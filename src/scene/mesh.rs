@@ -121,7 +121,7 @@ impl<'m> Mesh<'m> {
             MeshImpl::ComplexFace(i) => {
                 let f = self.cx.model.complex_triangulated_face_arena.get(i.0);
                 (
-                    &f.name,
+                    self.cx.model.text(f.name),
                     &f.coordinates,
                     &f.normals,
                     &f.pnindex,
@@ -136,7 +136,7 @@ impl<'m> Mesh<'m> {
                     .complex_triangulated_surface_set_arena
                     .get(i.0);
                 (
-                    &s.name,
+                    self.cx.model.text(s.name),
                     &s.coordinates,
                     &s.normals,
                     &s.pnindex,
@@ -146,7 +146,14 @@ impl<'m> Mesh<'m> {
             }
             MeshImpl::PlainFace(i) => {
                 let f = self.cx.model.tessellated_face_arena.get(i.0);
-                (&f.name, &f.coordinates, &f.normals, &[], &[], &[])
+                (
+                    self.cx.model.text(f.name),
+                    &f.coordinates,
+                    &f.normals,
+                    &[],
+                    &[],
+                    &[],
+                )
             }
         }
     }
@@ -315,8 +322,14 @@ impl<'m> MeshGroup<'m> {
 
     pub fn name(&self) -> &'m str {
         match self.which {
-            GroupImpl::Solid(i) => &self.cx.model.tessellated_solid_arena.get(i.0).name,
-            GroupImpl::Shell(i) => &self.cx.model.tessellated_shell_arena.get(i.0).name,
+            GroupImpl::Solid(i) => self
+                .cx
+                .model
+                .text(self.cx.model.tessellated_solid_arena.get(i.0).name),
+            GroupImpl::Shell(i) => self
+                .cx
+                .model
+                .text(self.cx.model.tessellated_shell_arena.get(i.0).name),
         }
     }
 

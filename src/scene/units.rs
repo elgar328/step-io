@@ -121,7 +121,7 @@ fn classify_unit(model: &StepModel, ur: &m::UnitRef) -> Option<(UnitKind, Unit)>
         }
         m::UnitRef::ConversionBasedUnit(id) => {
             let cbu = model.conversion_based_unit_arena.get(id.0);
-            classify_cbu(model, &cbu.name, &cbu.conversion_factor)
+            classify_cbu(model, model.text(cbu.name), &cbu.conversion_factor)
         }
         m::UnitRef::Complex(cuid) => {
             let cu = model.complex_unit_arena.get(cuid.0);
@@ -130,7 +130,7 @@ fn classify_unit(model: &StepModel, ur: &m::UnitRef) -> Option<(UnitKind, Unit)>
                 m::UnitPart::ConversionBasedUnit {
                     name,
                     conversion_factor,
-                } => classify_cbu(model, name, conversion_factor),
+                } => classify_cbu(model, model.text(*name), conversion_factor),
                 _ => None,
             })
         }

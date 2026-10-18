@@ -94,15 +94,15 @@ impl<'m> Product<'m> {
     }
 
     pub fn id(&self) -> &'m str {
-        &self.raw().id
+        self.cx.model.text(self.raw().id)
     }
 
     pub fn name(&self) -> &'m str {
-        &self.raw().name
+        self.cx.model.text(self.raw().name)
     }
 
     pub fn description(&self) -> Option<&'m str> {
-        self.raw().description.as_deref()
+        self.raw().description.map(|t| self.cx.model.text(t))
     }
 
     /// The definitions of this product (reverse: a `PRODUCT_DEFINITION_FORMATION`
@@ -227,13 +227,13 @@ impl<'m> Version<'m> {
         match self.which {
             FormImpl::Plain(i) => {
                 let f = model.product_definition_formation_arena.get(i.0);
-                (&f.id, f.description.as_deref())
+                (model.text(f.id), f.description.map(|t| model.text(t)))
             }
             FormImpl::WithSource(i) => {
                 let f = model
                     .product_definition_formation_with_specified_source_arena
                     .get(i.0);
-                (&f.id, f.description.as_deref())
+                (model.text(f.id), f.description.map(|t| model.text(t)))
             }
         }
     }
@@ -324,8 +324,8 @@ impl<'m> ProductDef<'m> {
             PdImpl::Plain(i) => {
                 let r = self.cx.model.product_definition_arena.get(i.0);
                 PdCore {
-                    id: &r.id,
-                    description: r.description.as_deref(),
+                    id: self.cx.model.text(r.id),
+                    description: r.description.map(|t| self.cx.model.text(t)),
                     formation: &r.formation,
                 }
             }
@@ -336,8 +336,8 @@ impl<'m> ProductDef<'m> {
                     .product_definition_with_associated_documents_arena
                     .get(i.0);
                 PdCore {
-                    id: &r.id,
-                    description: r.description.as_deref(),
+                    id: self.cx.model.text(r.id),
+                    description: r.description.map(|t| self.cx.model.text(t)),
                     formation: &r.formation,
                 }
             }
@@ -480,14 +480,16 @@ impl<'m> ProductDef<'m> {
         let model = self.cx.model;
         match self.core().formation {
             m::ProductDefinitionFormationRef::ProductDefinitionFormation(i) => {
-                Some(&model.product_definition_formation_arena.get(i.0).id)
+                Some(model.text(model.product_definition_formation_arena.get(i.0).id))
             }
             m::ProductDefinitionFormationRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 Some(
-                    &model
-                        .product_definition_formation_with_specified_source_arena
-                        .get(i.0)
-                        .id,
+                    model.text(
+                        model
+                            .product_definition_formation_with_specified_source_arena
+                            .get(i.0)
+                            .id,
+                    ),
                 )
             }
             m::ProductDefinitionFormationRef::Complex(_) => None,
@@ -887,12 +889,13 @@ impl<'m> Contributor<'m> {
     /// The role this contributor plays (`creator`, `design_owner`, …).
     pub fn role(&self) -> &'m str {
         let (_, rid) = self.ids();
-        &self
-            .cx
-            .model
-            .person_and_organization_role_arena
-            .get(rid.0)
-            .name
+        self.cx.model.text(
+            self.cx
+                .model
+                .person_and_organization_role_arena
+                .get(rid.0)
+                .name,
+        )
     }
 
     /// The person.
@@ -919,7 +922,9 @@ impl<'m> Contributor<'m> {
             .person_and_organization_arena
             .get(pao.0)
             .the_organization;
-        &self.cx.model.organization_arena.get(oid.0).name
+        self.cx
+            .model
+            .text(self.cx.model.organization_arena.get(oid.0).name)
     }
 }
 
@@ -942,17 +947,17 @@ impl<'m> Person<'m> {
 
     /// The person's STEP `id`.
     pub fn id(&self) -> &'m str {
-        &self.raw().id
+        self.cx.model.text(self.raw().id)
     }
 
     /// The person's given name, if recorded.
     pub fn first_name(&self) -> Option<&'m str> {
-        self.raw().first_name.as_deref()
+        self.raw().first_name.map(|t| self.cx.model.text(t))
     }
 
     /// The person's family name, if recorded.
     pub fn last_name(&self) -> Option<&'m str> {
-        self.raw().last_name.as_deref()
+        self.raw().last_name.map(|t| self.cx.model.text(t))
     }
 }
 
@@ -1202,7 +1207,7 @@ impl<'m> MappedInstance<'m> {
     }
 
     pub fn name(&self) -> &'m str {
-        &self.raw().name
+        self.cx.model.text(self.raw().name)
     }
 
     /// This instance's global identity (a `Copy` key for maps / deduplication).
@@ -1575,12 +1580,14 @@ impl<'m> Approval<'m> {
     /// The approval status name (`approved`, `not_yet_approved`, …).
     pub fn status(&self) -> &'m str {
         let m::ApprovalStatusRef::ApprovalStatus(sid) = &self.raw().status;
-        &self.cx.model.approval_status_arena.get(sid.0).name
+        self.cx
+            .model
+            .text(self.cx.model.approval_status_arena.get(sid.0).name)
     }
 
     /// The approval level.
     pub fn level(&self) -> &'m str {
-        &self.raw().level
+        self.cx.model.text(self.raw().level)
     }
 
     /// Who authorised this approval, with their role (reverse: an
@@ -1696,7 +1703,9 @@ impl<'m> Approver<'m> {
     /// The approver's role (`approver`, `security_approval`, …).
     pub fn role(&self) -> &'m str {
         let m::ApprovalRoleRef::ApprovalRole(rid) = &self.raw().role;
-        &self.cx.model.approval_role_arena.get(rid.0).role
+        self.cx
+            .model
+            .text(self.cx.model.approval_role_arena.get(rid.0).role)
     }
 
     /// The approver's person, if the approver is a person or a
@@ -1737,7 +1746,11 @@ impl<'m> Approver<'m> {
             }
             m::PersonOrganizationSelectRef::Person(_) => return None,
         };
-        Some(&self.cx.model.organization_arena.get(oid.0).name)
+        Some(
+            self.cx
+                .model
+                .text(self.cx.model.organization_arena.get(oid.0).name),
+        )
     }
 }
 
@@ -1792,11 +1805,21 @@ impl<'m> Document<'m> {
         match self.which {
             DocImpl::Document(i) => {
                 let d = model.document_arena.get(i.0);
-                (&d.id, &d.name, d.description.as_deref(), &d.kind)
+                (
+                    model.text(d.id),
+                    model.text(d.name),
+                    d.description.map(|t| model.text(t)),
+                    &d.kind,
+                )
             }
             DocImpl::DocumentFile(i) => {
                 let d = model.document_file_arena.get(i.0);
-                (&d.id, &d.name, d.description.as_deref(), &d.kind)
+                (
+                    model.text(d.id),
+                    model.text(d.name),
+                    d.description.map(|t| model.text(t)),
+                    &d.kind,
+                )
             }
         }
     }
@@ -1828,12 +1851,13 @@ impl<'m> Document<'m> {
     /// `drawing`, `specification`).
     pub fn kind(&self) -> &'m str {
         let m::DocumentTypeRef::DocumentType(tid) = self.fields().3;
-        &self
-            .cx
-            .model
-            .document_type_arena
-            .get(tid.0)
-            .product_data_type
+        self.cx.model.text(
+            self.cx
+                .model
+                .document_type_arena
+                .get(tid.0)
+                .product_data_type,
+        )
     }
 }
 
@@ -1892,12 +1916,12 @@ impl<'m> SecurityClassification<'m> {
 
     /// The classification name / identifier.
     pub fn name(&self) -> &'m str {
-        &self.raw().name
+        self.cx.model.text(self.raw().name)
     }
 
     /// Why the part is classified.
     pub fn purpose(&self) -> &'m str {
-        &self.raw().purpose
+        self.cx.model.text(self.raw().purpose)
     }
 
     /// The confidentiality level (the `name` of its `SECURITY_CLASSIFICATION_LEVEL`,
@@ -1905,11 +1929,12 @@ impl<'m> SecurityClassification<'m> {
     pub fn level(&self) -> &'m str {
         let m::SecurityClassificationLevelRef::SecurityClassificationLevel(lid) =
             &self.raw().security_level;
-        &self
-            .cx
-            .model
-            .security_classification_level_arena
-            .get(lid.0)
-            .name
+        self.cx.model.text(
+            self.cx
+                .model
+                .security_classification_level_arena
+                .get(lid.0)
+                .name,
+        )
     }
 }

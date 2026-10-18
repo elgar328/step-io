@@ -18,6 +18,44 @@ fn field_type(ir: &ModelIr, f: &Field) -> String {
     }
 }
 
+/// Whether a field holds strings the authoring layer takes as `String`s: a
+/// STRING, or a list of them.
+fn author_takes_strings(k: &Kind) -> bool {
+    match k {
+        Kind::Str => true,
+        Kind::Vec(inner) => matches!(inner.as_ref(), Kind::Str),
+        _ => false,
+    }
+}
+
+/// The type an `Ap242Author` constructor takes for a field: the field's
+/// type, with `String` for each `Text`.
+fn author_param_type(ir: &ModelIr, f: &Field) -> String {
+    if author_takes_strings(&f.kind) {
+        field_type(ir, f).replace("Text", "String")
+    } else {
+        field_type(ir, f)
+    }
+}
+
+/// The statement storing a constructor's `String` argument(s) `ident` as
+/// model `Text`, or `""` if the field takes no strings.
+fn author_store_strings(ident: &str, f: &Field) -> String {
+    if !author_takes_strings(&f.kind) {
+        return String::new();
+    }
+    let one = if matches!(f.kind, Kind::Str) {
+        "self.text(&v)".to_string()
+    } else {
+        "v.iter().map(|e| self.text(e)).collect()".to_string()
+    };
+    if f.optional || f.derivable {
+        format!("        let {ident} = {ident}.map(|v| {one});\n")
+    } else {
+        format!("        let {ident} = {{ let v = {ident}; {one} }};\n")
+    }
+}
+
 fn kind_type(ir: &ModelIr, k: &Kind) -> String {
     match k {
         Kind::Ref(t) => ir.ref_enums[t].rust.clone(),
@@ -27,7 +65,7 @@ fn kind_type(ir: &ModelIr, k: &Kind) -> String {
         Kind::Int => "i64".into(),
         Kind::Bool => "bool".into(),
         Kind::Logical => "Logical".into(),
-        Kind::Str => "String".into(),
+        Kind::Str => "Text".into(),
         Kind::Binary => "String".into(),
         Kind::Enum(a) => ir.enums[a].rust.clone(),
         Kind::MeasureSelect(_) => "MeasureValue".into(),
@@ -63,7 +101,7 @@ fn idents(fields: &[Field]) -> Vec<(String, &Field)> {
 
 pub fn emit_model(ir: &ModelIr) -> String {
     let mut s = String::from(HEADER);
-    s.push_str("//! The schema-faithful model — [`StepModel`], one arena per entity type.\n\n");
+    s.push_str("//! The schema-faithful model — [`StepModel`], one arena per entity type.\n//!\n//! It is laid out compactly: an entity refers to another by its 32-bit index\n//! in that entity's arena (the `…Id` types, [`EntityKey`]); every string is a\n//! [`Text`] into the model's text table, read with [`StepModel::text`]; and a\n//! list of at most three reals — a point's coordinates, a direction, a mesh\n//! vertex — is a [`Reals3`] held inline.\n\n");
 
     // Arena + helpers.
     s.push_str(
@@ -157,6 +195,85 @@ impl From<[f64; 1]> for Reals3 { fn from(v: [f64; 1]) -> Self { Self { len: 1, v
 impl From<[f64; 2]> for Reals3 { fn from(v: [f64; 2]) -> Self { Self { len: 2, values: [v[0], v[1], 0.0] } } }
 impl From<[f64; 3]> for Reals3 { fn from(v: [f64; 3]) -> Self { Self { len: 3, values: v } } }
 
+/// A string held by a [`StepModel`]: its index in the model's text table.
+/// Read it with [`StepModel::text`]; it means nothing in another model. The
+/// reader and the authoring layer store each distinct string once, so within
+/// a model equal strings are the same `Text`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Text(std::num::NonZeroU32);
+
+/// The strings of a model, back to back in one buffer.
+#[derive(Debug, Default)]
+pub(crate) struct Texts { buf: String, spans: Vec<(u32, u32)> }
+impl Texts {
+    pub(crate) fn get(&self, t: Text) -> &str {
+        let span = self.spans.get(t.0.get() as usize - 1);
+        span.and_then(|&(at, n)| self.buf.get(at as usize..at as usize + n as usize)).unwrap_or("")
+    }
+    /// Append `s` as a new `Text` (no deduplication).
+    pub(crate) fn push(&mut self, s: &str) -> Text {
+        let at = self.buf.len() as u32;
+        self.buf.push_str(s);
+        self.spans.push((at, s.len() as u32));
+        Text(std::num::NonZeroU32::new(self.spans.len() as u32).unwrap_or(std::num::NonZeroU32::MIN))
+    }
+    /// Whether the table has outgrown its 32-bit positions.
+    pub(crate) fn overflowed(&self) -> bool {
+        self.buf.len() > u32::MAX as usize || self.spans.len() >= u32::MAX as usize
+    }
+    pub(crate) fn shrink(&mut self) { self.buf.shrink_to_fit(); self.spans.shrink_to_fit(); }
+}
+
+/// A `Hasher` for keys that are already hashes.
+#[derive(Default)]
+pub(crate) struct Prehashed(u64);
+impl std::hash::Hasher for Prehashed {
+    fn finish(&self) -> u64 { self.0 }
+    fn write(&mut self, bytes: &[u8]) { for &b in bytes { self.0 = self.0.rotate_left(8) ^ u64::from(b); } }
+    fn write_u64(&mut self, v: u64) { self.0 = v; }
+}
+
+/// Stores each distinct string of a model once, while it is read or
+/// authored. Holds only hashes; the strings stay in the model's `Texts`.
+#[derive(Default)]
+pub(crate) struct TextDedup {
+    by_hash: std::collections::HashMap<u64, Text, std::hash::BuildHasherDefault<Prehashed>>,
+    /// Strings whose hash another string already has.
+    collided: std::collections::HashMap<u64, Vec<Text>, std::hash::BuildHasherDefault<Prehashed>>,
+    last: Option<Text>,
+}
+impl TextDedup {
+    pub(crate) fn intern(&mut self, texts: &mut Texts, s: &str) -> Text {
+        if let Some(t) = self.last.filter(|&t| texts.get(t) == s) {
+            return t;
+        }
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        std::hash::Hash::hash(s, &mut hasher);
+        let h = std::hash::Hasher::finish(&hasher);
+        let t = match self.by_hash.get(&h) {
+            None => {
+                let t = texts.push(s);
+                self.by_hash.insert(h, t);
+                t
+            }
+            Some(&t) if texts.get(t) == s => t,
+            Some(_) => {
+                let list = self.collided.entry(h).or_default();
+                match list.iter().copied().find(|&t| texts.get(t) == s) {
+                    Some(t) => t,
+                    None => {
+                        let t = texts.push(s);
+                        list.push(t);
+                        t
+                    }
+                }
+            }
+        };
+        self.last = Some(t);
+        t
+    }
+}
+
 /// select-of-scalars: `Some(type_name)` = typed member `TYPE(v)`; `None` = bare.
 /// `value` is int-or-real because EXPRESS `number` members (count_measure,
 /// numeric_measure) admit both; the token is preserved (2 stays 2, not 2.0).
@@ -164,18 +281,18 @@ impl From<[f64; 3]> for Reals3 { fn from(v: [f64; 3]) -> Self { Self { len: 3, v
 pub enum MeasureScalar { Int(i64), Real(f64) }
 impl MeasureScalar { pub fn as_f64(&self) -> f64 { match self { Self::Int(i) => *i as f64, Self::Real(r) => *r } } }
 #[derive(Debug, Clone, PartialEq)]
-pub struct MeasureValue { pub type_name: Option<String>, pub value: MeasureScalar }
+pub struct MeasureValue { pub type_name: Option<Text>, pub value: MeasureScalar }
 
 /// select-of-named-strings (e.g. SELECT(identifier, message)): `Some(type_name)`
 /// = typed member `TYPE('s')`; `None` = bare string.
 #[derive(Debug, Clone, PartialEq)]
-pub struct StringSelectValue { pub type_name: Option<String>, pub value: String }
+pub struct StringSelectValue { pub type_name: Option<Text>, pub value: Text }
 
 /// select-of-named-integers (e.g. SELECT(u_direction_count, v_direction_count)):
 /// `Some(type_name)` = typed member `TYPE(2)`; `None` = bare integer. Integer-
 /// valued so counts are not widened to reals.
 #[derive(Debug, Clone, PartialEq)]
-pub struct IntMeasureValue { pub type_name: Option<String>, pub value: i64 }
+pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
 
 "#,
     );
@@ -297,6 +414,7 @@ pub struct IntMeasureValue { pub type_name: Option<String>, pub value: i64 }
     writeln!(s, "#[derive(Debug, Default)]\npub struct StepModel {{").unwrap();
     // The file's HEADER section (hand-written module; accessor lives there).
     writeln!(s, "    pub(crate) header: crate::header::FileHeader,").unwrap();
+    writeln!(s, "    pub(crate) texts: Texts,").unwrap();
     for se in &ir.simples {
         writeln!(s, "    pub {}: Arena<{}>,", arena_field(&se.rust), se.rust).unwrap();
     }
@@ -304,6 +422,7 @@ pub struct IntMeasureValue { pub type_name: Option<String>, pub value: i64 }
         writeln!(s, "    pub complex_unit_arena: Arena<ComplexUnit>,").unwrap();
     }
     writeln!(s, "}}").unwrap();
+    s.push_str("impl StepModel {\n    /// The string `t` stands for (`\"\"` for a `Text` of another model).\n    pub fn text(&self, t: Text) -> &str { self.texts.get(t) }\n    /// Store `s` as a new `Text`.\n    pub(crate) fn add_text(&mut self, s: &str) -> Text { self.texts.push(s) }\n}\n");
 
     s
 }
@@ -423,7 +542,7 @@ pub fn emit_resolvers(ir: &ModelIr) -> String {
 fn scalar_rust_ty(k: &Kind) -> &'static str {
     match k {
         Kind::Real => "f64",
-        Kind::Str => "String",
+        Kind::Str => "Text",
         _ => unreachable!("unsupported scalar arm kind: {k:?}"),
     }
 }
@@ -553,13 +672,19 @@ fn as_int(a: &Attribute, ctx: &str) -> Result<i64, String> {
 fn as_str(a: &Attribute, ctx: &str) -> Result<String, String> {
     match a { Attribute::String(s) => Ok(s.clone()), other => Err(format!("{ctx}: expected string, got {other:?}")) }
 }
+/// Where the reader stores strings: the model's texts, each distinct string once.
+pub struct TextIn<'a> { pub texts: &'a mut Texts, pub dedup: &'a mut TextDedup }
+impl TextIn<'_> { fn intern(&mut self, s: &str) -> Text { self.dedup.intern(self.texts, s) } }
+fn as_text(a: &Attribute, ctx: &str, tt: &mut TextIn<'_>) -> Result<Text, String> {
+    match a { Attribute::String(s) => Ok(tt.intern(s)), other => Err(format!("{ctx}: expected string, got {other:?}")) }
+}
 fn as_logical(a: &Attribute, ctx: &str) -> Result<Logical, String> {
     match a { Attribute::Enum(s) => Logical::parse(s).ok_or_else(|| format!("{ctx}: bad logical {s:?}")), other => Err(format!("{ctx}: expected logical, got {other:?}")) }
 }
 fn as_ref_id(a: &Attribute, ctx: &str) -> Result<u64, String> {
     match a { Attribute::EntityRef(n) => Ok(*n), other => Err(format!("{ctx}: expected ref, got {other:?}")) }
 }
-fn read_measure_value(a: &Attribute, ctx: &str) -> Result<MeasureValue, String> {
+fn read_measure_value(a: &Attribute, ctx: &str, tt: &mut TextIn<'_>) -> Result<MeasureValue, String> {
     // A measure's numeric literal sits nested inside a Typed/bare attribute, so
     // it is not a top-level slot the normalize layer rewrites; preserve the
     // original token (integer vs real) — `number` members admit either.
@@ -567,31 +692,34 @@ fn read_measure_value(a: &Attribute, ctx: &str) -> Result<MeasureValue, String> 
         match a { Attribute::Real(r) => Ok(MeasureScalar::Real(*r)), Attribute::Integer(i) => Ok(MeasureScalar::Int(*i)), other => Err(format!("{ctx}: expected measure scalar, got {other:?}")) }
     }
     match a {
-        Attribute::Typed { type_name, value } => Ok(MeasureValue { type_name: Some(type_name.clone()), value: measure_scalar(value, ctx)? }),
+        Attribute::Typed { type_name, value } => Ok(MeasureValue { type_name: Some(tt.intern(type_name)), value: measure_scalar(value, ctx)? }),
         Attribute::Real(_) | Attribute::Integer(_) => Ok(MeasureValue { type_name: None, value: measure_scalar(a, ctx)? }),
         other => Err(format!("{ctx}: expected measure_value, got {other:?}")),
     }
 }
-fn read_string_select(a: &Attribute, ctx: &str) -> Result<StringSelectValue, String> {
+fn read_string_select(a: &Attribute, ctx: &str, tt: &mut TextIn<'_>) -> Result<StringSelectValue, String> {
     // A named string select member is a Typed literal `TYPE('s')`; a bare string
     // is unwrapped. (Mirrors read_measure_value for the string case.)
     fn str_of(a: &Attribute, ctx: &str) -> Result<String, String> {
         match a { Attribute::String(s) => Ok(s.clone()), other => Err(format!("{ctx}: expected select string, got {other:?}")) }
     }
     match a {
-        Attribute::Typed { type_name, value } => Ok(StringSelectValue { type_name: Some(type_name.clone()), value: str_of(value, ctx)? }),
-        Attribute::String(s) => Ok(StringSelectValue { type_name: None, value: s.clone() }),
+        Attribute::Typed { type_name, value } => {
+            let value = str_of(value, ctx)?;
+            Ok(StringSelectValue { type_name: Some(tt.intern(type_name)), value: tt.intern(&value) })
+        }
+        Attribute::String(s) => Ok(StringSelectValue { type_name: None, value: tt.intern(s) }),
         other => Err(format!("{ctx}: expected string_select, got {other:?}")),
     }
 }
-fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, String> {
+fn read_int_measure_value(a: &Attribute, ctx: &str, tt: &mut TextIn<'_>) -> Result<IntMeasureValue, String> {
     // Integer-valued select-of-scalars (mirrors read_measure_value but keeps the
     // value as i64). A non-standard real literal is truncated (NORM).
     fn int_of(a: &Attribute, ctx: &str) -> Result<i64, String> {
         match a { Attribute::Integer(i) => Ok(*i), Attribute::Real(r) => Ok(*r as i64), other => Err(format!("{ctx}: expected measure int, got {other:?}")) }
     }
     match a {
-        Attribute::Typed { type_name, value } => Ok(IntMeasureValue { type_name: Some(type_name.clone()), value: int_of(value, ctx)? }),
+        Attribute::Typed { type_name, value } => Ok(IntMeasureValue { type_name: Some(tt.intern(type_name)), value: int_of(value, ctx)? }),
         Attribute::Integer(_) | Attribute::Real(_) => Ok(IntMeasureValue { type_name: None, value: int_of(a, ctx)? }),
         other => Err(format!("{ctx}: expected int_measure_value, got {other:?}")),
     }
@@ -717,12 +845,12 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
     // The reader builds each entity as it streams past (`build_entity`), keeps
     // the ref slots, and resolves them once the file is read
     // (`resolve_entity`); `finalize_arenas` puts the arenas in id order first.
-    s.push_str("pub fn build_entity(model: &mut StepModel, ix: u16, attributes: &[Attribute]) -> Result<u32, String> {\n    Ok(match ix {\n");
+    s.push_str("pub fn build_entity(model: &mut StepModel, ix: u16, attributes: &[Attribute], dedup: &mut TextDedup) -> Result<u32, String> {\n    let mut tt = TextIn { texts: &mut model.texts, dedup };\n    Ok(match ix {\n");
     for (ix, se) in ir.simples.iter().enumerate() {
         let af = arena_field(&se.rust);
         writeln!(
             s,
-            "        {ix} => model.{af}.push(build_{af}(attributes)?),"
+            "        {ix} => model.{af}.push(build_{af}(attributes, &mut tt)?),"
         )
         .unwrap();
     }
@@ -734,13 +862,13 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
     }
     s.push_str("        _ => return None,\n    })\n}\n\n");
 
-    s.push_str("pub fn resolve_entity(model: &mut StepModel, ix: u16, i: u32, attributes: &[Attribute], idmap: &IdMap) -> Result<(), String> {\n    match ix {\n");
+    s.push_str("pub fn resolve_entity(model: &mut StepModel, ix: u16, i: u32, attributes: &[Attribute], idmap: &IdMap, dedup: &mut TextDedup) -> Result<(), String> {\n    match ix {\n");
     for (ix, se) in ir.simples.iter().enumerate() {
         if se.fields.iter().any(|f| has_ref(&f.kind)) {
             let af = arena_field(&se.rust);
             writeln!(
                 s,
-                "        {ix} => resolve_{af}(model, {}Id(i), attributes, idmap),",
+                "        {ix} => resolve_{af}(model, {}Id(i), attributes, idmap, dedup),",
                 se.rust
             )
             .unwrap();
@@ -749,13 +877,13 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
     s.push_str("        _ => Ok(()),\n    }\n}\n\n");
 
     if ir.has_part_bag {
-        s.push_str("pub fn build_complex_entity(model: &mut StepModel, parts: &[RawEntityPart]) -> Result<u32, String> {\n    Ok(model.complex_unit_arena.push(ComplexUnit { parts: read_complex_parts_norefs(parts)? }))\n}\n\n");
+        s.push_str("pub fn build_complex_entity(model: &mut StepModel, parts: &[RawEntityPart], dedup: &mut TextDedup) -> Result<u32, String> {\n    let mut tt = TextIn { texts: &mut model.texts, dedup };\n    Ok(model.complex_unit_arena.push(ComplexUnit { parts: read_complex_parts_norefs(parts, &mut tt)? }))\n}\n\n");
         s.push_str("pub fn complex_key_of(i: u32) -> Option<EntityKey> {\n    Some(EntityKey::ComplexUnit(ComplexUnitId(i)))\n}\n\n");
-        s.push_str("pub fn resolve_complex_entity(model: &mut StepModel, i: u32, parts: &[RawEntityPart], idmap: &IdMap) -> Result<(), String> {\n    resolve_complex(model, ComplexUnitId(i), parts, idmap)\n}\n\n");
+        s.push_str("pub fn resolve_complex_entity(model: &mut StepModel, i: u32, parts: &[RawEntityPart], idmap: &IdMap, dedup: &mut TextDedup) -> Result<(), String> {\n    resolve_complex(model, ComplexUnitId(i), parts, idmap, dedup)\n}\n\n");
     } else {
-        s.push_str("pub fn build_complex_entity(_model: &mut StepModel, _parts: &[RawEntityPart]) -> Result<u32, String> {\n    Err(\"no complex entities are modeled\".to_string())\n}\n\n");
+        s.push_str("pub fn build_complex_entity(_model: &mut StepModel, _parts: &[RawEntityPart], _dedup: &mut TextDedup) -> Result<u32, String> {\n    Err(\"no complex entities are modeled\".to_string())\n}\n\n");
         s.push_str("pub fn complex_key_of(_i: u32) -> Option<EntityKey> {\n    None\n}\n\n");
-        s.push_str("pub fn resolve_complex_entity(_model: &mut StepModel, _i: u32, _parts: &[RawEntityPart], _idmap: &IdMap) -> Result<(), String> {\n    Ok(())\n}\n\n");
+        s.push_str("pub fn resolve_complex_entity(_model: &mut StepModel, _i: u32, _parts: &[RawEntityPart], _idmap: &IdMap, _dedup: &mut TextDedup) -> Result<(), String> {\n    Ok(())\n}\n\n");
     }
 
     // `order[ix]` = the arena indices of type `ix` to keep, in id order.
@@ -775,7 +903,7 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
     }
     s.push_str("}\n\n");
 
-    s.push_str("pub fn shrink_arenas(model: &mut StepModel) {\n");
+    s.push_str("pub fn shrink_arenas(model: &mut StepModel) {\n    model.texts.shrink();\n");
     for se in &ir.simples {
         writeln!(
             s,
@@ -810,7 +938,7 @@ fn emit_build(s: &mut String, ir: &ModelIr, se: &SimpleEnt) {
     let af = arena_field(&se.rust);
     writeln!(
         s,
-        "fn build_{af}(attributes: &[Attribute]) -> Result<{}, String> {{",
+        "fn build_{af}(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<{}, String> {{",
         se.rust
     )
     .unwrap();
@@ -917,14 +1045,15 @@ fn scalar_fallible(ir: &ModelIr, k: &Kind, a: &str, ctx: &str) -> String {
     match k {
         Kind::Real => format!("as_real({a}, {ctx:?})"),
         Kind::Int => format!("as_int({a}, {ctx:?})"),
-        Kind::Str | Kind::Binary => format!("as_str({a}, {ctx:?})"),
+        Kind::Str => format!("as_text({a}, {ctx:?}, tt)"),
+        Kind::Binary => format!("as_str({a}, {ctx:?})"),
         Kind::Bool => {
             format!("Ok::<bool, String>(matches!({a}, Attribute::Enum(s) if s == \"T\"))")
         }
         Kind::Logical => format!("as_logical({a}, {ctx:?})"),
-        Kind::MeasureSelect(_) => format!("read_measure_value({a}, {ctx:?})"),
-        Kind::StringSelect(_) => format!("read_string_select({a}, {ctx:?})"),
-        Kind::IntSelect(_) => format!("read_int_measure_value({a}, {ctx:?})"),
+        Kind::MeasureSelect(_) => format!("read_measure_value({a}, {ctx:?}, tt)"),
+        Kind::StringSelect(_) => format!("read_string_select({a}, {ctx:?}, tt)"),
+        Kind::IntSelect(_) => format!("read_int_measure_value({a}, {ctx:?}, tt)"),
         Kind::Enum(name) => {
             let ty = &ir.enums[name].rust;
             format!(
@@ -949,7 +1078,7 @@ fn emit_resolve(s: &mut String, ir: &ModelIr, se: &SimpleEnt) {
     let af = arena_field(&se.rust);
     writeln!(
         s,
-        "fn resolve_{af}(model: &mut StepModel, aid: {}Id, attrs: &[Attribute], idmap: &IdMap) -> Result<(), String> {{",
+        "fn resolve_{af}(model: &mut StepModel, aid: {}Id, attrs: &[Attribute], idmap: &IdMap, dedup: &mut TextDedup) -> Result<(), String> {{\n    let tt = &mut TextIn {{ texts: &mut model.texts, dedup }};",
         se.rust
     )
     .unwrap();
@@ -1012,7 +1141,7 @@ fn resolve_ref_one(re: &RefEnum, aref: &str, ctx: &str) -> String {
             _ => unreachable!("unsupported scalar arm kind"),
         };
         arms.push(format!(
-            "Attribute::Typed {{ type_name, .. }} if type_name == \"{wire}\" => {}::{}({reader}({aref}, {ctx:?})?.value{accessor}),",
+            "Attribute::Typed {{ type_name, .. }} if type_name == \"{wire}\" => {}::{}({reader}({aref}, {ctx:?}, tt)?.value{accessor}),",
             re.rust, sv
         ));
     }
@@ -1070,7 +1199,7 @@ fn resolve_ref_vec(ir: &ModelIr, inner: &Kind, a: &str, ctx: &str) -> String {
 fn emit_complex_read(s: &mut String, ir: &ModelIr) {
     // pass1: bind non-ref part attrs
     s.push_str(
-        "fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, String> {\n",
+        "fn read_complex_parts_norefs(parts: &[RawEntityPart], tt: &mut TextIn<'_>) -> Result<Vec<UnitPart>, String> {\n",
     );
     s.push_str(
         "    parts.iter().map(|p| -> Result<UnitPart, String> { Ok(match p.name.as_str() {\n",
@@ -1110,7 +1239,8 @@ fn emit_complex_read(s: &mut String, ir: &ModelIr) {
     );
 
     // pass2: patch ref part attrs
-    s.push_str("fn resolve_complex(model: &mut StepModel, aid: ComplexUnitId, parts: &[RawEntityPart], idmap: &IdMap) -> Result<(), String> {\n");
+    s.push_str("fn resolve_complex(model: &mut StepModel, aid: ComplexUnitId, parts: &[RawEntityPart], idmap: &IdMap, dedup: &mut TextDedup) -> Result<(), String> {\n");
+    s.push_str("    let tt = &mut TextIn { texts: &mut model.texts, dedup };\n");
     s.push_str("    let bag = &mut model.complex_unit_arena.items[aid.0 as usize];\n");
     s.push_str("    for (slot, p) in bag.parts.iter_mut().zip(parts.iter()) {\n");
     s.push_str("        match slot {\n");
@@ -1181,15 +1311,16 @@ pub fn emit_write(ir: &ModelIr) -> String {
         format!("{mant}{exp}")
     } else { s }
 }
-fn measure(m: &MeasureValue) -> String {
+fn measure(model: &StepModel, m: &MeasureValue) -> String {
     let v = match &m.value { MeasureScalar::Int(i) => format!("{i}"), MeasureScalar::Real(r) => real(*r) };
-    match &m.type_name { Some(t) => format!("{t}({v})"), None => v }
+    match m.type_name { Some(t) => format!("{}({v})", model.text(t)), None => v }
 }
-fn int_measure(m: &IntMeasureValue) -> String {
-    match &m.type_name { Some(t) => format!("{t}({})", m.value), None => format!("{}", m.value) }
+fn int_measure(model: &StepModel, m: &IntMeasureValue) -> String {
+    match m.type_name { Some(t) => format!("{}({})", model.text(t), m.value), None => format!("{}", m.value) }
 }
-fn string_select(m: &StringSelectValue) -> String {
-    match &m.type_name { Some(t) => format!("{t}({})", step_str(&m.value)), None => step_str(&m.value) }
+fn string_select(model: &StepModel, m: &StringSelectValue) -> String {
+    let v = step_str(model.text(m.value));
+    match m.type_name { Some(t) => format!("{}({v})", model.text(t)), None => v }
 }
 /// Part 21 string literal, quotes included, in plain ASCII — see
 /// `crate::parser::string::encode`.
@@ -1570,7 +1701,7 @@ fn render_ref_value(re: &RefEnum, v: &str) -> String {
         // `WIRE(value)` (a bare-on-read value is normalized to this on write).
         let val = match sk {
             Kind::Real => "real(*x)",
-            Kind::Str => "step_str(x)",
+            Kind::Str => "step_str(self.model.text(*x))",
             _ => unreachable!("unsupported scalar arm kind"),
         };
         arms.push(format!(
@@ -1592,13 +1723,13 @@ fn render_scalar(_ir: &ModelIr, k: &Kind, access: &str) -> String {
     match k {
         Kind::Real => format!("real({access})"),
         Kind::Int => format!("format!(\"{{}}\", {access})"),
-        Kind::Str => format!("step_str(&{access})"),
+        Kind::Str => format!("step_str(self.model.text({access}))"),
         Kind::Bool => format!("(if {access} {{ \".T.\" }} else {{ \".F.\" }}).to_string()"),
         Kind::Logical => format!("{access}.token().to_string()"),
         Kind::Binary => format!("format!(\"'{{}}'\", {access})"),
-        Kind::MeasureSelect(_) => format!("measure(&{access})"),
-        Kind::StringSelect(_) => format!("string_select(&{access})"),
-        Kind::IntSelect(_) => format!("int_measure(&{access})"),
+        Kind::MeasureSelect(_) => format!("measure(self.model, &{access})"),
+        Kind::StringSelect(_) => format!("string_select(self.model, &{access})"),
+        Kind::IntSelect(_) => format!("int_measure(self.model, &{access})"),
         Kind::Enum(_) => format!("{access}.token().to_string()"),
         _ => unreachable!(),
     }
@@ -1609,13 +1740,13 @@ fn render_scalar_ref(_ir: &ModelIr, k: &Kind, access: &str) -> String {
     match k {
         Kind::Real => format!("real(*{access})"),
         Kind::Int => format!("format!(\"{{}}\", {access})"),
-        Kind::Str => format!("step_str({access})"),
+        Kind::Str => format!("step_str(self.model.text(*{access}))"),
         Kind::Bool => format!("(if *{access} {{ \".T.\" }} else {{ \".F.\" }}).to_string()"),
         Kind::Logical => format!("{access}.token().to_string()"),
         Kind::Binary => format!("format!(\"'{{}}'\", {access})"),
-        Kind::MeasureSelect(_) => format!("measure({access})"),
-        Kind::StringSelect(_) => format!("string_select({access})"),
-        Kind::IntSelect(_) => format!("int_measure({access})"),
+        Kind::MeasureSelect(_) => format!("measure(self.model, {access})"),
+        Kind::StringSelect(_) => format!("string_select(self.model, {access})"),
+        Kind::IntSelect(_) => format!("int_measure(self.model, {access})"),
         Kind::Enum(_) => format!("{access}.token().to_string()"),
         _ => unreachable!(),
     }
@@ -1638,12 +1769,12 @@ fn render_vec_elem(ir: &ModelIr, inner: &Kind) -> String {
         }
         Kind::Real => "real(*e)".to_string(),
         Kind::Int => "format!(\"{e}\")".to_string(),
-        Kind::Str => "step_str(e)".to_string(),
+        Kind::Str => "step_str(self.model.text(*e))".to_string(),
         Kind::Logical => "e.token().to_string()".to_string(),
         Kind::Enum(_) => "e.token().to_string()".to_string(),
-        Kind::MeasureSelect(_) => "measure(e)".to_string(),
-        Kind::StringSelect(_) => "string_select(e)".to_string(),
-        Kind::IntSelect(_) => "int_measure(e)".to_string(),
+        Kind::MeasureSelect(_) => "measure(self.model, e)".to_string(),
+        Kind::StringSelect(_) => "string_select(self.model, e)".to_string(),
+        Kind::IntSelect(_) => "int_measure(self.model, e)".to_string(),
         _ => "real(*e)".to_string(),
     }
 }
@@ -2472,11 +2603,19 @@ impl std::error::Error for AuthorError {}
 #[derive(Default)]
 pub struct Ap242Author {
     model: StepModel,
+    dedup: TextDedup,
 }
 
 impl Ap242Author {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Store a string in the model, once per distinct string, for the
+    /// entities built directly as values (complex parts, self-referencing
+    /// entities); the constructors take `String`s and store them themselves.
+    pub fn text(&mut self, s: &str) -> Text {
+        self.dedup.intern(&mut self.model.texts, s)
     }
 
     /// Emit the model as AP242 (edition 2 IS) Part 21 text. The header's
@@ -2508,7 +2647,7 @@ impl Ap242Author {
             if f.derived {
                 continue;
             }
-            write!(sig, ", {ident}: {}", field_type(ir, f)).unwrap();
+            write!(sig, ", {ident}: {}", author_param_type(ir, f)).unwrap();
         }
         writeln!(s, "\n    /// `{}` — strict AP242 constructor.", se.name).unwrap();
         writeln!(
@@ -2533,6 +2672,11 @@ impl Ap242Author {
                 0,
             );
             s.push_str(&check);
+        }
+        for (ident, f) in &params {
+            if !f.derived {
+                s.push_str(&author_store_strings(ident, f));
+            }
         }
         write!(
             s,

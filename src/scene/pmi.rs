@@ -100,10 +100,22 @@ impl<'m> Dimension<'m> {
     /// The dimension's name.
     pub fn name(&self) -> &'m str {
         match self.which {
-            DimImpl::Size(i) => &self.cx.model.dimensional_size_arena.get(i.0).name,
-            DimImpl::Location(i) => &self.cx.model.dimensional_location_arena.get(i.0).name,
-            DimImpl::AngularSize(i) => &self.cx.model.angular_size_arena.get(i.0).name,
-            DimImpl::AngularLocation(i) => &self.cx.model.angular_location_arena.get(i.0).name,
+            DimImpl::Size(i) => self
+                .cx
+                .model
+                .text(self.cx.model.dimensional_size_arena.get(i.0).name),
+            DimImpl::Location(i) => self
+                .cx
+                .model
+                .text(self.cx.model.dimensional_location_arena.get(i.0).name),
+            DimImpl::AngularSize(i) => self
+                .cx
+                .model
+                .text(self.cx.model.angular_size_arena.get(i.0).name),
+            DimImpl::AngularLocation(i) => self
+                .cx
+                .model
+                .text(self.cx.model.angular_location_arena.get(i.0).name),
         }
     }
 
@@ -253,7 +265,7 @@ macro_rules! leaf_tolerances {
                 match self.which {
                     $( TolImpl::$ent(i) => {
                         let e = self.cx.model.$arena.get(i.0);
-                        Some((&e.name, e.magnitude.as_ref()))
+                        Some((self.cx.model.text(e.name), e.magnitude.as_ref()))
                     } )+
                     TolImpl::Complex(_) => None,
                 }
@@ -354,7 +366,7 @@ impl<'m> Tolerance<'m> {
         cu.parts.iter().find_map(|p| match p {
             m::UnitPart::GeometricTolerance {
                 name, magnitude, ..
-            } => Some((name.as_str(), magnitude.as_ref())),
+            } => Some((self.cx.model.text(*name), magnitude.as_ref())),
             _ => None,
         })
     }
@@ -453,16 +465,25 @@ impl<'m> Datum<'m> {
     /// letter (A, B, C, …); a common datum may carry a compound label ("A-B").
     pub fn letter(&self) -> &'m str {
         match self.which {
-            DatumImpl::Datum(i) => &self.cx.model.datum_arena.get(i.0).identification,
-            DatumImpl::CommonDatum(i) => &self.cx.model.common_datum_arena.get(i.0).identification,
+            DatumImpl::Datum(i) => self
+                .cx
+                .model
+                .text(self.cx.model.datum_arena.get(i.0).identification),
+            DatumImpl::CommonDatum(i) => self
+                .cx
+                .model
+                .text(self.cx.model.common_datum_arena.get(i.0).identification),
         }
     }
 
     /// The datum's name.
     pub fn name(&self) -> &'m str {
         match self.which {
-            DatumImpl::Datum(i) => &self.cx.model.datum_arena.get(i.0).name,
-            DatumImpl::CommonDatum(i) => &self.cx.model.common_datum_arena.get(i.0).name,
+            DatumImpl::Datum(i) => self.cx.model.text(self.cx.model.datum_arena.get(i.0).name),
+            DatumImpl::CommonDatum(i) => self
+                .cx
+                .model
+                .text(self.cx.model.common_datum_arena.get(i.0).name),
         }
     }
 
@@ -708,8 +729,8 @@ macro_rules! feature_family {
             /// The feature's name.
             pub fn name(&self) -> &'m str {
                 match self.which {
-                    $( FeatureImpl::$rent(i) => &self.cx.model.$rarena.get(i.0).name, )+
-                    $( FeatureImpl::$aent(i) => &self.cx.model.$aarena.get(i.0).name, )+
+                    $( FeatureImpl::$rent(i) => self.cx.model.text(self.cx.model.$rarena.get(i.0).name), )+
+                    $( FeatureImpl::$aent(i) => self.cx.model.text(self.cx.model.$aarena.get(i.0).name), )+
                 }
             }
 
@@ -717,10 +738,10 @@ macro_rules! feature_family {
             pub fn description(&self) -> Option<&'m str> {
                 match self.which {
                     $( FeatureImpl::$rent(i) => {
-                        self.cx.model.$rarena.get(i.0).description.as_deref()
+                        self.cx.model.$rarena.get(i.0).description.map(|t| self.cx.model.text(t))
                     } )+
                     $( FeatureImpl::$aent(i) => {
-                        self.cx.model.$aarena.get(i.0).description.as_deref()
+                        self.cx.model.$aarena.get(i.0).description.map(|t| self.cx.model.text(t))
                     } )+
                 }
             }

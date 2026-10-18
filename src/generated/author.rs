@@ -65,11 +65,19 @@ impl std::error::Error for AuthorError {}
 #[derive(Default)]
 pub struct Ap242Author {
     model: StepModel,
+    dedup: TextDedup,
 }
 
 impl Ap242Author {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Store a string in the model, once per distinct string, for the
+    /// entities built directly as values (complex parts, self-referencing
+    /// entities); the constructors take `String`s and store them themselves.
+    pub fn text(&mut self, s: &str) -> Text {
+        self.dedup.intern(&mut self.model.texts, s)
     }
 
     /// Emit the model as AP242 (edition 2 IS) Part 21 text. The header's
@@ -94,6 +102,11 @@ impl Ap242Author {
         chosen_method: ActionMethodRef,
     ) -> Result<ActionId, AuthorError> {
         check_action_method_ref(&self.model, &chosen_method)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ActionId(self.model.action_arena.push(Action {
             name,
             description,
@@ -138,6 +151,19 @@ impl Ap242Author {
         for e0 in &requests {
             check_versioned_action_request_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
+        let analysis = {
+            let v = analysis;
+            self.text(&v)
+        };
+        let comment = {
+            let v = comment;
+            self.text(&v)
+        };
         Ok(ActionDirectiveId(self.model.action_directive_arena.push(
             ActionDirective {
                 name,
@@ -157,6 +183,19 @@ impl Ap242Author {
         consequence: String,
         purpose: String,
     ) -> Result<ActionMethodId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
+        let consequence = {
+            let v = consequence;
+            self.text(&v)
+        };
+        let purpose = {
+            let v = purpose;
+            self.text(&v)
+        };
         Ok(ActionMethodId(self.model.action_method_arena.push(
             ActionMethod {
                 name,
@@ -177,6 +216,11 @@ impl Ap242Author {
     ) -> Result<ActionMethodRelationshipId, AuthorError> {
         check_action_method_ref(&self.model, &relating_method)?;
         check_action_method_ref(&self.model, &related_method)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ActionMethodRelationshipId(
             self.model
                 .action_method_relationship_arena
@@ -197,6 +241,14 @@ impl Ap242Author {
         definition: CharacterizedActionDefinitionRef,
     ) -> Result<ActionPropertyId, AuthorError> {
         check_characterized_action_definition_ref(&self.model, &definition)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = {
+            let v = description;
+            self.text(&v)
+        };
         Ok(ActionPropertyId(self.model.action_property_arena.push(
             ActionProperty {
                 name,
@@ -216,6 +268,11 @@ impl Ap242Author {
     ) -> Result<ActionRelationshipId, AuthorError> {
         check_action_ref(&self.model, &relating_action)?;
         check_action_ref(&self.model, &related_action)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ActionRelationshipId(
             self.model
                 .action_relationship_arena
@@ -282,6 +339,11 @@ impl Ap242Author {
             check_supported_item_ref(&self.model, e0)?;
         }
         check_action_resource_type_ref(&self.model, &kind)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ActionResourceId(self.model.action_resource_arena.push(
             ActionResource {
                 name,
@@ -302,6 +364,11 @@ impl Ap242Author {
     ) -> Result<ActionResourceRelationshipId, AuthorError> {
         check_action_resource_ref(&self.model, &relating_resource)?;
         check_action_resource_ref(&self.model, &related_resource)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ActionResourceRelationshipId(
             self.model
                 .action_resource_relationship_arena
@@ -338,6 +405,14 @@ impl Ap242Author {
         for e0 in &operations {
             check_characterized_action_definition_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = {
+            let v = description;
+            self.text(&v)
+        };
         Ok(ActionResourceRequirementId(
             self.model
                 .action_resource_requirement_arena
@@ -355,6 +430,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<ActionResourceTypeId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ActionResourceTypeId(
             self.model
                 .action_resource_type_arena
@@ -378,6 +457,18 @@ impl Ap242Author {
         electronic_mail_address: Option<String>,
         telex_number: Option<String>,
     ) -> Result<AddressId, AuthorError> {
+        let internal_location = internal_location.map(|v| self.text(&v));
+        let street_number = street_number.map(|v| self.text(&v));
+        let street = street.map(|v| self.text(&v));
+        let postal_box = postal_box.map(|v| self.text(&v));
+        let town = town.map(|v| self.text(&v));
+        let region = region.map(|v| self.text(&v));
+        let postal_code = postal_code.map(|v| self.text(&v));
+        let country = country.map(|v| self.text(&v));
+        let facsimile_number = facsimile_number.map(|v| self.text(&v));
+        let telephone_number = telephone_number.map(|v| self.text(&v));
+        let electronic_mail_address = electronic_mail_address.map(|v| self.text(&v));
+        let telex_number = telex_number.map(|v| self.text(&v));
         Ok(AddressId(self.model.address_arena.push(Address {
             internal_location,
             street_number,
@@ -417,6 +508,10 @@ impl Ap242Author {
             check_representation_item_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(AdvancedBrepShapeRepresentationId(
             self.model.advanced_brep_shape_representation_arena.push(
                 AdvancedBrepShapeRepresentation {
@@ -452,6 +547,10 @@ impl Ap242Author {
             check_face_bound_ref(&self.model, e0)?;
         }
         check_surface_ref(&self.model, &face_geometry)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(AdvancedFaceId(self.model.advanced_face_arena.push(
             AdvancedFace {
                 name,
@@ -471,6 +570,11 @@ impl Ap242Author {
         product_definitional: Logical,
     ) -> Result<AllAroundShapeAspectId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(AllAroundShapeAspectId(
             self.model
                 .all_around_shape_aspect_arena
@@ -494,6 +598,11 @@ impl Ap242Author {
     ) -> Result<AngularLocationId, AuthorError> {
         check_shape_aspect_ref(&self.model, &relating_shape_aspect)?;
         check_shape_aspect_ref(&self.model, &related_shape_aspect)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(AngularLocationId(self.model.angular_location_arena.push(
             AngularLocation {
                 name,
@@ -513,6 +622,10 @@ impl Ap242Author {
         angle_selection: AngleRelator,
     ) -> Result<AngularSizeId, AuthorError> {
         check_shape_aspect_ref(&self.model, &applies_to)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(AngularSizeId(self.model.angular_size_arena.push(
             AngularSize {
                 applies_to,
@@ -550,6 +663,11 @@ impl Ap242Author {
         for e0 in &datum_system {
             check_datum_system_or_reference_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(AngularityToleranceId(
             self.model
                 .angularity_tolerance_arena
@@ -574,6 +692,10 @@ impl Ap242Author {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
         check_curve_or_curve_set_ref(&self.model, &item)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(AnnotationCurveOccurrenceId(
             self.model
                 .annotation_curve_occurrence_arena
@@ -594,6 +716,10 @@ impl Ap242Author {
         }
         check_styled_item_target_ref(&self.model, &item)?;
         check_point_ref(&self.model, &fill_style_target)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(AnnotationFillAreaOccurrenceId(
             self.model
                 .annotation_fill_area_occurrence_arena
@@ -617,6 +743,10 @@ impl Ap242Author {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
         check_styled_item_target_ref(&self.model, &item)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(AnnotationOccurrenceId(
             self.model
                 .annotation_occurrence_arena
@@ -634,6 +764,14 @@ impl Ap242Author {
     ) -> Result<AnnotationOccurrenceAssociativityId, AuthorError> {
         check_annotation_occurrence_ref(&self.model, &relating_annotation_occurrence)?;
         check_annotation_occurrence_ref(&self.model, &related_annotation_occurrence)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = {
+            let v = description;
+            self.text(&v)
+        };
         Ok(AnnotationOccurrenceAssociativityId(
             self.model.annotation_occurrence_associativity_arena.push(
                 AnnotationOccurrenceAssociativity {
@@ -656,6 +794,14 @@ impl Ap242Author {
     ) -> Result<AnnotationOccurrenceRelationshipId, AuthorError> {
         check_annotation_occurrence_ref(&self.model, &relating_annotation_occurrence)?;
         check_annotation_occurrence_ref(&self.model, &related_annotation_occurrence)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = {
+            let v = description;
+            self.text(&v)
+        };
         Ok(AnnotationOccurrenceRelationshipId(
             self.model.annotation_occurrence_relationship_arena.push(
                 AnnotationOccurrenceRelationship {
@@ -681,6 +827,10 @@ impl Ap242Author {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
         check_styled_item_target_ref(&self.model, &item)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(AnnotationPlaceholderOccurrenceId(
             self.model.annotation_placeholder_occurrence_arena.push(
                 AnnotationPlaceholderOccurrence {
@@ -722,6 +872,10 @@ impl Ap242Author {
                 check_annotation_plane_element_ref(&self.model, e0)?;
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(AnnotationPlaneId(self.model.annotation_plane_arena.push(
             AnnotationPlane {
                 name,
@@ -741,6 +895,10 @@ impl Ap242Author {
     ) -> Result<AnnotationSymbolId, AuthorError> {
         check_representation_map_ref(&self.model, &mapping_source)?;
         check_representation_item_ref(&self.model, &mapping_target)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(AnnotationSymbolId(self.model.annotation_symbol_arena.push(
             AnnotationSymbol {
                 name,
@@ -761,6 +919,10 @@ impl Ap242Author {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
         check_annotation_symbol_occurrence_item_ref(&self.model, &item)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(AnnotationSymbolOccurrenceId(
             self.model
                 .annotation_symbol_occurrence_arena
@@ -777,6 +939,10 @@ impl Ap242Author {
     ) -> Result<AnnotationTextId, AuthorError> {
         check_representation_map_ref(&self.model, &mapping_source)?;
         check_axis2_placement_ref(&self.model, &mapping_target)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(AnnotationTextId(self.model.annotation_text_arena.push(
             AnnotationText {
                 name,
@@ -796,6 +962,14 @@ impl Ap242Author {
     ) -> Result<AnnotationTextCharacterId, AuthorError> {
         check_representation_map_ref(&self.model, &mapping_source)?;
         check_axis2_placement_ref(&self.model, &mapping_target)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let alignment = {
+            let v = alignment;
+            self.text(&v)
+        };
         Ok(AnnotationTextCharacterId(
             self.model
                 .annotation_text_character_arena
@@ -819,6 +993,10 @@ impl Ap242Author {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
         check_annotation_text_occurrence_item_ref(&self.model, &item)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(AnnotationTextOccurrenceId(
             self.model
                 .annotation_text_occurrence_arena
@@ -831,6 +1009,10 @@ impl Ap242Author {
         &mut self,
         application: String,
     ) -> Result<ApplicationContextId, AuthorError> {
+        let application = {
+            let v = application;
+            self.text(&v)
+        };
         Ok(ApplicationContextId(
             self.model
                 .application_context_arena
@@ -845,6 +1027,10 @@ impl Ap242Author {
         frame_of_reference: ApplicationContextRef,
     ) -> Result<ApplicationContextElementId, AuthorError> {
         check_application_context_ref(&self.model, &frame_of_reference)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ApplicationContextElementId(
             self.model
                 .application_context_element_arena
@@ -864,6 +1050,14 @@ impl Ap242Author {
         application: ApplicationContextRef,
     ) -> Result<ApplicationProtocolDefinitionId, AuthorError> {
         check_application_context_ref(&self.model, &application)?;
+        let status = {
+            let v = status;
+            self.text(&v)
+        };
+        let application_interpreted_model_schema_name = {
+            let v = application_interpreted_model_schema_name;
+            self.text(&v)
+        };
         Ok(ApplicationProtocolDefinitionId(
             self.model
                 .application_protocol_definition_arena
@@ -966,6 +1160,10 @@ impl Ap242Author {
         for e0 in &items {
             check_document_reference_item_ref(&self.model, e0)?;
         }
+        let source = {
+            let v = source;
+            self.text(&v)
+        };
         Ok(AppliedDocumentReferenceId(
             self.model
                 .applied_document_reference_arena
@@ -1002,6 +1200,10 @@ impl Ap242Author {
         for e0 in &items {
             check_external_identification_item_ref(&self.model, e0)?;
         }
+        let assigned_id = {
+            let v = assigned_id;
+            self.text(&v)
+        };
         Ok(AppliedExternalIdentificationAssignmentId(
             self.model
                 .applied_external_identification_assignment_arena
@@ -1147,6 +1349,10 @@ impl Ap242Author {
         level: String,
     ) -> Result<ApprovalId, AuthorError> {
         check_approval_status_ref(&self.model, &status)?;
+        let level = {
+            let v = level;
+            self.text(&v)
+        };
         Ok(ApprovalId(
             self.model.approval_arena.push(Approval { status, level }),
         ))
@@ -1204,6 +1410,10 @@ impl Ap242Author {
 
     /// `APPROVAL_ROLE` — strict AP242 constructor.
     pub fn add_approval_role(&mut self, role: String) -> Result<ApprovalRoleId, AuthorError> {
+        let role = {
+            let v = role;
+            self.text(&v)
+        };
         Ok(ApprovalRoleId(
             self.model.approval_role_arena.push(ApprovalRole { role }),
         ))
@@ -1211,6 +1421,10 @@ impl Ap242Author {
 
     /// `APPROVAL_STATUS` — strict AP242 constructor.
     pub fn add_approval_status(&mut self, name: String) -> Result<ApprovalStatusId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ApprovalStatusId(
             self.model
                 .approval_status_arena
@@ -1268,6 +1482,11 @@ impl Ap242Author {
     ) -> Result<AscribableStateId, AuthorError> {
         check_state_type_ref(&self.model, &pertaining_state_type)?;
         check_state_observed_ref(&self.model, &ascribed_state_observed)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(AscribableStateId(self.model.ascribable_state_arena.push(
             AscribableState {
                 name,
@@ -1288,6 +1507,11 @@ impl Ap242Author {
     ) -> Result<AscribableStateRelationshipId, AuthorError> {
         check_ascribable_state_ref(&self.model, &relating_ascribable_state)?;
         check_ascribable_state_ref(&self.model, &related_ascribable_state)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(AscribableStateRelationshipId(
             self.model
                 .ascribable_state_relationship_arena
@@ -1312,6 +1536,16 @@ impl Ap242Author {
     ) -> Result<AssemblyComponentUsageId, AuthorError> {
         check_product_definition_or_reference_ref(&self.model, &relating_product_definition)?;
         check_product_definition_or_reference_ref(&self.model, &related_product_definition)?;
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
+        let reference_designator = reference_designator.map(|v| self.text(&v));
         Ok(AssemblyComponentUsageId(
             self.model
                 .assembly_component_usage_arena
@@ -1337,6 +1571,10 @@ impl Ap242Author {
         if let Some(x) = &axis {
             check_direction_ref(&self.model, x)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(Axis1PlacementId(self.model.axis1_placement_arena.push(
             Axis1Placement {
                 name,
@@ -1357,6 +1595,10 @@ impl Ap242Author {
         if let Some(x) = &ref_direction {
             check_direction_ref(&self.model, x)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(Axis2Placement2dId(self.model.axis2_placement2d_arena.push(
             Axis2Placement2d {
                 name,
@@ -1381,6 +1623,10 @@ impl Ap242Author {
         if let Some(x) = &ref_direction {
             check_direction_ref(&self.model, x)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(Axis2Placement3dId(self.model.axis2_placement3d_arena.push(
             Axis2Placement3d {
                 name,
@@ -1416,6 +1662,10 @@ impl Ap242Author {
         for e0 in &control_points_list {
             check_cartesian_point_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(BSplineCurveId(self.model.b_spline_curve_arena.push(
             BSplineCurve {
                 name,
@@ -1480,6 +1730,10 @@ impl Ap242Author {
                 });
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(BSplineCurveWithKnotsId(
             self.model
                 .b_spline_curve_with_knots_arena
@@ -1526,6 +1780,10 @@ impl Ap242Author {
                 check_cartesian_point_ref(&self.model, e1)?;
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(BSplineSurfaceId(self.model.b_spline_surface_arena.push(
             BSplineSurface {
                 name,
@@ -1622,6 +1880,10 @@ impl Ap242Author {
                 });
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(BSplineSurfaceWithKnotsId(
             self.model
                 .b_spline_surface_with_knots_arena
@@ -1668,6 +1930,10 @@ impl Ap242Author {
         for e0 in &control_points_list {
             check_cartesian_point_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(BezierCurveId(self.model.bezier_curve_arena.push(
             BezierCurve {
                 name,
@@ -1709,6 +1975,10 @@ impl Ap242Author {
                 check_cartesian_point_ref(&self.model, e1)?;
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(BezierSurfaceId(self.model.bezier_surface_arena.push(
             BezierSurface {
                 name,
@@ -1725,6 +1995,10 @@ impl Ap242Author {
 
     /// `BOUNDED_CURVE` — strict AP242 constructor.
     pub fn add_bounded_curve(&mut self, name: String) -> Result<BoundedCurveId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(BoundedCurveId(
             self.model.bounded_curve_arena.push(BoundedCurve { name }),
         ))
@@ -1739,6 +2013,10 @@ impl Ap242Author {
     ) -> Result<BoundedPcurveId, AuthorError> {
         check_surface_ref(&self.model, &basis_surface)?;
         check_definitional_representation_ref(&self.model, &reference_to_curve)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(BoundedPcurveId(self.model.bounded_pcurve_arena.push(
             BoundedPcurve {
                 name,
@@ -1750,6 +2028,10 @@ impl Ap242Author {
 
     /// `BOUNDED_SURFACE` — strict AP242 constructor.
     pub fn add_bounded_surface(&mut self, name: String) -> Result<BoundedSurfaceId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(BoundedSurfaceId(
             self.model
                 .bounded_surface_arena
@@ -1781,6 +2063,10 @@ impl Ap242Author {
         for e0 in &associated_geometry {
             check_pcurve_or_surface_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(BoundedSurfaceCurveId(
             self.model
                 .bounded_surface_curve_arena
@@ -1816,6 +2102,10 @@ impl Ap242Author {
         for e0 in &voids {
             check_oriented_closed_shell_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(BrepWithVoidsId(
             self.model
                 .brep_with_voids_arena
@@ -1848,6 +2138,10 @@ impl Ap242Author {
     ) -> Result<CameraImageId, AuthorError> {
         check_representation_map_ref(&self.model, &mapping_source)?;
         check_representation_item_ref(&self.model, &mapping_target)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(CameraImageId(self.model.camera_image_arena.push(
             CameraImage {
                 name,
@@ -1866,6 +2160,10 @@ impl Ap242Author {
     ) -> Result<CameraImage3dWithScaleId, AuthorError> {
         check_representation_map_ref(&self.model, &mapping_source)?;
         check_representation_item_ref(&self.model, &mapping_target)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(CameraImage3dWithScaleId(
             self.model
                 .camera_image3d_with_scale_arena
@@ -1879,6 +2177,10 @@ impl Ap242Author {
 
     /// `CAMERA_MODEL` — strict AP242 constructor.
     pub fn add_camera_model(&mut self, name: String) -> Result<CameraModelId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(CameraModelId(
             self.model.camera_model_arena.push(CameraModel { name }),
         ))
@@ -1893,6 +2195,10 @@ impl Ap242Author {
     ) -> Result<CameraModelD3Id, AuthorError> {
         check_axis2_placement3d_ref(&self.model, &view_reference_system)?;
         check_view_volume_ref(&self.model, &perspective_of_volume)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(CameraModelD3Id(self.model.camera_model_d3_arena.push(
             CameraModelD3 {
                 name,
@@ -1927,6 +2233,10 @@ impl Ap242Author {
         for e0 in &shape_clipping {
             check_camera_model_d3_multi_clipping_intersection_select_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(CameraModelD3MultiClippingId(
             self.model
                 .camera_model_d3_multi_clipping_arena
@@ -1949,6 +2259,10 @@ impl Ap242Author {
     ) -> Result<CameraModelD3WithHlhsrId, AuthorError> {
         check_axis2_placement3d_ref(&self.model, &view_reference_system)?;
         check_view_volume_ref(&self.model, &perspective_of_volume)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(CameraModelD3WithHlhsrId(
             self.model
                 .camera_model_d3_with_hlhsr_arena
@@ -1995,6 +2309,10 @@ impl Ap242Author {
                 });
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(CartesianPointId(
             self.model
                 .cartesian_point_arena
@@ -2143,6 +2461,11 @@ impl Ap242Author {
         product_definitional: Logical,
     ) -> Result<CentreOfSymmetryId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(CentreOfSymmetryId(
             self.model.centre_of_symmetry_arena.push(CentreOfSymmetry {
                 name,
@@ -2161,6 +2484,14 @@ impl Ap242Author {
         kind: CertificationTypeRef,
     ) -> Result<CertificationId, AuthorError> {
         check_certification_type_ref(&self.model, &kind)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let purpose = {
+            let v = purpose;
+            self.text(&v)
+        };
         Ok(CertificationId(self.model.certification_arena.push(
             Certification {
                 name,
@@ -2175,6 +2506,10 @@ impl Ap242Author {
         &mut self,
         description: String,
     ) -> Result<CertificationTypeId, AuthorError> {
+        let description = {
+            let v = description;
+            self.text(&v)
+        };
         Ok(CertificationTypeId(
             self.model
                 .certification_type_arena
@@ -2276,6 +2611,11 @@ impl Ap242Author {
     ) -> Result<CharacterizedItemWithinRepresentationId, AuthorError> {
         check_representation_item_ref(&self.model, &item)?;
         check_representation_ref(&self.model, &rep)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(CharacterizedItemWithinRepresentationId(
             self.model
                 .characterized_item_within_representation_arena
@@ -2294,6 +2634,8 @@ impl Ap242Author {
         name: Option<String>,
         description: Option<String>,
     ) -> Result<CharacterizedObjectId, AuthorError> {
+        let name = name.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(&v));
         Ok(CharacterizedObjectId(
             self.model
                 .characterized_object_arena
@@ -2341,6 +2683,10 @@ impl Ap242Author {
         radius: f64,
     ) -> Result<CircleId, AuthorError> {
         check_axis2_placement_ref(&self.model, &position)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(CircleId(self.model.circle_arena.push(Circle {
             name,
             position,
@@ -2376,6 +2722,11 @@ impl Ap242Author {
         for e0 in &datum_system {
             check_datum_system_or_reference_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(CircularRunoutToleranceId(
             self.model
                 .circular_runout_tolerance_arena
@@ -2410,6 +2761,10 @@ impl Ap242Author {
         for e0 in &cfs_faces {
             check_face_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ClosedShellId(
             self.model
                 .closed_shell_arena
@@ -2445,6 +2800,11 @@ impl Ap242Author {
         for e0 in &datum_system {
             check_datum_system_or_reference_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(CoaxialityToleranceId(
             self.model
                 .coaxiality_tolerance_arena
@@ -2471,6 +2831,10 @@ impl Ap242Author {
         green: f64,
         blue: f64,
     ) -> Result<ColourRgbId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ColourRgbId(self.model.colour_rgb_arena.push(ColourRgb {
             name,
             red,
@@ -2484,6 +2848,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<ColourSpecificationId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ColourSpecificationId(
             self.model
                 .colour_specification_arena
@@ -2501,6 +2869,15 @@ impl Ap242Author {
         identification: String,
     ) -> Result<CommonDatumId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
+        let identification = {
+            let v = identification;
+            self.text(&v)
+        };
         Ok(CommonDatumId(self.model.common_datum_arena.push(
             CommonDatum {
                 name,
@@ -2542,6 +2919,10 @@ impl Ap242Author {
         if let Some(x) = &geometric_link {
             check_face_or_surface_ref(&self.model, x)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ComplexTriangulatedFaceId(
             self.model
                 .complex_triangulated_face_arena
@@ -2584,6 +2965,10 @@ impl Ap242Author {
                 }
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ComplexTriangulatedSurfaceSetId(
             self.model
                 .complex_triangulated_surface_set_arena
@@ -2621,6 +3006,10 @@ impl Ap242Author {
         for e0 in &segments {
             check_composite_curve_segment_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(CompositeCurveId(self.model.composite_curve_arena.push(
             CompositeCurve {
                 name,
@@ -2658,6 +3047,11 @@ impl Ap242Author {
         product_definitional: Logical,
     ) -> Result<CompositeGroupShapeAspectId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(CompositeGroupShapeAspectId(
             self.model
                 .composite_group_shape_aspect_arena
@@ -2679,6 +3073,11 @@ impl Ap242Author {
         product_definitional: Logical,
     ) -> Result<CompositeShapeAspectId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(CompositeShapeAspectId(
             self.model
                 .composite_shape_aspect_arena
@@ -2712,6 +3111,10 @@ impl Ap242Author {
         for e0 in &collected_text {
             check_text_or_character_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(CompositeTextId(self.model.composite_text_arena.push(
             CompositeText {
                 name,
@@ -2727,6 +3130,10 @@ impl Ap242Author {
         item_element: CompoundItemDefinitionRef,
     ) -> Result<CompoundRepresentationItemId, AuthorError> {
         check_compound_item_definition_ref(&self.model, &item_element)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(CompoundRepresentationItemId(
             self.model
                 .compound_representation_item_arena
@@ -2762,6 +3169,11 @@ impl Ap242Author {
         for e0 in &datum_system {
             check_datum_system_or_reference_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ConcentricityToleranceId(
             self.model
                 .concentricity_tolerance_arena
@@ -2802,6 +3214,10 @@ impl Ap242Author {
     ) -> Result<ConfigurationEffectivityId, AuthorError> {
         check_product_definition_relationship_ref(&self.model, &usage)?;
         check_configuration_design_ref(&self.model, &configuration)?;
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
         Ok(ConfigurationEffectivityId(
             self.model
                 .configuration_effectivity_arena
@@ -2823,6 +3239,16 @@ impl Ap242Author {
         purpose: Option<String>,
     ) -> Result<ConfigurationItemId, AuthorError> {
         check_product_concept_ref(&self.model, &item_concept)?;
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
+        let purpose = purpose.map(|v| self.text(&v));
         Ok(ConfigurationItemId(
             self.model.configuration_item_arena.push(ConfigurationItem {
                 id,
@@ -2841,6 +3267,10 @@ impl Ap242Author {
         position: Axis2PlacementRef,
     ) -> Result<ConicId, AuthorError> {
         check_axis2_placement_ref(&self.model, &position)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ConicId(
             self.model.conic_arena.push(Conic { name, position }),
         ))
@@ -2855,6 +3285,10 @@ impl Ap242Author {
         semi_angle: f64,
     ) -> Result<ConicalSurfaceId, AuthorError> {
         check_axis2_placement3d_ref(&self.model, &position)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ConicalSurfaceId(self.model.conical_surface_arena.push(
             ConicalSurface {
                 name,
@@ -2887,6 +3321,10 @@ impl Ap242Author {
                 check_face_ref(&self.model, e0)?;
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ConnectedFaceSetId(
             self.model
                 .connected_face_set_arena
@@ -2917,6 +3355,10 @@ impl Ap242Author {
             check_representation_item_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ConstructiveGeometryRepresentationId(
             self.model.constructive_geometry_representation_arena.push(
                 ConstructiveGeometryRepresentation {
@@ -2941,6 +3383,11 @@ impl Ap242Author {
             &rep_1,
         )?;
         check_representation_or_representation_reference_ref(&self.model, &rep_2)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ConstructiveGeometryRepresentationRelationshipId(
             self.model
                 .constructive_geometry_representation_relationship_arena
@@ -2982,6 +3429,10 @@ impl Ap242Author {
         for e0 in &style_context {
             check_style_context_select_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ContextDependentOverRidingStyledItemId(
             self.model
                 .context_dependent_over_riding_styled_item_arena
@@ -3020,6 +3471,10 @@ impl Ap242Author {
         name: String,
     ) -> Result<ContextDependentUnitId, AuthorError> {
         check_dimensional_exponents_ref(&self.model, &dimensions)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ContextDependentUnitId(
             self.model
                 .context_dependent_unit_arena
@@ -3036,6 +3491,11 @@ impl Ap242Author {
         product_definitional: Logical,
     ) -> Result<ContinuousShapeAspectId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ContinuousShapeAspectId(
             self.model
                 .continuous_shape_aspect_arena
@@ -3056,6 +3516,14 @@ impl Ap242Author {
         kind: ContractTypeRef,
     ) -> Result<ContractId, AuthorError> {
         check_contract_type_ref(&self.model, &kind)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let purpose = {
+            let v = purpose;
+            self.text(&v)
+        };
         Ok(ContractId(self.model.contract_arena.push(Contract {
             name,
             purpose,
@@ -3068,6 +3536,10 @@ impl Ap242Author {
         &mut self,
         description: String,
     ) -> Result<ContractTypeId, AuthorError> {
+        let description = {
+            let v = description;
+            self.text(&v)
+        };
         Ok(ContractTypeId(
             self.model
                 .contract_type_arena
@@ -3084,6 +3556,10 @@ impl Ap242Author {
     ) -> Result<ConversionBasedUnitId, AuthorError> {
         check_dimensional_exponents_ref(&self.model, &dimensions)?;
         check_measure_with_unit_ref(&self.model, &conversion_factor)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ConversionBasedUnitId(
             self.model
                 .conversion_based_unit_arena
@@ -3146,6 +3622,10 @@ impl Ap242Author {
                 }
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(CoordinatesListId(self.model.coordinates_list_arena.push(
             CoordinatesList {
                 name,
@@ -3157,6 +3637,10 @@ impl Ap242Author {
 
     /// `CURVE` — strict AP242 constructor.
     pub fn add_curve(&mut self, name: String) -> Result<CurveId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(CurveId(self.model.curve_arena.push(Curve { name })))
     }
 
@@ -3177,6 +3661,10 @@ impl Ap242Author {
         if let Some(x) = &curve_colour {
             check_colour_ref(&self.model, x)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(CurveStyleId(self.model.curve_style_arena.push(
             CurveStyle {
                 name,
@@ -3208,6 +3696,10 @@ impl Ap242Author {
         for e0 in &pattern_list {
             check_curve_style_font_pattern_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(CurveStyleFontId(
             self.model
                 .curve_style_font_arena
@@ -3223,6 +3715,10 @@ impl Ap242Author {
         curve_font_scaling: f64,
     ) -> Result<CurveStyleFontAndScalingId, AuthorError> {
         check_curve_style_font_select_ref(&self.model, &curve_font)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(CurveStyleFontAndScalingId(
             self.model
                 .curve_style_font_and_scaling_arena
@@ -3275,6 +3771,10 @@ impl Ap242Author {
         radius: f64,
     ) -> Result<CylindricalSurfaceId, AuthorError> {
         check_axis2_placement3d_ref(&self.model, &position)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(CylindricalSurfaceId(
             self.model
                 .cylindrical_surface_arena
@@ -3298,6 +3798,11 @@ impl Ap242Author {
             check_length_measure_with_unit_ref(&self.model, x)?;
         }
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(CylindricityToleranceId(
             self.model
                 .cylindricity_tolerance_arena
@@ -3351,6 +3856,10 @@ impl Ap242Author {
 
     /// `DATE_ROLE` — strict AP242 constructor.
     pub fn add_date_role(&mut self, name: String) -> Result<DateRoleId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(DateRoleId(
             self.model.date_role_arena.push(DateRole { name }),
         ))
@@ -3358,6 +3867,10 @@ impl Ap242Author {
 
     /// `DATE_TIME_ROLE` — strict AP242 constructor.
     pub fn add_date_time_role(&mut self, name: String) -> Result<DateTimeRoleId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(DateTimeRoleId(
             self.model.date_time_role_arena.push(DateTimeRole { name }),
         ))
@@ -3373,6 +3886,15 @@ impl Ap242Author {
         identification: String,
     ) -> Result<DatumId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
+        let identification = {
+            let v = identification;
+            self.text(&v)
+        };
         Ok(DatumId(self.model.datum_arena.push(Datum {
             name,
             description,
@@ -3391,6 +3913,11 @@ impl Ap242Author {
         product_definitional: Logical,
     ) -> Result<DatumFeatureId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(DatumFeatureId(self.model.datum_feature_arena.push(
             DatumFeature {
                 name,
@@ -3444,6 +3971,11 @@ impl Ap242Author {
                 check_datum_reference_modifier_ref(&self.model, e0)?;
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(DatumReferenceCompartmentId(
             self.model
                 .datum_reference_compartment_arena
@@ -3486,6 +4018,11 @@ impl Ap242Author {
                 check_datum_reference_modifier_ref(&self.model, e0)?;
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(DatumReferenceElementId(
             self.model
                 .datum_reference_element_arena
@@ -3542,6 +4079,11 @@ impl Ap242Author {
         for e0 in &constituents {
             check_datum_reference_compartment_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(DatumSystemId(self.model.datum_system_arena.push(
             DatumSystem {
                 name,
@@ -3563,6 +4105,15 @@ impl Ap242Author {
         target_id: String,
     ) -> Result<DatumTargetId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
+        let target_id = {
+            let v = target_id;
+            self.text(&v)
+        };
         Ok(DatumTargetId(self.model.datum_target_arena.push(
             DatumTarget {
                 name,
@@ -3588,6 +4139,16 @@ impl Ap242Author {
         check_representation_item_ref(&self.model, &item)?;
         check_representation_ref(&self.model, &rep)?;
         check_product_definition_shape_ref(&self.model, &of_shape)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
+        let name_1 = {
+            let v = name_1;
+            self.text(&v)
+        };
+        let description_1 = description_1.map(|v| self.text(&v));
         Ok(DefaultModelGeometricViewId(
             self.model
                 .default_model_geometric_view_arena
@@ -3612,6 +4173,10 @@ impl Ap242Author {
     ) -> Result<DefinedCharacterGlyphId, AuthorError> {
         check_defined_glyph_select_ref(&self.model, &definition)?;
         check_axis2_placement_ref(&self.model, &placement)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(DefinedCharacterGlyphId(
             self.model
                 .defined_character_glyph_arena
@@ -3632,6 +4197,10 @@ impl Ap242Author {
     ) -> Result<DefinedSymbolId, AuthorError> {
         check_defined_symbol_select_ref(&self.model, &definition)?;
         check_symbol_target_ref(&self.model, &target)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(DefinedSymbolId(self.model.defined_symbol_arena.push(
             DefinedSymbol {
                 name,
@@ -3664,6 +4233,10 @@ impl Ap242Author {
             check_representation_item_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(DefinitionalRepresentationId(
             self.model
                 .definitional_representation_arena
@@ -3685,6 +4258,11 @@ impl Ap242Author {
     ) -> Result<DefinitionalRepresentationRelationshipId, AuthorError> {
         check_representation_or_representation_reference_ref(&self.model, &rep_1)?;
         check_representation_or_representation_reference_ref(&self.model, &rep_2)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(DefinitionalRepresentationRelationshipId(
             self.model
                 .definitional_representation_relationship_arena
@@ -3707,6 +4285,11 @@ impl Ap242Author {
     ) -> Result<DefinitionalRepresentationRelationshipWithSameContextId, AuthorError> {
         check_representation_or_representation_reference_ref(&self.model, &rep_1)?;
         check_representation_or_representation_reference_ref(&self.model, &rep_2)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(DefinitionalRepresentationRelationshipWithSameContextId(
             self.model
                 .definitional_representation_relationship_with_same_context_arena
@@ -3729,6 +4312,10 @@ impl Ap242Author {
         select_outer: bool,
     ) -> Result<DegenerateToroidalSurfaceId, AuthorError> {
         check_axis2_placement3d_ref(&self.model, &position)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(DegenerateToroidalSurfaceId(
             self.model
                 .degenerate_toroidal_surface_arena
@@ -3751,6 +4338,11 @@ impl Ap242Author {
         product_definitional: Logical,
     ) -> Result<DerivedShapeAspectId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(DerivedShapeAspectId(
             self.model
                 .derived_shape_aspect_arena
@@ -3809,6 +4401,10 @@ impl Ap242Author {
         described_item: DescriptionAttributeSelectRef,
     ) -> Result<DescriptionAttributeId, AuthorError> {
         check_description_attribute_select_ref(&self.model, &described_item)?;
+        let attribute_value = {
+            let v = attribute_value;
+            self.text(&v)
+        };
         Ok(DescriptionAttributeId(
             self.model
                 .description_attribute_arena
@@ -3825,6 +4421,14 @@ impl Ap242Author {
         name: String,
         description: String,
     ) -> Result<DescriptiveRepresentationItemId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = {
+            let v = description;
+            self.text(&v)
+        };
         Ok(DescriptiveRepresentationItemId(
             self.model
                 .descriptive_representation_item_arena
@@ -3840,6 +4444,14 @@ impl Ap242Author {
         life_cycle_stage: String,
     ) -> Result<DesignContextId, AuthorError> {
         check_application_context_ref(&self.model, &frame_of_reference)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let life_cycle_stage = {
+            let v = life_cycle_stage;
+            self.text(&v)
+        };
         Ok(DesignContextId(self.model.design_context_arena.push(
             DesignContext {
                 name,
@@ -3903,6 +4515,11 @@ impl Ap242Author {
     ) -> Result<DimensionalLocationId, AuthorError> {
         check_shape_aspect_ref(&self.model, &relating_shape_aspect)?;
         check_shape_aspect_ref(&self.model, &related_shape_aspect)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(DimensionalLocationId(
             self.model
                 .dimensional_location_arena
@@ -3927,6 +4544,11 @@ impl Ap242Author {
         check_shape_aspect_ref(&self.model, &relating_shape_aspect)?;
         check_shape_aspect_ref(&self.model, &related_shape_aspect)?;
         check_shape_aspect_ref(&self.model, &path)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(DimensionalLocationWithPathId(
             self.model
                 .dimensional_location_with_path_arena
@@ -3947,6 +4569,10 @@ impl Ap242Author {
         name: String,
     ) -> Result<DimensionalSizeId, AuthorError> {
         check_shape_aspect_ref(&self.model, &applies_to)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(DimensionalSizeId(
             self.model
                 .dimensional_size_arena
@@ -3966,6 +4592,15 @@ impl Ap242Author {
     ) -> Result<DimensionalSizeWithDatumFeatureId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
         check_shape_aspect_ref(&self.model, &applies_to)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
+        let name_1 = {
+            let v = name_1;
+            self.text(&v)
+        };
         Ok(DimensionalSizeWithDatumFeatureId(
             self.model.dimensional_size_with_datum_feature_arena.push(
                 DimensionalSizeWithDatumFeature {
@@ -3989,6 +4624,10 @@ impl Ap242Author {
     ) -> Result<DimensionalSizeWithPathId, AuthorError> {
         check_shape_aspect_ref(&self.model, &applies_to)?;
         check_shape_aspect_ref(&self.model, &path)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(DimensionalSizeWithPathId(
             self.model
                 .dimensional_size_with_path_arena
@@ -4010,6 +4649,11 @@ impl Ap242Author {
     ) -> Result<DirectedDimensionalLocationId, AuthorError> {
         check_shape_aspect_ref(&self.model, &relating_shape_aspect)?;
         check_shape_aspect_ref(&self.model, &related_shape_aspect)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(DirectedDimensionalLocationId(
             self.model
                 .directed_dimensional_location_arena
@@ -4040,6 +4684,10 @@ impl Ap242Author {
                 });
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(DirectionId(self.model.direction_arena.push(Direction {
             name,
             direction_ratios,
@@ -4055,6 +4703,15 @@ impl Ap242Author {
         kind: DocumentTypeRef,
     ) -> Result<DocumentId, AuthorError> {
         check_document_type_ref(&self.model, &kind)?;
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(DocumentId(self.model.document_arena.push(Document {
             id,
             name,
@@ -4074,6 +4731,20 @@ impl Ap242Author {
         description_1: Option<String>,
     ) -> Result<DocumentFileId, AuthorError> {
         check_document_type_ref(&self.model, &kind)?;
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
+        let name_1 = {
+            let v = name_1;
+            self.text(&v)
+        };
+        let description_1 = description_1.map(|v| self.text(&v));
         Ok(DocumentFileId(self.model.document_file_arena.push(
             DocumentFile {
                 id,
@@ -4096,6 +4767,11 @@ impl Ap242Author {
     ) -> Result<DocumentProductAssociationId, AuthorError> {
         check_document_ref(&self.model, &relating_document)?;
         check_product_or_formation_or_definition_ref(&self.model, &related_product)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(DocumentProductAssociationId(
             self.model
                 .document_product_association_arena
@@ -4118,6 +4794,11 @@ impl Ap242Author {
     ) -> Result<DocumentProductEquivalenceId, AuthorError> {
         check_document_ref(&self.model, &relating_document)?;
         check_product_or_formation_or_definition_ref(&self.model, &related_product)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(DocumentProductEquivalenceId(
             self.model
                 .document_product_equivalence_arena
@@ -4137,6 +4818,10 @@ impl Ap242Author {
         source: String,
     ) -> Result<DocumentReferenceId, AuthorError> {
         check_document_ref(&self.model, &assigned_document)?;
+        let source = {
+            let v = source;
+            self.text(&v)
+        };
         Ok(DocumentReferenceId(
             self.model.document_reference_arena.push(DocumentReference {
                 assigned_document,
@@ -4152,6 +4837,10 @@ impl Ap242Author {
         represented_document: DocumentRef,
     ) -> Result<DocumentRepresentationTypeId, AuthorError> {
         check_document_ref(&self.model, &represented_document)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(DocumentRepresentationTypeId(
             self.model
                 .document_representation_type_arena
@@ -4167,6 +4856,10 @@ impl Ap242Author {
         &mut self,
         product_data_type: String,
     ) -> Result<DocumentTypeId, AuthorError> {
+        let product_data_type = {
+            let v = product_data_type;
+            self.text(&v)
+        };
         Ok(DocumentTypeId(
             self.model
                 .document_type_arena
@@ -4185,6 +4878,10 @@ impl Ap242Author {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
         check_styled_item_target_ref(&self.model, &item)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(DraughtingAnnotationOccurrenceId(
             self.model
                 .draughting_annotation_occurrence_arena
@@ -4213,6 +4910,10 @@ impl Ap242Author {
         for e0 in &contents {
             check_draughting_callout_element_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(DraughtingCalloutId(
             self.model
                 .draughting_callout_arena
@@ -4230,6 +4931,14 @@ impl Ap242Author {
     ) -> Result<DraughtingCalloutRelationshipId, AuthorError> {
         check_draughting_callout_ref(&self.model, &relating_draughting_callout)?;
         check_draughting_callout_ref(&self.model, &related_draughting_callout)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = {
+            let v = description;
+            self.text(&v)
+        };
         Ok(DraughtingCalloutRelationshipId(
             self.model
                 .draughting_callout_relationship_arena
@@ -4265,6 +4974,10 @@ impl Ap242Author {
             check_representation_item_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(DraughtingModelId(self.model.draughting_model_arena.push(
             DraughtingModel {
                 name,
@@ -4286,6 +4999,11 @@ impl Ap242Author {
         check_draughting_model_item_definition_ref(&self.model, &definition)?;
         check_annotation_representation_select_ref(&self.model, &used_representation)?;
         check_draughting_model_item_association_select_ref(&self.model, &identified_item)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(DraughtingModelItemAssociationId(
             self.model.draughting_model_item_association_arena.push(
                 DraughtingModelItemAssociation {
@@ -4313,6 +5031,11 @@ impl Ap242Author {
         check_annotation_representation_select_ref(&self.model, &used_representation)?;
         check_draughting_model_item_association_select_ref(&self.model, &identified_item)?;
         check_annotation_placeholder_occurrence_ref(&self.model, &annotation_placeholder)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(DraughtingModelItemAssociationWithPlaceholderId(
             self.model
                 .draughting_model_item_association_with_placeholder_arena
@@ -4332,6 +5055,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<DraughtingPreDefinedColourId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(DraughtingPreDefinedColourId(
             self.model
                 .draughting_pre_defined_colour_arena
@@ -4344,6 +5071,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<DraughtingPreDefinedCurveFontId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(DraughtingPreDefinedCurveFontId(
             self.model
                 .draughting_pre_defined_curve_font_arena
@@ -4356,6 +5087,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<DraughtingPreDefinedTextFontId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(DraughtingPreDefinedTextFontId(
             self.model
                 .draughting_pre_defined_text_font_arena
@@ -4376,6 +5111,10 @@ impl Ap242Author {
         if let Some(x) = &edge_end {
             check_vertex_ref(&self.model, x)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(EdgeId(self.model.edge_arena.push(Edge {
             name,
             edge_start,
@@ -4395,6 +5134,10 @@ impl Ap242Author {
         check_vertex_ref(&self.model, &edge_start)?;
         check_vertex_ref(&self.model, &edge_end)?;
         check_curve_ref(&self.model, &edge_geometry)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(EdgeCurveId(self.model.edge_curve_arena.push(EdgeCurve {
             name,
             edge_start,
@@ -4425,6 +5168,10 @@ impl Ap242Author {
         for e0 in &edge_list {
             check_oriented_edge_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(EdgeLoopId(
             self.model
                 .edge_loop_arena
@@ -4434,6 +5181,10 @@ impl Ap242Author {
 
     /// `EFFECTIVITY` — strict AP242 constructor.
     pub fn add_effectivity(&mut self, id: String) -> Result<EffectivityId, AuthorError> {
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
         Ok(EffectivityId(
             self.model.effectivity_arena.push(Effectivity { id }),
         ))
@@ -4446,6 +5197,10 @@ impl Ap242Author {
         position: Axis2Placement3dRef,
     ) -> Result<ElementarySurfaceId, AuthorError> {
         check_axis2_placement3d_ref(&self.model, &position)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ElementarySurfaceId(
             self.model
                 .elementary_surface_arena
@@ -4462,6 +5217,10 @@ impl Ap242Author {
         semi_axis_2: f64,
     ) -> Result<EllipseId, AuthorError> {
         check_axis2_placement_ref(&self.model, &position)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(EllipseId(self.model.ellipse_arena.push(Ellipse {
             name,
             position,
@@ -4486,6 +5245,10 @@ impl Ap242Author {
     ) -> Result<ExternalIdentificationAssignmentId, AuthorError> {
         check_identification_role_ref(&self.model, &role)?;
         check_external_source_ref(&self.model, &source)?;
+        let assigned_id = {
+            let v = assigned_id;
+            self.text(&v)
+        };
         Ok(ExternalIdentificationAssignmentId(
             self.model.external_identification_assignment_arena.push(
                 ExternalIdentificationAssignment {
@@ -4545,6 +5308,10 @@ impl Ap242Author {
         name: String,
     ) -> Result<ExternallyDefinedHatchStyleId, AuthorError> {
         check_external_source_ref(&self.model, &source)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ExternallyDefinedHatchStyleId(
             self.model
                 .externally_defined_hatch_style_arena
@@ -4634,6 +5401,10 @@ impl Ap242Author {
         name: String,
     ) -> Result<ExternallyDefinedTileStyleId, AuthorError> {
         check_external_source_ref(&self.model, &source)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ExternallyDefinedTileStyleId(
             self.model
                 .externally_defined_tile_style_arena
@@ -4666,6 +5437,10 @@ impl Ap242Author {
         for e0 in &bounds {
             check_face_bound_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(FaceId(self.model.face_arena.push(Face { name, bounds })))
     }
 
@@ -4677,6 +5452,10 @@ impl Ap242Author {
         orientation: bool,
     ) -> Result<FaceBoundId, AuthorError> {
         check_loop_ref(&self.model, &bound)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(FaceBoundId(self.model.face_bound_arena.push(FaceBound {
             name,
             bound,
@@ -4692,6 +5471,10 @@ impl Ap242Author {
         orientation: bool,
     ) -> Result<FaceOuterBoundId, AuthorError> {
         check_loop_ref(&self.model, &bound)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(FaceOuterBoundId(self.model.face_outer_bound_arena.push(
             FaceOuterBound {
                 name,
@@ -4725,6 +5508,10 @@ impl Ap242Author {
             check_face_bound_ref(&self.model, e0)?;
         }
         check_surface_ref(&self.model, &face_geometry)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(FaceSurfaceId(self.model.face_surface_arena.push(
             FaceSurface {
                 name,
@@ -4745,6 +5532,11 @@ impl Ap242Author {
     ) -> Result<FeatureForDatumTargetRelationshipId, AuthorError> {
         check_shape_aspect_ref(&self.model, &relating_shape_aspect)?;
         check_shape_aspect_ref(&self.model, &related_shape_aspect)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(FeatureForDatumTargetRelationshipId(
             self.model.feature_for_datum_target_relationship_arena.push(
                 FeatureForDatumTargetRelationship {
@@ -4778,6 +5570,10 @@ impl Ap242Author {
         for e0 in &fill_styles {
             check_fill_style_select_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(FillAreaStyleId(
             self.model
                 .fill_area_style_arena
@@ -4792,6 +5588,10 @@ impl Ap242Author {
         fill_colour: ColourRef,
     ) -> Result<FillAreaStyleColourId, AuthorError> {
         check_colour_ref(&self.model, &fill_colour)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(FillAreaStyleColourId(
             self.model
                 .fill_area_style_colour_arena
@@ -4813,6 +5613,10 @@ impl Ap242Author {
         check_one_direction_repeat_factor_ref(&self.model, &start_of_next_hatch_line)?;
         check_cartesian_point_ref(&self.model, &point_of_reference_hatch_line)?;
         check_cartesian_point_ref(&self.model, &pattern_start)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(FillAreaStyleHatchingId(
             self.model
                 .fill_area_style_hatching_arena
@@ -4836,6 +5640,10 @@ impl Ap242Author {
     ) -> Result<FillAreaStyleTileColouredRegionId, AuthorError> {
         check_curve_or_annotation_curve_occurrence_ref(&self.model, &closed_curve)?;
         check_colour_ref(&self.model, &region_colour)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(FillAreaStyleTileColouredRegionId(
             self.model.fill_area_style_tile_coloured_region_arena.push(
                 FillAreaStyleTileColouredRegion {
@@ -4854,6 +5662,10 @@ impl Ap242Author {
         styled_curve: AnnotationCurveOccurrenceRef,
     ) -> Result<FillAreaStyleTileCurveWithStyleId, AuthorError> {
         check_annotation_curve_occurrence_ref(&self.model, &styled_curve)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(FillAreaStyleTileCurveWithStyleId(
             self.model
                 .fill_area_style_tile_curve_with_style_arena
@@ -4868,6 +5680,10 @@ impl Ap242Author {
         symbol: AnnotationSymbolOccurrenceRef,
     ) -> Result<FillAreaStyleTileSymbolWithStyleId, AuthorError> {
         check_annotation_symbol_occurrence_ref(&self.model, &symbol)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(FillAreaStyleTileSymbolWithStyleId(
             self.model
                 .fill_area_style_tile_symbol_with_style_arena
@@ -4899,6 +5715,10 @@ impl Ap242Author {
         for e0 in &tiles {
             check_fill_area_style_tile_shape_select_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(FillAreaStyleTilesId(
             self.model
                 .fill_area_style_tiles_arena
@@ -4923,6 +5743,11 @@ impl Ap242Author {
             check_length_measure_with_unit_ref(&self.model, x)?;
         }
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(FlatnessToleranceId(
             self.model.flatness_tolerance_arena.push(FlatnessTolerance {
                 name,
@@ -4946,6 +5771,11 @@ impl Ap242Author {
         name: String,
         description: Option<String>,
     ) -> Result<FunctionallyDefinedTransformationId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(FunctionallyDefinedTransformationId(
             self.model
                 .functionally_defined_transformation_arena
@@ -4981,6 +5811,11 @@ impl Ap242Author {
                 check_datum_reference_modifier_ref(&self.model, e0)?;
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(GeneralDatumReferenceId(
             self.model
                 .general_datum_reference_arena
@@ -5002,6 +5837,15 @@ impl Ap242Author {
         name: String,
         description: Option<String>,
     ) -> Result<GeneralPropertyId, AuthorError> {
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(GeneralPropertyId(self.model.general_property_arena.push(
             GeneralProperty {
                 id,
@@ -5021,6 +5865,11 @@ impl Ap242Author {
     ) -> Result<GeneralPropertyAssociationId, AuthorError> {
         check_general_property_ref(&self.model, &base_definition)?;
         check_derived_property_select_ref(&self.model, &derived_definition)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(GeneralPropertyAssociationId(
             self.model
                 .general_property_association_arena
@@ -5083,6 +5932,10 @@ impl Ap242Author {
         for e0 in &elements {
             check_geometric_set_select_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(GeometricCurveSetId(
             self.model
                 .geometric_curve_set_arena
@@ -5102,6 +5955,11 @@ impl Ap242Author {
         check_geometric_item_specific_usage_select_ref(&self.model, &definition)?;
         check_shape_model_ref(&self.model, &used_representation)?;
         check_geometric_model_item_ref(&self.model, &identified_item)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(GeometricItemSpecificUsageId(
             self.model
                 .geometric_item_specific_usage_arena
@@ -5122,6 +5980,14 @@ impl Ap242Author {
         context_type: String,
         coordinate_space_dimension: i64,
     ) -> Result<GeometricRepresentationContextId, AuthorError> {
+        let context_identifier = {
+            let v = context_identifier;
+            self.text(&v)
+        };
+        let context_type = {
+            let v = context_type;
+            self.text(&v)
+        };
         Ok(GeometricRepresentationContextId(
             self.model.geometric_representation_context_arena.push(
                 GeometricRepresentationContext {
@@ -5138,6 +6004,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<GeometricRepresentationItemId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(GeometricRepresentationItemId(
             self.model
                 .geometric_representation_item_arena
@@ -5166,6 +6036,10 @@ impl Ap242Author {
         for e0 in &elements {
             check_geometric_set_select_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(GeometricSetId(
             self.model
                 .geometric_set_arena
@@ -5185,6 +6059,11 @@ impl Ap242Author {
             check_length_measure_with_unit_ref(&self.model, x)?;
         }
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(GeometricToleranceId(
             self.model
                 .geometric_tolerance_arena
@@ -5207,6 +6086,14 @@ impl Ap242Author {
     ) -> Result<GeometricToleranceRelationshipId, AuthorError> {
         check_geometric_tolerance_ref(&self.model, &relating_geometric_tolerance)?;
         check_geometric_tolerance_ref(&self.model, &related_geometric_tolerance)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = {
+            let v = description;
+            self.text(&v)
+        };
         Ok(GeometricToleranceRelationshipId(
             self.model.geometric_tolerance_relationship_arena.push(
                 GeometricToleranceRelationship {
@@ -5247,6 +6134,11 @@ impl Ap242Author {
         for e0 in &datum_system {
             check_datum_system_or_reference_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(GeometricToleranceWithDatumReferenceId(
             self.model
                 .geometric_tolerance_with_datum_reference_arena
@@ -5279,6 +6171,11 @@ impl Ap242Author {
         if let Some(x) = &second_unit_size {
             check_length_or_plane_angle_measure_with_unit_select_ref(&self.model, x)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(GeometricToleranceWithDefinedAreaUnitId(
             self.model
                 .geometric_tolerance_with_defined_area_unit_arena
@@ -5308,6 +6205,11 @@ impl Ap242Author {
         }
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
         check_length_or_plane_angle_measure_with_unit_select_ref(&self.model, &unit_size)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(GeometricToleranceWithDefinedUnitId(
             self.model.geometric_tolerance_with_defined_unit_arena.push(
                 GeometricToleranceWithDefinedUnit {
@@ -5348,6 +6250,11 @@ impl Ap242Author {
             }
         }
         check_length_measure_with_unit_ref(&self.model, &maximum_upper_tolerance)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(GeometricToleranceWithMaximumToleranceId(
             self.model
                 .geometric_tolerance_with_maximum_tolerance_arena
@@ -5387,6 +6294,11 @@ impl Ap242Author {
                 });
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(GeometricToleranceWithModifiersId(
             self.model.geometric_tolerance_with_modifiers_arena.push(
                 GeometricToleranceWithModifiers {
@@ -5423,6 +6335,10 @@ impl Ap242Author {
             check_representation_item_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(GeometricallyBoundedSurfaceShapeRepresentationId(
             self.model
                 .geometrically_bounded_surface_shape_representation_arena
@@ -5457,6 +6373,10 @@ impl Ap242Author {
             check_representation_item_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(GeometricallyBoundedWireframeShapeRepresentationId(
             self.model
                 .geometrically_bounded_wireframe_shape_representation_arena
@@ -5490,6 +6410,14 @@ impl Ap242Author {
         for e0 in &uncertainty {
             check_uncertainty_measure_with_unit_ref(&self.model, e0)?;
         }
+        let context_identifier = {
+            let v = context_identifier;
+            self.text(&v)
+        };
+        let context_type = {
+            let v = context_type;
+            self.text(&v)
+        };
         Ok(GlobalUncertaintyAssignedContextId(
             self.model.global_uncertainty_assigned_context_arena.push(
                 GlobalUncertaintyAssignedContext {
@@ -5523,6 +6451,14 @@ impl Ap242Author {
         for e0 in &units {
             check_unit_ref(&self.model, e0)?;
         }
+        let context_identifier = {
+            let v = context_identifier;
+            self.text(&v)
+        };
+        let context_type = {
+            let v = context_type;
+            self.text(&v)
+        };
         Ok(GlobalUnitAssignedContextId(
             self.model
                 .global_unit_assigned_context_arena
@@ -5540,6 +6476,11 @@ impl Ap242Author {
         name: String,
         description: Option<String>,
     ) -> Result<GroupId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(GroupId(
             self.model.group_arena.push(Group { name, description }),
         ))
@@ -5567,6 +6508,10 @@ impl Ap242Author {
         semi_imag_axis: f64,
     ) -> Result<HyperbolaId, AuthorError> {
         check_axis2_placement_ref(&self.model, &position)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(HyperbolaId(self.model.hyperbola_arena.push(Hyperbola {
             name,
             position,
@@ -5582,6 +6527,10 @@ impl Ap242Author {
         identified_item: IdAttributeSelectRef,
     ) -> Result<IdAttributeId, AuthorError> {
         check_id_attribute_select_ref(&self.model, &identified_item)?;
+        let attribute_value = {
+            let v = attribute_value;
+            self.text(&v)
+        };
         Ok(IdAttributeId(self.model.id_attribute_arena.push(
             IdAttribute {
                 attribute_value,
@@ -5597,6 +6546,10 @@ impl Ap242Author {
         role: IdentificationRoleRef,
     ) -> Result<IdentificationAssignmentId, AuthorError> {
         check_identification_role_ref(&self.model, &role)?;
+        let assigned_id = {
+            let v = assigned_id;
+            self.text(&v)
+        };
         Ok(IdentificationAssignmentId(
             self.model
                 .identification_assignment_arena
@@ -5610,6 +6563,11 @@ impl Ap242Author {
         name: String,
         description: Option<String>,
     ) -> Result<IdentificationRoleId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(IdentificationRoleId(
             self.model
                 .identification_role_arena
@@ -5630,6 +6588,10 @@ impl Ap242Author {
         name: String,
         the_value: i64,
     ) -> Result<IntegerRepresentationItemId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(IntegerRepresentationItemId(
             self.model
                 .integer_representation_item_arena
@@ -5661,6 +6623,10 @@ impl Ap242Author {
         for e0 in &associated_geometry {
             check_pcurve_or_surface_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(IntersectionCurveId(
             self.model.intersection_curve_arena.push(IntersectionCurve {
                 name,
@@ -5708,6 +6674,11 @@ impl Ap242Author {
     ) -> Result<ItemDefinedTransformationId, AuthorError> {
         check_representation_item_ref(&self.model, &transform_item_1)?;
         check_representation_item_ref(&self.model, &transform_item_2)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ItemDefinedTransformationId(
             self.model
                 .item_defined_transformation_arena
@@ -5732,6 +6703,11 @@ impl Ap242Author {
         check_item_identified_representation_usage_definition_ref(&self.model, &definition)?;
         check_representation_ref(&self.model, &used_representation)?;
         check_item_identified_representation_usage_select_ref(&self.model, &identified_item)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ItemIdentifiedRepresentationUsageId(
             self.model.item_identified_representation_usage_arena.push(
                 ItemIdentifiedRepresentationUsage {
@@ -5756,6 +6732,10 @@ impl Ap242Author {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
         check_curve_or_curve_set_ref(&self.model, &item)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(LeaderCurveId(
             self.model
                 .leader_curve_arena
@@ -5784,6 +6764,10 @@ impl Ap242Author {
         for e0 in &contents {
             check_draughting_callout_element_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(LeaderDirectedCalloutId(
             self.model
                 .leader_directed_callout_arena
@@ -5804,6 +6788,10 @@ impl Ap242Author {
         }
         check_annotation_symbol_occurrence_item_ref(&self.model, &item)?;
         check_annotation_curve_occurrence_ref(&self.model, &annotated_curve)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(LeaderTerminatorId(self.model.leader_terminator_arena.push(
             LeaderTerminator {
                 name,
@@ -5850,6 +6838,22 @@ impl Ap242Author {
         grade: String,
         source: String,
     ) -> Result<LimitsAndFitsId, AuthorError> {
+        let form_variance = {
+            let v = form_variance;
+            self.text(&v)
+        };
+        let zone_variance = {
+            let v = zone_variance;
+            self.text(&v)
+        };
+        let grade = {
+            let v = grade;
+            self.text(&v)
+        };
+        let source = {
+            let v = source;
+            self.text(&v)
+        };
         Ok(LimitsAndFitsId(self.model.limits_and_fits_arena.push(
             LimitsAndFits {
                 form_variance,
@@ -5869,6 +6873,10 @@ impl Ap242Author {
     ) -> Result<LineId, AuthorError> {
         check_cartesian_point_ref(&self.model, &pnt)?;
         check_vector_ref(&self.model, &dir)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(LineId(self.model.line_arena.push(Line { name, pnt, dir })))
     }
 
@@ -5884,6 +6892,11 @@ impl Ap242Author {
             check_length_measure_with_unit_ref(&self.model, x)?;
         }
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(LineProfileToleranceId(
             self.model
                 .line_profile_tolerance_arena
@@ -5924,6 +6937,10 @@ impl Ap242Author {
 
     /// `LOOP` — strict AP242 constructor.
     pub fn add_loop(&mut self, name: String) -> Result<LoopId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(LoopId(self.model.loop_arena.push(Loop { name })))
     }
 
@@ -5942,6 +6959,19 @@ impl Ap242Author {
         check_product_definition_or_reference_ref(&self.model, &relating_product_definition)?;
         check_product_definition_or_reference_ref(&self.model, &related_product_definition)?;
         check_measure_with_unit_ref(&self.model, &quantity)?;
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
+        let ranking_rationale = {
+            let v = ranking_rationale;
+            self.text(&v)
+        };
         Ok(MakeFromUsageOptionId(
             self.model
                 .make_from_usage_option_arena
@@ -5965,6 +6995,10 @@ impl Ap242Author {
         outer: ClosedShellRef,
     ) -> Result<ManifoldSolidBrepId, AuthorError> {
         check_closed_shell_ref(&self.model, &outer)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ManifoldSolidBrepId(
             self.model
                 .manifold_solid_brep_arena
@@ -5995,6 +7029,10 @@ impl Ap242Author {
             check_representation_item_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ManifoldSurfaceShapeRepresentationId(
             self.model.manifold_surface_shape_representation_arena.push(
                 ManifoldSurfaceShapeRepresentation {
@@ -6015,6 +7053,10 @@ impl Ap242Author {
     ) -> Result<MappedItemId, AuthorError> {
         check_representation_map_ref(&self.model, &mapping_source)?;
         check_representation_item_ref(&self.model, &mapping_target)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(MappedItemId(self.model.mapped_item_arena.push(
             MappedItem {
                 name,
@@ -6076,6 +7118,14 @@ impl Ap242Author {
         for e0 in &qualifiers {
             check_value_qualifier_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = {
+            let v = description;
+            self.text(&v)
+        };
         Ok(MeasureQualificationId(
             self.model
                 .measure_qualification_arena
@@ -6096,6 +7146,10 @@ impl Ap242Author {
         unit_component: UnitRef,
     ) -> Result<MeasureRepresentationItemId, AuthorError> {
         check_unit_ref(&self.model, &unit_component)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(MeasureRepresentationItemId(
             self.model
                 .measure_representation_item_arena
@@ -6130,6 +7184,14 @@ impl Ap242Author {
         discipline_type: String,
     ) -> Result<MechanicalContextId, AuthorError> {
         check_application_context_ref(&self.model, &frame_of_reference)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let discipline_type = {
+            let v = discipline_type;
+            self.text(&v)
+        };
         Ok(MechanicalContextId(
             self.model.mechanical_context_arena.push(MechanicalContext {
                 name,
@@ -6149,6 +7211,11 @@ impl Ap242Author {
     ) -> Result<MechanicalDesignAndDraughtingRelationshipId, AuthorError> {
         check_mechanical_design_and_draughting_relationship_select_ref(&self.model, &rep_1)?;
         check_mechanical_design_and_draughting_relationship_select_ref(&self.model, &rep_2)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(MechanicalDesignAndDraughtingRelationshipId(
             self.model
                 .mechanical_design_and_draughting_relationship_arena
@@ -6184,6 +7251,10 @@ impl Ap242Author {
             check_representation_item_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(MechanicalDesignGeometricPresentationRepresentationId(
             self.model
                 .mechanical_design_geometric_presentation_representation_arena
@@ -6218,6 +7289,10 @@ impl Ap242Author {
             check_representation_item_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(MechanicalDesignPresentationRepresentationWithDraughtingId(
             self.model
                 .mechanical_design_presentation_representation_with_draughting_arena
@@ -6252,6 +7327,10 @@ impl Ap242Author {
             check_representation_item_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(MechanicalDesignShadedPresentationRepresentationId(
             self.model
                 .mechanical_design_shaded_presentation_representation_arena
@@ -6273,6 +7352,11 @@ impl Ap242Author {
     ) -> Result<ModelGeometricViewId, AuthorError> {
         check_representation_item_ref(&self.model, &item)?;
         check_representation_ref(&self.model, &rep)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ModelGeometricViewId(
             self.model
                 .model_geometric_view_arena
@@ -6298,6 +7382,11 @@ impl Ap242Author {
             check_length_measure_with_unit_ref(&self.model, x)?;
         }
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ModifiedGeometricToleranceId(
             self.model
                 .modified_geometric_tolerance_arena
@@ -6318,6 +7407,10 @@ impl Ap242Author {
         named_item: NameAttributeSelectRef,
     ) -> Result<NameAttributeId, AuthorError> {
         check_name_attribute_select_ref(&self.model, &named_item)?;
+        let attribute_value = {
+            let v = attribute_value;
+            self.text(&v)
+        };
         Ok(NameAttributeId(self.model.name_attribute_arena.push(
             NameAttribute {
                 attribute_value,
@@ -6351,6 +7444,16 @@ impl Ap242Author {
     ) -> Result<NextAssemblyUsageOccurrenceId, AuthorError> {
         check_product_definition_or_reference_ref(&self.model, &relating_product_definition)?;
         check_product_definition_or_reference_ref(&self.model, &related_product_definition)?;
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
+        let reference_designator = reference_designator.map(|v| self.text(&v));
         Ok(NextAssemblyUsageOccurrenceId(
             self.model
                 .next_assembly_usage_occurrence_arena
@@ -6380,6 +7483,11 @@ impl Ap242Author {
         name: String,
         description: Option<String>,
     ) -> Result<ObjectRoleId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ObjectRoleId(
             self.model
                 .object_role_arena
@@ -6396,6 +7504,10 @@ impl Ap242Author {
         self_intersect: Logical,
     ) -> Result<OffsetSurfaceId, AuthorError> {
         check_surface_ref(&self.model, &basis_surface)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(OffsetSurfaceId(self.model.offset_surface_arena.push(
             OffsetSurface {
                 name,
@@ -6413,6 +7525,10 @@ impl Ap242Author {
         repeat_factor: VectorRef,
     ) -> Result<OneDirectionRepeatFactorId, AuthorError> {
         check_vector_ref(&self.model, &repeat_factor)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(OneDirectionRepeatFactorId(
             self.model
                 .one_direction_repeat_factor_arena
@@ -6444,6 +7560,10 @@ impl Ap242Author {
         for e0 in &cfs_faces {
             check_face_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(OpenShellId(
             self.model
                 .open_shell_arena
@@ -6458,6 +7578,12 @@ impl Ap242Author {
         name: String,
         description: Option<String>,
     ) -> Result<OrganizationId, AuthorError> {
+        let id = id.map(|v| self.text(&v));
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(OrganizationId(self.model.organization_arena.push(
             Organization {
                 id,
@@ -6477,6 +7603,11 @@ impl Ap242Author {
     ) -> Result<OrganizationRelationshipId, AuthorError> {
         check_organization_ref(&self.model, &relating_organization)?;
         check_organization_ref(&self.model, &related_organization)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(OrganizationRelationshipId(
             self.model
                 .organization_relationship_arena
@@ -6494,6 +7625,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<OrganizationRoleId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(OrganizationRoleId(
             self.model
                 .organization_role_arena
@@ -6508,6 +7643,15 @@ impl Ap242Author {
         name: String,
         description: Option<String>,
     ) -> Result<OrganizationTypeId, AuthorError> {
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(OrganizationTypeId(self.model.organization_type_arena.push(
             OrganizationType {
                 id,
@@ -6524,6 +7668,15 @@ impl Ap242Author {
         name: String,
         description: Option<String>,
     ) -> Result<OrganizationTypeRoleId, AuthorError> {
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(OrganizationTypeRoleId(
             self.model
                 .organization_type_role_arena
@@ -6568,6 +7721,19 @@ impl Ap242Author {
         for e0 in &organizations {
             check_organization_ref(&self.model, e0)?;
         }
+        let internal_location = internal_location.map(|v| self.text(&v));
+        let street_number = street_number.map(|v| self.text(&v));
+        let street = street.map(|v| self.text(&v));
+        let postal_box = postal_box.map(|v| self.text(&v));
+        let town = town.map(|v| self.text(&v));
+        let region = region.map(|v| self.text(&v));
+        let postal_code = postal_code.map(|v| self.text(&v));
+        let country = country.map(|v| self.text(&v));
+        let facsimile_number = facsimile_number.map(|v| self.text(&v));
+        let telephone_number = telephone_number.map(|v| self.text(&v));
+        let electronic_mail_address = electronic_mail_address.map(|v| self.text(&v));
+        let telex_number = telex_number.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(&v));
         Ok(OrganizationalAddressId(
             self.model
                 .organizational_address_arena
@@ -6612,6 +7778,11 @@ impl Ap242Author {
         for e0 in &responsible_organizations {
             check_organization_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(OrganizationalProjectId(
             self.model
                 .organizational_project_arena
@@ -6633,6 +7804,11 @@ impl Ap242Author {
     ) -> Result<OrganizationalProjectRelationshipId, AuthorError> {
         check_organizational_project_ref(&self.model, &relating_organizational_project)?;
         check_organizational_project_ref(&self.model, &related_organizational_project)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(OrganizationalProjectRelationshipId(
             self.model.organizational_project_relationship_arena.push(
                 OrganizationalProjectRelationship {
@@ -6651,6 +7827,11 @@ impl Ap242Author {
         name: String,
         description: Option<String>,
     ) -> Result<OrganizationalProjectRoleId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(OrganizationalProjectRoleId(
             self.model
                 .organizational_project_role_arena
@@ -6666,6 +7847,10 @@ impl Ap242Author {
         orientation: bool,
     ) -> Result<OrientedClosedShellId, AuthorError> {
         check_closed_shell_ref(&self.model, &closed_shell_element)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(OrientedClosedShellId(
             self.model
                 .oriented_closed_shell_arena
@@ -6685,6 +7870,10 @@ impl Ap242Author {
         orientation: bool,
     ) -> Result<OrientedEdgeId, AuthorError> {
         check_edge_ref(&self.model, &edge_element)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(OrientedEdgeId(self.model.oriented_edge_arena.push(
             OrientedEdge {
                 name,
@@ -6707,6 +7896,10 @@ impl Ap242Author {
         }
         check_styled_item_target_ref(&self.model, &item)?;
         check_styled_item_ref(&self.model, &over_ridden_style)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(OverRidingStyledItemId(
             self.model
                 .over_riding_styled_item_arena
@@ -6747,6 +7940,11 @@ impl Ap242Author {
         for e0 in &datum_system {
             check_datum_system_or_reference_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ParallelismToleranceId(
             self.model
                 .parallelism_tolerance_arena
@@ -6766,6 +7964,14 @@ impl Ap242Author {
         context_identifier: String,
         context_type: String,
     ) -> Result<ParametricRepresentationContextId, AuthorError> {
+        let context_identifier = {
+            let v = context_identifier;
+            self.text(&v)
+        };
+        let context_type = {
+            let v = context_type;
+            self.text(&v)
+        };
         Ok(ParametricRepresentationContextId(
             self.model.parametric_representation_context_arena.push(
                 ParametricRepresentationContext {
@@ -6797,6 +8003,10 @@ impl Ap242Author {
         for e0 in &edge_list {
             check_oriented_edge_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PathId(self.model.path_arena.push(Path { name, edge_list })))
     }
 
@@ -6809,6 +8019,10 @@ impl Ap242Author {
     ) -> Result<PcurveId, AuthorError> {
         check_surface_ref(&self.model, &basis_surface)?;
         check_definitional_representation_ref(&self.model, &reference_to_curve)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PcurveId(self.model.pcurve_arena.push(Pcurve {
             name,
             basis_surface,
@@ -6844,6 +8058,11 @@ impl Ap242Author {
         for e0 in &datum_system {
             check_datum_system_or_reference_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(PerpendicularityToleranceId(
             self.model
                 .perpendicularity_tolerance_arena
@@ -6900,6 +8119,15 @@ impl Ap242Author {
                 });
             }
         }
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let last_name = last_name.map(|v| self.text(&v));
+        let first_name = first_name.map(|v| self.text(&v));
+        let middle_names = middle_names.map(|v| v.iter().map(|e| self.text(e)).collect());
+        let prefix_titles = prefix_titles.map(|v| v.iter().map(|e| self.text(e)).collect());
+        let suffix_titles = suffix_titles.map(|v| v.iter().map(|e| self.text(e)).collect());
         Ok(PersonId(self.model.person_arena.push(Person {
             id,
             last_name,
@@ -6978,6 +8206,20 @@ impl Ap242Author {
         for e0 in &people {
             check_person_ref(&self.model, e0)?;
         }
+        let internal_location = internal_location.map(|v| self.text(&v));
+        let street_number = street_number.map(|v| self.text(&v));
+        let street = street.map(|v| self.text(&v));
+        let postal_box = postal_box.map(|v| self.text(&v));
+        let town = town.map(|v| self.text(&v));
+        let region = region.map(|v| self.text(&v));
+        let postal_code = postal_code.map(|v| self.text(&v));
+        let country = country.map(|v| self.text(&v));
+        let facsimile_number = facsimile_number.map(|v| self.text(&v));
+        let telephone_number = telephone_number.map(|v| self.text(&v));
+        let electronic_mail_address = electronic_mail_address.map(|v| self.text(&v));
+        let telex_number = telex_number.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(&v));
+        let description_1 = description_1.map(|v| self.text(&v));
         Ok(PersonAndOrganizationAddressId(
             self.model
                 .person_and_organization_address_arena
@@ -7025,6 +8267,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<PersonAndOrganizationRoleId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PersonAndOrganizationRoleId(
             self.model
                 .person_and_organization_role_arena
@@ -7065,6 +8311,19 @@ impl Ap242Author {
         for e0 in &people {
             check_person_ref(&self.model, e0)?;
         }
+        let internal_location = internal_location.map(|v| self.text(&v));
+        let street_number = street_number.map(|v| self.text(&v));
+        let street = street.map(|v| self.text(&v));
+        let postal_box = postal_box.map(|v| self.text(&v));
+        let town = town.map(|v| self.text(&v));
+        let region = region.map(|v| self.text(&v));
+        let postal_code = postal_code.map(|v| self.text(&v));
+        let country = country.map(|v| self.text(&v));
+        let facsimile_number = facsimile_number.map(|v| self.text(&v));
+        let telephone_number = telephone_number.map(|v| self.text(&v));
+        let electronic_mail_address = electronic_mail_address.map(|v| self.text(&v));
+        let telex_number = telex_number.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(&v));
         Ok(PersonalAddressId(self.model.personal_address_arena.push(
             PersonalAddress {
                 internal_location,
@@ -7095,6 +8354,15 @@ impl Ap242Author {
         target_id: String,
     ) -> Result<PlacedDatumTargetFeatureId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
+        let target_id = {
+            let v = target_id;
+            self.text(&v)
+        };
         Ok(PlacedDatumTargetFeatureId(
             self.model
                 .placed_datum_target_feature_arena
@@ -7115,6 +8383,10 @@ impl Ap242Author {
         location: CartesianPointRef,
     ) -> Result<PlacementId, AuthorError> {
         check_cartesian_point_ref(&self.model, &location)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PlacementId(
             self.model
                 .placement_arena
@@ -7131,6 +8403,10 @@ impl Ap242Author {
         placement: Axis2PlacementRef,
     ) -> Result<PlanarBoxId, AuthorError> {
         check_axis2_placement_ref(&self.model, &placement)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PlanarBoxId(self.model.planar_box_arena.push(PlanarBox {
             name,
             size_in_x,
@@ -7146,6 +8422,10 @@ impl Ap242Author {
         size_in_x: f64,
         size_in_y: f64,
     ) -> Result<PlanarExtentId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PlanarExtentId(self.model.planar_extent_arena.push(
             PlanarExtent {
                 name,
@@ -7162,6 +8442,10 @@ impl Ap242Author {
         position: Axis2Placement3dRef,
     ) -> Result<PlaneId, AuthorError> {
         check_axis2_placement3d_ref(&self.model, &position)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PlaneId(
             self.model.plane_arena.push(Plane { name, position }),
         ))
@@ -7217,6 +8501,10 @@ impl Ap242Author {
 
     /// `POINT` — strict AP242 constructor.
     pub fn add_point(&mut self, name: String) -> Result<PointId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PointId(self.model.point_arena.push(Point { name })))
     }
 
@@ -7237,6 +8525,10 @@ impl Ap242Author {
         if let Some(x) = &marker_colour {
             check_colour_ref(&self.model, x)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PointStyleId(self.model.point_style_arena.push(
             PointStyle {
                 name,
@@ -7268,6 +8560,10 @@ impl Ap242Author {
         for e0 in &polygon {
             check_cartesian_point_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PolyLoopId(
             self.model.poly_loop_arena.push(PolyLoop { name, polygon }),
         ))
@@ -7294,6 +8590,10 @@ impl Ap242Author {
         for e0 in &points {
             check_cartesian_point_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PolylineId(
             self.model.polyline_arena.push(Polyline { name, points }),
         ))
@@ -7311,6 +8611,11 @@ impl Ap242Author {
             check_length_measure_with_unit_ref(&self.model, x)?;
         }
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(PositionToleranceId(
             self.model.position_tolerance_arena.push(PositionTolerance {
                 name,
@@ -7326,6 +8631,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<PreDefinedCharacterGlyphId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PreDefinedCharacterGlyphId(
             self.model
                 .pre_defined_character_glyph_arena
@@ -7338,6 +8647,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<PreDefinedColourId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PreDefinedColourId(
             self.model
                 .pre_defined_colour_arena
@@ -7350,6 +8663,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<PreDefinedCurveFontId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PreDefinedCurveFontId(
             self.model
                 .pre_defined_curve_font_arena
@@ -7359,6 +8676,10 @@ impl Ap242Author {
 
     /// `PRE_DEFINED_ITEM` — strict AP242 constructor.
     pub fn add_pre_defined_item(&mut self, name: String) -> Result<PreDefinedItemId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PreDefinedItemId(
             self.model
                 .pre_defined_item_arena
@@ -7371,6 +8692,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<PreDefinedMarkerId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PreDefinedMarkerId(
             self.model
                 .pre_defined_marker_arena
@@ -7383,6 +8708,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<PreDefinedPointMarkerSymbolId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PreDefinedPointMarkerSymbolId(
             self.model
                 .pre_defined_point_marker_symbol_arena
@@ -7395,6 +8724,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<PreDefinedSurfaceSideStyleId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PreDefinedSurfaceSideStyleId(
             self.model
                 .pre_defined_surface_side_style_arena
@@ -7407,6 +8740,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<PreDefinedSymbolId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PreDefinedSymbolId(
             self.model
                 .pre_defined_symbol_arena
@@ -7419,6 +8756,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<PreDefinedTerminatorSymbolId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PreDefinedTerminatorSymbolId(
             self.model
                 .pre_defined_terminator_symbol_arena
@@ -7431,6 +8772,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<PreDefinedTextFontId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PreDefinedTextFontId(
             self.model
                 .pre_defined_text_font_arena
@@ -7440,6 +8785,10 @@ impl Ap242Author {
 
     /// `PRE_DEFINED_TILE` — strict AP242 constructor.
     pub fn add_pre_defined_tile(&mut self, name: String) -> Result<PreDefinedTileId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PreDefinedTileId(
             self.model
                 .pre_defined_tile_arena
@@ -7482,6 +8831,10 @@ impl Ap242Author {
             check_representation_item_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PresentationAreaId(self.model.presentation_area_arena.push(
             PresentationArea {
                 name,
@@ -7513,6 +8866,14 @@ impl Ap242Author {
         for e0 in &assigned_items {
             check_layered_item_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = {
+            let v = description;
+            self.text(&v)
+        };
         Ok(PresentationLayerAssignmentId(
             self.model
                 .presentation_layer_assignment_arena
@@ -7547,6 +8908,10 @@ impl Ap242Author {
             check_representation_item_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PresentationRepresentationId(
             self.model
                 .presentation_representation_arena
@@ -7662,6 +9027,10 @@ impl Ap242Author {
             check_representation_item_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(PresentationViewId(self.model.presentation_view_arena.push(
             PresentationView {
                 name,
@@ -7716,6 +9085,15 @@ impl Ap242Author {
         for e0 in &frame_of_reference {
             check_product_context_ref(&self.model, e0)?;
         }
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ProductId(self.model.product_arena.push(Product {
             id,
             name,
@@ -7730,6 +9108,11 @@ impl Ap242Author {
         name: String,
         description: Option<String>,
     ) -> Result<ProductCategoryId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ProductCategoryId(
             self.model
                 .product_category_arena
@@ -7747,6 +9130,11 @@ impl Ap242Author {
     ) -> Result<ProductCategoryRelationshipId, AuthorError> {
         check_product_category_ref(&self.model, &category)?;
         check_product_category_ref(&self.model, &sub_category)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ProductCategoryRelationshipId(
             self.model
                 .product_category_relationship_arena
@@ -7768,6 +9156,15 @@ impl Ap242Author {
         market_context: ProductConceptContextRef,
     ) -> Result<ProductConceptId, AuthorError> {
         check_product_concept_context_ref(&self.model, &market_context)?;
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ProductConceptId(self.model.product_concept_arena.push(
             ProductConcept {
                 id,
@@ -7786,6 +9183,14 @@ impl Ap242Author {
         market_segment_type: String,
     ) -> Result<ProductConceptContextId, AuthorError> {
         check_application_context_ref(&self.model, &frame_of_reference)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let market_segment_type = {
+            let v = market_segment_type;
+            self.text(&v)
+        };
         Ok(ProductConceptContextId(
             self.model
                 .product_concept_context_arena
@@ -7804,6 +9209,15 @@ impl Ap242Author {
         name: String,
         description: Option<String>,
     ) -> Result<ProductConceptFeatureId, AuthorError> {
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ProductConceptFeatureId(
             self.model
                 .product_concept_feature_arena
@@ -7821,6 +9235,11 @@ impl Ap242Author {
         name: String,
         description: Option<String>,
     ) -> Result<ProductConceptFeatureCategoryId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ProductConceptFeatureCategoryId(
             self.model
                 .product_concept_feature_category_arena
@@ -7836,6 +9255,14 @@ impl Ap242Author {
         discipline_type: String,
     ) -> Result<ProductContextId, AuthorError> {
         check_application_context_ref(&self.model, &frame_of_reference)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let discipline_type = {
+            let v = discipline_type;
+            self.text(&v)
+        };
         Ok(ProductContextId(self.model.product_context_arena.push(
             ProductContext {
                 name,
@@ -7855,6 +9282,11 @@ impl Ap242Author {
     ) -> Result<ProductDefinitionId, AuthorError> {
         check_product_definition_formation_ref(&self.model, &formation)?;
         check_product_definition_context_ref(&self.model, &frame_of_reference)?;
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ProductDefinitionId(
             self.model.product_definition_arena.push(ProductDefinition {
                 id,
@@ -7873,6 +9305,14 @@ impl Ap242Author {
         life_cycle_stage: String,
     ) -> Result<ProductDefinitionContextId, AuthorError> {
         check_application_context_ref(&self.model, &frame_of_reference)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let life_cycle_stage = {
+            let v = life_cycle_stage;
+            self.text(&v)
+        };
         Ok(ProductDefinitionContextId(
             self.model
                 .product_definition_context_arena
@@ -7911,6 +9351,11 @@ impl Ap242Author {
         name: String,
         description: Option<String>,
     ) -> Result<ProductDefinitionContextRoleId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ProductDefinitionContextRoleId(
             self.model
                 .product_definition_context_role_arena
@@ -7925,6 +9370,10 @@ impl Ap242Author {
         usage: ProductDefinitionRelationshipRef,
     ) -> Result<ProductDefinitionEffectivityId, AuthorError> {
         check_product_definition_relationship_ref(&self.model, &usage)?;
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
         Ok(ProductDefinitionEffectivityId(
             self.model
                 .product_definition_effectivity_arena
@@ -7940,6 +9389,11 @@ impl Ap242Author {
         of_product: ProductRef,
     ) -> Result<ProductDefinitionFormationId, AuthorError> {
         check_product_ref(&self.model, &of_product)?;
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ProductDefinitionFormationId(
             self.model
                 .product_definition_formation_arena
@@ -7960,6 +9414,11 @@ impl Ap242Author {
         make_or_buy: Source,
     ) -> Result<ProductDefinitionFormationWithSpecifiedSourceId, AuthorError> {
         check_product_ref(&self.model, &of_product)?;
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ProductDefinitionFormationWithSpecifiedSourceId(
             self.model
                 .product_definition_formation_with_specified_source_arena
@@ -7987,6 +9446,12 @@ impl Ap242Author {
         if let Some(x) = &quantity {
             check_measure_with_unit_ref(&self.model, x)?;
         }
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let name = name.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(&v));
         Ok(ProductDefinitionOccurrenceId(
             self.model
                 .product_definition_occurrence_arena
@@ -8011,6 +9476,15 @@ impl Ap242Author {
     ) -> Result<ProductDefinitionRelationshipId, AuthorError> {
         check_product_definition_or_reference_ref(&self.model, &relating_product_definition)?;
         check_product_definition_or_reference_ref(&self.model, &related_product_definition)?;
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ProductDefinitionRelationshipId(
             self.model
                 .product_definition_relationship_arena
@@ -8035,6 +9509,15 @@ impl Ap242Author {
     ) -> Result<ProductDefinitionRelationshipRelationshipId, AuthorError> {
         check_product_definition_relationship_ref(&self.model, &relating)?;
         check_product_definition_relationship_ref(&self.model, &related)?;
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ProductDefinitionRelationshipRelationshipId(
             self.model
                 .product_definition_relationship_relationship_arena
@@ -8056,6 +9539,11 @@ impl Ap242Author {
         definition: CharacterizedDefinitionRef,
     ) -> Result<ProductDefinitionShapeId, AuthorError> {
         check_characterized_definition_ref(&self.model, &definition)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ProductDefinitionShapeId(
             self.model
                 .product_definition_shape_arena
@@ -8076,6 +9564,7 @@ impl Ap242Author {
     ) -> Result<ProductDefinitionSubstituteId, AuthorError> {
         check_product_definition_relationship_ref(&self.model, &context_relationship)?;
         check_product_definition_ref(&self.model, &substitute_definition)?;
+        let description = description.map(|v| self.text(&v));
         Ok(ProductDefinitionSubstituteId(
             self.model
                 .product_definition_substitute_arena
@@ -8098,6 +9587,15 @@ impl Ap242Author {
     ) -> Result<ProductDefinitionUsageId, AuthorError> {
         check_product_definition_or_reference_ref(&self.model, &relating_product_definition)?;
         check_product_definition_or_reference_ref(&self.model, &related_product_definition)?;
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ProductDefinitionUsageId(
             self.model
                 .product_definition_usage_arena
@@ -8137,6 +9635,11 @@ impl Ap242Author {
         for e0 in &documentation_ids {
             check_document_ref(&self.model, e0)?;
         }
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ProductDefinitionWithAssociatedDocumentsId(
             self.model
                 .product_definition_with_associated_documents_arena
@@ -8172,6 +9675,11 @@ impl Ap242Author {
         for e0 in &products {
             check_product_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ProductRelatedProductCategoryId(
             self.model
                 .product_related_product_category_arena
@@ -8217,6 +9725,11 @@ impl Ap242Author {
         definition: CharacterizedDefinitionRef,
     ) -> Result<PropertyDefinitionId, AuthorError> {
         check_characterized_definition_ref(&self.model, &definition)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(PropertyDefinitionId(
             self.model
                 .property_definition_arena
@@ -8238,6 +9751,14 @@ impl Ap242Author {
     ) -> Result<PropertyDefinitionRelationshipId, AuthorError> {
         check_property_definition_ref(&self.model, &relating_property_definition)?;
         check_property_definition_ref(&self.model, &related_property_definition)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = {
+            let v = description;
+            self.text(&v)
+        };
         Ok(PropertyDefinitionRelationshipId(
             self.model.property_definition_relationship_arena.push(
                 PropertyDefinitionRelationship {
@@ -8289,6 +9810,10 @@ impl Ap242Author {
         for e0 in &qualifiers {
             check_value_qualifier_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(QualifiedRepresentationItemId(
             self.model
                 .qualified_representation_item_arena
@@ -8321,6 +9846,10 @@ impl Ap242Author {
         for e0 in &control_points_list {
             check_cartesian_point_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(QuasiUniformCurveId(
             self.model
                 .quasi_uniform_curve_arena
@@ -8364,6 +9893,10 @@ impl Ap242Author {
                 check_cartesian_point_ref(&self.model, e1)?;
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(QuasiUniformSurfaceId(
             self.model
                 .quasi_uniform_surface_arena
@@ -8446,6 +9979,10 @@ impl Ap242Author {
                 });
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(RationalBSplineCurveId(
             self.model
                 .rational_b_spline_curve_arena
@@ -8503,6 +10040,10 @@ impl Ap242Author {
                 });
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(RationalBSplineSurfaceId(
             self.model
                 .rational_b_spline_surface_arena
@@ -8535,6 +10076,10 @@ impl Ap242Author {
         name: String,
         the_value: f64,
     ) -> Result<RealRepresentationItemId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(RealRepresentationItemId(
             self.model
                 .real_representation_item_arena
@@ -8549,6 +10094,10 @@ impl Ap242Author {
         location: Axis2Placement3dRef,
     ) -> Result<RepositionedTessellatedItemId, AuthorError> {
         check_axis2_placement3d_ref(&self.model, &location)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(RepositionedTessellatedItemId(
             self.model
                 .repositioned_tessellated_item_arena
@@ -8579,6 +10128,10 @@ impl Ap242Author {
             check_representation_item_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(RepresentationId(self.model.representation_arena.push(
             Representation {
                 name,
@@ -8594,6 +10147,14 @@ impl Ap242Author {
         context_identifier: String,
         context_type: String,
     ) -> Result<RepresentationContextId, AuthorError> {
+        let context_identifier = {
+            let v = context_identifier;
+            self.text(&v)
+        };
+        let context_type = {
+            let v = context_type;
+            self.text(&v)
+        };
         Ok(RepresentationContextId(
             self.model
                 .representation_context_arena
@@ -8609,6 +10170,10 @@ impl Ap242Author {
         &mut self,
         context_identifier: String,
     ) -> Result<RepresentationContextReferenceId, AuthorError> {
+        let context_identifier = {
+            let v = context_identifier;
+            self.text(&v)
+        };
         Ok(RepresentationContextReferenceId(
             self.model
                 .representation_context_reference_arena
@@ -8621,6 +10186,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<RepresentationItemId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(RepresentationItemId(
             self.model
                 .representation_item_arena
@@ -8651,6 +10220,10 @@ impl Ap242Author {
         context_of_items: RepresentationContextReferenceRef,
     ) -> Result<RepresentationReferenceId, AuthorError> {
         check_representation_context_reference_ref(&self.model, &context_of_items)?;
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
         Ok(RepresentationReferenceId(
             self.model
                 .representation_reference_arena
@@ -8671,6 +10244,11 @@ impl Ap242Author {
     ) -> Result<RepresentationRelationshipId, AuthorError> {
         check_representation_or_representation_reference_ref(&self.model, &rep_1)?;
         check_representation_or_representation_reference_ref(&self.model, &rep_2)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(RepresentationRelationshipId(
             self.model
                 .representation_relationship_arena
@@ -8695,6 +10273,11 @@ impl Ap242Author {
         check_representation_or_representation_reference_ref(&self.model, &rep_1)?;
         check_representation_or_representation_reference_ref(&self.model, &rep_2)?;
         check_transformation_ref(&self.model, &transformation_operator)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(RepresentationRelationshipWithTransformationId(
             self.model
                 .representation_relationship_with_transformation_arena
@@ -8716,6 +10299,14 @@ impl Ap242Author {
         resource: CharacterizedResourceDefinitionRef,
     ) -> Result<ResourcePropertyId, AuthorError> {
         check_characterized_resource_definition_ref(&self.model, &resource)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = {
+            let v = description;
+            self.text(&v)
+        };
         Ok(ResourcePropertyId(self.model.resource_property_arena.push(
             ResourceProperty {
                 name,
@@ -8731,6 +10322,14 @@ impl Ap242Author {
         name: String,
         description: String,
     ) -> Result<ResourceRequirementTypeId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = {
+            let v = description;
+            self.text(&v)
+        };
         Ok(ResourceRequirementTypeId(
             self.model
                 .resource_requirement_type_arena
@@ -8766,6 +10365,11 @@ impl Ap242Author {
             check_length_measure_with_unit_ref(&self.model, x)?;
         }
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(RoundnessToleranceId(
             self.model
                 .roundness_tolerance_arena
@@ -8802,6 +10406,10 @@ impl Ap242Author {
         for e0 in &associated_geometry {
             check_pcurve_or_surface_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(SeamCurveId(self.model.seam_curve_arena.push(SeamCurve {
             name,
             curve_3d,
@@ -8818,6 +10426,14 @@ impl Ap242Author {
         security_level: SecurityClassificationLevelRef,
     ) -> Result<SecurityClassificationId, AuthorError> {
         check_security_classification_level_ref(&self.model, &security_level)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let purpose = {
+            let v = purpose;
+            self.text(&v)
+        };
         Ok(SecurityClassificationId(
             self.model
                 .security_classification_arena
@@ -8849,6 +10465,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<SecurityClassificationLevelId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(SecurityClassificationLevelId(
             self.model
                 .security_classification_level_arena
@@ -8865,6 +10485,11 @@ impl Ap242Author {
         product_definitional: Option<Logical>,
     ) -> Result<ShapeAspectId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ShapeAspectId(self.model.shape_aspect_arena.push(
             ShapeAspect {
                 name,
@@ -8885,6 +10510,11 @@ impl Ap242Author {
     ) -> Result<ShapeAspectAssociativityId, AuthorError> {
         check_shape_aspect_ref(&self.model, &relating_shape_aspect)?;
         check_shape_aspect_ref(&self.model, &related_shape_aspect)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ShapeAspectAssociativityId(
             self.model
                 .shape_aspect_associativity_arena
@@ -8907,6 +10537,11 @@ impl Ap242Author {
     ) -> Result<ShapeAspectDerivingRelationshipId, AuthorError> {
         check_shape_aspect_ref(&self.model, &relating_shape_aspect)?;
         check_shape_aspect_ref(&self.model, &related_shape_aspect)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ShapeAspectDerivingRelationshipId(
             self.model.shape_aspect_deriving_relationship_arena.push(
                 ShapeAspectDerivingRelationship {
@@ -8929,6 +10564,11 @@ impl Ap242Author {
     ) -> Result<ShapeAspectRelationshipId, AuthorError> {
         check_shape_aspect_ref(&self.model, &relating_shape_aspect)?;
         check_shape_aspect_ref(&self.model, &related_shape_aspect)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ShapeAspectRelationshipId(
             self.model
                 .shape_aspect_relationship_arena
@@ -8982,6 +10622,10 @@ impl Ap242Author {
             check_representation_item_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ShapeDimensionRepresentationId(
             self.model
                 .shape_dimension_representation_arena
@@ -9016,6 +10660,10 @@ impl Ap242Author {
             check_representation_item_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ShapeRepresentationId(
             self.model
                 .shape_representation_arena
@@ -9037,6 +10685,11 @@ impl Ap242Author {
     ) -> Result<ShapeRepresentationRelationshipId, AuthorError> {
         check_representation_or_representation_reference_ref(&self.model, &rep_1)?;
         check_representation_or_representation_reference_ref(&self.model, &rep_2)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ShapeRepresentationRelationshipId(
             self.model.shape_representation_relationship_arena.push(
                 ShapeRepresentationRelationship {
@@ -9072,6 +10725,10 @@ impl Ap242Author {
             check_representation_item_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ShapeRepresentationWithParametersId(
             self.model.shape_representation_with_parameters_arena.push(
                 ShapeRepresentationWithParameters {
@@ -9104,6 +10761,10 @@ impl Ap242Author {
         for e0 in &sbsm_boundary {
             check_shell_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ShellBasedSurfaceModelId(
             self.model
                 .shell_based_surface_model_arena
@@ -9162,6 +10823,10 @@ impl Ap242Author {
 
     /// `SOLID_MODEL` — strict AP242 constructor.
     pub fn add_solid_model(&mut self, name: String) -> Result<SolidModelId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(SolidModelId(
             self.model.solid_model_arena.push(SolidModel { name }),
         ))
@@ -9175,6 +10840,10 @@ impl Ap242Author {
         radius: f64,
     ) -> Result<SphericalSurfaceId, AuthorError> {
         check_axis2_placement3d_ref(&self.model, &position)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(SphericalSurfaceId(self.model.spherical_surface_arena.push(
             SphericalSurface {
                 name,
@@ -9248,6 +10917,11 @@ impl Ap242Author {
         name: String,
         description: Option<String>,
     ) -> Result<StateObservedId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(StateObservedId(
             self.model
                 .state_observed_arena
@@ -9261,6 +10935,11 @@ impl Ap242Author {
         name: String,
         description: Option<String>,
     ) -> Result<StateTypeId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(StateTypeId(
             self.model
                 .state_type_arena
@@ -9280,6 +10959,11 @@ impl Ap242Author {
             check_length_measure_with_unit_ref(&self.model, x)?;
         }
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(StraightnessToleranceId(
             self.model
                 .straightness_tolerance_arena
@@ -9303,6 +10987,10 @@ impl Ap242Author {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
         check_styled_item_target_ref(&self.model, &item)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(StyledItemId(
             self.model
                 .styled_item_arena
@@ -9312,6 +11000,10 @@ impl Ap242Author {
 
     /// `SURFACE` — strict AP242 constructor.
     pub fn add_surface(&mut self, name: String) -> Result<SurfaceId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(SurfaceId(self.model.surface_arena.push(Surface { name })))
     }
 
@@ -9339,6 +11031,10 @@ impl Ap242Author {
         for e0 in &associated_geometry {
             check_pcurve_or_surface_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(SurfaceCurveId(self.model.surface_curve_arena.push(
             SurfaceCurve {
                 name,
@@ -9358,6 +11054,10 @@ impl Ap242Author {
     ) -> Result<SurfaceOfLinearExtrusionId, AuthorError> {
         check_curve_ref(&self.model, &swept_curve)?;
         check_vector_ref(&self.model, &extrusion_axis)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(SurfaceOfLinearExtrusionId(
             self.model
                 .surface_of_linear_extrusion_arena
@@ -9378,6 +11078,10 @@ impl Ap242Author {
     ) -> Result<SurfaceOfRevolutionId, AuthorError> {
         check_curve_ref(&self.model, &swept_curve)?;
         check_axis1_placement_ref(&self.model, &axis_position)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(SurfaceOfRevolutionId(
             self.model
                 .surface_of_revolution_arena
@@ -9401,6 +11105,11 @@ impl Ap242Author {
             check_length_measure_with_unit_ref(&self.model, x)?;
         }
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(SurfaceProfileToleranceId(
             self.model
                 .surface_profile_tolerance_arena
@@ -9447,6 +11156,10 @@ impl Ap242Author {
         for e0 in &styles {
             check_surface_style_element_select_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(SurfaceSideStyleId(
             self.model
                 .surface_side_style_arena
@@ -9652,6 +11365,10 @@ impl Ap242Author {
         swept_curve: CurveRef,
     ) -> Result<SweptSurfaceId, AuthorError> {
         check_curve_ref(&self.model, &swept_curve)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(SweptSurfaceId(
             self.model
                 .swept_surface_arena
@@ -9695,6 +11412,10 @@ impl Ap242Author {
             check_representation_item_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(SymbolRepresentationId(
             self.model
                 .symbol_representation_arena
@@ -9713,6 +11434,10 @@ impl Ap242Author {
         style_of_symbol: SymbolStyleSelectRef,
     ) -> Result<SymbolStyleId, AuthorError> {
         check_symbol_style_select_ref(&self.model, &style_of_symbol)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(SymbolStyleId(self.model.symbol_style_arena.push(
             SymbolStyle {
                 name,
@@ -9730,6 +11455,10 @@ impl Ap242Author {
         y_scale: f64,
     ) -> Result<SymbolTargetId, AuthorError> {
         check_axis2_placement_ref(&self.model, &placement)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(SymbolTargetId(self.model.symbol_target_arena.push(
             SymbolTarget {
                 name,
@@ -9768,6 +11497,11 @@ impl Ap242Author {
         for e0 in &datum_system {
             check_datum_system_or_reference_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(SymmetryToleranceId(
             self.model.symmetry_tolerance_arena.push(SymmetryTolerance {
                 name,
@@ -9792,6 +11526,10 @@ impl Ap242Author {
         }
         check_annotation_symbol_occurrence_item_ref(&self.model, &item)?;
         check_annotation_curve_occurrence_ref(&self.model, &annotated_curve)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(TerminatorSymbolId(self.model.terminator_symbol_arena.push(
             TerminatorSymbol {
                 name,
@@ -9813,6 +11551,10 @@ impl Ap242Author {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
         check_styled_item_target_ref(&self.model, &item)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(TessellatedAnnotationOccurrenceId(
             self.model
                 .tessellated_annotation_occurrence_arena
@@ -9840,6 +11582,10 @@ impl Ap242Author {
                 });
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(TessellatedCurveSetId(
             self.model
                 .tessellated_curve_set_arena
@@ -9878,6 +11624,10 @@ impl Ap242Author {
         if let Some(x) = &geometric_link {
             check_face_or_surface_ref(&self.model, x)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(TessellatedFaceId(self.model.tessellated_face_arena.push(
             TessellatedFace {
                 name,
@@ -9910,6 +11660,10 @@ impl Ap242Author {
         for e0 in &children {
             check_tessellated_item_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(TessellatedGeometricSetId(
             self.model
                 .tessellated_geometric_set_arena
@@ -9919,6 +11673,10 @@ impl Ap242Author {
 
     /// `TESSELLATED_ITEM` — strict AP242 constructor.
     pub fn add_tessellated_item(&mut self, name: String) -> Result<TessellatedItemId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(TessellatedItemId(
             self.model
                 .tessellated_item_arena
@@ -9949,6 +11707,10 @@ impl Ap242Author {
             check_representation_item_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(TessellatedShapeRepresentationId(
             self.model.tessellated_shape_representation_arena.push(
                 TessellatedShapeRepresentation {
@@ -9985,6 +11747,10 @@ impl Ap242Author {
         if let Some(x) = &topological_link {
             check_connected_face_set_ref(&self.model, x)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(TessellatedShellId(self.model.tessellated_shell_arena.push(
             TessellatedShell {
                 name,
@@ -10019,6 +11785,10 @@ impl Ap242Author {
         if let Some(x) = &geometric_link {
             check_manifold_solid_brep_ref(&self.model, x)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(TessellatedSolidId(self.model.tessellated_solid_arena.push(
             TessellatedSolid {
                 name,
@@ -10033,6 +11803,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<TessellatedStructuredItemId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(TessellatedStructuredItemId(
             self.model
                 .tessellated_structured_item_arena
@@ -10063,6 +11837,10 @@ impl Ap242Author {
                 }
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(TessellatedSurfaceSetId(
             self.model
                 .tessellated_surface_set_arena
@@ -10082,6 +11860,18 @@ impl Ap242Author {
         name: String,
         description: String,
     ) -> Result<TextFontId, AuthorError> {
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = {
+            let v = description;
+            self.text(&v)
+        };
         Ok(TextFontId(self.model.text_font_arena.push(TextFont {
             id,
             name,
@@ -10101,6 +11891,18 @@ impl Ap242Author {
     ) -> Result<TextLiteralId, AuthorError> {
         check_axis2_placement_ref(&self.model, &placement)?;
         check_font_select_ref(&self.model, &font)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let literal = {
+            let v = literal;
+            self.text(&v)
+        };
+        let alignment = {
+            let v = alignment;
+            self.text(&v)
+        };
         Ok(TextLiteralId(self.model.text_literal_arena.push(
             TextLiteral {
                 name,
@@ -10120,6 +11922,10 @@ impl Ap242Author {
         character_appearance: CharacterStyleSelectRef,
     ) -> Result<TextStyleId, AuthorError> {
         check_character_style_select_ref(&self.model, &character_appearance)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(TextStyleId(self.model.text_style_arena.push(TextStyle {
             name,
             character_appearance,
@@ -10159,6 +11965,10 @@ impl Ap242Author {
                 });
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(TextStyleWithBoxCharacteristicsId(
             self.model.text_style_with_box_characteristics_arena.push(
                 TextStyleWithBoxCharacteristics {
@@ -10246,6 +12056,11 @@ impl Ap242Author {
             check_tolerance_zone_target_ref(&self.model, e0)?;
         }
         check_tolerance_zone_form_ref(&self.model, &form)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ToleranceZoneId(self.model.tolerance_zone_arena.push(
             ToleranceZone {
                 name,
@@ -10280,6 +12095,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<ToleranceZoneFormId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ToleranceZoneFormId(
             self.model
                 .tolerance_zone_form_arena
@@ -10316,6 +12135,11 @@ impl Ap242Author {
         }
         check_tolerance_zone_form_ref(&self.model, &form)?;
         check_datum_system_ref(&self.model, &datum_reference)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(ToleranceZoneWithDatumId(
             self.model
                 .tolerance_zone_with_datum_arena
@@ -10336,6 +12160,10 @@ impl Ap242Author {
         &mut self,
         name: String,
     ) -> Result<TopologicalRepresentationItemId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(TopologicalRepresentationItemId(
             self.model
                 .topological_representation_item_arena
@@ -10352,6 +12180,10 @@ impl Ap242Author {
         minor_radius: f64,
     ) -> Result<ToroidalSurfaceId, AuthorError> {
         check_axis2_placement3d_ref(&self.model, &position)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ToroidalSurfaceId(self.model.toroidal_surface_arena.push(
             ToroidalSurface {
                 name,
@@ -10390,6 +12222,11 @@ impl Ap242Author {
         for e0 in &datum_system {
             check_datum_system_or_reference_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(TotalRunoutToleranceId(
             self.model
                 .total_runout_tolerance_arena
@@ -10444,6 +12281,10 @@ impl Ap242Author {
         for e0 in &trim_2 {
             check_trimming_select_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(TrimmedCurveId(self.model.trimmed_curve_arena.push(
             TrimmedCurve {
                 name,
@@ -10465,6 +12306,10 @@ impl Ap242Author {
     ) -> Result<TwoDirectionRepeatFactorId, AuthorError> {
         check_vector_ref(&self.model, &repeat_factor)?;
         check_vector_ref(&self.model, &second_repeat_factor)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(TwoDirectionRepeatFactorId(
             self.model
                 .two_direction_repeat_factor_arena
@@ -10478,6 +12323,10 @@ impl Ap242Author {
 
     /// `TYPE_QUALIFIER` — strict AP242 constructor.
     pub fn add_type_qualifier(&mut self, name: String) -> Result<TypeQualifierId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(TypeQualifierId(
             self.model.type_qualifier_arena.push(TypeQualifier { name }),
         ))
@@ -10492,6 +12341,11 @@ impl Ap242Author {
         description: Option<String>,
     ) -> Result<UncertaintyMeasureWithUnitId, AuthorError> {
         check_unit_ref(&self.model, &unit_component)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(UncertaintyMeasureWithUnitId(
             self.model
                 .uncertainty_measure_with_unit_arena
@@ -10510,6 +12364,14 @@ impl Ap242Author {
         measure_name: String,
         description: String,
     ) -> Result<UncertaintyQualifierId, AuthorError> {
+        let measure_name = {
+            let v = measure_name;
+            self.text(&v)
+        };
+        let description = {
+            let v = description;
+            self.text(&v)
+        };
         Ok(UncertaintyQualifierId(
             self.model
                 .uncertainty_qualifier_arena
@@ -10534,6 +12396,11 @@ impl Ap242Author {
         }
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
         check_length_measure_with_unit_ref(&self.model, &displacement)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(UnequallyDisposedGeometricToleranceId(
             self.model
                 .unequally_disposed_geometric_tolerance_arena
@@ -10572,6 +12439,10 @@ impl Ap242Author {
         for e0 in &control_points_list {
             check_cartesian_point_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(UniformCurveId(self.model.uniform_curve_arena.push(
             UniformCurve {
                 name,
@@ -10613,6 +12484,10 @@ impl Ap242Author {
                 check_cartesian_point_ref(&self.model, e1)?;
             }
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(UniformSurfaceId(self.model.uniform_surface_arena.push(
             UniformSurface {
                 name,
@@ -10632,6 +12507,10 @@ impl Ap242Author {
         &mut self,
         format_type: String,
     ) -> Result<ValueFormatTypeQualifierId, AuthorError> {
+        let format_type = {
+            let v = format_type;
+            self.text(&v)
+        };
         Ok(ValueFormatTypeQualifierId(
             self.model
                 .value_format_type_qualifier_arena
@@ -10645,6 +12524,10 @@ impl Ap242Author {
         name: String,
         value_component: MeasureValue,
     ) -> Result<ValueRepresentationItemId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(ValueRepresentationItemId(
             self.model
                 .value_representation_item_arena
@@ -10663,6 +12546,10 @@ impl Ap242Author {
         magnitude: f64,
     ) -> Result<VectorId, AuthorError> {
         check_direction_ref(&self.model, &orientation)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(VectorId(self.model.vector_arena.push(Vector {
             name,
             orientation,
@@ -10678,6 +12565,16 @@ impl Ap242Author {
         purpose: String,
         description: Option<String>,
     ) -> Result<VersionedActionRequestId, AuthorError> {
+        let id = {
+            let v = id;
+            self.text(&v)
+        };
+        let version = version.map(|v| self.text(&v));
+        let purpose = {
+            let v = purpose;
+            self.text(&v)
+        };
+        let description = description.map(|v| self.text(&v));
         Ok(VersionedActionRequestId(
             self.model
                 .versioned_action_request_arena
@@ -10692,6 +12589,10 @@ impl Ap242Author {
 
     /// `VERTEX` — strict AP242 constructor.
     pub fn add_vertex(&mut self, name: String) -> Result<VertexId, AuthorError> {
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(VertexId(self.model.vertex_arena.push(Vertex { name })))
     }
 
@@ -10702,6 +12603,10 @@ impl Ap242Author {
         loop_vertex: VertexRef,
     ) -> Result<VertexLoopId, AuthorError> {
         check_vertex_ref(&self.model, &loop_vertex)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(VertexLoopId(
             self.model
                 .vertex_loop_arena
@@ -10716,6 +12621,10 @@ impl Ap242Author {
         vertex_geometry: PointRef,
     ) -> Result<VertexPointId, AuthorError> {
         check_point_ref(&self.model, &vertex_geometry)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(VertexPointId(self.model.vertex_point_arena.push(
             VertexPoint {
                 name,
@@ -10731,6 +12640,10 @@ impl Ap242Author {
         vertex_shell_extent: VertexLoopRef,
     ) -> Result<VertexShellId, AuthorError> {
         check_vertex_loop_ref(&self.model, &vertex_shell_extent)?;
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(VertexShellId(self.model.vertex_shell_arena.push(
             VertexShell {
                 name,
@@ -10815,6 +12728,10 @@ impl Ap242Author {
         for e0 in &wire_shell_extent {
             check_loop_ref(&self.model, e0)?;
         }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
         Ok(WireShellId(self.model.wire_shell_arena.push(WireShell {
             name,
             wire_shell_extent,

@@ -117,6 +117,9 @@ fn dangling_reference_is_rejected_at_insertion() {
 #[test]
 fn complex_instances_round_trip_with_zero_drops() {
     let mut a = Ap242Author::new();
+    let three_d = a.text("3D");
+    let empty = a.text("");
+    let ctx = a.text("ctx");
 
     // Rational B-spline curve — the most frequent corpus complex (7 parts).
     let cps: Vec<m::CartesianPointRef> = [[0.0, 0.0, 0.0], [1.0, 1.0, 0.0], [2.0, 0.0, 0.0]]
@@ -147,9 +150,7 @@ fn complex_instances_round_trip_with_zero_drops() {
             m::UnitPart::RationalBSplineCurve {
                 weights_data: vec![1.0, 2.0, 1.0],
             },
-            m::UnitPart::RepresentationItem {
-                name: String::new(),
-            },
+            m::UnitPart::RepresentationItem { name: empty },
         ])
         .expect("rational b-spline curve complex");
 
@@ -185,8 +186,8 @@ fn complex_instances_round_trip_with_zero_drops() {
                 units: vec![m::UnitRef::Complex(mm)],
             },
             m::UnitPart::RepresentationContext {
-                context_identifier: "ctx".to_owned(),
-                context_type: "3D".to_owned(),
+                context_identifier: ctx,
+                context_type: three_d,
             },
         ])
         .expect("unit-assigned context complex");
@@ -208,6 +209,7 @@ fn complex_instances_round_trip_with_zero_drops() {
 #[test]
 fn invalid_complex_part_sets_are_rejected() {
     let mut a = Ap242Author::new();
+    let empty = a.text("");
 
     // Missing supertype part: SI_UNIT alone (NAMED_UNIT chain absent).
     let err = a
@@ -229,9 +231,7 @@ fn invalid_complex_part_sets_are_rejected() {
             m::UnitPart::BoundedCurve,
             m::UnitPart::Curve,
             m::UnitPart::GeometricRepresentationItem,
-            m::UnitPart::RepresentationItem {
-                name: String::new(),
-            },
+            m::UnitPart::RepresentationItem { name: empty },
             m::UnitPart::LengthUnit,
             m::UnitPart::NamedUnit { dimensions: None },
             m::UnitPart::SiUnit {
@@ -267,9 +267,7 @@ fn invalid_complex_part_sets_are_rejected() {
             },
             m::UnitPart::Curve,
             m::UnitPart::GeometricRepresentationItem,
-            m::UnitPart::RepresentationItem {
-                name: String::new(),
-            },
+            m::UnitPart::RepresentationItem { name: empty },
         ])
         .expect_err("oneof conflict must be rejected");
     assert!(matches!(
@@ -320,6 +318,8 @@ fn invalid_complex_part_sets_are_rejected() {
 #[test]
 fn self_referencing_entity_round_trips_with_zero_drops() {
     let mut a = Ap242Author::new();
+    let diameter = a.text("diameter");
+    let datum_feature = a.text("datum feature");
 
     // Minimal product chain up to the PRODUCT_DEFINITION_SHAPE.
     let ac = a.add_application_context("mim".to_owned()).expect("ac");
@@ -368,12 +368,12 @@ fn self_referencing_entity_round_trips_with_zero_drops() {
     // applies_to references the entity itself (WR1).
     let dswdf = a
         .add_dimensional_size_with_datum_feature_cyclic(|id| m::DimensionalSizeWithDatumFeature {
-            name: "datum feature".to_owned(),
+            name: datum_feature,
             description: None,
             of_shape: m::ProductDefinitionShapeRef::ProductDefinitionShape(pds),
             product_definitional: m::Logical::True,
             applies_to: m::ShapeAspectRef::DimensionalSizeWithDatumFeature(id),
-            name_1: "diameter".to_owned(),
+            name_1: diameter,
         })
         .expect("self-referencing DSWDF");
     assert_eq!(dswdf.0, 0);
@@ -393,11 +393,12 @@ fn self_referencing_entity_round_trips_with_zero_drops() {
 #[test]
 fn cyclic_constructor_rolls_back_on_dangling_reference() {
     let mut a = Ap242Author::new();
+    let empty = a.text("");
     // A genuinely dangling forward reference (id + 1) must be rejected and
     // the insertion rolled back — model unchanged.
     let err = a
         .add_dimensional_size_with_datum_feature_cyclic(|id| m::DimensionalSizeWithDatumFeature {
-            name: String::new(),
+            name: empty,
             description: None,
             of_shape: m::ProductDefinitionShapeRef::ProductDefinitionShape(
                 m::ProductDefinitionShapeId(0),
@@ -406,7 +407,7 @@ fn cyclic_constructor_rolls_back_on_dangling_reference() {
             applies_to: m::ShapeAspectRef::DimensionalSizeWithDatumFeature(
                 m::DimensionalSizeWithDatumFeatureId(id.0 + 1),
             ),
-            name_1: String::new(),
+            name_1: empty,
         })
         .expect_err("forward dangling reference must be rejected");
     assert!(matches!(err, AuthorError::DanglingRef { .. }));
@@ -414,14 +415,14 @@ fn cyclic_constructor_rolls_back_on_dangling_reference() {
     // Rolled back: a retry with a valid self-reference gets the same id 0.
     let pds_missing = a
         .add_dimensional_size_with_datum_feature_cyclic(|id| m::DimensionalSizeWithDatumFeature {
-            name: String::new(),
+            name: empty,
             description: None,
             of_shape: m::ProductDefinitionShapeRef::ProductDefinitionShape(
                 m::ProductDefinitionShapeId(0),
             ),
             product_definitional: m::Logical::True,
             applies_to: m::ShapeAspectRef::DimensionalSizeWithDatumFeature(id),
-            name_1: String::new(),
+            name_1: empty,
         })
         .expect_err("of_shape still dangling (empty pds arena)");
     assert!(matches!(
@@ -438,14 +439,14 @@ fn cyclic_constructor_rolls_back_on_dangling_reference() {
     let _ = a.add_dimensional_size_with_datum_feature_cyclic(|id| {
         seen.set(id.0);
         m::DimensionalSizeWithDatumFeature {
-            name: String::new(),
+            name: empty,
             description: None,
             of_shape: m::ProductDefinitionShapeRef::ProductDefinitionShape(
                 m::ProductDefinitionShapeId(0),
             ),
             product_definitional: m::Logical::True,
             applies_to: m::ShapeAspectRef::DimensionalSizeWithDatumFeature(id),
-            name_1: String::new(),
+            name_1: empty,
         }
     });
     assert_eq!(seen.get(), 0, "both rolled-back insertions must be popped");
@@ -454,6 +455,8 @@ fn cyclic_constructor_rolls_back_on_dangling_reference() {
 #[test]
 fn aggregate_cardinality_is_enforced() {
     let mut a = Ap242Author::new();
+    let three_d = a.text("3D");
+    let empty = a.text("");
 
     // DIRECTION.direction_ratios is LIST [2:3].
     let err = a
@@ -500,8 +503,8 @@ fn aggregate_cardinality_is_enforced() {
             },
             m::UnitPart::GlobalUnitAssignedContext { units: vec![] },
             m::UnitPart::RepresentationContext {
-                context_identifier: String::new(),
-                context_type: "3D".to_owned(),
+                context_identifier: empty,
+                context_type: three_d,
             },
         ])
         .expect_err("empty units set is below the minimum");

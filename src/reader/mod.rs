@@ -13,7 +13,7 @@
 use std::collections::BTreeMap;
 
 use crate::generated::generic_normalize;
-use crate::generated::model::StepModel;
+use crate::generated::model::{StepModel, TextDedup};
 use crate::generated::read::{
     COMPLEX_PART_NAMES, RefSlot, SIMPLE_NAMES, build_complex_entity, build_entity,
     complex_part_index, complex_ref_field_slots, complex_ref_slots, finalize_arenas,
@@ -122,6 +122,8 @@ struct Scan {
     build_fail: Vec<(u64, String)>,
     synthetic: Vec<Synthetic>,
     max_id: Option<u64>,
+    /// Each distinct string of the model, once.
+    dedup: TextDedup,
 }
 
 impl Scan {
@@ -158,7 +160,7 @@ impl Scan {
             } => match simple_index(&name) {
                 Some(ix) => {
                     row.member = Member::Simple(ix);
-                    match build_entity(&mut self.model, ix, &attributes) {
+                    match build_entity(&mut self.model, ix, &attributes, &mut self.dedup) {
                         Ok(i) => row.arena = i,
                         Err(e) => self.build_fail.push((id, e)),
                     }
@@ -174,7 +176,7 @@ impl Scan {
                     parts.iter().map(|p| complex_part_index(&p.name)).collect();
                 if let Some(pixs) = pixs.filter(|p| !p.is_empty()) {
                     row.member = Member::Complex;
-                    match build_complex_entity(&mut self.model, &parts) {
+                    match build_complex_entity(&mut self.model, &parts, &mut self.dedup) {
                         Ok(i) => row.arena = i,
                         Err(e) => self.build_fail.push((id, e)),
                     }
@@ -201,7 +203,7 @@ impl Scan {
         match simple_index("COLOUR") {
             Some(ix) => {
                 row.member = Member::Simple(ix);
-                match build_entity(&mut self.model, ix, &[]) {
+                match build_entity(&mut self.model, ix, &[], &mut self.dedup) {
                     Ok(i) => row.arena = i,
                     Err(e) => build = Err(e),
                 }
@@ -265,6 +267,7 @@ impl Scan {
         }
         self.refs.set_synth_ids(ids);
         Ok(Scanned {
+            dedup: self.dedup,
             model: self.model,
             table: EntityTable::new(rows),
             refs: self.refs,
@@ -301,6 +304,7 @@ fn span_of(src: &[u8], seq: u32) -> Span {
 
 /// The streamed source, ready for the drop pass and the resolve step.
 struct Scanned {
+    dedup: TextDedup,
     model: StepModel,
     table: EntityTable,
     refs: RefStore,
@@ -501,6 +505,7 @@ fn resolve(
     table: &EntityTable,
     refs: &RefStore,
     kept: &[bool],
+    dedup: &mut TextDedup,
 ) -> Vec<(usize, String)> {
     let idmap = IdMap::new(table);
     let mut fails = Vec::new();
@@ -514,11 +519,11 @@ fn resolve(
         let r = match row.member {
             Member::Simple(ix) if !ref_field_slots(ix).is_empty() => {
                 refs.restore_simple(row.refs, &mut attrs);
-                resolve_entity(model, ix, i, &attrs, &idmap)
+                resolve_entity(model, ix, i, &attrs, &idmap, dedup)
             }
             Member::Complex => {
                 refs.restore_complex(row.refs, &mut parts);
-                resolve_complex_entity(model, i, &parts, &idmap)
+                resolve_complex_entity(model, i, &parts, &idmap, dedup)
             }
             _ => continue,
         };
@@ -568,7 +573,10 @@ fn read_at_most(src: &[u8], limit: usize) -> Result<(StepModel, Report), Error> 
                 let at = ent.span();
                 scan.entity(ent);
                 // Like a parse error, this yields to a duplicate id before it.
-                if scan.rows.len() + scan.synthetic.len() > limit || scan.refs.overflowed() {
+                if scan.rows.len() + scan.synthetic.len() > limit
+                    || scan.refs.overflowed()
+                    || scan.model.texts.overflowed()
+                {
                     break Err(Error::TooLarge { span: at });
                 }
             }
@@ -577,6 +585,7 @@ fn read_at_most(src: &[u8], limit: usize) -> Result<(StepModel, Report), Error> 
         }
     };
     let Scanned {
+        mut dedup,
         mut model,
         mut table,
         refs,
@@ -614,7 +623,7 @@ fn read_at_most(src: &[u8], limit: usize) -> Result<(StepModel, Report), Error> 
             .filter(|(p, _, _)| kept[*p])
             .map(|(p, _, e)| (*p, e.clone()))
             .collect();
-        fails.extend(resolve(&mut model, &table, &refs, &kept));
+        fails.extend(resolve(&mut model, &table, &refs, &kept, &mut dedup));
         dropped = kept_dropped;
         validated = n_kept;
         if fails.is_empty() {
@@ -701,6 +710,33 @@ mod tests {
             super::read_at_most(src(dup).as_bytes(), 2),
             Err(Error::DuplicateEntityId { id: 1, .. })
         ));
+    }
+
+    /// Each distinct string is stored once and reads back as written;
+    /// a `Text` of another model reads as `""`.
+    #[test]
+    fn texts_store_each_string_once() {
+        use crate::generated::model::{StepModel, TextDedup};
+        let mut model = StepModel::default();
+        let mut dedup = TextDedup::default();
+        let words = ["NONE", "", "NONE", "wheel", "", "NONE", "wheel"];
+        let texts: Vec<_> = words
+            .iter()
+            .map(|w| dedup.intern(&mut model.texts, w))
+            .collect();
+        for (w, &t) in words.iter().zip(&texts) {
+            assert_eq!(model.text(t), *w);
+        }
+        assert_eq!(texts[0], texts[2]);
+        assert_eq!(texts[1], texts[4]);
+        assert_eq!(texts[3], texts[6]);
+        assert_ne!(texts[0], texts[3]);
+        let mut other = StepModel::default();
+        let far = (0..10)
+            .map(|i| other.add_text(&i.to_string()))
+            .last()
+            .unwrap();
+        assert_eq!(model.text(far), "");
     }
 
     /// `retain_order` keeps exactly the listed items, in the listed order,

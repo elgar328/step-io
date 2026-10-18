@@ -52,6 +52,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Arena::indices()` iterates them. References and `EntityKey` take 8 bytes
   instead of 16. A file of more than about four billion entities fails to
   read with the new `Error::TooLarge`.
+- String fields of the generated model are `Text`s: indices into the
+  model's text table, which stores each distinct string once instead of
+  allocating every field (a typical file repeats a few hundred distinct
+  strings, such as `NONE`, across a million fields). Read one with
+  `model.text(e.name)` instead of `&e.name`; the scene handles' `name()` and
+  the like still return `&str`. `MeasureValue`, `StringSelectValue` and
+  `IntMeasureValue` hold `Text`s too. `Ap242Author` constructors still take
+  `String`s; for values built directly, such as complex parts, make the
+  `Text` with the new `Ap242Author::text`.
 - A list of at most three reals — a point's `coordinates`, a direction's
   `direction_ratios`, a mesh vertex or normal — is a `Reals3` held inline
   instead of a `Vec<f64>`, so it no longer allocates. It reads as a `&[f64]`;

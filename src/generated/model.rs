@@ -2,6 +2,12 @@
 // Schema-faithful model + generic 2-pass read + topo write.
 
 //! The schema-faithful model — [`StepModel`], one arena per entity type.
+//!
+//! It is laid out compactly: an entity refers to another by its 32-bit index
+//! in that entity's arena (the `…Id` types, [`EntityKey`]); every string is a
+//! [`Text`] into the model's text table, read with [`StepModel::text`]; and a
+//! list of at most three reals — a point's coordinates, a direction, a mesh
+//! vertex — is a [`Reals3`] held inline.
 
 #[derive(Debug)]
 pub struct Arena<T> {
@@ -158,6 +164,102 @@ impl From<[f64; 3]> for Reals3 {
     }
 }
 
+/// A string held by a [`StepModel`]: its index in the model's text table.
+/// Read it with [`StepModel::text`]; it means nothing in another model. The
+/// reader and the authoring layer store each distinct string once, so within
+/// a model equal strings are the same `Text`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Text(std::num::NonZeroU32);
+
+/// The strings of a model, back to back in one buffer.
+#[derive(Debug, Default)]
+pub(crate) struct Texts {
+    buf: String,
+    spans: Vec<(u32, u32)>,
+}
+impl Texts {
+    pub(crate) fn get(&self, t: Text) -> &str {
+        let span = self.spans.get(t.0.get() as usize - 1);
+        span.and_then(|&(at, n)| self.buf.get(at as usize..at as usize + n as usize))
+            .unwrap_or("")
+    }
+    /// Append `s` as a new `Text` (no deduplication).
+    pub(crate) fn push(&mut self, s: &str) -> Text {
+        let at = self.buf.len() as u32;
+        self.buf.push_str(s);
+        self.spans.push((at, s.len() as u32));
+        Text(
+            std::num::NonZeroU32::new(self.spans.len() as u32).unwrap_or(std::num::NonZeroU32::MIN),
+        )
+    }
+    /// Whether the table has outgrown its 32-bit positions.
+    pub(crate) fn overflowed(&self) -> bool {
+        self.buf.len() > u32::MAX as usize || self.spans.len() >= u32::MAX as usize
+    }
+    pub(crate) fn shrink(&mut self) {
+        self.buf.shrink_to_fit();
+        self.spans.shrink_to_fit();
+    }
+}
+
+/// A `Hasher` for keys that are already hashes.
+#[derive(Default)]
+pub(crate) struct Prehashed(u64);
+impl std::hash::Hasher for Prehashed {
+    fn finish(&self) -> u64 {
+        self.0
+    }
+    fn write(&mut self, bytes: &[u8]) {
+        for &b in bytes {
+            self.0 = self.0.rotate_left(8) ^ u64::from(b);
+        }
+    }
+    fn write_u64(&mut self, v: u64) {
+        self.0 = v;
+    }
+}
+
+/// Stores each distinct string of a model once, while it is read or
+/// authored. Holds only hashes; the strings stay in the model's `Texts`.
+#[derive(Default)]
+pub(crate) struct TextDedup {
+    by_hash: std::collections::HashMap<u64, Text, std::hash::BuildHasherDefault<Prehashed>>,
+    /// Strings whose hash another string already has.
+    collided: std::collections::HashMap<u64, Vec<Text>, std::hash::BuildHasherDefault<Prehashed>>,
+    last: Option<Text>,
+}
+impl TextDedup {
+    pub(crate) fn intern(&mut self, texts: &mut Texts, s: &str) -> Text {
+        if let Some(t) = self.last.filter(|&t| texts.get(t) == s) {
+            return t;
+        }
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        std::hash::Hash::hash(s, &mut hasher);
+        let h = std::hash::Hasher::finish(&hasher);
+        let t = match self.by_hash.get(&h) {
+            None => {
+                let t = texts.push(s);
+                self.by_hash.insert(h, t);
+                t
+            }
+            Some(&t) if texts.get(t) == s => t,
+            Some(_) => {
+                let list = self.collided.entry(h).or_default();
+                match list.iter().copied().find(|&t| texts.get(t) == s) {
+                    Some(t) => t,
+                    None => {
+                        let t = texts.push(s);
+                        list.push(t);
+                        t
+                    }
+                }
+            }
+        };
+        self.last = Some(t);
+        t
+    }
+}
+
 /// select-of-scalars: `Some(type_name)` = typed member `TYPE(v)`; `None` = bare.
 /// `value` is int-or-real because EXPRESS `number` members (count_measure,
 /// numeric_measure) admit both; the token is preserved (2 stays 2, not 2.0).
@@ -176,7 +278,7 @@ impl MeasureScalar {
 }
 #[derive(Debug, Clone, PartialEq)]
 pub struct MeasureValue {
-    pub type_name: Option<String>,
+    pub type_name: Option<Text>,
     pub value: MeasureScalar,
 }
 
@@ -184,8 +286,8 @@ pub struct MeasureValue {
 /// = typed member `TYPE('s')`; `None` = bare string.
 #[derive(Debug, Clone, PartialEq)]
 pub struct StringSelectValue {
-    pub type_name: Option<String>,
-    pub value: String,
+    pub type_name: Option<Text>,
+    pub value: Text,
 }
 
 /// select-of-named-integers (e.g. SELECT(u_direction_count, v_direction_count)):
@@ -193,7 +295,7 @@ pub struct StringSelectValue {
 /// valued so counts are not widened to reals.
 #[derive(Debug, Clone, PartialEq)]
 pub struct IntMeasureValue {
-    pub type_name: Option<String>,
+    pub type_name: Option<Text>,
     pub value: i64,
 }
 
@@ -12600,7 +12702,7 @@ pub enum SizeSelectRef {
     PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
     RatioMeasureWithUnit(RatioMeasureWithUnitId),
     UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
-    DescriptiveMeasure(String),
+    DescriptiveMeasure(Text),
     PositiveLengthMeasure(f64),
     Complex(ComplexUnitId),
 }
@@ -14176,8 +14278,8 @@ impl WorkItemRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Action {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub chosen_method: ActionMethodRef,
 }
 
@@ -14188,40 +14290,40 @@ pub struct ActionAssignment {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionDirective {
-    pub name: String,
-    pub description: Option<String>,
-    pub analysis: String,
-    pub comment: String,
+    pub name: Text,
+    pub description: Option<Text>,
+    pub analysis: Text,
+    pub comment: Text,
     pub requests: Vec<VersionedActionRequestRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionMethod {
-    pub name: String,
-    pub description: Option<String>,
-    pub consequence: String,
-    pub purpose: String,
+    pub name: Text,
+    pub description: Option<Text>,
+    pub consequence: Text,
+    pub purpose: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionMethodRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_method: ActionMethodRef,
     pub related_method: ActionMethodRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionProperty {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub definition: CharacterizedActionDefinitionRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_action: ActionRef,
     pub related_action: ActionRef,
 }
@@ -14239,59 +14341,59 @@ pub struct ActionRequestSolution {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionResource {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub usage: Vec<SupportedItemRef>,
     pub kind: ActionResourceTypeRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionResourceRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_resource: ActionResourceRef,
     pub related_resource: ActionResourceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionResourceRequirement {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub kind: ResourceRequirementTypeRef,
     pub operations: Vec<CharacterizedActionDefinitionRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionResourceType {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Address {
-    pub internal_location: Option<String>,
-    pub street_number: Option<String>,
-    pub street: Option<String>,
-    pub postal_box: Option<String>,
-    pub town: Option<String>,
-    pub region: Option<String>,
-    pub postal_code: Option<String>,
-    pub country: Option<String>,
-    pub facsimile_number: Option<String>,
-    pub telephone_number: Option<String>,
-    pub electronic_mail_address: Option<String>,
-    pub telex_number: Option<String>,
+    pub internal_location: Option<Text>,
+    pub street_number: Option<Text>,
+    pub street: Option<Text>,
+    pub postal_box: Option<Text>,
+    pub town: Option<Text>,
+    pub region: Option<Text>,
+    pub postal_code: Option<Text>,
+    pub country: Option<Text>,
+    pub facsimile_number: Option<Text>,
+    pub telephone_number: Option<Text>,
+    pub electronic_mail_address: Option<Text>,
+    pub telex_number: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AdvancedBrepShapeRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AdvancedFace {
-    pub name: String,
+    pub name: Text,
     pub bounds: Vec<FaceBoundRef>,
     pub face_geometry: SurfaceRef,
     pub same_sense: bool,
@@ -14299,16 +14401,16 @@ pub struct AdvancedFace {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AllAroundShapeAspect {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AngularLocation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_shape_aspect: ShapeAspectRef,
     pub related_shape_aspect: ShapeAspectRef,
     pub angle_selection: AngleRelator,
@@ -14317,14 +14419,14 @@ pub struct AngularLocation {
 #[derive(Debug, Clone, PartialEq)]
 pub struct AngularSize {
     pub applies_to: ShapeAspectRef,
-    pub name: String,
+    pub name: Text,
     pub angle_selection: AngleRelator,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AngularityTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -14332,14 +14434,14 @@ pub struct AngularityTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationCurveOccurrence {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: CurveOrCurveSetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationFillAreaOccurrence {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
     pub fill_style_target: PointRef,
@@ -14347,36 +14449,36 @@ pub struct AnnotationFillAreaOccurrence {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationOccurrence {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationOccurrenceAssociativity {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub relating_annotation_occurrence: AnnotationOccurrenceRef,
     pub related_annotation_occurrence: AnnotationOccurrenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationOccurrenceRelationship {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub relating_annotation_occurrence: AnnotationOccurrenceRef,
     pub related_annotation_occurrence: AnnotationOccurrenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationPlaceholderLeaderLine {
-    pub name: String,
+    pub name: Text,
     pub geometric_elements: Vec<DesApllPointSelectRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationPlaceholderOccurrence {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
     pub role: AnnotationPlaceholderOccurrenceRole,
@@ -14385,7 +14487,7 @@ pub struct AnnotationPlaceholderOccurrence {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationPlaceholderOccurrenceWithLeaderLine {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
     pub role: AnnotationPlaceholderOccurrenceRole,
@@ -14395,7 +14497,7 @@ pub struct AnnotationPlaceholderOccurrenceWithLeaderLine {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationPlane {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: PlaneOrPlanarBoxRef,
     pub elements: Option<Vec<AnnotationPlaneElementRef>>,
@@ -14403,62 +14505,62 @@ pub struct AnnotationPlane {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationSymbol {
-    pub name: String,
+    pub name: Text,
     pub mapping_source: RepresentationMapRef,
     pub mapping_target: RepresentationItemRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationSymbolOccurrence {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: AnnotationSymbolOccurrenceItemRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationText {
-    pub name: String,
+    pub name: Text,
     pub mapping_source: RepresentationMapRef,
     pub mapping_target: Axis2PlacementRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationTextCharacter {
-    pub name: String,
+    pub name: Text,
     pub mapping_source: RepresentationMapRef,
     pub mapping_target: Axis2PlacementRef,
-    pub alignment: String,
+    pub alignment: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationTextOccurrence {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: AnnotationTextOccurrenceItemRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationToAnnotationLeaderLine {
-    pub name: String,
+    pub name: Text,
     pub geometric_elements: Vec<DesApllPointSelectRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationToModelLeaderLine {
-    pub name: String,
+    pub name: Text,
     pub geometric_elements: Vec<DesApllPointSelectRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ApllPoint {
-    pub name: String,
+    pub name: Text,
     pub coordinates: Reals3,
     pub symbol_applied: DesApllPointSymbol,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ApllPointWithSurface {
-    pub name: String,
+    pub name: Text,
     pub coordinates: Reals3,
     pub symbol_applied: DesApllPointSymbol,
     pub associated_surface: FaceSurfaceRef,
@@ -14466,19 +14568,19 @@ pub struct ApllPointWithSurface {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ApplicationContext {
-    pub application: String,
+    pub application: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ApplicationContextElement {
-    pub name: String,
+    pub name: Text,
     pub frame_of_reference: ApplicationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ApplicationProtocolDefinition {
-    pub status: String,
-    pub application_interpreted_model_schema_name: String,
+    pub status: Text,
+    pub application_interpreted_model_schema_name: Text,
     pub application_protocol_year: i64,
     pub application: ApplicationContextRef,
 }
@@ -14499,13 +14601,13 @@ pub struct AppliedDateAndTimeAssignment {
 #[derive(Debug, Clone, PartialEq)]
 pub struct AppliedDocumentReference {
     pub assigned_document: DocumentRef,
-    pub source: String,
+    pub source: Text,
     pub items: Vec<DocumentReferenceItemRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AppliedExternalIdentificationAssignment {
-    pub assigned_id: String,
+    pub assigned_id: Text,
     pub role: IdentificationRoleRef,
     pub source: ExternalSourceRef,
     pub items: Vec<ExternalIdentificationItemRef>,
@@ -14538,7 +14640,7 @@ pub struct AppliedSecurityClassificationAssignment {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Approval {
     pub status: ApprovalStatusRef,
-    pub level: String,
+    pub level: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -14561,12 +14663,12 @@ pub struct ApprovalPersonOrganization {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ApprovalRole {
-    pub role: String,
+    pub role: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ApprovalStatus {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -14599,54 +14701,54 @@ pub struct AreaUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AscribableState {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub pertaining_state_type: StateTypeRef,
     pub ascribed_state_observed: StateObservedRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AscribableStateRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_ascribable_state: AscribableStateRef,
     pub related_ascribable_state: AscribableStateRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AssemblyComponentUsage {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_product_definition: ProductDefinitionOrReferenceRef,
     pub related_product_definition: ProductDefinitionOrReferenceRef,
-    pub reference_designator: Option<String>,
+    pub reference_designator: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AuxiliaryLeaderLine {
-    pub name: String,
+    pub name: Text,
     pub geometric_elements: Vec<DesApllPointSelectRef>,
     pub controlling_leader_line: AnnotationToModelLeaderLineRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Axis1Placement {
-    pub name: String,
+    pub name: Text,
     pub location: CartesianPointRef,
     pub axis: Option<DirectionRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Axis2Placement2d {
-    pub name: String,
+    pub name: Text,
     pub location: CartesianPointRef,
     pub ref_direction: Option<DirectionRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Axis2Placement3d {
-    pub name: String,
+    pub name: Text,
     pub location: CartesianPointRef,
     pub axis: Option<DirectionRef>,
     pub ref_direction: Option<DirectionRef>,
@@ -14654,7 +14756,7 @@ pub struct Axis2Placement3d {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BSplineCurve {
-    pub name: String,
+    pub name: Text,
     pub degree: i64,
     pub control_points_list: Vec<CartesianPointRef>,
     pub curve_form: BSplineCurveForm,
@@ -14664,7 +14766,7 @@ pub struct BSplineCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BSplineCurveWithKnots {
-    pub name: String,
+    pub name: Text,
     pub degree: i64,
     pub control_points_list: Vec<CartesianPointRef>,
     pub curve_form: BSplineCurveForm,
@@ -14677,7 +14779,7 @@ pub struct BSplineCurveWithKnots {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BSplineSurface {
-    pub name: String,
+    pub name: Text,
     pub u_degree: i64,
     pub v_degree: i64,
     pub control_points_list: Vec<Vec<CartesianPointRef>>,
@@ -14689,7 +14791,7 @@ pub struct BSplineSurface {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BSplineSurfaceWithKnots {
-    pub name: String,
+    pub name: Text,
     pub u_degree: i64,
     pub v_degree: i64,
     pub control_points_list: Vec<Vec<CartesianPointRef>>,
@@ -14706,7 +14808,7 @@ pub struct BSplineSurfaceWithKnots {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BezierCurve {
-    pub name: String,
+    pub name: Text,
     pub degree: i64,
     pub control_points_list: Vec<CartesianPointRef>,
     pub curve_form: BSplineCurveForm,
@@ -14716,7 +14818,7 @@ pub struct BezierCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BezierSurface {
-    pub name: String,
+    pub name: Text,
     pub u_degree: i64,
     pub v_degree: i64,
     pub control_points_list: Vec<Vec<CartesianPointRef>>,
@@ -14728,24 +14830,24 @@ pub struct BezierSurface {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BoundedCurve {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BoundedPcurve {
-    pub name: String,
+    pub name: Text,
     pub basis_surface: SurfaceRef,
     pub reference_to_curve: DefinitionalRepresentationRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BoundedSurface {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BoundedSurfaceCurve {
-    pub name: String,
+    pub name: Text,
     pub curve_3d: CurveRef,
     pub associated_geometry: Vec<PcurveOrSurfaceRef>,
     pub master_representation: PreferredSurfaceCurveRepresentation,
@@ -14753,7 +14855,7 @@ pub struct BoundedSurfaceCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BrepWithVoids {
-    pub name: String,
+    pub name: Text,
     pub outer: ClosedShellRef,
     pub voids: Vec<OrientedClosedShellRef>,
 }
@@ -14767,33 +14869,33 @@ pub struct CalendarDate {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CameraImage {
-    pub name: String,
+    pub name: Text,
     pub mapping_source: RepresentationMapRef,
     pub mapping_target: RepresentationItemRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CameraImage3dWithScale {
-    pub name: String,
+    pub name: Text,
     pub mapping_source: RepresentationMapRef,
     pub mapping_target: RepresentationItemRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CameraModel {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CameraModelD3 {
-    pub name: String,
+    pub name: Text,
     pub view_reference_system: Axis2Placement3dRef,
     pub perspective_of_volume: ViewVolumeRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CameraModelD3MultiClipping {
-    pub name: String,
+    pub name: Text,
     pub view_reference_system: Axis2Placement3dRef,
     pub perspective_of_volume: ViewVolumeRef,
     pub shape_clipping: Vec<CameraModelD3MultiClippingIntersectionSelectRef>,
@@ -14801,7 +14903,7 @@ pub struct CameraModelD3MultiClipping {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CameraModelD3WithHlhsr {
-    pub name: String,
+    pub name: Text,
     pub view_reference_system: Axis2Placement3dRef,
     pub perspective_of_volume: ViewVolumeRef,
     pub hidden_line_surface_removal: bool,
@@ -14815,7 +14917,7 @@ pub struct CameraUsage {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CartesianPoint {
-    pub name: String,
+    pub name: Text,
     pub coordinates: Reals3,
 }
 
@@ -14847,22 +14949,22 @@ pub struct CcDesignSecurityClassification {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CentreOfSymmetry {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Certification {
-    pub name: String,
-    pub purpose: String,
+    pub name: Text,
+    pub purpose: Text,
     pub kind: CertificationTypeRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CertificationType {
-    pub description: String,
+    pub description: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -14889,16 +14991,16 @@ pub struct CharacterGlyphStyleStroke {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CharacterizedItemWithinRepresentation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub item: RepresentationItemRef,
     pub rep: RepresentationRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CharacterizedObject {
-    pub name: Option<String>,
-    pub description: Option<String>,
+    pub name: Option<Text>,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -14909,15 +15011,15 @@ pub struct CharacterizedRepresentation {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Circle {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2PlacementRef,
     pub radius: f64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CircularRunoutTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -14925,14 +15027,14 @@ pub struct CircularRunoutTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ClosedShell {
-    pub name: String,
+    pub name: Text,
     pub cfs_faces: Vec<FaceRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CoaxialityTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -14943,7 +15045,7 @@ pub struct Colour {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ColourRgb {
-    pub name: String,
+    pub name: Text,
     pub red: f64,
     pub green: f64,
     pub blue: f64,
@@ -14951,21 +15053,21 @@ pub struct ColourRgb {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ColourSpecification {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CommonDatum {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
-    pub identification: String,
+    pub identification: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ComplexTriangulatedFace {
-    pub name: String,
+    pub name: Text,
     pub coordinates: CoordinatesListRef,
     pub pnmax: i64,
     pub normals: Vec<Reals3>,
@@ -14977,7 +15079,7 @@ pub struct ComplexTriangulatedFace {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ComplexTriangulatedSurfaceSet {
-    pub name: String,
+    pub name: Text,
     pub coordinates: CoordinatesListRef,
     pub pnmax: i64,
     pub normals: Vec<Reals3>,
@@ -14988,7 +15090,7 @@ pub struct ComplexTriangulatedSurfaceSet {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CompositeCurve {
-    pub name: String,
+    pub name: Text,
     pub segments: Vec<CompositeCurveSegmentRef>,
     pub self_intersect: Logical,
 }
@@ -15002,36 +15104,36 @@ pub struct CompositeCurveSegment {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CompositeGroupShapeAspect {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CompositeShapeAspect {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CompositeText {
-    pub name: String,
+    pub name: Text,
     pub collected_text: Vec<TextOrCharacterRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CompoundRepresentationItem {
-    pub name: String,
+    pub name: Text,
     pub item_element: CompoundItemDefinitionRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConcentricityTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -15045,29 +15147,29 @@ pub struct ConfigurationDesign {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConfigurationEffectivity {
-    pub id: String,
+    pub id: Text,
     pub usage: ProductDefinitionRelationshipRef,
     pub configuration: ConfigurationDesignRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConfigurationItem {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub item_concept: ProductConceptRef,
-    pub purpose: Option<String>,
+    pub purpose: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Conic {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2PlacementRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConicalSurface {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2Placement3dRef,
     pub radius: f64,
     pub semi_angle: f64,
@@ -15075,28 +15177,28 @@ pub struct ConicalSurface {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConnectedFaceSet {
-    pub name: String,
+    pub name: Text,
     pub cfs_faces: Option<Vec<FaceRef>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConstructiveGeometryRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConstructiveGeometryRepresentationRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub rep_1: ConstructiveGeometryRepresentationOrShapeRepresentationRef,
     pub rep_2: RepresentationOrRepresentationReferenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ContextDependentOverRidingStyledItem {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
     pub over_ridden_style: StyledItemRef,
@@ -15112,33 +15214,33 @@ pub struct ContextDependentShapeRepresentation {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ContextDependentUnit {
     pub dimensions: DimensionalExponentsRef,
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ContinuousShapeAspect {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Contract {
-    pub name: String,
-    pub purpose: String,
+    pub name: Text,
+    pub purpose: Text,
     pub kind: ContractTypeRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ContractType {
-    pub description: String,
+    pub description: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConversionBasedUnit {
     pub dimensions: DimensionalExponentsRef,
-    pub name: String,
+    pub name: Text,
     pub conversion_factor: MeasureWithUnitRef,
 }
 
@@ -15151,19 +15253,19 @@ pub struct CoordinatedUniversalTimeOffset {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CoordinatesList {
-    pub name: String,
+    pub name: Text,
     pub npoints: i64,
     pub position_coords: Vec<Reals3>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Curve {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CurveStyle {
-    pub name: String,
+    pub name: Text,
     pub curve_font: Option<CurveFontOrScaledCurveFontSelectRef>,
     pub curve_width: Option<SizeSelectRef>,
     pub curve_colour: Option<ColourRef>,
@@ -15171,13 +15273,13 @@ pub struct CurveStyle {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CurveStyleFont {
-    pub name: String,
+    pub name: Text,
     pub pattern_list: Vec<CurveStyleFontPatternRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CurveStyleFontAndScaling {
-    pub name: String,
+    pub name: Text,
     pub curve_font: CurveStyleFontSelectRef,
     pub curve_font_scaling: f64,
 }
@@ -15196,15 +15298,15 @@ pub struct CurveStyleRendering {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CylindricalSurface {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2Placement3dRef,
     pub radius: f64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CylindricityTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
 }
@@ -15228,27 +15330,27 @@ pub struct DateAndTimeAssignment {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DateRole {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DateTimeRole {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Datum {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
-    pub identification: String,
+    pub identification: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DatumFeature {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
 }
@@ -15261,8 +15363,8 @@ pub struct DatumReference {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DatumReferenceCompartment {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
     pub base: DatumOrCommonDatumRef,
@@ -15271,8 +15373,8 @@ pub struct DatumReferenceCompartment {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DatumReferenceElement {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
     pub base: DatumOrCommonDatumRef,
@@ -15287,8 +15389,8 @@ pub struct DatumReferenceModifierWithValue {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DatumSystem {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
     pub constituents: Vec<DatumReferenceCompartmentRef>,
@@ -15296,64 +15398,64 @@ pub struct DatumSystem {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DatumTarget {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
-    pub target_id: String,
+    pub target_id: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DefaultModelGeometricView {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub item: RepresentationItemRef,
     pub rep: RepresentationRef,
-    pub name_1: String,
-    pub description_1: Option<String>,
+    pub name_1: Text,
+    pub description_1: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DefinedCharacterGlyph {
-    pub name: String,
+    pub name: Text,
     pub definition: DefinedGlyphSelectRef,
     pub placement: Axis2PlacementRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DefinedSymbol {
-    pub name: String,
+    pub name: Text,
     pub definition: DefinedSymbolSelectRef,
     pub target: SymbolTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DefinitionalRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DefinitionalRepresentationRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub rep_1: RepresentationOrRepresentationReferenceRef,
     pub rep_2: RepresentationOrRepresentationReferenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DefinitionalRepresentationRelationshipWithSameContext {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub rep_1: RepresentationOrRepresentationReferenceRef,
     pub rep_2: RepresentationOrRepresentationReferenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DegenerateToroidalSurface {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2Placement3dRef,
     pub major_radius: f64,
     pub minor_radius: f64,
@@ -15362,8 +15464,8 @@ pub struct DegenerateToroidalSurface {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DerivedShapeAspect {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
 }
@@ -15381,21 +15483,21 @@ pub struct DerivedUnitElement {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DescriptionAttribute {
-    pub attribute_value: String,
+    pub attribute_value: Text,
     pub described_item: DescriptionAttributeSelectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DescriptiveRepresentationItem {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DesignContext {
-    pub name: String,
+    pub name: Text,
     pub frame_of_reference: ApplicationContextRef,
-    pub life_cycle_stage: String,
+    pub life_cycle_stage: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -15417,16 +15519,16 @@ pub struct DimensionalExponents {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DimensionalLocation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_shape_aspect: ShapeAspectRef,
     pub related_shape_aspect: ShapeAspectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DimensionalLocationWithPath {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_shape_aspect: ShapeAspectRef,
     pub related_shape_aspect: ShapeAspectRef,
     pub path: ShapeAspectRef,
@@ -15435,70 +15537,70 @@ pub struct DimensionalLocationWithPath {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DimensionalSize {
     pub applies_to: ShapeAspectRef,
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DimensionalSizeWithDatumFeature {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
     pub applies_to: ShapeAspectRef,
-    pub name_1: String,
+    pub name_1: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DimensionalSizeWithPath {
     pub applies_to: ShapeAspectRef,
-    pub name: String,
+    pub name: Text,
     pub path: ShapeAspectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DirectedDimensionalLocation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_shape_aspect: ShapeAspectRef,
     pub related_shape_aspect: ShapeAspectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Direction {
-    pub name: String,
+    pub name: Text,
     pub direction_ratios: Reals3,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Document {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub kind: DocumentTypeRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DocumentFile {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub kind: DocumentTypeRef,
-    pub name_1: String,
-    pub description_1: Option<String>,
+    pub name_1: Text,
+    pub description_1: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DocumentProductAssociation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_document: DocumentRef,
     pub related_product: ProductOrFormationOrDefinitionRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DocumentProductEquivalence {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_document: DocumentRef,
     pub related_product: ProductOrFormationOrDefinitionRef,
 }
@@ -15506,52 +15608,52 @@ pub struct DocumentProductEquivalence {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DocumentReference {
     pub assigned_document: DocumentRef,
-    pub source: String,
+    pub source: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DocumentRepresentationType {
-    pub name: String,
+    pub name: Text,
     pub represented_document: DocumentRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DocumentType {
-    pub product_data_type: String,
+    pub product_data_type: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingAnnotationOccurrence {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingCallout {
-    pub name: String,
+    pub name: Text,
     pub contents: Vec<DraughtingCalloutElementRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingCalloutRelationship {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub relating_draughting_callout: DraughtingCalloutRef,
     pub related_draughting_callout: DraughtingCalloutRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingModel {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingModelItemAssociation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub definition: DraughtingModelItemDefinitionRef,
     pub used_representation: AnnotationRepresentationSelectRef,
     pub identified_item: DraughtingModelItemAssociationSelectRef,
@@ -15559,8 +15661,8 @@ pub struct DraughtingModelItemAssociation {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingModelItemAssociationWithPlaceholder {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub definition: DraughtingModelItemDefinitionRef,
     pub used_representation: AnnotationRepresentationSelectRef,
     pub identified_item: DraughtingModelItemAssociationSelectRef,
@@ -15569,29 +15671,29 @@ pub struct DraughtingModelItemAssociationWithPlaceholder {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingPreDefinedColour {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingPreDefinedCurveFont {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingPreDefinedTextFont {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Edge {
-    pub name: String,
+    pub name: Text,
     pub edge_start: Option<VertexRef>,
     pub edge_end: Option<VertexRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct EdgeCurve {
-    pub name: String,
+    pub name: Text,
     pub edge_start: VertexRef,
     pub edge_end: VertexRef,
     pub edge_geometry: CurveRef,
@@ -15600,24 +15702,24 @@ pub struct EdgeCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct EdgeLoop {
-    pub name: String,
+    pub name: Text,
     pub edge_list: Vec<OrientedEdgeRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Effectivity {
-    pub id: String,
+    pub id: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ElementarySurface {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2Placement3dRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Ellipse {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2PlacementRef,
     pub semi_axis_1: f64,
     pub semi_axis_2: f64,
@@ -15628,7 +15730,7 @@ pub struct Expression {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ExternalIdentificationAssignment {
-    pub assigned_id: String,
+    pub assigned_id: Text,
     pub role: IdentificationRoleRef,
     pub source: ExternalSourceRef,
 }
@@ -15654,7 +15756,7 @@ pub struct ExternallyDefinedCurveFont {
 pub struct ExternallyDefinedHatchStyle {
     pub item_id: StringSelectValue,
     pub source: ExternalSourceRef,
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -15691,32 +15793,32 @@ pub struct ExternallyDefinedTile {
 pub struct ExternallyDefinedTileStyle {
     pub item_id: StringSelectValue,
     pub source: ExternalSourceRef,
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Face {
-    pub name: String,
+    pub name: Text,
     pub bounds: Vec<FaceBoundRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FaceBound {
-    pub name: String,
+    pub name: Text,
     pub bound: LoopRef,
     pub orientation: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FaceOuterBound {
-    pub name: String,
+    pub name: Text,
     pub bound: LoopRef,
     pub orientation: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FaceSurface {
-    pub name: String,
+    pub name: Text,
     pub bounds: Vec<FaceBoundRef>,
     pub face_geometry: SurfaceRef,
     pub same_sense: bool,
@@ -15724,27 +15826,27 @@ pub struct FaceSurface {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FeatureForDatumTargetRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_shape_aspect: ShapeAspectRef,
     pub related_shape_aspect: ShapeAspectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FillAreaStyle {
-    pub name: String,
+    pub name: Text,
     pub fill_styles: Vec<FillStyleSelectRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FillAreaStyleColour {
-    pub name: String,
+    pub name: Text,
     pub fill_colour: ColourRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FillAreaStyleHatching {
-    pub name: String,
+    pub name: Text,
     pub hatch_line_appearance: CurveStyleRef,
     pub start_of_next_hatch_line: OneDirectionRepeatFactorRef,
     pub point_of_reference_hatch_line: CartesianPointRef,
@@ -15754,26 +15856,26 @@ pub struct FillAreaStyleHatching {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FillAreaStyleTileColouredRegion {
-    pub name: String,
+    pub name: Text,
     pub closed_curve: CurveOrAnnotationCurveOccurrenceRef,
     pub region_colour: ColourRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FillAreaStyleTileCurveWithStyle {
-    pub name: String,
+    pub name: Text,
     pub styled_curve: AnnotationCurveOccurrenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FillAreaStyleTileSymbolWithStyle {
-    pub name: String,
+    pub name: Text,
     pub symbol: AnnotationSymbolOccurrenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FillAreaStyleTiles {
-    pub name: String,
+    pub name: Text,
     pub tiling_pattern: TwoDirectionRepeatFactorRef,
     pub tiles: Vec<FillAreaStyleTileShapeSelectRef>,
     pub tiling_scale: f64,
@@ -15781,8 +15883,8 @@ pub struct FillAreaStyleTiles {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FlatnessTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
 }
@@ -15792,14 +15894,14 @@ pub struct FoundedItem {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunctionallyDefinedTransformation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeneralDatumReference {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
     pub base: DatumOrCommonDatumRef,
@@ -15808,15 +15910,15 @@ pub struct GeneralDatumReference {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeneralProperty {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeneralPropertyAssociation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub base_definition: GeneralPropertyRef,
     pub derived_definition: DerivedPropertySelectRef,
 }
@@ -15834,14 +15936,14 @@ pub struct GenericProductDefinitionReference {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricCurveSet {
-    pub name: String,
+    pub name: Text,
     pub elements: Vec<GeometricSetSelectRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricItemSpecificUsage {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub definition: GeometricItemSpecificUsageSelectRef,
     pub used_representation: ShapeModelRef,
     pub identified_item: GeometricModelItemRef,
@@ -15849,42 +15951,42 @@ pub struct GeometricItemSpecificUsage {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricRepresentationContext {
-    pub context_identifier: String,
-    pub context_type: String,
+    pub context_identifier: Text,
+    pub context_type: Text,
     pub coordinate_space_dimension: i64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricRepresentationItem {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricSet {
-    pub name: String,
+    pub name: Text,
     pub elements: Vec<GeometricSetSelectRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricToleranceRelationship {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub relating_geometric_tolerance: GeometricToleranceRef,
     pub related_geometric_tolerance: GeometricToleranceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricToleranceWithDatumReference {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -15892,8 +15994,8 @@ pub struct GeometricToleranceWithDatumReference {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricToleranceWithDefinedAreaUnit {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef,
@@ -15903,8 +16005,8 @@ pub struct GeometricToleranceWithDefinedAreaUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricToleranceWithDefinedUnit {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef,
@@ -15912,8 +16014,8 @@ pub struct GeometricToleranceWithDefinedUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricToleranceWithMaximumTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub modifiers: Vec<GeometricToleranceModifier>,
@@ -15922,8 +16024,8 @@ pub struct GeometricToleranceWithMaximumTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricToleranceWithModifiers {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub modifiers: Vec<GeometricToleranceModifier>,
@@ -15931,36 +16033,36 @@ pub struct GeometricToleranceWithModifiers {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricallyBoundedSurfaceShapeRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricallyBoundedWireframeShapeRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GlobalUncertaintyAssignedContext {
-    pub context_identifier: String,
-    pub context_type: String,
+    pub context_identifier: Text,
+    pub context_type: Text,
     pub uncertainty: Vec<UncertaintyMeasureWithUnitRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GlobalUnitAssignedContext {
-    pub context_identifier: String,
-    pub context_type: String,
+    pub context_identifier: Text,
+    pub context_type: Text,
     pub units: Vec<UnitRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Group {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -15970,7 +16072,7 @@ pub struct GroupAssignment {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Hyperbola {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2PlacementRef,
     pub semi_axis: f64,
     pub semi_imag_axis: f64,
@@ -15978,20 +16080,20 @@ pub struct Hyperbola {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct IdAttribute {
-    pub attribute_value: String,
+    pub attribute_value: Text,
     pub identified_item: IdAttributeSelectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct IdentificationAssignment {
-    pub assigned_id: String,
+    pub assigned_id: Text,
     pub role: IdentificationRoleRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct IdentificationRole {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -16001,13 +16103,13 @@ pub struct IntLiteral {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct IntegerRepresentationItem {
-    pub name: String,
+    pub name: Text,
     pub the_value: i64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct IntersectionCurve {
-    pub name: String,
+    pub name: Text,
     pub curve_3d: CurveRef,
     pub associated_geometry: Vec<PcurveOrSurfaceRef>,
     pub master_representation: PreferredSurfaceCurveRepresentation,
@@ -16020,16 +16122,16 @@ pub struct Invisibility {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ItemDefinedTransformation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub transform_item_1: RepresentationItemRef,
     pub transform_item_2: RepresentationItemRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ItemIdentifiedRepresentationUsage {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub definition: ItemIdentifiedRepresentationUsageDefinitionRef,
     pub used_representation: RepresentationRef,
     pub identified_item: ItemIdentifiedRepresentationUsageSelectRef,
@@ -16037,20 +16139,20 @@ pub struct ItemIdentifiedRepresentationUsage {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LeaderCurve {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: CurveOrCurveSetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LeaderDirectedCallout {
-    pub name: String,
+    pub name: Text,
     pub contents: Vec<DraughtingCalloutElementRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LeaderTerminator {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: AnnotationSymbolOccurrenceItemRef,
     pub annotated_curve: AnnotationCurveOccurrenceRef,
@@ -16069,23 +16171,23 @@ pub struct LengthUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LimitsAndFits {
-    pub form_variance: String,
-    pub zone_variance: String,
-    pub grade: String,
-    pub source: String,
+    pub form_variance: Text,
+    pub zone_variance: Text,
+    pub grade: Text,
+    pub source: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Line {
-    pub name: String,
+    pub name: Text,
     pub pnt: CartesianPointRef,
     pub dir: VectorRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LineProfileTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
 }
@@ -16105,37 +16207,37 @@ pub struct LocalTime {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Loop {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MakeFromUsageOption {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_product_definition: ProductDefinitionOrReferenceRef,
     pub related_product_definition: ProductDefinitionOrReferenceRef,
     pub ranking: i64,
-    pub ranking_rationale: String,
+    pub ranking_rationale: Text,
     pub quantity: MeasureWithUnitRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ManifoldSolidBrep {
-    pub name: String,
+    pub name: Text,
     pub outer: ClosedShellRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ManifoldSurfaceShapeRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MappedItem {
-    pub name: String,
+    pub name: Text,
     pub mapping_source: RepresentationMapRef,
     pub mapping_target: RepresentationItemRef,
 }
@@ -16153,15 +16255,15 @@ pub struct MassUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MeasureQualification {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub qualified_measure: MeasureWithUnitRef,
     pub qualifiers: Vec<ValueQualifierRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MeasureRepresentationItem {
-    pub name: String,
+    pub name: Text,
     pub value_component: MeasureValue,
     pub unit_component: UnitRef,
 }
@@ -16174,52 +16276,52 @@ pub struct MeasureWithUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MechanicalContext {
-    pub name: String,
+    pub name: Text,
     pub frame_of_reference: ApplicationContextRef,
-    pub discipline_type: String,
+    pub discipline_type: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MechanicalDesignAndDraughtingRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub rep_1: MechanicalDesignAndDraughtingRelationshipSelectRef,
     pub rep_2: MechanicalDesignAndDraughtingRelationshipSelectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MechanicalDesignGeometricPresentationRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MechanicalDesignPresentationRepresentationWithDraughting {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MechanicalDesignShadedPresentationRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ModelGeometricView {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub item: RepresentationItemRef,
     pub rep: RepresentationRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ModifiedGeometricTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub modifier: LimitCondition,
@@ -16227,7 +16329,7 @@ pub struct ModifiedGeometricTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NameAttribute {
-    pub attribute_value: String,
+    pub attribute_value: Text,
     pub named_item: NameAttributeSelectRef,
 }
 
@@ -16238,12 +16340,12 @@ pub struct NamedUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NextAssemblyUsageOccurrence {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_product_definition: ProductDefinitionOrReferenceRef,
     pub related_product_definition: ProductDefinitionOrReferenceRef,
-    pub reference_designator: Option<String>,
+    pub reference_designator: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -16251,13 +16353,13 @@ pub struct NumericExpression {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ObjectRole {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OffsetSurface {
-    pub name: String,
+    pub name: Text,
     pub basis_surface: SurfaceRef,
     pub distance: f64,
     pub self_intersect: Logical,
@@ -16265,106 +16367,106 @@ pub struct OffsetSurface {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OneDirectionRepeatFactor {
-    pub name: String,
+    pub name: Text,
     pub repeat_factor: VectorRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OpenShell {
-    pub name: String,
+    pub name: Text,
     pub cfs_faces: Vec<FaceRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Organization {
-    pub id: Option<String>,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Option<Text>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrganizationRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_organization: OrganizationRef,
     pub related_organization: OrganizationRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrganizationRole {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrganizationType {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrganizationTypeRole {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrganizationalAddress {
-    pub internal_location: Option<String>,
-    pub street_number: Option<String>,
-    pub street: Option<String>,
-    pub postal_box: Option<String>,
-    pub town: Option<String>,
-    pub region: Option<String>,
-    pub postal_code: Option<String>,
-    pub country: Option<String>,
-    pub facsimile_number: Option<String>,
-    pub telephone_number: Option<String>,
-    pub electronic_mail_address: Option<String>,
-    pub telex_number: Option<String>,
+    pub internal_location: Option<Text>,
+    pub street_number: Option<Text>,
+    pub street: Option<Text>,
+    pub postal_box: Option<Text>,
+    pub town: Option<Text>,
+    pub region: Option<Text>,
+    pub postal_code: Option<Text>,
+    pub country: Option<Text>,
+    pub facsimile_number: Option<Text>,
+    pub telephone_number: Option<Text>,
+    pub electronic_mail_address: Option<Text>,
+    pub telex_number: Option<Text>,
     pub organizations: Vec<OrganizationRef>,
-    pub description: Option<String>,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrganizationalProject {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub responsible_organizations: Vec<OrganizationRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrganizationalProjectRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_organizational_project: OrganizationalProjectRef,
     pub related_organizational_project: OrganizationalProjectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrganizationalProjectRole {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrientedClosedShell {
-    pub name: String,
+    pub name: Text,
     pub closed_shell_element: ClosedShellRef,
     pub orientation: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrientedEdge {
-    pub name: String,
+    pub name: Text,
     pub edge_element: EdgeRef,
     pub orientation: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OverRidingStyledItem {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
     pub over_ridden_style: StyledItemRef,
@@ -16372,8 +16474,8 @@ pub struct OverRidingStyledItem {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParallelismTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -16381,27 +16483,27 @@ pub struct ParallelismTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParametricRepresentationContext {
-    pub context_identifier: String,
-    pub context_type: String,
+    pub context_identifier: Text,
+    pub context_type: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Path {
-    pub name: String,
+    pub name: Text,
     pub edge_list: Vec<OrientedEdgeRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Pcurve {
-    pub name: String,
+    pub name: Text,
     pub basis_surface: SurfaceRef,
     pub reference_to_curve: DefinitionalRepresentationRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PerpendicularityTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -16409,12 +16511,12 @@ pub struct PerpendicularityTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Person {
-    pub id: String,
-    pub last_name: Option<String>,
-    pub first_name: Option<String>,
-    pub middle_names: Option<Vec<String>>,
-    pub prefix_titles: Option<Vec<String>>,
-    pub suffix_titles: Option<Vec<String>>,
+    pub id: Text,
+    pub last_name: Option<Text>,
+    pub first_name: Option<Text>,
+    pub middle_names: Option<Vec<Text>>,
+    pub prefix_titles: Option<Vec<Text>>,
+    pub suffix_titles: Option<Vec<Text>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -16425,22 +16527,22 @@ pub struct PersonAndOrganization {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PersonAndOrganizationAddress {
-    pub internal_location: Option<String>,
-    pub street_number: Option<String>,
-    pub street: Option<String>,
-    pub postal_box: Option<String>,
-    pub town: Option<String>,
-    pub region: Option<String>,
-    pub postal_code: Option<String>,
-    pub country: Option<String>,
-    pub facsimile_number: Option<String>,
-    pub telephone_number: Option<String>,
-    pub electronic_mail_address: Option<String>,
-    pub telex_number: Option<String>,
+    pub internal_location: Option<Text>,
+    pub street_number: Option<Text>,
+    pub street: Option<Text>,
+    pub postal_box: Option<Text>,
+    pub town: Option<Text>,
+    pub region: Option<Text>,
+    pub postal_code: Option<Text>,
+    pub country: Option<Text>,
+    pub facsimile_number: Option<Text>,
+    pub telephone_number: Option<Text>,
+    pub electronic_mail_address: Option<Text>,
+    pub telex_number: Option<Text>,
     pub organizations: Vec<OrganizationRef>,
-    pub description: Option<String>,
+    pub description: Option<Text>,
     pub people: Vec<PersonRef>,
-    pub description_1: Option<String>,
+    pub description_1: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -16451,45 +16553,45 @@ pub struct PersonAndOrganizationAssignment {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PersonAndOrganizationRole {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PersonalAddress {
-    pub internal_location: Option<String>,
-    pub street_number: Option<String>,
-    pub street: Option<String>,
-    pub postal_box: Option<String>,
-    pub town: Option<String>,
-    pub region: Option<String>,
-    pub postal_code: Option<String>,
-    pub country: Option<String>,
-    pub facsimile_number: Option<String>,
-    pub telephone_number: Option<String>,
-    pub electronic_mail_address: Option<String>,
-    pub telex_number: Option<String>,
+    pub internal_location: Option<Text>,
+    pub street_number: Option<Text>,
+    pub street: Option<Text>,
+    pub postal_box: Option<Text>,
+    pub town: Option<Text>,
+    pub region: Option<Text>,
+    pub postal_code: Option<Text>,
+    pub country: Option<Text>,
+    pub facsimile_number: Option<Text>,
+    pub telephone_number: Option<Text>,
+    pub electronic_mail_address: Option<Text>,
+    pub telex_number: Option<Text>,
     pub people: Vec<PersonRef>,
-    pub description: Option<String>,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PlacedDatumTargetFeature {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
-    pub target_id: String,
+    pub target_id: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Placement {
-    pub name: String,
+    pub name: Text,
     pub location: CartesianPointRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PlanarBox {
-    pub name: String,
+    pub name: Text,
     pub size_in_x: f64,
     pub size_in_y: f64,
     pub placement: Axis2PlacementRef,
@@ -16497,14 +16599,14 @@ pub struct PlanarBox {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PlanarExtent {
-    pub name: String,
+    pub name: Text,
     pub size_in_x: f64,
     pub size_in_y: f64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Plane {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2Placement3dRef,
 }
 
@@ -16527,12 +16629,12 @@ pub struct PlusMinusTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Point {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PointStyle {
-    pub name: String,
+    pub name: Text,
     pub marker: Option<MarkerSelectRef>,
     pub marker_size: Option<SizeSelectRef>,
     pub marker_colour: Option<ColourRef>,
@@ -16540,82 +16642,82 @@ pub struct PointStyle {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PolyLoop {
-    pub name: String,
+    pub name: Text,
     pub polygon: Vec<CartesianPointRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Polyline {
-    pub name: String,
+    pub name: Text,
     pub points: Vec<CartesianPointRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PositionTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedCharacterGlyph {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedColour {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedCurveFont {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedItem {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedMarker {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedPointMarkerSymbol {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedPresentationStyle {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedSurfaceSideStyle {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedSymbol {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedTerminatorSymbol {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedTextFont {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedTile {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -16625,21 +16727,21 @@ pub struct PrecisionQualifier {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PresentationArea {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PresentationLayerAssignment {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub assigned_items: Vec<LayeredItemRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PresentationRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
@@ -16666,7 +16768,7 @@ pub struct PresentationStyleByContext {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PresentationView {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
@@ -16682,74 +16784,74 @@ pub struct PresentedItemRepresentation {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Product {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub frame_of_reference: Vec<ProductContextRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductCategory {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductCategoryRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub category: ProductCategoryRef,
     pub sub_category: ProductCategoryRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductConcept {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub market_context: ProductConceptContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductConceptContext {
-    pub name: String,
+    pub name: Text,
     pub frame_of_reference: ApplicationContextRef,
-    pub market_segment_type: String,
+    pub market_segment_type: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductConceptFeature {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductConceptFeatureCategory {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductContext {
-    pub name: String,
+    pub name: Text,
     pub frame_of_reference: ApplicationContextRef,
-    pub discipline_type: String,
+    pub discipline_type: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinition {
-    pub id: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub description: Option<Text>,
     pub formation: ProductDefinitionFormationRef,
     pub frame_of_reference: ProductDefinitionContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionContext {
-    pub name: String,
+    pub name: Text,
     pub frame_of_reference: ApplicationContextRef,
-    pub life_cycle_stage: String,
+    pub life_cycle_stage: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -16761,85 +16863,85 @@ pub struct ProductDefinitionContextAssociation {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionContextRole {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionEffectivity {
-    pub id: String,
+    pub id: Text,
     pub usage: ProductDefinitionRelationshipRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionFormation {
-    pub id: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub description: Option<Text>,
     pub of_product: ProductRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionFormationWithSpecifiedSource {
-    pub id: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub description: Option<Text>,
     pub of_product: ProductRef,
     pub make_or_buy: Source,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionOccurrence {
-    pub id: String,
-    pub name: Option<String>,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Option<Text>,
+    pub description: Option<Text>,
     pub definition: Option<ProductDefinitionOrReferenceRef>,
     pub quantity: Option<MeasureWithUnitRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionRelationship {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_product_definition: ProductDefinitionOrReferenceRef,
     pub related_product_definition: ProductDefinitionOrReferenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionRelationshipRelationship {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating: ProductDefinitionRelationshipRef,
     pub related: ProductDefinitionRelationshipRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionShape {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub definition: CharacterizedDefinitionRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionSubstitute {
-    pub description: Option<String>,
+    pub description: Option<Text>,
     pub context_relationship: ProductDefinitionRelationshipRef,
     pub substitute_definition: ProductDefinitionRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionUsage {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_product_definition: ProductDefinitionOrReferenceRef,
     pub related_product_definition: ProductDefinitionOrReferenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionWithAssociatedDocuments {
-    pub id: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub description: Option<Text>,
     pub formation: ProductDefinitionFormationRef,
     pub frame_of_reference: ProductDefinitionContextRef,
     pub documentation_ids: Vec<DocumentRef>,
@@ -16847,8 +16949,8 @@ pub struct ProductDefinitionWithAssociatedDocuments {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductRelatedProductCategory {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub products: Vec<ProductRef>,
 }
 
@@ -16862,15 +16964,15 @@ pub struct ProjectedZoneDefinition {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PropertyDefinition {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub definition: CharacterizedDefinitionRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PropertyDefinitionRelationship {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub relating_property_definition: PropertyDefinitionRef,
     pub related_property_definition: PropertyDefinitionRef,
 }
@@ -16883,13 +16985,13 @@ pub struct PropertyDefinitionRepresentation {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct QualifiedRepresentationItem {
-    pub name: String,
+    pub name: Text,
     pub qualifiers: Vec<ValueQualifierRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct QuasiUniformCurve {
-    pub name: String,
+    pub name: Text,
     pub degree: i64,
     pub control_points_list: Vec<CartesianPointRef>,
     pub curve_form: BSplineCurveForm,
@@ -16899,7 +17001,7 @@ pub struct QuasiUniformCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct QuasiUniformSurface {
-    pub name: String,
+    pub name: Text,
     pub u_degree: i64,
     pub v_degree: i64,
     pub control_points_list: Vec<Vec<CartesianPointRef>>,
@@ -16922,7 +17024,7 @@ pub struct RatioUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RationalBSplineCurve {
-    pub name: String,
+    pub name: Text,
     pub degree: i64,
     pub control_points_list: Vec<CartesianPointRef>,
     pub curve_form: BSplineCurveForm,
@@ -16933,7 +17035,7 @@ pub struct RationalBSplineCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RationalBSplineSurface {
-    pub name: String,
+    pub name: Text,
     pub u_degree: i64,
     pub v_degree: i64,
     pub control_points_list: Vec<Vec<CartesianPointRef>>,
@@ -16951,37 +17053,37 @@ pub struct RealLiteral {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RealRepresentationItem {
-    pub name: String,
+    pub name: Text,
     pub the_value: f64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RepositionedTessellatedItem {
-    pub name: String,
+    pub name: Text,
     pub location: Axis2Placement3dRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Representation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RepresentationContext {
-    pub context_identifier: String,
-    pub context_type: String,
+    pub context_identifier: Text,
+    pub context_type: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RepresentationContextReference {
-    pub context_identifier: String,
+    pub context_identifier: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RepresentationItem {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -16992,22 +17094,22 @@ pub struct RepresentationMap {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RepresentationReference {
-    pub id: String,
+    pub id: Text,
     pub context_of_items: RepresentationContextReferenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RepresentationRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub rep_1: RepresentationOrRepresentationReferenceRef,
     pub rep_2: RepresentationOrRepresentationReferenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RepresentationRelationshipWithTransformation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub rep_1: RepresentationOrRepresentationReferenceRef,
     pub rep_2: RepresentationOrRepresentationReferenceRef,
     pub transformation_operator: TransformationRef,
@@ -17015,15 +17117,15 @@ pub struct RepresentationRelationshipWithTransformation {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ResourceProperty {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub resource: CharacterizedResourceDefinitionRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ResourceRequirementType {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -17034,15 +17136,15 @@ pub struct RoleAssociation {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RoundnessTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SeamCurve {
-    pub name: String,
+    pub name: Text,
     pub curve_3d: CurveRef,
     pub associated_geometry: Vec<PcurveOrSurfaceRef>,
     pub master_representation: PreferredSurfaceCurveRepresentation,
@@ -17050,8 +17152,8 @@ pub struct SeamCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SecurityClassification {
-    pub name: String,
-    pub purpose: String,
+    pub name: Text,
+    pub purpose: Text,
     pub security_level: SecurityClassificationLevelRef,
 }
 
@@ -17062,37 +17164,37 @@ pub struct SecurityClassificationAssignment {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SecurityClassificationLevel {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeAspect {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Option<Logical>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeAspectAssociativity {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_shape_aspect: ShapeAspectRef,
     pub related_shape_aspect: ShapeAspectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeAspectDerivingRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_shape_aspect: ShapeAspectRef,
     pub related_shape_aspect: ShapeAspectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeAspectRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_shape_aspect: ShapeAspectRef,
     pub related_shape_aspect: ShapeAspectRef,
 }
@@ -17105,36 +17207,36 @@ pub struct ShapeDefinitionRepresentation {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeDimensionRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeRepresentationRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub rep_1: RepresentationOrRepresentationReferenceRef,
     pub rep_2: RepresentationOrRepresentationReferenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeRepresentationWithParameters {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShellBasedSurfaceModel {
-    pub name: String,
+    pub name: Text,
     pub sbsm_boundary: Vec<ShellRef>,
 }
 
@@ -17157,12 +17259,12 @@ pub struct SolidAngleUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SolidModel {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SphericalSurface {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2Placement3dRef,
     pub radius: f64,
 }
@@ -17181,39 +17283,39 @@ pub struct StartWork {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct StateObserved {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct StateType {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct StraightnessTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct StyledItem {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Surface {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SurfaceCurve {
-    pub name: String,
+    pub name: Text,
     pub curve_3d: CurveRef,
     pub associated_geometry: Vec<PcurveOrSurfaceRef>,
     pub master_representation: PreferredSurfaceCurveRepresentation,
@@ -17221,22 +17323,22 @@ pub struct SurfaceCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SurfaceOfLinearExtrusion {
-    pub name: String,
+    pub name: Text,
     pub swept_curve: CurveRef,
     pub extrusion_axis: VectorRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SurfaceOfRevolution {
-    pub name: String,
+    pub name: Text,
     pub swept_curve: CurveRef,
     pub axis_position: Axis1PlacementRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SurfaceProfileTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
 }
@@ -17248,7 +17350,7 @@ pub struct SurfaceRenderingProperties {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SurfaceSideStyle {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<SurfaceStyleElementSelectRef>,
 }
 
@@ -17314,7 +17416,7 @@ pub struct SurfaceStyleUsage {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SweptSurface {
-    pub name: String,
+    pub name: Text,
     pub swept_curve: CurveRef,
 }
 
@@ -17325,20 +17427,20 @@ pub struct SymbolColour {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SymbolRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SymbolStyle {
-    pub name: String,
+    pub name: Text,
     pub style_of_symbol: SymbolStyleSelectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SymbolTarget {
-    pub name: String,
+    pub name: Text,
     pub placement: Axis2PlacementRef,
     pub x_scale: f64,
     pub y_scale: f64,
@@ -17346,8 +17448,8 @@ pub struct SymbolTarget {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SymmetryTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -17355,7 +17457,7 @@ pub struct SymmetryTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TerminatorSymbol {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: AnnotationSymbolOccurrenceItemRef,
     pub annotated_curve: AnnotationCurveOccurrenceRef,
@@ -17363,21 +17465,21 @@ pub struct TerminatorSymbol {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedAnnotationOccurrence {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedCurveSet {
-    pub name: String,
+    pub name: Text,
     pub coordinates: CoordinatesListRef,
     pub line_strips: Vec<Vec<i64>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedFace {
-    pub name: String,
+    pub name: Text,
     pub coordinates: CoordinatesListRef,
     pub pnmax: i64,
     pub normals: Vec<Reals3>,
@@ -17386,44 +17488,44 @@ pub struct TessellatedFace {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedGeometricSet {
-    pub name: String,
+    pub name: Text,
     pub children: Vec<TessellatedItemRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedItem {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedShapeRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedShell {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<TessellatedStructuredItemRef>,
     pub topological_link: Option<ConnectedFaceSetRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedSolid {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<TessellatedStructuredItemRef>,
     pub geometric_link: Option<ManifoldSolidBrepRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedStructuredItem {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedSurfaceSet {
-    pub name: String,
+    pub name: Text,
     pub coordinates: CoordinatesListRef,
     pub pnmax: i64,
     pub normals: Vec<Reals3>,
@@ -17431,24 +17533,24 @@ pub struct TessellatedSurfaceSet {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextFont {
-    pub id: String,
-    pub name: String,
-    pub description: String,
+    pub id: Text,
+    pub name: Text,
+    pub description: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextLiteral {
-    pub name: String,
-    pub literal: String,
+    pub name: Text,
+    pub literal: Text,
     pub placement: Axis2PlacementRef,
-    pub alignment: String,
+    pub alignment: Text,
     pub path: TextPath,
     pub font: FontSelectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextStyle {
-    pub name: String,
+    pub name: Text,
     pub character_appearance: CharacterStyleSelectRef,
 }
 
@@ -17459,7 +17561,7 @@ pub struct TextStyleForDefinedFont {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextStyleWithBoxCharacteristics {
-    pub name: String,
+    pub name: Text,
     pub character_appearance: CharacterStyleSelectRef,
     pub characteristics: Vec<MeasureValue>,
 }
@@ -17483,8 +17585,8 @@ pub struct ToleranceValue {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ToleranceZone {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
     pub defining_tolerance: Vec<ToleranceZoneTargetRef>,
@@ -17499,13 +17601,13 @@ pub struct ToleranceZoneDefinition {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ToleranceZoneForm {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ToleranceZoneWithDatum {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
     pub defining_tolerance: Vec<ToleranceZoneTargetRef>,
@@ -17515,12 +17617,12 @@ pub struct ToleranceZoneWithDatum {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TopologicalRepresentationItem {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ToroidalSurface {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2Placement3dRef,
     pub major_radius: f64,
     pub minor_radius: f64,
@@ -17528,8 +17630,8 @@ pub struct ToroidalSurface {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TotalRunoutTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -17537,7 +17639,7 @@ pub struct TotalRunoutTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TrimmedCurve {
-    pub name: String,
+    pub name: Text,
     pub basis_curve: CurveRef,
     pub trim_1: Vec<TrimmingSelectRef>,
     pub trim_2: Vec<TrimmingSelectRef>,
@@ -17547,34 +17649,34 @@ pub struct TrimmedCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TwoDirectionRepeatFactor {
-    pub name: String,
+    pub name: Text,
     pub repeat_factor: VectorRef,
     pub second_repeat_factor: VectorRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TypeQualifier {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UncertaintyMeasureWithUnit {
     pub value_component: MeasureValue,
     pub unit_component: UnitRef,
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UncertaintyQualifier {
-    pub measure_name: String,
-    pub description: String,
+    pub measure_name: Text,
+    pub description: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnequallyDisposedGeometricTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub displacement: LengthMeasureWithUnitRef,
@@ -17582,7 +17684,7 @@ pub struct UnequallyDisposedGeometricTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UniformCurve {
-    pub name: String,
+    pub name: Text,
     pub degree: i64,
     pub control_points_list: Vec<CartesianPointRef>,
     pub curve_form: BSplineCurveForm,
@@ -17592,7 +17694,7 @@ pub struct UniformCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UniformSurface {
-    pub name: String,
+    pub name: Text,
     pub u_degree: i64,
     pub v_degree: i64,
     pub control_points_list: Vec<Vec<CartesianPointRef>>,
@@ -17604,50 +17706,50 @@ pub struct UniformSurface {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ValueFormatTypeQualifier {
-    pub format_type: String,
+    pub format_type: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ValueRepresentationItem {
-    pub name: String,
+    pub name: Text,
     pub value_component: MeasureValue,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Vector {
-    pub name: String,
+    pub name: Text,
     pub orientation: DirectionRef,
     pub magnitude: f64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VersionedActionRequest {
-    pub id: String,
-    pub version: Option<String>,
-    pub purpose: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub version: Option<Text>,
+    pub purpose: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Vertex {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VertexLoop {
-    pub name: String,
+    pub name: Text,
     pub loop_vertex: VertexRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VertexPoint {
-    pub name: String,
+    pub name: Text,
     pub vertex_geometry: PointRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VertexShell {
-    pub name: String,
+    pub name: Text,
     pub vertex_shell_extent: VertexLoopRef,
 }
 
@@ -17671,32 +17773,32 @@ pub struct VolumeUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct WireShell {
-    pub name: String,
+    pub name: Text,
     pub wire_shell_extent: Vec<LoopRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum UnitPart {
     Action {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         chosen_method: ActionMethodRef,
     },
     ActionMethod {
-        name: String,
-        description: Option<String>,
-        consequence: String,
-        purpose: String,
+        name: Text,
+        description: Option<Text>,
+        consequence: Text,
+        purpose: Text,
     },
     ActionMethodRelationship {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         relating_method: ActionMethodRef,
         related_method: ActionMethodRef,
     },
     ActionRelationship {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         relating_action: ActionRef,
         related_action: ActionRef,
     },
@@ -17704,30 +17806,30 @@ pub enum UnitPart {
         assigned_action_request: VersionedActionRequestRef,
     },
     ActionResource {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         usage: Vec<SupportedItemRef>,
         kind: ActionResourceTypeRef,
     },
     ActionResourceRequirement {
-        name: String,
-        description: String,
+        name: Text,
+        description: Text,
         kind: ResourceRequirementTypeRef,
         operations: Vec<CharacterizedActionDefinitionRef>,
     },
     Address {
-        internal_location: Option<String>,
-        street_number: Option<String>,
-        street: Option<String>,
-        postal_box: Option<String>,
-        town: Option<String>,
-        region: Option<String>,
-        postal_code: Option<String>,
-        country: Option<String>,
-        facsimile_number: Option<String>,
-        telephone_number: Option<String>,
-        electronic_mail_address: Option<String>,
-        telex_number: Option<String>,
+        internal_location: Option<Text>,
+        street_number: Option<Text>,
+        street: Option<Text>,
+        postal_box: Option<Text>,
+        town: Option<Text>,
+        region: Option<Text>,
+        postal_code: Option<Text>,
+        country: Option<Text>,
+        facsimile_number: Option<Text>,
+        telephone_number: Option<Text>,
+        electronic_mail_address: Option<Text>,
+        telex_number: Option<Text>,
     },
     AdvancedBrepShapeRepresentation,
     AdvancedFace,
@@ -17738,8 +17840,8 @@ pub enum UnitPart {
     AnnotationOccurrence,
     AnnotationOccurrenceAssociativity,
     AnnotationOccurrenceRelationship {
-        name: String,
-        description: String,
+        name: Text,
+        description: Text,
         relating_annotation_occurrence: AnnotationOccurrenceRef,
         related_annotation_occurrence: AnnotationOccurrenceRef,
     },
@@ -17757,11 +17859,11 @@ pub enum UnitPart {
     AnnotationSymbolOccurrence,
     AnnotationText,
     AnnotationTextCharacter {
-        alignment: String,
+        alignment: Text,
     },
     AnnotationTextOccurrence,
     ApplicationContextElement {
-        name: String,
+        name: Text,
         frame_of_reference: ApplicationContextRef,
     },
     AppliedApprovalAssignment {
@@ -17796,13 +17898,13 @@ pub enum UnitPart {
         in_set: PresentationSetRef,
     },
     AscribableStateRelationship {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         relating_ascribable_state: AscribableStateRef,
         related_ascribable_state: AscribableStateRef,
     },
     AssemblyComponentUsage {
-        reference_designator: Option<String>,
+        reference_designator: Option<Text>,
     },
     BSplineCurve {
         degree: i64,
@@ -17881,8 +17983,8 @@ pub enum UnitPart {
         rep: RepresentationRef,
     },
     CharacterizedObject {
-        name: Option<String>,
-        description: Option<String>,
+        name: Option<Text>,
+        description: Option<Text>,
     },
     CharacterizedRepresentation,
     CircularRunoutTolerance,
@@ -17894,7 +17996,7 @@ pub enum UnitPart {
         blue: f64,
     },
     ColourSpecification {
-        name: String,
+        name: Text,
     },
     CommonDatum,
     CompositeCurve {
@@ -17918,11 +18020,11 @@ pub enum UnitPart {
         configuration: ConfigurationDesignRef,
     },
     ConfigurationItem {
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: Text,
+        name: Text,
+        description: Option<Text>,
         item_concept: ProductConceptRef,
-        purpose: Option<String>,
+        purpose: Option<Text>,
     },
     ConnectedFaceSet {
         cfs_faces: Option<Vec<FaceRef>>,
@@ -17932,25 +18034,25 @@ pub enum UnitPart {
         style_context: Vec<StyleContextSelectRef>,
     },
     ContextDependentUnit {
-        name: String,
+        name: Text,
     },
     ConversionBasedUnit {
-        name: String,
+        name: Text,
         conversion_factor: MeasureWithUnitRef,
     },
     Curve,
     CurveStyle {
-        name: String,
+        name: Text,
         curve_font: Option<CurveFontOrScaledCurveFontSelectRef>,
         curve_width: Option<SizeSelectRef>,
         curve_colour: Option<ColourRef>,
     },
     CurveStyleFont {
-        name: String,
+        name: Text,
         pattern_list: Vec<CurveStyleFontPatternRef>,
     },
     CurveStyleFontAndScaling {
-        name: String,
+        name: Text,
         curve_font: CurveStyleFontSelectRef,
         curve_font_scaling: f64,
     },
@@ -17971,7 +18073,7 @@ pub enum UnitPart {
         role: DateTimeRoleRef,
     },
     Datum {
-        identification: String,
+        identification: Text,
     },
     DatumFeature,
     DatumReference {
@@ -17982,7 +18084,7 @@ pub enum UnitPart {
         constituents: Vec<DatumReferenceCompartmentRef>,
     },
     DatumTarget {
-        target_id: String,
+        target_id: Text,
     },
     DefaultModelGeometricView,
     DefinitionalRepresentation,
@@ -17997,36 +18099,36 @@ pub enum UnitPart {
     DesignContext,
     DimensionalSize {
         applies_to: ShapeAspectRef,
-        name: String,
+        name: Text,
     },
     Direction {
         direction_ratios: Reals3,
     },
     Document {
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: Text,
+        name: Text,
+        description: Option<Text>,
         kind: DocumentTypeRef,
     },
     DocumentFile,
     DocumentProductAssociation {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         relating_document: DocumentRef,
         related_product: ProductOrFormationOrDefinitionRef,
     },
     DocumentProductEquivalence,
     DocumentReference {
         assigned_document: DocumentRef,
-        source: String,
+        source: Text,
     },
     DraughtingAnnotationOccurrence,
     DraughtingCallout {
         contents: Vec<DraughtingCalloutElementRef>,
     },
     DraughtingCalloutRelationship {
-        name: String,
-        description: String,
+        name: Text,
+        description: Text,
         relating_draughting_callout: DraughtingCalloutRef,
         related_draughting_callout: DraughtingCalloutRef,
     },
@@ -18048,7 +18150,7 @@ pub enum UnitPart {
     },
     EdgeLoop,
     Effectivity {
-        id: String,
+        id: Text,
     },
     ElementarySurface {
         position: Axis2Placement3dRef,
@@ -18085,7 +18187,7 @@ pub enum UnitPart {
         same_sense: bool,
     },
     FillAreaStyle {
-        name: String,
+        name: Text,
         fill_styles: Vec<FillStyleSelectRef>,
     },
     FillAreaStyleHatching {
@@ -18106,17 +18208,17 @@ pub enum UnitPart {
     FlatnessTolerance,
     FoundedItem,
     FunctionallyDefinedTransformation {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
     },
     GeneralDatumReference {
         base: DatumOrCommonDatumRef,
         modifiers: Option<Vec<DatumReferenceModifierRef>>,
     },
     GeneralProperty {
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: Text,
+        name: Text,
+        description: Option<Text>,
     },
     GenericExpression,
     GenericLiteral,
@@ -18133,8 +18235,8 @@ pub enum UnitPart {
         elements: Vec<GeometricSetSelectRef>,
     },
     GeometricTolerance {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
     },
@@ -18163,14 +18265,14 @@ pub enum UnitPart {
         units: Vec<UnitRef>,
     },
     Group {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
     },
     GroupAssignment {
         assigned_group: GroupRef,
     },
     IdentificationAssignment {
-        assigned_id: String,
+        assigned_id: Text,
         role: IdentificationRoleRef,
     },
     IntLiteral,
@@ -18180,14 +18282,14 @@ pub enum UnitPart {
         invisible_items: Vec<InvisibleItemRef>,
     },
     ItemDefinedTransformation {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         transform_item_1: RepresentationItemRef,
         transform_item_2: RepresentationItemRef,
     },
     ItemIdentifiedRepresentationUsage {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         definition: ItemIdentifiedRepresentationUsageDefinitionRef,
         used_representation: RepresentationRef,
         identified_item: ItemIdentifiedRepresentationUsageSelectRef,
@@ -18233,7 +18335,7 @@ pub enum UnitPart {
     OpenShell,
     OrganizationalAddress {
         organizations: Vec<OrganizationRef>,
-        description: Option<String>,
+        description: Option<Text>,
     },
     OrientedClosedShell {
         closed_shell_element: ClosedShellRef,
@@ -18263,7 +18365,7 @@ pub enum UnitPart {
     },
     PersonalAddress {
         people: Vec<PersonRef>,
-        description: Option<String>,
+        description: Option<Text>,
     },
     PlacedDatumTargetFeature,
     Placement {
@@ -18280,7 +18382,7 @@ pub enum UnitPart {
     PlaneAngleUnit,
     Point,
     PointStyle {
-        name: String,
+        name: Text,
         marker: Option<MarkerSelectRef>,
         marker_size: Option<SizeSelectRef>,
         marker_colour: Option<ColourRef>,
@@ -18293,7 +18395,7 @@ pub enum UnitPart {
     PreDefinedColour,
     PreDefinedCurveFont,
     PreDefinedItem {
-        name: String,
+        name: Text,
     },
     PreDefinedMarker,
     PreDefinedPointMarkerSymbol,
@@ -18315,68 +18417,68 @@ pub enum UnitPart {
     PresentationView,
     PresentedItem,
     Product {
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: Text,
+        name: Text,
+        description: Option<Text>,
         frame_of_reference: Vec<ProductContextRef>,
     },
     ProductCategory {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
     },
     ProductConcept {
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: Text,
+        name: Text,
+        description: Option<Text>,
         market_context: ProductConceptContextRef,
     },
     ProductConceptFeature {
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: Text,
+        name: Text,
+        description: Option<Text>,
     },
     ProductConceptFeatureCategory,
     ProductContext {
-        discipline_type: String,
+        discipline_type: Text,
     },
     ProductDefinition {
-        id: String,
-        description: Option<String>,
+        id: Text,
+        description: Option<Text>,
         formation: ProductDefinitionFormationRef,
         frame_of_reference: ProductDefinitionContextRef,
     },
     ProductDefinitionContext {
-        life_cycle_stage: String,
+        life_cycle_stage: Text,
     },
     ProductDefinitionEffectivity {
         usage: ProductDefinitionRelationshipRef,
     },
     ProductDefinitionFormation {
-        id: String,
-        description: Option<String>,
+        id: Text,
+        description: Option<Text>,
         of_product: ProductRef,
     },
     ProductDefinitionFormationWithSpecifiedSource {
         make_or_buy: Source,
     },
     ProductDefinitionOccurrence {
-        id: String,
-        name: Option<String>,
-        description: Option<String>,
+        id: Text,
+        name: Option<Text>,
+        description: Option<Text>,
         definition: Option<ProductDefinitionOrReferenceRef>,
         quantity: Option<MeasureWithUnitRef>,
     },
     ProductDefinitionRelationship {
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: Text,
+        name: Text,
+        description: Option<Text>,
         relating_product_definition: ProductDefinitionOrReferenceRef,
         related_product_definition: ProductDefinitionOrReferenceRef,
     },
     ProductDefinitionRelationshipRelationship {
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: Text,
+        name: Text,
+        description: Option<Text>,
         relating: ProductDefinitionRelationshipRef,
         related: ProductDefinitionRelationshipRef,
     },
@@ -18393,8 +18495,8 @@ pub enum UnitPart {
         projected_length: LengthMeasureWithUnitRef,
     },
     PropertyDefinition {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         definition: CharacterizedDefinitionRef,
     },
     PropertyDefinitionRepresentation {
@@ -18420,28 +18522,28 @@ pub enum UnitPart {
         location: Axis2Placement3dRef,
     },
     Representation {
-        name: String,
+        name: Text,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     },
     RepresentationContext {
-        context_identifier: String,
-        context_type: String,
+        context_identifier: Text,
+        context_type: Text,
     },
     RepresentationItem {
-        name: String,
+        name: Text,
     },
     RepresentationMap {
         mapping_origin: RepresentationItemRef,
         mapped_representation: RepresentationRef,
     },
     RepresentationReference {
-        id: String,
+        id: Text,
         context_of_items: RepresentationContextReferenceRef,
     },
     RepresentationRelationship {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         rep_1: RepresentationOrRepresentationReferenceRef,
         rep_2: RepresentationOrRepresentationReferenceRef,
     },
@@ -18454,14 +18556,14 @@ pub enum UnitPart {
         assigned_security_classification: SecurityClassificationRef,
     },
     ShapeAspect {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Option<Logical>,
     },
     ShapeAspectRelationship {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         relating_shape_aspect: ShapeAspectRef,
         related_shape_aspect: ShapeAspectRef,
     },
@@ -18485,12 +18587,12 @@ pub enum UnitPart {
         items: Vec<StartRequestItemRef>,
     },
     StateObserved {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
     },
     StateType {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
     },
     StraightnessTolerance,
     StyledItem {
@@ -18505,7 +18607,7 @@ pub enum UnitPart {
     },
     SurfaceProfileTolerance,
     SurfaceSideStyle {
-        name: String,
+        name: Text,
         styles: Vec<SurfaceStyleElementSelectRef>,
     },
     SurfaceStyleBoundary {
@@ -18543,7 +18645,7 @@ pub enum UnitPart {
     },
     SymbolRepresentation,
     SymbolStyle {
-        name: String,
+        name: Text,
         style_of_symbol: SymbolStyleSelectRef,
     },
     TerminatorSymbol {
@@ -18556,14 +18658,14 @@ pub enum UnitPart {
     TessellatedShapeRepresentation,
     TessellatedStructuredItem,
     TextLiteral {
-        literal: String,
+        literal: Text,
         placement: Axis2PlacementRef,
-        alignment: String,
+        alignment: Text,
         path: TextPath,
         font: FontSelectRef,
     },
     TextStyle {
-        name: String,
+        name: Text,
         character_appearance: CharacterStyleSelectRef,
     },
     TextStyleWithBoxCharacteristics {
@@ -18628,6 +18730,7 @@ pub struct ComplexUnit {
 #[derive(Debug, Default)]
 pub struct StepModel {
     pub(crate) header: crate::header::FileHeader,
+    pub(crate) texts: Texts,
     pub action_arena: Arena<Action>,
     pub action_assignment_arena: Arena<ActionAssignment>,
     pub action_directive_arena: Arena<ActionDirective>,
@@ -19154,4 +19257,14 @@ pub struct StepModel {
     pub volume_unit_arena: Arena<VolumeUnit>,
     pub wire_shell_arena: Arena<WireShell>,
     pub complex_unit_arena: Arena<ComplexUnit>,
+}
+impl StepModel {
+    /// The string `t` stands for (`""` for a `Text` of another model).
+    pub fn text(&self, t: Text) -> &str {
+        self.texts.get(t)
+    }
+    /// Store `s` as a new `Text`.
+    pub(crate) fn add_text(&mut self, s: &str) -> Text {
+        self.texts.push(s)
+    }
 }

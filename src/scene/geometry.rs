@@ -129,11 +129,11 @@ impl<'m> Solid<'m> {
         match self.which {
             SolidImpl::Manifold(i) => {
                 let s = self.cx.model.manifold_solid_brep_arena.get(i.0);
-                (&s.name, &s.outer)
+                (self.cx.model.text(s.name), &s.outer)
             }
             SolidImpl::WithVoids(i) => {
                 let s = self.cx.model.brep_with_voids_arena.get(i.0);
-                (&s.name, &s.outer)
+                (self.cx.model.text(s.name), &s.outer)
             }
         }
     }
@@ -264,11 +264,21 @@ impl<'m> Face<'m> {
         match self.which {
             FaceImpl::Advanced(i) => {
                 let f = self.cx.model.advanced_face_arena.get(i.0);
-                (&f.name, &f.bounds, &f.face_geometry, f.same_sense)
+                (
+                    self.cx.model.text(f.name),
+                    &f.bounds,
+                    &f.face_geometry,
+                    f.same_sense,
+                )
             }
             FaceImpl::Surface(i) => {
                 let f = self.cx.model.face_surface_arena.get(i.0);
-                (&f.name, &f.bounds, &f.face_geometry, f.same_sense)
+                (
+                    self.cx.model.text(f.name),
+                    &f.bounds,
+                    &f.face_geometry,
+                    f.same_sense,
+                )
             }
         }
     }

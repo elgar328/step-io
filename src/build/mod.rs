@@ -592,15 +592,17 @@ impl StepBuilder {
             },
             m::UnitPart::SolidAngleUnit,
         ])?;
+        let length_measure = a.text("LENGTH_MEASURE");
         let uncertainty = a.add_uncertainty_measure_with_unit(
             m::MeasureValue {
-                type_name: Some("LENGTH_MEASURE".to_owned()),
+                type_name: Some(length_measure),
                 value: m::MeasureScalar::Real(units.uncertainty),
             },
             m::UnitRef::Complex(mm),
             "distance_accuracy_value".to_owned(),
             Some("confusion accuracy".to_owned()),
         )?;
+        let (no_identifier, context_type) = (a.text(""), a.text("3D"));
         let ctx = a.add_complex(vec![
             m::UnitPart::GeometricRepresentationContext {
                 coordinate_space_dimension: 3,
@@ -618,8 +620,8 @@ impl StepBuilder {
                 ],
             },
             m::UnitPart::RepresentationContext {
-                context_identifier: String::new(),
-                context_type: "3D".to_owned(),
+                context_identifier: no_identifier,
+                context_type,
             },
         ])?;
 
@@ -875,6 +877,7 @@ impl StepBuilder {
             )?;
             Ok(m::CurveRef::BSplineCurveWithKnots(id))
         } else {
+            let no_name = self.author.text("");
             let id = self.author.add_complex(vec![
                 m::UnitPart::BoundedCurve,
                 m::UnitPart::BSplineCurve {
@@ -894,9 +897,7 @@ impl StepBuilder {
                 m::UnitPart::RationalBSplineCurve {
                     weights_data: c.weights.clone(),
                 },
-                m::UnitPart::RepresentationItem {
-                    name: String::new(),
-                },
+                m::UnitPart::RepresentationItem { name: no_name },
             ])?;
             Ok(m::CurveRef::Complex(id))
         }
@@ -931,6 +932,7 @@ impl StepBuilder {
             )?;
             Ok(m::SurfaceRef::BSplineSurfaceWithKnots(id))
         } else {
+            let no_name = self.author.text("");
             let id = self.author.add_complex(vec![
                 m::UnitPart::BoundedSurface,
                 m::UnitPart::BSplineSurface {
@@ -953,9 +955,7 @@ impl StepBuilder {
                 m::UnitPart::RationalBSplineSurface {
                     weights_data: s.weights.clone(),
                 },
-                m::UnitPart::RepresentationItem {
-                    name: String::new(),
-                },
+                m::UnitPart::RepresentationItem { name: no_name },
                 m::UnitPart::Surface,
             ])?;
             Ok(m::SurfaceRef::Complex(id))
@@ -1745,9 +1745,10 @@ fn bind_placements(
             m::RepresentationItemRef::Axis2Placement3d(parts[placement.parent].origin),
             m::RepresentationItemRef::Axis2Placement3d(placement.to),
         )?;
+        let no_name = a.text("");
         let rrwt = a.add_complex(vec![
             m::UnitPart::RepresentationRelationship {
-                name: String::new(),
+                name: no_name,
                 description: None,
                 rep_1: part_reps[placement.child].clone(),
                 rep_2: part_reps[placement.parent].clone(),

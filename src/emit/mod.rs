@@ -65,13 +65,16 @@ pub fn dump_universal(model: &mut StepModel) -> String {
 /// `application_context` entities (application = `apd.description`) to `apd`,
 /// so the dumped file's APD agrees with the `FILE_SCHEMA` header.
 fn stamp_apd(model: &mut StepModel, apd: &ApdInfo) {
+    let status = model.add_text(apd.status);
+    let name = model.add_text(apd.name);
+    let description = model.add_text(apd.description);
     for x in &mut model.application_protocol_definition_arena.items {
-        x.status = apd.status.to_string();
-        x.application_interpreted_model_schema_name = apd.name.to_string();
+        x.status = status;
+        x.application_interpreted_model_schema_name = name;
         x.application_protocol_year = apd.year;
     }
     for ac in &mut model.application_context_arena.items {
-        ac.application = apd.description.to_string();
+        ac.application = description;
     }
 }
 

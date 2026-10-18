@@ -153,7 +153,9 @@ fn colour_to_rgb(cx: Ctx<'_>, r: &m::ColourRef) -> Option<Rgb> {
             })
         }
         m::ColourRef::DraughtingPreDefinedColour(i) => {
-            let name = &cx.model.draughting_pre_defined_colour_arena.get(i.0).name;
+            let name = cx
+                .model
+                .text(cx.model.draughting_pre_defined_colour_arena.get(i.0).name);
             predefined_rgb(name).or_else(|| {
                 cx.warn(format!("unknown pre-defined colour: {name}"));
                 None
@@ -323,7 +325,10 @@ fn referred_by_invisibility(cx: Ctx<'_>, key: m::EntityKey) -> bool {
 /// The name of the first layer `target` belongs to, if any.
 pub(crate) fn layer_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<&str> {
     let pid = *layers_of(cx, target).first()?;
-    Some(&cx.model.presentation_layer_assignment_arena.get(pid.0).name)
+    Some(
+        cx.model
+            .text(cx.model.presentation_layer_assignment_arena.get(pid.0).name),
+    )
 }
 
 /// Whether `target` is visible — i.e. no `INVISIBILITY` hides one of its styled
@@ -440,20 +445,24 @@ fn size_f64(cx: Ctx<'_>, r: &m::SizeSelectRef) -> Option<f64> {
 fn curve_font_name<'m>(cx: Ctx<'m>, r: &m::CurveFontOrScaledCurveFontSelectRef) -> Option<&'m str> {
     match r {
         m::CurveFontOrScaledCurveFontSelectRef::CurveStyleFont(i) => {
-            Some(&cx.model.curve_style_font_arena.get(i.0).name)
+            Some(cx.model.text(cx.model.curve_style_font_arena.get(i.0).name))
         }
-        m::CurveFontOrScaledCurveFontSelectRef::CurveStyleFontAndScaling(i) => {
-            Some(&cx.model.curve_style_font_and_scaling_arena.get(i.0).name)
-        }
-        m::CurveFontOrScaledCurveFontSelectRef::DraughtingPreDefinedCurveFont(i) => Some(
-            &cx.model
-                .draughting_pre_defined_curve_font_arena
-                .get(i.0)
-                .name,
+        m::CurveFontOrScaledCurveFontSelectRef::CurveStyleFontAndScaling(i) => Some(
+            cx.model
+                .text(cx.model.curve_style_font_and_scaling_arena.get(i.0).name),
         ),
-        m::CurveFontOrScaledCurveFontSelectRef::PreDefinedCurveFont(i) => {
-            Some(&cx.model.pre_defined_curve_font_arena.get(i.0).name)
-        }
+        m::CurveFontOrScaledCurveFontSelectRef::DraughtingPreDefinedCurveFont(i) => Some(
+            cx.model.text(
+                cx.model
+                    .draughting_pre_defined_curve_font_arena
+                    .get(i.0)
+                    .name,
+            ),
+        ),
+        m::CurveFontOrScaledCurveFontSelectRef::PreDefinedCurveFont(i) => Some(
+            cx.model
+                .text(cx.model.pre_defined_curve_font_arena.get(i.0).name),
+        ),
         // No name (externally defined) or unresolved (complex).
         m::CurveFontOrScaledCurveFontSelectRef::ExternallyDefinedCurveFont(_) => None,
         m::CurveFontOrScaledCurveFontSelectRef::Complex(_) => {

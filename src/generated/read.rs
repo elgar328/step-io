@@ -32,6 +32,22 @@ fn as_str(a: &Attribute, ctx: &str) -> Result<String, String> {
         other => Err(format!("{ctx}: expected string, got {other:?}")),
     }
 }
+/// Where the reader stores strings: the model's texts, each distinct string once.
+pub struct TextIn<'a> {
+    pub texts: &'a mut Texts,
+    pub dedup: &'a mut TextDedup,
+}
+impl TextIn<'_> {
+    fn intern(&mut self, s: &str) -> Text {
+        self.dedup.intern(self.texts, s)
+    }
+}
+fn as_text(a: &Attribute, ctx: &str, tt: &mut TextIn<'_>) -> Result<Text, String> {
+    match a {
+        Attribute::String(s) => Ok(tt.intern(s)),
+        other => Err(format!("{ctx}: expected string, got {other:?}")),
+    }
+}
 fn as_logical(a: &Attribute, ctx: &str) -> Result<Logical, String> {
     match a {
         Attribute::Enum(s) => Logical::parse(s).ok_or_else(|| format!("{ctx}: bad logical {s:?}")),
@@ -44,7 +60,11 @@ fn as_ref_id(a: &Attribute, ctx: &str) -> Result<u64, String> {
         other => Err(format!("{ctx}: expected ref, got {other:?}")),
     }
 }
-fn read_measure_value(a: &Attribute, ctx: &str) -> Result<MeasureValue, String> {
+fn read_measure_value(
+    a: &Attribute,
+    ctx: &str,
+    tt: &mut TextIn<'_>,
+) -> Result<MeasureValue, String> {
     // A measure's numeric literal sits nested inside a Typed/bare attribute, so
     // it is not a top-level slot the normalize layer rewrites; preserve the
     // original token (integer vs real) — `number` members admit either.
@@ -57,7 +77,7 @@ fn read_measure_value(a: &Attribute, ctx: &str) -> Result<MeasureValue, String> 
     }
     match a {
         Attribute::Typed { type_name, value } => Ok(MeasureValue {
-            type_name: Some(type_name.clone()),
+            type_name: Some(tt.intern(type_name)),
             value: measure_scalar(value, ctx)?,
         }),
         Attribute::Real(_) | Attribute::Integer(_) => Ok(MeasureValue {
@@ -67,7 +87,11 @@ fn read_measure_value(a: &Attribute, ctx: &str) -> Result<MeasureValue, String> 
         other => Err(format!("{ctx}: expected measure_value, got {other:?}")),
     }
 }
-fn read_string_select(a: &Attribute, ctx: &str) -> Result<StringSelectValue, String> {
+fn read_string_select(
+    a: &Attribute,
+    ctx: &str,
+    tt: &mut TextIn<'_>,
+) -> Result<StringSelectValue, String> {
     // A named string select member is a Typed literal `TYPE('s')`; a bare string
     // is unwrapped. (Mirrors read_measure_value for the string case.)
     fn str_of(a: &Attribute, ctx: &str) -> Result<String, String> {
@@ -77,18 +101,25 @@ fn read_string_select(a: &Attribute, ctx: &str) -> Result<StringSelectValue, Str
         }
     }
     match a {
-        Attribute::Typed { type_name, value } => Ok(StringSelectValue {
-            type_name: Some(type_name.clone()),
-            value: str_of(value, ctx)?,
-        }),
+        Attribute::Typed { type_name, value } => {
+            let value = str_of(value, ctx)?;
+            Ok(StringSelectValue {
+                type_name: Some(tt.intern(type_name)),
+                value: tt.intern(&value),
+            })
+        }
         Attribute::String(s) => Ok(StringSelectValue {
             type_name: None,
-            value: s.clone(),
+            value: tt.intern(s),
         }),
         other => Err(format!("{ctx}: expected string_select, got {other:?}")),
     }
 }
-fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, String> {
+fn read_int_measure_value(
+    a: &Attribute,
+    ctx: &str,
+    tt: &mut TextIn<'_>,
+) -> Result<IntMeasureValue, String> {
     // Integer-valued select-of-scalars (mirrors read_measure_value but keeps the
     // value as i64). A non-standard real literal is truncated (NORM).
     fn int_of(a: &Attribute, ctx: &str) -> Result<i64, String> {
@@ -100,7 +131,7 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
     }
     match a {
         Attribute::Typed { type_name, value } => Ok(IntMeasureValue {
-            type_name: Some(type_name.clone()),
+            type_name: Some(tt.intern(type_name)),
             value: int_of(value, ctx)?,
         }),
         Attribute::Integer(_) | Attribute::Real(_) => Ok(IntMeasureValue {
@@ -10054,106 +10085,132 @@ pub fn complex_ref_field_slots(pix: u16) -> &'static [u16] {
     }
 }
 
-fn build_action_arena(attributes: &[Attribute]) -> Result<Action, String> {
+fn build_action_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Action, String> {
     Ok(Action {
-        name: (as_str(req(attributes, 0, "ACTION.name")?, "ACTION.name"))?,
+        name: (as_text(req(attributes, 0, "ACTION.name")?, "ACTION.name", tt))?,
         description: match req(attributes, 1, "ACTION.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ACTION.description"))?),
+            other => Some((as_text(other, "ACTION.description", tt))?),
         },
         chosen_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)),
     })
 }
 
-fn build_action_assignment_arena(attributes: &[Attribute]) -> Result<ActionAssignment, String> {
+fn build_action_assignment_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ActionAssignment, String> {
     Ok(ActionAssignment {
         assigned_action: ActionRef::Action(ActionId(u32::MAX)),
     })
 }
 
-fn build_action_directive_arena(attributes: &[Attribute]) -> Result<ActionDirective, String> {
+fn build_action_directive_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ActionDirective, String> {
     Ok(ActionDirective {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ACTION_DIRECTIVE.name")?,
             "ACTION_DIRECTIVE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "ACTION_DIRECTIVE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ACTION_DIRECTIVE.description"))?),
+            other => Some((as_text(other, "ACTION_DIRECTIVE.description", tt))?),
         },
-        analysis: (as_str(
+        analysis: (as_text(
             req(attributes, 2, "ACTION_DIRECTIVE.analysis")?,
             "ACTION_DIRECTIVE.analysis",
+            tt,
         ))?,
-        comment: (as_str(
+        comment: (as_text(
             req(attributes, 3, "ACTION_DIRECTIVE.comment")?,
             "ACTION_DIRECTIVE.comment",
+            tt,
         ))?,
         requests: Vec::new(),
     })
 }
 
-fn build_action_method_arena(attributes: &[Attribute]) -> Result<ActionMethod, String> {
+fn build_action_method_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ActionMethod, String> {
     Ok(ActionMethod {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ACTION_METHOD.name")?,
             "ACTION_METHOD.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "ACTION_METHOD.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ACTION_METHOD.description"))?),
+            other => Some((as_text(other, "ACTION_METHOD.description", tt))?),
         },
-        consequence: (as_str(
+        consequence: (as_text(
             req(attributes, 2, "ACTION_METHOD.consequence")?,
             "ACTION_METHOD.consequence",
+            tt,
         ))?,
-        purpose: (as_str(
+        purpose: (as_text(
             req(attributes, 3, "ACTION_METHOD.purpose")?,
             "ACTION_METHOD.purpose",
+            tt,
         ))?,
     })
 }
 
 fn build_action_method_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ActionMethodRelationship, String> {
     Ok(ActionMethodRelationship {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ACTION_METHOD_RELATIONSHIP.name")?,
             "ACTION_METHOD_RELATIONSHIP.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "ACTION_METHOD_RELATIONSHIP.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ACTION_METHOD_RELATIONSHIP.description"))?),
+            other => Some((as_text(other, "ACTION_METHOD_RELATIONSHIP.description", tt))?),
         },
         relating_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)),
         related_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)),
     })
 }
 
-fn build_action_property_arena(attributes: &[Attribute]) -> Result<ActionProperty, String> {
+fn build_action_property_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ActionProperty, String> {
     Ok(ActionProperty {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ACTION_PROPERTY.name")?,
             "ACTION_PROPERTY.name",
+            tt,
         ))?,
-        description: (as_str(
+        description: (as_text(
             req(attributes, 1, "ACTION_PROPERTY.description")?,
             "ACTION_PROPERTY.description",
+            tt,
         ))?,
         definition: CharacterizedActionDefinitionRef::Action(ActionId(u32::MAX)),
     })
 }
 
-fn build_action_relationship_arena(attributes: &[Attribute]) -> Result<ActionRelationship, String> {
+fn build_action_relationship_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ActionRelationship, String> {
     Ok(ActionRelationship {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ACTION_RELATIONSHIP.name")?,
             "ACTION_RELATIONSHIP.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "ACTION_RELATIONSHIP.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ACTION_RELATIONSHIP.description"))?),
+            other => Some((as_text(other, "ACTION_RELATIONSHIP.description", tt))?),
         },
         relating_action: ActionRef::Action(ActionId(u32::MAX)),
         related_action: ActionRef::Action(ActionId(u32::MAX)),
@@ -10162,6 +10219,7 @@ fn build_action_relationship_arena(attributes: &[Attribute]) -> Result<ActionRel
 
 fn build_action_request_assignment_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ActionRequestAssignment, String> {
     Ok(ActionRequestAssignment {
         assigned_action_request: VersionedActionRequestRef::VersionedActionRequest(
@@ -10172,6 +10230,7 @@ fn build_action_request_assignment_arena(
 
 fn build_action_request_solution_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ActionRequestSolution, String> {
     Ok(ActionRequestSolution {
         method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)),
@@ -10181,15 +10240,19 @@ fn build_action_request_solution_arena(
     })
 }
 
-fn build_action_resource_arena(attributes: &[Attribute]) -> Result<ActionResource, String> {
+fn build_action_resource_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ActionResource, String> {
     Ok(ActionResource {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ACTION_RESOURCE.name")?,
             "ACTION_RESOURCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "ACTION_RESOURCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ACTION_RESOURCE.description"))?),
+            other => Some((as_text(other, "ACTION_RESOURCE.description", tt))?),
         },
         usage: Vec::new(),
         kind: ActionResourceTypeRef::ActionResourceType(ActionResourceTypeId(u32::MAX)),
@@ -10198,15 +10261,17 @@ fn build_action_resource_arena(attributes: &[Attribute]) -> Result<ActionResourc
 
 fn build_action_resource_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ActionResourceRelationship, String> {
     Ok(ActionResourceRelationship {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ACTION_RESOURCE_RELATIONSHIP.name")?,
             "ACTION_RESOURCE_RELATIONSHIP.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "ACTION_RESOURCE_RELATIONSHIP.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ACTION_RESOURCE_RELATIONSHIP.description"))?),
+            other => Some((as_text(other, "ACTION_RESOURCE_RELATIONSHIP.description", tt))?),
         },
         relating_resource: ActionResourceRef::ActionResource(ActionResourceId(u32::MAX)),
         related_resource: ActionResourceRef::ActionResource(ActionResourceId(u32::MAX)),
@@ -10215,15 +10280,18 @@ fn build_action_resource_relationship_arena(
 
 fn build_action_resource_requirement_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ActionResourceRequirement, String> {
     Ok(ActionResourceRequirement {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ACTION_RESOURCE_REQUIREMENT.name")?,
             "ACTION_RESOURCE_REQUIREMENT.name",
+            tt,
         ))?,
-        description: (as_str(
+        description: (as_text(
             req(attributes, 1, "ACTION_RESOURCE_REQUIREMENT.description")?,
             "ACTION_RESOURCE_REQUIREMENT.description",
+            tt,
         ))?,
         kind: ResourceRequirementTypeRef::ResourceRequirementType(ResourceRequirementTypeId(
             u32::MAX,
@@ -10234,75 +10302,79 @@ fn build_action_resource_requirement_arena(
 
 fn build_action_resource_type_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ActionResourceType, String> {
     Ok(ActionResourceType {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ACTION_RESOURCE_TYPE.name")?,
             "ACTION_RESOURCE_TYPE.name",
+            tt,
         ))?,
     })
 }
 
-fn build_address_arena(attributes: &[Attribute]) -> Result<Address, String> {
+fn build_address_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Address, String> {
     Ok(Address {
         internal_location: match req(attributes, 0, "ADDRESS.internal_location")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ADDRESS.internal_location"))?),
+            other => Some((as_text(other, "ADDRESS.internal_location", tt))?),
         },
         street_number: match req(attributes, 1, "ADDRESS.street_number")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ADDRESS.street_number"))?),
+            other => Some((as_text(other, "ADDRESS.street_number", tt))?),
         },
         street: match req(attributes, 2, "ADDRESS.street")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ADDRESS.street"))?),
+            other => Some((as_text(other, "ADDRESS.street", tt))?),
         },
         postal_box: match req(attributes, 3, "ADDRESS.postal_box")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ADDRESS.postal_box"))?),
+            other => Some((as_text(other, "ADDRESS.postal_box", tt))?),
         },
         town: match req(attributes, 4, "ADDRESS.town")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ADDRESS.town"))?),
+            other => Some((as_text(other, "ADDRESS.town", tt))?),
         },
         region: match req(attributes, 5, "ADDRESS.region")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ADDRESS.region"))?),
+            other => Some((as_text(other, "ADDRESS.region", tt))?),
         },
         postal_code: match req(attributes, 6, "ADDRESS.postal_code")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ADDRESS.postal_code"))?),
+            other => Some((as_text(other, "ADDRESS.postal_code", tt))?),
         },
         country: match req(attributes, 7, "ADDRESS.country")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ADDRESS.country"))?),
+            other => Some((as_text(other, "ADDRESS.country", tt))?),
         },
         facsimile_number: match req(attributes, 8, "ADDRESS.facsimile_number")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ADDRESS.facsimile_number"))?),
+            other => Some((as_text(other, "ADDRESS.facsimile_number", tt))?),
         },
         telephone_number: match req(attributes, 9, "ADDRESS.telephone_number")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ADDRESS.telephone_number"))?),
+            other => Some((as_text(other, "ADDRESS.telephone_number", tt))?),
         },
         electronic_mail_address: match req(attributes, 10, "ADDRESS.electronic_mail_address")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ADDRESS.electronic_mail_address"))?),
+            other => Some((as_text(other, "ADDRESS.electronic_mail_address", tt))?),
         },
         telex_number: match req(attributes, 11, "ADDRESS.telex_number")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ADDRESS.telex_number"))?),
+            other => Some((as_text(other, "ADDRESS.telex_number", tt))?),
         },
     })
 }
 
 fn build_advanced_brep_shape_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AdvancedBrepShapeRepresentation, String> {
     Ok(AdvancedBrepShapeRepresentation {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ADVANCED_BREP_SHAPE_REPRESENTATION.name")?,
             "ADVANCED_BREP_SHAPE_REPRESENTATION.name",
+            tt,
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
@@ -10311,11 +10383,15 @@ fn build_advanced_brep_shape_representation_arena(
     })
 }
 
-fn build_advanced_face_arena(attributes: &[Attribute]) -> Result<AdvancedFace, String> {
+fn build_advanced_face_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<AdvancedFace, String> {
     Ok(AdvancedFace {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ADVANCED_FACE.name")?,
             "ADVANCED_FACE.name",
+            tt,
         ))?,
         bounds: Vec::new(),
         face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)),
@@ -10327,15 +10403,17 @@ fn build_advanced_face_arena(attributes: &[Attribute]) -> Result<AdvancedFace, S
 
 fn build_all_around_shape_aspect_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AllAroundShapeAspect, String> {
     Ok(AllAroundShapeAspect {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ALL_AROUND_SHAPE_ASPECT.name")?,
             "ALL_AROUND_SHAPE_ASPECT.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "ALL_AROUND_SHAPE_ASPECT.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ALL_AROUND_SHAPE_ASPECT.description"))?),
+            other => Some((as_text(other, "ALL_AROUND_SHAPE_ASPECT.description", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -10351,15 +10429,19 @@ fn build_all_around_shape_aspect_arena(
     })
 }
 
-fn build_angular_location_arena(attributes: &[Attribute]) -> Result<AngularLocation, String> {
+fn build_angular_location_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<AngularLocation, String> {
     Ok(AngularLocation {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ANGULAR_LOCATION.name")?,
             "ANGULAR_LOCATION.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "ANGULAR_LOCATION.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ANGULAR_LOCATION.description"))?),
+            other => Some((as_text(other, "ANGULAR_LOCATION.description", tt))?),
         },
         relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
             u32::MAX,
@@ -10377,12 +10459,16 @@ fn build_angular_location_arena(attributes: &[Attribute]) -> Result<AngularLocat
     })
 }
 
-fn build_angular_size_arena(attributes: &[Attribute]) -> Result<AngularSize, String> {
+fn build_angular_size_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<AngularSize, String> {
     Ok(AngularSize {
         applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)),
-        name: (as_str(
+        name: (as_text(
             req(attributes, 1, "ANGULAR_SIZE.name")?,
             "ANGULAR_SIZE.name",
+            tt,
         ))?,
         angle_selection: (match req(attributes, 2, "ANGULAR_SIZE.angle_selection")? {
             Attribute::Enum(s) => AngleRelator::parse(s)
@@ -10396,15 +10482,17 @@ fn build_angular_size_arena(attributes: &[Attribute]) -> Result<AngularSize, Str
 
 fn build_angularity_tolerance_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AngularityTolerance, String> {
     Ok(AngularityTolerance {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ANGULARITY_TOLERANCE.name")?,
             "ANGULARITY_TOLERANCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "ANGULARITY_TOLERANCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ANGULARITY_TOLERANCE.description"))?),
+            other => Some((as_text(other, "ANGULARITY_TOLERANCE.description", tt))?),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -10416,11 +10504,13 @@ fn build_angularity_tolerance_arena(
 
 fn build_annotation_curve_occurrence_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AnnotationCurveOccurrence, String> {
     Ok(AnnotationCurveOccurrence {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ANNOTATION_CURVE_OCCURRENCE.name")?,
             "ANNOTATION_CURVE_OCCURRENCE.name",
+            tt,
         ))?,
         styles: Vec::new(),
         item: CurveOrCurveSetRef::BSplineCurve(BSplineCurveId(u32::MAX)),
@@ -10429,11 +10519,13 @@ fn build_annotation_curve_occurrence_arena(
 
 fn build_annotation_fill_area_occurrence_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AnnotationFillAreaOccurrence, String> {
     Ok(AnnotationFillAreaOccurrence {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ANNOTATION_FILL_AREA_OCCURRENCE.name")?,
             "ANNOTATION_FILL_AREA_OCCURRENCE.name",
+            tt,
         ))?,
         styles: Vec::new(),
         item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
@@ -10445,11 +10537,13 @@ fn build_annotation_fill_area_occurrence_arena(
 
 fn build_annotation_occurrence_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AnnotationOccurrence, String> {
     Ok(AnnotationOccurrence {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ANNOTATION_OCCURRENCE.name")?,
             "ANNOTATION_OCCURRENCE.name",
+            tt,
         ))?,
         styles: Vec::new(),
         item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
@@ -10460,19 +10554,22 @@ fn build_annotation_occurrence_arena(
 
 fn build_annotation_occurrence_associativity_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AnnotationOccurrenceAssociativity, String> {
     Ok(AnnotationOccurrenceAssociativity {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ANNOTATION_OCCURRENCE_ASSOCIATIVITY.name")?,
             "ANNOTATION_OCCURRENCE_ASSOCIATIVITY.name",
+            tt,
         ))?,
-        description: (as_str(
+        description: (as_text(
             req(
                 attributes,
                 1,
                 "ANNOTATION_OCCURRENCE_ASSOCIATIVITY.description",
             )?,
             "ANNOTATION_OCCURRENCE_ASSOCIATIVITY.description",
+            tt,
         ))?,
         relating_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(
             AnnotationCurveOccurrenceId(u32::MAX),
@@ -10485,19 +10582,22 @@ fn build_annotation_occurrence_associativity_arena(
 
 fn build_annotation_occurrence_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AnnotationOccurrenceRelationship, String> {
     Ok(AnnotationOccurrenceRelationship {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ANNOTATION_OCCURRENCE_RELATIONSHIP.name")?,
             "ANNOTATION_OCCURRENCE_RELATIONSHIP.name",
+            tt,
         ))?,
-        description: (as_str(
+        description: (as_text(
             req(
                 attributes,
                 1,
                 "ANNOTATION_OCCURRENCE_RELATIONSHIP.description",
             )?,
             "ANNOTATION_OCCURRENCE_RELATIONSHIP.description",
+            tt,
         ))?,
         relating_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(
             AnnotationCurveOccurrenceId(u32::MAX),
@@ -10510,11 +10610,13 @@ fn build_annotation_occurrence_relationship_arena(
 
 fn build_annotation_placeholder_leader_line_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AnnotationPlaceholderLeaderLine, String> {
     Ok(AnnotationPlaceholderLeaderLine {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ANNOTATION_PLACEHOLDER_LEADER_LINE.name")?,
             "ANNOTATION_PLACEHOLDER_LEADER_LINE.name",
+            tt,
         ))?,
         geometric_elements: Vec::new(),
     })
@@ -10522,11 +10624,13 @@ fn build_annotation_placeholder_leader_line_arena(
 
 fn build_annotation_placeholder_occurrence_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AnnotationPlaceholderOccurrence, String> {
     Ok(AnnotationPlaceholderOccurrence {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ANNOTATION_PLACEHOLDER_OCCURRENCE.name")?,
             "ANNOTATION_PLACEHOLDER_OCCURRENCE.name",
+            tt,
         ))?,
         styles: Vec::new(),
         item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
@@ -10552,15 +10656,17 @@ fn build_annotation_placeholder_occurrence_arena(
 
 fn build_annotation_placeholder_occurrence_with_leader_line_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AnnotationPlaceholderOccurrenceWithLeaderLine, String> {
     Ok(AnnotationPlaceholderOccurrenceWithLeaderLine {
-        name: (as_str(
+        name: (as_text(
             req(
                 attributes,
                 0,
                 "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE.name",
             )?,
             "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE.name",
+            tt,
         ))?,
         styles: Vec::new(),
         item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
@@ -10590,11 +10696,15 @@ fn build_annotation_placeholder_occurrence_with_leader_line_arena(
     })
 }
 
-fn build_annotation_plane_arena(attributes: &[Attribute]) -> Result<AnnotationPlane, String> {
+fn build_annotation_plane_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<AnnotationPlane, String> {
     Ok(AnnotationPlane {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ANNOTATION_PLANE.name")?,
             "ANNOTATION_PLANE.name",
+            tt,
         ))?,
         styles: Vec::new(),
         item: PlaneOrPlanarBoxRef::PlanarBox(PlanarBoxId(u32::MAX)),
@@ -10602,11 +10712,15 @@ fn build_annotation_plane_arena(attributes: &[Attribute]) -> Result<AnnotationPl
     })
 }
 
-fn build_annotation_symbol_arena(attributes: &[Attribute]) -> Result<AnnotationSymbol, String> {
+fn build_annotation_symbol_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<AnnotationSymbol, String> {
     Ok(AnnotationSymbol {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ANNOTATION_SYMBOL.name")?,
             "ANNOTATION_SYMBOL.name",
+            tt,
         ))?,
         mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(u32::MAX)),
         mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
@@ -10615,22 +10729,28 @@ fn build_annotation_symbol_arena(attributes: &[Attribute]) -> Result<AnnotationS
 
 fn build_annotation_symbol_occurrence_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AnnotationSymbolOccurrence, String> {
     Ok(AnnotationSymbolOccurrence {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ANNOTATION_SYMBOL_OCCURRENCE.name")?,
             "ANNOTATION_SYMBOL_OCCURRENCE.name",
+            tt,
         ))?,
         styles: Vec::new(),
         item: AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(AnnotationSymbolId(u32::MAX)),
     })
 }
 
-fn build_annotation_text_arena(attributes: &[Attribute]) -> Result<AnnotationText, String> {
+fn build_annotation_text_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<AnnotationText, String> {
     Ok(AnnotationText {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ANNOTATION_TEXT.name")?,
             "ANNOTATION_TEXT.name",
+            tt,
         ))?,
         mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(u32::MAX)),
         mapping_target: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)),
@@ -10639,28 +10759,33 @@ fn build_annotation_text_arena(attributes: &[Attribute]) -> Result<AnnotationTex
 
 fn build_annotation_text_character_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AnnotationTextCharacter, String> {
     Ok(AnnotationTextCharacter {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ANNOTATION_TEXT_CHARACTER.name")?,
             "ANNOTATION_TEXT_CHARACTER.name",
+            tt,
         ))?,
         mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(u32::MAX)),
         mapping_target: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)),
-        alignment: (as_str(
+        alignment: (as_text(
             req(attributes, 3, "ANNOTATION_TEXT_CHARACTER.alignment")?,
             "ANNOTATION_TEXT_CHARACTER.alignment",
+            tt,
         ))?,
     })
 }
 
 fn build_annotation_text_occurrence_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AnnotationTextOccurrence, String> {
     Ok(AnnotationTextOccurrence {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ANNOTATION_TEXT_OCCURRENCE.name")?,
             "ANNOTATION_TEXT_OCCURRENCE.name",
+            tt,
         ))?,
         styles: Vec::new(),
         item: AnnotationTextOccurrenceItemRef::AnnotationText(AnnotationTextId(u32::MAX)),
@@ -10669,11 +10794,13 @@ fn build_annotation_text_occurrence_arena(
 
 fn build_annotation_to_annotation_leader_line_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AnnotationToAnnotationLeaderLine, String> {
     Ok(AnnotationToAnnotationLeaderLine {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ANNOTATION_TO_ANNOTATION_LEADER_LINE.name")?,
             "ANNOTATION_TO_ANNOTATION_LEADER_LINE.name",
+            tt,
         ))?,
         geometric_elements: Vec::new(),
     })
@@ -10681,19 +10808,28 @@ fn build_annotation_to_annotation_leader_line_arena(
 
 fn build_annotation_to_model_leader_line_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AnnotationToModelLeaderLine, String> {
     Ok(AnnotationToModelLeaderLine {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ANNOTATION_TO_MODEL_LEADER_LINE.name")?,
             "ANNOTATION_TO_MODEL_LEADER_LINE.name",
+            tt,
         ))?,
         geometric_elements: Vec::new(),
     })
 }
 
-fn build_apll_point_arena(attributes: &[Attribute]) -> Result<ApllPoint, String> {
+fn build_apll_point_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ApllPoint, String> {
     Ok(ApllPoint {
-        name: (as_str(req(attributes, 0, "APLL_POINT.name")?, "APLL_POINT.name"))?,
+        name: (as_text(
+            req(attributes, 0, "APLL_POINT.name")?,
+            "APLL_POINT.name",
+            tt,
+        ))?,
         coordinates: (match req(attributes, 1, "APLL_POINT.coordinates")? {
             Attribute::List(l) => Reals3::try_collect(
                 l.iter().map(|e| as_real(e, "APLL_POINT.coordinates")),
@@ -10713,11 +10849,13 @@ fn build_apll_point_arena(attributes: &[Attribute]) -> Result<ApllPoint, String>
 
 fn build_apll_point_with_surface_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ApllPointWithSurface, String> {
     Ok(ApllPointWithSurface {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "APLL_POINT_WITH_SURFACE.name")?,
             "APLL_POINT_WITH_SURFACE.name",
+            tt,
         ))?,
         coordinates: (match req(attributes, 1, "APLL_POINT_WITH_SURFACE.coordinates")? {
             Attribute::List(l) => Reals3::try_collect(
@@ -10740,22 +10878,28 @@ fn build_apll_point_with_surface_arena(
     })
 }
 
-fn build_application_context_arena(attributes: &[Attribute]) -> Result<ApplicationContext, String> {
+fn build_application_context_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ApplicationContext, String> {
     Ok(ApplicationContext {
-        application: (as_str(
+        application: (as_text(
             req(attributes, 0, "APPLICATION_CONTEXT.application")?,
             "APPLICATION_CONTEXT.application",
+            tt,
         ))?,
     })
 }
 
 fn build_application_context_element_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ApplicationContextElement, String> {
     Ok(ApplicationContextElement {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "APPLICATION_CONTEXT_ELEMENT.name")?,
             "APPLICATION_CONTEXT_ELEMENT.name",
+            tt,
         ))?,
         frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(
             u32::MAX,
@@ -10765,19 +10909,22 @@ fn build_application_context_element_arena(
 
 fn build_application_protocol_definition_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ApplicationProtocolDefinition, String> {
     Ok(ApplicationProtocolDefinition {
-        status: (as_str(
+        status: (as_text(
             req(attributes, 0, "APPLICATION_PROTOCOL_DEFINITION.status")?,
             "APPLICATION_PROTOCOL_DEFINITION.status",
+            tt,
         ))?,
-        application_interpreted_model_schema_name: (as_str(
+        application_interpreted_model_schema_name: (as_text(
             req(
                 attributes,
                 1,
                 "APPLICATION_PROTOCOL_DEFINITION.application_interpreted_model_schema_name",
             )?,
             "APPLICATION_PROTOCOL_DEFINITION.application_interpreted_model_schema_name",
+            tt,
         ))?,
         application_protocol_year: (as_int(
             req(
@@ -10793,6 +10940,7 @@ fn build_application_protocol_definition_arena(
 
 fn build_applied_approval_assignment_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AppliedApprovalAssignment, String> {
     Ok(AppliedApprovalAssignment {
         assigned_approval: ApprovalRef::Approval(ApprovalId(u32::MAX)),
@@ -10802,6 +10950,7 @@ fn build_applied_approval_assignment_arena(
 
 fn build_applied_date_and_time_assignment_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AppliedDateAndTimeAssignment, String> {
     Ok(AppliedDateAndTimeAssignment {
         assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(u32::MAX)),
@@ -10812,12 +10961,14 @@ fn build_applied_date_and_time_assignment_arena(
 
 fn build_applied_document_reference_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AppliedDocumentReference, String> {
     Ok(AppliedDocumentReference {
         assigned_document: DocumentRef::Document(DocumentId(u32::MAX)),
-        source: (as_str(
+        source: (as_text(
             req(attributes, 1, "APPLIED_DOCUMENT_REFERENCE.source")?,
             "APPLIED_DOCUMENT_REFERENCE.source",
+            tt,
         ))?,
         items: Vec::new(),
     })
@@ -10825,15 +10976,17 @@ fn build_applied_document_reference_arena(
 
 fn build_applied_external_identification_assignment_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AppliedExternalIdentificationAssignment, String> {
     Ok(AppliedExternalIdentificationAssignment {
-        assigned_id: (as_str(
+        assigned_id: (as_text(
             req(
                 attributes,
                 0,
                 "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT.assigned_id",
             )?,
             "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT.assigned_id",
+            tt,
         ))?,
         role: IdentificationRoleRef::IdentificationRole(IdentificationRoleId(u32::MAX)),
         source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
@@ -10843,6 +10996,7 @@ fn build_applied_external_identification_assignment_arena(
 
 fn build_applied_group_assignment_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AppliedGroupAssignment, String> {
     Ok(AppliedGroupAssignment {
         assigned_group: GroupRef::Group(GroupId(u32::MAX)),
@@ -10852,6 +11006,7 @@ fn build_applied_group_assignment_arena(
 
 fn build_applied_person_and_organization_assignment_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AppliedPersonAndOrganizationAssignment, String> {
     Ok(AppliedPersonAndOrganizationAssignment {
         assigned_person_and_organization: PersonAndOrganizationRef::PersonAndOrganization(
@@ -10866,12 +11021,14 @@ fn build_applied_person_and_organization_assignment_arena(
 
 fn build_applied_presented_item_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AppliedPresentedItem, String> {
     Ok(AppliedPresentedItem { items: Vec::new() })
 }
 
 fn build_applied_security_classification_assignment_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AppliedSecurityClassificationAssignment, String> {
     Ok(AppliedSecurityClassificationAssignment {
         assigned_security_classification: SecurityClassificationRef::SecurityClassification(
@@ -10881,20 +11038,26 @@ fn build_applied_security_classification_assignment_arena(
     })
 }
 
-fn build_approval_arena(attributes: &[Attribute]) -> Result<Approval, String> {
+fn build_approval_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Approval, String> {
     Ok(Approval {
         status: ApprovalStatusRef::ApprovalStatus(ApprovalStatusId(u32::MAX)),
-        level: (as_str(req(attributes, 1, "APPROVAL.level")?, "APPROVAL.level"))?,
+        level: (as_text(req(attributes, 1, "APPROVAL.level")?, "APPROVAL.level", tt))?,
     })
 }
 
-fn build_approval_assignment_arena(attributes: &[Attribute]) -> Result<ApprovalAssignment, String> {
+fn build_approval_assignment_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ApprovalAssignment, String> {
     Ok(ApprovalAssignment {
         assigned_approval: ApprovalRef::Approval(ApprovalId(u32::MAX)),
     })
 }
 
-fn build_approval_date_time_arena(attributes: &[Attribute]) -> Result<ApprovalDateTime, String> {
+fn build_approval_date_time_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ApprovalDateTime, String> {
     Ok(ApprovalDateTime {
         date_time: DateTimeSelectRef::CalendarDate(CalendarDateId(u32::MAX)),
         dated_approval: ApprovalRef::Approval(ApprovalId(u32::MAX)),
@@ -10903,6 +11066,7 @@ fn build_approval_date_time_arena(attributes: &[Attribute]) -> Result<ApprovalDa
 
 fn build_approval_person_organization_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ApprovalPersonOrganization, String> {
     Ok(ApprovalPersonOrganization {
         person_organization: PersonOrganizationSelectRef::Organization(OrganizationId(u32::MAX)),
@@ -10911,26 +11075,35 @@ fn build_approval_person_organization_arena(
     })
 }
 
-fn build_approval_role_arena(attributes: &[Attribute]) -> Result<ApprovalRole, String> {
+fn build_approval_role_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ApprovalRole, String> {
     Ok(ApprovalRole {
-        role: (as_str(
+        role: (as_text(
             req(attributes, 0, "APPROVAL_ROLE.role")?,
             "APPROVAL_ROLE.role",
+            tt,
         ))?,
     })
 }
 
-fn build_approval_status_arena(attributes: &[Attribute]) -> Result<ApprovalStatus, String> {
+fn build_approval_status_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ApprovalStatus, String> {
     Ok(ApprovalStatus {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "APPROVAL_STATUS.name")?,
             "APPROVAL_STATUS.name",
+            tt,
         ))?,
     })
 }
 
 fn build_approximation_tolerance_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ApproximationTolerance, String> {
     Ok(ApproximationTolerance {
         tolerance: ToleranceSelectRef::ApproximationToleranceDeviation(
@@ -10941,6 +11114,7 @@ fn build_approximation_tolerance_arena(
 
 fn build_approximation_tolerance_deviation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ApproximationToleranceDeviation, String> {
     Ok(ApproximationToleranceDeviation {
         tessellation_type: (match req(
@@ -10962,7 +11136,7 @@ fn build_approximation_tolerance_deviation_arena(
         )? {
             Attribute::List(l) => l
                 .iter()
-                .map(|e| read_measure_value(e, "APPROXIMATION_TOLERANCE_DEVIATION.tolerances"))
+                .map(|e| read_measure_value(e, "APPROXIMATION_TOLERANCE_DEVIATION.tolerances", tt))
                 .collect::<Result<Vec<_>, String>>(),
             o => Err(format!(
                 "APPROXIMATION_TOLERANCE_DEVIATION.tolerances: expected list, got {o:?}"
@@ -10985,6 +11159,7 @@ fn build_approximation_tolerance_deviation_arena(
 
 fn build_approximation_tolerance_parameter_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ApproximationToleranceParameter, String> {
     Ok(ApproximationToleranceParameter {
         tolerances: (match req(
@@ -10994,7 +11169,7 @@ fn build_approximation_tolerance_parameter_arena(
         )? {
             Attribute::List(l) => l
                 .iter()
-                .map(|e| read_measure_value(e, "APPROXIMATION_TOLERANCE_PARAMETER.tolerances"))
+                .map(|e| read_measure_value(e, "APPROXIMATION_TOLERANCE_PARAMETER.tolerances", tt))
                 .collect::<Result<Vec<_>, String>>(),
             o => Err(format!(
                 "APPROXIMATION_TOLERANCE_PARAMETER.tolerances: expected list, got {o:?}"
@@ -11003,28 +11178,38 @@ fn build_approximation_tolerance_parameter_arena(
     })
 }
 
-fn build_area_in_set_arena(attributes: &[Attribute]) -> Result<AreaInSet, String> {
+fn build_area_in_set_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<AreaInSet, String> {
     Ok(AreaInSet {
         area: PresentationAreaRef::PresentationArea(PresentationAreaId(u32::MAX)),
         in_set: PresentationSetRef::PresentationSet(PresentationSetId(u32::MAX)),
     })
 }
 
-fn build_area_unit_arena(attributes: &[Attribute]) -> Result<AreaUnit, String> {
+fn build_area_unit_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<AreaUnit, String> {
     Ok(AreaUnit {
         elements: Vec::new(),
     })
 }
 
-fn build_ascribable_state_arena(attributes: &[Attribute]) -> Result<AscribableState, String> {
+fn build_ascribable_state_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<AscribableState, String> {
     Ok(AscribableState {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ASCRIBABLE_STATE.name")?,
             "ASCRIBABLE_STATE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "ASCRIBABLE_STATE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ASCRIBABLE_STATE.description"))?),
+            other => Some((as_text(other, "ASCRIBABLE_STATE.description", tt))?),
         },
         pertaining_state_type: StateTypeRef::StateType(StateTypeId(u32::MAX)),
         ascribed_state_observed: StateObservedRef::StateObserved(StateObservedId(u32::MAX)),
@@ -11033,15 +11218,17 @@ fn build_ascribable_state_arena(attributes: &[Attribute]) -> Result<AscribableSt
 
 fn build_ascribable_state_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AscribableStateRelationship, String> {
     Ok(AscribableStateRelationship {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ASCRIBABLE_STATE_RELATIONSHIP.name")?,
             "ASCRIBABLE_STATE_RELATIONSHIP.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "ASCRIBABLE_STATE_RELATIONSHIP.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ASCRIBABLE_STATE_RELATIONSHIP.description"))?),
+            other => Some((as_text(other, "ASCRIBABLE_STATE_RELATIONSHIP.description", tt))?),
         },
         relating_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(u32::MAX)),
         related_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(u32::MAX)),
@@ -11050,19 +11237,22 @@ fn build_ascribable_state_relationship_arena(
 
 fn build_assembly_component_usage_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AssemblyComponentUsage, String> {
     Ok(AssemblyComponentUsage {
-        id: (as_str(
+        id: (as_text(
             req(attributes, 0, "ASSEMBLY_COMPONENT_USAGE.id")?,
             "ASSEMBLY_COMPONENT_USAGE.id",
+            tt,
         ))?,
-        name: (as_str(
+        name: (as_text(
             req(attributes, 1, "ASSEMBLY_COMPONENT_USAGE.name")?,
             "ASSEMBLY_COMPONENT_USAGE.name",
+            tt,
         ))?,
         description: match req(attributes, 2, "ASSEMBLY_COMPONENT_USAGE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ASSEMBLY_COMPONENT_USAGE.description"))?),
+            other => Some((as_text(other, "ASSEMBLY_COMPONENT_USAGE.description", tt))?),
         },
         relating_product_definition:
             ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
@@ -11078,18 +11268,20 @@ fn build_assembly_component_usage_arena(
             "ASSEMBLY_COMPONENT_USAGE.reference_designator",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ASSEMBLY_COMPONENT_USAGE.reference_designator"))?),
+            other => Some((as_text(other, "ASSEMBLY_COMPONENT_USAGE.reference_designator", tt))?),
         },
     })
 }
 
 fn build_auxiliary_leader_line_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<AuxiliaryLeaderLine, String> {
     Ok(AuxiliaryLeaderLine {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "AUXILIARY_LEADER_LINE.name")?,
             "AUXILIARY_LEADER_LINE.name",
+            tt,
         ))?,
         geometric_elements: Vec::new(),
         controlling_leader_line: AnnotationToModelLeaderLineRef::AnnotationToModelLeaderLine(
@@ -11098,33 +11290,45 @@ fn build_auxiliary_leader_line_arena(
     })
 }
 
-fn build_axis1_placement_arena(attributes: &[Attribute]) -> Result<Axis1Placement, String> {
+fn build_axis1_placement_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<Axis1Placement, String> {
     Ok(Axis1Placement {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "AXIS1_PLACEMENT.name")?,
             "AXIS1_PLACEMENT.name",
+            tt,
         ))?,
         location: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)),
         axis: None,
     })
 }
 
-fn build_axis2_placement2d_arena(attributes: &[Attribute]) -> Result<Axis2Placement2d, String> {
+fn build_axis2_placement2d_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<Axis2Placement2d, String> {
     Ok(Axis2Placement2d {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "AXIS2_PLACEMENT_2D.name")?,
             "AXIS2_PLACEMENT_2D.name",
+            tt,
         ))?,
         location: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)),
         ref_direction: None,
     })
 }
 
-fn build_axis2_placement3d_arena(attributes: &[Attribute]) -> Result<Axis2Placement3d, String> {
+fn build_axis2_placement3d_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<Axis2Placement3d, String> {
     Ok(Axis2Placement3d {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "AXIS2_PLACEMENT_3D.name")?,
             "AXIS2_PLACEMENT_3D.name",
+            tt,
         ))?,
         location: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)),
         axis: None,
@@ -11132,11 +11336,15 @@ fn build_axis2_placement3d_arena(attributes: &[Attribute]) -> Result<Axis2Placem
     })
 }
 
-fn build_b_spline_curve_arena(attributes: &[Attribute]) -> Result<BSplineCurve, String> {
+fn build_b_spline_curve_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<BSplineCurve, String> {
     Ok(BSplineCurve {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "B_SPLINE_CURVE.name")?,
             "B_SPLINE_CURVE.name",
+            tt,
         ))?,
         degree: (as_int(
             req(attributes, 1, "B_SPLINE_CURVE.degree")?,
@@ -11163,11 +11371,13 @@ fn build_b_spline_curve_arena(attributes: &[Attribute]) -> Result<BSplineCurve, 
 
 fn build_b_spline_curve_with_knots_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<BSplineCurveWithKnots, String> {
     Ok(BSplineCurveWithKnots {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "B_SPLINE_CURVE_WITH_KNOTS.name")?,
             "B_SPLINE_CURVE_WITH_KNOTS.name",
+            tt,
         ))?,
         degree: (as_int(
             req(attributes, 1, "B_SPLINE_CURVE_WITH_KNOTS.degree")?,
@@ -11221,11 +11431,15 @@ fn build_b_spline_curve_with_knots_arena(
     })
 }
 
-fn build_b_spline_surface_arena(attributes: &[Attribute]) -> Result<BSplineSurface, String> {
+fn build_b_spline_surface_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<BSplineSurface, String> {
     Ok(BSplineSurface {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "B_SPLINE_SURFACE.name")?,
             "B_SPLINE_SURFACE.name",
+            tt,
         ))?,
         u_degree: (as_int(
             req(attributes, 1, "B_SPLINE_SURFACE.u_degree")?,
@@ -11260,11 +11474,13 @@ fn build_b_spline_surface_arena(attributes: &[Attribute]) -> Result<BSplineSurfa
 
 fn build_b_spline_surface_with_knots_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<BSplineSurfaceWithKnots, String> {
     Ok(BSplineSurfaceWithKnots {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "B_SPLINE_SURFACE_WITH_KNOTS.name")?,
             "B_SPLINE_SURFACE_WITH_KNOTS.name",
+            tt,
         ))?,
         u_degree: (as_int(
             req(attributes, 1, "B_SPLINE_SURFACE_WITH_KNOTS.u_degree")?,
@@ -11348,11 +11564,15 @@ fn build_b_spline_surface_with_knots_arena(
     })
 }
 
-fn build_bezier_curve_arena(attributes: &[Attribute]) -> Result<BezierCurve, String> {
+fn build_bezier_curve_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<BezierCurve, String> {
     Ok(BezierCurve {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "BEZIER_CURVE.name")?,
             "BEZIER_CURVE.name",
+            tt,
         ))?,
         degree: (as_int(
             req(attributes, 1, "BEZIER_CURVE.degree")?,
@@ -11375,11 +11595,15 @@ fn build_bezier_curve_arena(attributes: &[Attribute]) -> Result<BezierCurve, Str
     })
 }
 
-fn build_bezier_surface_arena(attributes: &[Attribute]) -> Result<BezierSurface, String> {
+fn build_bezier_surface_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<BezierSurface, String> {
     Ok(BezierSurface {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "BEZIER_SURFACE.name")?,
             "BEZIER_SURFACE.name",
+            tt,
         ))?,
         u_degree: (as_int(
             req(attributes, 1, "BEZIER_SURFACE.u_degree")?,
@@ -11412,20 +11636,28 @@ fn build_bezier_surface_arena(attributes: &[Attribute]) -> Result<BezierSurface,
     })
 }
 
-fn build_bounded_curve_arena(attributes: &[Attribute]) -> Result<BoundedCurve, String> {
+fn build_bounded_curve_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<BoundedCurve, String> {
     Ok(BoundedCurve {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "BOUNDED_CURVE.name")?,
             "BOUNDED_CURVE.name",
+            tt,
         ))?,
     })
 }
 
-fn build_bounded_pcurve_arena(attributes: &[Attribute]) -> Result<BoundedPcurve, String> {
+fn build_bounded_pcurve_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<BoundedPcurve, String> {
     Ok(BoundedPcurve {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "BOUNDED_PCURVE.name")?,
             "BOUNDED_PCURVE.name",
+            tt,
         ))?,
         basis_surface: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)),
         reference_to_curve: DefinitionalRepresentationRef::DefinitionalRepresentation(
@@ -11434,22 +11666,28 @@ fn build_bounded_pcurve_arena(attributes: &[Attribute]) -> Result<BoundedPcurve,
     })
 }
 
-fn build_bounded_surface_arena(attributes: &[Attribute]) -> Result<BoundedSurface, String> {
+fn build_bounded_surface_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<BoundedSurface, String> {
     Ok(BoundedSurface {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "BOUNDED_SURFACE.name")?,
             "BOUNDED_SURFACE.name",
+            tt,
         ))?,
     })
 }
 
 fn build_bounded_surface_curve_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<BoundedSurfaceCurve, String> {
     Ok(BoundedSurfaceCurve {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "BOUNDED_SURFACE_CURVE.name")?,
             "BOUNDED_SURFACE_CURVE.name",
+            tt,
         ))?,
         curve_3d: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
         associated_geometry: Vec::new(),
@@ -11468,18 +11706,25 @@ fn build_bounded_surface_curve_arena(
     })
 }
 
-fn build_brep_with_voids_arena(attributes: &[Attribute]) -> Result<BrepWithVoids, String> {
+fn build_brep_with_voids_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<BrepWithVoids, String> {
     Ok(BrepWithVoids {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "BREP_WITH_VOIDS.name")?,
             "BREP_WITH_VOIDS.name",
+            tt,
         ))?,
         outer: ClosedShellRef::ClosedShell(ClosedShellId(u32::MAX)),
         voids: Vec::new(),
     })
 }
 
-fn build_calendar_date_arena(attributes: &[Attribute]) -> Result<CalendarDate, String> {
+fn build_calendar_date_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<CalendarDate, String> {
     Ok(CalendarDate {
         year_component: (as_int(
             req(attributes, 0, "CALENDAR_DATE.year_component")?,
@@ -11496,11 +11741,15 @@ fn build_calendar_date_arena(attributes: &[Attribute]) -> Result<CalendarDate, S
     })
 }
 
-fn build_camera_image_arena(attributes: &[Attribute]) -> Result<CameraImage, String> {
+fn build_camera_image_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<CameraImage, String> {
     Ok(CameraImage {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CAMERA_IMAGE.name")?,
             "CAMERA_IMAGE.name",
+            tt,
         ))?,
         mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(u32::MAX)),
         mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
@@ -11509,31 +11758,41 @@ fn build_camera_image_arena(attributes: &[Attribute]) -> Result<CameraImage, Str
 
 fn build_camera_image3d_with_scale_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CameraImage3dWithScale, String> {
     Ok(CameraImage3dWithScale {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CAMERA_IMAGE_3D_WITH_SCALE.name")?,
             "CAMERA_IMAGE_3D_WITH_SCALE.name",
+            tt,
         ))?,
         mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(u32::MAX)),
         mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
     })
 }
 
-fn build_camera_model_arena(attributes: &[Attribute]) -> Result<CameraModel, String> {
+fn build_camera_model_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<CameraModel, String> {
     Ok(CameraModel {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CAMERA_MODEL.name")?,
             "CAMERA_MODEL.name",
+            tt,
         ))?,
     })
 }
 
-fn build_camera_model_d3_arena(attributes: &[Attribute]) -> Result<CameraModelD3, String> {
+fn build_camera_model_d3_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<CameraModelD3, String> {
     Ok(CameraModelD3 {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CAMERA_MODEL_D3.name")?,
             "CAMERA_MODEL_D3.name",
+            tt,
         ))?,
         view_reference_system: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
         perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(u32::MAX)),
@@ -11542,11 +11801,13 @@ fn build_camera_model_d3_arena(attributes: &[Attribute]) -> Result<CameraModelD3
 
 fn build_camera_model_d3_multi_clipping_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CameraModelD3MultiClipping, String> {
     Ok(CameraModelD3MultiClipping {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CAMERA_MODEL_D3_MULTI_CLIPPING.name")?,
             "CAMERA_MODEL_D3_MULTI_CLIPPING.name",
+            tt,
         ))?,
         view_reference_system: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
         perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(u32::MAX)),
@@ -11556,11 +11817,13 @@ fn build_camera_model_d3_multi_clipping_arena(
 
 fn build_camera_model_d3_with_hlhsr_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CameraModelD3WithHlhsr, String> {
     Ok(CameraModelD3WithHlhsr {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CAMERA_MODEL_D3_WITH_HLHSR.name")?,
             "CAMERA_MODEL_D3_WITH_HLHSR.name",
+            tt,
         ))?,
         view_reference_system: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
         perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(u32::MAX)),
@@ -11570,7 +11833,10 @@ fn build_camera_model_d3_with_hlhsr_arena(
     })
 }
 
-fn build_camera_usage_arena(attributes: &[Attribute]) -> Result<CameraUsage, String> {
+fn build_camera_usage_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<CameraUsage, String> {
     Ok(CameraUsage {
         mapping_origin: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
         mapped_representation: RepresentationRef::AdvancedBrepShapeRepresentation(
@@ -11579,11 +11845,15 @@ fn build_camera_usage_arena(attributes: &[Attribute]) -> Result<CameraUsage, Str
     })
 }
 
-fn build_cartesian_point_arena(attributes: &[Attribute]) -> Result<CartesianPoint, String> {
+fn build_cartesian_point_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<CartesianPoint, String> {
     Ok(CartesianPoint {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CARTESIAN_POINT.name")?,
             "CARTESIAN_POINT.name",
+            tt,
         ))?,
         coordinates: (match req(attributes, 1, "CARTESIAN_POINT.coordinates")? {
             Attribute::List(l) => Reals3::try_collect(
@@ -11597,7 +11867,10 @@ fn build_cartesian_point_arena(attributes: &[Attribute]) -> Result<CartesianPoin
     })
 }
 
-fn build_cc_design_approval_arena(attributes: &[Attribute]) -> Result<CcDesignApproval, String> {
+fn build_cc_design_approval_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<CcDesignApproval, String> {
     Ok(CcDesignApproval {
         assigned_approval: ApprovalRef::Approval(ApprovalId(u32::MAX)),
         items: Vec::new(),
@@ -11606,6 +11879,7 @@ fn build_cc_design_approval_arena(attributes: &[Attribute]) -> Result<CcDesignAp
 
 fn build_cc_design_date_and_time_assignment_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CcDesignDateAndTimeAssignment, String> {
     Ok(CcDesignDateAndTimeAssignment {
         assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(u32::MAX)),
@@ -11616,6 +11890,7 @@ fn build_cc_design_date_and_time_assignment_arena(
 
 fn build_cc_design_person_and_organization_assignment_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CcDesignPersonAndOrganizationAssignment, String> {
     Ok(CcDesignPersonAndOrganizationAssignment {
         assigned_person_and_organization: PersonAndOrganizationRef::PersonAndOrganization(
@@ -11630,6 +11905,7 @@ fn build_cc_design_person_and_organization_assignment_arena(
 
 fn build_cc_design_security_classification_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CcDesignSecurityClassification, String> {
     Ok(CcDesignSecurityClassification {
         assigned_security_classification: SecurityClassificationRef::SecurityClassification(
@@ -11639,15 +11915,19 @@ fn build_cc_design_security_classification_arena(
     })
 }
 
-fn build_centre_of_symmetry_arena(attributes: &[Attribute]) -> Result<CentreOfSymmetry, String> {
+fn build_centre_of_symmetry_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<CentreOfSymmetry, String> {
     Ok(CentreOfSymmetry {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CENTRE_OF_SYMMETRY.name")?,
             "CENTRE_OF_SYMMETRY.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "CENTRE_OF_SYMMETRY.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "CENTRE_OF_SYMMETRY.description"))?),
+            other => Some((as_text(other, "CENTRE_OF_SYMMETRY.description", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -11659,37 +11939,49 @@ fn build_centre_of_symmetry_arena(attributes: &[Attribute]) -> Result<CentreOfSy
     })
 }
 
-fn build_certification_arena(attributes: &[Attribute]) -> Result<Certification, String> {
+fn build_certification_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<Certification, String> {
     Ok(Certification {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CERTIFICATION.name")?,
             "CERTIFICATION.name",
+            tt,
         ))?,
-        purpose: (as_str(
+        purpose: (as_text(
             req(attributes, 1, "CERTIFICATION.purpose")?,
             "CERTIFICATION.purpose",
+            tt,
         ))?,
         kind: CertificationTypeRef::CertificationType(CertificationTypeId(u32::MAX)),
     })
 }
 
-fn build_certification_type_arena(attributes: &[Attribute]) -> Result<CertificationType, String> {
+fn build_certification_type_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<CertificationType, String> {
     Ok(CertificationType {
-        description: (as_str(
+        description: (as_text(
             req(attributes, 0, "CERTIFICATION_TYPE.description")?,
             "CERTIFICATION_TYPE.description",
+            tt,
         ))?,
     })
 }
 
-fn build_change_arena(attributes: &[Attribute]) -> Result<Change, String> {
+fn build_change_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Change, String> {
     Ok(Change {
         assigned_action: ActionRef::Action(ActionId(u32::MAX)),
         items: Vec::new(),
     })
 }
 
-fn build_change_request_arena(attributes: &[Attribute]) -> Result<ChangeRequest, String> {
+fn build_change_request_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ChangeRequest, String> {
     Ok(ChangeRequest {
         assigned_action_request: VersionedActionRequestRef::VersionedActionRequest(
             VersionedActionRequestId(u32::MAX),
@@ -11700,6 +11992,7 @@ fn build_change_request_arena(attributes: &[Attribute]) -> Result<ChangeRequest,
 
 fn build_character_glyph_style_outline_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CharacterGlyphStyleOutline, String> {
     Ok(CharacterGlyphStyleOutline {
         outline_style: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)),
@@ -11708,6 +12001,7 @@ fn build_character_glyph_style_outline_arena(
 
 fn build_character_glyph_style_stroke_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CharacterGlyphStyleStroke, String> {
     Ok(CharacterGlyphStyleStroke {
         stroke_style: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)),
@@ -11716,15 +12010,17 @@ fn build_character_glyph_style_stroke_arena(
 
 fn build_characterized_item_within_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CharacterizedItemWithinRepresentation, String> {
     Ok(CharacterizedItemWithinRepresentation {
-        name: (as_str(
+        name: (as_text(
             req(
                 attributes,
                 0,
                 "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION.name",
             )?,
             "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -11733,9 +12029,10 @@ fn build_characterized_item_within_representation_arena(
         )? {
             Attribute::Unset => None,
             other => Some(
-                (as_str(
+                (as_text(
                     other,
                     "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION.description",
+                    tt,
                 ))?,
             ),
         },
@@ -11748,21 +12045,23 @@ fn build_characterized_item_within_representation_arena(
 
 fn build_characterized_object_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CharacterizedObject, String> {
     Ok(CharacterizedObject {
         name: match req(attributes, 0, "CHARACTERIZED_OBJECT.name")? {
             Attribute::Derived => None,
-            other => Some((as_str(other, "CHARACTERIZED_OBJECT.name"))?),
+            other => Some((as_text(other, "CHARACTERIZED_OBJECT.name", tt))?),
         },
         description: match req(attributes, 1, "CHARACTERIZED_OBJECT.description")? {
             Attribute::Derived => None,
-            other => Some((as_str(other, "CHARACTERIZED_OBJECT.description"))?),
+            other => Some((as_text(other, "CHARACTERIZED_OBJECT.description", tt))?),
         },
     })
 }
 
 fn build_characterized_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CharacterizedRepresentation, String> {
     Ok(CharacterizedRepresentation {
         items: Vec::new(),
@@ -11772,9 +12071,9 @@ fn build_characterized_representation_arena(
     })
 }
 
-fn build_circle_arena(attributes: &[Attribute]) -> Result<Circle, String> {
+fn build_circle_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Circle, String> {
     Ok(Circle {
-        name: (as_str(req(attributes, 0, "CIRCLE.name")?, "CIRCLE.name"))?,
+        name: (as_text(req(attributes, 0, "CIRCLE.name")?, "CIRCLE.name", tt))?,
         position: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)),
         radius: (as_real(req(attributes, 2, "CIRCLE.radius")?, "CIRCLE.radius"))?,
     })
@@ -11782,15 +12081,17 @@ fn build_circle_arena(attributes: &[Attribute]) -> Result<Circle, String> {
 
 fn build_circular_runout_tolerance_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CircularRunoutTolerance, String> {
     Ok(CircularRunoutTolerance {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CIRCULAR_RUNOUT_TOLERANCE.name")?,
             "CIRCULAR_RUNOUT_TOLERANCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "CIRCULAR_RUNOUT_TOLERANCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "CIRCULAR_RUNOUT_TOLERANCE.description"))?),
+            other => Some((as_text(other, "CIRCULAR_RUNOUT_TOLERANCE.description", tt))?),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -11800,11 +12101,15 @@ fn build_circular_runout_tolerance_arena(
     })
 }
 
-fn build_closed_shell_arena(attributes: &[Attribute]) -> Result<ClosedShell, String> {
+fn build_closed_shell_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ClosedShell, String> {
     Ok(ClosedShell {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CLOSED_SHELL.name")?,
             "CLOSED_SHELL.name",
+            tt,
         ))?,
         cfs_faces: Vec::new(),
     })
@@ -11812,15 +12117,17 @@ fn build_closed_shell_arena(attributes: &[Attribute]) -> Result<ClosedShell, Str
 
 fn build_coaxiality_tolerance_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CoaxialityTolerance, String> {
     Ok(CoaxialityTolerance {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "COAXIALITY_TOLERANCE.name")?,
             "COAXIALITY_TOLERANCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "COAXIALITY_TOLERANCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "COAXIALITY_TOLERANCE.description"))?),
+            other => Some((as_text(other, "COAXIALITY_TOLERANCE.description", tt))?),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -11830,13 +12137,20 @@ fn build_coaxiality_tolerance_arena(
     })
 }
 
-fn build_colour_arena(attributes: &[Attribute]) -> Result<Colour, String> {
+fn build_colour_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Colour, String> {
     Ok(Colour {})
 }
 
-fn build_colour_rgb_arena(attributes: &[Attribute]) -> Result<ColourRgb, String> {
+fn build_colour_rgb_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ColourRgb, String> {
     Ok(ColourRgb {
-        name: (as_str(req(attributes, 0, "COLOUR_RGB.name")?, "COLOUR_RGB.name"))?,
+        name: (as_text(
+            req(attributes, 0, "COLOUR_RGB.name")?,
+            "COLOUR_RGB.name",
+            tt,
+        ))?,
         red: (as_real(req(attributes, 1, "COLOUR_RGB.red")?, "COLOUR_RGB.red"))?,
         green: (as_real(req(attributes, 2, "COLOUR_RGB.green")?, "COLOUR_RGB.green"))?,
         blue: (as_real(req(attributes, 3, "COLOUR_RGB.blue")?, "COLOUR_RGB.blue"))?,
@@ -11845,24 +12159,30 @@ fn build_colour_rgb_arena(attributes: &[Attribute]) -> Result<ColourRgb, String>
 
 fn build_colour_specification_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ColourSpecification, String> {
     Ok(ColourSpecification {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "COLOUR_SPECIFICATION.name")?,
             "COLOUR_SPECIFICATION.name",
+            tt,
         ))?,
     })
 }
 
-fn build_common_datum_arena(attributes: &[Attribute]) -> Result<CommonDatum, String> {
+fn build_common_datum_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<CommonDatum, String> {
     Ok(CommonDatum {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "COMMON_DATUM.name")?,
             "COMMON_DATUM.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "COMMON_DATUM.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "COMMON_DATUM.description"))?),
+            other => Some((as_text(other, "COMMON_DATUM.description", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -11871,20 +12191,23 @@ fn build_common_datum_arena(attributes: &[Attribute]) -> Result<CommonDatum, Str
             req(attributes, 3, "COMMON_DATUM.product_definitional")?,
             "COMMON_DATUM.product_definitional",
         ))?,
-        identification: (as_str(
+        identification: (as_text(
             req(attributes, 4, "COMMON_DATUM.identification")?,
             "COMMON_DATUM.identification",
+            tt,
         ))?,
     })
 }
 
 fn build_complex_triangulated_face_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ComplexTriangulatedFace, String> {
     Ok(ComplexTriangulatedFace {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "COMPLEX_TRIANGULATED_FACE.name")?,
             "COMPLEX_TRIANGULATED_FACE.name",
+            tt,
         ))?,
         coordinates: CoordinatesListRef::CoordinatesList(CoordinatesListId(u32::MAX)),
         pnmax: (as_int(
@@ -11958,11 +12281,13 @@ fn build_complex_triangulated_face_arena(
 
 fn build_complex_triangulated_surface_set_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ComplexTriangulatedSurfaceSet, String> {
     Ok(ComplexTriangulatedSurfaceSet {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "COMPLEX_TRIANGULATED_SURFACE_SET.name")?,
             "COMPLEX_TRIANGULATED_SURFACE_SET.name",
+            tt,
         ))?,
         coordinates: CoordinatesListRef::CoordinatesList(CoordinatesListId(u32::MAX)),
         pnmax: (as_int(
@@ -12041,11 +12366,15 @@ fn build_complex_triangulated_surface_set_arena(
     })
 }
 
-fn build_composite_curve_arena(attributes: &[Attribute]) -> Result<CompositeCurve, String> {
+fn build_composite_curve_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<CompositeCurve, String> {
     Ok(CompositeCurve {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "COMPOSITE_CURVE.name")?,
             "COMPOSITE_CURVE.name",
+            tt,
         ))?,
         segments: Vec::new(),
         self_intersect: (as_logical(
@@ -12057,6 +12386,7 @@ fn build_composite_curve_arena(attributes: &[Attribute]) -> Result<CompositeCurv
 
 fn build_composite_curve_segment_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CompositeCurveSegment, String> {
     Ok(CompositeCurveSegment {
         transition: (match req(attributes, 0, "COMPOSITE_CURVE_SEGMENT.transition")? {
@@ -12075,15 +12405,17 @@ fn build_composite_curve_segment_arena(
 
 fn build_composite_group_shape_aspect_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CompositeGroupShapeAspect, String> {
     Ok(CompositeGroupShapeAspect {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "COMPOSITE_GROUP_SHAPE_ASPECT.name")?,
             "COMPOSITE_GROUP_SHAPE_ASPECT.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "COMPOSITE_GROUP_SHAPE_ASPECT.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "COMPOSITE_GROUP_SHAPE_ASPECT.description"))?),
+            other => Some((as_text(other, "COMPOSITE_GROUP_SHAPE_ASPECT.description", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -12101,15 +12433,17 @@ fn build_composite_group_shape_aspect_arena(
 
 fn build_composite_shape_aspect_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CompositeShapeAspect, String> {
     Ok(CompositeShapeAspect {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "COMPOSITE_SHAPE_ASPECT.name")?,
             "COMPOSITE_SHAPE_ASPECT.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "COMPOSITE_SHAPE_ASPECT.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "COMPOSITE_SHAPE_ASPECT.description"))?),
+            other => Some((as_text(other, "COMPOSITE_SHAPE_ASPECT.description", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -12121,11 +12455,15 @@ fn build_composite_shape_aspect_arena(
     })
 }
 
-fn build_composite_text_arena(attributes: &[Attribute]) -> Result<CompositeText, String> {
+fn build_composite_text_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<CompositeText, String> {
     Ok(CompositeText {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "COMPOSITE_TEXT.name")?,
             "COMPOSITE_TEXT.name",
+            tt,
         ))?,
         collected_text: Vec::new(),
     })
@@ -12133,11 +12471,13 @@ fn build_composite_text_arena(attributes: &[Attribute]) -> Result<CompositeText,
 
 fn build_compound_representation_item_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CompoundRepresentationItem, String> {
     Ok(CompoundRepresentationItem {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "COMPOUND_REPRESENTATION_ITEM.name")?,
             "COMPOUND_REPRESENTATION_ITEM.name",
+            tt,
         ))?,
         item_element: CompoundItemDefinitionRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
     })
@@ -12145,15 +12485,17 @@ fn build_compound_representation_item_arena(
 
 fn build_concentricity_tolerance_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ConcentricityTolerance, String> {
     Ok(ConcentricityTolerance {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CONCENTRICITY_TOLERANCE.name")?,
             "CONCENTRICITY_TOLERANCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "CONCENTRICITY_TOLERANCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "CONCENTRICITY_TOLERANCE.description"))?),
+            other => Some((as_text(other, "CONCENTRICITY_TOLERANCE.description", tt))?),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -12165,6 +12507,7 @@ fn build_concentricity_tolerance_arena(
 
 fn build_configuration_design_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ConfigurationDesign, String> {
     Ok(ConfigurationDesign {
         configuration: ConfigurationItemRef::ConfigurationItem(ConfigurationItemId(u32::MAX)),
@@ -12174,11 +12517,13 @@ fn build_configuration_design_arena(
 
 fn build_configuration_effectivity_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ConfigurationEffectivity, String> {
     Ok(ConfigurationEffectivity {
-        id: (as_str(
+        id: (as_text(
             req(attributes, 0, "CONFIGURATION_EFFECTIVITY.id")?,
             "CONFIGURATION_EFFECTIVITY.id",
+            tt,
         ))?,
         usage: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(
             u32::MAX,
@@ -12187,40 +12532,49 @@ fn build_configuration_effectivity_arena(
     })
 }
 
-fn build_configuration_item_arena(attributes: &[Attribute]) -> Result<ConfigurationItem, String> {
+fn build_configuration_item_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ConfigurationItem, String> {
     Ok(ConfigurationItem {
-        id: (as_str(
+        id: (as_text(
             req(attributes, 0, "CONFIGURATION_ITEM.id")?,
             "CONFIGURATION_ITEM.id",
+            tt,
         ))?,
-        name: (as_str(
+        name: (as_text(
             req(attributes, 1, "CONFIGURATION_ITEM.name")?,
             "CONFIGURATION_ITEM.name",
+            tt,
         ))?,
         description: match req(attributes, 2, "CONFIGURATION_ITEM.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "CONFIGURATION_ITEM.description"))?),
+            other => Some((as_text(other, "CONFIGURATION_ITEM.description", tt))?),
         },
         item_concept: ProductConceptRef::ProductConcept(ProductConceptId(u32::MAX)),
         purpose: match req(attributes, 4, "CONFIGURATION_ITEM.purpose")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "CONFIGURATION_ITEM.purpose"))?),
+            other => Some((as_text(other, "CONFIGURATION_ITEM.purpose", tt))?),
         },
     })
 }
 
-fn build_conic_arena(attributes: &[Attribute]) -> Result<Conic, String> {
+fn build_conic_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Conic, String> {
     Ok(Conic {
-        name: (as_str(req(attributes, 0, "CONIC.name")?, "CONIC.name"))?,
+        name: (as_text(req(attributes, 0, "CONIC.name")?, "CONIC.name", tt))?,
         position: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)),
     })
 }
 
-fn build_conical_surface_arena(attributes: &[Attribute]) -> Result<ConicalSurface, String> {
+fn build_conical_surface_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ConicalSurface, String> {
     Ok(ConicalSurface {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CONICAL_SURFACE.name")?,
             "CONICAL_SURFACE.name",
+            tt,
         ))?,
         position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
         radius: (as_real(
@@ -12234,11 +12588,15 @@ fn build_conical_surface_arena(attributes: &[Attribute]) -> Result<ConicalSurfac
     })
 }
 
-fn build_connected_face_set_arena(attributes: &[Attribute]) -> Result<ConnectedFaceSet, String> {
+fn build_connected_face_set_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ConnectedFaceSet, String> {
     Ok(ConnectedFaceSet {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CONNECTED_FACE_SET.name")?,
             "CONNECTED_FACE_SET.name",
+            tt,
         ))?,
         cfs_faces: None,
     })
@@ -12246,11 +12604,13 @@ fn build_connected_face_set_arena(attributes: &[Attribute]) -> Result<ConnectedF
 
 fn build_constructive_geometry_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ConstructiveGeometryRepresentation, String> {
     Ok(ConstructiveGeometryRepresentation {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CONSTRUCTIVE_GEOMETRY_REPRESENTATION.name")?,
             "CONSTRUCTIVE_GEOMETRY_REPRESENTATION.name",
+            tt,
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
@@ -12261,10 +12621,11 @@ fn build_constructive_geometry_representation_arena(
 
 fn build_constructive_geometry_representation_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ConstructiveGeometryRepresentationRelationship, String> {
     Ok(ConstructiveGeometryRepresentationRelationship {
-        name: (as_str(req(attributes, 0, "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP.name")?, "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP.name"))?,
-        description: match req(attributes, 1, "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP.description"))?) },
+        name: (as_text(req(attributes, 0, "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP.name")?, "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP.name", tt))?,
+        description: match req(attributes, 1, "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP.description", tt))?) },
         rep_1: ConstructiveGeometryRepresentationOrShapeRepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)),
         rep_2: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)),
     })
@@ -12272,15 +12633,17 @@ fn build_constructive_geometry_representation_relationship_arena(
 
 fn build_context_dependent_over_riding_styled_item_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ContextDependentOverRidingStyledItem, String> {
     Ok(ContextDependentOverRidingStyledItem {
-        name: (as_str(
+        name: (as_text(
             req(
                 attributes,
                 0,
                 "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.name",
             )?,
             "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.name",
+            tt,
         ))?,
         styles: Vec::new(),
         item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
@@ -12295,6 +12658,7 @@ fn build_context_dependent_over_riding_styled_item_arena(
 
 fn build_context_dependent_shape_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ContextDependentShapeRepresentation, String> {
     Ok(ContextDependentShapeRepresentation {
         representation_relation:
@@ -12309,27 +12673,31 @@ fn build_context_dependent_shape_representation_arena(
 
 fn build_context_dependent_unit_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ContextDependentUnit, String> {
     Ok(ContextDependentUnit {
         dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(u32::MAX)),
-        name: (as_str(
+        name: (as_text(
             req(attributes, 1, "CONTEXT_DEPENDENT_UNIT.name")?,
             "CONTEXT_DEPENDENT_UNIT.name",
+            tt,
         ))?,
     })
 }
 
 fn build_continuous_shape_aspect_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ContinuousShapeAspect, String> {
     Ok(ContinuousShapeAspect {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CONTINUOUS_SHAPE_ASPECT.name")?,
             "CONTINUOUS_SHAPE_ASPECT.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "CONTINUOUS_SHAPE_ASPECT.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "CONTINUOUS_SHAPE_ASPECT.description"))?),
+            other => Some((as_text(other, "CONTINUOUS_SHAPE_ASPECT.description", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -12345,31 +12713,41 @@ fn build_continuous_shape_aspect_arena(
     })
 }
 
-fn build_contract_arena(attributes: &[Attribute]) -> Result<Contract, String> {
+fn build_contract_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Contract, String> {
     Ok(Contract {
-        name: (as_str(req(attributes, 0, "CONTRACT.name")?, "CONTRACT.name"))?,
-        purpose: (as_str(req(attributes, 1, "CONTRACT.purpose")?, "CONTRACT.purpose"))?,
+        name: (as_text(req(attributes, 0, "CONTRACT.name")?, "CONTRACT.name", tt))?,
+        purpose: (as_text(
+            req(attributes, 1, "CONTRACT.purpose")?,
+            "CONTRACT.purpose",
+            tt,
+        ))?,
         kind: ContractTypeRef::ContractType(ContractTypeId(u32::MAX)),
     })
 }
 
-fn build_contract_type_arena(attributes: &[Attribute]) -> Result<ContractType, String> {
+fn build_contract_type_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ContractType, String> {
     Ok(ContractType {
-        description: (as_str(
+        description: (as_text(
             req(attributes, 0, "CONTRACT_TYPE.description")?,
             "CONTRACT_TYPE.description",
+            tt,
         ))?,
     })
 }
 
 fn build_conversion_based_unit_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ConversionBasedUnit, String> {
     Ok(ConversionBasedUnit {
         dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(u32::MAX)),
-        name: (as_str(
+        name: (as_text(
             req(attributes, 1, "CONVERSION_BASED_UNIT.name")?,
             "CONVERSION_BASED_UNIT.name",
+            tt,
         ))?,
         conversion_factor: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(
             u32::MAX,
@@ -12379,6 +12757,7 @@ fn build_conversion_based_unit_arena(
 
 fn build_coordinated_universal_time_offset_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CoordinatedUniversalTimeOffset, String> {
     Ok(CoordinatedUniversalTimeOffset {
         hour_offset: (as_int(
@@ -12407,11 +12786,15 @@ fn build_coordinated_universal_time_offset_arena(
     })
 }
 
-fn build_coordinates_list_arena(attributes: &[Attribute]) -> Result<CoordinatesList, String> {
+fn build_coordinates_list_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<CoordinatesList, String> {
     Ok(CoordinatesList {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "COORDINATES_LIST.name")?,
             "COORDINATES_LIST.name",
+            tt,
         ))?,
         npoints: (as_int(
             req(attributes, 1, "COORDINATES_LIST.npoints")?,
@@ -12438,26 +12821,37 @@ fn build_coordinates_list_arena(attributes: &[Attribute]) -> Result<CoordinatesL
     })
 }
 
-fn build_curve_arena(attributes: &[Attribute]) -> Result<Curve, String> {
+fn build_curve_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Curve, String> {
     Ok(Curve {
-        name: (as_str(req(attributes, 0, "CURVE.name")?, "CURVE.name"))?,
+        name: (as_text(req(attributes, 0, "CURVE.name")?, "CURVE.name", tt))?,
     })
 }
 
-fn build_curve_style_arena(attributes: &[Attribute]) -> Result<CurveStyle, String> {
+fn build_curve_style_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<CurveStyle, String> {
     Ok(CurveStyle {
-        name: (as_str(req(attributes, 0, "CURVE_STYLE.name")?, "CURVE_STYLE.name"))?,
+        name: (as_text(
+            req(attributes, 0, "CURVE_STYLE.name")?,
+            "CURVE_STYLE.name",
+            tt,
+        ))?,
         curve_font: None,
         curve_width: None,
         curve_colour: None,
     })
 }
 
-fn build_curve_style_font_arena(attributes: &[Attribute]) -> Result<CurveStyleFont, String> {
+fn build_curve_style_font_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<CurveStyleFont, String> {
     Ok(CurveStyleFont {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CURVE_STYLE_FONT.name")?,
             "CURVE_STYLE_FONT.name",
+            tt,
         ))?,
         pattern_list: Vec::new(),
     })
@@ -12465,11 +12859,13 @@ fn build_curve_style_font_arena(attributes: &[Attribute]) -> Result<CurveStyleFo
 
 fn build_curve_style_font_and_scaling_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CurveStyleFontAndScaling, String> {
     Ok(CurveStyleFontAndScaling {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CURVE_STYLE_FONT_AND_SCALING.name")?,
             "CURVE_STYLE_FONT_AND_SCALING.name",
+            tt,
         ))?,
         curve_font: CurveStyleFontSelectRef::CurveStyleFont(CurveStyleFontId(u32::MAX)),
         curve_font_scaling: (as_real(
@@ -12485,6 +12881,7 @@ fn build_curve_style_font_and_scaling_arena(
 
 fn build_curve_style_font_pattern_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CurveStyleFontPattern, String> {
     Ok(CurveStyleFontPattern {
         visible_segment_length: (as_real(
@@ -12508,6 +12905,7 @@ fn build_curve_style_font_pattern_arena(
 
 fn build_curve_style_rendering_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CurveStyleRendering, String> {
     Ok(CurveStyleRendering {
         rendering_method: (match req(attributes, 0, "CURVE_STYLE_RENDERING.rendering_method")? {
@@ -12523,11 +12921,15 @@ fn build_curve_style_rendering_arena(
     })
 }
 
-fn build_cylindrical_surface_arena(attributes: &[Attribute]) -> Result<CylindricalSurface, String> {
+fn build_cylindrical_surface_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<CylindricalSurface, String> {
     Ok(CylindricalSurface {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CYLINDRICAL_SURFACE.name")?,
             "CYLINDRICAL_SURFACE.name",
+            tt,
         ))?,
         position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
         radius: (as_real(
@@ -12539,15 +12941,17 @@ fn build_cylindrical_surface_arena(attributes: &[Attribute]) -> Result<Cylindric
 
 fn build_cylindricity_tolerance_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<CylindricityTolerance, String> {
     Ok(CylindricityTolerance {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "CYLINDRICITY_TOLERANCE.name")?,
             "CYLINDRICITY_TOLERANCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "CYLINDRICITY_TOLERANCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "CYLINDRICITY_TOLERANCE.description"))?),
+            other => Some((as_text(other, "CYLINDRICITY_TOLERANCE.description", tt))?),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -12556,7 +12960,7 @@ fn build_cylindricity_tolerance_arena(
     })
 }
 
-fn build_date_arena(attributes: &[Attribute]) -> Result<Date, String> {
+fn build_date_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Date, String> {
     Ok(Date {
         year_component: (as_int(
             req(attributes, 0, "DATE.year_component")?,
@@ -12565,7 +12969,10 @@ fn build_date_arena(attributes: &[Attribute]) -> Result<Date, String> {
     })
 }
 
-fn build_date_and_time_arena(attributes: &[Attribute]) -> Result<DateAndTime, String> {
+fn build_date_and_time_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<DateAndTime, String> {
     Ok(DateAndTime {
         date_component: DateRef::CalendarDate(CalendarDateId(u32::MAX)),
         time_component: LocalTimeRef::LocalTime(LocalTimeId(u32::MAX)),
@@ -12574,6 +12981,7 @@ fn build_date_and_time_arena(attributes: &[Attribute]) -> Result<DateAndTime, St
 
 fn build_date_and_time_assignment_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DateAndTimeAssignment, String> {
     Ok(DateAndTimeAssignment {
         assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(u32::MAX)),
@@ -12581,27 +12989,34 @@ fn build_date_and_time_assignment_arena(
     })
 }
 
-fn build_date_role_arena(attributes: &[Attribute]) -> Result<DateRole, String> {
+fn build_date_role_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<DateRole, String> {
     Ok(DateRole {
-        name: (as_str(req(attributes, 0, "DATE_ROLE.name")?, "DATE_ROLE.name"))?,
+        name: (as_text(req(attributes, 0, "DATE_ROLE.name")?, "DATE_ROLE.name", tt))?,
     })
 }
 
-fn build_date_time_role_arena(attributes: &[Attribute]) -> Result<DateTimeRole, String> {
+fn build_date_time_role_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<DateTimeRole, String> {
     Ok(DateTimeRole {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DATE_TIME_ROLE.name")?,
             "DATE_TIME_ROLE.name",
+            tt,
         ))?,
     })
 }
 
-fn build_datum_arena(attributes: &[Attribute]) -> Result<Datum, String> {
+fn build_datum_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Datum, String> {
     Ok(Datum {
-        name: (as_str(req(attributes, 0, "DATUM.name")?, "DATUM.name"))?,
+        name: (as_text(req(attributes, 0, "DATUM.name")?, "DATUM.name", tt))?,
         description: match req(attributes, 1, "DATUM.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "DATUM.description"))?),
+            other => Some((as_text(other, "DATUM.description", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -12610,22 +13025,27 @@ fn build_datum_arena(attributes: &[Attribute]) -> Result<Datum, String> {
             req(attributes, 3, "DATUM.product_definitional")?,
             "DATUM.product_definitional",
         ))?,
-        identification: (as_str(
+        identification: (as_text(
             req(attributes, 4, "DATUM.identification")?,
             "DATUM.identification",
+            tt,
         ))?,
     })
 }
 
-fn build_datum_feature_arena(attributes: &[Attribute]) -> Result<DatumFeature, String> {
+fn build_datum_feature_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<DatumFeature, String> {
     Ok(DatumFeature {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DATUM_FEATURE.name")?,
             "DATUM_FEATURE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "DATUM_FEATURE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "DATUM_FEATURE.description"))?),
+            other => Some((as_text(other, "DATUM_FEATURE.description", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -12637,7 +13057,10 @@ fn build_datum_feature_arena(attributes: &[Attribute]) -> Result<DatumFeature, S
     })
 }
 
-fn build_datum_reference_arena(attributes: &[Attribute]) -> Result<DatumReference, String> {
+fn build_datum_reference_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<DatumReference, String> {
     Ok(DatumReference {
         precedence: (as_int(
             req(attributes, 0, "DATUM_REFERENCE.precedence")?,
@@ -12649,15 +13072,17 @@ fn build_datum_reference_arena(attributes: &[Attribute]) -> Result<DatumReferenc
 
 fn build_datum_reference_compartment_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DatumReferenceCompartment, String> {
     Ok(DatumReferenceCompartment {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DATUM_REFERENCE_COMPARTMENT.name")?,
             "DATUM_REFERENCE_COMPARTMENT.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "DATUM_REFERENCE_COMPARTMENT.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "DATUM_REFERENCE_COMPARTMENT.description"))?),
+            other => Some((as_text(other, "DATUM_REFERENCE_COMPARTMENT.description", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -12677,15 +13102,17 @@ fn build_datum_reference_compartment_arena(
 
 fn build_datum_reference_element_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DatumReferenceElement, String> {
     Ok(DatumReferenceElement {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DATUM_REFERENCE_ELEMENT.name")?,
             "DATUM_REFERENCE_ELEMENT.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "DATUM_REFERENCE_ELEMENT.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "DATUM_REFERENCE_ELEMENT.description"))?),
+            other => Some((as_text(other, "DATUM_REFERENCE_ELEMENT.description", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -12705,6 +13132,7 @@ fn build_datum_reference_element_arena(
 
 fn build_datum_reference_modifier_with_value_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DatumReferenceModifierWithValue, String> {
     Ok(DatumReferenceModifierWithValue {
         modifier_type: (match req(
@@ -12725,15 +13153,19 @@ fn build_datum_reference_modifier_with_value_arena(
     })
 }
 
-fn build_datum_system_arena(attributes: &[Attribute]) -> Result<DatumSystem, String> {
+fn build_datum_system_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<DatumSystem, String> {
     Ok(DatumSystem {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DATUM_SYSTEM.name")?,
             "DATUM_SYSTEM.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "DATUM_SYSTEM.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "DATUM_SYSTEM.description"))?),
+            other => Some((as_text(other, "DATUM_SYSTEM.description", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -12746,15 +13178,19 @@ fn build_datum_system_arena(attributes: &[Attribute]) -> Result<DatumSystem, Str
     })
 }
 
-fn build_datum_target_arena(attributes: &[Attribute]) -> Result<DatumTarget, String> {
+fn build_datum_target_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<DatumTarget, String> {
     Ok(DatumTarget {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DATUM_TARGET.name")?,
             "DATUM_TARGET.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "DATUM_TARGET.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "DATUM_TARGET.description"))?),
+            other => Some((as_text(other, "DATUM_TARGET.description", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -12763,36 +13199,40 @@ fn build_datum_target_arena(attributes: &[Attribute]) -> Result<DatumTarget, Str
             req(attributes, 3, "DATUM_TARGET.product_definitional")?,
             "DATUM_TARGET.product_definitional",
         ))?,
-        target_id: (as_str(
+        target_id: (as_text(
             req(attributes, 4, "DATUM_TARGET.target_id")?,
             "DATUM_TARGET.target_id",
+            tt,
         ))?,
     })
 }
 
 fn build_default_model_geometric_view_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DefaultModelGeometricView, String> {
     Ok(DefaultModelGeometricView {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DEFAULT_MODEL_GEOMETRIC_VIEW.name")?,
             "DEFAULT_MODEL_GEOMETRIC_VIEW.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "DEFAULT_MODEL_GEOMETRIC_VIEW.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "DEFAULT_MODEL_GEOMETRIC_VIEW.description"))?),
+            other => Some((as_text(other, "DEFAULT_MODEL_GEOMETRIC_VIEW.description", tt))?),
         },
         item: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
         rep: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(
             u32::MAX,
         )),
-        name_1: (as_str(
+        name_1: (as_text(
             req(attributes, 4, "DEFAULT_MODEL_GEOMETRIC_VIEW.name_1")?,
             "DEFAULT_MODEL_GEOMETRIC_VIEW.name_1",
+            tt,
         ))?,
         description_1: match req(attributes, 5, "DEFAULT_MODEL_GEOMETRIC_VIEW.description_1")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "DEFAULT_MODEL_GEOMETRIC_VIEW.description_1"))?),
+            other => Some((as_text(other, "DEFAULT_MODEL_GEOMETRIC_VIEW.description_1", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -12802,11 +13242,13 @@ fn build_default_model_geometric_view_arena(
 
 fn build_defined_character_glyph_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DefinedCharacterGlyph, String> {
     Ok(DefinedCharacterGlyph {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DEFINED_CHARACTER_GLYPH.name")?,
             "DEFINED_CHARACTER_GLYPH.name",
+            tt,
         ))?,
         definition: DefinedGlyphSelectRef::ExternallyDefinedCharacterGlyph(
             ExternallyDefinedCharacterGlyphId(u32::MAX),
@@ -12815,11 +13257,15 @@ fn build_defined_character_glyph_arena(
     })
 }
 
-fn build_defined_symbol_arena(attributes: &[Attribute]) -> Result<DefinedSymbol, String> {
+fn build_defined_symbol_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<DefinedSymbol, String> {
     Ok(DefinedSymbol {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DEFINED_SYMBOL.name")?,
             "DEFINED_SYMBOL.name",
+            tt,
         ))?,
         definition: DefinedSymbolSelectRef::ExternallyDefinedSymbol(ExternallyDefinedSymbolId(
             u32::MAX,
@@ -12830,11 +13276,13 @@ fn build_defined_symbol_arena(attributes: &[Attribute]) -> Result<DefinedSymbol,
 
 fn build_definitional_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DefinitionalRepresentation, String> {
     Ok(DefinitionalRepresentation {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DEFINITIONAL_REPRESENTATION.name")?,
             "DEFINITIONAL_REPRESENTATION.name",
+            tt,
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
@@ -12845,15 +13293,17 @@ fn build_definitional_representation_arena(
 
 fn build_definitional_representation_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DefinitionalRepresentationRelationship, String> {
     Ok(DefinitionalRepresentationRelationship {
-        name: (as_str(
+        name: (as_text(
             req(
                 attributes,
                 0,
                 "DEFINITIONAL_REPRESENTATION_RELATIONSHIP.name",
             )?,
             "DEFINITIONAL_REPRESENTATION_RELATIONSHIP.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -12862,9 +13312,10 @@ fn build_definitional_representation_relationship_arena(
         )? {
             Attribute::Unset => None,
             other => Some(
-                (as_str(
+                (as_text(
                     other,
                     "DEFINITIONAL_REPRESENTATION_RELATIONSHIP.description",
+                    tt,
                 ))?,
             ),
         },
@@ -12879,15 +13330,17 @@ fn build_definitional_representation_relationship_arena(
 
 fn build_definitional_representation_relationship_with_same_context_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DefinitionalRepresentationRelationshipWithSameContext, String> {
     Ok(DefinitionalRepresentationRelationshipWithSameContext {
-        name: (as_str(
+        name: (as_text(
             req(
                 attributes,
                 0,
                 "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT.name",
             )?,
             "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -12896,9 +13349,10 @@ fn build_definitional_representation_relationship_with_same_context_arena(
         )? {
             Attribute::Unset => None,
             other => Some(
-                (as_str(
+                (as_text(
                     other,
                     "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT.description",
+                    tt,
                 ))?,
             ),
         },
@@ -12913,11 +13367,13 @@ fn build_definitional_representation_relationship_with_same_context_arena(
 
 fn build_degenerate_toroidal_surface_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DegenerateToroidalSurface, String> {
     Ok(DegenerateToroidalSurface {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DEGENERATE_TOROIDAL_SURFACE.name")?,
             "DEGENERATE_TOROIDAL_SURFACE.name",
+            tt,
         ))?,
         position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
         major_radius: (as_real(
@@ -12936,15 +13392,17 @@ fn build_degenerate_toroidal_surface_arena(
 
 fn build_derived_shape_aspect_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DerivedShapeAspect, String> {
     Ok(DerivedShapeAspect {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DERIVED_SHAPE_ASPECT.name")?,
             "DERIVED_SHAPE_ASPECT.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "DERIVED_SHAPE_ASPECT.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "DERIVED_SHAPE_ASPECT.description"))?),
+            other => Some((as_text(other, "DERIVED_SHAPE_ASPECT.description", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -12956,7 +13414,10 @@ fn build_derived_shape_aspect_arena(
     })
 }
 
-fn build_derived_unit_arena(attributes: &[Attribute]) -> Result<DerivedUnit, String> {
+fn build_derived_unit_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<DerivedUnit, String> {
     Ok(DerivedUnit {
         elements: Vec::new(),
     })
@@ -12964,6 +13425,7 @@ fn build_derived_unit_arena(attributes: &[Attribute]) -> Result<DerivedUnit, Str
 
 fn build_derived_unit_element_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DerivedUnitElement, String> {
     Ok(DerivedUnitElement {
         unit: NamedUnitRef::ContextDependentUnit(ContextDependentUnitId(u32::MAX)),
@@ -12976,11 +13438,13 @@ fn build_derived_unit_element_arena(
 
 fn build_description_attribute_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DescriptionAttribute, String> {
     Ok(DescriptionAttribute {
-        attribute_value: (as_str(
+        attribute_value: (as_text(
             req(attributes, 0, "DESCRIPTION_ATTRIBUTE.attribute_value")?,
             "DESCRIPTION_ATTRIBUTE.attribute_value",
+            tt,
         ))?,
         described_item: DescriptionAttributeSelectRef::ActionRequestSolution(
             ActionRequestSolutionId(u32::MAX),
@@ -12990,37 +13454,46 @@ fn build_description_attribute_arena(
 
 fn build_descriptive_representation_item_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DescriptiveRepresentationItem, String> {
     Ok(DescriptiveRepresentationItem {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DESCRIPTIVE_REPRESENTATION_ITEM.name")?,
             "DESCRIPTIVE_REPRESENTATION_ITEM.name",
+            tt,
         ))?,
-        description: (as_str(
+        description: (as_text(
             req(attributes, 1, "DESCRIPTIVE_REPRESENTATION_ITEM.description")?,
             "DESCRIPTIVE_REPRESENTATION_ITEM.description",
+            tt,
         ))?,
     })
 }
 
-fn build_design_context_arena(attributes: &[Attribute]) -> Result<DesignContext, String> {
+fn build_design_context_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<DesignContext, String> {
     Ok(DesignContext {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DESIGN_CONTEXT.name")?,
             "DESIGN_CONTEXT.name",
+            tt,
         ))?,
         frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(
             u32::MAX,
         )),
-        life_cycle_stage: (as_str(
+        life_cycle_stage: (as_text(
             req(attributes, 2, "DESIGN_CONTEXT.life_cycle_stage")?,
             "DESIGN_CONTEXT.life_cycle_stage",
+            tt,
         ))?,
     })
 }
 
 fn build_dimensional_characteristic_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DimensionalCharacteristicRepresentation, String> {
     Ok(DimensionalCharacteristicRepresentation {
         dimension: DimensionalCharacteristicRef::AngularLocation(AngularLocationId(u32::MAX)),
@@ -13032,6 +13505,7 @@ fn build_dimensional_characteristic_representation_arena(
 
 fn build_dimensional_exponents_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DimensionalExponents, String> {
     Ok(DimensionalExponents {
         length_exponent: (as_real(
@@ -13083,15 +13557,17 @@ fn build_dimensional_exponents_arena(
 
 fn build_dimensional_location_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DimensionalLocation, String> {
     Ok(DimensionalLocation {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DIMENSIONAL_LOCATION.name")?,
             "DIMENSIONAL_LOCATION.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "DIMENSIONAL_LOCATION.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "DIMENSIONAL_LOCATION.description"))?),
+            other => Some((as_text(other, "DIMENSIONAL_LOCATION.description", tt))?),
         },
         relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
             u32::MAX,
@@ -13104,15 +13580,17 @@ fn build_dimensional_location_arena(
 
 fn build_dimensional_location_with_path_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DimensionalLocationWithPath, String> {
     Ok(DimensionalLocationWithPath {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DIMENSIONAL_LOCATION_WITH_PATH.name")?,
             "DIMENSIONAL_LOCATION_WITH_PATH.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "DIMENSIONAL_LOCATION_WITH_PATH.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "DIMENSIONAL_LOCATION_WITH_PATH.description"))?),
+            other => Some((as_text(other, "DIMENSIONAL_LOCATION_WITH_PATH.description", tt))?),
         },
         relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
             u32::MAX,
@@ -13124,23 +13602,29 @@ fn build_dimensional_location_with_path_arena(
     })
 }
 
-fn build_dimensional_size_arena(attributes: &[Attribute]) -> Result<DimensionalSize, String> {
+fn build_dimensional_size_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<DimensionalSize, String> {
     Ok(DimensionalSize {
         applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)),
-        name: (as_str(
+        name: (as_text(
             req(attributes, 1, "DIMENSIONAL_SIZE.name")?,
             "DIMENSIONAL_SIZE.name",
+            tt,
         ))?,
     })
 }
 
 fn build_dimensional_size_with_datum_feature_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DimensionalSizeWithDatumFeature, String> {
     Ok(DimensionalSizeWithDatumFeature {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE.name")?,
             "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -13148,7 +13632,7 @@ fn build_dimensional_size_with_datum_feature_arena(
             "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE.description",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE.description"))?),
+            other => Some((as_text(other, "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE.description", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -13162,21 +13646,24 @@ fn build_dimensional_size_with_datum_feature_arena(
             "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE.product_definitional",
         ))?,
         applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)),
-        name_1: (as_str(
+        name_1: (as_text(
             req(attributes, 5, "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE.name_1")?,
             "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE.name_1",
+            tt,
         ))?,
     })
 }
 
 fn build_dimensional_size_with_path_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DimensionalSizeWithPath, String> {
     Ok(DimensionalSizeWithPath {
         applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)),
-        name: (as_str(
+        name: (as_text(
             req(attributes, 1, "DIMENSIONAL_SIZE_WITH_PATH.name")?,
             "DIMENSIONAL_SIZE_WITH_PATH.name",
+            tt,
         ))?,
         path: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)),
     })
@@ -13184,15 +13671,17 @@ fn build_dimensional_size_with_path_arena(
 
 fn build_directed_dimensional_location_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DirectedDimensionalLocation, String> {
     Ok(DirectedDimensionalLocation {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DIRECTED_DIMENSIONAL_LOCATION.name")?,
             "DIRECTED_DIMENSIONAL_LOCATION.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "DIRECTED_DIMENSIONAL_LOCATION.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "DIRECTED_DIMENSIONAL_LOCATION.description"))?),
+            other => Some((as_text(other, "DIRECTED_DIMENSIONAL_LOCATION.description", tt))?),
         },
         relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
             u32::MAX,
@@ -13203,9 +13692,12 @@ fn build_directed_dimensional_location_arena(
     })
 }
 
-fn build_direction_arena(attributes: &[Attribute]) -> Result<Direction, String> {
+fn build_direction_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<Direction, String> {
     Ok(Direction {
-        name: (as_str(req(attributes, 0, "DIRECTION.name")?, "DIRECTION.name"))?,
+        name: (as_text(req(attributes, 0, "DIRECTION.name")?, "DIRECTION.name", tt))?,
         direction_ratios: (match req(attributes, 1, "DIRECTION.direction_ratios")? {
             Attribute::List(l) => Reals3::try_collect(
                 l.iter().map(|e| as_real(e, "DIRECTION.direction_ratios")),
@@ -13218,52 +13710,63 @@ fn build_direction_arena(attributes: &[Attribute]) -> Result<Direction, String> 
     })
 }
 
-fn build_document_arena(attributes: &[Attribute]) -> Result<Document, String> {
+fn build_document_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Document, String> {
     Ok(Document {
-        id: (as_str(req(attributes, 0, "DOCUMENT.id")?, "DOCUMENT.id"))?,
-        name: (as_str(req(attributes, 1, "DOCUMENT.name")?, "DOCUMENT.name"))?,
+        id: (as_text(req(attributes, 0, "DOCUMENT.id")?, "DOCUMENT.id", tt))?,
+        name: (as_text(req(attributes, 1, "DOCUMENT.name")?, "DOCUMENT.name", tt))?,
         description: match req(attributes, 2, "DOCUMENT.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "DOCUMENT.description"))?),
+            other => Some((as_text(other, "DOCUMENT.description", tt))?),
         },
         kind: DocumentTypeRef::DocumentType(DocumentTypeId(u32::MAX)),
     })
 }
 
-fn build_document_file_arena(attributes: &[Attribute]) -> Result<DocumentFile, String> {
+fn build_document_file_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<DocumentFile, String> {
     Ok(DocumentFile {
-        id: (as_str(req(attributes, 0, "DOCUMENT_FILE.id")?, "DOCUMENT_FILE.id"))?,
-        name: (as_str(
+        id: (as_text(
+            req(attributes, 0, "DOCUMENT_FILE.id")?,
+            "DOCUMENT_FILE.id",
+            tt,
+        ))?,
+        name: (as_text(
             req(attributes, 1, "DOCUMENT_FILE.name")?,
             "DOCUMENT_FILE.name",
+            tt,
         ))?,
         description: match req(attributes, 2, "DOCUMENT_FILE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "DOCUMENT_FILE.description"))?),
+            other => Some((as_text(other, "DOCUMENT_FILE.description", tt))?),
         },
         kind: DocumentTypeRef::DocumentType(DocumentTypeId(u32::MAX)),
-        name_1: (as_str(
+        name_1: (as_text(
             req(attributes, 4, "DOCUMENT_FILE.name_1")?,
             "DOCUMENT_FILE.name_1",
+            tt,
         ))?,
         description_1: match req(attributes, 5, "DOCUMENT_FILE.description_1")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "DOCUMENT_FILE.description_1"))?),
+            other => Some((as_text(other, "DOCUMENT_FILE.description_1", tt))?),
         },
     })
 }
 
 fn build_document_product_association_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DocumentProductAssociation, String> {
     Ok(DocumentProductAssociation {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DOCUMENT_PRODUCT_ASSOCIATION.name")?,
             "DOCUMENT_PRODUCT_ASSOCIATION.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "DOCUMENT_PRODUCT_ASSOCIATION.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "DOCUMENT_PRODUCT_ASSOCIATION.description"))?),
+            other => Some((as_text(other, "DOCUMENT_PRODUCT_ASSOCIATION.description", tt))?),
         },
         relating_document: DocumentRef::Document(DocumentId(u32::MAX)),
         related_product: ProductOrFormationOrDefinitionRef::Product(ProductId(u32::MAX)),
@@ -13272,59 +13775,73 @@ fn build_document_product_association_arena(
 
 fn build_document_product_equivalence_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DocumentProductEquivalence, String> {
     Ok(DocumentProductEquivalence {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DOCUMENT_PRODUCT_EQUIVALENCE.name")?,
             "DOCUMENT_PRODUCT_EQUIVALENCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "DOCUMENT_PRODUCT_EQUIVALENCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "DOCUMENT_PRODUCT_EQUIVALENCE.description"))?),
+            other => Some((as_text(other, "DOCUMENT_PRODUCT_EQUIVALENCE.description", tt))?),
         },
         relating_document: DocumentRef::Document(DocumentId(u32::MAX)),
         related_product: ProductOrFormationOrDefinitionRef::Product(ProductId(u32::MAX)),
     })
 }
 
-fn build_document_reference_arena(attributes: &[Attribute]) -> Result<DocumentReference, String> {
+fn build_document_reference_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<DocumentReference, String> {
     Ok(DocumentReference {
         assigned_document: DocumentRef::Document(DocumentId(u32::MAX)),
-        source: (as_str(
+        source: (as_text(
             req(attributes, 1, "DOCUMENT_REFERENCE.source")?,
             "DOCUMENT_REFERENCE.source",
+            tt,
         ))?,
     })
 }
 
 fn build_document_representation_type_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DocumentRepresentationType, String> {
     Ok(DocumentRepresentationType {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DOCUMENT_REPRESENTATION_TYPE.name")?,
             "DOCUMENT_REPRESENTATION_TYPE.name",
+            tt,
         ))?,
         represented_document: DocumentRef::Document(DocumentId(u32::MAX)),
     })
 }
 
-fn build_document_type_arena(attributes: &[Attribute]) -> Result<DocumentType, String> {
+fn build_document_type_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<DocumentType, String> {
     Ok(DocumentType {
-        product_data_type: (as_str(
+        product_data_type: (as_text(
             req(attributes, 0, "DOCUMENT_TYPE.product_data_type")?,
             "DOCUMENT_TYPE.product_data_type",
+            tt,
         ))?,
     })
 }
 
 fn build_draughting_annotation_occurrence_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DraughtingAnnotationOccurrence, String> {
     Ok(DraughtingAnnotationOccurrence {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DRAUGHTING_ANNOTATION_OCCURRENCE.name")?,
             "DRAUGHTING_ANNOTATION_OCCURRENCE.name",
+            tt,
         ))?,
         styles: Vec::new(),
         item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
@@ -13333,11 +13850,15 @@ fn build_draughting_annotation_occurrence_arena(
     })
 }
 
-fn build_draughting_callout_arena(attributes: &[Attribute]) -> Result<DraughtingCallout, String> {
+fn build_draughting_callout_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<DraughtingCallout, String> {
     Ok(DraughtingCallout {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DRAUGHTING_CALLOUT.name")?,
             "DRAUGHTING_CALLOUT.name",
+            tt,
         ))?,
         contents: Vec::new(),
     })
@@ -13345,15 +13866,18 @@ fn build_draughting_callout_arena(attributes: &[Attribute]) -> Result<Draughting
 
 fn build_draughting_callout_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DraughtingCalloutRelationship, String> {
     Ok(DraughtingCalloutRelationship {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DRAUGHTING_CALLOUT_RELATIONSHIP.name")?,
             "DRAUGHTING_CALLOUT_RELATIONSHIP.name",
+            tt,
         ))?,
-        description: (as_str(
+        description: (as_text(
             req(attributes, 1, "DRAUGHTING_CALLOUT_RELATIONSHIP.description")?,
             "DRAUGHTING_CALLOUT_RELATIONSHIP.description",
+            tt,
         ))?,
         relating_draughting_callout: DraughtingCalloutRef::DraughtingCallout(DraughtingCalloutId(
             u32::MAX,
@@ -13364,11 +13888,15 @@ fn build_draughting_callout_relationship_arena(
     })
 }
 
-fn build_draughting_model_arena(attributes: &[Attribute]) -> Result<DraughtingModel, String> {
+fn build_draughting_model_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<DraughtingModel, String> {
     Ok(DraughtingModel {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DRAUGHTING_MODEL.name")?,
             "DRAUGHTING_MODEL.name",
+            tt,
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
@@ -13379,11 +13907,13 @@ fn build_draughting_model_arena(attributes: &[Attribute]) -> Result<DraughtingMo
 
 fn build_draughting_model_item_association_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DraughtingModelItemAssociation, String> {
     Ok(DraughtingModelItemAssociation {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DRAUGHTING_MODEL_ITEM_ASSOCIATION.name")?,
             "DRAUGHTING_MODEL_ITEM_ASSOCIATION.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -13391,7 +13921,7 @@ fn build_draughting_model_item_association_arena(
             "DRAUGHTING_MODEL_ITEM_ASSOCIATION.description",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "DRAUGHTING_MODEL_ITEM_ASSOCIATION.description"))?),
+            other => Some((as_text(other, "DRAUGHTING_MODEL_ITEM_ASSOCIATION.description", tt))?),
         },
         definition: DraughtingModelItemDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(
             u32::MAX,
@@ -13407,15 +13937,17 @@ fn build_draughting_model_item_association_arena(
 
 fn build_draughting_model_item_association_with_placeholder_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DraughtingModelItemAssociationWithPlaceholder, String> {
     Ok(DraughtingModelItemAssociationWithPlaceholder {
-        name: (as_str(
+        name: (as_text(
             req(
                 attributes,
                 0,
                 "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER.name",
             )?,
             "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -13424,9 +13956,10 @@ fn build_draughting_model_item_association_with_placeholder_arena(
         )? {
             Attribute::Unset => None,
             other => Some(
-                (as_str(
+                (as_text(
                     other,
                     "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER.description",
+                    tt,
                 ))?,
             ),
         },
@@ -13447,48 +13980,61 @@ fn build_draughting_model_item_association_with_placeholder_arena(
 
 fn build_draughting_pre_defined_colour_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DraughtingPreDefinedColour, String> {
     Ok(DraughtingPreDefinedColour {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DRAUGHTING_PRE_DEFINED_COLOUR.name")?,
             "DRAUGHTING_PRE_DEFINED_COLOUR.name",
+            tt,
         ))?,
     })
 }
 
 fn build_draughting_pre_defined_curve_font_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DraughtingPreDefinedCurveFont, String> {
     Ok(DraughtingPreDefinedCurveFont {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DRAUGHTING_PRE_DEFINED_CURVE_FONT.name")?,
             "DRAUGHTING_PRE_DEFINED_CURVE_FONT.name",
+            tt,
         ))?,
     })
 }
 
 fn build_draughting_pre_defined_text_font_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<DraughtingPreDefinedTextFont, String> {
     Ok(DraughtingPreDefinedTextFont {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "DRAUGHTING_PRE_DEFINED_TEXT_FONT.name")?,
             "DRAUGHTING_PRE_DEFINED_TEXT_FONT.name",
+            tt,
         ))?,
     })
 }
 
-fn build_edge_arena(attributes: &[Attribute]) -> Result<Edge, String> {
+fn build_edge_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Edge, String> {
     Ok(Edge {
-        name: (as_str(req(attributes, 0, "EDGE.name")?, "EDGE.name"))?,
+        name: (as_text(req(attributes, 0, "EDGE.name")?, "EDGE.name", tt))?,
         edge_start: None,
         edge_end: None,
     })
 }
 
-fn build_edge_curve_arena(attributes: &[Attribute]) -> Result<EdgeCurve, String> {
+fn build_edge_curve_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<EdgeCurve, String> {
     Ok(EdgeCurve {
-        name: (as_str(req(attributes, 0, "EDGE_CURVE.name")?, "EDGE_CURVE.name"))?,
+        name: (as_text(
+            req(attributes, 0, "EDGE_CURVE.name")?,
+            "EDGE_CURVE.name",
+            tt,
+        ))?,
         edge_start: VertexRef::Vertex(VertexId(u32::MAX)),
         edge_end: VertexRef::Vertex(VertexId(u32::MAX)),
         edge_geometry: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
@@ -13498,32 +14044,42 @@ fn build_edge_curve_arena(attributes: &[Attribute]) -> Result<EdgeCurve, String>
     })
 }
 
-fn build_edge_loop_arena(attributes: &[Attribute]) -> Result<EdgeLoop, String> {
+fn build_edge_loop_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<EdgeLoop, String> {
     Ok(EdgeLoop {
-        name: (as_str(req(attributes, 0, "EDGE_LOOP.name")?, "EDGE_LOOP.name"))?,
+        name: (as_text(req(attributes, 0, "EDGE_LOOP.name")?, "EDGE_LOOP.name", tt))?,
         edge_list: Vec::new(),
     })
 }
 
-fn build_effectivity_arena(attributes: &[Attribute]) -> Result<Effectivity, String> {
+fn build_effectivity_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<Effectivity, String> {
     Ok(Effectivity {
-        id: (as_str(req(attributes, 0, "EFFECTIVITY.id")?, "EFFECTIVITY.id"))?,
+        id: (as_text(req(attributes, 0, "EFFECTIVITY.id")?, "EFFECTIVITY.id", tt))?,
     })
 }
 
-fn build_elementary_surface_arena(attributes: &[Attribute]) -> Result<ElementarySurface, String> {
+fn build_elementary_surface_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ElementarySurface, String> {
     Ok(ElementarySurface {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ELEMENTARY_SURFACE.name")?,
             "ELEMENTARY_SURFACE.name",
+            tt,
         ))?,
         position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
     })
 }
 
-fn build_ellipse_arena(attributes: &[Attribute]) -> Result<Ellipse, String> {
+fn build_ellipse_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Ellipse, String> {
     Ok(Ellipse {
-        name: (as_str(req(attributes, 0, "ELLIPSE.name")?, "ELLIPSE.name"))?,
+        name: (as_text(req(attributes, 0, "ELLIPSE.name")?, "ELLIPSE.name", tt))?,
         position: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)),
         semi_axis_1: (as_real(
             req(attributes, 2, "ELLIPSE.semi_axis_1")?,
@@ -13536,43 +14092,54 @@ fn build_ellipse_arena(attributes: &[Attribute]) -> Result<Ellipse, String> {
     })
 }
 
-fn build_expression_arena(attributes: &[Attribute]) -> Result<Expression, String> {
+fn build_expression_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<Expression, String> {
     Ok(Expression {})
 }
 
 fn build_external_identification_assignment_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ExternalIdentificationAssignment, String> {
     Ok(ExternalIdentificationAssignment {
-        assigned_id: (as_str(
+        assigned_id: (as_text(
             req(
                 attributes,
                 0,
                 "EXTERNAL_IDENTIFICATION_ASSIGNMENT.assigned_id",
             )?,
             "EXTERNAL_IDENTIFICATION_ASSIGNMENT.assigned_id",
+            tt,
         ))?,
         role: IdentificationRoleRef::IdentificationRole(IdentificationRoleId(u32::MAX)),
         source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
     })
 }
 
-fn build_external_source_arena(attributes: &[Attribute]) -> Result<ExternalSource, String> {
+fn build_external_source_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ExternalSource, String> {
     Ok(ExternalSource {
         source_id: (read_string_select(
             req(attributes, 0, "EXTERNAL_SOURCE.source_id")?,
             "EXTERNAL_SOURCE.source_id",
+            tt,
         ))?,
     })
 }
 
 fn build_externally_defined_character_glyph_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ExternallyDefinedCharacterGlyph, String> {
     Ok(ExternallyDefinedCharacterGlyph {
         item_id: (read_string_select(
             req(attributes, 0, "EXTERNALLY_DEFINED_CHARACTER_GLYPH.item_id")?,
             "EXTERNALLY_DEFINED_CHARACTER_GLYPH.item_id",
+            tt,
         ))?,
         source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
     })
@@ -13580,11 +14147,13 @@ fn build_externally_defined_character_glyph_arena(
 
 fn build_externally_defined_curve_font_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ExternallyDefinedCurveFont, String> {
     Ok(ExternallyDefinedCurveFont {
         item_id: (read_string_select(
             req(attributes, 0, "EXTERNALLY_DEFINED_CURVE_FONT.item_id")?,
             "EXTERNALLY_DEFINED_CURVE_FONT.item_id",
+            tt,
         ))?,
         source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
     })
@@ -13592,27 +14161,32 @@ fn build_externally_defined_curve_font_arena(
 
 fn build_externally_defined_hatch_style_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ExternallyDefinedHatchStyle, String> {
     Ok(ExternallyDefinedHatchStyle {
         item_id: (read_string_select(
             req(attributes, 0, "EXTERNALLY_DEFINED_HATCH_STYLE.item_id")?,
             "EXTERNALLY_DEFINED_HATCH_STYLE.item_id",
+            tt,
         ))?,
         source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
-        name: (as_str(
+        name: (as_text(
             req(attributes, 2, "EXTERNALLY_DEFINED_HATCH_STYLE.name")?,
             "EXTERNALLY_DEFINED_HATCH_STYLE.name",
+            tt,
         ))?,
     })
 }
 
 fn build_externally_defined_item_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ExternallyDefinedItem, String> {
     Ok(ExternallyDefinedItem {
         item_id: (read_string_select(
             req(attributes, 0, "EXTERNALLY_DEFINED_ITEM.item_id")?,
             "EXTERNALLY_DEFINED_ITEM.item_id",
+            tt,
         ))?,
         source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
     })
@@ -13620,11 +14194,13 @@ fn build_externally_defined_item_arena(
 
 fn build_externally_defined_style_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ExternallyDefinedStyle, String> {
     Ok(ExternallyDefinedStyle {
         item_id: (read_string_select(
             req(attributes, 0, "EXTERNALLY_DEFINED_STYLE.item_id")?,
             "EXTERNALLY_DEFINED_STYLE.item_id",
+            tt,
         ))?,
         source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
     })
@@ -13632,11 +14208,13 @@ fn build_externally_defined_style_arena(
 
 fn build_externally_defined_symbol_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ExternallyDefinedSymbol, String> {
     Ok(ExternallyDefinedSymbol {
         item_id: (read_string_select(
             req(attributes, 0, "EXTERNALLY_DEFINED_SYMBOL.item_id")?,
             "EXTERNALLY_DEFINED_SYMBOL.item_id",
+            tt,
         ))?,
         source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
     })
@@ -13644,11 +14222,13 @@ fn build_externally_defined_symbol_arena(
 
 fn build_externally_defined_text_font_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ExternallyDefinedTextFont, String> {
     Ok(ExternallyDefinedTextFont {
         item_id: (read_string_select(
             req(attributes, 0, "EXTERNALLY_DEFINED_TEXT_FONT.item_id")?,
             "EXTERNALLY_DEFINED_TEXT_FONT.item_id",
+            tt,
         ))?,
         source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
     })
@@ -13656,11 +14236,13 @@ fn build_externally_defined_text_font_arena(
 
 fn build_externally_defined_tile_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ExternallyDefinedTile, String> {
     Ok(ExternallyDefinedTile {
         item_id: (read_string_select(
             req(attributes, 0, "EXTERNALLY_DEFINED_TILE.item_id")?,
             "EXTERNALLY_DEFINED_TILE.item_id",
+            tt,
         ))?,
         source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
     })
@@ -13668,30 +14250,40 @@ fn build_externally_defined_tile_arena(
 
 fn build_externally_defined_tile_style_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ExternallyDefinedTileStyle, String> {
     Ok(ExternallyDefinedTileStyle {
         item_id: (read_string_select(
             req(attributes, 0, "EXTERNALLY_DEFINED_TILE_STYLE.item_id")?,
             "EXTERNALLY_DEFINED_TILE_STYLE.item_id",
+            tt,
         ))?,
         source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
-        name: (as_str(
+        name: (as_text(
             req(attributes, 2, "EXTERNALLY_DEFINED_TILE_STYLE.name")?,
             "EXTERNALLY_DEFINED_TILE_STYLE.name",
+            tt,
         ))?,
     })
 }
 
-fn build_face_arena(attributes: &[Attribute]) -> Result<Face, String> {
+fn build_face_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Face, String> {
     Ok(Face {
-        name: (as_str(req(attributes, 0, "FACE.name")?, "FACE.name"))?,
+        name: (as_text(req(attributes, 0, "FACE.name")?, "FACE.name", tt))?,
         bounds: Vec::new(),
     })
 }
 
-fn build_face_bound_arena(attributes: &[Attribute]) -> Result<FaceBound, String> {
+fn build_face_bound_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<FaceBound, String> {
     Ok(FaceBound {
-        name: (as_str(req(attributes, 0, "FACE_BOUND.name")?, "FACE_BOUND.name"))?,
+        name: (as_text(
+            req(attributes, 0, "FACE_BOUND.name")?,
+            "FACE_BOUND.name",
+            tt,
+        ))?,
         bound: LoopRef::EdgeLoop(EdgeLoopId(u32::MAX)),
         orientation: (Ok::<bool, String>(
             matches!(req(attributes, 2, "FACE_BOUND.orientation")?, Attribute::Enum(s) if s == "T"),
@@ -13699,11 +14291,15 @@ fn build_face_bound_arena(attributes: &[Attribute]) -> Result<FaceBound, String>
     })
 }
 
-fn build_face_outer_bound_arena(attributes: &[Attribute]) -> Result<FaceOuterBound, String> {
+fn build_face_outer_bound_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<FaceOuterBound, String> {
     Ok(FaceOuterBound {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "FACE_OUTER_BOUND.name")?,
             "FACE_OUTER_BOUND.name",
+            tt,
         ))?,
         bound: LoopRef::EdgeLoop(EdgeLoopId(u32::MAX)),
         orientation: (Ok::<bool, String>(
@@ -13712,11 +14308,15 @@ fn build_face_outer_bound_arena(attributes: &[Attribute]) -> Result<FaceOuterBou
     })
 }
 
-fn build_face_surface_arena(attributes: &[Attribute]) -> Result<FaceSurface, String> {
+fn build_face_surface_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<FaceSurface, String> {
     Ok(FaceSurface {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "FACE_SURFACE.name")?,
             "FACE_SURFACE.name",
+            tt,
         ))?,
         bounds: Vec::new(),
         face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)),
@@ -13728,11 +14328,13 @@ fn build_face_surface_arena(attributes: &[Attribute]) -> Result<FaceSurface, Str
 
 fn build_feature_for_datum_target_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<FeatureForDatumTargetRelationship, String> {
     Ok(FeatureForDatumTargetRelationship {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP.name")?,
             "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -13740,7 +14342,13 @@ fn build_feature_for_datum_target_relationship_arena(
             "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP.description",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP.description"))?),
+            other => Some(
+                (as_text(
+                    other,
+                    "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP.description",
+                    tt,
+                ))?,
+            ),
         },
         relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
             u32::MAX,
@@ -13751,11 +14359,15 @@ fn build_feature_for_datum_target_relationship_arena(
     })
 }
 
-fn build_fill_area_style_arena(attributes: &[Attribute]) -> Result<FillAreaStyle, String> {
+fn build_fill_area_style_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<FillAreaStyle, String> {
     Ok(FillAreaStyle {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "FILL_AREA_STYLE.name")?,
             "FILL_AREA_STYLE.name",
+            tt,
         ))?,
         fill_styles: Vec::new(),
     })
@@ -13763,11 +14375,13 @@ fn build_fill_area_style_arena(attributes: &[Attribute]) -> Result<FillAreaStyle
 
 fn build_fill_area_style_colour_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<FillAreaStyleColour, String> {
     Ok(FillAreaStyleColour {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "FILL_AREA_STYLE_COLOUR.name")?,
             "FILL_AREA_STYLE_COLOUR.name",
+            tt,
         ))?,
         fill_colour: ColourRef::Colour(ColourId(u32::MAX)),
     })
@@ -13775,11 +14389,13 @@ fn build_fill_area_style_colour_arena(
 
 fn build_fill_area_style_hatching_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<FillAreaStyleHatching, String> {
     Ok(FillAreaStyleHatching {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "FILL_AREA_STYLE_HATCHING.name")?,
             "FILL_AREA_STYLE_HATCHING.name",
+            tt,
         ))?,
         hatch_line_appearance: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)),
         start_of_next_hatch_line: OneDirectionRepeatFactorRef::OneDirectionRepeatFactor(
@@ -13796,11 +14412,13 @@ fn build_fill_area_style_hatching_arena(
 
 fn build_fill_area_style_tile_coloured_region_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<FillAreaStyleTileColouredRegion, String> {
     Ok(FillAreaStyleTileColouredRegion {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "FILL_AREA_STYLE_TILE_COLOURED_REGION.name")?,
             "FILL_AREA_STYLE_TILE_COLOURED_REGION.name",
+            tt,
         ))?,
         closed_curve: CurveOrAnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(
             AnnotationCurveOccurrenceId(u32::MAX),
@@ -13811,11 +14429,13 @@ fn build_fill_area_style_tile_coloured_region_arena(
 
 fn build_fill_area_style_tile_curve_with_style_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<FillAreaStyleTileCurveWithStyle, String> {
     Ok(FillAreaStyleTileCurveWithStyle {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE.name")?,
             "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE.name",
+            tt,
         ))?,
         styled_curve: AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(
             AnnotationCurveOccurrenceId(u32::MAX),
@@ -13825,11 +14445,13 @@ fn build_fill_area_style_tile_curve_with_style_arena(
 
 fn build_fill_area_style_tile_symbol_with_style_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<FillAreaStyleTileSymbolWithStyle, String> {
     Ok(FillAreaStyleTileSymbolWithStyle {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE.name")?,
             "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE.name",
+            tt,
         ))?,
         symbol: AnnotationSymbolOccurrenceRef::AnnotationSymbolOccurrence(
             AnnotationSymbolOccurrenceId(u32::MAX),
@@ -13839,11 +14461,13 @@ fn build_fill_area_style_tile_symbol_with_style_arena(
 
 fn build_fill_area_style_tiles_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<FillAreaStyleTiles, String> {
     Ok(FillAreaStyleTiles {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "FILL_AREA_STYLE_TILES.name")?,
             "FILL_AREA_STYLE_TILES.name",
+            tt,
         ))?,
         tiling_pattern: TwoDirectionRepeatFactorRef::TwoDirectionRepeatFactor(
             TwoDirectionRepeatFactorId(u32::MAX),
@@ -13856,15 +14480,19 @@ fn build_fill_area_style_tiles_arena(
     })
 }
 
-fn build_flatness_tolerance_arena(attributes: &[Attribute]) -> Result<FlatnessTolerance, String> {
+fn build_flatness_tolerance_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<FlatnessTolerance, String> {
     Ok(FlatnessTolerance {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "FLATNESS_TOLERANCE.name")?,
             "FLATNESS_TOLERANCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "FLATNESS_TOLERANCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "FLATNESS_TOLERANCE.description"))?),
+            other => Some((as_text(other, "FLATNESS_TOLERANCE.description", tt))?),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -13873,17 +14501,22 @@ fn build_flatness_tolerance_arena(attributes: &[Attribute]) -> Result<FlatnessTo
     })
 }
 
-fn build_founded_item_arena(attributes: &[Attribute]) -> Result<FoundedItem, String> {
+fn build_founded_item_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<FoundedItem, String> {
     Ok(FoundedItem {})
 }
 
 fn build_functionally_defined_transformation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<FunctionallyDefinedTransformation, String> {
     Ok(FunctionallyDefinedTransformation {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "FUNCTIONALLY_DEFINED_TRANSFORMATION.name")?,
             "FUNCTIONALLY_DEFINED_TRANSFORMATION.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -13891,22 +14524,24 @@ fn build_functionally_defined_transformation_arena(
             "FUNCTIONALLY_DEFINED_TRANSFORMATION.description",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "FUNCTIONALLY_DEFINED_TRANSFORMATION.description"))?),
+            other => Some((as_text(other, "FUNCTIONALLY_DEFINED_TRANSFORMATION.description", tt))?),
         },
     })
 }
 
 fn build_general_datum_reference_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<GeneralDatumReference, String> {
     Ok(GeneralDatumReference {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "GENERAL_DATUM_REFERENCE.name")?,
             "GENERAL_DATUM_REFERENCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "GENERAL_DATUM_REFERENCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "GENERAL_DATUM_REFERENCE.description"))?),
+            other => Some((as_text(other, "GENERAL_DATUM_REFERENCE.description", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -13924,61 +14559,79 @@ fn build_general_datum_reference_arena(
     })
 }
 
-fn build_general_property_arena(attributes: &[Attribute]) -> Result<GeneralProperty, String> {
+fn build_general_property_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<GeneralProperty, String> {
     Ok(GeneralProperty {
-        id: (as_str(
+        id: (as_text(
             req(attributes, 0, "GENERAL_PROPERTY.id")?,
             "GENERAL_PROPERTY.id",
+            tt,
         ))?,
-        name: (as_str(
+        name: (as_text(
             req(attributes, 1, "GENERAL_PROPERTY.name")?,
             "GENERAL_PROPERTY.name",
+            tt,
         ))?,
         description: match req(attributes, 2, "GENERAL_PROPERTY.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "GENERAL_PROPERTY.description"))?),
+            other => Some((as_text(other, "GENERAL_PROPERTY.description", tt))?),
         },
     })
 }
 
 fn build_general_property_association_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<GeneralPropertyAssociation, String> {
     Ok(GeneralPropertyAssociation {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "GENERAL_PROPERTY_ASSOCIATION.name")?,
             "GENERAL_PROPERTY_ASSOCIATION.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "GENERAL_PROPERTY_ASSOCIATION.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "GENERAL_PROPERTY_ASSOCIATION.description"))?),
+            other => Some((as_text(other, "GENERAL_PROPERTY_ASSOCIATION.description", tt))?),
         },
         base_definition: GeneralPropertyRef::GeneralProperty(GeneralPropertyId(u32::MAX)),
         derived_definition: DerivedPropertySelectRef::ActionProperty(ActionPropertyId(u32::MAX)),
     })
 }
 
-fn build_generic_expression_arena(attributes: &[Attribute]) -> Result<GenericExpression, String> {
+fn build_generic_expression_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<GenericExpression, String> {
     Ok(GenericExpression {})
 }
 
-fn build_generic_literal_arena(attributes: &[Attribute]) -> Result<GenericLiteral, String> {
+fn build_generic_literal_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<GenericLiteral, String> {
     Ok(GenericLiteral {})
 }
 
 fn build_generic_product_definition_reference_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<GenericProductDefinitionReference, String> {
     Ok(GenericProductDefinitionReference {
         source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
     })
 }
 
-fn build_geometric_curve_set_arena(attributes: &[Attribute]) -> Result<GeometricCurveSet, String> {
+fn build_geometric_curve_set_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<GeometricCurveSet, String> {
     Ok(GeometricCurveSet {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "GEOMETRIC_CURVE_SET.name")?,
             "GEOMETRIC_CURVE_SET.name",
+            tt,
         ))?,
         elements: Vec::new(),
     })
@@ -13986,15 +14639,17 @@ fn build_geometric_curve_set_arena(attributes: &[Attribute]) -> Result<Geometric
 
 fn build_geometric_item_specific_usage_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<GeometricItemSpecificUsage, String> {
     Ok(GeometricItemSpecificUsage {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "GEOMETRIC_ITEM_SPECIFIC_USAGE.name")?,
             "GEOMETRIC_ITEM_SPECIFIC_USAGE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "GEOMETRIC_ITEM_SPECIFIC_USAGE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "GEOMETRIC_ITEM_SPECIFIC_USAGE.description"))?),
+            other => Some((as_text(other, "GEOMETRIC_ITEM_SPECIFIC_USAGE.description", tt))?),
         },
         definition: GeometricItemSpecificUsageSelectRef::AllAroundShapeAspect(
             AllAroundShapeAspectId(u32::MAX),
@@ -14008,23 +14663,26 @@ fn build_geometric_item_specific_usage_arena(
 
 fn build_geometric_representation_context_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<GeometricRepresentationContext, String> {
     Ok(GeometricRepresentationContext {
-        context_identifier: (as_str(
+        context_identifier: (as_text(
             req(
                 attributes,
                 0,
                 "GEOMETRIC_REPRESENTATION_CONTEXT.context_identifier",
             )?,
             "GEOMETRIC_REPRESENTATION_CONTEXT.context_identifier",
+            tt,
         ))?,
-        context_type: (as_str(
+        context_type: (as_text(
             req(
                 attributes,
                 1,
                 "GEOMETRIC_REPRESENTATION_CONTEXT.context_type",
             )?,
             "GEOMETRIC_REPRESENTATION_CONTEXT.context_type",
+            tt,
         ))?,
         coordinate_space_dimension: (as_int(
             req(
@@ -14039,34 +14697,44 @@ fn build_geometric_representation_context_arena(
 
 fn build_geometric_representation_item_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<GeometricRepresentationItem, String> {
     Ok(GeometricRepresentationItem {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "GEOMETRIC_REPRESENTATION_ITEM.name")?,
             "GEOMETRIC_REPRESENTATION_ITEM.name",
+            tt,
         ))?,
     })
 }
 
-fn build_geometric_set_arena(attributes: &[Attribute]) -> Result<GeometricSet, String> {
+fn build_geometric_set_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<GeometricSet, String> {
     Ok(GeometricSet {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "GEOMETRIC_SET.name")?,
             "GEOMETRIC_SET.name",
+            tt,
         ))?,
         elements: Vec::new(),
     })
 }
 
-fn build_geometric_tolerance_arena(attributes: &[Attribute]) -> Result<GeometricTolerance, String> {
+fn build_geometric_tolerance_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<GeometricTolerance, String> {
     Ok(GeometricTolerance {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "GEOMETRIC_TOLERANCE.name")?,
             "GEOMETRIC_TOLERANCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "GEOMETRIC_TOLERANCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "GEOMETRIC_TOLERANCE.description"))?),
+            other => Some((as_text(other, "GEOMETRIC_TOLERANCE.description", tt))?),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -14077,19 +14745,22 @@ fn build_geometric_tolerance_arena(attributes: &[Attribute]) -> Result<Geometric
 
 fn build_geometric_tolerance_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<GeometricToleranceRelationship, String> {
     Ok(GeometricToleranceRelationship {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "GEOMETRIC_TOLERANCE_RELATIONSHIP.name")?,
             "GEOMETRIC_TOLERANCE_RELATIONSHIP.name",
+            tt,
         ))?,
-        description: (as_str(
+        description: (as_text(
             req(
                 attributes,
                 1,
                 "GEOMETRIC_TOLERANCE_RELATIONSHIP.description",
             )?,
             "GEOMETRIC_TOLERANCE_RELATIONSHIP.description",
+            tt,
         ))?,
         relating_geometric_tolerance: GeometricToleranceRef::AngularityTolerance(
             AngularityToleranceId(u32::MAX),
@@ -14102,15 +14773,17 @@ fn build_geometric_tolerance_relationship_arena(
 
 fn build_geometric_tolerance_with_datum_reference_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<GeometricToleranceWithDatumReference, String> {
     Ok(GeometricToleranceWithDatumReference {
-        name: (as_str(
+        name: (as_text(
             req(
                 attributes,
                 0,
                 "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE.name",
             )?,
             "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -14119,9 +14792,10 @@ fn build_geometric_tolerance_with_datum_reference_arena(
         )? {
             Attribute::Unset => None,
             other => Some(
-                (as_str(
+                (as_text(
                     other,
                     "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE.description",
+                    tt,
                 ))?,
             ),
         },
@@ -14135,15 +14809,17 @@ fn build_geometric_tolerance_with_datum_reference_arena(
 
 fn build_geometric_tolerance_with_defined_area_unit_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<GeometricToleranceWithDefinedAreaUnit, String> {
     Ok(GeometricToleranceWithDefinedAreaUnit {
-        name: (as_str(
+        name: (as_text(
             req(
                 attributes,
                 0,
                 "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.name",
             )?,
             "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -14152,9 +14828,10 @@ fn build_geometric_tolerance_with_defined_area_unit_arena(
         )? {
             Attribute::Unset => None,
             other => Some(
-                (as_str(
+                (as_text(
                     other,
                     "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.description",
+                    tt,
                 ))?,
             ),
         },
@@ -14183,11 +14860,13 @@ fn build_geometric_tolerance_with_defined_area_unit_arena(
 
 fn build_geometric_tolerance_with_defined_unit_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<GeometricToleranceWithDefinedUnit, String> {
     Ok(GeometricToleranceWithDefinedUnit {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.name")?,
             "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -14195,7 +14874,13 @@ fn build_geometric_tolerance_with_defined_unit_arena(
             "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.description",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.description"))?),
+            other => Some(
+                (as_text(
+                    other,
+                    "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.description",
+                    tt,
+                ))?,
+            ),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -14209,10 +14894,11 @@ fn build_geometric_tolerance_with_defined_unit_arena(
 
 fn build_geometric_tolerance_with_maximum_tolerance_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<GeometricToleranceWithMaximumTolerance, String> {
     Ok(GeometricToleranceWithMaximumTolerance {
-        name: (as_str(req(attributes, 0, "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.name")?, "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.name"))?,
-        description: match req(attributes, 1, "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.description")? { Attribute::Unset => None, other => Some((as_str(other, "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.description"))?) },
+        name: (as_text(req(attributes, 0, "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.name")?, "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.name", tt))?,
+        description: match req(attributes, 1, "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.description")? { Attribute::Unset => None, other => Some((as_text(other, "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.description", tt))?) },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)),
         modifiers: (match req(attributes, 4, "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.modifiers")? { Attribute::List(l) => l.iter().map(|e| match e { Attribute::Enum(s) => GeometricToleranceModifier::parse(s).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.modifiers: bad enum {s:?}")), o => Err(format!("GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.modifiers: expected enum, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.modifiers: expected list, got {o:?}")) })?,
@@ -14222,11 +14908,13 @@ fn build_geometric_tolerance_with_maximum_tolerance_arena(
 
 fn build_geometric_tolerance_with_modifiers_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<GeometricToleranceWithModifiers, String> {
     Ok(GeometricToleranceWithModifiers {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "GEOMETRIC_TOLERANCE_WITH_MODIFIERS.name")?,
             "GEOMETRIC_TOLERANCE_WITH_MODIFIERS.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -14234,7 +14922,7 @@ fn build_geometric_tolerance_with_modifiers_arena(
             "GEOMETRIC_TOLERANCE_WITH_MODIFIERS.description",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "GEOMETRIC_TOLERANCE_WITH_MODIFIERS.description"))?),
+            other => Some((as_text(other, "GEOMETRIC_TOLERANCE_WITH_MODIFIERS.description", tt))?),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -14265,15 +14953,17 @@ fn build_geometric_tolerance_with_modifiers_arena(
 
 fn build_geometrically_bounded_surface_shape_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<GeometricallyBoundedSurfaceShapeRepresentation, String> {
     Ok(GeometricallyBoundedSurfaceShapeRepresentation {
-        name: (as_str(
+        name: (as_text(
             req(
                 attributes,
                 0,
                 "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION.name",
             )?,
             "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION.name",
+            tt,
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
@@ -14284,15 +14974,17 @@ fn build_geometrically_bounded_surface_shape_representation_arena(
 
 fn build_geometrically_bounded_wireframe_shape_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<GeometricallyBoundedWireframeShapeRepresentation, String> {
     Ok(GeometricallyBoundedWireframeShapeRepresentation {
-        name: (as_str(
+        name: (as_text(
             req(
                 attributes,
                 0,
                 "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION.name",
             )?,
             "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION.name",
+            tt,
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
@@ -14303,23 +14995,26 @@ fn build_geometrically_bounded_wireframe_shape_representation_arena(
 
 fn build_global_uncertainty_assigned_context_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<GlobalUncertaintyAssignedContext, String> {
     Ok(GlobalUncertaintyAssignedContext {
-        context_identifier: (as_str(
+        context_identifier: (as_text(
             req(
                 attributes,
                 0,
                 "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.context_identifier",
             )?,
             "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.context_identifier",
+            tt,
         ))?,
-        context_type: (as_str(
+        context_type: (as_text(
             req(
                 attributes,
                 1,
                 "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.context_type",
             )?,
             "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.context_type",
+            tt,
         ))?,
         uncertainty: Vec::new(),
     })
@@ -14327,43 +15022,52 @@ fn build_global_uncertainty_assigned_context_arena(
 
 fn build_global_unit_assigned_context_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<GlobalUnitAssignedContext, String> {
     Ok(GlobalUnitAssignedContext {
-        context_identifier: (as_str(
+        context_identifier: (as_text(
             req(
                 attributes,
                 0,
                 "GLOBAL_UNIT_ASSIGNED_CONTEXT.context_identifier",
             )?,
             "GLOBAL_UNIT_ASSIGNED_CONTEXT.context_identifier",
+            tt,
         ))?,
-        context_type: (as_str(
+        context_type: (as_text(
             req(attributes, 1, "GLOBAL_UNIT_ASSIGNED_CONTEXT.context_type")?,
             "GLOBAL_UNIT_ASSIGNED_CONTEXT.context_type",
+            tt,
         ))?,
         units: Vec::new(),
     })
 }
 
-fn build_group_arena(attributes: &[Attribute]) -> Result<Group, String> {
+fn build_group_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Group, String> {
     Ok(Group {
-        name: (as_str(req(attributes, 0, "GROUP.name")?, "GROUP.name"))?,
+        name: (as_text(req(attributes, 0, "GROUP.name")?, "GROUP.name", tt))?,
         description: match req(attributes, 1, "GROUP.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "GROUP.description"))?),
+            other => Some((as_text(other, "GROUP.description", tt))?),
         },
     })
 }
 
-fn build_group_assignment_arena(attributes: &[Attribute]) -> Result<GroupAssignment, String> {
+fn build_group_assignment_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<GroupAssignment, String> {
     Ok(GroupAssignment {
         assigned_group: GroupRef::Group(GroupId(u32::MAX)),
     })
 }
 
-fn build_hyperbola_arena(attributes: &[Attribute]) -> Result<Hyperbola, String> {
+fn build_hyperbola_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<Hyperbola, String> {
     Ok(Hyperbola {
-        name: (as_str(req(attributes, 0, "HYPERBOLA.name")?, "HYPERBOLA.name"))?,
+        name: (as_text(req(attributes, 0, "HYPERBOLA.name")?, "HYPERBOLA.name", tt))?,
         position: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)),
         semi_axis: (as_real(
             req(attributes, 2, "HYPERBOLA.semi_axis")?,
@@ -14376,11 +15080,15 @@ fn build_hyperbola_arena(attributes: &[Attribute]) -> Result<Hyperbola, String> 
     })
 }
 
-fn build_id_attribute_arena(attributes: &[Attribute]) -> Result<IdAttribute, String> {
+fn build_id_attribute_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<IdAttribute, String> {
     Ok(IdAttribute {
-        attribute_value: (as_str(
+        attribute_value: (as_text(
             req(attributes, 0, "ID_ATTRIBUTE.attribute_value")?,
             "ID_ATTRIBUTE.attribute_value",
+            tt,
         ))?,
         identified_item: IdAttributeSelectRef::Action(ActionId(u32::MAX)),
     })
@@ -14388,30 +15096,39 @@ fn build_id_attribute_arena(attributes: &[Attribute]) -> Result<IdAttribute, Str
 
 fn build_identification_assignment_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<IdentificationAssignment, String> {
     Ok(IdentificationAssignment {
-        assigned_id: (as_str(
+        assigned_id: (as_text(
             req(attributes, 0, "IDENTIFICATION_ASSIGNMENT.assigned_id")?,
             "IDENTIFICATION_ASSIGNMENT.assigned_id",
+            tt,
         ))?,
         role: IdentificationRoleRef::IdentificationRole(IdentificationRoleId(u32::MAX)),
     })
 }
 
-fn build_identification_role_arena(attributes: &[Attribute]) -> Result<IdentificationRole, String> {
+fn build_identification_role_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<IdentificationRole, String> {
     Ok(IdentificationRole {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "IDENTIFICATION_ROLE.name")?,
             "IDENTIFICATION_ROLE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "IDENTIFICATION_ROLE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "IDENTIFICATION_ROLE.description"))?),
+            other => Some((as_text(other, "IDENTIFICATION_ROLE.description", tt))?),
         },
     })
 }
 
-fn build_int_literal_arena(attributes: &[Attribute]) -> Result<IntLiteral, String> {
+fn build_int_literal_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<IntLiteral, String> {
     Ok(IntLiteral {
         the_value: (as_int(
             req(attributes, 0, "INT_LITERAL.the_value")?,
@@ -14422,11 +15139,13 @@ fn build_int_literal_arena(attributes: &[Attribute]) -> Result<IntLiteral, Strin
 
 fn build_integer_representation_item_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<IntegerRepresentationItem, String> {
     Ok(IntegerRepresentationItem {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "INTEGER_REPRESENTATION_ITEM.name")?,
             "INTEGER_REPRESENTATION_ITEM.name",
+            tt,
         ))?,
         the_value: (as_int(
             req(attributes, 1, "INTEGER_REPRESENTATION_ITEM.the_value")?,
@@ -14435,11 +15154,15 @@ fn build_integer_representation_item_arena(
     })
 }
 
-fn build_intersection_curve_arena(attributes: &[Attribute]) -> Result<IntersectionCurve, String> {
+fn build_intersection_curve_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<IntersectionCurve, String> {
     Ok(IntersectionCurve {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "INTERSECTION_CURVE.name")?,
             "INTERSECTION_CURVE.name",
+            tt,
         ))?,
         curve_3d: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
         associated_geometry: Vec::new(),
@@ -14457,7 +15180,10 @@ fn build_intersection_curve_arena(attributes: &[Attribute]) -> Result<Intersecti
     })
 }
 
-fn build_invisibility_arena(attributes: &[Attribute]) -> Result<Invisibility, String> {
+fn build_invisibility_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<Invisibility, String> {
     Ok(Invisibility {
         invisible_items: Vec::new(),
     })
@@ -14465,15 +15191,17 @@ fn build_invisibility_arena(attributes: &[Attribute]) -> Result<Invisibility, St
 
 fn build_item_defined_transformation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ItemDefinedTransformation, String> {
     Ok(ItemDefinedTransformation {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ITEM_DEFINED_TRANSFORMATION.name")?,
             "ITEM_DEFINED_TRANSFORMATION.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "ITEM_DEFINED_TRANSFORMATION.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ITEM_DEFINED_TRANSFORMATION.description"))?),
+            other => Some((as_text(other, "ITEM_DEFINED_TRANSFORMATION.description", tt))?),
         },
         transform_item_1: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
         transform_item_2: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
@@ -14482,11 +15210,13 @@ fn build_item_defined_transformation_arena(
 
 fn build_item_identified_representation_usage_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ItemIdentifiedRepresentationUsage, String> {
     Ok(ItemIdentifiedRepresentationUsage {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.name")?,
             "ITEM_IDENTIFIED_REPRESENTATION_USAGE.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -14494,7 +15224,13 @@ fn build_item_identified_representation_usage_arena(
             "ITEM_IDENTIFIED_REPRESENTATION_USAGE.description",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.description"))?),
+            other => Some(
+                (as_text(
+                    other,
+                    "ITEM_IDENTIFIED_REPRESENTATION_USAGE.description",
+                    tt,
+                ))?,
+            ),
         },
         definition: ItemIdentifiedRepresentationUsageDefinitionRef::AllAroundShapeAspect(
             AllAroundShapeAspectId(u32::MAX),
@@ -14508,11 +15244,15 @@ fn build_item_identified_representation_usage_arena(
     })
 }
 
-fn build_leader_curve_arena(attributes: &[Attribute]) -> Result<LeaderCurve, String> {
+fn build_leader_curve_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<LeaderCurve, String> {
     Ok(LeaderCurve {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "LEADER_CURVE.name")?,
             "LEADER_CURVE.name",
+            tt,
         ))?,
         styles: Vec::new(),
         item: CurveOrCurveSetRef::BSplineCurve(BSplineCurveId(u32::MAX)),
@@ -14521,21 +15261,27 @@ fn build_leader_curve_arena(attributes: &[Attribute]) -> Result<LeaderCurve, Str
 
 fn build_leader_directed_callout_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<LeaderDirectedCallout, String> {
     Ok(LeaderDirectedCallout {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "LEADER_DIRECTED_CALLOUT.name")?,
             "LEADER_DIRECTED_CALLOUT.name",
+            tt,
         ))?,
         contents: Vec::new(),
     })
 }
 
-fn build_leader_terminator_arena(attributes: &[Attribute]) -> Result<LeaderTerminator, String> {
+fn build_leader_terminator_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<LeaderTerminator, String> {
     Ok(LeaderTerminator {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "LEADER_TERMINATOR.name")?,
             "LEADER_TERMINATOR.name",
+            tt,
         ))?,
         styles: Vec::new(),
         item: AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(AnnotationSymbolId(u32::MAX)),
@@ -14547,46 +15293,58 @@ fn build_leader_terminator_arena(attributes: &[Attribute]) -> Result<LeaderTermi
 
 fn build_length_measure_with_unit_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<LengthMeasureWithUnit, String> {
     Ok(LengthMeasureWithUnit {
         value_component: (read_measure_value(
             req(attributes, 0, "LENGTH_MEASURE_WITH_UNIT.value_component")?,
             "LENGTH_MEASURE_WITH_UNIT.value_component",
+            tt,
         ))?,
         unit_component: UnitRef::AreaUnit(AreaUnitId(u32::MAX)),
     })
 }
 
-fn build_length_unit_arena(attributes: &[Attribute]) -> Result<LengthUnit, String> {
+fn build_length_unit_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<LengthUnit, String> {
     Ok(LengthUnit {
         dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(u32::MAX)),
     })
 }
 
-fn build_limits_and_fits_arena(attributes: &[Attribute]) -> Result<LimitsAndFits, String> {
+fn build_limits_and_fits_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<LimitsAndFits, String> {
     Ok(LimitsAndFits {
-        form_variance: (as_str(
+        form_variance: (as_text(
             req(attributes, 0, "LIMITS_AND_FITS.form_variance")?,
             "LIMITS_AND_FITS.form_variance",
+            tt,
         ))?,
-        zone_variance: (as_str(
+        zone_variance: (as_text(
             req(attributes, 1, "LIMITS_AND_FITS.zone_variance")?,
             "LIMITS_AND_FITS.zone_variance",
+            tt,
         ))?,
-        grade: (as_str(
+        grade: (as_text(
             req(attributes, 2, "LIMITS_AND_FITS.grade")?,
             "LIMITS_AND_FITS.grade",
+            tt,
         ))?,
-        source: (as_str(
+        source: (as_text(
             req(attributes, 3, "LIMITS_AND_FITS.source")?,
             "LIMITS_AND_FITS.source",
+            tt,
         ))?,
     })
 }
 
-fn build_line_arena(attributes: &[Attribute]) -> Result<Line, String> {
+fn build_line_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Line, String> {
     Ok(Line {
-        name: (as_str(req(attributes, 0, "LINE.name")?, "LINE.name"))?,
+        name: (as_text(req(attributes, 0, "LINE.name")?, "LINE.name", tt))?,
         pnt: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)),
         dir: VectorRef::Vector(VectorId(u32::MAX)),
     })
@@ -14594,15 +15352,17 @@ fn build_line_arena(attributes: &[Attribute]) -> Result<Line, String> {
 
 fn build_line_profile_tolerance_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<LineProfileTolerance, String> {
     Ok(LineProfileTolerance {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "LINE_PROFILE_TOLERANCE.name")?,
             "LINE_PROFILE_TOLERANCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "LINE_PROFILE_TOLERANCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "LINE_PROFILE_TOLERANCE.description"))?),
+            other => Some((as_text(other, "LINE_PROFILE_TOLERANCE.description", tt))?),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -14611,7 +15371,10 @@ fn build_line_profile_tolerance_arena(
     })
 }
 
-fn build_literal_number_arena(attributes: &[Attribute]) -> Result<LiteralNumber, String> {
+fn build_literal_number_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<LiteralNumber, String> {
     Ok(LiteralNumber {
         the_value: (as_real(
             req(attributes, 0, "LITERAL_NUMBER.the_value")?,
@@ -14620,7 +15383,10 @@ fn build_literal_number_arena(attributes: &[Attribute]) -> Result<LiteralNumber,
     })
 }
 
-fn build_local_time_arena(attributes: &[Attribute]) -> Result<LocalTime, String> {
+fn build_local_time_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<LocalTime, String> {
     Ok(LocalTime {
         hour_component: (as_int(
             req(attributes, 0, "LOCAL_TIME.hour_component")?,
@@ -14640,27 +15406,30 @@ fn build_local_time_arena(attributes: &[Attribute]) -> Result<LocalTime, String>
     })
 }
 
-fn build_loop_arena(attributes: &[Attribute]) -> Result<Loop, String> {
+fn build_loop_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Loop, String> {
     Ok(Loop {
-        name: (as_str(req(attributes, 0, "LOOP.name")?, "LOOP.name"))?,
+        name: (as_text(req(attributes, 0, "LOOP.name")?, "LOOP.name", tt))?,
     })
 }
 
 fn build_make_from_usage_option_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<MakeFromUsageOption, String> {
     Ok(MakeFromUsageOption {
-        id: (as_str(
+        id: (as_text(
             req(attributes, 0, "MAKE_FROM_USAGE_OPTION.id")?,
             "MAKE_FROM_USAGE_OPTION.id",
+            tt,
         ))?,
-        name: (as_str(
+        name: (as_text(
             req(attributes, 1, "MAKE_FROM_USAGE_OPTION.name")?,
             "MAKE_FROM_USAGE_OPTION.name",
+            tt,
         ))?,
         description: match req(attributes, 2, "MAKE_FROM_USAGE_OPTION.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "MAKE_FROM_USAGE_OPTION.description"))?),
+            other => Some((as_text(other, "MAKE_FROM_USAGE_OPTION.description", tt))?),
         },
         relating_product_definition:
             ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
@@ -14674,19 +15443,24 @@ fn build_make_from_usage_option_arena(
             req(attributes, 5, "MAKE_FROM_USAGE_OPTION.ranking")?,
             "MAKE_FROM_USAGE_OPTION.ranking",
         ))?,
-        ranking_rationale: (as_str(
+        ranking_rationale: (as_text(
             req(attributes, 6, "MAKE_FROM_USAGE_OPTION.ranking_rationale")?,
             "MAKE_FROM_USAGE_OPTION.ranking_rationale",
+            tt,
         ))?,
         quantity: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)),
     })
 }
 
-fn build_manifold_solid_brep_arena(attributes: &[Attribute]) -> Result<ManifoldSolidBrep, String> {
+fn build_manifold_solid_brep_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ManifoldSolidBrep, String> {
     Ok(ManifoldSolidBrep {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "MANIFOLD_SOLID_BREP.name")?,
             "MANIFOLD_SOLID_BREP.name",
+            tt,
         ))?,
         outer: ClosedShellRef::ClosedShell(ClosedShellId(u32::MAX)),
     })
@@ -14694,11 +15468,13 @@ fn build_manifold_solid_brep_arena(attributes: &[Attribute]) -> Result<ManifoldS
 
 fn build_manifold_surface_shape_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ManifoldSurfaceShapeRepresentation, String> {
     Ok(ManifoldSurfaceShapeRepresentation {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "MANIFOLD_SURFACE_SHAPE_REPRESENTATION.name")?,
             "MANIFOLD_SURFACE_SHAPE_REPRESENTATION.name",
+            tt,
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
@@ -14707,9 +15483,16 @@ fn build_manifold_surface_shape_representation_arena(
     })
 }
 
-fn build_mapped_item_arena(attributes: &[Attribute]) -> Result<MappedItem, String> {
+fn build_mapped_item_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<MappedItem, String> {
     Ok(MappedItem {
-        name: (as_str(req(attributes, 0, "MAPPED_ITEM.name")?, "MAPPED_ITEM.name"))?,
+        name: (as_text(
+            req(attributes, 0, "MAPPED_ITEM.name")?,
+            "MAPPED_ITEM.name",
+            tt,
+        ))?,
         mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(u32::MAX)),
         mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
     })
@@ -14717,17 +15500,22 @@ fn build_mapped_item_arena(attributes: &[Attribute]) -> Result<MappedItem, Strin
 
 fn build_mass_measure_with_unit_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<MassMeasureWithUnit, String> {
     Ok(MassMeasureWithUnit {
         value_component: (read_measure_value(
             req(attributes, 0, "MASS_MEASURE_WITH_UNIT.value_component")?,
             "MASS_MEASURE_WITH_UNIT.value_component",
+            tt,
         ))?,
         unit_component: UnitRef::AreaUnit(AreaUnitId(u32::MAX)),
     })
 }
 
-fn build_mass_unit_arena(attributes: &[Attribute]) -> Result<MassUnit, String> {
+fn build_mass_unit_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<MassUnit, String> {
     Ok(MassUnit {
         dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(u32::MAX)),
     })
@@ -14735,15 +15523,18 @@ fn build_mass_unit_arena(attributes: &[Attribute]) -> Result<MassUnit, String> {
 
 fn build_measure_qualification_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<MeasureQualification, String> {
     Ok(MeasureQualification {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "MEASURE_QUALIFICATION.name")?,
             "MEASURE_QUALIFICATION.name",
+            tt,
         ))?,
-        description: (as_str(
+        description: (as_text(
             req(attributes, 1, "MEASURE_QUALIFICATION.description")?,
             "MEASURE_QUALIFICATION.description",
+            tt,
         ))?,
         qualified_measure: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(
             u32::MAX,
@@ -14754,57 +15545,71 @@ fn build_measure_qualification_arena(
 
 fn build_measure_representation_item_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<MeasureRepresentationItem, String> {
     Ok(MeasureRepresentationItem {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "MEASURE_REPRESENTATION_ITEM.name")?,
             "MEASURE_REPRESENTATION_ITEM.name",
+            tt,
         ))?,
         value_component: (read_measure_value(
             req(attributes, 1, "MEASURE_REPRESENTATION_ITEM.value_component")?,
             "MEASURE_REPRESENTATION_ITEM.value_component",
+            tt,
         ))?,
         unit_component: UnitRef::AreaUnit(AreaUnitId(u32::MAX)),
     })
 }
 
-fn build_measure_with_unit_arena(attributes: &[Attribute]) -> Result<MeasureWithUnit, String> {
+fn build_measure_with_unit_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<MeasureWithUnit, String> {
     Ok(MeasureWithUnit {
         value_component: (read_measure_value(
             req(attributes, 0, "MEASURE_WITH_UNIT.value_component")?,
             "MEASURE_WITH_UNIT.value_component",
+            tt,
         ))?,
         unit_component: UnitRef::AreaUnit(AreaUnitId(u32::MAX)),
     })
 }
 
-fn build_mechanical_context_arena(attributes: &[Attribute]) -> Result<MechanicalContext, String> {
+fn build_mechanical_context_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<MechanicalContext, String> {
     Ok(MechanicalContext {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "MECHANICAL_CONTEXT.name")?,
             "MECHANICAL_CONTEXT.name",
+            tt,
         ))?,
         frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(
             u32::MAX,
         )),
-        discipline_type: (as_str(
+        discipline_type: (as_text(
             req(attributes, 2, "MECHANICAL_CONTEXT.discipline_type")?,
             "MECHANICAL_CONTEXT.discipline_type",
+            tt,
         ))?,
     })
 }
 
 fn build_mechanical_design_and_draughting_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<MechanicalDesignAndDraughtingRelationship, String> {
     Ok(MechanicalDesignAndDraughtingRelationship {
-        name: (as_str(
+        name: (as_text(
             req(
                 attributes,
                 0,
                 "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP.name",
             )?,
             "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -14813,9 +15618,10 @@ fn build_mechanical_design_and_draughting_relationship_arena(
         )? {
             Attribute::Unset => None,
             other => Some(
-                (as_str(
+                (as_text(
                     other,
                     "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP.description",
+                    tt,
                 ))?,
             ),
         },
@@ -14830,15 +15636,17 @@ fn build_mechanical_design_and_draughting_relationship_arena(
 
 fn build_mechanical_design_geometric_presentation_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<MechanicalDesignGeometricPresentationRepresentation, String> {
     Ok(MechanicalDesignGeometricPresentationRepresentation {
-        name: (as_str(
+        name: (as_text(
             req(
                 attributes,
                 0,
                 "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION.name",
             )?,
             "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION.name",
+            tt,
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
@@ -14849,15 +15657,17 @@ fn build_mechanical_design_geometric_presentation_representation_arena(
 
 fn build_mechanical_design_presentation_representation_with_draughting_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<MechanicalDesignPresentationRepresentationWithDraughting, String> {
     Ok(MechanicalDesignPresentationRepresentationWithDraughting {
-        name: (as_str(
+        name: (as_text(
             req(
                 attributes,
                 0,
                 "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING.name",
             )?,
             "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING.name",
+            tt,
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
@@ -14868,15 +15678,17 @@ fn build_mechanical_design_presentation_representation_with_draughting_arena(
 
 fn build_mechanical_design_shaded_presentation_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<MechanicalDesignShadedPresentationRepresentation, String> {
     Ok(MechanicalDesignShadedPresentationRepresentation {
-        name: (as_str(
+        name: (as_text(
             req(
                 attributes,
                 0,
                 "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION.name",
             )?,
             "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION.name",
+            tt,
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
@@ -14887,15 +15699,17 @@ fn build_mechanical_design_shaded_presentation_representation_arena(
 
 fn build_model_geometric_view_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ModelGeometricView, String> {
     Ok(ModelGeometricView {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "MODEL_GEOMETRIC_VIEW.name")?,
             "MODEL_GEOMETRIC_VIEW.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "MODEL_GEOMETRIC_VIEW.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "MODEL_GEOMETRIC_VIEW.description"))?),
+            other => Some((as_text(other, "MODEL_GEOMETRIC_VIEW.description", tt))?),
         },
         item: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
         rep: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(
@@ -14906,15 +15720,17 @@ fn build_model_geometric_view_arena(
 
 fn build_modified_geometric_tolerance_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ModifiedGeometricTolerance, String> {
     Ok(ModifiedGeometricTolerance {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "MODIFIED_GEOMETRIC_TOLERANCE.name")?,
             "MODIFIED_GEOMETRIC_TOLERANCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "MODIFIED_GEOMETRIC_TOLERANCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "MODIFIED_GEOMETRIC_TOLERANCE.description"))?),
+            other => Some((as_text(other, "MODIFIED_GEOMETRIC_TOLERANCE.description", tt))?),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -14930,11 +15746,15 @@ fn build_modified_geometric_tolerance_arena(
     })
 }
 
-fn build_name_attribute_arena(attributes: &[Attribute]) -> Result<NameAttribute, String> {
+fn build_name_attribute_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<NameAttribute, String> {
     Ok(NameAttribute {
-        attribute_value: (as_str(
+        attribute_value: (as_text(
             req(attributes, 0, "NAME_ATTRIBUTE.attribute_value")?,
             "NAME_ATTRIBUTE.attribute_value",
+            tt,
         ))?,
         named_item: NameAttributeSelectRef::ActionRequestSolution(ActionRequestSolutionId(
             u32::MAX,
@@ -14942,25 +15762,31 @@ fn build_name_attribute_arena(attributes: &[Attribute]) -> Result<NameAttribute,
     })
 }
 
-fn build_named_unit_arena(attributes: &[Attribute]) -> Result<NamedUnit, String> {
+fn build_named_unit_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<NamedUnit, String> {
     Ok(NamedUnit { dimensions: None })
 }
 
 fn build_next_assembly_usage_occurrence_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<NextAssemblyUsageOccurrence, String> {
     Ok(NextAssemblyUsageOccurrence {
-        id: (as_str(
+        id: (as_text(
             req(attributes, 0, "NEXT_ASSEMBLY_USAGE_OCCURRENCE.id")?,
             "NEXT_ASSEMBLY_USAGE_OCCURRENCE.id",
+            tt,
         ))?,
-        name: (as_str(
+        name: (as_text(
             req(attributes, 1, "NEXT_ASSEMBLY_USAGE_OCCURRENCE.name")?,
             "NEXT_ASSEMBLY_USAGE_OCCURRENCE.name",
+            tt,
         ))?,
         description: match req(attributes, 2, "NEXT_ASSEMBLY_USAGE_OCCURRENCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "NEXT_ASSEMBLY_USAGE_OCCURRENCE.description"))?),
+            other => Some((as_text(other, "NEXT_ASSEMBLY_USAGE_OCCURRENCE.description", tt))?),
         },
         relating_product_definition:
             ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
@@ -14976,30 +15802,50 @@ fn build_next_assembly_usage_occurrence_arena(
             "NEXT_ASSEMBLY_USAGE_OCCURRENCE.reference_designator",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "NEXT_ASSEMBLY_USAGE_OCCURRENCE.reference_designator"))?),
+            other => Some(
+                (as_text(
+                    other,
+                    "NEXT_ASSEMBLY_USAGE_OCCURRENCE.reference_designator",
+                    tt,
+                ))?,
+            ),
         },
     })
 }
 
-fn build_numeric_expression_arena(attributes: &[Attribute]) -> Result<NumericExpression, String> {
+fn build_numeric_expression_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<NumericExpression, String> {
     Ok(NumericExpression {})
 }
 
-fn build_object_role_arena(attributes: &[Attribute]) -> Result<ObjectRole, String> {
+fn build_object_role_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ObjectRole, String> {
     Ok(ObjectRole {
-        name: (as_str(req(attributes, 0, "OBJECT_ROLE.name")?, "OBJECT_ROLE.name"))?,
+        name: (as_text(
+            req(attributes, 0, "OBJECT_ROLE.name")?,
+            "OBJECT_ROLE.name",
+            tt,
+        ))?,
         description: match req(attributes, 1, "OBJECT_ROLE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "OBJECT_ROLE.description"))?),
+            other => Some((as_text(other, "OBJECT_ROLE.description", tt))?),
         },
     })
 }
 
-fn build_offset_surface_arena(attributes: &[Attribute]) -> Result<OffsetSurface, String> {
+fn build_offset_surface_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<OffsetSurface, String> {
     Ok(OffsetSurface {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "OFFSET_SURFACE.name")?,
             "OFFSET_SURFACE.name",
+            tt,
         ))?,
         basis_surface: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)),
         distance: (as_real(
@@ -15015,145 +15861,173 @@ fn build_offset_surface_arena(attributes: &[Attribute]) -> Result<OffsetSurface,
 
 fn build_one_direction_repeat_factor_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<OneDirectionRepeatFactor, String> {
     Ok(OneDirectionRepeatFactor {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ONE_DIRECTION_REPEAT_FACTOR.name")?,
             "ONE_DIRECTION_REPEAT_FACTOR.name",
+            tt,
         ))?,
         repeat_factor: VectorRef::Vector(VectorId(u32::MAX)),
     })
 }
 
-fn build_open_shell_arena(attributes: &[Attribute]) -> Result<OpenShell, String> {
+fn build_open_shell_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<OpenShell, String> {
     Ok(OpenShell {
-        name: (as_str(req(attributes, 0, "OPEN_SHELL.name")?, "OPEN_SHELL.name"))?,
+        name: (as_text(
+            req(attributes, 0, "OPEN_SHELL.name")?,
+            "OPEN_SHELL.name",
+            tt,
+        ))?,
         cfs_faces: Vec::new(),
     })
 }
 
-fn build_organization_arena(attributes: &[Attribute]) -> Result<Organization, String> {
+fn build_organization_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<Organization, String> {
     Ok(Organization {
         id: match req(attributes, 0, "ORGANIZATION.id")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATION.id"))?),
+            other => Some((as_text(other, "ORGANIZATION.id", tt))?),
         },
-        name: (as_str(
+        name: (as_text(
             req(attributes, 1, "ORGANIZATION.name")?,
             "ORGANIZATION.name",
+            tt,
         ))?,
         description: match req(attributes, 2, "ORGANIZATION.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATION.description"))?),
+            other => Some((as_text(other, "ORGANIZATION.description", tt))?),
         },
     })
 }
 
 fn build_organization_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<OrganizationRelationship, String> {
     Ok(OrganizationRelationship {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ORGANIZATION_RELATIONSHIP.name")?,
             "ORGANIZATION_RELATIONSHIP.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "ORGANIZATION_RELATIONSHIP.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATION_RELATIONSHIP.description"))?),
+            other => Some((as_text(other, "ORGANIZATION_RELATIONSHIP.description", tt))?),
         },
         relating_organization: OrganizationRef::Organization(OrganizationId(u32::MAX)),
         related_organization: OrganizationRef::Organization(OrganizationId(u32::MAX)),
     })
 }
 
-fn build_organization_role_arena(attributes: &[Attribute]) -> Result<OrganizationRole, String> {
+fn build_organization_role_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<OrganizationRole, String> {
     Ok(OrganizationRole {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ORGANIZATION_ROLE.name")?,
             "ORGANIZATION_ROLE.name",
+            tt,
         ))?,
     })
 }
 
-fn build_organization_type_arena(attributes: &[Attribute]) -> Result<OrganizationType, String> {
+fn build_organization_type_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<OrganizationType, String> {
     Ok(OrganizationType {
-        id: (as_str(
+        id: (as_text(
             req(attributes, 0, "ORGANIZATION_TYPE.id")?,
             "ORGANIZATION_TYPE.id",
+            tt,
         ))?,
-        name: (as_str(
+        name: (as_text(
             req(attributes, 1, "ORGANIZATION_TYPE.name")?,
             "ORGANIZATION_TYPE.name",
+            tt,
         ))?,
         description: match req(attributes, 2, "ORGANIZATION_TYPE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATION_TYPE.description"))?),
+            other => Some((as_text(other, "ORGANIZATION_TYPE.description", tt))?),
         },
     })
 }
 
 fn build_organization_type_role_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<OrganizationTypeRole, String> {
     Ok(OrganizationTypeRole {
-        id: (as_str(
+        id: (as_text(
             req(attributes, 0, "ORGANIZATION_TYPE_ROLE.id")?,
             "ORGANIZATION_TYPE_ROLE.id",
+            tt,
         ))?,
-        name: (as_str(
+        name: (as_text(
             req(attributes, 1, "ORGANIZATION_TYPE_ROLE.name")?,
             "ORGANIZATION_TYPE_ROLE.name",
+            tt,
         ))?,
         description: match req(attributes, 2, "ORGANIZATION_TYPE_ROLE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATION_TYPE_ROLE.description"))?),
+            other => Some((as_text(other, "ORGANIZATION_TYPE_ROLE.description", tt))?),
         },
     })
 }
 
 fn build_organizational_address_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<OrganizationalAddress, String> {
     Ok(OrganizationalAddress {
         internal_location: match req(attributes, 0, "ORGANIZATIONAL_ADDRESS.internal_location")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATIONAL_ADDRESS.internal_location"))?),
+            other => Some((as_text(other, "ORGANIZATIONAL_ADDRESS.internal_location", tt))?),
         },
         street_number: match req(attributes, 1, "ORGANIZATIONAL_ADDRESS.street_number")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATIONAL_ADDRESS.street_number"))?),
+            other => Some((as_text(other, "ORGANIZATIONAL_ADDRESS.street_number", tt))?),
         },
         street: match req(attributes, 2, "ORGANIZATIONAL_ADDRESS.street")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATIONAL_ADDRESS.street"))?),
+            other => Some((as_text(other, "ORGANIZATIONAL_ADDRESS.street", tt))?),
         },
         postal_box: match req(attributes, 3, "ORGANIZATIONAL_ADDRESS.postal_box")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATIONAL_ADDRESS.postal_box"))?),
+            other => Some((as_text(other, "ORGANIZATIONAL_ADDRESS.postal_box", tt))?),
         },
         town: match req(attributes, 4, "ORGANIZATIONAL_ADDRESS.town")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATIONAL_ADDRESS.town"))?),
+            other => Some((as_text(other, "ORGANIZATIONAL_ADDRESS.town", tt))?),
         },
         region: match req(attributes, 5, "ORGANIZATIONAL_ADDRESS.region")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATIONAL_ADDRESS.region"))?),
+            other => Some((as_text(other, "ORGANIZATIONAL_ADDRESS.region", tt))?),
         },
         postal_code: match req(attributes, 6, "ORGANIZATIONAL_ADDRESS.postal_code")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATIONAL_ADDRESS.postal_code"))?),
+            other => Some((as_text(other, "ORGANIZATIONAL_ADDRESS.postal_code", tt))?),
         },
         country: match req(attributes, 7, "ORGANIZATIONAL_ADDRESS.country")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATIONAL_ADDRESS.country"))?),
+            other => Some((as_text(other, "ORGANIZATIONAL_ADDRESS.country", tt))?),
         },
         facsimile_number: match req(attributes, 8, "ORGANIZATIONAL_ADDRESS.facsimile_number")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATIONAL_ADDRESS.facsimile_number"))?),
+            other => Some((as_text(other, "ORGANIZATIONAL_ADDRESS.facsimile_number", tt))?),
         },
         telephone_number: match req(attributes, 9, "ORGANIZATIONAL_ADDRESS.telephone_number")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATIONAL_ADDRESS.telephone_number"))?),
+            other => Some((as_text(other, "ORGANIZATIONAL_ADDRESS.telephone_number", tt))?),
         },
         electronic_mail_address: match req(
             attributes,
@@ -15161,31 +16035,33 @@ fn build_organizational_address_arena(
             "ORGANIZATIONAL_ADDRESS.electronic_mail_address",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATIONAL_ADDRESS.electronic_mail_address"))?),
+            other => Some((as_text(other, "ORGANIZATIONAL_ADDRESS.electronic_mail_address", tt))?),
         },
         telex_number: match req(attributes, 11, "ORGANIZATIONAL_ADDRESS.telex_number")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATIONAL_ADDRESS.telex_number"))?),
+            other => Some((as_text(other, "ORGANIZATIONAL_ADDRESS.telex_number", tt))?),
         },
         organizations: Vec::new(),
         description: match req(attributes, 13, "ORGANIZATIONAL_ADDRESS.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATIONAL_ADDRESS.description"))?),
+            other => Some((as_text(other, "ORGANIZATIONAL_ADDRESS.description", tt))?),
         },
     })
 }
 
 fn build_organizational_project_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<OrganizationalProject, String> {
     Ok(OrganizationalProject {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ORGANIZATIONAL_PROJECT.name")?,
             "ORGANIZATIONAL_PROJECT.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "ORGANIZATIONAL_PROJECT.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATIONAL_PROJECT.description"))?),
+            other => Some((as_text(other, "ORGANIZATIONAL_PROJECT.description", tt))?),
         },
         responsible_organizations: Vec::new(),
     })
@@ -15193,11 +16069,13 @@ fn build_organizational_project_arena(
 
 fn build_organizational_project_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<OrganizationalProjectRelationship, String> {
     Ok(OrganizationalProjectRelationship {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ORGANIZATIONAL_PROJECT_RELATIONSHIP.name")?,
             "ORGANIZATIONAL_PROJECT_RELATIONSHIP.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -15205,7 +16083,7 @@ fn build_organizational_project_relationship_arena(
             "ORGANIZATIONAL_PROJECT_RELATIONSHIP.description",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATIONAL_PROJECT_RELATIONSHIP.description"))?),
+            other => Some((as_text(other, "ORGANIZATIONAL_PROJECT_RELATIONSHIP.description", tt))?),
         },
         relating_organizational_project: OrganizationalProjectRef::OrganizationalProject(
             OrganizationalProjectId(u32::MAX),
@@ -15218,26 +16096,30 @@ fn build_organizational_project_relationship_arena(
 
 fn build_organizational_project_role_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<OrganizationalProjectRole, String> {
     Ok(OrganizationalProjectRole {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ORGANIZATIONAL_PROJECT_ROLE.name")?,
             "ORGANIZATIONAL_PROJECT_ROLE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "ORGANIZATIONAL_PROJECT_ROLE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ORGANIZATIONAL_PROJECT_ROLE.description"))?),
+            other => Some((as_text(other, "ORGANIZATIONAL_PROJECT_ROLE.description", tt))?),
         },
     })
 }
 
 fn build_oriented_closed_shell_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<OrientedClosedShell, String> {
     Ok(OrientedClosedShell {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ORIENTED_CLOSED_SHELL.name")?,
             "ORIENTED_CLOSED_SHELL.name",
+            tt,
         ))?,
         closed_shell_element: ClosedShellRef::ClosedShell(ClosedShellId(u32::MAX)),
         orientation: (Ok::<bool, String>(
@@ -15246,11 +16128,15 @@ fn build_oriented_closed_shell_arena(
     })
 }
 
-fn build_oriented_edge_arena(attributes: &[Attribute]) -> Result<OrientedEdge, String> {
+fn build_oriented_edge_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<OrientedEdge, String> {
     Ok(OrientedEdge {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ORIENTED_EDGE.name")?,
             "ORIENTED_EDGE.name",
+            tt,
         ))?,
         edge_element: EdgeRef::Edge(EdgeId(u32::MAX)),
         orientation: (Ok::<bool, String>(
@@ -15261,11 +16147,13 @@ fn build_oriented_edge_arena(attributes: &[Attribute]) -> Result<OrientedEdge, S
 
 fn build_over_riding_styled_item_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<OverRidingStyledItem, String> {
     Ok(OverRidingStyledItem {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "OVER_RIDING_STYLED_ITEM.name")?,
             "OVER_RIDING_STYLED_ITEM.name",
+            tt,
         ))?,
         styles: Vec::new(),
         item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
@@ -15279,15 +16167,17 @@ fn build_over_riding_styled_item_arena(
 
 fn build_parallelism_tolerance_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ParallelismTolerance, String> {
     Ok(ParallelismTolerance {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PARALLELISM_TOLERANCE.name")?,
             "PARALLELISM_TOLERANCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "PARALLELISM_TOLERANCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PARALLELISM_TOLERANCE.description"))?),
+            other => Some((as_text(other, "PARALLELISM_TOLERANCE.description", tt))?),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -15299,37 +16189,40 @@ fn build_parallelism_tolerance_arena(
 
 fn build_parametric_representation_context_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ParametricRepresentationContext, String> {
     Ok(ParametricRepresentationContext {
-        context_identifier: (as_str(
+        context_identifier: (as_text(
             req(
                 attributes,
                 0,
                 "PARAMETRIC_REPRESENTATION_CONTEXT.context_identifier",
             )?,
             "PARAMETRIC_REPRESENTATION_CONTEXT.context_identifier",
+            tt,
         ))?,
-        context_type: (as_str(
+        context_type: (as_text(
             req(
                 attributes,
                 1,
                 "PARAMETRIC_REPRESENTATION_CONTEXT.context_type",
             )?,
             "PARAMETRIC_REPRESENTATION_CONTEXT.context_type",
+            tt,
         ))?,
     })
 }
 
-fn build_path_arena(attributes: &[Attribute]) -> Result<Path, String> {
+fn build_path_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Path, String> {
     Ok(Path {
-        name: (as_str(req(attributes, 0, "PATH.name")?, "PATH.name"))?,
+        name: (as_text(req(attributes, 0, "PATH.name")?, "PATH.name", tt))?,
         edge_list: Vec::new(),
     })
 }
 
-fn build_pcurve_arena(attributes: &[Attribute]) -> Result<Pcurve, String> {
+fn build_pcurve_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Pcurve, String> {
     Ok(Pcurve {
-        name: (as_str(req(attributes, 0, "PCURVE.name")?, "PCURVE.name"))?,
+        name: (as_text(req(attributes, 0, "PCURVE.name")?, "PCURVE.name", tt))?,
         basis_surface: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)),
         reference_to_curve: DefinitionalRepresentationRef::DefinitionalRepresentation(
             DefinitionalRepresentationId(u32::MAX),
@@ -15339,15 +16232,17 @@ fn build_pcurve_arena(attributes: &[Attribute]) -> Result<Pcurve, String> {
 
 fn build_perpendicularity_tolerance_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PerpendicularityTolerance, String> {
     Ok(PerpendicularityTolerance {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PERPENDICULARITY_TOLERANCE.name")?,
             "PERPENDICULARITY_TOLERANCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "PERPENDICULARITY_TOLERANCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERPENDICULARITY_TOLERANCE.description"))?),
+            other => Some((as_text(other, "PERPENDICULARITY_TOLERANCE.description", tt))?),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -15357,16 +16252,16 @@ fn build_perpendicularity_tolerance_arena(
     })
 }
 
-fn build_person_arena(attributes: &[Attribute]) -> Result<Person, String> {
+fn build_person_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Person, String> {
     Ok(Person {
-        id: (as_str(req(attributes, 0, "PERSON.id")?, "PERSON.id"))?,
+        id: (as_text(req(attributes, 0, "PERSON.id")?, "PERSON.id", tt))?,
         last_name: match req(attributes, 1, "PERSON.last_name")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSON.last_name"))?),
+            other => Some((as_text(other, "PERSON.last_name", tt))?),
         },
         first_name: match req(attributes, 2, "PERSON.first_name")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSON.first_name"))?),
+            other => Some((as_text(other, "PERSON.first_name", tt))?),
         },
         middle_names: match req(attributes, 3, "PERSON.middle_names")? {
             Attribute::Unset => None,
@@ -15374,7 +16269,7 @@ fn build_person_arena(attributes: &[Attribute]) -> Result<Person, String> {
                 (match other {
                     Attribute::List(l) => l
                         .iter()
-                        .map(|e| as_str(e, "PERSON.middle_names"))
+                        .map(|e| as_text(e, "PERSON.middle_names", tt))
                         .collect::<Result<Vec<_>, String>>(),
                     o => Err(format!("PERSON.middle_names: expected list, got {o:?}")),
                 })?,
@@ -15386,7 +16281,7 @@ fn build_person_arena(attributes: &[Attribute]) -> Result<Person, String> {
                 (match other {
                     Attribute::List(l) => l
                         .iter()
-                        .map(|e| as_str(e, "PERSON.prefix_titles"))
+                        .map(|e| as_text(e, "PERSON.prefix_titles", tt))
                         .collect::<Result<Vec<_>, String>>(),
                     o => Err(format!("PERSON.prefix_titles: expected list, got {o:?}")),
                 })?,
@@ -15398,7 +16293,7 @@ fn build_person_arena(attributes: &[Attribute]) -> Result<Person, String> {
                 (match other {
                     Attribute::List(l) => l
                         .iter()
-                        .map(|e| as_str(e, "PERSON.suffix_titles"))
+                        .map(|e| as_text(e, "PERSON.suffix_titles", tt))
                         .collect::<Result<Vec<_>, String>>(),
                     o => Err(format!("PERSON.suffix_titles: expected list, got {o:?}")),
                 })?,
@@ -15409,6 +16304,7 @@ fn build_person_arena(attributes: &[Attribute]) -> Result<Person, String> {
 
 fn build_person_and_organization_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PersonAndOrganization, String> {
     Ok(PersonAndOrganization {
         the_person: PersonRef::Person(PersonId(u32::MAX)),
@@ -15418,6 +16314,7 @@ fn build_person_and_organization_arena(
 
 fn build_person_and_organization_address_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PersonAndOrganizationAddress, String> {
     Ok(PersonAndOrganizationAddress {
         internal_location: match req(
@@ -15426,7 +16323,13 @@ fn build_person_and_organization_address_arena(
             "PERSON_AND_ORGANIZATION_ADDRESS.internal_location",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSON_AND_ORGANIZATION_ADDRESS.internal_location"))?),
+            other => Some(
+                (as_text(
+                    other,
+                    "PERSON_AND_ORGANIZATION_ADDRESS.internal_location",
+                    tt,
+                ))?,
+            ),
         },
         street_number: match req(
             attributes,
@@ -15434,31 +16337,31 @@ fn build_person_and_organization_address_arena(
             "PERSON_AND_ORGANIZATION_ADDRESS.street_number",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSON_AND_ORGANIZATION_ADDRESS.street_number"))?),
+            other => Some((as_text(other, "PERSON_AND_ORGANIZATION_ADDRESS.street_number", tt))?),
         },
         street: match req(attributes, 2, "PERSON_AND_ORGANIZATION_ADDRESS.street")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSON_AND_ORGANIZATION_ADDRESS.street"))?),
+            other => Some((as_text(other, "PERSON_AND_ORGANIZATION_ADDRESS.street", tt))?),
         },
         postal_box: match req(attributes, 3, "PERSON_AND_ORGANIZATION_ADDRESS.postal_box")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSON_AND_ORGANIZATION_ADDRESS.postal_box"))?),
+            other => Some((as_text(other, "PERSON_AND_ORGANIZATION_ADDRESS.postal_box", tt))?),
         },
         town: match req(attributes, 4, "PERSON_AND_ORGANIZATION_ADDRESS.town")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSON_AND_ORGANIZATION_ADDRESS.town"))?),
+            other => Some((as_text(other, "PERSON_AND_ORGANIZATION_ADDRESS.town", tt))?),
         },
         region: match req(attributes, 5, "PERSON_AND_ORGANIZATION_ADDRESS.region")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSON_AND_ORGANIZATION_ADDRESS.region"))?),
+            other => Some((as_text(other, "PERSON_AND_ORGANIZATION_ADDRESS.region", tt))?),
         },
         postal_code: match req(attributes, 6, "PERSON_AND_ORGANIZATION_ADDRESS.postal_code")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSON_AND_ORGANIZATION_ADDRESS.postal_code"))?),
+            other => Some((as_text(other, "PERSON_AND_ORGANIZATION_ADDRESS.postal_code", tt))?),
         },
         country: match req(attributes, 7, "PERSON_AND_ORGANIZATION_ADDRESS.country")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSON_AND_ORGANIZATION_ADDRESS.country"))?),
+            other => Some((as_text(other, "PERSON_AND_ORGANIZATION_ADDRESS.country", tt))?),
         },
         facsimile_number: match req(
             attributes,
@@ -15466,7 +16369,13 @@ fn build_person_and_organization_address_arena(
             "PERSON_AND_ORGANIZATION_ADDRESS.facsimile_number",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSON_AND_ORGANIZATION_ADDRESS.facsimile_number"))?),
+            other => Some(
+                (as_text(
+                    other,
+                    "PERSON_AND_ORGANIZATION_ADDRESS.facsimile_number",
+                    tt,
+                ))?,
+            ),
         },
         telephone_number: match req(
             attributes,
@@ -15474,7 +16383,13 @@ fn build_person_and_organization_address_arena(
             "PERSON_AND_ORGANIZATION_ADDRESS.telephone_number",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSON_AND_ORGANIZATION_ADDRESS.telephone_number"))?),
+            other => Some(
+                (as_text(
+                    other,
+                    "PERSON_AND_ORGANIZATION_ADDRESS.telephone_number",
+                    tt,
+                ))?,
+            ),
         },
         electronic_mail_address: match req(
             attributes,
@@ -15483,9 +16398,10 @@ fn build_person_and_organization_address_arena(
         )? {
             Attribute::Unset => None,
             other => Some(
-                (as_str(
+                (as_text(
                     other,
                     "PERSON_AND_ORGANIZATION_ADDRESS.electronic_mail_address",
+                    tt,
                 ))?,
             ),
         },
@@ -15495,7 +16411,7 @@ fn build_person_and_organization_address_arena(
             "PERSON_AND_ORGANIZATION_ADDRESS.telex_number",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSON_AND_ORGANIZATION_ADDRESS.telex_number"))?),
+            other => Some((as_text(other, "PERSON_AND_ORGANIZATION_ADDRESS.telex_number", tt))?),
         },
         organizations: Vec::new(),
         description: match req(
@@ -15504,7 +16420,7 @@ fn build_person_and_organization_address_arena(
             "PERSON_AND_ORGANIZATION_ADDRESS.description",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSON_AND_ORGANIZATION_ADDRESS.description"))?),
+            other => Some((as_text(other, "PERSON_AND_ORGANIZATION_ADDRESS.description", tt))?),
         },
         people: Vec::new(),
         description_1: match req(
@@ -15513,13 +16429,14 @@ fn build_person_and_organization_address_arena(
             "PERSON_AND_ORGANIZATION_ADDRESS.description_1",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSON_AND_ORGANIZATION_ADDRESS.description_1"))?),
+            other => Some((as_text(other, "PERSON_AND_ORGANIZATION_ADDRESS.description_1", tt))?),
         },
     })
 }
 
 fn build_person_and_organization_assignment_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PersonAndOrganizationAssignment, String> {
     Ok(PersonAndOrganizationAssignment {
         assigned_person_and_organization: PersonAndOrganizationRef::PersonAndOrganization(
@@ -15533,56 +16450,61 @@ fn build_person_and_organization_assignment_arena(
 
 fn build_person_and_organization_role_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PersonAndOrganizationRole, String> {
     Ok(PersonAndOrganizationRole {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PERSON_AND_ORGANIZATION_ROLE.name")?,
             "PERSON_AND_ORGANIZATION_ROLE.name",
+            tt,
         ))?,
     })
 }
 
-fn build_personal_address_arena(attributes: &[Attribute]) -> Result<PersonalAddress, String> {
+fn build_personal_address_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<PersonalAddress, String> {
     Ok(PersonalAddress {
         internal_location: match req(attributes, 0, "PERSONAL_ADDRESS.internal_location")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSONAL_ADDRESS.internal_location"))?),
+            other => Some((as_text(other, "PERSONAL_ADDRESS.internal_location", tt))?),
         },
         street_number: match req(attributes, 1, "PERSONAL_ADDRESS.street_number")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSONAL_ADDRESS.street_number"))?),
+            other => Some((as_text(other, "PERSONAL_ADDRESS.street_number", tt))?),
         },
         street: match req(attributes, 2, "PERSONAL_ADDRESS.street")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSONAL_ADDRESS.street"))?),
+            other => Some((as_text(other, "PERSONAL_ADDRESS.street", tt))?),
         },
         postal_box: match req(attributes, 3, "PERSONAL_ADDRESS.postal_box")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSONAL_ADDRESS.postal_box"))?),
+            other => Some((as_text(other, "PERSONAL_ADDRESS.postal_box", tt))?),
         },
         town: match req(attributes, 4, "PERSONAL_ADDRESS.town")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSONAL_ADDRESS.town"))?),
+            other => Some((as_text(other, "PERSONAL_ADDRESS.town", tt))?),
         },
         region: match req(attributes, 5, "PERSONAL_ADDRESS.region")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSONAL_ADDRESS.region"))?),
+            other => Some((as_text(other, "PERSONAL_ADDRESS.region", tt))?),
         },
         postal_code: match req(attributes, 6, "PERSONAL_ADDRESS.postal_code")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSONAL_ADDRESS.postal_code"))?),
+            other => Some((as_text(other, "PERSONAL_ADDRESS.postal_code", tt))?),
         },
         country: match req(attributes, 7, "PERSONAL_ADDRESS.country")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSONAL_ADDRESS.country"))?),
+            other => Some((as_text(other, "PERSONAL_ADDRESS.country", tt))?),
         },
         facsimile_number: match req(attributes, 8, "PERSONAL_ADDRESS.facsimile_number")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSONAL_ADDRESS.facsimile_number"))?),
+            other => Some((as_text(other, "PERSONAL_ADDRESS.facsimile_number", tt))?),
         },
         telephone_number: match req(attributes, 9, "PERSONAL_ADDRESS.telephone_number")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSONAL_ADDRESS.telephone_number"))?),
+            other => Some((as_text(other, "PERSONAL_ADDRESS.telephone_number", tt))?),
         },
         electronic_mail_address: match req(
             attributes,
@@ -15590,31 +16512,33 @@ fn build_personal_address_arena(attributes: &[Attribute]) -> Result<PersonalAddr
             "PERSONAL_ADDRESS.electronic_mail_address",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSONAL_ADDRESS.electronic_mail_address"))?),
+            other => Some((as_text(other, "PERSONAL_ADDRESS.electronic_mail_address", tt))?),
         },
         telex_number: match req(attributes, 11, "PERSONAL_ADDRESS.telex_number")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSONAL_ADDRESS.telex_number"))?),
+            other => Some((as_text(other, "PERSONAL_ADDRESS.telex_number", tt))?),
         },
         people: Vec::new(),
         description: match req(attributes, 13, "PERSONAL_ADDRESS.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PERSONAL_ADDRESS.description"))?),
+            other => Some((as_text(other, "PERSONAL_ADDRESS.description", tt))?),
         },
     })
 }
 
 fn build_placed_datum_target_feature_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PlacedDatumTargetFeature, String> {
     Ok(PlacedDatumTargetFeature {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PLACED_DATUM_TARGET_FEATURE.name")?,
             "PLACED_DATUM_TARGET_FEATURE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "PLACED_DATUM_TARGET_FEATURE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PLACED_DATUM_TARGET_FEATURE.description"))?),
+            other => Some((as_text(other, "PLACED_DATUM_TARGET_FEATURE.description", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -15627,23 +16551,34 @@ fn build_placed_datum_target_feature_arena(
             )?,
             "PLACED_DATUM_TARGET_FEATURE.product_definitional",
         ))?,
-        target_id: (as_str(
+        target_id: (as_text(
             req(attributes, 4, "PLACED_DATUM_TARGET_FEATURE.target_id")?,
             "PLACED_DATUM_TARGET_FEATURE.target_id",
+            tt,
         ))?,
     })
 }
 
-fn build_placement_arena(attributes: &[Attribute]) -> Result<Placement, String> {
+fn build_placement_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<Placement, String> {
     Ok(Placement {
-        name: (as_str(req(attributes, 0, "PLACEMENT.name")?, "PLACEMENT.name"))?,
+        name: (as_text(req(attributes, 0, "PLACEMENT.name")?, "PLACEMENT.name", tt))?,
         location: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)),
     })
 }
 
-fn build_planar_box_arena(attributes: &[Attribute]) -> Result<PlanarBox, String> {
+fn build_planar_box_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<PlanarBox, String> {
     Ok(PlanarBox {
-        name: (as_str(req(attributes, 0, "PLANAR_BOX.name")?, "PLANAR_BOX.name"))?,
+        name: (as_text(
+            req(attributes, 0, "PLANAR_BOX.name")?,
+            "PLANAR_BOX.name",
+            tt,
+        ))?,
         size_in_x: (as_real(
             req(attributes, 1, "PLANAR_BOX.size_in_x")?,
             "PLANAR_BOX.size_in_x",
@@ -15656,11 +16591,15 @@ fn build_planar_box_arena(attributes: &[Attribute]) -> Result<PlanarBox, String>
     })
 }
 
-fn build_planar_extent_arena(attributes: &[Attribute]) -> Result<PlanarExtent, String> {
+fn build_planar_extent_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<PlanarExtent, String> {
     Ok(PlanarExtent {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PLANAR_EXTENT.name")?,
             "PLANAR_EXTENT.name",
+            tt,
         ))?,
         size_in_x: (as_real(
             req(attributes, 1, "PLANAR_EXTENT.size_in_x")?,
@@ -15673,15 +16612,16 @@ fn build_planar_extent_arena(attributes: &[Attribute]) -> Result<PlanarExtent, S
     })
 }
 
-fn build_plane_arena(attributes: &[Attribute]) -> Result<Plane, String> {
+fn build_plane_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Plane, String> {
     Ok(Plane {
-        name: (as_str(req(attributes, 0, "PLANE.name")?, "PLANE.name"))?,
+        name: (as_text(req(attributes, 0, "PLANE.name")?, "PLANE.name", tt))?,
         position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
     })
 }
 
 fn build_plane_angle_measure_with_unit_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PlaneAngleMeasureWithUnit, String> {
     Ok(PlaneAngleMeasureWithUnit {
         value_component: (read_measure_value(
@@ -15691,12 +16631,16 @@ fn build_plane_angle_measure_with_unit_arena(
                 "PLANE_ANGLE_MEASURE_WITH_UNIT.value_component",
             )?,
             "PLANE_ANGLE_MEASURE_WITH_UNIT.value_component",
+            tt,
         ))?,
         unit_component: UnitRef::AreaUnit(AreaUnitId(u32::MAX)),
     })
 }
 
-fn build_plane_angle_unit_arena(attributes: &[Attribute]) -> Result<PlaneAngleUnit, String> {
+fn build_plane_angle_unit_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<PlaneAngleUnit, String> {
     Ok(PlaneAngleUnit {
         dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(u32::MAX)),
     })
@@ -15704,6 +16648,7 @@ fn build_plane_angle_unit_arena(attributes: &[Attribute]) -> Result<PlaneAngleUn
 
 fn build_plus_minus_tolerance_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PlusMinusTolerance, String> {
     Ok(PlusMinusTolerance {
         range: ToleranceMethodDefinitionRef::LimitsAndFits(LimitsAndFitsId(u32::MAX)),
@@ -15713,44 +16658,58 @@ fn build_plus_minus_tolerance_arena(
     })
 }
 
-fn build_point_arena(attributes: &[Attribute]) -> Result<Point, String> {
+fn build_point_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Point, String> {
     Ok(Point {
-        name: (as_str(req(attributes, 0, "POINT.name")?, "POINT.name"))?,
+        name: (as_text(req(attributes, 0, "POINT.name")?, "POINT.name", tt))?,
     })
 }
 
-fn build_point_style_arena(attributes: &[Attribute]) -> Result<PointStyle, String> {
+fn build_point_style_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<PointStyle, String> {
     Ok(PointStyle {
-        name: (as_str(req(attributes, 0, "POINT_STYLE.name")?, "POINT_STYLE.name"))?,
+        name: (as_text(
+            req(attributes, 0, "POINT_STYLE.name")?,
+            "POINT_STYLE.name",
+            tt,
+        ))?,
         marker: None,
         marker_size: None,
         marker_colour: None,
     })
 }
 
-fn build_poly_loop_arena(attributes: &[Attribute]) -> Result<PolyLoop, String> {
+fn build_poly_loop_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<PolyLoop, String> {
     Ok(PolyLoop {
-        name: (as_str(req(attributes, 0, "POLY_LOOP.name")?, "POLY_LOOP.name"))?,
+        name: (as_text(req(attributes, 0, "POLY_LOOP.name")?, "POLY_LOOP.name", tt))?,
         polygon: Vec::new(),
     })
 }
 
-fn build_polyline_arena(attributes: &[Attribute]) -> Result<Polyline, String> {
+fn build_polyline_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Polyline, String> {
     Ok(Polyline {
-        name: (as_str(req(attributes, 0, "POLYLINE.name")?, "POLYLINE.name"))?,
+        name: (as_text(req(attributes, 0, "POLYLINE.name")?, "POLYLINE.name", tt))?,
         points: Vec::new(),
     })
 }
 
-fn build_position_tolerance_arena(attributes: &[Attribute]) -> Result<PositionTolerance, String> {
+fn build_position_tolerance_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<PositionTolerance, String> {
     Ok(PositionTolerance {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "POSITION_TOLERANCE.name")?,
             "POSITION_TOLERANCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "POSITION_TOLERANCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "POSITION_TOLERANCE.description"))?),
+            other => Some((as_text(other, "POSITION_TOLERANCE.description", tt))?),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -15761,127 +16720,164 @@ fn build_position_tolerance_arena(attributes: &[Attribute]) -> Result<PositionTo
 
 fn build_pre_defined_character_glyph_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PreDefinedCharacterGlyph, String> {
     Ok(PreDefinedCharacterGlyph {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRE_DEFINED_CHARACTER_GLYPH.name")?,
             "PRE_DEFINED_CHARACTER_GLYPH.name",
+            tt,
         ))?,
     })
 }
 
-fn build_pre_defined_colour_arena(attributes: &[Attribute]) -> Result<PreDefinedColour, String> {
+fn build_pre_defined_colour_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<PreDefinedColour, String> {
     Ok(PreDefinedColour {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRE_DEFINED_COLOUR.name")?,
             "PRE_DEFINED_COLOUR.name",
+            tt,
         ))?,
     })
 }
 
 fn build_pre_defined_curve_font_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PreDefinedCurveFont, String> {
     Ok(PreDefinedCurveFont {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRE_DEFINED_CURVE_FONT.name")?,
             "PRE_DEFINED_CURVE_FONT.name",
+            tt,
         ))?,
     })
 }
 
-fn build_pre_defined_item_arena(attributes: &[Attribute]) -> Result<PreDefinedItem, String> {
+fn build_pre_defined_item_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<PreDefinedItem, String> {
     Ok(PreDefinedItem {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRE_DEFINED_ITEM.name")?,
             "PRE_DEFINED_ITEM.name",
+            tt,
         ))?,
     })
 }
 
-fn build_pre_defined_marker_arena(attributes: &[Attribute]) -> Result<PreDefinedMarker, String> {
+fn build_pre_defined_marker_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<PreDefinedMarker, String> {
     Ok(PreDefinedMarker {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRE_DEFINED_MARKER.name")?,
             "PRE_DEFINED_MARKER.name",
+            tt,
         ))?,
     })
 }
 
 fn build_pre_defined_point_marker_symbol_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PreDefinedPointMarkerSymbol, String> {
     Ok(PreDefinedPointMarkerSymbol {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRE_DEFINED_POINT_MARKER_SYMBOL.name")?,
             "PRE_DEFINED_POINT_MARKER_SYMBOL.name",
+            tt,
         ))?,
     })
 }
 
 fn build_pre_defined_presentation_style_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PreDefinedPresentationStyle, String> {
     Ok(PreDefinedPresentationStyle {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRE_DEFINED_PRESENTATION_STYLE.name")?,
             "PRE_DEFINED_PRESENTATION_STYLE.name",
+            tt,
         ))?,
     })
 }
 
 fn build_pre_defined_surface_side_style_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PreDefinedSurfaceSideStyle, String> {
     Ok(PreDefinedSurfaceSideStyle {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRE_DEFINED_SURFACE_SIDE_STYLE.name")?,
             "PRE_DEFINED_SURFACE_SIDE_STYLE.name",
+            tt,
         ))?,
     })
 }
 
-fn build_pre_defined_symbol_arena(attributes: &[Attribute]) -> Result<PreDefinedSymbol, String> {
+fn build_pre_defined_symbol_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<PreDefinedSymbol, String> {
     Ok(PreDefinedSymbol {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRE_DEFINED_SYMBOL.name")?,
             "PRE_DEFINED_SYMBOL.name",
+            tt,
         ))?,
     })
 }
 
 fn build_pre_defined_terminator_symbol_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PreDefinedTerminatorSymbol, String> {
     Ok(PreDefinedTerminatorSymbol {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRE_DEFINED_TERMINATOR_SYMBOL.name")?,
             "PRE_DEFINED_TERMINATOR_SYMBOL.name",
+            tt,
         ))?,
     })
 }
 
 fn build_pre_defined_text_font_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PreDefinedTextFont, String> {
     Ok(PreDefinedTextFont {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRE_DEFINED_TEXT_FONT.name")?,
             "PRE_DEFINED_TEXT_FONT.name",
+            tt,
         ))?,
     })
 }
 
-fn build_pre_defined_tile_arena(attributes: &[Attribute]) -> Result<PreDefinedTile, String> {
+fn build_pre_defined_tile_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<PreDefinedTile, String> {
     Ok(PreDefinedTile {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRE_DEFINED_TILE.name")?,
             "PRE_DEFINED_TILE.name",
+            tt,
         ))?,
     })
 }
 
-fn build_precision_qualifier_arena(attributes: &[Attribute]) -> Result<PrecisionQualifier, String> {
+fn build_precision_qualifier_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<PrecisionQualifier, String> {
     Ok(PrecisionQualifier {
         precision_value: (as_int(
             req(attributes, 0, "PRECISION_QUALIFIER.precision_value")?,
@@ -15890,11 +16886,15 @@ fn build_precision_qualifier_arena(attributes: &[Attribute]) -> Result<Precision
     })
 }
 
-fn build_presentation_area_arena(attributes: &[Attribute]) -> Result<PresentationArea, String> {
+fn build_presentation_area_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<PresentationArea, String> {
     Ok(PresentationArea {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRESENTATION_AREA.name")?,
             "PRESENTATION_AREA.name",
+            tt,
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
@@ -15905,15 +16905,18 @@ fn build_presentation_area_arena(attributes: &[Attribute]) -> Result<Presentatio
 
 fn build_presentation_layer_assignment_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PresentationLayerAssignment, String> {
     Ok(PresentationLayerAssignment {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRESENTATION_LAYER_ASSIGNMENT.name")?,
             "PRESENTATION_LAYER_ASSIGNMENT.name",
+            tt,
         ))?,
-        description: (as_str(
+        description: (as_text(
             req(attributes, 1, "PRESENTATION_LAYER_ASSIGNMENT.description")?,
             "PRESENTATION_LAYER_ASSIGNMENT.description",
+            tt,
         ))?,
         assigned_items: Vec::new(),
     })
@@ -15921,11 +16924,13 @@ fn build_presentation_layer_assignment_arena(
 
 fn build_presentation_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PresentationRepresentation, String> {
     Ok(PresentationRepresentation {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRESENTATION_REPRESENTATION.name")?,
             "PRESENTATION_REPRESENTATION.name",
+            tt,
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
@@ -15934,11 +16939,17 @@ fn build_presentation_representation_arena(
     })
 }
 
-fn build_presentation_set_arena(attributes: &[Attribute]) -> Result<PresentationSet, String> {
+fn build_presentation_set_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<PresentationSet, String> {
     Ok(PresentationSet {})
 }
 
-fn build_presentation_size_arena(attributes: &[Attribute]) -> Result<PresentationSize, String> {
+fn build_presentation_size_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<PresentationSize, String> {
     Ok(PresentationSize {
         unit: PresentationSizeAssignmentSelectRef::AreaInSet(AreaInSetId(u32::MAX)),
         size: PlanarBoxRef::PlanarBox(PlanarBoxId(u32::MAX)),
@@ -15947,12 +16958,14 @@ fn build_presentation_size_arena(attributes: &[Attribute]) -> Result<Presentatio
 
 fn build_presentation_style_assignment_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PresentationStyleAssignment, String> {
     Ok(PresentationStyleAssignment { styles: Vec::new() })
 }
 
 fn build_presentation_style_by_context_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PresentationStyleByContext, String> {
     Ok(PresentationStyleByContext {
         styles: Vec::new(),
@@ -15962,11 +16975,15 @@ fn build_presentation_style_by_context_arena(
     })
 }
 
-fn build_presentation_view_arena(attributes: &[Attribute]) -> Result<PresentationView, String> {
+fn build_presentation_view_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<PresentationView, String> {
     Ok(PresentationView {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRESENTATION_VIEW.name")?,
             "PRESENTATION_VIEW.name",
+            tt,
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
@@ -15975,12 +16992,16 @@ fn build_presentation_view_arena(attributes: &[Attribute]) -> Result<Presentatio
     })
 }
 
-fn build_presented_item_arena(attributes: &[Attribute]) -> Result<PresentedItem, String> {
+fn build_presented_item_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<PresentedItem, String> {
     Ok(PresentedItem {})
 }
 
 fn build_presented_item_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PresentedItemRepresentation, String> {
     Ok(PresentedItemRepresentation {
         presentation: PresentationRepresentationSelectRef::PresentationArea(PresentationAreaId(
@@ -15990,61 +17011,72 @@ fn build_presented_item_representation_arena(
     })
 }
 
-fn build_product_arena(attributes: &[Attribute]) -> Result<Product, String> {
+fn build_product_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Product, String> {
     Ok(Product {
-        id: (as_str(req(attributes, 0, "PRODUCT.id")?, "PRODUCT.id"))?,
-        name: (as_str(req(attributes, 1, "PRODUCT.name")?, "PRODUCT.name"))?,
+        id: (as_text(req(attributes, 0, "PRODUCT.id")?, "PRODUCT.id", tt))?,
+        name: (as_text(req(attributes, 1, "PRODUCT.name")?, "PRODUCT.name", tt))?,
         description: match req(attributes, 2, "PRODUCT.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PRODUCT.description"))?),
+            other => Some((as_text(other, "PRODUCT.description", tt))?),
         },
         frame_of_reference: Vec::new(),
     })
 }
 
-fn build_product_category_arena(attributes: &[Attribute]) -> Result<ProductCategory, String> {
+fn build_product_category_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ProductCategory, String> {
     Ok(ProductCategory {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRODUCT_CATEGORY.name")?,
             "PRODUCT_CATEGORY.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "PRODUCT_CATEGORY.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PRODUCT_CATEGORY.description"))?),
+            other => Some((as_text(other, "PRODUCT_CATEGORY.description", tt))?),
         },
     })
 }
 
 fn build_product_category_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ProductCategoryRelationship, String> {
     Ok(ProductCategoryRelationship {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRODUCT_CATEGORY_RELATIONSHIP.name")?,
             "PRODUCT_CATEGORY_RELATIONSHIP.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "PRODUCT_CATEGORY_RELATIONSHIP.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PRODUCT_CATEGORY_RELATIONSHIP.description"))?),
+            other => Some((as_text(other, "PRODUCT_CATEGORY_RELATIONSHIP.description", tt))?),
         },
         category: ProductCategoryRef::ProductCategory(ProductCategoryId(u32::MAX)),
         sub_category: ProductCategoryRef::ProductCategory(ProductCategoryId(u32::MAX)),
     })
 }
 
-fn build_product_concept_arena(attributes: &[Attribute]) -> Result<ProductConcept, String> {
+fn build_product_concept_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ProductConcept, String> {
     Ok(ProductConcept {
-        id: (as_str(
+        id: (as_text(
             req(attributes, 0, "PRODUCT_CONCEPT.id")?,
             "PRODUCT_CONCEPT.id",
+            tt,
         ))?,
-        name: (as_str(
+        name: (as_text(
             req(attributes, 1, "PRODUCT_CONCEPT.name")?,
             "PRODUCT_CONCEPT.name",
+            tt,
         ))?,
         description: match req(attributes, 2, "PRODUCT_CONCEPT.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PRODUCT_CONCEPT.description"))?),
+            other => Some((as_text(other, "PRODUCT_CONCEPT.description", tt))?),
         },
         market_context: ProductConceptContextRef::ProductConceptContext(ProductConceptContextId(
             u32::MAX,
@@ -16054,48 +17086,56 @@ fn build_product_concept_arena(attributes: &[Attribute]) -> Result<ProductConcep
 
 fn build_product_concept_context_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ProductConceptContext, String> {
     Ok(ProductConceptContext {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRODUCT_CONCEPT_CONTEXT.name")?,
             "PRODUCT_CONCEPT_CONTEXT.name",
+            tt,
         ))?,
         frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(
             u32::MAX,
         )),
-        market_segment_type: (as_str(
+        market_segment_type: (as_text(
             req(attributes, 2, "PRODUCT_CONCEPT_CONTEXT.market_segment_type")?,
             "PRODUCT_CONCEPT_CONTEXT.market_segment_type",
+            tt,
         ))?,
     })
 }
 
 fn build_product_concept_feature_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ProductConceptFeature, String> {
     Ok(ProductConceptFeature {
-        id: (as_str(
+        id: (as_text(
             req(attributes, 0, "PRODUCT_CONCEPT_FEATURE.id")?,
             "PRODUCT_CONCEPT_FEATURE.id",
+            tt,
         ))?,
-        name: (as_str(
+        name: (as_text(
             req(attributes, 1, "PRODUCT_CONCEPT_FEATURE.name")?,
             "PRODUCT_CONCEPT_FEATURE.name",
+            tt,
         ))?,
         description: match req(attributes, 2, "PRODUCT_CONCEPT_FEATURE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PRODUCT_CONCEPT_FEATURE.description"))?),
+            other => Some((as_text(other, "PRODUCT_CONCEPT_FEATURE.description", tt))?),
         },
     })
 }
 
 fn build_product_concept_feature_category_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ProductConceptFeatureCategory, String> {
     Ok(ProductConceptFeatureCategory {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRODUCT_CONCEPT_FEATURE_CATEGORY.name")?,
             "PRODUCT_CONCEPT_FEATURE_CATEGORY.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -16103,36 +17143,45 @@ fn build_product_concept_feature_category_arena(
             "PRODUCT_CONCEPT_FEATURE_CATEGORY.description",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PRODUCT_CONCEPT_FEATURE_CATEGORY.description"))?),
+            other => Some((as_text(other, "PRODUCT_CONCEPT_FEATURE_CATEGORY.description", tt))?),
         },
     })
 }
 
-fn build_product_context_arena(attributes: &[Attribute]) -> Result<ProductContext, String> {
+fn build_product_context_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ProductContext, String> {
     Ok(ProductContext {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRODUCT_CONTEXT.name")?,
             "PRODUCT_CONTEXT.name",
+            tt,
         ))?,
         frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(
             u32::MAX,
         )),
-        discipline_type: (as_str(
+        discipline_type: (as_text(
             req(attributes, 2, "PRODUCT_CONTEXT.discipline_type")?,
             "PRODUCT_CONTEXT.discipline_type",
+            tt,
         ))?,
     })
 }
 
-fn build_product_definition_arena(attributes: &[Attribute]) -> Result<ProductDefinition, String> {
+fn build_product_definition_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ProductDefinition, String> {
     Ok(ProductDefinition {
-        id: (as_str(
+        id: (as_text(
             req(attributes, 0, "PRODUCT_DEFINITION.id")?,
             "PRODUCT_DEFINITION.id",
+            tt,
         ))?,
         description: match req(attributes, 1, "PRODUCT_DEFINITION.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PRODUCT_DEFINITION.description"))?),
+            other => Some((as_text(other, "PRODUCT_DEFINITION.description", tt))?),
         },
         formation: ProductDefinitionFormationRef::ProductDefinitionFormation(
             ProductDefinitionFormationId(u32::MAX),
@@ -16143,24 +17192,28 @@ fn build_product_definition_arena(attributes: &[Attribute]) -> Result<ProductDef
 
 fn build_product_definition_context_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ProductDefinitionContext, String> {
     Ok(ProductDefinitionContext {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRODUCT_DEFINITION_CONTEXT.name")?,
             "PRODUCT_DEFINITION_CONTEXT.name",
+            tt,
         ))?,
         frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(
             u32::MAX,
         )),
-        life_cycle_stage: (as_str(
+        life_cycle_stage: (as_text(
             req(attributes, 2, "PRODUCT_DEFINITION_CONTEXT.life_cycle_stage")?,
             "PRODUCT_DEFINITION_CONTEXT.life_cycle_stage",
+            tt,
         ))?,
     })
 }
 
 fn build_product_definition_context_association_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ProductDefinitionContextAssociation, String> {
     Ok(ProductDefinitionContextAssociation {
         definition: ProductDefinitionRef::ProductDefinition(ProductDefinitionId(u32::MAX)),
@@ -16173,26 +17226,30 @@ fn build_product_definition_context_association_arena(
 
 fn build_product_definition_context_role_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ProductDefinitionContextRole, String> {
     Ok(ProductDefinitionContextRole {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRODUCT_DEFINITION_CONTEXT_ROLE.name")?,
             "PRODUCT_DEFINITION_CONTEXT_ROLE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "PRODUCT_DEFINITION_CONTEXT_ROLE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PRODUCT_DEFINITION_CONTEXT_ROLE.description"))?),
+            other => Some((as_text(other, "PRODUCT_DEFINITION_CONTEXT_ROLE.description", tt))?),
         },
     })
 }
 
 fn build_product_definition_effectivity_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ProductDefinitionEffectivity, String> {
     Ok(ProductDefinitionEffectivity {
-        id: (as_str(
+        id: (as_text(
             req(attributes, 0, "PRODUCT_DEFINITION_EFFECTIVITY.id")?,
             "PRODUCT_DEFINITION_EFFECTIVITY.id",
+            tt,
         ))?,
         usage: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(
             u32::MAX,
@@ -16202,15 +17259,17 @@ fn build_product_definition_effectivity_arena(
 
 fn build_product_definition_formation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ProductDefinitionFormation, String> {
     Ok(ProductDefinitionFormation {
-        id: (as_str(
+        id: (as_text(
             req(attributes, 0, "PRODUCT_DEFINITION_FORMATION.id")?,
             "PRODUCT_DEFINITION_FORMATION.id",
+            tt,
         ))?,
         description: match req(attributes, 1, "PRODUCT_DEFINITION_FORMATION.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PRODUCT_DEFINITION_FORMATION.description"))?),
+            other => Some((as_text(other, "PRODUCT_DEFINITION_FORMATION.description", tt))?),
         },
         of_product: ProductRef::Product(ProductId(u32::MAX)),
     })
@@ -16218,15 +17277,17 @@ fn build_product_definition_formation_arena(
 
 fn build_product_definition_formation_with_specified_source_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ProductDefinitionFormationWithSpecifiedSource, String> {
     Ok(ProductDefinitionFormationWithSpecifiedSource {
-        id: (as_str(
+        id: (as_text(
             req(
                 attributes,
                 0,
                 "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE.id",
             )?,
             "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE.id",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -16235,9 +17296,10 @@ fn build_product_definition_formation_with_specified_source_arena(
         )? {
             Attribute::Unset => None,
             other => Some(
-                (as_str(
+                (as_text(
                     other,
                     "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE.description",
+                    tt,
                 ))?,
             ),
         },
@@ -16261,19 +17323,21 @@ fn build_product_definition_formation_with_specified_source_arena(
 
 fn build_product_definition_occurrence_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ProductDefinitionOccurrence, String> {
     Ok(ProductDefinitionOccurrence {
-        id: (as_str(
+        id: (as_text(
             req(attributes, 0, "PRODUCT_DEFINITION_OCCURRENCE.id")?,
             "PRODUCT_DEFINITION_OCCURRENCE.id",
+            tt,
         ))?,
         name: match req(attributes, 1, "PRODUCT_DEFINITION_OCCURRENCE.name")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PRODUCT_DEFINITION_OCCURRENCE.name"))?),
+            other => Some((as_text(other, "PRODUCT_DEFINITION_OCCURRENCE.name", tt))?),
         },
         description: match req(attributes, 2, "PRODUCT_DEFINITION_OCCURRENCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PRODUCT_DEFINITION_OCCURRENCE.description"))?),
+            other => Some((as_text(other, "PRODUCT_DEFINITION_OCCURRENCE.description", tt))?),
         },
         definition: None,
         quantity: None,
@@ -16282,19 +17346,22 @@ fn build_product_definition_occurrence_arena(
 
 fn build_product_definition_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ProductDefinitionRelationship, String> {
     Ok(ProductDefinitionRelationship {
-        id: (as_str(
+        id: (as_text(
             req(attributes, 0, "PRODUCT_DEFINITION_RELATIONSHIP.id")?,
             "PRODUCT_DEFINITION_RELATIONSHIP.id",
+            tt,
         ))?,
-        name: (as_str(
+        name: (as_text(
             req(attributes, 1, "PRODUCT_DEFINITION_RELATIONSHIP.name")?,
             "PRODUCT_DEFINITION_RELATIONSHIP.name",
+            tt,
         ))?,
         description: match req(attributes, 2, "PRODUCT_DEFINITION_RELATIONSHIP.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PRODUCT_DEFINITION_RELATIONSHIP.description"))?),
+            other => Some((as_text(other, "PRODUCT_DEFINITION_RELATIONSHIP.description", tt))?),
         },
         relating_product_definition:
             ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
@@ -16309,23 +17376,26 @@ fn build_product_definition_relationship_arena(
 
 fn build_product_definition_relationship_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ProductDefinitionRelationshipRelationship, String> {
     Ok(ProductDefinitionRelationshipRelationship {
-        id: (as_str(
+        id: (as_text(
             req(
                 attributes,
                 0,
                 "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.id",
             )?,
             "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.id",
+            tt,
         ))?,
-        name: (as_str(
+        name: (as_text(
             req(
                 attributes,
                 1,
                 "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.name",
             )?,
             "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -16334,9 +17404,10 @@ fn build_product_definition_relationship_relationship_arena(
         )? {
             Attribute::Unset => None,
             other => Some(
-                (as_str(
+                (as_text(
                     other,
                     "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.description",
+                    tt,
                 ))?,
             ),
         },
@@ -16351,15 +17422,17 @@ fn build_product_definition_relationship_relationship_arena(
 
 fn build_product_definition_shape_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ProductDefinitionShape, String> {
     Ok(ProductDefinitionShape {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRODUCT_DEFINITION_SHAPE.name")?,
             "PRODUCT_DEFINITION_SHAPE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "PRODUCT_DEFINITION_SHAPE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PRODUCT_DEFINITION_SHAPE.description"))?),
+            other => Some((as_text(other, "PRODUCT_DEFINITION_SHAPE.description", tt))?),
         },
         definition: CharacterizedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(
             u32::MAX,
@@ -16369,11 +17442,12 @@ fn build_product_definition_shape_arena(
 
 fn build_product_definition_substitute_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ProductDefinitionSubstitute, String> {
     Ok(ProductDefinitionSubstitute {
         description: match req(attributes, 0, "PRODUCT_DEFINITION_SUBSTITUTE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PRODUCT_DEFINITION_SUBSTITUTE.description"))?),
+            other => Some((as_text(other, "PRODUCT_DEFINITION_SUBSTITUTE.description", tt))?),
         },
         context_relationship: ProductDefinitionRelationshipRef::AssemblyComponentUsage(
             AssemblyComponentUsageId(u32::MAX),
@@ -16386,19 +17460,22 @@ fn build_product_definition_substitute_arena(
 
 fn build_product_definition_usage_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ProductDefinitionUsage, String> {
     Ok(ProductDefinitionUsage {
-        id: (as_str(
+        id: (as_text(
             req(attributes, 0, "PRODUCT_DEFINITION_USAGE.id")?,
             "PRODUCT_DEFINITION_USAGE.id",
+            tt,
         ))?,
-        name: (as_str(
+        name: (as_text(
             req(attributes, 1, "PRODUCT_DEFINITION_USAGE.name")?,
             "PRODUCT_DEFINITION_USAGE.name",
+            tt,
         ))?,
         description: match req(attributes, 2, "PRODUCT_DEFINITION_USAGE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PRODUCT_DEFINITION_USAGE.description"))?),
+            other => Some((as_text(other, "PRODUCT_DEFINITION_USAGE.description", tt))?),
         },
         relating_product_definition:
             ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
@@ -16413,15 +17490,17 @@ fn build_product_definition_usage_arena(
 
 fn build_product_definition_with_associated_documents_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ProductDefinitionWithAssociatedDocuments, String> {
     Ok(ProductDefinitionWithAssociatedDocuments {
-        id: (as_str(
+        id: (as_text(
             req(
                 attributes,
                 0,
                 "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS.id",
             )?,
             "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS.id",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -16430,9 +17509,10 @@ fn build_product_definition_with_associated_documents_arena(
         )? {
             Attribute::Unset => None,
             other => Some(
-                (as_str(
+                (as_text(
                     other,
                     "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS.description",
+                    tt,
                 ))?,
             ),
         },
@@ -16446,11 +17526,13 @@ fn build_product_definition_with_associated_documents_arena(
 
 fn build_product_related_product_category_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ProductRelatedProductCategory, String> {
     Ok(ProductRelatedProductCategory {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PRODUCT_RELATED_PRODUCT_CATEGORY.name")?,
             "PRODUCT_RELATED_PRODUCT_CATEGORY.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -16458,7 +17540,7 @@ fn build_product_related_product_category_arena(
             "PRODUCT_RELATED_PRODUCT_CATEGORY.description",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PRODUCT_RELATED_PRODUCT_CATEGORY.description"))?),
+            other => Some((as_text(other, "PRODUCT_RELATED_PRODUCT_CATEGORY.description", tt))?),
         },
         products: Vec::new(),
     })
@@ -16466,6 +17548,7 @@ fn build_product_related_product_category_arena(
 
 fn build_projected_zone_definition_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ProjectedZoneDefinition, String> {
     Ok(ProjectedZoneDefinition {
         zone: ToleranceZoneRef::ToleranceZone(ToleranceZoneId(u32::MAX)),
@@ -16477,15 +17560,19 @@ fn build_projected_zone_definition_arena(
     })
 }
 
-fn build_property_definition_arena(attributes: &[Attribute]) -> Result<PropertyDefinition, String> {
+fn build_property_definition_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<PropertyDefinition, String> {
     Ok(PropertyDefinition {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PROPERTY_DEFINITION.name")?,
             "PROPERTY_DEFINITION.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "PROPERTY_DEFINITION.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "PROPERTY_DEFINITION.description"))?),
+            other => Some((as_text(other, "PROPERTY_DEFINITION.description", tt))?),
         },
         definition: CharacterizedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(
             u32::MAX,
@@ -16495,19 +17582,22 @@ fn build_property_definition_arena(attributes: &[Attribute]) -> Result<PropertyD
 
 fn build_property_definition_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PropertyDefinitionRelationship, String> {
     Ok(PropertyDefinitionRelationship {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "PROPERTY_DEFINITION_RELATIONSHIP.name")?,
             "PROPERTY_DEFINITION_RELATIONSHIP.name",
+            tt,
         ))?,
-        description: (as_str(
+        description: (as_text(
             req(
                 attributes,
                 1,
                 "PROPERTY_DEFINITION_RELATIONSHIP.description",
             )?,
             "PROPERTY_DEFINITION_RELATIONSHIP.description",
+            tt,
         ))?,
         relating_property_definition: PropertyDefinitionRef::ProductDefinitionShape(
             ProductDefinitionShapeId(u32::MAX),
@@ -16520,6 +17610,7 @@ fn build_property_definition_relationship_arena(
 
 fn build_property_definition_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<PropertyDefinitionRepresentation, String> {
     Ok(PropertyDefinitionRepresentation {
         definition: RepresentedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(
@@ -16533,21 +17624,27 @@ fn build_property_definition_representation_arena(
 
 fn build_qualified_representation_item_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<QualifiedRepresentationItem, String> {
     Ok(QualifiedRepresentationItem {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "QUALIFIED_REPRESENTATION_ITEM.name")?,
             "QUALIFIED_REPRESENTATION_ITEM.name",
+            tt,
         ))?,
         qualifiers: Vec::new(),
     })
 }
 
-fn build_quasi_uniform_curve_arena(attributes: &[Attribute]) -> Result<QuasiUniformCurve, String> {
+fn build_quasi_uniform_curve_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<QuasiUniformCurve, String> {
     Ok(QuasiUniformCurve {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "QUASI_UNIFORM_CURVE.name")?,
             "QUASI_UNIFORM_CURVE.name",
+            tt,
         ))?,
         degree: (as_int(
             req(attributes, 1, "QUASI_UNIFORM_CURVE.degree")?,
@@ -16574,11 +17671,13 @@ fn build_quasi_uniform_curve_arena(attributes: &[Attribute]) -> Result<QuasiUnif
 
 fn build_quasi_uniform_surface_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<QuasiUniformSurface, String> {
     Ok(QuasiUniformSurface {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "QUASI_UNIFORM_SURFACE.name")?,
             "QUASI_UNIFORM_SURFACE.name",
+            tt,
         ))?,
         u_degree: (as_int(
             req(attributes, 1, "QUASI_UNIFORM_SURFACE.u_degree")?,
@@ -16613,17 +17712,22 @@ fn build_quasi_uniform_surface_arena(
 
 fn build_ratio_measure_with_unit_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<RatioMeasureWithUnit, String> {
     Ok(RatioMeasureWithUnit {
         value_component: (read_measure_value(
             req(attributes, 0, "RATIO_MEASURE_WITH_UNIT.value_component")?,
             "RATIO_MEASURE_WITH_UNIT.value_component",
+            tt,
         ))?,
         unit_component: UnitRef::AreaUnit(AreaUnitId(u32::MAX)),
     })
 }
 
-fn build_ratio_unit_arena(attributes: &[Attribute]) -> Result<RatioUnit, String> {
+fn build_ratio_unit_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<RatioUnit, String> {
     Ok(RatioUnit {
         dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(u32::MAX)),
     })
@@ -16631,11 +17735,13 @@ fn build_ratio_unit_arena(attributes: &[Attribute]) -> Result<RatioUnit, String>
 
 fn build_rational_b_spline_curve_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<RationalBSplineCurve, String> {
     Ok(RationalBSplineCurve {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "RATIONAL_B_SPLINE_CURVE.name")?,
             "RATIONAL_B_SPLINE_CURVE.name",
+            tt,
         ))?,
         degree: (as_int(
             req(attributes, 1, "RATIONAL_B_SPLINE_CURVE.degree")?,
@@ -16671,11 +17777,13 @@ fn build_rational_b_spline_curve_arena(
 
 fn build_rational_b_spline_surface_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<RationalBSplineSurface, String> {
     Ok(RationalBSplineSurface {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "RATIONAL_B_SPLINE_SURFACE.name")?,
             "RATIONAL_B_SPLINE_SURFACE.name",
+            tt,
         ))?,
         u_degree: (as_int(
             req(attributes, 1, "RATIONAL_B_SPLINE_SURFACE.u_degree")?,
@@ -16725,7 +17833,10 @@ fn build_rational_b_spline_surface_arena(
     })
 }
 
-fn build_real_literal_arena(attributes: &[Attribute]) -> Result<RealLiteral, String> {
+fn build_real_literal_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<RealLiteral, String> {
     Ok(RealLiteral {
         the_value: (as_real(
             req(attributes, 0, "REAL_LITERAL.the_value")?,
@@ -16736,11 +17847,13 @@ fn build_real_literal_arena(attributes: &[Attribute]) -> Result<RealLiteral, Str
 
 fn build_real_representation_item_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<RealRepresentationItem, String> {
     Ok(RealRepresentationItem {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "REAL_REPRESENTATION_ITEM.name")?,
             "REAL_REPRESENTATION_ITEM.name",
+            tt,
         ))?,
         the_value: (as_real(
             req(attributes, 1, "REAL_REPRESENTATION_ITEM.the_value")?,
@@ -16751,21 +17864,27 @@ fn build_real_representation_item_arena(
 
 fn build_repositioned_tessellated_item_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<RepositionedTessellatedItem, String> {
     Ok(RepositionedTessellatedItem {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "REPOSITIONED_TESSELLATED_ITEM.name")?,
             "REPOSITIONED_TESSELLATED_ITEM.name",
+            tt,
         ))?,
         location: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
     })
 }
 
-fn build_representation_arena(attributes: &[Attribute]) -> Result<Representation, String> {
+fn build_representation_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<Representation, String> {
     Ok(Representation {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "REPRESENTATION.name")?,
             "REPRESENTATION.name",
+            tt,
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
@@ -16776,44 +17895,56 @@ fn build_representation_arena(attributes: &[Attribute]) -> Result<Representation
 
 fn build_representation_context_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<RepresentationContext, String> {
     Ok(RepresentationContext {
-        context_identifier: (as_str(
+        context_identifier: (as_text(
             req(attributes, 0, "REPRESENTATION_CONTEXT.context_identifier")?,
             "REPRESENTATION_CONTEXT.context_identifier",
+            tt,
         ))?,
-        context_type: (as_str(
+        context_type: (as_text(
             req(attributes, 1, "REPRESENTATION_CONTEXT.context_type")?,
             "REPRESENTATION_CONTEXT.context_type",
+            tt,
         ))?,
     })
 }
 
 fn build_representation_context_reference_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<RepresentationContextReference, String> {
     Ok(RepresentationContextReference {
-        context_identifier: (as_str(
+        context_identifier: (as_text(
             req(
                 attributes,
                 0,
                 "REPRESENTATION_CONTEXT_REFERENCE.context_identifier",
             )?,
             "REPRESENTATION_CONTEXT_REFERENCE.context_identifier",
+            tt,
         ))?,
     })
 }
 
-fn build_representation_item_arena(attributes: &[Attribute]) -> Result<RepresentationItem, String> {
+fn build_representation_item_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<RepresentationItem, String> {
     Ok(RepresentationItem {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "REPRESENTATION_ITEM.name")?,
             "REPRESENTATION_ITEM.name",
+            tt,
         ))?,
     })
 }
 
-fn build_representation_map_arena(attributes: &[Attribute]) -> Result<RepresentationMap, String> {
+fn build_representation_map_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<RepresentationMap, String> {
     Ok(RepresentationMap {
         mapping_origin: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
         mapped_representation: RepresentationRef::AdvancedBrepShapeRepresentation(
@@ -16824,11 +17955,13 @@ fn build_representation_map_arena(attributes: &[Attribute]) -> Result<Representa
 
 fn build_representation_reference_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<RepresentationReference, String> {
     Ok(RepresentationReference {
-        id: (as_str(
+        id: (as_text(
             req(attributes, 0, "REPRESENTATION_REFERENCE.id")?,
             "REPRESENTATION_REFERENCE.id",
+            tt,
         ))?,
         context_of_items: RepresentationContextReferenceRef::RepresentationContextReference(
             RepresentationContextReferenceId(u32::MAX),
@@ -16838,15 +17971,17 @@ fn build_representation_reference_arena(
 
 fn build_representation_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<RepresentationRelationship, String> {
     Ok(RepresentationRelationship {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "REPRESENTATION_RELATIONSHIP.name")?,
             "REPRESENTATION_RELATIONSHIP.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "REPRESENTATION_RELATIONSHIP.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "REPRESENTATION_RELATIONSHIP.description"))?),
+            other => Some((as_text(other, "REPRESENTATION_RELATIONSHIP.description", tt))?),
         },
         rep_1: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
             AdvancedBrepShapeRepresentationId(u32::MAX),
@@ -16859,15 +17994,17 @@ fn build_representation_relationship_arena(
 
 fn build_representation_relationship_with_transformation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<RepresentationRelationshipWithTransformation, String> {
     Ok(RepresentationRelationshipWithTransformation {
-        name: (as_str(
+        name: (as_text(
             req(
                 attributes,
                 0,
                 "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION.name",
             )?,
             "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -16876,9 +18013,10 @@ fn build_representation_relationship_with_transformation_arena(
         )? {
             Attribute::Unset => None,
             other => Some(
-                (as_str(
+                (as_text(
                     other,
                     "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION.description",
+                    tt,
                 ))?,
             ),
         },
@@ -16894,15 +18032,20 @@ fn build_representation_relationship_with_transformation_arena(
     })
 }
 
-fn build_resource_property_arena(attributes: &[Attribute]) -> Result<ResourceProperty, String> {
+fn build_resource_property_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ResourceProperty, String> {
     Ok(ResourceProperty {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "RESOURCE_PROPERTY.name")?,
             "RESOURCE_PROPERTY.name",
+            tt,
         ))?,
-        description: (as_str(
+        description: (as_text(
             req(attributes, 1, "RESOURCE_PROPERTY.description")?,
             "RESOURCE_PROPERTY.description",
+            tt,
         ))?,
         resource: CharacterizedResourceDefinitionRef::ActionResource(ActionResourceId(u32::MAX)),
     })
@@ -16910,35 +18053,45 @@ fn build_resource_property_arena(attributes: &[Attribute]) -> Result<ResourcePro
 
 fn build_resource_requirement_type_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ResourceRequirementType, String> {
     Ok(ResourceRequirementType {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "RESOURCE_REQUIREMENT_TYPE.name")?,
             "RESOURCE_REQUIREMENT_TYPE.name",
+            tt,
         ))?,
-        description: (as_str(
+        description: (as_text(
             req(attributes, 1, "RESOURCE_REQUIREMENT_TYPE.description")?,
             "RESOURCE_REQUIREMENT_TYPE.description",
+            tt,
         ))?,
     })
 }
 
-fn build_role_association_arena(attributes: &[Attribute]) -> Result<RoleAssociation, String> {
+fn build_role_association_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<RoleAssociation, String> {
     Ok(RoleAssociation {
         role: ObjectRoleRef::ObjectRole(ObjectRoleId(u32::MAX)),
         item_with_role: RoleSelectRef::ActionAssignment(ActionAssignmentId(u32::MAX)),
     })
 }
 
-fn build_roundness_tolerance_arena(attributes: &[Attribute]) -> Result<RoundnessTolerance, String> {
+fn build_roundness_tolerance_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<RoundnessTolerance, String> {
     Ok(RoundnessTolerance {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "ROUNDNESS_TOLERANCE.name")?,
             "ROUNDNESS_TOLERANCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "ROUNDNESS_TOLERANCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "ROUNDNESS_TOLERANCE.description"))?),
+            other => Some((as_text(other, "ROUNDNESS_TOLERANCE.description", tt))?),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -16947,9 +18100,16 @@ fn build_roundness_tolerance_arena(attributes: &[Attribute]) -> Result<Roundness
     })
 }
 
-fn build_seam_curve_arena(attributes: &[Attribute]) -> Result<SeamCurve, String> {
+fn build_seam_curve_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<SeamCurve, String> {
     Ok(SeamCurve {
-        name: (as_str(req(attributes, 0, "SEAM_CURVE.name")?, "SEAM_CURVE.name"))?,
+        name: (as_text(
+            req(attributes, 0, "SEAM_CURVE.name")?,
+            "SEAM_CURVE.name",
+            tt,
+        ))?,
         curve_3d: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
         associated_geometry: Vec::new(),
         master_representation: (match req(attributes, 3, "SEAM_CURVE.master_representation")? {
@@ -16964,15 +18124,18 @@ fn build_seam_curve_arena(attributes: &[Attribute]) -> Result<SeamCurve, String>
 
 fn build_security_classification_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SecurityClassification, String> {
     Ok(SecurityClassification {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SECURITY_CLASSIFICATION.name")?,
             "SECURITY_CLASSIFICATION.name",
+            tt,
         ))?,
-        purpose: (as_str(
+        purpose: (as_text(
             req(attributes, 1, "SECURITY_CLASSIFICATION.purpose")?,
             "SECURITY_CLASSIFICATION.purpose",
+            tt,
         ))?,
         security_level: SecurityClassificationLevelRef::SecurityClassificationLevel(
             SecurityClassificationLevelId(u32::MAX),
@@ -16982,6 +18145,7 @@ fn build_security_classification_arena(
 
 fn build_security_classification_assignment_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SecurityClassificationAssignment, String> {
     Ok(SecurityClassificationAssignment {
         assigned_security_classification: SecurityClassificationRef::SecurityClassification(
@@ -16992,24 +18156,30 @@ fn build_security_classification_assignment_arena(
 
 fn build_security_classification_level_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SecurityClassificationLevel, String> {
     Ok(SecurityClassificationLevel {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SECURITY_CLASSIFICATION_LEVEL.name")?,
             "SECURITY_CLASSIFICATION_LEVEL.name",
+            tt,
         ))?,
     })
 }
 
-fn build_shape_aspect_arena(attributes: &[Attribute]) -> Result<ShapeAspect, String> {
+fn build_shape_aspect_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ShapeAspect, String> {
     Ok(ShapeAspect {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SHAPE_ASPECT.name")?,
             "SHAPE_ASPECT.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "SHAPE_ASPECT.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "SHAPE_ASPECT.description"))?),
+            other => Some((as_text(other, "SHAPE_ASPECT.description", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -17023,15 +18193,17 @@ fn build_shape_aspect_arena(attributes: &[Attribute]) -> Result<ShapeAspect, Str
 
 fn build_shape_aspect_associativity_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ShapeAspectAssociativity, String> {
     Ok(ShapeAspectAssociativity {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SHAPE_ASPECT_ASSOCIATIVITY.name")?,
             "SHAPE_ASPECT_ASSOCIATIVITY.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "SHAPE_ASPECT_ASSOCIATIVITY.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "SHAPE_ASPECT_ASSOCIATIVITY.description"))?),
+            other => Some((as_text(other, "SHAPE_ASPECT_ASSOCIATIVITY.description", tt))?),
         },
         relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
             u32::MAX,
@@ -17044,11 +18216,13 @@ fn build_shape_aspect_associativity_arena(
 
 fn build_shape_aspect_deriving_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ShapeAspectDerivingRelationship, String> {
     Ok(ShapeAspectDerivingRelationship {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SHAPE_ASPECT_DERIVING_RELATIONSHIP.name")?,
             "SHAPE_ASPECT_DERIVING_RELATIONSHIP.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -17056,7 +18230,7 @@ fn build_shape_aspect_deriving_relationship_arena(
             "SHAPE_ASPECT_DERIVING_RELATIONSHIP.description",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "SHAPE_ASPECT_DERIVING_RELATIONSHIP.description"))?),
+            other => Some((as_text(other, "SHAPE_ASPECT_DERIVING_RELATIONSHIP.description", tt))?),
         },
         relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
             u32::MAX,
@@ -17069,15 +18243,17 @@ fn build_shape_aspect_deriving_relationship_arena(
 
 fn build_shape_aspect_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ShapeAspectRelationship, String> {
     Ok(ShapeAspectRelationship {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SHAPE_ASPECT_RELATIONSHIP.name")?,
             "SHAPE_ASPECT_RELATIONSHIP.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "SHAPE_ASPECT_RELATIONSHIP.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "SHAPE_ASPECT_RELATIONSHIP.description"))?),
+            other => Some((as_text(other, "SHAPE_ASPECT_RELATIONSHIP.description", tt))?),
         },
         relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
             u32::MAX,
@@ -17090,6 +18266,7 @@ fn build_shape_aspect_relationship_arena(
 
 fn build_shape_definition_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ShapeDefinitionRepresentation, String> {
     Ok(ShapeDefinitionRepresentation {
         definition: RepresentedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(
@@ -17103,11 +18280,13 @@ fn build_shape_definition_representation_arena(
 
 fn build_shape_dimension_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ShapeDimensionRepresentation, String> {
     Ok(ShapeDimensionRepresentation {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SHAPE_DIMENSION_REPRESENTATION.name")?,
             "SHAPE_DIMENSION_REPRESENTATION.name",
+            tt,
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
@@ -17118,11 +18297,13 @@ fn build_shape_dimension_representation_arena(
 
 fn build_shape_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ShapeRepresentation, String> {
     Ok(ShapeRepresentation {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SHAPE_REPRESENTATION.name")?,
             "SHAPE_REPRESENTATION.name",
+            tt,
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
@@ -17133,11 +18314,13 @@ fn build_shape_representation_arena(
 
 fn build_shape_representation_relationship_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ShapeRepresentationRelationship, String> {
     Ok(ShapeRepresentationRelationship {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SHAPE_REPRESENTATION_RELATIONSHIP.name")?,
             "SHAPE_REPRESENTATION_RELATIONSHIP.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -17145,7 +18328,7 @@ fn build_shape_representation_relationship_arena(
             "SHAPE_REPRESENTATION_RELATIONSHIP.description",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "SHAPE_REPRESENTATION_RELATIONSHIP.description"))?),
+            other => Some((as_text(other, "SHAPE_REPRESENTATION_RELATIONSHIP.description", tt))?),
         },
         rep_1: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
             AdvancedBrepShapeRepresentationId(u32::MAX),
@@ -17158,11 +18341,13 @@ fn build_shape_representation_relationship_arena(
 
 fn build_shape_representation_with_parameters_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ShapeRepresentationWithParameters, String> {
     Ok(ShapeRepresentationWithParameters {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SHAPE_REPRESENTATION_WITH_PARAMETERS.name")?,
             "SHAPE_REPRESENTATION_WITH_PARAMETERS.name",
+            tt,
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
@@ -17173,17 +18358,19 @@ fn build_shape_representation_with_parameters_arena(
 
 fn build_shell_based_surface_model_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ShellBasedSurfaceModel, String> {
     Ok(ShellBasedSurfaceModel {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SHELL_BASED_SURFACE_MODEL.name")?,
             "SHELL_BASED_SURFACE_MODEL.name",
+            tt,
         ))?,
         sbsm_boundary: Vec::new(),
     })
 }
 
-fn build_si_unit_arena(attributes: &[Attribute]) -> Result<SiUnit, String> {
+fn build_si_unit_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<SiUnit, String> {
     Ok(SiUnit {
         prefix: match req(attributes, 1, "SI_UNIT.prefix")? {
             Attribute::Unset => None,
@@ -17207,33 +18394,49 @@ fn build_si_unit_arena(attributes: &[Attribute]) -> Result<SiUnit, String> {
 
 fn build_simple_generic_expression_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SimpleGenericExpression, String> {
     Ok(SimpleGenericExpression {})
 }
 
 fn build_simple_numeric_expression_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SimpleNumericExpression, String> {
     Ok(SimpleNumericExpression {})
 }
 
-fn build_solid_angle_unit_arena(attributes: &[Attribute]) -> Result<SolidAngleUnit, String> {
+fn build_solid_angle_unit_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<SolidAngleUnit, String> {
     Ok(SolidAngleUnit {
         dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(u32::MAX)),
     })
 }
 
-fn build_solid_model_arena(attributes: &[Attribute]) -> Result<SolidModel, String> {
+fn build_solid_model_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<SolidModel, String> {
     Ok(SolidModel {
-        name: (as_str(req(attributes, 0, "SOLID_MODEL.name")?, "SOLID_MODEL.name"))?,
+        name: (as_text(
+            req(attributes, 0, "SOLID_MODEL.name")?,
+            "SOLID_MODEL.name",
+            tt,
+        ))?,
     })
 }
 
-fn build_spherical_surface_arena(attributes: &[Attribute]) -> Result<SphericalSurface, String> {
+fn build_spherical_surface_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<SphericalSurface, String> {
     Ok(SphericalSurface {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SPHERICAL_SURFACE.name")?,
             "SPHERICAL_SURFACE.name",
+            tt,
         ))?,
         position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
         radius: (as_real(
@@ -17243,7 +18446,10 @@ fn build_spherical_surface_arena(attributes: &[Attribute]) -> Result<SphericalSu
     })
 }
 
-fn build_start_request_arena(attributes: &[Attribute]) -> Result<StartRequest, String> {
+fn build_start_request_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<StartRequest, String> {
     Ok(StartRequest {
         assigned_action_request: VersionedActionRequestRef::VersionedActionRequest(
             VersionedActionRequestId(u32::MAX),
@@ -17252,47 +18458,63 @@ fn build_start_request_arena(attributes: &[Attribute]) -> Result<StartRequest, S
     })
 }
 
-fn build_start_work_arena(attributes: &[Attribute]) -> Result<StartWork, String> {
+fn build_start_work_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<StartWork, String> {
     Ok(StartWork {
         assigned_action: ActionRef::Action(ActionId(u32::MAX)),
         items: Vec::new(),
     })
 }
 
-fn build_state_observed_arena(attributes: &[Attribute]) -> Result<StateObserved, String> {
+fn build_state_observed_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<StateObserved, String> {
     Ok(StateObserved {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "STATE_OBSERVED.name")?,
             "STATE_OBSERVED.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "STATE_OBSERVED.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "STATE_OBSERVED.description"))?),
+            other => Some((as_text(other, "STATE_OBSERVED.description", tt))?),
         },
     })
 }
 
-fn build_state_type_arena(attributes: &[Attribute]) -> Result<StateType, String> {
+fn build_state_type_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<StateType, String> {
     Ok(StateType {
-        name: (as_str(req(attributes, 0, "STATE_TYPE.name")?, "STATE_TYPE.name"))?,
+        name: (as_text(
+            req(attributes, 0, "STATE_TYPE.name")?,
+            "STATE_TYPE.name",
+            tt,
+        ))?,
         description: match req(attributes, 1, "STATE_TYPE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "STATE_TYPE.description"))?),
+            other => Some((as_text(other, "STATE_TYPE.description", tt))?),
         },
     })
 }
 
 fn build_straightness_tolerance_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<StraightnessTolerance, String> {
     Ok(StraightnessTolerance {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "STRAIGHTNESS_TOLERANCE.name")?,
             "STRAIGHTNESS_TOLERANCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "STRAIGHTNESS_TOLERANCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "STRAIGHTNESS_TOLERANCE.description"))?),
+            other => Some((as_text(other, "STRAIGHTNESS_TOLERANCE.description", tt))?),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -17301,9 +18523,16 @@ fn build_straightness_tolerance_arena(
     })
 }
 
-fn build_styled_item_arena(attributes: &[Attribute]) -> Result<StyledItem, String> {
+fn build_styled_item_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<StyledItem, String> {
     Ok(StyledItem {
-        name: (as_str(req(attributes, 0, "STYLED_ITEM.name")?, "STYLED_ITEM.name"))?,
+        name: (as_text(
+            req(attributes, 0, "STYLED_ITEM.name")?,
+            "STYLED_ITEM.name",
+            tt,
+        ))?,
         styles: Vec::new(),
         item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
             AdvancedBrepShapeRepresentationId(u32::MAX),
@@ -17311,17 +18540,21 @@ fn build_styled_item_arena(attributes: &[Attribute]) -> Result<StyledItem, Strin
     })
 }
 
-fn build_surface_arena(attributes: &[Attribute]) -> Result<Surface, String> {
+fn build_surface_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Surface, String> {
     Ok(Surface {
-        name: (as_str(req(attributes, 0, "SURFACE.name")?, "SURFACE.name"))?,
+        name: (as_text(req(attributes, 0, "SURFACE.name")?, "SURFACE.name", tt))?,
     })
 }
 
-fn build_surface_curve_arena(attributes: &[Attribute]) -> Result<SurfaceCurve, String> {
+fn build_surface_curve_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<SurfaceCurve, String> {
     Ok(SurfaceCurve {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SURFACE_CURVE.name")?,
             "SURFACE_CURVE.name",
+            tt,
         ))?,
         curve_3d: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
         associated_geometry: Vec::new(),
@@ -17337,11 +18570,13 @@ fn build_surface_curve_arena(attributes: &[Attribute]) -> Result<SurfaceCurve, S
 
 fn build_surface_of_linear_extrusion_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SurfaceOfLinearExtrusion, String> {
     Ok(SurfaceOfLinearExtrusion {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SURFACE_OF_LINEAR_EXTRUSION.name")?,
             "SURFACE_OF_LINEAR_EXTRUSION.name",
+            tt,
         ))?,
         swept_curve: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
         extrusion_axis: VectorRef::Vector(VectorId(u32::MAX)),
@@ -17350,11 +18585,13 @@ fn build_surface_of_linear_extrusion_arena(
 
 fn build_surface_of_revolution_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SurfaceOfRevolution, String> {
     Ok(SurfaceOfRevolution {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SURFACE_OF_REVOLUTION.name")?,
             "SURFACE_OF_REVOLUTION.name",
+            tt,
         ))?,
         swept_curve: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
         axis_position: Axis1PlacementRef::Axis1Placement(Axis1PlacementId(u32::MAX)),
@@ -17363,15 +18600,17 @@ fn build_surface_of_revolution_arena(
 
 fn build_surface_profile_tolerance_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SurfaceProfileTolerance, String> {
     Ok(SurfaceProfileTolerance {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SURFACE_PROFILE_TOLERANCE.name")?,
             "SURFACE_PROFILE_TOLERANCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "SURFACE_PROFILE_TOLERANCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "SURFACE_PROFILE_TOLERANCE.description"))?),
+            other => Some((as_text(other, "SURFACE_PROFILE_TOLERANCE.description", tt))?),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -17382,17 +18621,22 @@ fn build_surface_profile_tolerance_arena(
 
 fn build_surface_rendering_properties_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SurfaceRenderingProperties, String> {
     Ok(SurfaceRenderingProperties {
         rendered_colour: ColourRef::Colour(ColourId(u32::MAX)),
     })
 }
 
-fn build_surface_side_style_arena(attributes: &[Attribute]) -> Result<SurfaceSideStyle, String> {
+fn build_surface_side_style_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<SurfaceSideStyle, String> {
     Ok(SurfaceSideStyle {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SURFACE_SIDE_STYLE.name")?,
             "SURFACE_SIDE_STYLE.name",
+            tt,
         ))?,
         styles: Vec::new(),
     })
@@ -17400,6 +18644,7 @@ fn build_surface_side_style_arena(attributes: &[Attribute]) -> Result<SurfaceSid
 
 fn build_surface_style_boundary_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SurfaceStyleBoundary, String> {
     Ok(SurfaceStyleBoundary {
         style_of_boundary: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)),
@@ -17408,6 +18653,7 @@ fn build_surface_style_boundary_arena(
 
 fn build_surface_style_control_grid_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SurfaceStyleControlGrid, String> {
     Ok(SurfaceStyleControlGrid {
         style_of_control_grid: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)),
@@ -17416,6 +18662,7 @@ fn build_surface_style_control_grid_arena(
 
 fn build_surface_style_fill_area_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SurfaceStyleFillArea, String> {
     Ok(SurfaceStyleFillArea {
         fill_area: FillAreaStyleRef::FillAreaStyle(FillAreaStyleId(u32::MAX)),
@@ -17424,6 +18671,7 @@ fn build_surface_style_fill_area_arena(
 
 fn build_surface_style_parameter_line_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SurfaceStyleParameterLine, String> {
     Ok(SurfaceStyleParameterLine {
         style_of_parameter_lines: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)),
@@ -17434,7 +18682,9 @@ fn build_surface_style_parameter_line_arena(
         )? {
             Attribute::List(l) => l
                 .iter()
-                .map(|e| read_int_measure_value(e, "SURFACE_STYLE_PARAMETER_LINE.direction_counts"))
+                .map(|e| {
+                    read_int_measure_value(e, "SURFACE_STYLE_PARAMETER_LINE.direction_counts", tt)
+                })
                 .collect::<Result<Vec<_>, String>>(),
             o => Err(format!(
                 "SURFACE_STYLE_PARAMETER_LINE.direction_counts: expected list, got {o:?}"
@@ -17445,6 +18695,7 @@ fn build_surface_style_parameter_line_arena(
 
 fn build_surface_style_reflectance_ambient_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SurfaceStyleReflectanceAmbient, String> {
     Ok(SurfaceStyleReflectanceAmbient {
         ambient_reflectance: (as_real(
@@ -17460,6 +18711,7 @@ fn build_surface_style_reflectance_ambient_arena(
 
 fn build_surface_style_rendering_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SurfaceStyleRendering, String> {
     Ok(SurfaceStyleRendering {
         rendering_method: (match req(attributes, 0, "SURFACE_STYLE_RENDERING.rendering_method")? {
@@ -17475,6 +18727,7 @@ fn build_surface_style_rendering_arena(
 
 fn build_surface_style_rendering_with_properties_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SurfaceStyleRenderingWithProperties, String> {
     Ok(SurfaceStyleRenderingWithProperties {
         rendering_method: (match req(
@@ -17496,6 +18749,7 @@ fn build_surface_style_rendering_with_properties_arena(
 
 fn build_surface_style_segmentation_curve_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SurfaceStyleSegmentationCurve, String> {
     Ok(SurfaceStyleSegmentationCurve {
         style_of_segmentation_curve: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)),
@@ -17504,6 +18758,7 @@ fn build_surface_style_segmentation_curve_arena(
 
 fn build_surface_style_silhouette_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SurfaceStyleSilhouette, String> {
     Ok(SurfaceStyleSilhouette {
         style_of_silhouette: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)),
@@ -17512,6 +18767,7 @@ fn build_surface_style_silhouette_arena(
 
 fn build_surface_style_transparent_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SurfaceStyleTransparent, String> {
     Ok(SurfaceStyleTransparent {
         transparency: (as_real(
@@ -17521,7 +18777,10 @@ fn build_surface_style_transparent_arena(
     })
 }
 
-fn build_surface_style_usage_arena(attributes: &[Attribute]) -> Result<SurfaceStyleUsage, String> {
+fn build_surface_style_usage_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<SurfaceStyleUsage, String> {
     Ok(SurfaceStyleUsage {
         side: (match req(attributes, 0, "SURFACE_STYLE_USAGE.side")? {
             Attribute::Enum(s) => SurfaceSide::parse(s)
@@ -17536,17 +18795,24 @@ fn build_surface_style_usage_arena(attributes: &[Attribute]) -> Result<SurfaceSt
     })
 }
 
-fn build_swept_surface_arena(attributes: &[Attribute]) -> Result<SweptSurface, String> {
+fn build_swept_surface_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<SweptSurface, String> {
     Ok(SweptSurface {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SWEPT_SURFACE.name")?,
             "SWEPT_SURFACE.name",
+            tt,
         ))?,
         swept_curve: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
     })
 }
 
-fn build_symbol_colour_arena(attributes: &[Attribute]) -> Result<SymbolColour, String> {
+fn build_symbol_colour_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<SymbolColour, String> {
     Ok(SymbolColour {
         colour_of_symbol: ColourRef::Colour(ColourId(u32::MAX)),
     })
@@ -17554,11 +18820,13 @@ fn build_symbol_colour_arena(attributes: &[Attribute]) -> Result<SymbolColour, S
 
 fn build_symbol_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<SymbolRepresentation, String> {
     Ok(SymbolRepresentation {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SYMBOL_REPRESENTATION.name")?,
             "SYMBOL_REPRESENTATION.name",
+            tt,
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
@@ -17567,21 +18835,29 @@ fn build_symbol_representation_arena(
     })
 }
 
-fn build_symbol_style_arena(attributes: &[Attribute]) -> Result<SymbolStyle, String> {
+fn build_symbol_style_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<SymbolStyle, String> {
     Ok(SymbolStyle {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SYMBOL_STYLE.name")?,
             "SYMBOL_STYLE.name",
+            tt,
         ))?,
         style_of_symbol: SymbolStyleSelectRef::SymbolColour(SymbolColourId(u32::MAX)),
     })
 }
 
-fn build_symbol_target_arena(attributes: &[Attribute]) -> Result<SymbolTarget, String> {
+fn build_symbol_target_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<SymbolTarget, String> {
     Ok(SymbolTarget {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SYMBOL_TARGET.name")?,
             "SYMBOL_TARGET.name",
+            tt,
         ))?,
         placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)),
         x_scale: (as_real(
@@ -17595,15 +18871,19 @@ fn build_symbol_target_arena(attributes: &[Attribute]) -> Result<SymbolTarget, S
     })
 }
 
-fn build_symmetry_tolerance_arena(attributes: &[Attribute]) -> Result<SymmetryTolerance, String> {
+fn build_symmetry_tolerance_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<SymmetryTolerance, String> {
     Ok(SymmetryTolerance {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "SYMMETRY_TOLERANCE.name")?,
             "SYMMETRY_TOLERANCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "SYMMETRY_TOLERANCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "SYMMETRY_TOLERANCE.description"))?),
+            other => Some((as_text(other, "SYMMETRY_TOLERANCE.description", tt))?),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -17613,11 +18893,15 @@ fn build_symmetry_tolerance_arena(attributes: &[Attribute]) -> Result<SymmetryTo
     })
 }
 
-fn build_terminator_symbol_arena(attributes: &[Attribute]) -> Result<TerminatorSymbol, String> {
+fn build_terminator_symbol_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<TerminatorSymbol, String> {
     Ok(TerminatorSymbol {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TERMINATOR_SYMBOL.name")?,
             "TERMINATOR_SYMBOL.name",
+            tt,
         ))?,
         styles: Vec::new(),
         item: AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(AnnotationSymbolId(u32::MAX)),
@@ -17629,11 +18913,13 @@ fn build_terminator_symbol_arena(attributes: &[Attribute]) -> Result<TerminatorS
 
 fn build_tessellated_annotation_occurrence_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<TessellatedAnnotationOccurrence, String> {
     Ok(TessellatedAnnotationOccurrence {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TESSELLATED_ANNOTATION_OCCURRENCE.name")?,
             "TESSELLATED_ANNOTATION_OCCURRENCE.name",
+            tt,
         ))?,
         styles: Vec::new(),
         item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
@@ -17644,11 +18930,13 @@ fn build_tessellated_annotation_occurrence_arena(
 
 fn build_tessellated_curve_set_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<TessellatedCurveSet, String> {
     Ok(TessellatedCurveSet {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TESSELLATED_CURVE_SET.name")?,
             "TESSELLATED_CURVE_SET.name",
+            tt,
         ))?,
         coordinates: CoordinatesListRef::CoordinatesList(CoordinatesListId(u32::MAX)),
         line_strips: (match req(attributes, 2, "TESSELLATED_CURVE_SET.line_strips")? {
@@ -17671,11 +18959,15 @@ fn build_tessellated_curve_set_arena(
     })
 }
 
-fn build_tessellated_face_arena(attributes: &[Attribute]) -> Result<TessellatedFace, String> {
+fn build_tessellated_face_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<TessellatedFace, String> {
     Ok(TessellatedFace {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TESSELLATED_FACE.name")?,
             "TESSELLATED_FACE.name",
+            tt,
         ))?,
         coordinates: CoordinatesListRef::CoordinatesList(CoordinatesListId(u32::MAX)),
         pnmax: (as_int(
@@ -17705,32 +18997,40 @@ fn build_tessellated_face_arena(attributes: &[Attribute]) -> Result<TessellatedF
 
 fn build_tessellated_geometric_set_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<TessellatedGeometricSet, String> {
     Ok(TessellatedGeometricSet {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TESSELLATED_GEOMETRIC_SET.name")?,
             "TESSELLATED_GEOMETRIC_SET.name",
+            tt,
         ))?,
         children: Vec::new(),
     })
 }
 
-fn build_tessellated_item_arena(attributes: &[Attribute]) -> Result<TessellatedItem, String> {
+fn build_tessellated_item_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<TessellatedItem, String> {
     Ok(TessellatedItem {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TESSELLATED_ITEM.name")?,
             "TESSELLATED_ITEM.name",
+            tt,
         ))?,
     })
 }
 
 fn build_tessellated_shape_representation_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<TessellatedShapeRepresentation, String> {
     Ok(TessellatedShapeRepresentation {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TESSELLATED_SHAPE_REPRESENTATION.name")?,
             "TESSELLATED_SHAPE_REPRESENTATION.name",
+            tt,
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
@@ -17739,22 +19039,30 @@ fn build_tessellated_shape_representation_arena(
     })
 }
 
-fn build_tessellated_shell_arena(attributes: &[Attribute]) -> Result<TessellatedShell, String> {
+fn build_tessellated_shell_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<TessellatedShell, String> {
     Ok(TessellatedShell {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TESSELLATED_SHELL.name")?,
             "TESSELLATED_SHELL.name",
+            tt,
         ))?,
         items: Vec::new(),
         topological_link: None,
     })
 }
 
-fn build_tessellated_solid_arena(attributes: &[Attribute]) -> Result<TessellatedSolid, String> {
+fn build_tessellated_solid_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<TessellatedSolid, String> {
     Ok(TessellatedSolid {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TESSELLATED_SOLID.name")?,
             "TESSELLATED_SOLID.name",
+            tt,
         ))?,
         items: Vec::new(),
         geometric_link: None,
@@ -17763,22 +19071,26 @@ fn build_tessellated_solid_arena(attributes: &[Attribute]) -> Result<Tessellated
 
 fn build_tessellated_structured_item_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<TessellatedStructuredItem, String> {
     Ok(TessellatedStructuredItem {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TESSELLATED_STRUCTURED_ITEM.name")?,
             "TESSELLATED_STRUCTURED_ITEM.name",
+            tt,
         ))?,
     })
 }
 
 fn build_tessellated_surface_set_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<TessellatedSurfaceSet, String> {
     Ok(TessellatedSurfaceSet {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TESSELLATED_SURFACE_SET.name")?,
             "TESSELLATED_SURFACE_SET.name",
+            tt,
         ))?,
         coordinates: CoordinatesListRef::CoordinatesList(CoordinatesListId(u32::MAX)),
         pnmax: (as_int(
@@ -17806,31 +19118,41 @@ fn build_tessellated_surface_set_arena(
     })
 }
 
-fn build_text_font_arena(attributes: &[Attribute]) -> Result<TextFont, String> {
+fn build_text_font_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<TextFont, String> {
     Ok(TextFont {
-        id: (as_str(req(attributes, 0, "TEXT_FONT.id")?, "TEXT_FONT.id"))?,
-        name: (as_str(req(attributes, 1, "TEXT_FONT.name")?, "TEXT_FONT.name"))?,
-        description: (as_str(
+        id: (as_text(req(attributes, 0, "TEXT_FONT.id")?, "TEXT_FONT.id", tt))?,
+        name: (as_text(req(attributes, 1, "TEXT_FONT.name")?, "TEXT_FONT.name", tt))?,
+        description: (as_text(
             req(attributes, 2, "TEXT_FONT.description")?,
             "TEXT_FONT.description",
+            tt,
         ))?,
     })
 }
 
-fn build_text_literal_arena(attributes: &[Attribute]) -> Result<TextLiteral, String> {
+fn build_text_literal_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<TextLiteral, String> {
     Ok(TextLiteral {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TEXT_LITERAL.name")?,
             "TEXT_LITERAL.name",
+            tt,
         ))?,
-        literal: (as_str(
+        literal: (as_text(
             req(attributes, 1, "TEXT_LITERAL.literal")?,
             "TEXT_LITERAL.literal",
+            tt,
         ))?,
         placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)),
-        alignment: (as_str(
+        alignment: (as_text(
             req(attributes, 3, "TEXT_LITERAL.alignment")?,
             "TEXT_LITERAL.alignment",
+            tt,
         ))?,
         path: (match req(attributes, 4, "TEXT_LITERAL.path")? {
             Attribute::Enum(s) => {
@@ -17842,9 +19164,16 @@ fn build_text_literal_arena(attributes: &[Attribute]) -> Result<TextLiteral, Str
     })
 }
 
-fn build_text_style_arena(attributes: &[Attribute]) -> Result<TextStyle, String> {
+fn build_text_style_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<TextStyle, String> {
     Ok(TextStyle {
-        name: (as_str(req(attributes, 0, "TEXT_STYLE.name")?, "TEXT_STYLE.name"))?,
+        name: (as_text(
+            req(attributes, 0, "TEXT_STYLE.name")?,
+            "TEXT_STYLE.name",
+            tt,
+        ))?,
         character_appearance: CharacterStyleSelectRef::CharacterGlyphStyleOutline(
             CharacterGlyphStyleOutlineId(u32::MAX),
         ),
@@ -17853,6 +19182,7 @@ fn build_text_style_arena(attributes: &[Attribute]) -> Result<TextStyle, String>
 
 fn build_text_style_for_defined_font_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<TextStyleForDefinedFont, String> {
     Ok(TextStyleForDefinedFont {
         text_colour: ColourRef::Colour(ColourId(u32::MAX)),
@@ -17861,11 +19191,13 @@ fn build_text_style_for_defined_font_arena(
 
 fn build_text_style_with_box_characteristics_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<TextStyleWithBoxCharacteristics, String> {
     Ok(TextStyleWithBoxCharacteristics {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TEXT_STYLE_WITH_BOX_CHARACTERISTICS.name")?,
             "TEXT_STYLE_WITH_BOX_CHARACTERISTICS.name",
+            tt,
         ))?,
         character_appearance: CharacterStyleSelectRef::CharacterGlyphStyleOutline(
             CharacterGlyphStyleOutlineId(u32::MAX),
@@ -17878,7 +19210,7 @@ fn build_text_style_with_box_characteristics_arena(
             Attribute::List(l) => l
                 .iter()
                 .map(|e| {
-                    read_measure_value(e, "TEXT_STYLE_WITH_BOX_CHARACTERISTICS.characteristics")
+                    read_measure_value(e, "TEXT_STYLE_WITH_BOX_CHARACTERISTICS.characteristics", tt)
                 })
                 .collect::<Result<Vec<_>, String>>(),
             o => Err(format!(
@@ -17890,38 +19222,50 @@ fn build_text_style_with_box_characteristics_arena(
 
 fn build_texture_style_specification_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<TextureStyleSpecification, String> {
     Ok(TextureStyleSpecification {})
 }
 
 fn build_texture_style_tessellation_specification_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<TextureStyleTessellationSpecification, String> {
     Ok(TextureStyleTessellationSpecification {})
 }
 
-fn build_time_unit_arena(attributes: &[Attribute]) -> Result<TimeUnit, String> {
+fn build_time_unit_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<TimeUnit, String> {
     Ok(TimeUnit {
         dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(u32::MAX)),
     })
 }
 
-fn build_tolerance_value_arena(attributes: &[Attribute]) -> Result<ToleranceValue, String> {
+fn build_tolerance_value_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ToleranceValue, String> {
     Ok(ToleranceValue {
         lower_bound: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)),
         upper_bound: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)),
     })
 }
 
-fn build_tolerance_zone_arena(attributes: &[Attribute]) -> Result<ToleranceZone, String> {
+fn build_tolerance_zone_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ToleranceZone, String> {
     Ok(ToleranceZone {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TOLERANCE_ZONE.name")?,
             "TOLERANCE_ZONE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "TOLERANCE_ZONE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "TOLERANCE_ZONE.description"))?),
+            other => Some((as_text(other, "TOLERANCE_ZONE.description", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -17937,6 +19281,7 @@ fn build_tolerance_zone_arena(attributes: &[Attribute]) -> Result<ToleranceZone,
 
 fn build_tolerance_zone_definition_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ToleranceZoneDefinition, String> {
     Ok(ToleranceZoneDefinition {
         zone: ToleranceZoneRef::ToleranceZone(ToleranceZoneId(u32::MAX)),
@@ -17944,26 +19289,32 @@ fn build_tolerance_zone_definition_arena(
     })
 }
 
-fn build_tolerance_zone_form_arena(attributes: &[Attribute]) -> Result<ToleranceZoneForm, String> {
+fn build_tolerance_zone_form_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ToleranceZoneForm, String> {
     Ok(ToleranceZoneForm {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TOLERANCE_ZONE_FORM.name")?,
             "TOLERANCE_ZONE_FORM.name",
+            tt,
         ))?,
     })
 }
 
 fn build_tolerance_zone_with_datum_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ToleranceZoneWithDatum, String> {
     Ok(ToleranceZoneWithDatum {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TOLERANCE_ZONE_WITH_DATUM.name")?,
             "TOLERANCE_ZONE_WITH_DATUM.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "TOLERANCE_ZONE_WITH_DATUM.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "TOLERANCE_ZONE_WITH_DATUM.description"))?),
+            other => Some((as_text(other, "TOLERANCE_ZONE_WITH_DATUM.description", tt))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
             u32::MAX,
@@ -17984,20 +19335,26 @@ fn build_tolerance_zone_with_datum_arena(
 
 fn build_topological_representation_item_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<TopologicalRepresentationItem, String> {
     Ok(TopologicalRepresentationItem {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TOPOLOGICAL_REPRESENTATION_ITEM.name")?,
             "TOPOLOGICAL_REPRESENTATION_ITEM.name",
+            tt,
         ))?,
     })
 }
 
-fn build_toroidal_surface_arena(attributes: &[Attribute]) -> Result<ToroidalSurface, String> {
+fn build_toroidal_surface_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ToroidalSurface, String> {
     Ok(ToroidalSurface {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TOROIDAL_SURFACE.name")?,
             "TOROIDAL_SURFACE.name",
+            tt,
         ))?,
         position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
         major_radius: (as_real(
@@ -18013,15 +19370,17 @@ fn build_toroidal_surface_arena(attributes: &[Attribute]) -> Result<ToroidalSurf
 
 fn build_total_runout_tolerance_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<TotalRunoutTolerance, String> {
     Ok(TotalRunoutTolerance {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TOTAL_RUNOUT_TOLERANCE.name")?,
             "TOTAL_RUNOUT_TOLERANCE.name",
+            tt,
         ))?,
         description: match req(attributes, 1, "TOTAL_RUNOUT_TOLERANCE.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "TOTAL_RUNOUT_TOLERANCE.description"))?),
+            other => Some((as_text(other, "TOTAL_RUNOUT_TOLERANCE.description", tt))?),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -18031,11 +19390,15 @@ fn build_total_runout_tolerance_arena(
     })
 }
 
-fn build_trimmed_curve_arena(attributes: &[Attribute]) -> Result<TrimmedCurve, String> {
+fn build_trimmed_curve_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<TrimmedCurve, String> {
     Ok(TrimmedCurve {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TRIMMED_CURVE.name")?,
             "TRIMMED_CURVE.name",
+            tt,
         ))?,
         basis_curve: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
         trim_1: Vec::new(),
@@ -18055,28 +19418,35 @@ fn build_trimmed_curve_arena(attributes: &[Attribute]) -> Result<TrimmedCurve, S
 
 fn build_two_direction_repeat_factor_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<TwoDirectionRepeatFactor, String> {
     Ok(TwoDirectionRepeatFactor {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TWO_DIRECTION_REPEAT_FACTOR.name")?,
             "TWO_DIRECTION_REPEAT_FACTOR.name",
+            tt,
         ))?,
         repeat_factor: VectorRef::Vector(VectorId(u32::MAX)),
         second_repeat_factor: VectorRef::Vector(VectorId(u32::MAX)),
     })
 }
 
-fn build_type_qualifier_arena(attributes: &[Attribute]) -> Result<TypeQualifier, String> {
+fn build_type_qualifier_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<TypeQualifier, String> {
     Ok(TypeQualifier {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "TYPE_QUALIFIER.name")?,
             "TYPE_QUALIFIER.name",
+            tt,
         ))?,
     })
 }
 
 fn build_uncertainty_measure_with_unit_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<UncertaintyMeasureWithUnit, String> {
     Ok(UncertaintyMeasureWithUnit {
         value_component: (read_measure_value(
@@ -18086,41 +19456,48 @@ fn build_uncertainty_measure_with_unit_arena(
                 "UNCERTAINTY_MEASURE_WITH_UNIT.value_component",
             )?,
             "UNCERTAINTY_MEASURE_WITH_UNIT.value_component",
+            tt,
         ))?,
         unit_component: UnitRef::AreaUnit(AreaUnitId(u32::MAX)),
-        name: (as_str(
+        name: (as_text(
             req(attributes, 2, "UNCERTAINTY_MEASURE_WITH_UNIT.name")?,
             "UNCERTAINTY_MEASURE_WITH_UNIT.name",
+            tt,
         ))?,
         description: match req(attributes, 3, "UNCERTAINTY_MEASURE_WITH_UNIT.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "UNCERTAINTY_MEASURE_WITH_UNIT.description"))?),
+            other => Some((as_text(other, "UNCERTAINTY_MEASURE_WITH_UNIT.description", tt))?),
         },
     })
 }
 
 fn build_uncertainty_qualifier_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<UncertaintyQualifier, String> {
     Ok(UncertaintyQualifier {
-        measure_name: (as_str(
+        measure_name: (as_text(
             req(attributes, 0, "UNCERTAINTY_QUALIFIER.measure_name")?,
             "UNCERTAINTY_QUALIFIER.measure_name",
+            tt,
         ))?,
-        description: (as_str(
+        description: (as_text(
             req(attributes, 1, "UNCERTAINTY_QUALIFIER.description")?,
             "UNCERTAINTY_QUALIFIER.description",
+            tt,
         ))?,
     })
 }
 
 fn build_unequally_disposed_geometric_tolerance_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<UnequallyDisposedGeometricTolerance, String> {
     Ok(UnequallyDisposedGeometricTolerance {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.name")?,
             "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.name",
+            tt,
         ))?,
         description: match req(
             attributes,
@@ -18128,7 +19505,13 @@ fn build_unequally_disposed_geometric_tolerance_arena(
             "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.description",
         )? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.description"))?),
+            other => Some(
+                (as_text(
+                    other,
+                    "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.description",
+                    tt,
+                ))?,
+            ),
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
@@ -18140,11 +19523,15 @@ fn build_unequally_disposed_geometric_tolerance_arena(
     })
 }
 
-fn build_uniform_curve_arena(attributes: &[Attribute]) -> Result<UniformCurve, String> {
+fn build_uniform_curve_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<UniformCurve, String> {
     Ok(UniformCurve {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "UNIFORM_CURVE.name")?,
             "UNIFORM_CURVE.name",
+            tt,
         ))?,
         degree: (as_int(
             req(attributes, 1, "UNIFORM_CURVE.degree")?,
@@ -18169,11 +19556,15 @@ fn build_uniform_curve_arena(attributes: &[Attribute]) -> Result<UniformCurve, S
     })
 }
 
-fn build_uniform_surface_arena(attributes: &[Attribute]) -> Result<UniformSurface, String> {
+fn build_uniform_surface_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<UniformSurface, String> {
     Ok(UniformSurface {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "UNIFORM_SURFACE.name")?,
             "UNIFORM_SURFACE.name",
+            tt,
         ))?,
         u_degree: (as_int(
             req(attributes, 1, "UNIFORM_SURFACE.u_degree")?,
@@ -18208,33 +19599,38 @@ fn build_uniform_surface_arena(attributes: &[Attribute]) -> Result<UniformSurfac
 
 fn build_value_format_type_qualifier_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ValueFormatTypeQualifier, String> {
     Ok(ValueFormatTypeQualifier {
-        format_type: (as_str(
+        format_type: (as_text(
             req(attributes, 0, "VALUE_FORMAT_TYPE_QUALIFIER.format_type")?,
             "VALUE_FORMAT_TYPE_QUALIFIER.format_type",
+            tt,
         ))?,
     })
 }
 
 fn build_value_representation_item_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<ValueRepresentationItem, String> {
     Ok(ValueRepresentationItem {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "VALUE_REPRESENTATION_ITEM.name")?,
             "VALUE_REPRESENTATION_ITEM.name",
+            tt,
         ))?,
         value_component: (read_measure_value(
             req(attributes, 1, "VALUE_REPRESENTATION_ITEM.value_component")?,
             "VALUE_REPRESENTATION_ITEM.value_component",
+            tt,
         ))?,
     })
 }
 
-fn build_vector_arena(attributes: &[Attribute]) -> Result<Vector, String> {
+fn build_vector_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Vector, String> {
     Ok(Vector {
-        name: (as_str(req(attributes, 0, "VECTOR.name")?, "VECTOR.name"))?,
+        name: (as_text(req(attributes, 0, "VECTOR.name")?, "VECTOR.name", tt))?,
         orientation: DirectionRef::Direction(DirectionId(u32::MAX)),
         magnitude: (as_real(req(attributes, 2, "VECTOR.magnitude")?, "VECTOR.magnitude"))?,
     })
@@ -18242,61 +19638,82 @@ fn build_vector_arena(attributes: &[Attribute]) -> Result<Vector, String> {
 
 fn build_versioned_action_request_arena(
     attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
 ) -> Result<VersionedActionRequest, String> {
     Ok(VersionedActionRequest {
-        id: (as_str(
+        id: (as_text(
             req(attributes, 0, "VERSIONED_ACTION_REQUEST.id")?,
             "VERSIONED_ACTION_REQUEST.id",
+            tt,
         ))?,
         version: match req(attributes, 1, "VERSIONED_ACTION_REQUEST.version")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "VERSIONED_ACTION_REQUEST.version"))?),
+            other => Some((as_text(other, "VERSIONED_ACTION_REQUEST.version", tt))?),
         },
-        purpose: (as_str(
+        purpose: (as_text(
             req(attributes, 2, "VERSIONED_ACTION_REQUEST.purpose")?,
             "VERSIONED_ACTION_REQUEST.purpose",
+            tt,
         ))?,
         description: match req(attributes, 3, "VERSIONED_ACTION_REQUEST.description")? {
             Attribute::Unset => None,
-            other => Some((as_str(other, "VERSIONED_ACTION_REQUEST.description"))?),
+            other => Some((as_text(other, "VERSIONED_ACTION_REQUEST.description", tt))?),
         },
     })
 }
 
-fn build_vertex_arena(attributes: &[Attribute]) -> Result<Vertex, String> {
+fn build_vertex_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Vertex, String> {
     Ok(Vertex {
-        name: (as_str(req(attributes, 0, "VERTEX.name")?, "VERTEX.name"))?,
+        name: (as_text(req(attributes, 0, "VERTEX.name")?, "VERTEX.name", tt))?,
     })
 }
 
-fn build_vertex_loop_arena(attributes: &[Attribute]) -> Result<VertexLoop, String> {
+fn build_vertex_loop_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<VertexLoop, String> {
     Ok(VertexLoop {
-        name: (as_str(req(attributes, 0, "VERTEX_LOOP.name")?, "VERTEX_LOOP.name"))?,
+        name: (as_text(
+            req(attributes, 0, "VERTEX_LOOP.name")?,
+            "VERTEX_LOOP.name",
+            tt,
+        ))?,
         loop_vertex: VertexRef::Vertex(VertexId(u32::MAX)),
     })
 }
 
-fn build_vertex_point_arena(attributes: &[Attribute]) -> Result<VertexPoint, String> {
+fn build_vertex_point_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<VertexPoint, String> {
     Ok(VertexPoint {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "VERTEX_POINT.name")?,
             "VERTEX_POINT.name",
+            tt,
         ))?,
         vertex_geometry: PointRef::ApllPoint(ApllPointId(u32::MAX)),
     })
 }
 
-fn build_vertex_shell_arena(attributes: &[Attribute]) -> Result<VertexShell, String> {
+fn build_vertex_shell_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<VertexShell, String> {
     Ok(VertexShell {
-        name: (as_str(
+        name: (as_text(
             req(attributes, 0, "VERTEX_SHELL.name")?,
             "VERTEX_SHELL.name",
+            tt,
         ))?,
         vertex_shell_extent: VertexLoopRef::VertexLoop(VertexLoopId(u32::MAX)),
     })
 }
 
-fn build_view_volume_arena(attributes: &[Attribute]) -> Result<ViewVolume, String> {
+fn build_view_volume_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<ViewVolume, String> {
     Ok(ViewVolume {
         projection_type: (match req(attributes, 0, "VIEW_VOLUME.projection_type")? {
             Attribute::Enum(s) => CentralOrParallel::parse(s)
@@ -18331,15 +19748,25 @@ fn build_view_volume_arena(attributes: &[Attribute]) -> Result<ViewVolume, Strin
     })
 }
 
-fn build_volume_unit_arena(attributes: &[Attribute]) -> Result<VolumeUnit, String> {
+fn build_volume_unit_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<VolumeUnit, String> {
     Ok(VolumeUnit {
         elements: Vec::new(),
     })
 }
 
-fn build_wire_shell_arena(attributes: &[Attribute]) -> Result<WireShell, String> {
+fn build_wire_shell_arena(
+    attributes: &[Attribute],
+    tt: &mut TextIn<'_>,
+) -> Result<WireShell, String> {
     Ok(WireShell {
-        name: (as_str(req(attributes, 0, "WIRE_SHELL.name")?, "WIRE_SHELL.name"))?,
+        name: (as_text(
+            req(attributes, 0, "WIRE_SHELL.name")?,
+            "WIRE_SHELL.name",
+            tt,
+        ))?,
         wire_shell_extent: Vec::new(),
     })
 }
@@ -18348,1466 +19775,1733 @@ pub fn build_entity(
     model: &mut StepModel,
     ix: u16,
     attributes: &[Attribute],
+    dedup: &mut TextDedup,
 ) -> Result<u32, String> {
+    let mut tt = TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     Ok(match ix {
-        0 => model.action_arena.push(build_action_arena(attributes)?),
+        0 => model
+            .action_arena
+            .push(build_action_arena(attributes, &mut tt)?),
         1 => model
             .action_assignment_arena
-            .push(build_action_assignment_arena(attributes)?),
+            .push(build_action_assignment_arena(attributes, &mut tt)?),
         2 => model
             .action_directive_arena
-            .push(build_action_directive_arena(attributes)?),
+            .push(build_action_directive_arena(attributes, &mut tt)?),
         3 => model
             .action_method_arena
-            .push(build_action_method_arena(attributes)?),
+            .push(build_action_method_arena(attributes, &mut tt)?),
         4 => model
             .action_method_relationship_arena
-            .push(build_action_method_relationship_arena(attributes)?),
+            .push(build_action_method_relationship_arena(attributes, &mut tt)?),
         5 => model
             .action_property_arena
-            .push(build_action_property_arena(attributes)?),
+            .push(build_action_property_arena(attributes, &mut tt)?),
         6 => model
             .action_relationship_arena
-            .push(build_action_relationship_arena(attributes)?),
+            .push(build_action_relationship_arena(attributes, &mut tt)?),
         7 => model
             .action_request_assignment_arena
-            .push(build_action_request_assignment_arena(attributes)?),
+            .push(build_action_request_assignment_arena(attributes, &mut tt)?),
         8 => model
             .action_request_solution_arena
-            .push(build_action_request_solution_arena(attributes)?),
+            .push(build_action_request_solution_arena(attributes, &mut tt)?),
         9 => model
             .action_resource_arena
-            .push(build_action_resource_arena(attributes)?),
-        10 => model
-            .action_resource_relationship_arena
-            .push(build_action_resource_relationship_arena(attributes)?),
-        11 => model
-            .action_resource_requirement_arena
-            .push(build_action_resource_requirement_arena(attributes)?),
+            .push(build_action_resource_arena(attributes, &mut tt)?),
+        10 => {
+            model
+                .action_resource_relationship_arena
+                .push(build_action_resource_relationship_arena(
+                    attributes, &mut tt,
+                )?)
+        }
+        11 => {
+            model
+                .action_resource_requirement_arena
+                .push(build_action_resource_requirement_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         12 => model
             .action_resource_type_arena
-            .push(build_action_resource_type_arena(attributes)?),
-        13 => model.address_arena.push(build_address_arena(attributes)?),
-        14 => model
-            .advanced_brep_shape_representation_arena
-            .push(build_advanced_brep_shape_representation_arena(attributes)?),
+            .push(build_action_resource_type_arena(attributes, &mut tt)?),
+        13 => model
+            .address_arena
+            .push(build_address_arena(attributes, &mut tt)?),
+        14 => model.advanced_brep_shape_representation_arena.push(
+            build_advanced_brep_shape_representation_arena(attributes, &mut tt)?,
+        ),
         15 => model
             .advanced_face_arena
-            .push(build_advanced_face_arena(attributes)?),
+            .push(build_advanced_face_arena(attributes, &mut tt)?),
         16 => model
             .all_around_shape_aspect_arena
-            .push(build_all_around_shape_aspect_arena(attributes)?),
+            .push(build_all_around_shape_aspect_arena(attributes, &mut tt)?),
         17 => model
             .angular_location_arena
-            .push(build_angular_location_arena(attributes)?),
+            .push(build_angular_location_arena(attributes, &mut tt)?),
         18 => model
             .angular_size_arena
-            .push(build_angular_size_arena(attributes)?),
+            .push(build_angular_size_arena(attributes, &mut tt)?),
         19 => model
             .angularity_tolerance_arena
-            .push(build_angularity_tolerance_arena(attributes)?),
-        20 => model
-            .annotation_curve_occurrence_arena
-            .push(build_annotation_curve_occurrence_arena(attributes)?),
-        21 => model
-            .annotation_fill_area_occurrence_arena
-            .push(build_annotation_fill_area_occurrence_arena(attributes)?),
+            .push(build_angularity_tolerance_arena(attributes, &mut tt)?),
+        20 => {
+            model
+                .annotation_curve_occurrence_arena
+                .push(build_annotation_curve_occurrence_arena(
+                    attributes, &mut tt,
+                )?)
+        }
+        21 => model.annotation_fill_area_occurrence_arena.push(
+            build_annotation_fill_area_occurrence_arena(attributes, &mut tt)?,
+        ),
         22 => model
             .annotation_occurrence_arena
-            .push(build_annotation_occurrence_arena(attributes)?),
-        23 => model
-            .annotation_occurrence_associativity_arena
-            .push(build_annotation_occurrence_associativity_arena(attributes)?),
-        24 => model
-            .annotation_occurrence_relationship_arena
-            .push(build_annotation_occurrence_relationship_arena(attributes)?),
-        25 => model
-            .annotation_placeholder_leader_line_arena
-            .push(build_annotation_placeholder_leader_line_arena(attributes)?),
-        26 => model
-            .annotation_placeholder_occurrence_arena
-            .push(build_annotation_placeholder_occurrence_arena(attributes)?),
+            .push(build_annotation_occurrence_arena(attributes, &mut tt)?),
+        23 => model.annotation_occurrence_associativity_arena.push(
+            build_annotation_occurrence_associativity_arena(attributes, &mut tt)?,
+        ),
+        24 => model.annotation_occurrence_relationship_arena.push(
+            build_annotation_occurrence_relationship_arena(attributes, &mut tt)?,
+        ),
+        25 => model.annotation_placeholder_leader_line_arena.push(
+            build_annotation_placeholder_leader_line_arena(attributes, &mut tt)?,
+        ),
+        26 => model.annotation_placeholder_occurrence_arena.push(
+            build_annotation_placeholder_occurrence_arena(attributes, &mut tt)?,
+        ),
         27 => model
             .annotation_placeholder_occurrence_with_leader_line_arena
-            .push(build_annotation_placeholder_occurrence_with_leader_line_arena(attributes)?),
+            .push(
+                build_annotation_placeholder_occurrence_with_leader_line_arena(
+                    attributes, &mut tt,
+                )?,
+            ),
         28 => model
             .annotation_plane_arena
-            .push(build_annotation_plane_arena(attributes)?),
+            .push(build_annotation_plane_arena(attributes, &mut tt)?),
         29 => model
             .annotation_symbol_arena
-            .push(build_annotation_symbol_arena(attributes)?),
-        30 => model
-            .annotation_symbol_occurrence_arena
-            .push(build_annotation_symbol_occurrence_arena(attributes)?),
+            .push(build_annotation_symbol_arena(attributes, &mut tt)?),
+        30 => {
+            model
+                .annotation_symbol_occurrence_arena
+                .push(build_annotation_symbol_occurrence_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         31 => model
             .annotation_text_arena
-            .push(build_annotation_text_arena(attributes)?),
+            .push(build_annotation_text_arena(attributes, &mut tt)?),
         32 => model
             .annotation_text_character_arena
-            .push(build_annotation_text_character_arena(attributes)?),
+            .push(build_annotation_text_character_arena(attributes, &mut tt)?),
         33 => model
             .annotation_text_occurrence_arena
-            .push(build_annotation_text_occurrence_arena(attributes)?),
+            .push(build_annotation_text_occurrence_arena(attributes, &mut tt)?),
         34 => model.annotation_to_annotation_leader_line_arena.push(
-            build_annotation_to_annotation_leader_line_arena(attributes)?,
+            build_annotation_to_annotation_leader_line_arena(attributes, &mut tt)?,
         ),
-        35 => model
-            .annotation_to_model_leader_line_arena
-            .push(build_annotation_to_model_leader_line_arena(attributes)?),
+        35 => model.annotation_to_model_leader_line_arena.push(
+            build_annotation_to_model_leader_line_arena(attributes, &mut tt)?,
+        ),
         36 => model
             .apll_point_arena
-            .push(build_apll_point_arena(attributes)?),
+            .push(build_apll_point_arena(attributes, &mut tt)?),
         37 => model
             .apll_point_with_surface_arena
-            .push(build_apll_point_with_surface_arena(attributes)?),
+            .push(build_apll_point_with_surface_arena(attributes, &mut tt)?),
         38 => model
             .application_context_arena
-            .push(build_application_context_arena(attributes)?),
-        39 => model
-            .application_context_element_arena
-            .push(build_application_context_element_arena(attributes)?),
-        40 => model
-            .application_protocol_definition_arena
-            .push(build_application_protocol_definition_arena(attributes)?),
-        41 => model
-            .applied_approval_assignment_arena
-            .push(build_applied_approval_assignment_arena(attributes)?),
-        42 => model
-            .applied_date_and_time_assignment_arena
-            .push(build_applied_date_and_time_assignment_arena(attributes)?),
+            .push(build_application_context_arena(attributes, &mut tt)?),
+        39 => {
+            model
+                .application_context_element_arena
+                .push(build_application_context_element_arena(
+                    attributes, &mut tt,
+                )?)
+        }
+        40 => model.application_protocol_definition_arena.push(
+            build_application_protocol_definition_arena(attributes, &mut tt)?,
+        ),
+        41 => {
+            model
+                .applied_approval_assignment_arena
+                .push(build_applied_approval_assignment_arena(
+                    attributes, &mut tt,
+                )?)
+        }
+        42 => model.applied_date_and_time_assignment_arena.push(
+            build_applied_date_and_time_assignment_arena(attributes, &mut tt)?,
+        ),
         43 => model
             .applied_document_reference_arena
-            .push(build_applied_document_reference_arena(attributes)?),
+            .push(build_applied_document_reference_arena(attributes, &mut tt)?),
         44 => model.applied_external_identification_assignment_arena.push(
-            build_applied_external_identification_assignment_arena(attributes)?,
+            build_applied_external_identification_assignment_arena(attributes, &mut tt)?,
         ),
         45 => model
             .applied_group_assignment_arena
-            .push(build_applied_group_assignment_arena(attributes)?),
+            .push(build_applied_group_assignment_arena(attributes, &mut tt)?),
         46 => model.applied_person_and_organization_assignment_arena.push(
-            build_applied_person_and_organization_assignment_arena(attributes)?,
+            build_applied_person_and_organization_assignment_arena(attributes, &mut tt)?,
         ),
         47 => model
             .applied_presented_item_arena
-            .push(build_applied_presented_item_arena(attributes)?),
+            .push(build_applied_presented_item_arena(attributes, &mut tt)?),
         48 => model.applied_security_classification_assignment_arena.push(
-            build_applied_security_classification_assignment_arena(attributes)?,
+            build_applied_security_classification_assignment_arena(attributes, &mut tt)?,
         ),
-        49 => model.approval_arena.push(build_approval_arena(attributes)?),
+        49 => model
+            .approval_arena
+            .push(build_approval_arena(attributes, &mut tt)?),
         50 => model
             .approval_assignment_arena
-            .push(build_approval_assignment_arena(attributes)?),
+            .push(build_approval_assignment_arena(attributes, &mut tt)?),
         51 => model
             .approval_date_time_arena
-            .push(build_approval_date_time_arena(attributes)?),
-        52 => model
-            .approval_person_organization_arena
-            .push(build_approval_person_organization_arena(attributes)?),
+            .push(build_approval_date_time_arena(attributes, &mut tt)?),
+        52 => {
+            model
+                .approval_person_organization_arena
+                .push(build_approval_person_organization_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         53 => model
             .approval_role_arena
-            .push(build_approval_role_arena(attributes)?),
+            .push(build_approval_role_arena(attributes, &mut tt)?),
         54 => model
             .approval_status_arena
-            .push(build_approval_status_arena(attributes)?),
+            .push(build_approval_status_arena(attributes, &mut tt)?),
         55 => model
             .approximation_tolerance_arena
-            .push(build_approximation_tolerance_arena(attributes)?),
-        56 => model
-            .approximation_tolerance_deviation_arena
-            .push(build_approximation_tolerance_deviation_arena(attributes)?),
-        57 => model
-            .approximation_tolerance_parameter_arena
-            .push(build_approximation_tolerance_parameter_arena(attributes)?),
+            .push(build_approximation_tolerance_arena(attributes, &mut tt)?),
+        56 => model.approximation_tolerance_deviation_arena.push(
+            build_approximation_tolerance_deviation_arena(attributes, &mut tt)?,
+        ),
+        57 => model.approximation_tolerance_parameter_arena.push(
+            build_approximation_tolerance_parameter_arena(attributes, &mut tt)?,
+        ),
         58 => model
             .area_in_set_arena
-            .push(build_area_in_set_arena(attributes)?),
+            .push(build_area_in_set_arena(attributes, &mut tt)?),
         59 => model
             .area_unit_arena
-            .push(build_area_unit_arena(attributes)?),
+            .push(build_area_unit_arena(attributes, &mut tt)?),
         60 => model
             .ascribable_state_arena
-            .push(build_ascribable_state_arena(attributes)?),
-        61 => model
-            .ascribable_state_relationship_arena
-            .push(build_ascribable_state_relationship_arena(attributes)?),
+            .push(build_ascribable_state_arena(attributes, &mut tt)?),
+        61 => model.ascribable_state_relationship_arena.push(
+            build_ascribable_state_relationship_arena(attributes, &mut tt)?,
+        ),
         62 => model
             .assembly_component_usage_arena
-            .push(build_assembly_component_usage_arena(attributes)?),
+            .push(build_assembly_component_usage_arena(attributes, &mut tt)?),
         63 => model
             .auxiliary_leader_line_arena
-            .push(build_auxiliary_leader_line_arena(attributes)?),
+            .push(build_auxiliary_leader_line_arena(attributes, &mut tt)?),
         64 => model
             .axis1_placement_arena
-            .push(build_axis1_placement_arena(attributes)?),
+            .push(build_axis1_placement_arena(attributes, &mut tt)?),
         65 => model
             .axis2_placement2d_arena
-            .push(build_axis2_placement2d_arena(attributes)?),
+            .push(build_axis2_placement2d_arena(attributes, &mut tt)?),
         66 => model
             .axis2_placement3d_arena
-            .push(build_axis2_placement3d_arena(attributes)?),
+            .push(build_axis2_placement3d_arena(attributes, &mut tt)?),
         67 => model
             .b_spline_curve_arena
-            .push(build_b_spline_curve_arena(attributes)?),
+            .push(build_b_spline_curve_arena(attributes, &mut tt)?),
         68 => model
             .b_spline_curve_with_knots_arena
-            .push(build_b_spline_curve_with_knots_arena(attributes)?),
+            .push(build_b_spline_curve_with_knots_arena(attributes, &mut tt)?),
         69 => model
             .b_spline_surface_arena
-            .push(build_b_spline_surface_arena(attributes)?),
-        70 => model
-            .b_spline_surface_with_knots_arena
-            .push(build_b_spline_surface_with_knots_arena(attributes)?),
+            .push(build_b_spline_surface_arena(attributes, &mut tt)?),
+        70 => {
+            model
+                .b_spline_surface_with_knots_arena
+                .push(build_b_spline_surface_with_knots_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         71 => model
             .bezier_curve_arena
-            .push(build_bezier_curve_arena(attributes)?),
+            .push(build_bezier_curve_arena(attributes, &mut tt)?),
         72 => model
             .bezier_surface_arena
-            .push(build_bezier_surface_arena(attributes)?),
+            .push(build_bezier_surface_arena(attributes, &mut tt)?),
         73 => model
             .bounded_curve_arena
-            .push(build_bounded_curve_arena(attributes)?),
+            .push(build_bounded_curve_arena(attributes, &mut tt)?),
         74 => model
             .bounded_pcurve_arena
-            .push(build_bounded_pcurve_arena(attributes)?),
+            .push(build_bounded_pcurve_arena(attributes, &mut tt)?),
         75 => model
             .bounded_surface_arena
-            .push(build_bounded_surface_arena(attributes)?),
+            .push(build_bounded_surface_arena(attributes, &mut tt)?),
         76 => model
             .bounded_surface_curve_arena
-            .push(build_bounded_surface_curve_arena(attributes)?),
+            .push(build_bounded_surface_curve_arena(attributes, &mut tt)?),
         77 => model
             .brep_with_voids_arena
-            .push(build_brep_with_voids_arena(attributes)?),
+            .push(build_brep_with_voids_arena(attributes, &mut tt)?),
         78 => model
             .calendar_date_arena
-            .push(build_calendar_date_arena(attributes)?),
+            .push(build_calendar_date_arena(attributes, &mut tt)?),
         79 => model
             .camera_image_arena
-            .push(build_camera_image_arena(attributes)?),
+            .push(build_camera_image_arena(attributes, &mut tt)?),
         80 => model
             .camera_image3d_with_scale_arena
-            .push(build_camera_image3d_with_scale_arena(attributes)?),
+            .push(build_camera_image3d_with_scale_arena(attributes, &mut tt)?),
         81 => model
             .camera_model_arena
-            .push(build_camera_model_arena(attributes)?),
+            .push(build_camera_model_arena(attributes, &mut tt)?),
         82 => model
             .camera_model_d3_arena
-            .push(build_camera_model_d3_arena(attributes)?),
-        83 => model
-            .camera_model_d3_multi_clipping_arena
-            .push(build_camera_model_d3_multi_clipping_arena(attributes)?),
+            .push(build_camera_model_d3_arena(attributes, &mut tt)?),
+        83 => model.camera_model_d3_multi_clipping_arena.push(
+            build_camera_model_d3_multi_clipping_arena(attributes, &mut tt)?,
+        ),
         84 => model
             .camera_model_d3_with_hlhsr_arena
-            .push(build_camera_model_d3_with_hlhsr_arena(attributes)?),
+            .push(build_camera_model_d3_with_hlhsr_arena(attributes, &mut tt)?),
         85 => model
             .camera_usage_arena
-            .push(build_camera_usage_arena(attributes)?),
+            .push(build_camera_usage_arena(attributes, &mut tt)?),
         86 => model
             .cartesian_point_arena
-            .push(build_cartesian_point_arena(attributes)?),
+            .push(build_cartesian_point_arena(attributes, &mut tt)?),
         87 => model
             .cc_design_approval_arena
-            .push(build_cc_design_approval_arena(attributes)?),
-        88 => model
-            .cc_design_date_and_time_assignment_arena
-            .push(build_cc_design_date_and_time_assignment_arena(attributes)?),
+            .push(build_cc_design_approval_arena(attributes, &mut tt)?),
+        88 => model.cc_design_date_and_time_assignment_arena.push(
+            build_cc_design_date_and_time_assignment_arena(attributes, &mut tt)?,
+        ),
         89 => model
             .cc_design_person_and_organization_assignment_arena
             .push(build_cc_design_person_and_organization_assignment_arena(
-                attributes,
+                attributes, &mut tt,
             )?),
-        90 => model
-            .cc_design_security_classification_arena
-            .push(build_cc_design_security_classification_arena(attributes)?),
+        90 => model.cc_design_security_classification_arena.push(
+            build_cc_design_security_classification_arena(attributes, &mut tt)?,
+        ),
         91 => model
             .centre_of_symmetry_arena
-            .push(build_centre_of_symmetry_arena(attributes)?),
+            .push(build_centre_of_symmetry_arena(attributes, &mut tt)?),
         92 => model
             .certification_arena
-            .push(build_certification_arena(attributes)?),
+            .push(build_certification_arena(attributes, &mut tt)?),
         93 => model
             .certification_type_arena
-            .push(build_certification_type_arena(attributes)?),
-        94 => model.change_arena.push(build_change_arena(attributes)?),
+            .push(build_certification_type_arena(attributes, &mut tt)?),
+        94 => model
+            .change_arena
+            .push(build_change_arena(attributes, &mut tt)?),
         95 => model
             .change_request_arena
-            .push(build_change_request_arena(attributes)?),
-        96 => model
-            .character_glyph_style_outline_arena
-            .push(build_character_glyph_style_outline_arena(attributes)?),
-        97 => model
-            .character_glyph_style_stroke_arena
-            .push(build_character_glyph_style_stroke_arena(attributes)?),
+            .push(build_change_request_arena(attributes, &mut tt)?),
+        96 => model.character_glyph_style_outline_arena.push(
+            build_character_glyph_style_outline_arena(attributes, &mut tt)?,
+        ),
+        97 => {
+            model
+                .character_glyph_style_stroke_arena
+                .push(build_character_glyph_style_stroke_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         98 => model.characterized_item_within_representation_arena.push(
-            build_characterized_item_within_representation_arena(attributes)?,
+            build_characterized_item_within_representation_arena(attributes, &mut tt)?,
         ),
         99 => model
             .characterized_object_arena
-            .push(build_characterized_object_arena(attributes)?),
-        100 => model
-            .characterized_representation_arena
-            .push(build_characterized_representation_arena(attributes)?),
-        101 => model.circle_arena.push(build_circle_arena(attributes)?),
+            .push(build_characterized_object_arena(attributes, &mut tt)?),
+        100 => {
+            model
+                .characterized_representation_arena
+                .push(build_characterized_representation_arena(
+                    attributes, &mut tt,
+                )?)
+        }
+        101 => model
+            .circle_arena
+            .push(build_circle_arena(attributes, &mut tt)?),
         102 => model
             .circular_runout_tolerance_arena
-            .push(build_circular_runout_tolerance_arena(attributes)?),
+            .push(build_circular_runout_tolerance_arena(attributes, &mut tt)?),
         103 => model
             .closed_shell_arena
-            .push(build_closed_shell_arena(attributes)?),
+            .push(build_closed_shell_arena(attributes, &mut tt)?),
         104 => model
             .coaxiality_tolerance_arena
-            .push(build_coaxiality_tolerance_arena(attributes)?),
-        105 => model.colour_arena.push(build_colour_arena(attributes)?),
+            .push(build_coaxiality_tolerance_arena(attributes, &mut tt)?),
+        105 => model
+            .colour_arena
+            .push(build_colour_arena(attributes, &mut tt)?),
         106 => model
             .colour_rgb_arena
-            .push(build_colour_rgb_arena(attributes)?),
+            .push(build_colour_rgb_arena(attributes, &mut tt)?),
         107 => model
             .colour_specification_arena
-            .push(build_colour_specification_arena(attributes)?),
+            .push(build_colour_specification_arena(attributes, &mut tt)?),
         108 => model
             .common_datum_arena
-            .push(build_common_datum_arena(attributes)?),
+            .push(build_common_datum_arena(attributes, &mut tt)?),
         109 => model
             .complex_triangulated_face_arena
-            .push(build_complex_triangulated_face_arena(attributes)?),
-        110 => model
-            .complex_triangulated_surface_set_arena
-            .push(build_complex_triangulated_surface_set_arena(attributes)?),
+            .push(build_complex_triangulated_face_arena(attributes, &mut tt)?),
+        110 => model.complex_triangulated_surface_set_arena.push(
+            build_complex_triangulated_surface_set_arena(attributes, &mut tt)?,
+        ),
         111 => model
             .composite_curve_arena
-            .push(build_composite_curve_arena(attributes)?),
+            .push(build_composite_curve_arena(attributes, &mut tt)?),
         112 => model
             .composite_curve_segment_arena
-            .push(build_composite_curve_segment_arena(attributes)?),
-        113 => model
-            .composite_group_shape_aspect_arena
-            .push(build_composite_group_shape_aspect_arena(attributes)?),
+            .push(build_composite_curve_segment_arena(attributes, &mut tt)?),
+        113 => {
+            model
+                .composite_group_shape_aspect_arena
+                .push(build_composite_group_shape_aspect_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         114 => model
             .composite_shape_aspect_arena
-            .push(build_composite_shape_aspect_arena(attributes)?),
+            .push(build_composite_shape_aspect_arena(attributes, &mut tt)?),
         115 => model
             .composite_text_arena
-            .push(build_composite_text_arena(attributes)?),
-        116 => model
-            .compound_representation_item_arena
-            .push(build_compound_representation_item_arena(attributes)?),
+            .push(build_composite_text_arena(attributes, &mut tt)?),
+        116 => {
+            model
+                .compound_representation_item_arena
+                .push(build_compound_representation_item_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         117 => model
             .concentricity_tolerance_arena
-            .push(build_concentricity_tolerance_arena(attributes)?),
+            .push(build_concentricity_tolerance_arena(attributes, &mut tt)?),
         118 => model
             .configuration_design_arena
-            .push(build_configuration_design_arena(attributes)?),
+            .push(build_configuration_design_arena(attributes, &mut tt)?),
         119 => model
             .configuration_effectivity_arena
-            .push(build_configuration_effectivity_arena(attributes)?),
+            .push(build_configuration_effectivity_arena(attributes, &mut tt)?),
         120 => model
             .configuration_item_arena
-            .push(build_configuration_item_arena(attributes)?),
-        121 => model.conic_arena.push(build_conic_arena(attributes)?),
+            .push(build_configuration_item_arena(attributes, &mut tt)?),
+        121 => model
+            .conic_arena
+            .push(build_conic_arena(attributes, &mut tt)?),
         122 => model
             .conical_surface_arena
-            .push(build_conical_surface_arena(attributes)?),
+            .push(build_conical_surface_arena(attributes, &mut tt)?),
         123 => model
             .connected_face_set_arena
-            .push(build_connected_face_set_arena(attributes)?),
+            .push(build_connected_face_set_arena(attributes, &mut tt)?),
         124 => model.constructive_geometry_representation_arena.push(
-            build_constructive_geometry_representation_arena(attributes)?,
+            build_constructive_geometry_representation_arena(attributes, &mut tt)?,
         ),
         125 => model
             .constructive_geometry_representation_relationship_arena
-            .push(build_constructive_geometry_representation_relationship_arena(attributes)?),
+            .push(
+                build_constructive_geometry_representation_relationship_arena(attributes, &mut tt)?,
+            ),
         126 => model.context_dependent_over_riding_styled_item_arena.push(
-            build_context_dependent_over_riding_styled_item_arena(attributes)?,
+            build_context_dependent_over_riding_styled_item_arena(attributes, &mut tt)?,
         ),
         127 => model.context_dependent_shape_representation_arena.push(
-            build_context_dependent_shape_representation_arena(attributes)?,
+            build_context_dependent_shape_representation_arena(attributes, &mut tt)?,
         ),
         128 => model
             .context_dependent_unit_arena
-            .push(build_context_dependent_unit_arena(attributes)?),
+            .push(build_context_dependent_unit_arena(attributes, &mut tt)?),
         129 => model
             .continuous_shape_aspect_arena
-            .push(build_continuous_shape_aspect_arena(attributes)?),
-        130 => model.contract_arena.push(build_contract_arena(attributes)?),
+            .push(build_continuous_shape_aspect_arena(attributes, &mut tt)?),
+        130 => model
+            .contract_arena
+            .push(build_contract_arena(attributes, &mut tt)?),
         131 => model
             .contract_type_arena
-            .push(build_contract_type_arena(attributes)?),
+            .push(build_contract_type_arena(attributes, &mut tt)?),
         132 => model
             .conversion_based_unit_arena
-            .push(build_conversion_based_unit_arena(attributes)?),
-        133 => model
-            .coordinated_universal_time_offset_arena
-            .push(build_coordinated_universal_time_offset_arena(attributes)?),
+            .push(build_conversion_based_unit_arena(attributes, &mut tt)?),
+        133 => model.coordinated_universal_time_offset_arena.push(
+            build_coordinated_universal_time_offset_arena(attributes, &mut tt)?,
+        ),
         134 => model
             .coordinates_list_arena
-            .push(build_coordinates_list_arena(attributes)?),
-        135 => model.curve_arena.push(build_curve_arena(attributes)?),
+            .push(build_coordinates_list_arena(attributes, &mut tt)?),
+        135 => model
+            .curve_arena
+            .push(build_curve_arena(attributes, &mut tt)?),
         136 => model
             .curve_style_arena
-            .push(build_curve_style_arena(attributes)?),
+            .push(build_curve_style_arena(attributes, &mut tt)?),
         137 => model
             .curve_style_font_arena
-            .push(build_curve_style_font_arena(attributes)?),
-        138 => model
-            .curve_style_font_and_scaling_arena
-            .push(build_curve_style_font_and_scaling_arena(attributes)?),
+            .push(build_curve_style_font_arena(attributes, &mut tt)?),
+        138 => {
+            model
+                .curve_style_font_and_scaling_arena
+                .push(build_curve_style_font_and_scaling_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         139 => model
             .curve_style_font_pattern_arena
-            .push(build_curve_style_font_pattern_arena(attributes)?),
+            .push(build_curve_style_font_pattern_arena(attributes, &mut tt)?),
         140 => model
             .curve_style_rendering_arena
-            .push(build_curve_style_rendering_arena(attributes)?),
+            .push(build_curve_style_rendering_arena(attributes, &mut tt)?),
         141 => model
             .cylindrical_surface_arena
-            .push(build_cylindrical_surface_arena(attributes)?),
+            .push(build_cylindrical_surface_arena(attributes, &mut tt)?),
         142 => model
             .cylindricity_tolerance_arena
-            .push(build_cylindricity_tolerance_arena(attributes)?),
-        143 => model.date_arena.push(build_date_arena(attributes)?),
+            .push(build_cylindricity_tolerance_arena(attributes, &mut tt)?),
+        143 => model
+            .date_arena
+            .push(build_date_arena(attributes, &mut tt)?),
         144 => model
             .date_and_time_arena
-            .push(build_date_and_time_arena(attributes)?),
+            .push(build_date_and_time_arena(attributes, &mut tt)?),
         145 => model
             .date_and_time_assignment_arena
-            .push(build_date_and_time_assignment_arena(attributes)?),
+            .push(build_date_and_time_assignment_arena(attributes, &mut tt)?),
         146 => model
             .date_role_arena
-            .push(build_date_role_arena(attributes)?),
+            .push(build_date_role_arena(attributes, &mut tt)?),
         147 => model
             .date_time_role_arena
-            .push(build_date_time_role_arena(attributes)?),
-        148 => model.datum_arena.push(build_datum_arena(attributes)?),
+            .push(build_date_time_role_arena(attributes, &mut tt)?),
+        148 => model
+            .datum_arena
+            .push(build_datum_arena(attributes, &mut tt)?),
         149 => model
             .datum_feature_arena
-            .push(build_datum_feature_arena(attributes)?),
+            .push(build_datum_feature_arena(attributes, &mut tt)?),
         150 => model
             .datum_reference_arena
-            .push(build_datum_reference_arena(attributes)?),
-        151 => model
-            .datum_reference_compartment_arena
-            .push(build_datum_reference_compartment_arena(attributes)?),
+            .push(build_datum_reference_arena(attributes, &mut tt)?),
+        151 => {
+            model
+                .datum_reference_compartment_arena
+                .push(build_datum_reference_compartment_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         152 => model
             .datum_reference_element_arena
-            .push(build_datum_reference_element_arena(attributes)?),
-        153 => model
-            .datum_reference_modifier_with_value_arena
-            .push(build_datum_reference_modifier_with_value_arena(attributes)?),
+            .push(build_datum_reference_element_arena(attributes, &mut tt)?),
+        153 => model.datum_reference_modifier_with_value_arena.push(
+            build_datum_reference_modifier_with_value_arena(attributes, &mut tt)?,
+        ),
         154 => model
             .datum_system_arena
-            .push(build_datum_system_arena(attributes)?),
+            .push(build_datum_system_arena(attributes, &mut tt)?),
         155 => model
             .datum_target_arena
-            .push(build_datum_target_arena(attributes)?),
-        156 => model
-            .default_model_geometric_view_arena
-            .push(build_default_model_geometric_view_arena(attributes)?),
+            .push(build_datum_target_arena(attributes, &mut tt)?),
+        156 => {
+            model
+                .default_model_geometric_view_arena
+                .push(build_default_model_geometric_view_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         157 => model
             .defined_character_glyph_arena
-            .push(build_defined_character_glyph_arena(attributes)?),
+            .push(build_defined_character_glyph_arena(attributes, &mut tt)?),
         158 => model
             .defined_symbol_arena
-            .push(build_defined_symbol_arena(attributes)?),
-        159 => model
-            .definitional_representation_arena
-            .push(build_definitional_representation_arena(attributes)?),
+            .push(build_defined_symbol_arena(attributes, &mut tt)?),
+        159 => {
+            model
+                .definitional_representation_arena
+                .push(build_definitional_representation_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         160 => model.definitional_representation_relationship_arena.push(
-            build_definitional_representation_relationship_arena(attributes)?,
+            build_definitional_representation_relationship_arena(attributes, &mut tt)?,
         ),
         161 => model
             .definitional_representation_relationship_with_same_context_arena
             .push(
-                build_definitional_representation_relationship_with_same_context_arena(attributes)?,
+                build_definitional_representation_relationship_with_same_context_arena(
+                    attributes, &mut tt,
+                )?,
             ),
-        162 => model
-            .degenerate_toroidal_surface_arena
-            .push(build_degenerate_toroidal_surface_arena(attributes)?),
+        162 => {
+            model
+                .degenerate_toroidal_surface_arena
+                .push(build_degenerate_toroidal_surface_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         163 => model
             .derived_shape_aspect_arena
-            .push(build_derived_shape_aspect_arena(attributes)?),
+            .push(build_derived_shape_aspect_arena(attributes, &mut tt)?),
         164 => model
             .derived_unit_arena
-            .push(build_derived_unit_arena(attributes)?),
+            .push(build_derived_unit_arena(attributes, &mut tt)?),
         165 => model
             .derived_unit_element_arena
-            .push(build_derived_unit_element_arena(attributes)?),
+            .push(build_derived_unit_element_arena(attributes, &mut tt)?),
         166 => model
             .description_attribute_arena
-            .push(build_description_attribute_arena(attributes)?),
-        167 => model
-            .descriptive_representation_item_arena
-            .push(build_descriptive_representation_item_arena(attributes)?),
+            .push(build_description_attribute_arena(attributes, &mut tt)?),
+        167 => model.descriptive_representation_item_arena.push(
+            build_descriptive_representation_item_arena(attributes, &mut tt)?,
+        ),
         168 => model
             .design_context_arena
-            .push(build_design_context_arena(attributes)?),
+            .push(build_design_context_arena(attributes, &mut tt)?),
         169 => model.dimensional_characteristic_representation_arena.push(
-            build_dimensional_characteristic_representation_arena(attributes)?,
+            build_dimensional_characteristic_representation_arena(attributes, &mut tt)?,
         ),
         170 => model
             .dimensional_exponents_arena
-            .push(build_dimensional_exponents_arena(attributes)?),
+            .push(build_dimensional_exponents_arena(attributes, &mut tt)?),
         171 => model
             .dimensional_location_arena
-            .push(build_dimensional_location_arena(attributes)?),
-        172 => model
-            .dimensional_location_with_path_arena
-            .push(build_dimensional_location_with_path_arena(attributes)?),
+            .push(build_dimensional_location_arena(attributes, &mut tt)?),
+        172 => model.dimensional_location_with_path_arena.push(
+            build_dimensional_location_with_path_arena(attributes, &mut tt)?,
+        ),
         173 => model
             .dimensional_size_arena
-            .push(build_dimensional_size_arena(attributes)?),
-        174 => model
-            .dimensional_size_with_datum_feature_arena
-            .push(build_dimensional_size_with_datum_feature_arena(attributes)?),
+            .push(build_dimensional_size_arena(attributes, &mut tt)?),
+        174 => model.dimensional_size_with_datum_feature_arena.push(
+            build_dimensional_size_with_datum_feature_arena(attributes, &mut tt)?,
+        ),
         175 => model
             .dimensional_size_with_path_arena
-            .push(build_dimensional_size_with_path_arena(attributes)?),
-        176 => model
-            .directed_dimensional_location_arena
-            .push(build_directed_dimensional_location_arena(attributes)?),
+            .push(build_dimensional_size_with_path_arena(attributes, &mut tt)?),
+        176 => model.directed_dimensional_location_arena.push(
+            build_directed_dimensional_location_arena(attributes, &mut tt)?,
+        ),
         177 => model
             .direction_arena
-            .push(build_direction_arena(attributes)?),
-        178 => model.document_arena.push(build_document_arena(attributes)?),
+            .push(build_direction_arena(attributes, &mut tt)?),
+        178 => model
+            .document_arena
+            .push(build_document_arena(attributes, &mut tt)?),
         179 => model
             .document_file_arena
-            .push(build_document_file_arena(attributes)?),
-        180 => model
-            .document_product_association_arena
-            .push(build_document_product_association_arena(attributes)?),
-        181 => model
-            .document_product_equivalence_arena
-            .push(build_document_product_equivalence_arena(attributes)?),
+            .push(build_document_file_arena(attributes, &mut tt)?),
+        180 => {
+            model
+                .document_product_association_arena
+                .push(build_document_product_association_arena(
+                    attributes, &mut tt,
+                )?)
+        }
+        181 => {
+            model
+                .document_product_equivalence_arena
+                .push(build_document_product_equivalence_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         182 => model
             .document_reference_arena
-            .push(build_document_reference_arena(attributes)?),
-        183 => model
-            .document_representation_type_arena
-            .push(build_document_representation_type_arena(attributes)?),
+            .push(build_document_reference_arena(attributes, &mut tt)?),
+        183 => {
+            model
+                .document_representation_type_arena
+                .push(build_document_representation_type_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         184 => model
             .document_type_arena
-            .push(build_document_type_arena(attributes)?),
-        185 => model
-            .draughting_annotation_occurrence_arena
-            .push(build_draughting_annotation_occurrence_arena(attributes)?),
+            .push(build_document_type_arena(attributes, &mut tt)?),
+        185 => model.draughting_annotation_occurrence_arena.push(
+            build_draughting_annotation_occurrence_arena(attributes, &mut tt)?,
+        ),
         186 => model
             .draughting_callout_arena
-            .push(build_draughting_callout_arena(attributes)?),
-        187 => model
-            .draughting_callout_relationship_arena
-            .push(build_draughting_callout_relationship_arena(attributes)?),
+            .push(build_draughting_callout_arena(attributes, &mut tt)?),
+        187 => model.draughting_callout_relationship_arena.push(
+            build_draughting_callout_relationship_arena(attributes, &mut tt)?,
+        ),
         188 => model
             .draughting_model_arena
-            .push(build_draughting_model_arena(attributes)?),
-        189 => model
-            .draughting_model_item_association_arena
-            .push(build_draughting_model_item_association_arena(attributes)?),
+            .push(build_draughting_model_arena(attributes, &mut tt)?),
+        189 => model.draughting_model_item_association_arena.push(
+            build_draughting_model_item_association_arena(attributes, &mut tt)?,
+        ),
         190 => model
             .draughting_model_item_association_with_placeholder_arena
-            .push(build_draughting_model_item_association_with_placeholder_arena(attributes)?),
-        191 => model
-            .draughting_pre_defined_colour_arena
-            .push(build_draughting_pre_defined_colour_arena(attributes)?),
-        192 => model
-            .draughting_pre_defined_curve_font_arena
-            .push(build_draughting_pre_defined_curve_font_arena(attributes)?),
-        193 => model
-            .draughting_pre_defined_text_font_arena
-            .push(build_draughting_pre_defined_text_font_arena(attributes)?),
-        194 => model.edge_arena.push(build_edge_arena(attributes)?),
+            .push(
+                build_draughting_model_item_association_with_placeholder_arena(
+                    attributes, &mut tt,
+                )?,
+            ),
+        191 => model.draughting_pre_defined_colour_arena.push(
+            build_draughting_pre_defined_colour_arena(attributes, &mut tt)?,
+        ),
+        192 => model.draughting_pre_defined_curve_font_arena.push(
+            build_draughting_pre_defined_curve_font_arena(attributes, &mut tt)?,
+        ),
+        193 => model.draughting_pre_defined_text_font_arena.push(
+            build_draughting_pre_defined_text_font_arena(attributes, &mut tt)?,
+        ),
+        194 => model
+            .edge_arena
+            .push(build_edge_arena(attributes, &mut tt)?),
         195 => model
             .edge_curve_arena
-            .push(build_edge_curve_arena(attributes)?),
+            .push(build_edge_curve_arena(attributes, &mut tt)?),
         196 => model
             .edge_loop_arena
-            .push(build_edge_loop_arena(attributes)?),
+            .push(build_edge_loop_arena(attributes, &mut tt)?),
         197 => model
             .effectivity_arena
-            .push(build_effectivity_arena(attributes)?),
+            .push(build_effectivity_arena(attributes, &mut tt)?),
         198 => model
             .elementary_surface_arena
-            .push(build_elementary_surface_arena(attributes)?),
-        199 => model.ellipse_arena.push(build_ellipse_arena(attributes)?),
+            .push(build_elementary_surface_arena(attributes, &mut tt)?),
+        199 => model
+            .ellipse_arena
+            .push(build_ellipse_arena(attributes, &mut tt)?),
         200 => model
             .expression_arena
-            .push(build_expression_arena(attributes)?),
-        201 => model
-            .external_identification_assignment_arena
-            .push(build_external_identification_assignment_arena(attributes)?),
+            .push(build_expression_arena(attributes, &mut tt)?),
+        201 => model.external_identification_assignment_arena.push(
+            build_external_identification_assignment_arena(attributes, &mut tt)?,
+        ),
         202 => model
             .external_source_arena
-            .push(build_external_source_arena(attributes)?),
-        203 => model
-            .externally_defined_character_glyph_arena
-            .push(build_externally_defined_character_glyph_arena(attributes)?),
-        204 => model
-            .externally_defined_curve_font_arena
-            .push(build_externally_defined_curve_font_arena(attributes)?),
-        205 => model
-            .externally_defined_hatch_style_arena
-            .push(build_externally_defined_hatch_style_arena(attributes)?),
+            .push(build_external_source_arena(attributes, &mut tt)?),
+        203 => model.externally_defined_character_glyph_arena.push(
+            build_externally_defined_character_glyph_arena(attributes, &mut tt)?,
+        ),
+        204 => model.externally_defined_curve_font_arena.push(
+            build_externally_defined_curve_font_arena(attributes, &mut tt)?,
+        ),
+        205 => model.externally_defined_hatch_style_arena.push(
+            build_externally_defined_hatch_style_arena(attributes, &mut tt)?,
+        ),
         206 => model
             .externally_defined_item_arena
-            .push(build_externally_defined_item_arena(attributes)?),
+            .push(build_externally_defined_item_arena(attributes, &mut tt)?),
         207 => model
             .externally_defined_style_arena
-            .push(build_externally_defined_style_arena(attributes)?),
+            .push(build_externally_defined_style_arena(attributes, &mut tt)?),
         208 => model
             .externally_defined_symbol_arena
-            .push(build_externally_defined_symbol_arena(attributes)?),
-        209 => model
-            .externally_defined_text_font_arena
-            .push(build_externally_defined_text_font_arena(attributes)?),
+            .push(build_externally_defined_symbol_arena(attributes, &mut tt)?),
+        209 => {
+            model
+                .externally_defined_text_font_arena
+                .push(build_externally_defined_text_font_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         210 => model
             .externally_defined_tile_arena
-            .push(build_externally_defined_tile_arena(attributes)?),
-        211 => model
-            .externally_defined_tile_style_arena
-            .push(build_externally_defined_tile_style_arena(attributes)?),
-        212 => model.face_arena.push(build_face_arena(attributes)?),
+            .push(build_externally_defined_tile_arena(attributes, &mut tt)?),
+        211 => model.externally_defined_tile_style_arena.push(
+            build_externally_defined_tile_style_arena(attributes, &mut tt)?,
+        ),
+        212 => model
+            .face_arena
+            .push(build_face_arena(attributes, &mut tt)?),
         213 => model
             .face_bound_arena
-            .push(build_face_bound_arena(attributes)?),
+            .push(build_face_bound_arena(attributes, &mut tt)?),
         214 => model
             .face_outer_bound_arena
-            .push(build_face_outer_bound_arena(attributes)?),
+            .push(build_face_outer_bound_arena(attributes, &mut tt)?),
         215 => model
             .face_surface_arena
-            .push(build_face_surface_arena(attributes)?),
+            .push(build_face_surface_arena(attributes, &mut tt)?),
         216 => model.feature_for_datum_target_relationship_arena.push(
-            build_feature_for_datum_target_relationship_arena(attributes)?,
+            build_feature_for_datum_target_relationship_arena(attributes, &mut tt)?,
         ),
         217 => model
             .fill_area_style_arena
-            .push(build_fill_area_style_arena(attributes)?),
+            .push(build_fill_area_style_arena(attributes, &mut tt)?),
         218 => model
             .fill_area_style_colour_arena
-            .push(build_fill_area_style_colour_arena(attributes)?),
+            .push(build_fill_area_style_colour_arena(attributes, &mut tt)?),
         219 => model
             .fill_area_style_hatching_arena
-            .push(build_fill_area_style_hatching_arena(attributes)?),
+            .push(build_fill_area_style_hatching_arena(attributes, &mut tt)?),
         220 => model.fill_area_style_tile_coloured_region_arena.push(
-            build_fill_area_style_tile_coloured_region_arena(attributes)?,
+            build_fill_area_style_tile_coloured_region_arena(attributes, &mut tt)?,
         ),
         221 => model.fill_area_style_tile_curve_with_style_arena.push(
-            build_fill_area_style_tile_curve_with_style_arena(attributes)?,
+            build_fill_area_style_tile_curve_with_style_arena(attributes, &mut tt)?,
         ),
         222 => model.fill_area_style_tile_symbol_with_style_arena.push(
-            build_fill_area_style_tile_symbol_with_style_arena(attributes)?,
+            build_fill_area_style_tile_symbol_with_style_arena(attributes, &mut tt)?,
         ),
         223 => model
             .fill_area_style_tiles_arena
-            .push(build_fill_area_style_tiles_arena(attributes)?),
+            .push(build_fill_area_style_tiles_arena(attributes, &mut tt)?),
         224 => model
             .flatness_tolerance_arena
-            .push(build_flatness_tolerance_arena(attributes)?),
+            .push(build_flatness_tolerance_arena(attributes, &mut tt)?),
         225 => model
             .founded_item_arena
-            .push(build_founded_item_arena(attributes)?),
-        226 => model
-            .functionally_defined_transformation_arena
-            .push(build_functionally_defined_transformation_arena(attributes)?),
+            .push(build_founded_item_arena(attributes, &mut tt)?),
+        226 => model.functionally_defined_transformation_arena.push(
+            build_functionally_defined_transformation_arena(attributes, &mut tt)?,
+        ),
         227 => model
             .general_datum_reference_arena
-            .push(build_general_datum_reference_arena(attributes)?),
+            .push(build_general_datum_reference_arena(attributes, &mut tt)?),
         228 => model
             .general_property_arena
-            .push(build_general_property_arena(attributes)?),
-        229 => model
-            .general_property_association_arena
-            .push(build_general_property_association_arena(attributes)?),
+            .push(build_general_property_arena(attributes, &mut tt)?),
+        229 => {
+            model
+                .general_property_association_arena
+                .push(build_general_property_association_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         230 => model
             .generic_expression_arena
-            .push(build_generic_expression_arena(attributes)?),
+            .push(build_generic_expression_arena(attributes, &mut tt)?),
         231 => model
             .generic_literal_arena
-            .push(build_generic_literal_arena(attributes)?),
+            .push(build_generic_literal_arena(attributes, &mut tt)?),
         232 => model.generic_product_definition_reference_arena.push(
-            build_generic_product_definition_reference_arena(attributes)?,
+            build_generic_product_definition_reference_arena(attributes, &mut tt)?,
         ),
         233 => model
             .geometric_curve_set_arena
-            .push(build_geometric_curve_set_arena(attributes)?),
-        234 => model
-            .geometric_item_specific_usage_arena
-            .push(build_geometric_item_specific_usage_arena(attributes)?),
-        235 => model
-            .geometric_representation_context_arena
-            .push(build_geometric_representation_context_arena(attributes)?),
-        236 => model
-            .geometric_representation_item_arena
-            .push(build_geometric_representation_item_arena(attributes)?),
+            .push(build_geometric_curve_set_arena(attributes, &mut tt)?),
+        234 => model.geometric_item_specific_usage_arena.push(
+            build_geometric_item_specific_usage_arena(attributes, &mut tt)?,
+        ),
+        235 => model.geometric_representation_context_arena.push(
+            build_geometric_representation_context_arena(attributes, &mut tt)?,
+        ),
+        236 => model.geometric_representation_item_arena.push(
+            build_geometric_representation_item_arena(attributes, &mut tt)?,
+        ),
         237 => model
             .geometric_set_arena
-            .push(build_geometric_set_arena(attributes)?),
+            .push(build_geometric_set_arena(attributes, &mut tt)?),
         238 => model
             .geometric_tolerance_arena
-            .push(build_geometric_tolerance_arena(attributes)?),
-        239 => model
-            .geometric_tolerance_relationship_arena
-            .push(build_geometric_tolerance_relationship_arena(attributes)?),
+            .push(build_geometric_tolerance_arena(attributes, &mut tt)?),
+        239 => model.geometric_tolerance_relationship_arena.push(
+            build_geometric_tolerance_relationship_arena(attributes, &mut tt)?,
+        ),
         240 => model.geometric_tolerance_with_datum_reference_arena.push(
-            build_geometric_tolerance_with_datum_reference_arena(attributes)?,
+            build_geometric_tolerance_with_datum_reference_arena(attributes, &mut tt)?,
         ),
         241 => model.geometric_tolerance_with_defined_area_unit_arena.push(
-            build_geometric_tolerance_with_defined_area_unit_arena(attributes)?,
+            build_geometric_tolerance_with_defined_area_unit_arena(attributes, &mut tt)?,
         ),
         242 => model.geometric_tolerance_with_defined_unit_arena.push(
-            build_geometric_tolerance_with_defined_unit_arena(attributes)?,
+            build_geometric_tolerance_with_defined_unit_arena(attributes, &mut tt)?,
         ),
         243 => model.geometric_tolerance_with_maximum_tolerance_arena.push(
-            build_geometric_tolerance_with_maximum_tolerance_arena(attributes)?,
+            build_geometric_tolerance_with_maximum_tolerance_arena(attributes, &mut tt)?,
         ),
-        244 => model
-            .geometric_tolerance_with_modifiers_arena
-            .push(build_geometric_tolerance_with_modifiers_arena(attributes)?),
+        244 => model.geometric_tolerance_with_modifiers_arena.push(
+            build_geometric_tolerance_with_modifiers_arena(attributes, &mut tt)?,
+        ),
         245 => model
             .geometrically_bounded_surface_shape_representation_arena
-            .push(build_geometrically_bounded_surface_shape_representation_arena(attributes)?),
+            .push(
+                build_geometrically_bounded_surface_shape_representation_arena(
+                    attributes, &mut tt,
+                )?,
+            ),
         246 => model
             .geometrically_bounded_wireframe_shape_representation_arena
-            .push(build_geometrically_bounded_wireframe_shape_representation_arena(attributes)?),
-        247 => model
-            .global_uncertainty_assigned_context_arena
-            .push(build_global_uncertainty_assigned_context_arena(attributes)?),
-        248 => model
-            .global_unit_assigned_context_arena
-            .push(build_global_unit_assigned_context_arena(attributes)?),
-        249 => model.group_arena.push(build_group_arena(attributes)?),
+            .push(
+                build_geometrically_bounded_wireframe_shape_representation_arena(
+                    attributes, &mut tt,
+                )?,
+            ),
+        247 => model.global_uncertainty_assigned_context_arena.push(
+            build_global_uncertainty_assigned_context_arena(attributes, &mut tt)?,
+        ),
+        248 => {
+            model
+                .global_unit_assigned_context_arena
+                .push(build_global_unit_assigned_context_arena(
+                    attributes, &mut tt,
+                )?)
+        }
+        249 => model
+            .group_arena
+            .push(build_group_arena(attributes, &mut tt)?),
         250 => model
             .group_assignment_arena
-            .push(build_group_assignment_arena(attributes)?),
+            .push(build_group_assignment_arena(attributes, &mut tt)?),
         251 => model
             .hyperbola_arena
-            .push(build_hyperbola_arena(attributes)?),
+            .push(build_hyperbola_arena(attributes, &mut tt)?),
         252 => model
             .id_attribute_arena
-            .push(build_id_attribute_arena(attributes)?),
+            .push(build_id_attribute_arena(attributes, &mut tt)?),
         253 => model
             .identification_assignment_arena
-            .push(build_identification_assignment_arena(attributes)?),
+            .push(build_identification_assignment_arena(attributes, &mut tt)?),
         254 => model
             .identification_role_arena
-            .push(build_identification_role_arena(attributes)?),
+            .push(build_identification_role_arena(attributes, &mut tt)?),
         255 => model
             .int_literal_arena
-            .push(build_int_literal_arena(attributes)?),
-        256 => model
-            .integer_representation_item_arena
-            .push(build_integer_representation_item_arena(attributes)?),
+            .push(build_int_literal_arena(attributes, &mut tt)?),
+        256 => {
+            model
+                .integer_representation_item_arena
+                .push(build_integer_representation_item_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         257 => model
             .intersection_curve_arena
-            .push(build_intersection_curve_arena(attributes)?),
+            .push(build_intersection_curve_arena(attributes, &mut tt)?),
         258 => model
             .invisibility_arena
-            .push(build_invisibility_arena(attributes)?),
-        259 => model
-            .item_defined_transformation_arena
-            .push(build_item_defined_transformation_arena(attributes)?),
+            .push(build_invisibility_arena(attributes, &mut tt)?),
+        259 => {
+            model
+                .item_defined_transformation_arena
+                .push(build_item_defined_transformation_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         260 => model.item_identified_representation_usage_arena.push(
-            build_item_identified_representation_usage_arena(attributes)?,
+            build_item_identified_representation_usage_arena(attributes, &mut tt)?,
         ),
         261 => model
             .leader_curve_arena
-            .push(build_leader_curve_arena(attributes)?),
+            .push(build_leader_curve_arena(attributes, &mut tt)?),
         262 => model
             .leader_directed_callout_arena
-            .push(build_leader_directed_callout_arena(attributes)?),
+            .push(build_leader_directed_callout_arena(attributes, &mut tt)?),
         263 => model
             .leader_terminator_arena
-            .push(build_leader_terminator_arena(attributes)?),
+            .push(build_leader_terminator_arena(attributes, &mut tt)?),
         264 => model
             .length_measure_with_unit_arena
-            .push(build_length_measure_with_unit_arena(attributes)?),
+            .push(build_length_measure_with_unit_arena(attributes, &mut tt)?),
         265 => model
             .length_unit_arena
-            .push(build_length_unit_arena(attributes)?),
+            .push(build_length_unit_arena(attributes, &mut tt)?),
         266 => model
             .limits_and_fits_arena
-            .push(build_limits_and_fits_arena(attributes)?),
-        267 => model.line_arena.push(build_line_arena(attributes)?),
+            .push(build_limits_and_fits_arena(attributes, &mut tt)?),
+        267 => model
+            .line_arena
+            .push(build_line_arena(attributes, &mut tt)?),
         268 => model
             .line_profile_tolerance_arena
-            .push(build_line_profile_tolerance_arena(attributes)?),
+            .push(build_line_profile_tolerance_arena(attributes, &mut tt)?),
         269 => model
             .literal_number_arena
-            .push(build_literal_number_arena(attributes)?),
+            .push(build_literal_number_arena(attributes, &mut tt)?),
         270 => model
             .local_time_arena
-            .push(build_local_time_arena(attributes)?),
-        271 => model.loop_arena.push(build_loop_arena(attributes)?),
+            .push(build_local_time_arena(attributes, &mut tt)?),
+        271 => model
+            .loop_arena
+            .push(build_loop_arena(attributes, &mut tt)?),
         272 => model
             .make_from_usage_option_arena
-            .push(build_make_from_usage_option_arena(attributes)?),
+            .push(build_make_from_usage_option_arena(attributes, &mut tt)?),
         273 => model
             .manifold_solid_brep_arena
-            .push(build_manifold_solid_brep_arena(attributes)?),
+            .push(build_manifold_solid_brep_arena(attributes, &mut tt)?),
         274 => model.manifold_surface_shape_representation_arena.push(
-            build_manifold_surface_shape_representation_arena(attributes)?,
+            build_manifold_surface_shape_representation_arena(attributes, &mut tt)?,
         ),
         275 => model
             .mapped_item_arena
-            .push(build_mapped_item_arena(attributes)?),
+            .push(build_mapped_item_arena(attributes, &mut tt)?),
         276 => model
             .mass_measure_with_unit_arena
-            .push(build_mass_measure_with_unit_arena(attributes)?),
+            .push(build_mass_measure_with_unit_arena(attributes, &mut tt)?),
         277 => model
             .mass_unit_arena
-            .push(build_mass_unit_arena(attributes)?),
+            .push(build_mass_unit_arena(attributes, &mut tt)?),
         278 => model
             .measure_qualification_arena
-            .push(build_measure_qualification_arena(attributes)?),
-        279 => model
-            .measure_representation_item_arena
-            .push(build_measure_representation_item_arena(attributes)?),
+            .push(build_measure_qualification_arena(attributes, &mut tt)?),
+        279 => {
+            model
+                .measure_representation_item_arena
+                .push(build_measure_representation_item_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         280 => model
             .measure_with_unit_arena
-            .push(build_measure_with_unit_arena(attributes)?),
+            .push(build_measure_with_unit_arena(attributes, &mut tt)?),
         281 => model
             .mechanical_context_arena
-            .push(build_mechanical_context_arena(attributes)?),
+            .push(build_mechanical_context_arena(attributes, &mut tt)?),
         282 => model
             .mechanical_design_and_draughting_relationship_arena
             .push(build_mechanical_design_and_draughting_relationship_arena(
-                attributes,
+                attributes, &mut tt,
             )?),
         283 => model
             .mechanical_design_geometric_presentation_representation_arena
-            .push(build_mechanical_design_geometric_presentation_representation_arena(attributes)?),
+            .push(
+                build_mechanical_design_geometric_presentation_representation_arena(
+                    attributes, &mut tt,
+                )?,
+            ),
         284 => model
             .mechanical_design_presentation_representation_with_draughting_arena
             .push(
                 build_mechanical_design_presentation_representation_with_draughting_arena(
-                    attributes,
+                    attributes, &mut tt,
                 )?,
             ),
         285 => model
             .mechanical_design_shaded_presentation_representation_arena
-            .push(build_mechanical_design_shaded_presentation_representation_arena(attributes)?),
+            .push(
+                build_mechanical_design_shaded_presentation_representation_arena(
+                    attributes, &mut tt,
+                )?,
+            ),
         286 => model
             .model_geometric_view_arena
-            .push(build_model_geometric_view_arena(attributes)?),
-        287 => model
-            .modified_geometric_tolerance_arena
-            .push(build_modified_geometric_tolerance_arena(attributes)?),
+            .push(build_model_geometric_view_arena(attributes, &mut tt)?),
+        287 => {
+            model
+                .modified_geometric_tolerance_arena
+                .push(build_modified_geometric_tolerance_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         288 => model
             .name_attribute_arena
-            .push(build_name_attribute_arena(attributes)?),
+            .push(build_name_attribute_arena(attributes, &mut tt)?),
         289 => model
             .named_unit_arena
-            .push(build_named_unit_arena(attributes)?),
-        290 => model
-            .next_assembly_usage_occurrence_arena
-            .push(build_next_assembly_usage_occurrence_arena(attributes)?),
+            .push(build_named_unit_arena(attributes, &mut tt)?),
+        290 => model.next_assembly_usage_occurrence_arena.push(
+            build_next_assembly_usage_occurrence_arena(attributes, &mut tt)?,
+        ),
         291 => model
             .numeric_expression_arena
-            .push(build_numeric_expression_arena(attributes)?),
+            .push(build_numeric_expression_arena(attributes, &mut tt)?),
         292 => model
             .object_role_arena
-            .push(build_object_role_arena(attributes)?),
+            .push(build_object_role_arena(attributes, &mut tt)?),
         293 => model
             .offset_surface_arena
-            .push(build_offset_surface_arena(attributes)?),
-        294 => model
-            .one_direction_repeat_factor_arena
-            .push(build_one_direction_repeat_factor_arena(attributes)?),
+            .push(build_offset_surface_arena(attributes, &mut tt)?),
+        294 => {
+            model
+                .one_direction_repeat_factor_arena
+                .push(build_one_direction_repeat_factor_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         295 => model
             .open_shell_arena
-            .push(build_open_shell_arena(attributes)?),
+            .push(build_open_shell_arena(attributes, &mut tt)?),
         296 => model
             .organization_arena
-            .push(build_organization_arena(attributes)?),
+            .push(build_organization_arena(attributes, &mut tt)?),
         297 => model
             .organization_relationship_arena
-            .push(build_organization_relationship_arena(attributes)?),
+            .push(build_organization_relationship_arena(attributes, &mut tt)?),
         298 => model
             .organization_role_arena
-            .push(build_organization_role_arena(attributes)?),
+            .push(build_organization_role_arena(attributes, &mut tt)?),
         299 => model
             .organization_type_arena
-            .push(build_organization_type_arena(attributes)?),
+            .push(build_organization_type_arena(attributes, &mut tt)?),
         300 => model
             .organization_type_role_arena
-            .push(build_organization_type_role_arena(attributes)?),
+            .push(build_organization_type_role_arena(attributes, &mut tt)?),
         301 => model
             .organizational_address_arena
-            .push(build_organizational_address_arena(attributes)?),
+            .push(build_organizational_address_arena(attributes, &mut tt)?),
         302 => model
             .organizational_project_arena
-            .push(build_organizational_project_arena(attributes)?),
-        303 => model
-            .organizational_project_relationship_arena
-            .push(build_organizational_project_relationship_arena(attributes)?),
-        304 => model
-            .organizational_project_role_arena
-            .push(build_organizational_project_role_arena(attributes)?),
+            .push(build_organizational_project_arena(attributes, &mut tt)?),
+        303 => model.organizational_project_relationship_arena.push(
+            build_organizational_project_relationship_arena(attributes, &mut tt)?,
+        ),
+        304 => {
+            model
+                .organizational_project_role_arena
+                .push(build_organizational_project_role_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         305 => model
             .oriented_closed_shell_arena
-            .push(build_oriented_closed_shell_arena(attributes)?),
+            .push(build_oriented_closed_shell_arena(attributes, &mut tt)?),
         306 => model
             .oriented_edge_arena
-            .push(build_oriented_edge_arena(attributes)?),
+            .push(build_oriented_edge_arena(attributes, &mut tt)?),
         307 => model
             .over_riding_styled_item_arena
-            .push(build_over_riding_styled_item_arena(attributes)?),
+            .push(build_over_riding_styled_item_arena(attributes, &mut tt)?),
         308 => model
             .parallelism_tolerance_arena
-            .push(build_parallelism_tolerance_arena(attributes)?),
-        309 => model
-            .parametric_representation_context_arena
-            .push(build_parametric_representation_context_arena(attributes)?),
-        310 => model.path_arena.push(build_path_arena(attributes)?),
-        311 => model.pcurve_arena.push(build_pcurve_arena(attributes)?),
+            .push(build_parallelism_tolerance_arena(attributes, &mut tt)?),
+        309 => model.parametric_representation_context_arena.push(
+            build_parametric_representation_context_arena(attributes, &mut tt)?,
+        ),
+        310 => model
+            .path_arena
+            .push(build_path_arena(attributes, &mut tt)?),
+        311 => model
+            .pcurve_arena
+            .push(build_pcurve_arena(attributes, &mut tt)?),
         312 => model
             .perpendicularity_tolerance_arena
-            .push(build_perpendicularity_tolerance_arena(attributes)?),
-        313 => model.person_arena.push(build_person_arena(attributes)?),
+            .push(build_perpendicularity_tolerance_arena(attributes, &mut tt)?),
+        313 => model
+            .person_arena
+            .push(build_person_arena(attributes, &mut tt)?),
         314 => model
             .person_and_organization_arena
-            .push(build_person_and_organization_arena(attributes)?),
-        315 => model
-            .person_and_organization_address_arena
-            .push(build_person_and_organization_address_arena(attributes)?),
-        316 => model
-            .person_and_organization_assignment_arena
-            .push(build_person_and_organization_assignment_arena(attributes)?),
-        317 => model
-            .person_and_organization_role_arena
-            .push(build_person_and_organization_role_arena(attributes)?),
+            .push(build_person_and_organization_arena(attributes, &mut tt)?),
+        315 => model.person_and_organization_address_arena.push(
+            build_person_and_organization_address_arena(attributes, &mut tt)?,
+        ),
+        316 => model.person_and_organization_assignment_arena.push(
+            build_person_and_organization_assignment_arena(attributes, &mut tt)?,
+        ),
+        317 => {
+            model
+                .person_and_organization_role_arena
+                .push(build_person_and_organization_role_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         318 => model
             .personal_address_arena
-            .push(build_personal_address_arena(attributes)?),
-        319 => model
-            .placed_datum_target_feature_arena
-            .push(build_placed_datum_target_feature_arena(attributes)?),
+            .push(build_personal_address_arena(attributes, &mut tt)?),
+        319 => {
+            model
+                .placed_datum_target_feature_arena
+                .push(build_placed_datum_target_feature_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         320 => model
             .placement_arena
-            .push(build_placement_arena(attributes)?),
+            .push(build_placement_arena(attributes, &mut tt)?),
         321 => model
             .planar_box_arena
-            .push(build_planar_box_arena(attributes)?),
+            .push(build_planar_box_arena(attributes, &mut tt)?),
         322 => model
             .planar_extent_arena
-            .push(build_planar_extent_arena(attributes)?),
-        323 => model.plane_arena.push(build_plane_arena(attributes)?),
-        324 => model
-            .plane_angle_measure_with_unit_arena
-            .push(build_plane_angle_measure_with_unit_arena(attributes)?),
+            .push(build_planar_extent_arena(attributes, &mut tt)?),
+        323 => model
+            .plane_arena
+            .push(build_plane_arena(attributes, &mut tt)?),
+        324 => model.plane_angle_measure_with_unit_arena.push(
+            build_plane_angle_measure_with_unit_arena(attributes, &mut tt)?,
+        ),
         325 => model
             .plane_angle_unit_arena
-            .push(build_plane_angle_unit_arena(attributes)?),
+            .push(build_plane_angle_unit_arena(attributes, &mut tt)?),
         326 => model
             .plus_minus_tolerance_arena
-            .push(build_plus_minus_tolerance_arena(attributes)?),
-        327 => model.point_arena.push(build_point_arena(attributes)?),
+            .push(build_plus_minus_tolerance_arena(attributes, &mut tt)?),
+        327 => model
+            .point_arena
+            .push(build_point_arena(attributes, &mut tt)?),
         328 => model
             .point_style_arena
-            .push(build_point_style_arena(attributes)?),
+            .push(build_point_style_arena(attributes, &mut tt)?),
         329 => model
             .poly_loop_arena
-            .push(build_poly_loop_arena(attributes)?),
-        330 => model.polyline_arena.push(build_polyline_arena(attributes)?),
+            .push(build_poly_loop_arena(attributes, &mut tt)?),
+        330 => model
+            .polyline_arena
+            .push(build_polyline_arena(attributes, &mut tt)?),
         331 => model
             .position_tolerance_arena
-            .push(build_position_tolerance_arena(attributes)?),
-        332 => model
-            .pre_defined_character_glyph_arena
-            .push(build_pre_defined_character_glyph_arena(attributes)?),
+            .push(build_position_tolerance_arena(attributes, &mut tt)?),
+        332 => {
+            model
+                .pre_defined_character_glyph_arena
+                .push(build_pre_defined_character_glyph_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         333 => model
             .pre_defined_colour_arena
-            .push(build_pre_defined_colour_arena(attributes)?),
+            .push(build_pre_defined_colour_arena(attributes, &mut tt)?),
         334 => model
             .pre_defined_curve_font_arena
-            .push(build_pre_defined_curve_font_arena(attributes)?),
+            .push(build_pre_defined_curve_font_arena(attributes, &mut tt)?),
         335 => model
             .pre_defined_item_arena
-            .push(build_pre_defined_item_arena(attributes)?),
+            .push(build_pre_defined_item_arena(attributes, &mut tt)?),
         336 => model
             .pre_defined_marker_arena
-            .push(build_pre_defined_marker_arena(attributes)?),
-        337 => model
-            .pre_defined_point_marker_symbol_arena
-            .push(build_pre_defined_point_marker_symbol_arena(attributes)?),
-        338 => model
-            .pre_defined_presentation_style_arena
-            .push(build_pre_defined_presentation_style_arena(attributes)?),
-        339 => model
-            .pre_defined_surface_side_style_arena
-            .push(build_pre_defined_surface_side_style_arena(attributes)?),
+            .push(build_pre_defined_marker_arena(attributes, &mut tt)?),
+        337 => model.pre_defined_point_marker_symbol_arena.push(
+            build_pre_defined_point_marker_symbol_arena(attributes, &mut tt)?,
+        ),
+        338 => model.pre_defined_presentation_style_arena.push(
+            build_pre_defined_presentation_style_arena(attributes, &mut tt)?,
+        ),
+        339 => model.pre_defined_surface_side_style_arena.push(
+            build_pre_defined_surface_side_style_arena(attributes, &mut tt)?,
+        ),
         340 => model
             .pre_defined_symbol_arena
-            .push(build_pre_defined_symbol_arena(attributes)?),
-        341 => model
-            .pre_defined_terminator_symbol_arena
-            .push(build_pre_defined_terminator_symbol_arena(attributes)?),
+            .push(build_pre_defined_symbol_arena(attributes, &mut tt)?),
+        341 => model.pre_defined_terminator_symbol_arena.push(
+            build_pre_defined_terminator_symbol_arena(attributes, &mut tt)?,
+        ),
         342 => model
             .pre_defined_text_font_arena
-            .push(build_pre_defined_text_font_arena(attributes)?),
+            .push(build_pre_defined_text_font_arena(attributes, &mut tt)?),
         343 => model
             .pre_defined_tile_arena
-            .push(build_pre_defined_tile_arena(attributes)?),
+            .push(build_pre_defined_tile_arena(attributes, &mut tt)?),
         344 => model
             .precision_qualifier_arena
-            .push(build_precision_qualifier_arena(attributes)?),
+            .push(build_precision_qualifier_arena(attributes, &mut tt)?),
         345 => model
             .presentation_area_arena
-            .push(build_presentation_area_arena(attributes)?),
-        346 => model
-            .presentation_layer_assignment_arena
-            .push(build_presentation_layer_assignment_arena(attributes)?),
-        347 => model
-            .presentation_representation_arena
-            .push(build_presentation_representation_arena(attributes)?),
+            .push(build_presentation_area_arena(attributes, &mut tt)?),
+        346 => model.presentation_layer_assignment_arena.push(
+            build_presentation_layer_assignment_arena(attributes, &mut tt)?,
+        ),
+        347 => {
+            model
+                .presentation_representation_arena
+                .push(build_presentation_representation_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         348 => model
             .presentation_set_arena
-            .push(build_presentation_set_arena(attributes)?),
+            .push(build_presentation_set_arena(attributes, &mut tt)?),
         349 => model
             .presentation_size_arena
-            .push(build_presentation_size_arena(attributes)?),
-        350 => model
-            .presentation_style_assignment_arena
-            .push(build_presentation_style_assignment_arena(attributes)?),
-        351 => model
-            .presentation_style_by_context_arena
-            .push(build_presentation_style_by_context_arena(attributes)?),
+            .push(build_presentation_size_arena(attributes, &mut tt)?),
+        350 => model.presentation_style_assignment_arena.push(
+            build_presentation_style_assignment_arena(attributes, &mut tt)?,
+        ),
+        351 => model.presentation_style_by_context_arena.push(
+            build_presentation_style_by_context_arena(attributes, &mut tt)?,
+        ),
         352 => model
             .presentation_view_arena
-            .push(build_presentation_view_arena(attributes)?),
+            .push(build_presentation_view_arena(attributes, &mut tt)?),
         353 => model
             .presented_item_arena
-            .push(build_presented_item_arena(attributes)?),
-        354 => model
-            .presented_item_representation_arena
-            .push(build_presented_item_representation_arena(attributes)?),
-        355 => model.product_arena.push(build_product_arena(attributes)?),
+            .push(build_presented_item_arena(attributes, &mut tt)?),
+        354 => model.presented_item_representation_arena.push(
+            build_presented_item_representation_arena(attributes, &mut tt)?,
+        ),
+        355 => model
+            .product_arena
+            .push(build_product_arena(attributes, &mut tt)?),
         356 => model
             .product_category_arena
-            .push(build_product_category_arena(attributes)?),
-        357 => model
-            .product_category_relationship_arena
-            .push(build_product_category_relationship_arena(attributes)?),
+            .push(build_product_category_arena(attributes, &mut tt)?),
+        357 => model.product_category_relationship_arena.push(
+            build_product_category_relationship_arena(attributes, &mut tt)?,
+        ),
         358 => model
             .product_concept_arena
-            .push(build_product_concept_arena(attributes)?),
+            .push(build_product_concept_arena(attributes, &mut tt)?),
         359 => model
             .product_concept_context_arena
-            .push(build_product_concept_context_arena(attributes)?),
+            .push(build_product_concept_context_arena(attributes, &mut tt)?),
         360 => model
             .product_concept_feature_arena
-            .push(build_product_concept_feature_arena(attributes)?),
-        361 => model
-            .product_concept_feature_category_arena
-            .push(build_product_concept_feature_category_arena(attributes)?),
+            .push(build_product_concept_feature_arena(attributes, &mut tt)?),
+        361 => model.product_concept_feature_category_arena.push(
+            build_product_concept_feature_category_arena(attributes, &mut tt)?,
+        ),
         362 => model
             .product_context_arena
-            .push(build_product_context_arena(attributes)?),
+            .push(build_product_context_arena(attributes, &mut tt)?),
         363 => model
             .product_definition_arena
-            .push(build_product_definition_arena(attributes)?),
+            .push(build_product_definition_arena(attributes, &mut tt)?),
         364 => model
             .product_definition_context_arena
-            .push(build_product_definition_context_arena(attributes)?),
+            .push(build_product_definition_context_arena(attributes, &mut tt)?),
         365 => model.product_definition_context_association_arena.push(
-            build_product_definition_context_association_arena(attributes)?,
+            build_product_definition_context_association_arena(attributes, &mut tt)?,
         ),
-        366 => model
-            .product_definition_context_role_arena
-            .push(build_product_definition_context_role_arena(attributes)?),
-        367 => model
-            .product_definition_effectivity_arena
-            .push(build_product_definition_effectivity_arena(attributes)?),
-        368 => model
-            .product_definition_formation_arena
-            .push(build_product_definition_formation_arena(attributes)?),
+        366 => model.product_definition_context_role_arena.push(
+            build_product_definition_context_role_arena(attributes, &mut tt)?,
+        ),
+        367 => model.product_definition_effectivity_arena.push(
+            build_product_definition_effectivity_arena(attributes, &mut tt)?,
+        ),
+        368 => {
+            model
+                .product_definition_formation_arena
+                .push(build_product_definition_formation_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         369 => model
             .product_definition_formation_with_specified_source_arena
-            .push(build_product_definition_formation_with_specified_source_arena(attributes)?),
-        370 => model
-            .product_definition_occurrence_arena
-            .push(build_product_definition_occurrence_arena(attributes)?),
-        371 => model
-            .product_definition_relationship_arena
-            .push(build_product_definition_relationship_arena(attributes)?),
+            .push(
+                build_product_definition_formation_with_specified_source_arena(
+                    attributes, &mut tt,
+                )?,
+            ),
+        370 => model.product_definition_occurrence_arena.push(
+            build_product_definition_occurrence_arena(attributes, &mut tt)?,
+        ),
+        371 => model.product_definition_relationship_arena.push(
+            build_product_definition_relationship_arena(attributes, &mut tt)?,
+        ),
         372 => model
             .product_definition_relationship_relationship_arena
             .push(build_product_definition_relationship_relationship_arena(
-                attributes,
+                attributes, &mut tt,
             )?),
         373 => model
             .product_definition_shape_arena
-            .push(build_product_definition_shape_arena(attributes)?),
-        374 => model
-            .product_definition_substitute_arena
-            .push(build_product_definition_substitute_arena(attributes)?),
+            .push(build_product_definition_shape_arena(attributes, &mut tt)?),
+        374 => model.product_definition_substitute_arena.push(
+            build_product_definition_substitute_arena(attributes, &mut tt)?,
+        ),
         375 => model
             .product_definition_usage_arena
-            .push(build_product_definition_usage_arena(attributes)?),
+            .push(build_product_definition_usage_arena(attributes, &mut tt)?),
         376 => model
             .product_definition_with_associated_documents_arena
             .push(build_product_definition_with_associated_documents_arena(
-                attributes,
+                attributes, &mut tt,
             )?),
-        377 => model
-            .product_related_product_category_arena
-            .push(build_product_related_product_category_arena(attributes)?),
+        377 => model.product_related_product_category_arena.push(
+            build_product_related_product_category_arena(attributes, &mut tt)?,
+        ),
         378 => model
             .projected_zone_definition_arena
-            .push(build_projected_zone_definition_arena(attributes)?),
+            .push(build_projected_zone_definition_arena(attributes, &mut tt)?),
         379 => model
             .property_definition_arena
-            .push(build_property_definition_arena(attributes)?),
-        380 => model
-            .property_definition_relationship_arena
-            .push(build_property_definition_relationship_arena(attributes)?),
-        381 => model
-            .property_definition_representation_arena
-            .push(build_property_definition_representation_arena(attributes)?),
-        382 => model
-            .qualified_representation_item_arena
-            .push(build_qualified_representation_item_arena(attributes)?),
+            .push(build_property_definition_arena(attributes, &mut tt)?),
+        380 => model.property_definition_relationship_arena.push(
+            build_property_definition_relationship_arena(attributes, &mut tt)?,
+        ),
+        381 => model.property_definition_representation_arena.push(
+            build_property_definition_representation_arena(attributes, &mut tt)?,
+        ),
+        382 => model.qualified_representation_item_arena.push(
+            build_qualified_representation_item_arena(attributes, &mut tt)?,
+        ),
         383 => model
             .quasi_uniform_curve_arena
-            .push(build_quasi_uniform_curve_arena(attributes)?),
+            .push(build_quasi_uniform_curve_arena(attributes, &mut tt)?),
         384 => model
             .quasi_uniform_surface_arena
-            .push(build_quasi_uniform_surface_arena(attributes)?),
+            .push(build_quasi_uniform_surface_arena(attributes, &mut tt)?),
         385 => model
             .ratio_measure_with_unit_arena
-            .push(build_ratio_measure_with_unit_arena(attributes)?),
+            .push(build_ratio_measure_with_unit_arena(attributes, &mut tt)?),
         386 => model
             .ratio_unit_arena
-            .push(build_ratio_unit_arena(attributes)?),
+            .push(build_ratio_unit_arena(attributes, &mut tt)?),
         387 => model
             .rational_b_spline_curve_arena
-            .push(build_rational_b_spline_curve_arena(attributes)?),
+            .push(build_rational_b_spline_curve_arena(attributes, &mut tt)?),
         388 => model
             .rational_b_spline_surface_arena
-            .push(build_rational_b_spline_surface_arena(attributes)?),
+            .push(build_rational_b_spline_surface_arena(attributes, &mut tt)?),
         389 => model
             .real_literal_arena
-            .push(build_real_literal_arena(attributes)?),
+            .push(build_real_literal_arena(attributes, &mut tt)?),
         390 => model
             .real_representation_item_arena
-            .push(build_real_representation_item_arena(attributes)?),
-        391 => model
-            .repositioned_tessellated_item_arena
-            .push(build_repositioned_tessellated_item_arena(attributes)?),
+            .push(build_real_representation_item_arena(attributes, &mut tt)?),
+        391 => model.repositioned_tessellated_item_arena.push(
+            build_repositioned_tessellated_item_arena(attributes, &mut tt)?,
+        ),
         392 => model
             .representation_arena
-            .push(build_representation_arena(attributes)?),
+            .push(build_representation_arena(attributes, &mut tt)?),
         393 => model
             .representation_context_arena
-            .push(build_representation_context_arena(attributes)?),
-        394 => model
-            .representation_context_reference_arena
-            .push(build_representation_context_reference_arena(attributes)?),
+            .push(build_representation_context_arena(attributes, &mut tt)?),
+        394 => model.representation_context_reference_arena.push(
+            build_representation_context_reference_arena(attributes, &mut tt)?,
+        ),
         395 => model
             .representation_item_arena
-            .push(build_representation_item_arena(attributes)?),
+            .push(build_representation_item_arena(attributes, &mut tt)?),
         396 => model
             .representation_map_arena
-            .push(build_representation_map_arena(attributes)?),
+            .push(build_representation_map_arena(attributes, &mut tt)?),
         397 => model
             .representation_reference_arena
-            .push(build_representation_reference_arena(attributes)?),
-        398 => model
-            .representation_relationship_arena
-            .push(build_representation_relationship_arena(attributes)?),
+            .push(build_representation_reference_arena(attributes, &mut tt)?),
+        398 => {
+            model
+                .representation_relationship_arena
+                .push(build_representation_relationship_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         399 => model
             .representation_relationship_with_transformation_arena
             .push(build_representation_relationship_with_transformation_arena(
-                attributes,
+                attributes, &mut tt,
             )?),
         400 => model
             .resource_property_arena
-            .push(build_resource_property_arena(attributes)?),
+            .push(build_resource_property_arena(attributes, &mut tt)?),
         401 => model
             .resource_requirement_type_arena
-            .push(build_resource_requirement_type_arena(attributes)?),
+            .push(build_resource_requirement_type_arena(attributes, &mut tt)?),
         402 => model
             .role_association_arena
-            .push(build_role_association_arena(attributes)?),
+            .push(build_role_association_arena(attributes, &mut tt)?),
         403 => model
             .roundness_tolerance_arena
-            .push(build_roundness_tolerance_arena(attributes)?),
+            .push(build_roundness_tolerance_arena(attributes, &mut tt)?),
         404 => model
             .seam_curve_arena
-            .push(build_seam_curve_arena(attributes)?),
+            .push(build_seam_curve_arena(attributes, &mut tt)?),
         405 => model
             .security_classification_arena
-            .push(build_security_classification_arena(attributes)?),
-        406 => model
-            .security_classification_assignment_arena
-            .push(build_security_classification_assignment_arena(attributes)?),
-        407 => model
-            .security_classification_level_arena
-            .push(build_security_classification_level_arena(attributes)?),
+            .push(build_security_classification_arena(attributes, &mut tt)?),
+        406 => model.security_classification_assignment_arena.push(
+            build_security_classification_assignment_arena(attributes, &mut tt)?,
+        ),
+        407 => model.security_classification_level_arena.push(
+            build_security_classification_level_arena(attributes, &mut tt)?,
+        ),
         408 => model
             .shape_aspect_arena
-            .push(build_shape_aspect_arena(attributes)?),
+            .push(build_shape_aspect_arena(attributes, &mut tt)?),
         409 => model
             .shape_aspect_associativity_arena
-            .push(build_shape_aspect_associativity_arena(attributes)?),
-        410 => model
-            .shape_aspect_deriving_relationship_arena
-            .push(build_shape_aspect_deriving_relationship_arena(attributes)?),
+            .push(build_shape_aspect_associativity_arena(attributes, &mut tt)?),
+        410 => model.shape_aspect_deriving_relationship_arena.push(
+            build_shape_aspect_deriving_relationship_arena(attributes, &mut tt)?,
+        ),
         411 => model
             .shape_aspect_relationship_arena
-            .push(build_shape_aspect_relationship_arena(attributes)?),
-        412 => model
-            .shape_definition_representation_arena
-            .push(build_shape_definition_representation_arena(attributes)?),
-        413 => model
-            .shape_dimension_representation_arena
-            .push(build_shape_dimension_representation_arena(attributes)?),
+            .push(build_shape_aspect_relationship_arena(attributes, &mut tt)?),
+        412 => model.shape_definition_representation_arena.push(
+            build_shape_definition_representation_arena(attributes, &mut tt)?,
+        ),
+        413 => model.shape_dimension_representation_arena.push(
+            build_shape_dimension_representation_arena(attributes, &mut tt)?,
+        ),
         414 => model
             .shape_representation_arena
-            .push(build_shape_representation_arena(attributes)?),
-        415 => model
-            .shape_representation_relationship_arena
-            .push(build_shape_representation_relationship_arena(attributes)?),
+            .push(build_shape_representation_arena(attributes, &mut tt)?),
+        415 => model.shape_representation_relationship_arena.push(
+            build_shape_representation_relationship_arena(attributes, &mut tt)?,
+        ),
         416 => model.shape_representation_with_parameters_arena.push(
-            build_shape_representation_with_parameters_arena(attributes)?,
+            build_shape_representation_with_parameters_arena(attributes, &mut tt)?,
         ),
         417 => model
             .shell_based_surface_model_arena
-            .push(build_shell_based_surface_model_arena(attributes)?),
-        418 => model.si_unit_arena.push(build_si_unit_arena(attributes)?),
+            .push(build_shell_based_surface_model_arena(attributes, &mut tt)?),
+        418 => model
+            .si_unit_arena
+            .push(build_si_unit_arena(attributes, &mut tt)?),
         419 => model
             .simple_generic_expression_arena
-            .push(build_simple_generic_expression_arena(attributes)?),
+            .push(build_simple_generic_expression_arena(attributes, &mut tt)?),
         420 => model
             .simple_numeric_expression_arena
-            .push(build_simple_numeric_expression_arena(attributes)?),
+            .push(build_simple_numeric_expression_arena(attributes, &mut tt)?),
         421 => model
             .solid_angle_unit_arena
-            .push(build_solid_angle_unit_arena(attributes)?),
+            .push(build_solid_angle_unit_arena(attributes, &mut tt)?),
         422 => model
             .solid_model_arena
-            .push(build_solid_model_arena(attributes)?),
+            .push(build_solid_model_arena(attributes, &mut tt)?),
         423 => model
             .spherical_surface_arena
-            .push(build_spherical_surface_arena(attributes)?),
+            .push(build_spherical_surface_arena(attributes, &mut tt)?),
         424 => model
             .start_request_arena
-            .push(build_start_request_arena(attributes)?),
+            .push(build_start_request_arena(attributes, &mut tt)?),
         425 => model
             .start_work_arena
-            .push(build_start_work_arena(attributes)?),
+            .push(build_start_work_arena(attributes, &mut tt)?),
         426 => model
             .state_observed_arena
-            .push(build_state_observed_arena(attributes)?),
+            .push(build_state_observed_arena(attributes, &mut tt)?),
         427 => model
             .state_type_arena
-            .push(build_state_type_arena(attributes)?),
+            .push(build_state_type_arena(attributes, &mut tt)?),
         428 => model
             .straightness_tolerance_arena
-            .push(build_straightness_tolerance_arena(attributes)?),
+            .push(build_straightness_tolerance_arena(attributes, &mut tt)?),
         429 => model
             .styled_item_arena
-            .push(build_styled_item_arena(attributes)?),
-        430 => model.surface_arena.push(build_surface_arena(attributes)?),
+            .push(build_styled_item_arena(attributes, &mut tt)?),
+        430 => model
+            .surface_arena
+            .push(build_surface_arena(attributes, &mut tt)?),
         431 => model
             .surface_curve_arena
-            .push(build_surface_curve_arena(attributes)?),
-        432 => model
-            .surface_of_linear_extrusion_arena
-            .push(build_surface_of_linear_extrusion_arena(attributes)?),
+            .push(build_surface_curve_arena(attributes, &mut tt)?),
+        432 => {
+            model
+                .surface_of_linear_extrusion_arena
+                .push(build_surface_of_linear_extrusion_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         433 => model
             .surface_of_revolution_arena
-            .push(build_surface_of_revolution_arena(attributes)?),
+            .push(build_surface_of_revolution_arena(attributes, &mut tt)?),
         434 => model
             .surface_profile_tolerance_arena
-            .push(build_surface_profile_tolerance_arena(attributes)?),
-        435 => model
-            .surface_rendering_properties_arena
-            .push(build_surface_rendering_properties_arena(attributes)?),
+            .push(build_surface_profile_tolerance_arena(attributes, &mut tt)?),
+        435 => {
+            model
+                .surface_rendering_properties_arena
+                .push(build_surface_rendering_properties_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         436 => model
             .surface_side_style_arena
-            .push(build_surface_side_style_arena(attributes)?),
+            .push(build_surface_side_style_arena(attributes, &mut tt)?),
         437 => model
             .surface_style_boundary_arena
-            .push(build_surface_style_boundary_arena(attributes)?),
+            .push(build_surface_style_boundary_arena(attributes, &mut tt)?),
         438 => model
             .surface_style_control_grid_arena
-            .push(build_surface_style_control_grid_arena(attributes)?),
+            .push(build_surface_style_control_grid_arena(attributes, &mut tt)?),
         439 => model
             .surface_style_fill_area_arena
-            .push(build_surface_style_fill_area_arena(attributes)?),
-        440 => model
-            .surface_style_parameter_line_arena
-            .push(build_surface_style_parameter_line_arena(attributes)?),
-        441 => model
-            .surface_style_reflectance_ambient_arena
-            .push(build_surface_style_reflectance_ambient_arena(attributes)?),
+            .push(build_surface_style_fill_area_arena(attributes, &mut tt)?),
+        440 => {
+            model
+                .surface_style_parameter_line_arena
+                .push(build_surface_style_parameter_line_arena(
+                    attributes, &mut tt,
+                )?)
+        }
+        441 => model.surface_style_reflectance_ambient_arena.push(
+            build_surface_style_reflectance_ambient_arena(attributes, &mut tt)?,
+        ),
         442 => model
             .surface_style_rendering_arena
-            .push(build_surface_style_rendering_arena(attributes)?),
+            .push(build_surface_style_rendering_arena(attributes, &mut tt)?),
         443 => model.surface_style_rendering_with_properties_arena.push(
-            build_surface_style_rendering_with_properties_arena(attributes)?,
+            build_surface_style_rendering_with_properties_arena(attributes, &mut tt)?,
         ),
-        444 => model
-            .surface_style_segmentation_curve_arena
-            .push(build_surface_style_segmentation_curve_arena(attributes)?),
+        444 => model.surface_style_segmentation_curve_arena.push(
+            build_surface_style_segmentation_curve_arena(attributes, &mut tt)?,
+        ),
         445 => model
             .surface_style_silhouette_arena
-            .push(build_surface_style_silhouette_arena(attributes)?),
+            .push(build_surface_style_silhouette_arena(attributes, &mut tt)?),
         446 => model
             .surface_style_transparent_arena
-            .push(build_surface_style_transparent_arena(attributes)?),
+            .push(build_surface_style_transparent_arena(attributes, &mut tt)?),
         447 => model
             .surface_style_usage_arena
-            .push(build_surface_style_usage_arena(attributes)?),
+            .push(build_surface_style_usage_arena(attributes, &mut tt)?),
         448 => model
             .swept_surface_arena
-            .push(build_swept_surface_arena(attributes)?),
+            .push(build_swept_surface_arena(attributes, &mut tt)?),
         449 => model
             .symbol_colour_arena
-            .push(build_symbol_colour_arena(attributes)?),
+            .push(build_symbol_colour_arena(attributes, &mut tt)?),
         450 => model
             .symbol_representation_arena
-            .push(build_symbol_representation_arena(attributes)?),
+            .push(build_symbol_representation_arena(attributes, &mut tt)?),
         451 => model
             .symbol_style_arena
-            .push(build_symbol_style_arena(attributes)?),
+            .push(build_symbol_style_arena(attributes, &mut tt)?),
         452 => model
             .symbol_target_arena
-            .push(build_symbol_target_arena(attributes)?),
+            .push(build_symbol_target_arena(attributes, &mut tt)?),
         453 => model
             .symmetry_tolerance_arena
-            .push(build_symmetry_tolerance_arena(attributes)?),
+            .push(build_symmetry_tolerance_arena(attributes, &mut tt)?),
         454 => model
             .terminator_symbol_arena
-            .push(build_terminator_symbol_arena(attributes)?),
-        455 => model
-            .tessellated_annotation_occurrence_arena
-            .push(build_tessellated_annotation_occurrence_arena(attributes)?),
+            .push(build_terminator_symbol_arena(attributes, &mut tt)?),
+        455 => model.tessellated_annotation_occurrence_arena.push(
+            build_tessellated_annotation_occurrence_arena(attributes, &mut tt)?,
+        ),
         456 => model
             .tessellated_curve_set_arena
-            .push(build_tessellated_curve_set_arena(attributes)?),
+            .push(build_tessellated_curve_set_arena(attributes, &mut tt)?),
         457 => model
             .tessellated_face_arena
-            .push(build_tessellated_face_arena(attributes)?),
+            .push(build_tessellated_face_arena(attributes, &mut tt)?),
         458 => model
             .tessellated_geometric_set_arena
-            .push(build_tessellated_geometric_set_arena(attributes)?),
+            .push(build_tessellated_geometric_set_arena(attributes, &mut tt)?),
         459 => model
             .tessellated_item_arena
-            .push(build_tessellated_item_arena(attributes)?),
-        460 => model
-            .tessellated_shape_representation_arena
-            .push(build_tessellated_shape_representation_arena(attributes)?),
+            .push(build_tessellated_item_arena(attributes, &mut tt)?),
+        460 => model.tessellated_shape_representation_arena.push(
+            build_tessellated_shape_representation_arena(attributes, &mut tt)?,
+        ),
         461 => model
             .tessellated_shell_arena
-            .push(build_tessellated_shell_arena(attributes)?),
+            .push(build_tessellated_shell_arena(attributes, &mut tt)?),
         462 => model
             .tessellated_solid_arena
-            .push(build_tessellated_solid_arena(attributes)?),
-        463 => model
-            .tessellated_structured_item_arena
-            .push(build_tessellated_structured_item_arena(attributes)?),
+            .push(build_tessellated_solid_arena(attributes, &mut tt)?),
+        463 => {
+            model
+                .tessellated_structured_item_arena
+                .push(build_tessellated_structured_item_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         464 => model
             .tessellated_surface_set_arena
-            .push(build_tessellated_surface_set_arena(attributes)?),
+            .push(build_tessellated_surface_set_arena(attributes, &mut tt)?),
         465 => model
             .text_font_arena
-            .push(build_text_font_arena(attributes)?),
+            .push(build_text_font_arena(attributes, &mut tt)?),
         466 => model
             .text_literal_arena
-            .push(build_text_literal_arena(attributes)?),
+            .push(build_text_literal_arena(attributes, &mut tt)?),
         467 => model
             .text_style_arena
-            .push(build_text_style_arena(attributes)?),
-        468 => model
-            .text_style_for_defined_font_arena
-            .push(build_text_style_for_defined_font_arena(attributes)?),
-        469 => model
-            .text_style_with_box_characteristics_arena
-            .push(build_text_style_with_box_characteristics_arena(attributes)?),
-        470 => model
-            .texture_style_specification_arena
-            .push(build_texture_style_specification_arena(attributes)?),
+            .push(build_text_style_arena(attributes, &mut tt)?),
+        468 => {
+            model
+                .text_style_for_defined_font_arena
+                .push(build_text_style_for_defined_font_arena(
+                    attributes, &mut tt,
+                )?)
+        }
+        469 => model.text_style_with_box_characteristics_arena.push(
+            build_text_style_with_box_characteristics_arena(attributes, &mut tt)?,
+        ),
+        470 => {
+            model
+                .texture_style_specification_arena
+                .push(build_texture_style_specification_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         471 => model.texture_style_tessellation_specification_arena.push(
-            build_texture_style_tessellation_specification_arena(attributes)?,
+            build_texture_style_tessellation_specification_arena(attributes, &mut tt)?,
         ),
         472 => model
             .time_unit_arena
-            .push(build_time_unit_arena(attributes)?),
+            .push(build_time_unit_arena(attributes, &mut tt)?),
         473 => model
             .tolerance_value_arena
-            .push(build_tolerance_value_arena(attributes)?),
+            .push(build_tolerance_value_arena(attributes, &mut tt)?),
         474 => model
             .tolerance_zone_arena
-            .push(build_tolerance_zone_arena(attributes)?),
+            .push(build_tolerance_zone_arena(attributes, &mut tt)?),
         475 => model
             .tolerance_zone_definition_arena
-            .push(build_tolerance_zone_definition_arena(attributes)?),
+            .push(build_tolerance_zone_definition_arena(attributes, &mut tt)?),
         476 => model
             .tolerance_zone_form_arena
-            .push(build_tolerance_zone_form_arena(attributes)?),
+            .push(build_tolerance_zone_form_arena(attributes, &mut tt)?),
         477 => model
             .tolerance_zone_with_datum_arena
-            .push(build_tolerance_zone_with_datum_arena(attributes)?),
-        478 => model
-            .topological_representation_item_arena
-            .push(build_topological_representation_item_arena(attributes)?),
+            .push(build_tolerance_zone_with_datum_arena(attributes, &mut tt)?),
+        478 => model.topological_representation_item_arena.push(
+            build_topological_representation_item_arena(attributes, &mut tt)?,
+        ),
         479 => model
             .toroidal_surface_arena
-            .push(build_toroidal_surface_arena(attributes)?),
+            .push(build_toroidal_surface_arena(attributes, &mut tt)?),
         480 => model
             .total_runout_tolerance_arena
-            .push(build_total_runout_tolerance_arena(attributes)?),
+            .push(build_total_runout_tolerance_arena(attributes, &mut tt)?),
         481 => model
             .trimmed_curve_arena
-            .push(build_trimmed_curve_arena(attributes)?),
-        482 => model
-            .two_direction_repeat_factor_arena
-            .push(build_two_direction_repeat_factor_arena(attributes)?),
+            .push(build_trimmed_curve_arena(attributes, &mut tt)?),
+        482 => {
+            model
+                .two_direction_repeat_factor_arena
+                .push(build_two_direction_repeat_factor_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         483 => model
             .type_qualifier_arena
-            .push(build_type_qualifier_arena(attributes)?),
-        484 => model
-            .uncertainty_measure_with_unit_arena
-            .push(build_uncertainty_measure_with_unit_arena(attributes)?),
+            .push(build_type_qualifier_arena(attributes, &mut tt)?),
+        484 => model.uncertainty_measure_with_unit_arena.push(
+            build_uncertainty_measure_with_unit_arena(attributes, &mut tt)?,
+        ),
         485 => model
             .uncertainty_qualifier_arena
-            .push(build_uncertainty_qualifier_arena(attributes)?),
+            .push(build_uncertainty_qualifier_arena(attributes, &mut tt)?),
         486 => model.unequally_disposed_geometric_tolerance_arena.push(
-            build_unequally_disposed_geometric_tolerance_arena(attributes)?,
+            build_unequally_disposed_geometric_tolerance_arena(attributes, &mut tt)?,
         ),
         487 => model
             .uniform_curve_arena
-            .push(build_uniform_curve_arena(attributes)?),
+            .push(build_uniform_curve_arena(attributes, &mut tt)?),
         488 => model
             .uniform_surface_arena
-            .push(build_uniform_surface_arena(attributes)?),
-        489 => model
-            .value_format_type_qualifier_arena
-            .push(build_value_format_type_qualifier_arena(attributes)?),
+            .push(build_uniform_surface_arena(attributes, &mut tt)?),
+        489 => {
+            model
+                .value_format_type_qualifier_arena
+                .push(build_value_format_type_qualifier_arena(
+                    attributes, &mut tt,
+                )?)
+        }
         490 => model
             .value_representation_item_arena
-            .push(build_value_representation_item_arena(attributes)?),
-        491 => model.vector_arena.push(build_vector_arena(attributes)?),
+            .push(build_value_representation_item_arena(attributes, &mut tt)?),
+        491 => model
+            .vector_arena
+            .push(build_vector_arena(attributes, &mut tt)?),
         492 => model
             .versioned_action_request_arena
-            .push(build_versioned_action_request_arena(attributes)?),
-        493 => model.vertex_arena.push(build_vertex_arena(attributes)?),
+            .push(build_versioned_action_request_arena(attributes, &mut tt)?),
+        493 => model
+            .vertex_arena
+            .push(build_vertex_arena(attributes, &mut tt)?),
         494 => model
             .vertex_loop_arena
-            .push(build_vertex_loop_arena(attributes)?),
+            .push(build_vertex_loop_arena(attributes, &mut tt)?),
         495 => model
             .vertex_point_arena
-            .push(build_vertex_point_arena(attributes)?),
+            .push(build_vertex_point_arena(attributes, &mut tt)?),
         496 => model
             .vertex_shell_arena
-            .push(build_vertex_shell_arena(attributes)?),
+            .push(build_vertex_shell_arena(attributes, &mut tt)?),
         497 => model
             .view_volume_arena
-            .push(build_view_volume_arena(attributes)?),
+            .push(build_view_volume_arena(attributes, &mut tt)?),
         498 => model
             .volume_unit_arena
-            .push(build_volume_unit_arena(attributes)?),
+            .push(build_volume_unit_arena(attributes, &mut tt)?),
         499 => model
             .wire_shell_arena
-            .push(build_wire_shell_arena(attributes)?),
+            .push(build_wire_shell_arena(attributes, &mut tt)?),
         _ => return Err(format!("no entity type #{ix}")),
     })
 }
@@ -20388,1482 +22082,1978 @@ pub fn resolve_entity(
     i: u32,
     attributes: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
     match ix {
-        0 => resolve_action_arena(model, ActionId(i), attributes, idmap),
-        1 => resolve_action_assignment_arena(model, ActionAssignmentId(i), attributes, idmap),
-        2 => resolve_action_directive_arena(model, ActionDirectiveId(i), attributes, idmap),
+        0 => resolve_action_arena(model, ActionId(i), attributes, idmap, dedup),
+        1 => {
+            resolve_action_assignment_arena(model, ActionAssignmentId(i), attributes, idmap, dedup)
+        }
+        2 => resolve_action_directive_arena(model, ActionDirectiveId(i), attributes, idmap, dedup),
         4 => resolve_action_method_relationship_arena(
             model,
             ActionMethodRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        5 => resolve_action_property_arena(model, ActionPropertyId(i), attributes, idmap),
-        6 => resolve_action_relationship_arena(model, ActionRelationshipId(i), attributes, idmap),
+        5 => resolve_action_property_arena(model, ActionPropertyId(i), attributes, idmap, dedup),
+        6 => resolve_action_relationship_arena(
+            model,
+            ActionRelationshipId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         7 => resolve_action_request_assignment_arena(
             model,
             ActionRequestAssignmentId(i),
             attributes,
             idmap,
+            dedup,
         ),
         8 => resolve_action_request_solution_arena(
             model,
             ActionRequestSolutionId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        9 => resolve_action_resource_arena(model, ActionResourceId(i), attributes, idmap),
+        9 => resolve_action_resource_arena(model, ActionResourceId(i), attributes, idmap, dedup),
         10 => resolve_action_resource_relationship_arena(
             model,
             ActionResourceRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
         11 => resolve_action_resource_requirement_arena(
             model,
             ActionResourceRequirementId(i),
             attributes,
             idmap,
+            dedup,
         ),
         14 => resolve_advanced_brep_shape_representation_arena(
             model,
             AdvancedBrepShapeRepresentationId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        15 => resolve_advanced_face_arena(model, AdvancedFaceId(i), attributes, idmap),
+        15 => resolve_advanced_face_arena(model, AdvancedFaceId(i), attributes, idmap, dedup),
         16 => resolve_all_around_shape_aspect_arena(
             model,
             AllAroundShapeAspectId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        17 => resolve_angular_location_arena(model, AngularLocationId(i), attributes, idmap),
-        18 => resolve_angular_size_arena(model, AngularSizeId(i), attributes, idmap),
-        19 => {
-            resolve_angularity_tolerance_arena(model, AngularityToleranceId(i), attributes, idmap)
-        }
+        17 => resolve_angular_location_arena(model, AngularLocationId(i), attributes, idmap, dedup),
+        18 => resolve_angular_size_arena(model, AngularSizeId(i), attributes, idmap, dedup),
+        19 => resolve_angularity_tolerance_arena(
+            model,
+            AngularityToleranceId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         20 => resolve_annotation_curve_occurrence_arena(
             model,
             AnnotationCurveOccurrenceId(i),
             attributes,
             idmap,
+            dedup,
         ),
         21 => resolve_annotation_fill_area_occurrence_arena(
             model,
             AnnotationFillAreaOccurrenceId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        22 => {
-            resolve_annotation_occurrence_arena(model, AnnotationOccurrenceId(i), attributes, idmap)
-        }
+        22 => resolve_annotation_occurrence_arena(
+            model,
+            AnnotationOccurrenceId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         23 => resolve_annotation_occurrence_associativity_arena(
             model,
             AnnotationOccurrenceAssociativityId(i),
             attributes,
             idmap,
+            dedup,
         ),
         24 => resolve_annotation_occurrence_relationship_arena(
             model,
             AnnotationOccurrenceRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
         25 => resolve_annotation_placeholder_leader_line_arena(
             model,
             AnnotationPlaceholderLeaderLineId(i),
             attributes,
             idmap,
+            dedup,
         ),
         26 => resolve_annotation_placeholder_occurrence_arena(
             model,
             AnnotationPlaceholderOccurrenceId(i),
             attributes,
             idmap,
+            dedup,
         ),
         27 => resolve_annotation_placeholder_occurrence_with_leader_line_arena(
             model,
             AnnotationPlaceholderOccurrenceWithLeaderLineId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        28 => resolve_annotation_plane_arena(model, AnnotationPlaneId(i), attributes, idmap),
-        29 => resolve_annotation_symbol_arena(model, AnnotationSymbolId(i), attributes, idmap),
+        28 => resolve_annotation_plane_arena(model, AnnotationPlaneId(i), attributes, idmap, dedup),
+        29 => {
+            resolve_annotation_symbol_arena(model, AnnotationSymbolId(i), attributes, idmap, dedup)
+        }
         30 => resolve_annotation_symbol_occurrence_arena(
             model,
             AnnotationSymbolOccurrenceId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        31 => resolve_annotation_text_arena(model, AnnotationTextId(i), attributes, idmap),
+        31 => resolve_annotation_text_arena(model, AnnotationTextId(i), attributes, idmap, dedup),
         32 => resolve_annotation_text_character_arena(
             model,
             AnnotationTextCharacterId(i),
             attributes,
             idmap,
+            dedup,
         ),
         33 => resolve_annotation_text_occurrence_arena(
             model,
             AnnotationTextOccurrenceId(i),
             attributes,
             idmap,
+            dedup,
         ),
         34 => resolve_annotation_to_annotation_leader_line_arena(
             model,
             AnnotationToAnnotationLeaderLineId(i),
             attributes,
             idmap,
+            dedup,
         ),
         35 => resolve_annotation_to_model_leader_line_arena(
             model,
             AnnotationToModelLeaderLineId(i),
             attributes,
             idmap,
+            dedup,
         ),
         37 => resolve_apll_point_with_surface_arena(
             model,
             ApllPointWithSurfaceId(i),
             attributes,
             idmap,
+            dedup,
         ),
         39 => resolve_application_context_element_arena(
             model,
             ApplicationContextElementId(i),
             attributes,
             idmap,
+            dedup,
         ),
         40 => resolve_application_protocol_definition_arena(
             model,
             ApplicationProtocolDefinitionId(i),
             attributes,
             idmap,
+            dedup,
         ),
         41 => resolve_applied_approval_assignment_arena(
             model,
             AppliedApprovalAssignmentId(i),
             attributes,
             idmap,
+            dedup,
         ),
         42 => resolve_applied_date_and_time_assignment_arena(
             model,
             AppliedDateAndTimeAssignmentId(i),
             attributes,
             idmap,
+            dedup,
         ),
         43 => resolve_applied_document_reference_arena(
             model,
             AppliedDocumentReferenceId(i),
             attributes,
             idmap,
+            dedup,
         ),
         44 => resolve_applied_external_identification_assignment_arena(
             model,
             AppliedExternalIdentificationAssignmentId(i),
             attributes,
             idmap,
+            dedup,
         ),
         45 => resolve_applied_group_assignment_arena(
             model,
             AppliedGroupAssignmentId(i),
             attributes,
             idmap,
+            dedup,
         ),
         46 => resolve_applied_person_and_organization_assignment_arena(
             model,
             AppliedPersonAndOrganizationAssignmentId(i),
             attributes,
             idmap,
+            dedup,
         ),
         47 => resolve_applied_presented_item_arena(
             model,
             AppliedPresentedItemId(i),
             attributes,
             idmap,
+            dedup,
         ),
         48 => resolve_applied_security_classification_assignment_arena(
             model,
             AppliedSecurityClassificationAssignmentId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        49 => resolve_approval_arena(model, ApprovalId(i), attributes, idmap),
-        50 => resolve_approval_assignment_arena(model, ApprovalAssignmentId(i), attributes, idmap),
-        51 => resolve_approval_date_time_arena(model, ApprovalDateTimeId(i), attributes, idmap),
+        49 => resolve_approval_arena(model, ApprovalId(i), attributes, idmap, dedup),
+        50 => resolve_approval_assignment_arena(
+            model,
+            ApprovalAssignmentId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        51 => {
+            resolve_approval_date_time_arena(model, ApprovalDateTimeId(i), attributes, idmap, dedup)
+        }
         52 => resolve_approval_person_organization_arena(
             model,
             ApprovalPersonOrganizationId(i),
             attributes,
             idmap,
+            dedup,
         ),
         55 => resolve_approximation_tolerance_arena(
             model,
             ApproximationToleranceId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        58 => resolve_area_in_set_arena(model, AreaInSetId(i), attributes, idmap),
-        59 => resolve_area_unit_arena(model, AreaUnitId(i), attributes, idmap),
-        60 => resolve_ascribable_state_arena(model, AscribableStateId(i), attributes, idmap),
+        58 => resolve_area_in_set_arena(model, AreaInSetId(i), attributes, idmap, dedup),
+        59 => resolve_area_unit_arena(model, AreaUnitId(i), attributes, idmap, dedup),
+        60 => resolve_ascribable_state_arena(model, AscribableStateId(i), attributes, idmap, dedup),
         61 => resolve_ascribable_state_relationship_arena(
             model,
             AscribableStateRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
         62 => resolve_assembly_component_usage_arena(
             model,
             AssemblyComponentUsageId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        63 => {
-            resolve_auxiliary_leader_line_arena(model, AuxiliaryLeaderLineId(i), attributes, idmap)
+        63 => resolve_auxiliary_leader_line_arena(
+            model,
+            AuxiliaryLeaderLineId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        64 => resolve_axis1_placement_arena(model, Axis1PlacementId(i), attributes, idmap, dedup),
+        65 => {
+            resolve_axis2_placement2d_arena(model, Axis2Placement2dId(i), attributes, idmap, dedup)
         }
-        64 => resolve_axis1_placement_arena(model, Axis1PlacementId(i), attributes, idmap),
-        65 => resolve_axis2_placement2d_arena(model, Axis2Placement2dId(i), attributes, idmap),
-        66 => resolve_axis2_placement3d_arena(model, Axis2Placement3dId(i), attributes, idmap),
-        67 => resolve_b_spline_curve_arena(model, BSplineCurveId(i), attributes, idmap),
+        66 => {
+            resolve_axis2_placement3d_arena(model, Axis2Placement3dId(i), attributes, idmap, dedup)
+        }
+        67 => resolve_b_spline_curve_arena(model, BSplineCurveId(i), attributes, idmap, dedup),
         68 => resolve_b_spline_curve_with_knots_arena(
             model,
             BSplineCurveWithKnotsId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        69 => resolve_b_spline_surface_arena(model, BSplineSurfaceId(i), attributes, idmap),
+        69 => resolve_b_spline_surface_arena(model, BSplineSurfaceId(i), attributes, idmap, dedup),
         70 => resolve_b_spline_surface_with_knots_arena(
             model,
             BSplineSurfaceWithKnotsId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        71 => resolve_bezier_curve_arena(model, BezierCurveId(i), attributes, idmap),
-        72 => resolve_bezier_surface_arena(model, BezierSurfaceId(i), attributes, idmap),
-        74 => resolve_bounded_pcurve_arena(model, BoundedPcurveId(i), attributes, idmap),
-        76 => {
-            resolve_bounded_surface_curve_arena(model, BoundedSurfaceCurveId(i), attributes, idmap)
-        }
-        77 => resolve_brep_with_voids_arena(model, BrepWithVoidsId(i), attributes, idmap),
-        79 => resolve_camera_image_arena(model, CameraImageId(i), attributes, idmap),
+        71 => resolve_bezier_curve_arena(model, BezierCurveId(i), attributes, idmap, dedup),
+        72 => resolve_bezier_surface_arena(model, BezierSurfaceId(i), attributes, idmap, dedup),
+        74 => resolve_bounded_pcurve_arena(model, BoundedPcurveId(i), attributes, idmap, dedup),
+        76 => resolve_bounded_surface_curve_arena(
+            model,
+            BoundedSurfaceCurveId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        77 => resolve_brep_with_voids_arena(model, BrepWithVoidsId(i), attributes, idmap, dedup),
+        79 => resolve_camera_image_arena(model, CameraImageId(i), attributes, idmap, dedup),
         80 => resolve_camera_image3d_with_scale_arena(
             model,
             CameraImage3dWithScaleId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        82 => resolve_camera_model_d3_arena(model, CameraModelD3Id(i), attributes, idmap),
+        82 => resolve_camera_model_d3_arena(model, CameraModelD3Id(i), attributes, idmap, dedup),
         83 => resolve_camera_model_d3_multi_clipping_arena(
             model,
             CameraModelD3MultiClippingId(i),
             attributes,
             idmap,
+            dedup,
         ),
         84 => resolve_camera_model_d3_with_hlhsr_arena(
             model,
             CameraModelD3WithHlhsrId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        85 => resolve_camera_usage_arena(model, CameraUsageId(i), attributes, idmap),
-        87 => resolve_cc_design_approval_arena(model, CcDesignApprovalId(i), attributes, idmap),
+        85 => resolve_camera_usage_arena(model, CameraUsageId(i), attributes, idmap, dedup),
+        87 => {
+            resolve_cc_design_approval_arena(model, CcDesignApprovalId(i), attributes, idmap, dedup)
+        }
         88 => resolve_cc_design_date_and_time_assignment_arena(
             model,
             CcDesignDateAndTimeAssignmentId(i),
             attributes,
             idmap,
+            dedup,
         ),
         89 => resolve_cc_design_person_and_organization_assignment_arena(
             model,
             CcDesignPersonAndOrganizationAssignmentId(i),
             attributes,
             idmap,
+            dedup,
         ),
         90 => resolve_cc_design_security_classification_arena(
             model,
             CcDesignSecurityClassificationId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        91 => resolve_centre_of_symmetry_arena(model, CentreOfSymmetryId(i), attributes, idmap),
-        92 => resolve_certification_arena(model, CertificationId(i), attributes, idmap),
-        94 => resolve_change_arena(model, ChangeId(i), attributes, idmap),
-        95 => resolve_change_request_arena(model, ChangeRequestId(i), attributes, idmap),
+        91 => {
+            resolve_centre_of_symmetry_arena(model, CentreOfSymmetryId(i), attributes, idmap, dedup)
+        }
+        92 => resolve_certification_arena(model, CertificationId(i), attributes, idmap, dedup),
+        94 => resolve_change_arena(model, ChangeId(i), attributes, idmap, dedup),
+        95 => resolve_change_request_arena(model, ChangeRequestId(i), attributes, idmap, dedup),
         96 => resolve_character_glyph_style_outline_arena(
             model,
             CharacterGlyphStyleOutlineId(i),
             attributes,
             idmap,
+            dedup,
         ),
         97 => resolve_character_glyph_style_stroke_arena(
             model,
             CharacterGlyphStyleStrokeId(i),
             attributes,
             idmap,
+            dedup,
         ),
         98 => resolve_characterized_item_within_representation_arena(
             model,
             CharacterizedItemWithinRepresentationId(i),
             attributes,
             idmap,
+            dedup,
         ),
         100 => resolve_characterized_representation_arena(
             model,
             CharacterizedRepresentationId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        101 => resolve_circle_arena(model, CircleId(i), attributes, idmap),
+        101 => resolve_circle_arena(model, CircleId(i), attributes, idmap, dedup),
         102 => resolve_circular_runout_tolerance_arena(
             model,
             CircularRunoutToleranceId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        103 => resolve_closed_shell_arena(model, ClosedShellId(i), attributes, idmap),
-        104 => {
-            resolve_coaxiality_tolerance_arena(model, CoaxialityToleranceId(i), attributes, idmap)
-        }
-        108 => resolve_common_datum_arena(model, CommonDatumId(i), attributes, idmap),
+        103 => resolve_closed_shell_arena(model, ClosedShellId(i), attributes, idmap, dedup),
+        104 => resolve_coaxiality_tolerance_arena(
+            model,
+            CoaxialityToleranceId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        108 => resolve_common_datum_arena(model, CommonDatumId(i), attributes, idmap, dedup),
         109 => resolve_complex_triangulated_face_arena(
             model,
             ComplexTriangulatedFaceId(i),
             attributes,
             idmap,
+            dedup,
         ),
         110 => resolve_complex_triangulated_surface_set_arena(
             model,
             ComplexTriangulatedSurfaceSetId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        111 => resolve_composite_curve_arena(model, CompositeCurveId(i), attributes, idmap),
+        111 => resolve_composite_curve_arena(model, CompositeCurveId(i), attributes, idmap, dedup),
         112 => resolve_composite_curve_segment_arena(
             model,
             CompositeCurveSegmentId(i),
             attributes,
             idmap,
+            dedup,
         ),
         113 => resolve_composite_group_shape_aspect_arena(
             model,
             CompositeGroupShapeAspectId(i),
             attributes,
             idmap,
+            dedup,
         ),
         114 => resolve_composite_shape_aspect_arena(
             model,
             CompositeShapeAspectId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        115 => resolve_composite_text_arena(model, CompositeTextId(i), attributes, idmap),
+        115 => resolve_composite_text_arena(model, CompositeTextId(i), attributes, idmap, dedup),
         116 => resolve_compound_representation_item_arena(
             model,
             CompoundRepresentationItemId(i),
             attributes,
             idmap,
+            dedup,
         ),
         117 => resolve_concentricity_tolerance_arena(
             model,
             ConcentricityToleranceId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        118 => {
-            resolve_configuration_design_arena(model, ConfigurationDesignId(i), attributes, idmap)
-        }
+        118 => resolve_configuration_design_arena(
+            model,
+            ConfigurationDesignId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         119 => resolve_configuration_effectivity_arena(
             model,
             ConfigurationEffectivityId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        120 => resolve_configuration_item_arena(model, ConfigurationItemId(i), attributes, idmap),
-        121 => resolve_conic_arena(model, ConicId(i), attributes, idmap),
-        122 => resolve_conical_surface_arena(model, ConicalSurfaceId(i), attributes, idmap),
-        123 => resolve_connected_face_set_arena(model, ConnectedFaceSetId(i), attributes, idmap),
+        120 => resolve_configuration_item_arena(
+            model,
+            ConfigurationItemId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        121 => resolve_conic_arena(model, ConicId(i), attributes, idmap, dedup),
+        122 => resolve_conical_surface_arena(model, ConicalSurfaceId(i), attributes, idmap, dedup),
+        123 => {
+            resolve_connected_face_set_arena(model, ConnectedFaceSetId(i), attributes, idmap, dedup)
+        }
         124 => resolve_constructive_geometry_representation_arena(
             model,
             ConstructiveGeometryRepresentationId(i),
             attributes,
             idmap,
+            dedup,
         ),
         125 => resolve_constructive_geometry_representation_relationship_arena(
             model,
             ConstructiveGeometryRepresentationRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
         126 => resolve_context_dependent_over_riding_styled_item_arena(
             model,
             ContextDependentOverRidingStyledItemId(i),
             attributes,
             idmap,
+            dedup,
         ),
         127 => resolve_context_dependent_shape_representation_arena(
             model,
             ContextDependentShapeRepresentationId(i),
             attributes,
             idmap,
+            dedup,
         ),
         128 => resolve_context_dependent_unit_arena(
             model,
             ContextDependentUnitId(i),
             attributes,
             idmap,
+            dedup,
         ),
         129 => resolve_continuous_shape_aspect_arena(
             model,
             ContinuousShapeAspectId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        130 => resolve_contract_arena(model, ContractId(i), attributes, idmap),
-        132 => {
-            resolve_conversion_based_unit_arena(model, ConversionBasedUnitId(i), attributes, idmap)
-        }
-        136 => resolve_curve_style_arena(model, CurveStyleId(i), attributes, idmap),
-        137 => resolve_curve_style_font_arena(model, CurveStyleFontId(i), attributes, idmap),
+        130 => resolve_contract_arena(model, ContractId(i), attributes, idmap, dedup),
+        132 => resolve_conversion_based_unit_arena(
+            model,
+            ConversionBasedUnitId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        136 => resolve_curve_style_arena(model, CurveStyleId(i), attributes, idmap, dedup),
+        137 => resolve_curve_style_font_arena(model, CurveStyleFontId(i), attributes, idmap, dedup),
         138 => resolve_curve_style_font_and_scaling_arena(
             model,
             CurveStyleFontAndScalingId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        140 => {
-            resolve_curve_style_rendering_arena(model, CurveStyleRenderingId(i), attributes, idmap)
-        }
-        141 => resolve_cylindrical_surface_arena(model, CylindricalSurfaceId(i), attributes, idmap),
+        140 => resolve_curve_style_rendering_arena(
+            model,
+            CurveStyleRenderingId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        141 => resolve_cylindrical_surface_arena(
+            model,
+            CylindricalSurfaceId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         142 => resolve_cylindricity_tolerance_arena(
             model,
             CylindricityToleranceId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        144 => resolve_date_and_time_arena(model, DateAndTimeId(i), attributes, idmap),
+        144 => resolve_date_and_time_arena(model, DateAndTimeId(i), attributes, idmap, dedup),
         145 => resolve_date_and_time_assignment_arena(
             model,
             DateAndTimeAssignmentId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        148 => resolve_datum_arena(model, DatumId(i), attributes, idmap),
-        149 => resolve_datum_feature_arena(model, DatumFeatureId(i), attributes, idmap),
-        150 => resolve_datum_reference_arena(model, DatumReferenceId(i), attributes, idmap),
+        148 => resolve_datum_arena(model, DatumId(i), attributes, idmap, dedup),
+        149 => resolve_datum_feature_arena(model, DatumFeatureId(i), attributes, idmap, dedup),
+        150 => resolve_datum_reference_arena(model, DatumReferenceId(i), attributes, idmap, dedup),
         151 => resolve_datum_reference_compartment_arena(
             model,
             DatumReferenceCompartmentId(i),
             attributes,
             idmap,
+            dedup,
         ),
         152 => resolve_datum_reference_element_arena(
             model,
             DatumReferenceElementId(i),
             attributes,
             idmap,
+            dedup,
         ),
         153 => resolve_datum_reference_modifier_with_value_arena(
             model,
             DatumReferenceModifierWithValueId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        154 => resolve_datum_system_arena(model, DatumSystemId(i), attributes, idmap),
-        155 => resolve_datum_target_arena(model, DatumTargetId(i), attributes, idmap),
+        154 => resolve_datum_system_arena(model, DatumSystemId(i), attributes, idmap, dedup),
+        155 => resolve_datum_target_arena(model, DatumTargetId(i), attributes, idmap, dedup),
         156 => resolve_default_model_geometric_view_arena(
             model,
             DefaultModelGeometricViewId(i),
             attributes,
             idmap,
+            dedup,
         ),
         157 => resolve_defined_character_glyph_arena(
             model,
             DefinedCharacterGlyphId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        158 => resolve_defined_symbol_arena(model, DefinedSymbolId(i), attributes, idmap),
+        158 => resolve_defined_symbol_arena(model, DefinedSymbolId(i), attributes, idmap, dedup),
         159 => resolve_definitional_representation_arena(
             model,
             DefinitionalRepresentationId(i),
             attributes,
             idmap,
+            dedup,
         ),
         160 => resolve_definitional_representation_relationship_arena(
             model,
             DefinitionalRepresentationRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
         161 => resolve_definitional_representation_relationship_with_same_context_arena(
             model,
             DefinitionalRepresentationRelationshipWithSameContextId(i),
             attributes,
             idmap,
+            dedup,
         ),
         162 => resolve_degenerate_toroidal_surface_arena(
             model,
             DegenerateToroidalSurfaceId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        163 => {
-            resolve_derived_shape_aspect_arena(model, DerivedShapeAspectId(i), attributes, idmap)
-        }
-        164 => resolve_derived_unit_arena(model, DerivedUnitId(i), attributes, idmap),
-        165 => {
-            resolve_derived_unit_element_arena(model, DerivedUnitElementId(i), attributes, idmap)
-        }
-        166 => {
-            resolve_description_attribute_arena(model, DescriptionAttributeId(i), attributes, idmap)
-        }
-        168 => resolve_design_context_arena(model, DesignContextId(i), attributes, idmap),
+        163 => resolve_derived_shape_aspect_arena(
+            model,
+            DerivedShapeAspectId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        164 => resolve_derived_unit_arena(model, DerivedUnitId(i), attributes, idmap, dedup),
+        165 => resolve_derived_unit_element_arena(
+            model,
+            DerivedUnitElementId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        166 => resolve_description_attribute_arena(
+            model,
+            DescriptionAttributeId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        168 => resolve_design_context_arena(model, DesignContextId(i), attributes, idmap, dedup),
         169 => resolve_dimensional_characteristic_representation_arena(
             model,
             DimensionalCharacteristicRepresentationId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        171 => {
-            resolve_dimensional_location_arena(model, DimensionalLocationId(i), attributes, idmap)
-        }
+        171 => resolve_dimensional_location_arena(
+            model,
+            DimensionalLocationId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         172 => resolve_dimensional_location_with_path_arena(
             model,
             DimensionalLocationWithPathId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        173 => resolve_dimensional_size_arena(model, DimensionalSizeId(i), attributes, idmap),
+        173 => {
+            resolve_dimensional_size_arena(model, DimensionalSizeId(i), attributes, idmap, dedup)
+        }
         174 => resolve_dimensional_size_with_datum_feature_arena(
             model,
             DimensionalSizeWithDatumFeatureId(i),
             attributes,
             idmap,
+            dedup,
         ),
         175 => resolve_dimensional_size_with_path_arena(
             model,
             DimensionalSizeWithPathId(i),
             attributes,
             idmap,
+            dedup,
         ),
         176 => resolve_directed_dimensional_location_arena(
             model,
             DirectedDimensionalLocationId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        178 => resolve_document_arena(model, DocumentId(i), attributes, idmap),
-        179 => resolve_document_file_arena(model, DocumentFileId(i), attributes, idmap),
+        178 => resolve_document_arena(model, DocumentId(i), attributes, idmap, dedup),
+        179 => resolve_document_file_arena(model, DocumentFileId(i), attributes, idmap, dedup),
         180 => resolve_document_product_association_arena(
             model,
             DocumentProductAssociationId(i),
             attributes,
             idmap,
+            dedup,
         ),
         181 => resolve_document_product_equivalence_arena(
             model,
             DocumentProductEquivalenceId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        182 => resolve_document_reference_arena(model, DocumentReferenceId(i), attributes, idmap),
+        182 => resolve_document_reference_arena(
+            model,
+            DocumentReferenceId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         183 => resolve_document_representation_type_arena(
             model,
             DocumentRepresentationTypeId(i),
             attributes,
             idmap,
+            dedup,
         ),
         185 => resolve_draughting_annotation_occurrence_arena(
             model,
             DraughtingAnnotationOccurrenceId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        186 => resolve_draughting_callout_arena(model, DraughtingCalloutId(i), attributes, idmap),
+        186 => resolve_draughting_callout_arena(
+            model,
+            DraughtingCalloutId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         187 => resolve_draughting_callout_relationship_arena(
             model,
             DraughtingCalloutRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        188 => resolve_draughting_model_arena(model, DraughtingModelId(i), attributes, idmap),
+        188 => {
+            resolve_draughting_model_arena(model, DraughtingModelId(i), attributes, idmap, dedup)
+        }
         189 => resolve_draughting_model_item_association_arena(
             model,
             DraughtingModelItemAssociationId(i),
             attributes,
             idmap,
+            dedup,
         ),
         190 => resolve_draughting_model_item_association_with_placeholder_arena(
             model,
             DraughtingModelItemAssociationWithPlaceholderId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        194 => resolve_edge_arena(model, EdgeId(i), attributes, idmap),
-        195 => resolve_edge_curve_arena(model, EdgeCurveId(i), attributes, idmap),
-        196 => resolve_edge_loop_arena(model, EdgeLoopId(i), attributes, idmap),
-        198 => resolve_elementary_surface_arena(model, ElementarySurfaceId(i), attributes, idmap),
-        199 => resolve_ellipse_arena(model, EllipseId(i), attributes, idmap),
+        194 => resolve_edge_arena(model, EdgeId(i), attributes, idmap, dedup),
+        195 => resolve_edge_curve_arena(model, EdgeCurveId(i), attributes, idmap, dedup),
+        196 => resolve_edge_loop_arena(model, EdgeLoopId(i), attributes, idmap, dedup),
+        198 => resolve_elementary_surface_arena(
+            model,
+            ElementarySurfaceId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        199 => resolve_ellipse_arena(model, EllipseId(i), attributes, idmap, dedup),
         201 => resolve_external_identification_assignment_arena(
             model,
             ExternalIdentificationAssignmentId(i),
             attributes,
             idmap,
+            dedup,
         ),
         203 => resolve_externally_defined_character_glyph_arena(
             model,
             ExternallyDefinedCharacterGlyphId(i),
             attributes,
             idmap,
+            dedup,
         ),
         204 => resolve_externally_defined_curve_font_arena(
             model,
             ExternallyDefinedCurveFontId(i),
             attributes,
             idmap,
+            dedup,
         ),
         205 => resolve_externally_defined_hatch_style_arena(
             model,
             ExternallyDefinedHatchStyleId(i),
             attributes,
             idmap,
+            dedup,
         ),
         206 => resolve_externally_defined_item_arena(
             model,
             ExternallyDefinedItemId(i),
             attributes,
             idmap,
+            dedup,
         ),
         207 => resolve_externally_defined_style_arena(
             model,
             ExternallyDefinedStyleId(i),
             attributes,
             idmap,
+            dedup,
         ),
         208 => resolve_externally_defined_symbol_arena(
             model,
             ExternallyDefinedSymbolId(i),
             attributes,
             idmap,
+            dedup,
         ),
         209 => resolve_externally_defined_text_font_arena(
             model,
             ExternallyDefinedTextFontId(i),
             attributes,
             idmap,
+            dedup,
         ),
         210 => resolve_externally_defined_tile_arena(
             model,
             ExternallyDefinedTileId(i),
             attributes,
             idmap,
+            dedup,
         ),
         211 => resolve_externally_defined_tile_style_arena(
             model,
             ExternallyDefinedTileStyleId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        212 => resolve_face_arena(model, FaceId(i), attributes, idmap),
-        213 => resolve_face_bound_arena(model, FaceBoundId(i), attributes, idmap),
-        214 => resolve_face_outer_bound_arena(model, FaceOuterBoundId(i), attributes, idmap),
-        215 => resolve_face_surface_arena(model, FaceSurfaceId(i), attributes, idmap),
+        212 => resolve_face_arena(model, FaceId(i), attributes, idmap, dedup),
+        213 => resolve_face_bound_arena(model, FaceBoundId(i), attributes, idmap, dedup),
+        214 => resolve_face_outer_bound_arena(model, FaceOuterBoundId(i), attributes, idmap, dedup),
+        215 => resolve_face_surface_arena(model, FaceSurfaceId(i), attributes, idmap, dedup),
         216 => resolve_feature_for_datum_target_relationship_arena(
             model,
             FeatureForDatumTargetRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        217 => resolve_fill_area_style_arena(model, FillAreaStyleId(i), attributes, idmap),
-        218 => {
-            resolve_fill_area_style_colour_arena(model, FillAreaStyleColourId(i), attributes, idmap)
-        }
+        217 => resolve_fill_area_style_arena(model, FillAreaStyleId(i), attributes, idmap, dedup),
+        218 => resolve_fill_area_style_colour_arena(
+            model,
+            FillAreaStyleColourId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         219 => resolve_fill_area_style_hatching_arena(
             model,
             FillAreaStyleHatchingId(i),
             attributes,
             idmap,
+            dedup,
         ),
         220 => resolve_fill_area_style_tile_coloured_region_arena(
             model,
             FillAreaStyleTileColouredRegionId(i),
             attributes,
             idmap,
+            dedup,
         ),
         221 => resolve_fill_area_style_tile_curve_with_style_arena(
             model,
             FillAreaStyleTileCurveWithStyleId(i),
             attributes,
             idmap,
+            dedup,
         ),
         222 => resolve_fill_area_style_tile_symbol_with_style_arena(
             model,
             FillAreaStyleTileSymbolWithStyleId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        223 => {
-            resolve_fill_area_style_tiles_arena(model, FillAreaStyleTilesId(i), attributes, idmap)
-        }
-        224 => resolve_flatness_tolerance_arena(model, FlatnessToleranceId(i), attributes, idmap),
+        223 => resolve_fill_area_style_tiles_arena(
+            model,
+            FillAreaStyleTilesId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        224 => resolve_flatness_tolerance_arena(
+            model,
+            FlatnessToleranceId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         227 => resolve_general_datum_reference_arena(
             model,
             GeneralDatumReferenceId(i),
             attributes,
             idmap,
+            dedup,
         ),
         229 => resolve_general_property_association_arena(
             model,
             GeneralPropertyAssociationId(i),
             attributes,
             idmap,
+            dedup,
         ),
         232 => resolve_generic_product_definition_reference_arena(
             model,
             GenericProductDefinitionReferenceId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        233 => resolve_geometric_curve_set_arena(model, GeometricCurveSetId(i), attributes, idmap),
+        233 => resolve_geometric_curve_set_arena(
+            model,
+            GeometricCurveSetId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         234 => resolve_geometric_item_specific_usage_arena(
             model,
             GeometricItemSpecificUsageId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        237 => resolve_geometric_set_arena(model, GeometricSetId(i), attributes, idmap),
-        238 => resolve_geometric_tolerance_arena(model, GeometricToleranceId(i), attributes, idmap),
+        237 => resolve_geometric_set_arena(model, GeometricSetId(i), attributes, idmap, dedup),
+        238 => resolve_geometric_tolerance_arena(
+            model,
+            GeometricToleranceId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         239 => resolve_geometric_tolerance_relationship_arena(
             model,
             GeometricToleranceRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
         240 => resolve_geometric_tolerance_with_datum_reference_arena(
             model,
             GeometricToleranceWithDatumReferenceId(i),
             attributes,
             idmap,
+            dedup,
         ),
         241 => resolve_geometric_tolerance_with_defined_area_unit_arena(
             model,
             GeometricToleranceWithDefinedAreaUnitId(i),
             attributes,
             idmap,
+            dedup,
         ),
         242 => resolve_geometric_tolerance_with_defined_unit_arena(
             model,
             GeometricToleranceWithDefinedUnitId(i),
             attributes,
             idmap,
+            dedup,
         ),
         243 => resolve_geometric_tolerance_with_maximum_tolerance_arena(
             model,
             GeometricToleranceWithMaximumToleranceId(i),
             attributes,
             idmap,
+            dedup,
         ),
         244 => resolve_geometric_tolerance_with_modifiers_arena(
             model,
             GeometricToleranceWithModifiersId(i),
             attributes,
             idmap,
+            dedup,
         ),
         245 => resolve_geometrically_bounded_surface_shape_representation_arena(
             model,
             GeometricallyBoundedSurfaceShapeRepresentationId(i),
             attributes,
             idmap,
+            dedup,
         ),
         246 => resolve_geometrically_bounded_wireframe_shape_representation_arena(
             model,
             GeometricallyBoundedWireframeShapeRepresentationId(i),
             attributes,
             idmap,
+            dedup,
         ),
         247 => resolve_global_uncertainty_assigned_context_arena(
             model,
             GlobalUncertaintyAssignedContextId(i),
             attributes,
             idmap,
+            dedup,
         ),
         248 => resolve_global_unit_assigned_context_arena(
             model,
             GlobalUnitAssignedContextId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        250 => resolve_group_assignment_arena(model, GroupAssignmentId(i), attributes, idmap),
-        251 => resolve_hyperbola_arena(model, HyperbolaId(i), attributes, idmap),
-        252 => resolve_id_attribute_arena(model, IdAttributeId(i), attributes, idmap),
+        250 => {
+            resolve_group_assignment_arena(model, GroupAssignmentId(i), attributes, idmap, dedup)
+        }
+        251 => resolve_hyperbola_arena(model, HyperbolaId(i), attributes, idmap, dedup),
+        252 => resolve_id_attribute_arena(model, IdAttributeId(i), attributes, idmap, dedup),
         253 => resolve_identification_assignment_arena(
             model,
             IdentificationAssignmentId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        257 => resolve_intersection_curve_arena(model, IntersectionCurveId(i), attributes, idmap),
-        258 => resolve_invisibility_arena(model, InvisibilityId(i), attributes, idmap),
+        257 => resolve_intersection_curve_arena(
+            model,
+            IntersectionCurveId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        258 => resolve_invisibility_arena(model, InvisibilityId(i), attributes, idmap, dedup),
         259 => resolve_item_defined_transformation_arena(
             model,
             ItemDefinedTransformationId(i),
             attributes,
             idmap,
+            dedup,
         ),
         260 => resolve_item_identified_representation_usage_arena(
             model,
             ItemIdentifiedRepresentationUsageId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        261 => resolve_leader_curve_arena(model, LeaderCurveId(i), attributes, idmap),
+        261 => resolve_leader_curve_arena(model, LeaderCurveId(i), attributes, idmap, dedup),
         262 => resolve_leader_directed_callout_arena(
             model,
             LeaderDirectedCalloutId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        263 => resolve_leader_terminator_arena(model, LeaderTerminatorId(i), attributes, idmap),
+        263 => {
+            resolve_leader_terminator_arena(model, LeaderTerminatorId(i), attributes, idmap, dedup)
+        }
         264 => resolve_length_measure_with_unit_arena(
             model,
             LengthMeasureWithUnitId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        265 => resolve_length_unit_arena(model, LengthUnitId(i), attributes, idmap),
-        267 => resolve_line_arena(model, LineId(i), attributes, idmap),
+        265 => resolve_length_unit_arena(model, LengthUnitId(i), attributes, idmap, dedup),
+        267 => resolve_line_arena(model, LineId(i), attributes, idmap, dedup),
         268 => resolve_line_profile_tolerance_arena(
             model,
             LineProfileToleranceId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        270 => resolve_local_time_arena(model, LocalTimeId(i), attributes, idmap),
-        272 => {
-            resolve_make_from_usage_option_arena(model, MakeFromUsageOptionId(i), attributes, idmap)
-        }
-        273 => resolve_manifold_solid_brep_arena(model, ManifoldSolidBrepId(i), attributes, idmap),
+        270 => resolve_local_time_arena(model, LocalTimeId(i), attributes, idmap, dedup),
+        272 => resolve_make_from_usage_option_arena(
+            model,
+            MakeFromUsageOptionId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        273 => resolve_manifold_solid_brep_arena(
+            model,
+            ManifoldSolidBrepId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         274 => resolve_manifold_surface_shape_representation_arena(
             model,
             ManifoldSurfaceShapeRepresentationId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        275 => resolve_mapped_item_arena(model, MappedItemId(i), attributes, idmap),
-        276 => {
-            resolve_mass_measure_with_unit_arena(model, MassMeasureWithUnitId(i), attributes, idmap)
-        }
-        277 => resolve_mass_unit_arena(model, MassUnitId(i), attributes, idmap),
-        278 => {
-            resolve_measure_qualification_arena(model, MeasureQualificationId(i), attributes, idmap)
-        }
+        275 => resolve_mapped_item_arena(model, MappedItemId(i), attributes, idmap, dedup),
+        276 => resolve_mass_measure_with_unit_arena(
+            model,
+            MassMeasureWithUnitId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        277 => resolve_mass_unit_arena(model, MassUnitId(i), attributes, idmap, dedup),
+        278 => resolve_measure_qualification_arena(
+            model,
+            MeasureQualificationId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         279 => resolve_measure_representation_item_arena(
             model,
             MeasureRepresentationItemId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        280 => resolve_measure_with_unit_arena(model, MeasureWithUnitId(i), attributes, idmap),
-        281 => resolve_mechanical_context_arena(model, MechanicalContextId(i), attributes, idmap),
+        280 => {
+            resolve_measure_with_unit_arena(model, MeasureWithUnitId(i), attributes, idmap, dedup)
+        }
+        281 => resolve_mechanical_context_arena(
+            model,
+            MechanicalContextId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         282 => resolve_mechanical_design_and_draughting_relationship_arena(
             model,
             MechanicalDesignAndDraughtingRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
         283 => resolve_mechanical_design_geometric_presentation_representation_arena(
             model,
             MechanicalDesignGeometricPresentationRepresentationId(i),
             attributes,
             idmap,
+            dedup,
         ),
         284 => resolve_mechanical_design_presentation_representation_with_draughting_arena(
             model,
             MechanicalDesignPresentationRepresentationWithDraughtingId(i),
             attributes,
             idmap,
+            dedup,
         ),
         285 => resolve_mechanical_design_shaded_presentation_representation_arena(
             model,
             MechanicalDesignShadedPresentationRepresentationId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        286 => {
-            resolve_model_geometric_view_arena(model, ModelGeometricViewId(i), attributes, idmap)
-        }
+        286 => resolve_model_geometric_view_arena(
+            model,
+            ModelGeometricViewId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         287 => resolve_modified_geometric_tolerance_arena(
             model,
             ModifiedGeometricToleranceId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        288 => resolve_name_attribute_arena(model, NameAttributeId(i), attributes, idmap),
-        289 => resolve_named_unit_arena(model, NamedUnitId(i), attributes, idmap),
+        288 => resolve_name_attribute_arena(model, NameAttributeId(i), attributes, idmap, dedup),
+        289 => resolve_named_unit_arena(model, NamedUnitId(i), attributes, idmap, dedup),
         290 => resolve_next_assembly_usage_occurrence_arena(
             model,
             NextAssemblyUsageOccurrenceId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        293 => resolve_offset_surface_arena(model, OffsetSurfaceId(i), attributes, idmap),
+        293 => resolve_offset_surface_arena(model, OffsetSurfaceId(i), attributes, idmap, dedup),
         294 => resolve_one_direction_repeat_factor_arena(
             model,
             OneDirectionRepeatFactorId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        295 => resolve_open_shell_arena(model, OpenShellId(i), attributes, idmap),
+        295 => resolve_open_shell_arena(model, OpenShellId(i), attributes, idmap, dedup),
         297 => resolve_organization_relationship_arena(
             model,
             OrganizationRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
         301 => resolve_organizational_address_arena(
             model,
             OrganizationalAddressId(i),
             attributes,
             idmap,
+            dedup,
         ),
         302 => resolve_organizational_project_arena(
             model,
             OrganizationalProjectId(i),
             attributes,
             idmap,
+            dedup,
         ),
         303 => resolve_organizational_project_relationship_arena(
             model,
             OrganizationalProjectRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        305 => {
-            resolve_oriented_closed_shell_arena(model, OrientedClosedShellId(i), attributes, idmap)
-        }
-        306 => resolve_oriented_edge_arena(model, OrientedEdgeId(i), attributes, idmap),
+        305 => resolve_oriented_closed_shell_arena(
+            model,
+            OrientedClosedShellId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        306 => resolve_oriented_edge_arena(model, OrientedEdgeId(i), attributes, idmap, dedup),
         307 => resolve_over_riding_styled_item_arena(
             model,
             OverRidingStyledItemId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        308 => {
-            resolve_parallelism_tolerance_arena(model, ParallelismToleranceId(i), attributes, idmap)
-        }
-        310 => resolve_path_arena(model, PathId(i), attributes, idmap),
-        311 => resolve_pcurve_arena(model, PcurveId(i), attributes, idmap),
+        308 => resolve_parallelism_tolerance_arena(
+            model,
+            ParallelismToleranceId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        310 => resolve_path_arena(model, PathId(i), attributes, idmap, dedup),
+        311 => resolve_pcurve_arena(model, PcurveId(i), attributes, idmap, dedup),
         312 => resolve_perpendicularity_tolerance_arena(
             model,
             PerpendicularityToleranceId(i),
             attributes,
             idmap,
+            dedup,
         ),
         314 => resolve_person_and_organization_arena(
             model,
             PersonAndOrganizationId(i),
             attributes,
             idmap,
+            dedup,
         ),
         315 => resolve_person_and_organization_address_arena(
             model,
             PersonAndOrganizationAddressId(i),
             attributes,
             idmap,
+            dedup,
         ),
         316 => resolve_person_and_organization_assignment_arena(
             model,
             PersonAndOrganizationAssignmentId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        318 => resolve_personal_address_arena(model, PersonalAddressId(i), attributes, idmap),
+        318 => {
+            resolve_personal_address_arena(model, PersonalAddressId(i), attributes, idmap, dedup)
+        }
         319 => resolve_placed_datum_target_feature_arena(
             model,
             PlacedDatumTargetFeatureId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        320 => resolve_placement_arena(model, PlacementId(i), attributes, idmap),
-        321 => resolve_planar_box_arena(model, PlanarBoxId(i), attributes, idmap),
-        323 => resolve_plane_arena(model, PlaneId(i), attributes, idmap),
+        320 => resolve_placement_arena(model, PlacementId(i), attributes, idmap, dedup),
+        321 => resolve_planar_box_arena(model, PlanarBoxId(i), attributes, idmap, dedup),
+        323 => resolve_plane_arena(model, PlaneId(i), attributes, idmap, dedup),
         324 => resolve_plane_angle_measure_with_unit_arena(
             model,
             PlaneAngleMeasureWithUnitId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        325 => resolve_plane_angle_unit_arena(model, PlaneAngleUnitId(i), attributes, idmap),
-        326 => {
-            resolve_plus_minus_tolerance_arena(model, PlusMinusToleranceId(i), attributes, idmap)
+        325 => resolve_plane_angle_unit_arena(model, PlaneAngleUnitId(i), attributes, idmap, dedup),
+        326 => resolve_plus_minus_tolerance_arena(
+            model,
+            PlusMinusToleranceId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        328 => resolve_point_style_arena(model, PointStyleId(i), attributes, idmap, dedup),
+        329 => resolve_poly_loop_arena(model, PolyLoopId(i), attributes, idmap, dedup),
+        330 => resolve_polyline_arena(model, PolylineId(i), attributes, idmap, dedup),
+        331 => resolve_position_tolerance_arena(
+            model,
+            PositionToleranceId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        345 => {
+            resolve_presentation_area_arena(model, PresentationAreaId(i), attributes, idmap, dedup)
         }
-        328 => resolve_point_style_arena(model, PointStyleId(i), attributes, idmap),
-        329 => resolve_poly_loop_arena(model, PolyLoopId(i), attributes, idmap),
-        330 => resolve_polyline_arena(model, PolylineId(i), attributes, idmap),
-        331 => resolve_position_tolerance_arena(model, PositionToleranceId(i), attributes, idmap),
-        345 => resolve_presentation_area_arena(model, PresentationAreaId(i), attributes, idmap),
         346 => resolve_presentation_layer_assignment_arena(
             model,
             PresentationLayerAssignmentId(i),
             attributes,
             idmap,
+            dedup,
         ),
         347 => resolve_presentation_representation_arena(
             model,
             PresentationRepresentationId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        349 => resolve_presentation_size_arena(model, PresentationSizeId(i), attributes, idmap),
+        349 => {
+            resolve_presentation_size_arena(model, PresentationSizeId(i), attributes, idmap, dedup)
+        }
         350 => resolve_presentation_style_assignment_arena(
             model,
             PresentationStyleAssignmentId(i),
             attributes,
             idmap,
+            dedup,
         ),
         351 => resolve_presentation_style_by_context_arena(
             model,
             PresentationStyleByContextId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        352 => resolve_presentation_view_arena(model, PresentationViewId(i), attributes, idmap),
+        352 => {
+            resolve_presentation_view_arena(model, PresentationViewId(i), attributes, idmap, dedup)
+        }
         354 => resolve_presented_item_representation_arena(
             model,
             PresentedItemRepresentationId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        355 => resolve_product_arena(model, ProductId(i), attributes, idmap),
+        355 => resolve_product_arena(model, ProductId(i), attributes, idmap, dedup),
         357 => resolve_product_category_relationship_arena(
             model,
             ProductCategoryRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        358 => resolve_product_concept_arena(model, ProductConceptId(i), attributes, idmap),
+        358 => resolve_product_concept_arena(model, ProductConceptId(i), attributes, idmap, dedup),
         359 => resolve_product_concept_context_arena(
             model,
             ProductConceptContextId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        362 => resolve_product_context_arena(model, ProductContextId(i), attributes, idmap),
-        363 => resolve_product_definition_arena(model, ProductDefinitionId(i), attributes, idmap),
+        362 => resolve_product_context_arena(model, ProductContextId(i), attributes, idmap, dedup),
+        363 => resolve_product_definition_arena(
+            model,
+            ProductDefinitionId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         364 => resolve_product_definition_context_arena(
             model,
             ProductDefinitionContextId(i),
             attributes,
             idmap,
+            dedup,
         ),
         365 => resolve_product_definition_context_association_arena(
             model,
             ProductDefinitionContextAssociationId(i),
             attributes,
             idmap,
+            dedup,
         ),
         367 => resolve_product_definition_effectivity_arena(
             model,
             ProductDefinitionEffectivityId(i),
             attributes,
             idmap,
+            dedup,
         ),
         368 => resolve_product_definition_formation_arena(
             model,
             ProductDefinitionFormationId(i),
             attributes,
             idmap,
+            dedup,
         ),
         369 => resolve_product_definition_formation_with_specified_source_arena(
             model,
             ProductDefinitionFormationWithSpecifiedSourceId(i),
             attributes,
             idmap,
+            dedup,
         ),
         370 => resolve_product_definition_occurrence_arena(
             model,
             ProductDefinitionOccurrenceId(i),
             attributes,
             idmap,
+            dedup,
         ),
         371 => resolve_product_definition_relationship_arena(
             model,
             ProductDefinitionRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
         372 => resolve_product_definition_relationship_relationship_arena(
             model,
             ProductDefinitionRelationshipRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
         373 => resolve_product_definition_shape_arena(
             model,
             ProductDefinitionShapeId(i),
             attributes,
             idmap,
+            dedup,
         ),
         374 => resolve_product_definition_substitute_arena(
             model,
             ProductDefinitionSubstituteId(i),
             attributes,
             idmap,
+            dedup,
         ),
         375 => resolve_product_definition_usage_arena(
             model,
             ProductDefinitionUsageId(i),
             attributes,
             idmap,
+            dedup,
         ),
         376 => resolve_product_definition_with_associated_documents_arena(
             model,
             ProductDefinitionWithAssociatedDocumentsId(i),
             attributes,
             idmap,
+            dedup,
         ),
         377 => resolve_product_related_product_category_arena(
             model,
             ProductRelatedProductCategoryId(i),
             attributes,
             idmap,
+            dedup,
         ),
         378 => resolve_projected_zone_definition_arena(
             model,
             ProjectedZoneDefinitionId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        379 => resolve_property_definition_arena(model, PropertyDefinitionId(i), attributes, idmap),
+        379 => resolve_property_definition_arena(
+            model,
+            PropertyDefinitionId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         380 => resolve_property_definition_relationship_arena(
             model,
             PropertyDefinitionRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
         381 => resolve_property_definition_representation_arena(
             model,
             PropertyDefinitionRepresentationId(i),
             attributes,
             idmap,
+            dedup,
         ),
         382 => resolve_qualified_representation_item_arena(
             model,
             QualifiedRepresentationItemId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        383 => resolve_quasi_uniform_curve_arena(model, QuasiUniformCurveId(i), attributes, idmap),
-        384 => {
-            resolve_quasi_uniform_surface_arena(model, QuasiUniformSurfaceId(i), attributes, idmap)
-        }
+        383 => resolve_quasi_uniform_curve_arena(
+            model,
+            QuasiUniformCurveId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        384 => resolve_quasi_uniform_surface_arena(
+            model,
+            QuasiUniformSurfaceId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         385 => resolve_ratio_measure_with_unit_arena(
             model,
             RatioMeasureWithUnitId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        386 => resolve_ratio_unit_arena(model, RatioUnitId(i), attributes, idmap),
+        386 => resolve_ratio_unit_arena(model, RatioUnitId(i), attributes, idmap, dedup),
         387 => resolve_rational_b_spline_curve_arena(
             model,
             RationalBSplineCurveId(i),
             attributes,
             idmap,
+            dedup,
         ),
         388 => resolve_rational_b_spline_surface_arena(
             model,
             RationalBSplineSurfaceId(i),
             attributes,
             idmap,
+            dedup,
         ),
         391 => resolve_repositioned_tessellated_item_arena(
             model,
             RepositionedTessellatedItemId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        392 => resolve_representation_arena(model, RepresentationId(i), attributes, idmap),
-        396 => resolve_representation_map_arena(model, RepresentationMapId(i), attributes, idmap),
+        392 => resolve_representation_arena(model, RepresentationId(i), attributes, idmap, dedup),
+        396 => resolve_representation_map_arena(
+            model,
+            RepresentationMapId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         397 => resolve_representation_reference_arena(
             model,
             RepresentationReferenceId(i),
             attributes,
             idmap,
+            dedup,
         ),
         398 => resolve_representation_relationship_arena(
             model,
             RepresentationRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
         399 => resolve_representation_relationship_with_transformation_arena(
             model,
             RepresentationRelationshipWithTransformationId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        400 => resolve_resource_property_arena(model, ResourcePropertyId(i), attributes, idmap),
-        402 => resolve_role_association_arena(model, RoleAssociationId(i), attributes, idmap),
-        403 => resolve_roundness_tolerance_arena(model, RoundnessToleranceId(i), attributes, idmap),
-        404 => resolve_seam_curve_arena(model, SeamCurveId(i), attributes, idmap),
+        400 => {
+            resolve_resource_property_arena(model, ResourcePropertyId(i), attributes, idmap, dedup)
+        }
+        402 => {
+            resolve_role_association_arena(model, RoleAssociationId(i), attributes, idmap, dedup)
+        }
+        403 => resolve_roundness_tolerance_arena(
+            model,
+            RoundnessToleranceId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        404 => resolve_seam_curve_arena(model, SeamCurveId(i), attributes, idmap, dedup),
         405 => resolve_security_classification_arena(
             model,
             SecurityClassificationId(i),
             attributes,
             idmap,
+            dedup,
         ),
         406 => resolve_security_classification_assignment_arena(
             model,
             SecurityClassificationAssignmentId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        408 => resolve_shape_aspect_arena(model, ShapeAspectId(i), attributes, idmap),
+        408 => resolve_shape_aspect_arena(model, ShapeAspectId(i), attributes, idmap, dedup),
         409 => resolve_shape_aspect_associativity_arena(
             model,
             ShapeAspectAssociativityId(i),
             attributes,
             idmap,
+            dedup,
         ),
         410 => resolve_shape_aspect_deriving_relationship_arena(
             model,
             ShapeAspectDerivingRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
         411 => resolve_shape_aspect_relationship_arena(
             model,
             ShapeAspectRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
         412 => resolve_shape_definition_representation_arena(
             model,
             ShapeDefinitionRepresentationId(i),
             attributes,
             idmap,
+            dedup,
         ),
         413 => resolve_shape_dimension_representation_arena(
             model,
             ShapeDimensionRepresentationId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        414 => {
-            resolve_shape_representation_arena(model, ShapeRepresentationId(i), attributes, idmap)
-        }
+        414 => resolve_shape_representation_arena(
+            model,
+            ShapeRepresentationId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         415 => resolve_shape_representation_relationship_arena(
             model,
             ShapeRepresentationRelationshipId(i),
             attributes,
             idmap,
+            dedup,
         ),
         416 => resolve_shape_representation_with_parameters_arena(
             model,
             ShapeRepresentationWithParametersId(i),
             attributes,
             idmap,
+            dedup,
         ),
         417 => resolve_shell_based_surface_model_arena(
             model,
             ShellBasedSurfaceModelId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        418 => resolve_si_unit_arena(model, SiUnitId(i), attributes, idmap),
-        421 => resolve_solid_angle_unit_arena(model, SolidAngleUnitId(i), attributes, idmap),
-        423 => resolve_spherical_surface_arena(model, SphericalSurfaceId(i), attributes, idmap),
-        424 => resolve_start_request_arena(model, StartRequestId(i), attributes, idmap),
-        425 => resolve_start_work_arena(model, StartWorkId(i), attributes, idmap),
+        418 => resolve_si_unit_arena(model, SiUnitId(i), attributes, idmap, dedup),
+        421 => resolve_solid_angle_unit_arena(model, SolidAngleUnitId(i), attributes, idmap, dedup),
+        423 => {
+            resolve_spherical_surface_arena(model, SphericalSurfaceId(i), attributes, idmap, dedup)
+        }
+        424 => resolve_start_request_arena(model, StartRequestId(i), attributes, idmap, dedup),
+        425 => resolve_start_work_arena(model, StartWorkId(i), attributes, idmap, dedup),
         428 => resolve_straightness_tolerance_arena(
             model,
             StraightnessToleranceId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        429 => resolve_styled_item_arena(model, StyledItemId(i), attributes, idmap),
-        431 => resolve_surface_curve_arena(model, SurfaceCurveId(i), attributes, idmap),
+        429 => resolve_styled_item_arena(model, StyledItemId(i), attributes, idmap, dedup),
+        431 => resolve_surface_curve_arena(model, SurfaceCurveId(i), attributes, idmap, dedup),
         432 => resolve_surface_of_linear_extrusion_arena(
             model,
             SurfaceOfLinearExtrusionId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        433 => {
-            resolve_surface_of_revolution_arena(model, SurfaceOfRevolutionId(i), attributes, idmap)
-        }
+        433 => resolve_surface_of_revolution_arena(
+            model,
+            SurfaceOfRevolutionId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
         434 => resolve_surface_profile_tolerance_arena(
             model,
             SurfaceProfileToleranceId(i),
             attributes,
             idmap,
+            dedup,
         ),
         435 => resolve_surface_rendering_properties_arena(
             model,
             SurfaceRenderingPropertiesId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        436 => resolve_surface_side_style_arena(model, SurfaceSideStyleId(i), attributes, idmap),
+        436 => {
+            resolve_surface_side_style_arena(model, SurfaceSideStyleId(i), attributes, idmap, dedup)
+        }
         437 => resolve_surface_style_boundary_arena(
             model,
             SurfaceStyleBoundaryId(i),
             attributes,
             idmap,
+            dedup,
         ),
         438 => resolve_surface_style_control_grid_arena(
             model,
             SurfaceStyleControlGridId(i),
             attributes,
             idmap,
+            dedup,
         ),
         439 => resolve_surface_style_fill_area_arena(
             model,
             SurfaceStyleFillAreaId(i),
             attributes,
             idmap,
+            dedup,
         ),
         440 => resolve_surface_style_parameter_line_arena(
             model,
             SurfaceStyleParameterLineId(i),
             attributes,
             idmap,
+            dedup,
         ),
         442 => resolve_surface_style_rendering_arena(
             model,
             SurfaceStyleRenderingId(i),
             attributes,
             idmap,
+            dedup,
         ),
         443 => resolve_surface_style_rendering_with_properties_arena(
             model,
             SurfaceStyleRenderingWithPropertiesId(i),
             attributes,
             idmap,
+            dedup,
         ),
         444 => resolve_surface_style_segmentation_curve_arena(
             model,
             SurfaceStyleSegmentationCurveId(i),
             attributes,
             idmap,
+            dedup,
         ),
         445 => resolve_surface_style_silhouette_arena(
             model,
             SurfaceStyleSilhouetteId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        447 => resolve_surface_style_usage_arena(model, SurfaceStyleUsageId(i), attributes, idmap),
-        448 => resolve_swept_surface_arena(model, SweptSurfaceId(i), attributes, idmap),
-        449 => resolve_symbol_colour_arena(model, SymbolColourId(i), attributes, idmap),
-        450 => {
-            resolve_symbol_representation_arena(model, SymbolRepresentationId(i), attributes, idmap)
+        447 => resolve_surface_style_usage_arena(
+            model,
+            SurfaceStyleUsageId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        448 => resolve_swept_surface_arena(model, SweptSurfaceId(i), attributes, idmap, dedup),
+        449 => resolve_symbol_colour_arena(model, SymbolColourId(i), attributes, idmap, dedup),
+        450 => resolve_symbol_representation_arena(
+            model,
+            SymbolRepresentationId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        451 => resolve_symbol_style_arena(model, SymbolStyleId(i), attributes, idmap, dedup),
+        452 => resolve_symbol_target_arena(model, SymbolTargetId(i), attributes, idmap, dedup),
+        453 => resolve_symmetry_tolerance_arena(
+            model,
+            SymmetryToleranceId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        454 => {
+            resolve_terminator_symbol_arena(model, TerminatorSymbolId(i), attributes, idmap, dedup)
         }
-        451 => resolve_symbol_style_arena(model, SymbolStyleId(i), attributes, idmap),
-        452 => resolve_symbol_target_arena(model, SymbolTargetId(i), attributes, idmap),
-        453 => resolve_symmetry_tolerance_arena(model, SymmetryToleranceId(i), attributes, idmap),
-        454 => resolve_terminator_symbol_arena(model, TerminatorSymbolId(i), attributes, idmap),
         455 => resolve_tessellated_annotation_occurrence_arena(
             model,
             TessellatedAnnotationOccurrenceId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        456 => {
-            resolve_tessellated_curve_set_arena(model, TessellatedCurveSetId(i), attributes, idmap)
+        456 => resolve_tessellated_curve_set_arena(
+            model,
+            TessellatedCurveSetId(i),
+            attributes,
+            idmap,
+            dedup,
+        ),
+        457 => {
+            resolve_tessellated_face_arena(model, TessellatedFaceId(i), attributes, idmap, dedup)
         }
-        457 => resolve_tessellated_face_arena(model, TessellatedFaceId(i), attributes, idmap),
         458 => resolve_tessellated_geometric_set_arena(
             model,
             TessellatedGeometricSetId(i),
             attributes,
             idmap,
+            dedup,
         ),
         460 => resolve_tessellated_shape_representation_arena(
             model,
             TessellatedShapeRepresentationId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        461 => resolve_tessellated_shell_arena(model, TessellatedShellId(i), attributes, idmap),
-        462 => resolve_tessellated_solid_arena(model, TessellatedSolidId(i), attributes, idmap),
+        461 => {
+            resolve_tessellated_shell_arena(model, TessellatedShellId(i), attributes, idmap, dedup)
+        }
+        462 => {
+            resolve_tessellated_solid_arena(model, TessellatedSolidId(i), attributes, idmap, dedup)
+        }
         464 => resolve_tessellated_surface_set_arena(
             model,
             TessellatedSurfaceSetId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        466 => resolve_text_literal_arena(model, TextLiteralId(i), attributes, idmap),
-        467 => resolve_text_style_arena(model, TextStyleId(i), attributes, idmap),
+        466 => resolve_text_literal_arena(model, TextLiteralId(i), attributes, idmap, dedup),
+        467 => resolve_text_style_arena(model, TextStyleId(i), attributes, idmap, dedup),
         468 => resolve_text_style_for_defined_font_arena(
             model,
             TextStyleForDefinedFontId(i),
             attributes,
             idmap,
+            dedup,
         ),
         469 => resolve_text_style_with_box_characteristics_arena(
             model,
             TextStyleWithBoxCharacteristicsId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        472 => resolve_time_unit_arena(model, TimeUnitId(i), attributes, idmap),
-        473 => resolve_tolerance_value_arena(model, ToleranceValueId(i), attributes, idmap),
-        474 => resolve_tolerance_zone_arena(model, ToleranceZoneId(i), attributes, idmap),
+        472 => resolve_time_unit_arena(model, TimeUnitId(i), attributes, idmap, dedup),
+        473 => resolve_tolerance_value_arena(model, ToleranceValueId(i), attributes, idmap, dedup),
+        474 => resolve_tolerance_zone_arena(model, ToleranceZoneId(i), attributes, idmap, dedup),
         475 => resolve_tolerance_zone_definition_arena(
             model,
             ToleranceZoneDefinitionId(i),
             attributes,
             idmap,
+            dedup,
         ),
         477 => resolve_tolerance_zone_with_datum_arena(
             model,
             ToleranceZoneWithDatumId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        479 => resolve_toroidal_surface_arena(model, ToroidalSurfaceId(i), attributes, idmap),
+        479 => {
+            resolve_toroidal_surface_arena(model, ToroidalSurfaceId(i), attributes, idmap, dedup)
+        }
         480 => resolve_total_runout_tolerance_arena(
             model,
             TotalRunoutToleranceId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        481 => resolve_trimmed_curve_arena(model, TrimmedCurveId(i), attributes, idmap),
+        481 => resolve_trimmed_curve_arena(model, TrimmedCurveId(i), attributes, idmap, dedup),
         482 => resolve_two_direction_repeat_factor_arena(
             model,
             TwoDirectionRepeatFactorId(i),
             attributes,
             idmap,
+            dedup,
         ),
         484 => resolve_uncertainty_measure_with_unit_arena(
             model,
             UncertaintyMeasureWithUnitId(i),
             attributes,
             idmap,
+            dedup,
         ),
         486 => resolve_unequally_disposed_geometric_tolerance_arena(
             model,
             UnequallyDisposedGeometricToleranceId(i),
             attributes,
             idmap,
+            dedup,
         ),
-        487 => resolve_uniform_curve_arena(model, UniformCurveId(i), attributes, idmap),
-        488 => resolve_uniform_surface_arena(model, UniformSurfaceId(i), attributes, idmap),
-        491 => resolve_vector_arena(model, VectorId(i), attributes, idmap),
-        494 => resolve_vertex_loop_arena(model, VertexLoopId(i), attributes, idmap),
-        495 => resolve_vertex_point_arena(model, VertexPointId(i), attributes, idmap),
-        496 => resolve_vertex_shell_arena(model, VertexShellId(i), attributes, idmap),
-        497 => resolve_view_volume_arena(model, ViewVolumeId(i), attributes, idmap),
-        498 => resolve_volume_unit_arena(model, VolumeUnitId(i), attributes, idmap),
-        499 => resolve_wire_shell_arena(model, WireShellId(i), attributes, idmap),
+        487 => resolve_uniform_curve_arena(model, UniformCurveId(i), attributes, idmap, dedup),
+        488 => resolve_uniform_surface_arena(model, UniformSurfaceId(i), attributes, idmap, dedup),
+        491 => resolve_vector_arena(model, VectorId(i), attributes, idmap, dedup),
+        494 => resolve_vertex_loop_arena(model, VertexLoopId(i), attributes, idmap, dedup),
+        495 => resolve_vertex_point_arena(model, VertexPointId(i), attributes, idmap, dedup),
+        496 => resolve_vertex_shell_arena(model, VertexShellId(i), attributes, idmap, dedup),
+        497 => resolve_view_volume_arena(model, ViewVolumeId(i), attributes, idmap, dedup),
+        498 => resolve_volume_unit_arena(model, VolumeUnitId(i), attributes, idmap, dedup),
+        499 => resolve_wire_shell_arena(model, WireShellId(i), attributes, idmap, dedup),
         _ => Ok(()),
     }
 }
 
-pub fn build_complex_entity(model: &mut StepModel, parts: &[RawEntityPart]) -> Result<u32, String> {
+pub fn build_complex_entity(
+    model: &mut StepModel,
+    parts: &[RawEntityPart],
+    dedup: &mut TextDedup,
+) -> Result<u32, String> {
+    let mut tt = TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     Ok(model.complex_unit_arena.push(ComplexUnit {
-        parts: read_complex_parts_norefs(parts)?,
+        parts: read_complex_parts_norefs(parts, &mut tt)?,
     }))
 }
 
@@ -21876,8 +24066,9 @@ pub fn resolve_complex_entity(
     i: u32,
     parts: &[RawEntityPart],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
-    resolve_complex(model, ComplexUnitId(i), parts, idmap)
+    resolve_complex(model, ComplexUnitId(i), parts, idmap, dedup)
 }
 
 pub fn finalize_arenas(model: &mut StepModel, order: &[Vec<u32>], complex: &[u32]) {
@@ -23385,6 +25576,7 @@ pub fn finalize_arenas(model: &mut StepModel, order: &[Vec<u32>], complex: &[u32
 }
 
 pub fn shrink_arenas(model: &mut StepModel) {
+    model.texts.shrink();
     model.action_arena.items.shrink_to_fit();
     model.action_assignment_arena.items.shrink_to_fit();
     model.action_directive_arena.items.shrink_to_fit();
@@ -24388,7 +26580,12 @@ fn resolve_action_arena(
     aid: ActionId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let chosen_method_v = {
         let a = req(attrs, 2, "ACTION.chosen_method")?;
         ((|| -> Result<ActionMethodRef, String> {
@@ -24410,7 +26607,12 @@ fn resolve_action_assignment_arena(
     aid: ActionAssignmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_action_v = {
         let a = req(attrs, 0, "ACTION_ASSIGNMENT.assigned_action")?;
         ((|| -> Result<ActionRef, String> {
@@ -24432,7 +26634,12 @@ fn resolve_action_directive_arena(
     aid: ActionDirectiveId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let requests_v = {
         let a = req(attrs, 4, "ACTION_DIRECTIVE.requests")?;
         (match a {
@@ -24466,7 +26673,12 @@ fn resolve_action_method_relationship_arena(
     aid: ActionMethodRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_method_v = {
         let a = req(attrs, 2, "ACTION_METHOD_RELATIONSHIP.relating_method")?;
         ((|| -> Result<ActionMethodRef, String> {
@@ -24504,7 +26716,12 @@ fn resolve_action_property_arena(
     aid: ActionPropertyId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let definition_v = {
         let a = req(attrs, 2, "ACTION_PROPERTY.definition")?;
         ((|| -> Result<CharacterizedActionDefinitionRef, String> {
@@ -24526,7 +26743,12 @@ fn resolve_action_relationship_arena(
     aid: ActionRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_action_v = {
         let a = req(attrs, 2, "ACTION_RELATIONSHIP.relating_action")?;
         ((|| -> Result<ActionRef, String> {
@@ -24560,7 +26782,12 @@ fn resolve_action_request_assignment_arena(
     aid: ActionRequestAssignmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_action_request_v = {
         let a = req(
             attrs,
@@ -24591,7 +26818,12 @@ fn resolve_action_request_solution_arena(
     aid: ActionRequestSolutionId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let method_v = {
         let a = req(attrs, 0, "ACTION_REQUEST_SOLUTION.method")?;
         ((|| -> Result<ActionMethodRef, String> {
@@ -24625,7 +26857,12 @@ fn resolve_action_resource_arena(
     aid: ActionResourceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let usage_v = {
         let a = req(attrs, 2, "ACTION_RESOURCE.usage")?;
         (match a {
@@ -24669,7 +26906,12 @@ fn resolve_action_resource_relationship_arena(
     aid: ActionResourceRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_resource_v = {
         let a = req(attrs, 2, "ACTION_RESOURCE_RELATIONSHIP.relating_resource")?;
         ((|| -> Result<ActionResourceRef, String> {
@@ -24713,7 +26955,12 @@ fn resolve_action_resource_requirement_arena(
     aid: ActionResourceRequirementId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let kind_v = {
         let a = req(attrs, 2, "ACTION_RESOURCE_REQUIREMENT.kind")?;
         ((|| -> Result<ResourceRequirementTypeRef, String> {
@@ -24759,7 +27006,12 @@ fn resolve_advanced_brep_shape_representation_arena(
     aid: AdvancedBrepShapeRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(attrs, 1, "ADVANCED_BREP_SHAPE_REPRESENTATION.items")?;
         (match a {
@@ -24816,7 +27068,12 @@ fn resolve_advanced_face_arena(
     aid: AdvancedFaceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let bounds_v = {
         let a = req(attrs, 1, "ADVANCED_FACE.bounds")?;
         (match a {
@@ -24860,7 +27117,12 @@ fn resolve_all_around_shape_aspect_arena(
     aid: AllAroundShapeAspectId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_shape_v = {
         let a = req(attrs, 2, "ALL_AROUND_SHAPE_ASPECT.of_shape")?;
         ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -24882,7 +27144,12 @@ fn resolve_angular_location_arena(
     aid: AngularLocationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_shape_aspect_v = {
         let a = req(attrs, 2, "ANGULAR_LOCATION.relating_shape_aspect")?;
         ((|| -> Result<ShapeAspectRef, String> {
@@ -24920,7 +27187,12 @@ fn resolve_angular_size_arena(
     aid: AngularSizeId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let applies_to_v = {
         let a = req(attrs, 0, "ANGULAR_SIZE.applies_to")?;
         ((|| -> Result<ShapeAspectRef, String> {
@@ -24942,7 +27214,12 @@ fn resolve_angularity_tolerance_arena(
     aid: AngularityToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "ANGULARITY_TOLERANCE.magnitude")?;
         match a {
@@ -25012,7 +27289,12 @@ fn resolve_annotation_curve_occurrence_arena(
     aid: AnnotationCurveOccurrenceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styles_v = {
         let a = req(attrs, 1, "ANNOTATION_CURVE_OCCURRENCE.styles")?;
         (match a {
@@ -25058,7 +27340,12 @@ fn resolve_annotation_fill_area_occurrence_arena(
     aid: AnnotationFillAreaOccurrenceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styles_v = {
         let a = req(attrs, 1, "ANNOTATION_FILL_AREA_OCCURRENCE.styles")?;
         (match a {
@@ -25125,7 +27412,12 @@ fn resolve_annotation_occurrence_arena(
     aid: AnnotationOccurrenceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styles_v = {
         let a = req(attrs, 1, "ANNOTATION_OCCURRENCE.styles")?;
         (match a {
@@ -25171,7 +27463,12 @@ fn resolve_annotation_occurrence_associativity_arena(
     aid: AnnotationOccurrenceAssociativityId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_annotation_occurrence_v = {
         let a = req(
             attrs,
@@ -25203,7 +27500,12 @@ fn resolve_annotation_occurrence_relationship_arena(
     aid: AnnotationOccurrenceRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_annotation_occurrence_v = {
         let a = req(
             attrs,
@@ -25235,7 +27537,12 @@ fn resolve_annotation_placeholder_leader_line_arena(
     aid: AnnotationPlaceholderLeaderLineId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let geometric_elements_v = {
         let a = req(
             attrs,
@@ -25254,7 +27561,12 @@ fn resolve_annotation_placeholder_occurrence_arena(
     aid: AnnotationPlaceholderOccurrenceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styles_v = {
         let a = req(attrs, 1, "ANNOTATION_PLACEHOLDER_OCCURRENCE.styles")?;
         (match a {
@@ -25304,7 +27616,12 @@ fn resolve_annotation_placeholder_occurrence_with_leader_line_arena(
     aid: AnnotationPlaceholderOccurrenceWithLeaderLineId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styles_v = {
         let a = req(
             attrs,
@@ -25357,7 +27674,12 @@ fn resolve_annotation_plane_arena(
     aid: AnnotationPlaneId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styles_v = {
         let a = req(attrs, 1, "ANNOTATION_PLANE.styles")?;
         (match a {
@@ -25430,7 +27752,12 @@ fn resolve_annotation_symbol_arena(
     aid: AnnotationSymbolId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let mapping_source_v = {
         let a = req(attrs, 1, "ANNOTATION_SYMBOL.mapping_source")?;
         ((|| -> Result<RepresentationMapRef, String> {
@@ -25464,7 +27791,12 @@ fn resolve_annotation_symbol_occurrence_arena(
     aid: AnnotationSymbolOccurrenceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styles_v = {
         let a = req(attrs, 1, "ANNOTATION_SYMBOL_OCCURRENCE.styles")?;
         (match a {
@@ -25510,7 +27842,12 @@ fn resolve_annotation_text_arena(
     aid: AnnotationTextId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let mapping_source_v = {
         let a = req(attrs, 1, "ANNOTATION_TEXT.mapping_source")?;
         ((|| -> Result<RepresentationMapRef, String> {
@@ -25544,7 +27881,12 @@ fn resolve_annotation_text_character_arena(
     aid: AnnotationTextCharacterId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let mapping_source_v = {
         let a = req(attrs, 1, "ANNOTATION_TEXT_CHARACTER.mapping_source")?;
         ((|| -> Result<RepresentationMapRef, String> {
@@ -25582,7 +27924,12 @@ fn resolve_annotation_text_occurrence_arena(
     aid: AnnotationTextOccurrenceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styles_v = {
         let a = req(attrs, 1, "ANNOTATION_TEXT_OCCURRENCE.styles")?;
         (match a {
@@ -25628,7 +27975,12 @@ fn resolve_annotation_to_annotation_leader_line_arena(
     aid: AnnotationToAnnotationLeaderLineId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let geometric_elements_v = {
         let a = req(
             attrs,
@@ -25647,7 +27999,12 @@ fn resolve_annotation_to_model_leader_line_arena(
     aid: AnnotationToModelLeaderLineId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let geometric_elements_v = {
         let a = req(
             attrs,
@@ -25666,7 +28023,12 @@ fn resolve_apll_point_with_surface_arena(
     aid: ApllPointWithSurfaceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let associated_surface_v = {
         let a = req(attrs, 3, "APLL_POINT_WITH_SURFACE.associated_surface")?;
         ((|| -> Result<FaceSurfaceRef, String> {
@@ -25690,7 +28052,12 @@ fn resolve_application_context_element_arena(
     aid: ApplicationContextElementId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let frame_of_reference_v = {
         let a = req(attrs, 1, "APPLICATION_CONTEXT_ELEMENT.frame_of_reference")?;
         ((|| -> Result<ApplicationContextRef, String> {
@@ -25717,7 +28084,12 @@ fn resolve_application_protocol_definition_arena(
     aid: ApplicationProtocolDefinitionId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let application_v = {
         let a = req(attrs, 3, "APPLICATION_PROTOCOL_DEFINITION.application")?;
         ((|| -> Result<ApplicationContextRef, String> {
@@ -25741,7 +28113,12 @@ fn resolve_applied_approval_assignment_arena(
     aid: AppliedApprovalAssignmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_approval_v = {
         let a = req(attrs, 0, "APPLIED_APPROVAL_ASSIGNMENT.assigned_approval")?;
         ((|| -> Result<ApprovalRef, String> {
@@ -25792,7 +28169,12 @@ fn resolve_applied_date_and_time_assignment_arena(
     aid: AppliedDateAndTimeAssignmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_date_and_time_v = {
         let a = req(
             attrs,
@@ -25863,7 +28245,12 @@ fn resolve_applied_document_reference_arena(
     aid: AppliedDocumentReferenceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_document_v = {
         let a = req(attrs, 0, "APPLIED_DOCUMENT_REFERENCE.assigned_document")?;
         ((|| -> Result<DocumentRef, String> {
@@ -25914,7 +28301,12 @@ fn resolve_applied_external_identification_assignment_arena(
     aid: AppliedExternalIdentificationAssignmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let role_v = {
         let a = req(attrs, 1, "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT.role")?;
         ((|| -> Result<IdentificationRoleRef, String> {
@@ -25967,7 +28359,12 @@ fn resolve_applied_group_assignment_arena(
     aid: AppliedGroupAssignmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_group_v = {
         let a = req(attrs, 0, "APPLIED_GROUP_ASSIGNMENT.assigned_group")?;
         ((|| -> Result<GroupRef, String> {
@@ -26015,7 +28412,12 @@ fn resolve_applied_person_and_organization_assignment_arena(
     aid: AppliedPersonAndOrganizationAssignmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_person_and_organization_v = {
         let a = req(
             attrs,
@@ -26058,7 +28460,12 @@ fn resolve_applied_presented_item_arena(
     aid: AppliedPresentedItemId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(attrs, 0, "APPLIED_PRESENTED_ITEM.items")?;
         (match a {
@@ -26092,7 +28499,12 @@ fn resolve_applied_security_classification_assignment_arena(
     aid: AppliedSecurityClassificationAssignmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_security_classification_v = {
         let a = req(
             attrs,
@@ -26118,7 +28530,12 @@ fn resolve_approval_arena(
     aid: ApprovalId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let status_v = {
         let a = req(attrs, 0, "APPROVAL.status")?;
         ((|| -> Result<ApprovalStatusRef, String> {
@@ -26140,7 +28557,12 @@ fn resolve_approval_assignment_arena(
     aid: ApprovalAssignmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_approval_v = {
         let a = req(attrs, 0, "APPROVAL_ASSIGNMENT.assigned_approval")?;
         ((|| -> Result<ApprovalRef, String> {
@@ -26164,7 +28586,12 @@ fn resolve_approval_date_time_arena(
     aid: ApprovalDateTimeId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let date_time_v = {
         let a = req(attrs, 0, "APPROVAL_DATE_TIME.date_time")?;
         ((|| -> Result<DateTimeSelectRef, String> {
@@ -26198,7 +28625,12 @@ fn resolve_approval_person_organization_arena(
     aid: ApprovalPersonOrganizationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let person_organization_v = {
         let a = req(attrs, 0, "APPROVAL_PERSON_ORGANIZATION.person_organization")?;
         ((|| -> Result<PersonOrganizationSelectRef, String> {
@@ -26254,7 +28686,12 @@ fn resolve_approximation_tolerance_arena(
     aid: ApproximationToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let tolerance_v = {
         let a = req(attrs, 0, "APPROXIMATION_TOLERANCE.tolerance")?;
         ((|| -> Result<ToleranceSelectRef, String> {
@@ -26276,7 +28713,12 @@ fn resolve_area_in_set_arena(
     aid: AreaInSetId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let area_v = {
         let a = req(attrs, 0, "AREA_IN_SET.area")?;
         ((|| -> Result<PresentationAreaRef, String> {
@@ -26310,7 +28752,12 @@ fn resolve_area_unit_arena(
     aid: AreaUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let elements_v = {
         let a = req(attrs, 0, "AREA_UNIT.elements")?;
         (match a {
@@ -26340,7 +28787,12 @@ fn resolve_ascribable_state_arena(
     aid: AscribableStateId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let pertaining_state_type_v = {
         let a = req(attrs, 2, "ASCRIBABLE_STATE.pertaining_state_type")?;
         ((|| -> Result<StateTypeRef, String> {
@@ -26378,7 +28830,12 @@ fn resolve_ascribable_state_relationship_arena(
     aid: AscribableStateRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_ascribable_state_v = {
         let a = req(
             attrs,
@@ -26434,7 +28891,12 @@ fn resolve_assembly_component_usage_arena(
     aid: AssemblyComponentUsageId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_product_definition_v = {
         let a = req(
             attrs,
@@ -26488,7 +28950,12 @@ fn resolve_auxiliary_leader_line_arena(
     aid: AuxiliaryLeaderLineId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let geometric_elements_v = {
         let a = req(attrs, 1, "AUXILIARY_LEADER_LINE.geometric_elements")?;
         (match a {
@@ -26541,7 +29008,12 @@ fn resolve_axis1_placement_arena(
     aid: Axis1PlacementId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let location_v = {
         let a = req(attrs, 1, "AXIS1_PLACEMENT.location")?;
         ((|| -> Result<CartesianPointRef, String> {
@@ -26580,7 +29052,12 @@ fn resolve_axis2_placement2d_arena(
     aid: Axis2Placement2dId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let location_v = {
         let a = req(attrs, 1, "AXIS2_PLACEMENT_2D.location")?;
         ((|| -> Result<CartesianPointRef, String> {
@@ -26621,7 +29098,12 @@ fn resolve_axis2_placement3d_arena(
     aid: Axis2Placement3dId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let location_v = {
         let a = req(attrs, 1, "AXIS2_PLACEMENT_3D.location")?;
         ((|| -> Result<CartesianPointRef, String> {
@@ -26679,7 +29161,12 @@ fn resolve_b_spline_curve_arena(
     aid: BSplineCurveId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let control_points_list_v = {
         let a = req(attrs, 2, "B_SPLINE_CURVE.control_points_list")?;
         (match a {
@@ -26713,7 +29200,12 @@ fn resolve_b_spline_curve_with_knots_arena(
     aid: BSplineCurveWithKnotsId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let control_points_list_v = {
         let a = req(attrs, 2, "B_SPLINE_CURVE_WITH_KNOTS.control_points_list")?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<CartesianPointRef, String> { Ok(CartesianPointRef::from_any(idmap.get(as_ref_id(e, "B_SPLINE_CURVE_WITH_KNOTS.control_points_list")?).ok_or_else(|| format!("B_SPLINE_CURVE_WITH_KNOTS.control_points_list: dangling ref"))?).map_err(|e| format!("B_SPLINE_CURVE_WITH_KNOTS.control_points_list: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_CURVE_WITH_KNOTS.control_points_list: expected ref list, got {o:?}")) })?
@@ -26728,7 +29220,12 @@ fn resolve_b_spline_surface_arena(
     aid: BSplineSurfaceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let control_points_list_v = {
         let a = req(attrs, 3, "B_SPLINE_SURFACE.control_points_list")?;
         (match a {
@@ -26774,7 +29271,12 @@ fn resolve_b_spline_surface_with_knots_arena(
     aid: BSplineSurfaceWithKnotsId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let control_points_list_v = {
         let a = req(attrs, 3, "B_SPLINE_SURFACE_WITH_KNOTS.control_points_list")?;
         (match a { Attribute::List(l) => l.iter().map(|e| match e { Attribute::List(l) => l.iter().map(|e| (|| -> Result<CartesianPointRef, String> { Ok(CartesianPointRef::from_any(idmap.get(as_ref_id(e, "B_SPLINE_SURFACE_WITH_KNOTS.control_points_list")?).ok_or_else(|| format!("B_SPLINE_SURFACE_WITH_KNOTS.control_points_list: dangling ref"))?).map_err(|e| format!("B_SPLINE_SURFACE_WITH_KNOTS.control_points_list: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_SURFACE_WITH_KNOTS.control_points_list: expected ref list, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_SURFACE_WITH_KNOTS.control_points_list: expected ref list, got {o:?}")) })?
@@ -26789,7 +29291,12 @@ fn resolve_bezier_curve_arena(
     aid: BezierCurveId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let control_points_list_v = {
         let a = req(attrs, 2, "BEZIER_CURVE.control_points_list")?;
         (match a {
@@ -26823,7 +29330,12 @@ fn resolve_bezier_surface_arena(
     aid: BezierSurfaceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let control_points_list_v = {
         let a = req(attrs, 3, "BEZIER_SURFACE.control_points_list")?;
         (match a {
@@ -26867,7 +29379,12 @@ fn resolve_bounded_pcurve_arena(
     aid: BoundedPcurveId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let basis_surface_v = {
         let a = req(attrs, 1, "BOUNDED_PCURVE.basis_surface")?;
         ((|| -> Result<SurfaceRef, String> {
@@ -26901,7 +29418,12 @@ fn resolve_bounded_surface_curve_arena(
     aid: BoundedSurfaceCurveId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let curve_3d_v = {
         let a = req(attrs, 1, "BOUNDED_SURFACE_CURVE.curve_3d")?;
         ((|| -> Result<CurveRef, String> {
@@ -26949,7 +29471,12 @@ fn resolve_brep_with_voids_arena(
     aid: BrepWithVoidsId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let outer_v = {
         let a = req(attrs, 1, "BREP_WITH_VOIDS.outer")?;
         ((|| -> Result<ClosedShellRef, String> {
@@ -26993,7 +29520,12 @@ fn resolve_camera_image_arena(
     aid: CameraImageId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let mapping_source_v = {
         let a = req(attrs, 1, "CAMERA_IMAGE.mapping_source")?;
         ((|| -> Result<RepresentationMapRef, String> {
@@ -27027,7 +29559,12 @@ fn resolve_camera_image3d_with_scale_arena(
     aid: CameraImage3dWithScaleId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let mapping_source_v = {
         let a = req(attrs, 1, "CAMERA_IMAGE_3D_WITH_SCALE.mapping_source")?;
         ((|| -> Result<RepresentationMapRef, String> {
@@ -27065,7 +29602,12 @@ fn resolve_camera_model_d3_arena(
     aid: CameraModelD3Id,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let view_reference_system_v = {
         let a = req(attrs, 1, "CAMERA_MODEL_D3.view_reference_system")?;
         ((|| -> Result<Axis2Placement3dRef, String> {
@@ -27103,7 +29645,12 @@ fn resolve_camera_model_d3_multi_clipping_arena(
     aid: CameraModelD3MultiClippingId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let view_reference_system_v = {
         let a = req(
             attrs,
@@ -27164,7 +29711,12 @@ fn resolve_camera_model_d3_with_hlhsr_arena(
     aid: CameraModelD3WithHlhsrId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let view_reference_system_v = {
         let a = req(attrs, 1, "CAMERA_MODEL_D3_WITH_HLHSR.view_reference_system")?;
         ((|| -> Result<Axis2Placement3dRef, String> {
@@ -27208,7 +29760,12 @@ fn resolve_camera_usage_arena(
     aid: CameraUsageId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let mapping_origin_v = {
         let a = req(attrs, 0, "CAMERA_USAGE.mapping_origin")?;
         ((|| -> Result<RepresentationItemRef, String> {
@@ -27242,7 +29799,12 @@ fn resolve_cc_design_approval_arena(
     aid: CcDesignApprovalId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_approval_v = {
         let a = req(attrs, 0, "CC_DESIGN_APPROVAL.assigned_approval")?;
         ((|| -> Result<ApprovalRef, String> {
@@ -27286,7 +29848,12 @@ fn resolve_cc_design_date_and_time_assignment_arena(
     aid: CcDesignDateAndTimeAssignmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_date_and_time_v = {
         let a = req(
             attrs,
@@ -27347,7 +29914,12 @@ fn resolve_cc_design_person_and_organization_assignment_arena(
     aid: CcDesignPersonAndOrganizationAssignmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_person_and_organization_v = {
         let a = req(
             attrs,
@@ -27400,7 +29972,12 @@ fn resolve_cc_design_security_classification_arena(
     aid: CcDesignSecurityClassificationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_security_classification_v = {
         let a = req(
             attrs,
@@ -27445,7 +30022,12 @@ fn resolve_centre_of_symmetry_arena(
     aid: CentreOfSymmetryId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_shape_v = {
         let a = req(attrs, 2, "CENTRE_OF_SYMMETRY.of_shape")?;
         ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -27467,7 +30049,12 @@ fn resolve_certification_arena(
     aid: CertificationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let kind_v = {
         let a = req(attrs, 2, "CERTIFICATION.kind")?;
         ((|| -> Result<CertificationTypeRef, String> {
@@ -27489,7 +30076,12 @@ fn resolve_change_arena(
     aid: ChangeId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_action_v = {
         let a = req(attrs, 0, "CHANGE.assigned_action")?;
         ((|| -> Result<ActionRef, String> {
@@ -27531,7 +30123,12 @@ fn resolve_change_request_arena(
     aid: ChangeRequestId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_action_request_v = {
         let a = req(attrs, 0, "CHANGE_REQUEST.assigned_action_request")?;
         ((|| -> Result<VersionedActionRequestRef, String> {
@@ -27577,7 +30174,12 @@ fn resolve_character_glyph_style_outline_arena(
     aid: CharacterGlyphStyleOutlineId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let outline_style_v = {
         let a = req(attrs, 0, "CHARACTER_GLYPH_STYLE_OUTLINE.outline_style")?;
         ((|| -> Result<CurveStyleRef, String> {
@@ -27601,7 +30203,12 @@ fn resolve_character_glyph_style_stroke_arena(
     aid: CharacterGlyphStyleStrokeId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let stroke_style_v = {
         let a = req(attrs, 0, "CHARACTER_GLYPH_STYLE_STROKE.stroke_style")?;
         ((|| -> Result<CurveStyleRef, String> {
@@ -27625,7 +30232,12 @@ fn resolve_characterized_item_within_representation_arena(
     aid: CharacterizedItemWithinRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let item_v = {
         let a = req(attrs, 2, "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION.item")?;
         ((|| -> Result<RepresentationItemRef, String> {
@@ -27669,7 +30281,12 @@ fn resolve_characterized_representation_arena(
     aid: CharacterizedRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(attrs, 1, "CHARACTERIZED_REPRESENTATION.items")?;
         (match a {
@@ -27720,7 +30337,12 @@ fn resolve_circle_arena(
     aid: CircleId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let position_v = {
         let a = req(attrs, 1, "CIRCLE.position")?;
         ((|| -> Result<Axis2PlacementRef, String> {
@@ -27742,7 +30364,12 @@ fn resolve_circular_runout_tolerance_arena(
     aid: CircularRunoutToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "CIRCULAR_RUNOUT_TOLERANCE.magnitude")?;
         match a {
@@ -27816,7 +30443,12 @@ fn resolve_closed_shell_arena(
     aid: ClosedShellId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let cfs_faces_v = {
         let a = req(attrs, 1, "CLOSED_SHELL.cfs_faces")?;
         (match a {
@@ -27848,7 +30480,12 @@ fn resolve_coaxiality_tolerance_arena(
     aid: CoaxialityToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "COAXIALITY_TOLERANCE.magnitude")?;
         match a {
@@ -27918,7 +30555,12 @@ fn resolve_common_datum_arena(
     aid: CommonDatumId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_shape_v = {
         let a = req(attrs, 2, "COMMON_DATUM.of_shape")?;
         ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -27940,7 +30582,12 @@ fn resolve_complex_triangulated_face_arena(
     aid: ComplexTriangulatedFaceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let coordinates_v = {
         let a = req(attrs, 1, "COMPLEX_TRIANGULATED_FACE.coordinates")?;
         ((|| -> Result<CoordinatesListRef, String> {
@@ -27983,7 +30630,12 @@ fn resolve_complex_triangulated_surface_set_arena(
     aid: ComplexTriangulatedSurfaceSetId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let coordinates_v = {
         let a = req(attrs, 1, "COMPLEX_TRIANGULATED_SURFACE_SET.coordinates")?;
         ((|| -> Result<CoordinatesListRef, String> {
@@ -28010,7 +30662,12 @@ fn resolve_composite_curve_arena(
     aid: CompositeCurveId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let segments_v = {
         let a = req(attrs, 1, "COMPOSITE_CURVE.segments")?;
         (match a {
@@ -28042,7 +30699,12 @@ fn resolve_composite_curve_segment_arena(
     aid: CompositeCurveSegmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let parent_curve_v = {
         let a = req(attrs, 2, "COMPOSITE_CURVE_SEGMENT.parent_curve")?;
         ((|| -> Result<CurveRef, String> {
@@ -28064,7 +30726,12 @@ fn resolve_composite_group_shape_aspect_arena(
     aid: CompositeGroupShapeAspectId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_shape_v = {
         let a = req(attrs, 2, "COMPOSITE_GROUP_SHAPE_ASPECT.of_shape")?;
         ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -28088,7 +30755,12 @@ fn resolve_composite_shape_aspect_arena(
     aid: CompositeShapeAspectId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_shape_v = {
         let a = req(attrs, 2, "COMPOSITE_SHAPE_ASPECT.of_shape")?;
         ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -28110,7 +30782,12 @@ fn resolve_composite_text_arena(
     aid: CompositeTextId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let collected_text_v = {
         let a = req(attrs, 1, "COMPOSITE_TEXT.collected_text")?;
         (match a {
@@ -28144,7 +30821,12 @@ fn resolve_compound_representation_item_arena(
     aid: CompoundRepresentationItemId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let item_element_v = {
         let a = req(attrs, 1, "COMPOUND_REPRESENTATION_ITEM.item_element")?;
         ((|| -> Result<CompoundItemDefinitionRef, String> {
@@ -28161,7 +30843,12 @@ fn resolve_concentricity_tolerance_arena(
     aid: ConcentricityToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "CONCENTRICITY_TOLERANCE.magnitude")?;
         match a {
@@ -28231,7 +30918,12 @@ fn resolve_configuration_design_arena(
     aid: ConfigurationDesignId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let configuration_v = {
         let a = req(attrs, 0, "CONFIGURATION_DESIGN.configuration")?;
         ((|| -> Result<ConfigurationItemRef, String> {
@@ -28265,7 +30957,12 @@ fn resolve_configuration_effectivity_arena(
     aid: ConfigurationEffectivityId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let usage_v = {
         let a = req(attrs, 1, "CONFIGURATION_EFFECTIVITY.usage")?;
         ((|| -> Result<ProductDefinitionRelationshipRef, String> {
@@ -28301,7 +30998,12 @@ fn resolve_configuration_item_arena(
     aid: ConfigurationItemId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let item_concept_v = {
         let a = req(attrs, 3, "CONFIGURATION_ITEM.item_concept")?;
         ((|| -> Result<ProductConceptRef, String> {
@@ -28323,7 +31025,12 @@ fn resolve_conic_arena(
     aid: ConicId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let position_v = {
         let a = req(attrs, 1, "CONIC.position")?;
         ((|| -> Result<Axis2PlacementRef, String> {
@@ -28345,7 +31052,12 @@ fn resolve_conical_surface_arena(
     aid: ConicalSurfaceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let position_v = {
         let a = req(attrs, 1, "CONICAL_SURFACE.position")?;
         ((|| -> Result<Axis2Placement3dRef, String> {
@@ -28367,7 +31079,12 @@ fn resolve_connected_face_set_arena(
     aid: ConnectedFaceSetId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let cfs_faces_v = {
         let a = req(attrs, 1, "CONNECTED_FACE_SET.cfs_faces")?;
         match a {
@@ -28406,7 +31123,12 @@ fn resolve_constructive_geometry_representation_arena(
     aid: ConstructiveGeometryRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(attrs, 1, "CONSTRUCTIVE_GEOMETRY_REPRESENTATION.items")?;
         (match a {
@@ -28465,7 +31187,12 @@ fn resolve_constructive_geometry_representation_relationship_arena(
     aid: ConstructiveGeometryRepresentationRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let rep_1_v = {
         let a = req(
             attrs,
@@ -28511,7 +31238,12 @@ fn resolve_context_dependent_over_riding_styled_item_arena(
     aid: ContextDependentOverRidingStyledItemId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styles_v = {
         let a = req(attrs, 1, "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.styles")?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<PresentationStyleAssignmentRef, String> { Ok(PresentationStyleAssignmentRef::from_any(idmap.get(as_ref_id(e, "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.styles")?).ok_or_else(|| format!("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.styles: dangling ref"))?).map_err(|e| format!("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.styles: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.styles: expected ref list, got {o:?}")) })?
@@ -28563,7 +31295,12 @@ fn resolve_context_dependent_shape_representation_arena(
     aid: ContextDependentShapeRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let representation_relation_v = {
         let a = req(
             attrs,
@@ -28595,7 +31332,12 @@ fn resolve_context_dependent_unit_arena(
     aid: ContextDependentUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let dimensions_v = {
         let a = req(attrs, 0, "CONTEXT_DEPENDENT_UNIT.dimensions")?;
         ((|| -> Result<DimensionalExponentsRef, String> {
@@ -28617,7 +31359,12 @@ fn resolve_continuous_shape_aspect_arena(
     aid: ContinuousShapeAspectId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_shape_v = {
         let a = req(attrs, 2, "CONTINUOUS_SHAPE_ASPECT.of_shape")?;
         ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -28639,7 +31386,12 @@ fn resolve_contract_arena(
     aid: ContractId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let kind_v = {
         let a = req(attrs, 2, "CONTRACT.kind")?;
         ((|| -> Result<ContractTypeRef, String> {
@@ -28661,7 +31413,12 @@ fn resolve_conversion_based_unit_arena(
     aid: ConversionBasedUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let dimensions_v = {
         let a = req(attrs, 0, "CONVERSION_BASED_UNIT.dimensions")?;
         ((|| -> Result<DimensionalExponentsRef, String> {
@@ -28697,7 +31454,12 @@ fn resolve_curve_style_arena(
     aid: CurveStyleId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let curve_font_v = {
         let a = req(attrs, 1, "CURVE_STYLE.curve_font")?;
         match a {
@@ -28725,14 +31487,14 @@ fn resolve_curve_style_arena(
                             if type_name == "DESCRIPTIVE_MEASURE" =>
                         {
                             SizeSelectRef::DescriptiveMeasure(
-                                read_string_select(a, "CURVE_STYLE.curve_width")?.value,
+                                read_string_select(a, "CURVE_STYLE.curve_width", tt)?.value,
                             )
                         }
                         Attribute::Typed { type_name, .. }
                             if type_name == "POSITIVE_LENGTH_MEASURE" =>
                         {
                             SizeSelectRef::PositiveLengthMeasure(
-                                read_measure_value(a, "CURVE_STYLE.curve_width")?
+                                read_measure_value(a, "CURVE_STYLE.curve_width", tt)?
                                     .value
                                     .as_f64(),
                             )
@@ -28776,7 +31538,12 @@ fn resolve_curve_style_font_arena(
     aid: CurveStyleFontId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let pattern_list_v = {
         let a = req(attrs, 1, "CURVE_STYLE_FONT.pattern_list")?;
         (match a {
@@ -28810,7 +31577,12 @@ fn resolve_curve_style_font_and_scaling_arena(
     aid: CurveStyleFontAndScalingId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let curve_font_v = {
         let a = req(attrs, 1, "CURVE_STYLE_FONT_AND_SCALING.curve_font")?;
         ((|| -> Result<CurveStyleFontSelectRef, String> {
@@ -28834,7 +31606,12 @@ fn resolve_curve_style_rendering_arena(
     aid: CurveStyleRenderingId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let rendering_properties_v = {
         let a = req(attrs, 1, "CURVE_STYLE_RENDERING.rendering_properties")?;
         ((|| -> Result<SurfaceRenderingPropertiesRef, String> {
@@ -28858,7 +31635,12 @@ fn resolve_cylindrical_surface_arena(
     aid: CylindricalSurfaceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let position_v = {
         let a = req(attrs, 1, "CYLINDRICAL_SURFACE.position")?;
         ((|| -> Result<Axis2Placement3dRef, String> {
@@ -28880,7 +31662,12 @@ fn resolve_cylindricity_tolerance_arena(
     aid: CylindricityToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "CYLINDRICITY_TOLERANCE.magnitude")?;
         match a {
@@ -28926,7 +31713,12 @@ fn resolve_date_and_time_arena(
     aid: DateAndTimeId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let date_component_v = {
         let a = req(attrs, 0, "DATE_AND_TIME.date_component")?;
         ((|| -> Result<DateRef, String> {
@@ -28960,7 +31752,12 @@ fn resolve_date_and_time_assignment_arena(
     aid: DateAndTimeAssignmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_date_and_time_v = {
         let a = req(attrs, 0, "DATE_AND_TIME_ASSIGNMENT.assigned_date_and_time")?;
         ((|| -> Result<DateAndTimeRef, String> {
@@ -28999,7 +31796,12 @@ fn resolve_datum_arena(
     aid: DatumId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_shape_v = {
         let a = req(attrs, 2, "DATUM.of_shape")?;
         ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -29021,7 +31823,12 @@ fn resolve_datum_feature_arena(
     aid: DatumFeatureId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_shape_v = {
         let a = req(attrs, 2, "DATUM_FEATURE.of_shape")?;
         ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -29043,7 +31850,12 @@ fn resolve_datum_reference_arena(
     aid: DatumReferenceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let referenced_datum_v = {
         let a = req(attrs, 1, "DATUM_REFERENCE.referenced_datum")?;
         ((|| -> Result<DatumRef, String> {
@@ -29065,7 +31877,12 @@ fn resolve_datum_reference_compartment_arena(
     aid: DatumReferenceCompartmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_shape_v = {
         let a = req(attrs, 2, "DATUM_REFERENCE_COMPARTMENT.of_shape")?;
         ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -29129,7 +31946,12 @@ fn resolve_datum_reference_element_arena(
     aid: DatumReferenceElementId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_shape_v = {
         let a = req(attrs, 2, "DATUM_REFERENCE_ELEMENT.of_shape")?;
         ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -29191,7 +32013,12 @@ fn resolve_datum_reference_modifier_with_value_arena(
     aid: DatumReferenceModifierWithValueId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let modifier_value_v = {
         let a = req(
             attrs,
@@ -29222,7 +32049,12 @@ fn resolve_datum_system_arena(
     aid: DatumSystemId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_shape_v = {
         let a = req(attrs, 2, "DATUM_SYSTEM.of_shape")?;
         ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -29268,7 +32100,12 @@ fn resolve_datum_target_arena(
     aid: DatumTargetId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_shape_v = {
         let a = req(attrs, 2, "DATUM_TARGET.of_shape")?;
         ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -29290,7 +32127,12 @@ fn resolve_default_model_geometric_view_arena(
     aid: DefaultModelGeometricViewId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let item_v = {
         let a = req(attrs, 2, "DEFAULT_MODEL_GEOMETRIC_VIEW.item")?;
         ((|| -> Result<RepresentationItemRef, String> {
@@ -29338,7 +32180,12 @@ fn resolve_defined_character_glyph_arena(
     aid: DefinedCharacterGlyphId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let definition_v = {
         let a = req(attrs, 1, "DEFINED_CHARACTER_GLYPH.definition")?;
         ((|| -> Result<DefinedGlyphSelectRef, String> {
@@ -29372,7 +32219,12 @@ fn resolve_defined_symbol_arena(
     aid: DefinedSymbolId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let definition_v = {
         let a = req(attrs, 1, "DEFINED_SYMBOL.definition")?;
         ((|| -> Result<DefinedSymbolSelectRef, String> {
@@ -29406,7 +32258,12 @@ fn resolve_definitional_representation_arena(
     aid: DefinitionalRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(attrs, 1, "DEFINITIONAL_REPRESENTATION.items")?;
         (match a {
@@ -29457,7 +32314,12 @@ fn resolve_definitional_representation_relationship_arena(
     aid: DefinitionalRepresentationRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let rep_1_v = {
         let a = req(attrs, 2, "DEFINITIONAL_REPRESENTATION_RELATIONSHIP.rep_1")?;
         ((|| -> Result<RepresentationOrRepresentationReferenceRef, String> {
@@ -29501,7 +32363,12 @@ fn resolve_definitional_representation_relationship_with_same_context_arena(
     aid: DefinitionalRepresentationRelationshipWithSameContextId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let rep_1_v = {
         let a = req(
             attrs,
@@ -29535,7 +32402,12 @@ fn resolve_degenerate_toroidal_surface_arena(
     aid: DegenerateToroidalSurfaceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let position_v = {
         let a = req(attrs, 1, "DEGENERATE_TOROIDAL_SURFACE.position")?;
         ((|| -> Result<Axis2Placement3dRef, String> {
@@ -29557,7 +32429,12 @@ fn resolve_derived_shape_aspect_arena(
     aid: DerivedShapeAspectId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_shape_v = {
         let a = req(attrs, 2, "DERIVED_SHAPE_ASPECT.of_shape")?;
         ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -29579,7 +32456,12 @@ fn resolve_derived_unit_arena(
     aid: DerivedUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let elements_v = {
         let a = req(attrs, 0, "DERIVED_UNIT.elements")?;
         (match a {
@@ -29611,7 +32493,12 @@ fn resolve_derived_unit_element_arena(
     aid: DerivedUnitElementId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let unit_v = {
         let a = req(attrs, 0, "DERIVED_UNIT_ELEMENT.unit")?;
         ((|| -> Result<NamedUnitRef, String> {
@@ -29633,7 +32520,12 @@ fn resolve_description_attribute_arena(
     aid: DescriptionAttributeId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let described_item_v = {
         let a = req(attrs, 1, "DESCRIPTION_ATTRIBUTE.described_item")?;
         ((|| -> Result<DescriptionAttributeSelectRef, String> {
@@ -29655,7 +32547,12 @@ fn resolve_design_context_arena(
     aid: DesignContextId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let frame_of_reference_v = {
         let a = req(attrs, 1, "DESIGN_CONTEXT.frame_of_reference")?;
         ((|| -> Result<ApplicationContextRef, String> {
@@ -29677,7 +32574,12 @@ fn resolve_dimensional_characteristic_representation_arena(
     aid: DimensionalCharacteristicRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let dimension_v = {
         let a = req(
             attrs,
@@ -29733,7 +32635,12 @@ fn resolve_dimensional_location_arena(
     aid: DimensionalLocationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_shape_aspect_v = {
         let a = req(attrs, 2, "DIMENSIONAL_LOCATION.relating_shape_aspect")?;
         ((|| -> Result<ShapeAspectRef, String> {
@@ -29771,7 +32678,12 @@ fn resolve_dimensional_location_with_path_arena(
     aid: DimensionalLocationWithPathId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_shape_aspect_v = {
         let a = req(
             attrs,
@@ -29837,7 +32749,12 @@ fn resolve_dimensional_size_arena(
     aid: DimensionalSizeId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let applies_to_v = {
         let a = req(attrs, 0, "DIMENSIONAL_SIZE.applies_to")?;
         ((|| -> Result<ShapeAspectRef, String> {
@@ -29859,7 +32776,12 @@ fn resolve_dimensional_size_with_datum_feature_arena(
     aid: DimensionalSizeWithDatumFeatureId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_shape_v = {
         let a = req(attrs, 2, "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE.of_shape")?;
         ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -29903,7 +32825,12 @@ fn resolve_dimensional_size_with_path_arena(
     aid: DimensionalSizeWithPathId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let applies_to_v = {
         let a = req(attrs, 0, "DIMENSIONAL_SIZE_WITH_PATH.applies_to")?;
         ((|| -> Result<ShapeAspectRef, String> {
@@ -29939,7 +32866,12 @@ fn resolve_directed_dimensional_location_arena(
     aid: DirectedDimensionalLocationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_shape_aspect_v = {
         let a = req(
             attrs,
@@ -29991,7 +32923,12 @@ fn resolve_document_arena(
     aid: DocumentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let kind_v = {
         let a = req(attrs, 3, "DOCUMENT.kind")?;
         ((|| -> Result<DocumentTypeRef, String> {
@@ -30013,7 +32950,12 @@ fn resolve_document_file_arena(
     aid: DocumentFileId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let kind_v = {
         let a = req(attrs, 3, "DOCUMENT_FILE.kind")?;
         ((|| -> Result<DocumentTypeRef, String> {
@@ -30035,7 +32977,12 @@ fn resolve_document_product_association_arena(
     aid: DocumentProductAssociationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_document_v = {
         let a = req(attrs, 2, "DOCUMENT_PRODUCT_ASSOCIATION.relating_document")?;
         ((|| -> Result<DocumentRef, String> {
@@ -30079,7 +33026,12 @@ fn resolve_document_product_equivalence_arena(
     aid: DocumentProductEquivalenceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_document_v = {
         let a = req(attrs, 2, "DOCUMENT_PRODUCT_EQUIVALENCE.relating_document")?;
         ((|| -> Result<DocumentRef, String> {
@@ -30123,7 +33075,12 @@ fn resolve_document_reference_arena(
     aid: DocumentReferenceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_document_v = {
         let a = req(attrs, 0, "DOCUMENT_REFERENCE.assigned_document")?;
         ((|| -> Result<DocumentRef, String> {
@@ -30145,7 +33102,12 @@ fn resolve_document_representation_type_arena(
     aid: DocumentRepresentationTypeId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let represented_document_v = {
         let a = req(
             attrs,
@@ -30176,7 +33138,12 @@ fn resolve_draughting_annotation_occurrence_arena(
     aid: DraughtingAnnotationOccurrenceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styles_v = {
         let a = req(attrs, 1, "DRAUGHTING_ANNOTATION_OCCURRENCE.styles")?;
         (match a {
@@ -30224,7 +33191,12 @@ fn resolve_draughting_callout_arena(
     aid: DraughtingCalloutId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let contents_v = {
         let a = req(attrs, 1, "DRAUGHTING_CALLOUT.contents")?;
         (match a {
@@ -30258,7 +33230,12 @@ fn resolve_draughting_callout_relationship_arena(
     aid: DraughtingCalloutRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_draughting_callout_v = {
         let a = req(
             attrs,
@@ -30290,7 +33267,12 @@ fn resolve_draughting_model_arena(
     aid: DraughtingModelId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(attrs, 1, "DRAUGHTING_MODEL.items")?;
         (match a {
@@ -30334,7 +33316,12 @@ fn resolve_draughting_model_item_association_arena(
     aid: DraughtingModelItemAssociationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let definition_v = {
         let a = req(attrs, 2, "DRAUGHTING_MODEL_ITEM_ASSOCIATION.definition")?;
         ((|| -> Result<DraughtingModelItemDefinitionRef, String> {
@@ -30405,7 +33392,12 @@ fn resolve_draughting_model_item_association_with_placeholder_arena(
     aid: DraughtingModelItemAssociationWithPlaceholderId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let definition_v = {
         let a = req(
             attrs,
@@ -30461,7 +33453,12 @@ fn resolve_edge_arena(
     aid: EdgeId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let edge_start_v = {
         let a = req(attrs, 1, "EDGE.edge_start")?;
         match a {
@@ -30505,7 +33502,12 @@ fn resolve_edge_curve_arena(
     aid: EdgeCurveId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let edge_start_v = {
         let a = req(attrs, 1, "EDGE_CURVE.edge_start")?;
         ((|| -> Result<VertexRef, String> {
@@ -30551,7 +33553,12 @@ fn resolve_edge_loop_arena(
     aid: EdgeLoopId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let edge_list_v = {
         let a = req(attrs, 1, "EDGE_LOOP.edge_list")?;
         (match a {
@@ -30581,7 +33588,12 @@ fn resolve_elementary_surface_arena(
     aid: ElementarySurfaceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let position_v = {
         let a = req(attrs, 1, "ELEMENTARY_SURFACE.position")?;
         ((|| -> Result<Axis2Placement3dRef, String> {
@@ -30603,7 +33615,12 @@ fn resolve_ellipse_arena(
     aid: EllipseId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let position_v = {
         let a = req(attrs, 1, "ELLIPSE.position")?;
         ((|| -> Result<Axis2PlacementRef, String> {
@@ -30625,7 +33642,12 @@ fn resolve_external_identification_assignment_arena(
     aid: ExternalIdentificationAssignmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let role_v = {
         let a = req(attrs, 1, "EXTERNAL_IDENTIFICATION_ASSIGNMENT.role")?;
         ((|| -> Result<IdentificationRoleRef, String> {
@@ -30663,7 +33685,12 @@ fn resolve_externally_defined_character_glyph_arena(
     aid: ExternallyDefinedCharacterGlyphId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let source_v = {
         let a = req(attrs, 1, "EXTERNALLY_DEFINED_CHARACTER_GLYPH.source")?;
         ((|| -> Result<ExternalSourceRef, String> {
@@ -30687,7 +33714,12 @@ fn resolve_externally_defined_curve_font_arena(
     aid: ExternallyDefinedCurveFontId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let source_v = {
         let a = req(attrs, 1, "EXTERNALLY_DEFINED_CURVE_FONT.source")?;
         ((|| -> Result<ExternalSourceRef, String> {
@@ -30709,7 +33741,12 @@ fn resolve_externally_defined_hatch_style_arena(
     aid: ExternallyDefinedHatchStyleId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let source_v = {
         let a = req(attrs, 1, "EXTERNALLY_DEFINED_HATCH_STYLE.source")?;
         ((|| -> Result<ExternalSourceRef, String> {
@@ -30733,7 +33770,12 @@ fn resolve_externally_defined_item_arena(
     aid: ExternallyDefinedItemId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let source_v = {
         let a = req(attrs, 1, "EXTERNALLY_DEFINED_ITEM.source")?;
         ((|| -> Result<ExternalSourceRef, String> {
@@ -30755,7 +33797,12 @@ fn resolve_externally_defined_style_arena(
     aid: ExternallyDefinedStyleId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let source_v = {
         let a = req(attrs, 1, "EXTERNALLY_DEFINED_STYLE.source")?;
         ((|| -> Result<ExternalSourceRef, String> {
@@ -30777,7 +33824,12 @@ fn resolve_externally_defined_symbol_arena(
     aid: ExternallyDefinedSymbolId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let source_v = {
         let a = req(attrs, 1, "EXTERNALLY_DEFINED_SYMBOL.source")?;
         ((|| -> Result<ExternalSourceRef, String> {
@@ -30799,7 +33851,12 @@ fn resolve_externally_defined_text_font_arena(
     aid: ExternallyDefinedTextFontId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let source_v = {
         let a = req(attrs, 1, "EXTERNALLY_DEFINED_TEXT_FONT.source")?;
         ((|| -> Result<ExternalSourceRef, String> {
@@ -30821,7 +33878,12 @@ fn resolve_externally_defined_tile_arena(
     aid: ExternallyDefinedTileId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let source_v = {
         let a = req(attrs, 1, "EXTERNALLY_DEFINED_TILE.source")?;
         ((|| -> Result<ExternalSourceRef, String> {
@@ -30843,7 +33905,12 @@ fn resolve_externally_defined_tile_style_arena(
     aid: ExternallyDefinedTileStyleId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let source_v = {
         let a = req(attrs, 1, "EXTERNALLY_DEFINED_TILE_STYLE.source")?;
         ((|| -> Result<ExternalSourceRef, String> {
@@ -30865,7 +33932,12 @@ fn resolve_face_arena(
     aid: FaceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let bounds_v = {
         let a = req(attrs, 1, "FACE.bounds")?;
         (match a {
@@ -30895,7 +33967,12 @@ fn resolve_face_bound_arena(
     aid: FaceBoundId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let bound_v = {
         let a = req(attrs, 1, "FACE_BOUND.bound")?;
         ((|| -> Result<LoopRef, String> {
@@ -30917,7 +33994,12 @@ fn resolve_face_outer_bound_arena(
     aid: FaceOuterBoundId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let bound_v = {
         let a = req(attrs, 1, "FACE_OUTER_BOUND.bound")?;
         ((|| -> Result<LoopRef, String> {
@@ -30939,7 +34021,12 @@ fn resolve_face_surface_arena(
     aid: FaceSurfaceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let bounds_v = {
         let a = req(attrs, 1, "FACE_SURFACE.bounds")?;
         (match a {
@@ -30981,7 +34068,12 @@ fn resolve_feature_for_datum_target_relationship_arena(
     aid: FeatureForDatumTargetRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_shape_aspect_v = {
         let a = req(
             attrs,
@@ -31013,7 +34105,12 @@ fn resolve_fill_area_style_arena(
     aid: FillAreaStyleId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let fill_styles_v = {
         let a = req(attrs, 1, "FILL_AREA_STYLE.fill_styles")?;
         (match a {
@@ -31047,7 +34144,12 @@ fn resolve_fill_area_style_colour_arena(
     aid: FillAreaStyleColourId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let fill_colour_v = {
         let a = req(attrs, 1, "FILL_AREA_STYLE_COLOUR.fill_colour")?;
         ((|| -> Result<ColourRef, String> {
@@ -31069,7 +34171,12 @@ fn resolve_fill_area_style_hatching_arena(
     aid: FillAreaStyleHatchingId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let hatch_line_appearance_v = {
         let a = req(attrs, 1, "FILL_AREA_STYLE_HATCHING.hatch_line_appearance")?;
         ((|| -> Result<CurveStyleRef, String> {
@@ -31154,7 +34261,12 @@ fn resolve_fill_area_style_tile_coloured_region_arena(
     aid: FillAreaStyleTileColouredRegionId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let closed_curve_v = {
         let a = req(
             attrs,
@@ -31206,7 +34318,12 @@ fn resolve_fill_area_style_tile_curve_with_style_arena(
     aid: FillAreaStyleTileCurveWithStyleId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styled_curve_v = {
         let a = req(
             attrs,
@@ -31237,7 +34354,12 @@ fn resolve_fill_area_style_tile_symbol_with_style_arena(
     aid: FillAreaStyleTileSymbolWithStyleId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let symbol_v = {
         let a = req(attrs, 1, "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE.symbol")?;
         ((|| -> Result<AnnotationSymbolOccurrenceRef, String> {
@@ -31264,7 +34386,12 @@ fn resolve_fill_area_style_tiles_arena(
     aid: FillAreaStyleTilesId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let tiling_pattern_v = {
         let a = req(attrs, 1, "FILL_AREA_STYLE_TILES.tiling_pattern")?;
         ((|| -> Result<TwoDirectionRepeatFactorRef, String> {
@@ -31310,7 +34437,12 @@ fn resolve_flatness_tolerance_arena(
     aid: FlatnessToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "FLATNESS_TOLERANCE.magnitude")?;
         match a {
@@ -31351,7 +34483,12 @@ fn resolve_general_datum_reference_arena(
     aid: GeneralDatumReferenceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_shape_v = {
         let a = req(attrs, 2, "GENERAL_DATUM_REFERENCE.of_shape")?;
         ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -31413,7 +34550,12 @@ fn resolve_general_property_association_arena(
     aid: GeneralPropertyAssociationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let base_definition_v = {
         let a = req(attrs, 2, "GENERAL_PROPERTY_ASSOCIATION.base_definition")?;
         ((|| -> Result<GeneralPropertyRef, String> {
@@ -31457,7 +34599,12 @@ fn resolve_generic_product_definition_reference_arena(
     aid: GenericProductDefinitionReferenceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let source_v = {
         let a = req(attrs, 0, "GENERIC_PRODUCT_DEFINITION_REFERENCE.source")?;
         ((|| -> Result<ExternalSourceRef, String> {
@@ -31481,7 +34628,12 @@ fn resolve_geometric_curve_set_arena(
     aid: GeometricCurveSetId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let elements_v = {
         let a = req(attrs, 1, "GEOMETRIC_CURVE_SET.elements")?;
         (match a {
@@ -31515,7 +34667,12 @@ fn resolve_geometric_item_specific_usage_arena(
     aid: GeometricItemSpecificUsageId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let definition_v = {
         let a = req(attrs, 2, "GEOMETRIC_ITEM_SPECIFIC_USAGE.definition")?;
         ((|| -> Result<GeometricItemSpecificUsageSelectRef, String> {
@@ -31577,7 +34734,12 @@ fn resolve_geometric_set_arena(
     aid: GeometricSetId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let elements_v = {
         let a = req(attrs, 1, "GEOMETRIC_SET.elements")?;
         (match a {
@@ -31609,7 +34771,12 @@ fn resolve_geometric_tolerance_arena(
     aid: GeometricToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "GEOMETRIC_TOLERANCE.magnitude")?;
         match a {
@@ -31652,7 +34819,12 @@ fn resolve_geometric_tolerance_relationship_arena(
     aid: GeometricToleranceRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_geometric_tolerance_v = {
         let a = req(
             attrs,
@@ -31684,7 +34856,12 @@ fn resolve_geometric_tolerance_with_datum_reference_arena(
     aid: GeometricToleranceWithDatumReferenceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(
             attrs,
@@ -31730,7 +34907,12 @@ fn resolve_geometric_tolerance_with_defined_area_unit_arena(
     aid: GeometricToleranceWithDefinedAreaUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(
             attrs,
@@ -31806,7 +34988,12 @@ fn resolve_geometric_tolerance_with_defined_unit_arena(
     aid: GeometricToleranceWithDefinedUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.magnitude")?;
         match a {
@@ -31858,7 +35045,12 @@ fn resolve_geometric_tolerance_with_maximum_tolerance_arena(
     aid: GeometricToleranceWithMaximumToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(
             attrs,
@@ -31906,7 +35098,12 @@ fn resolve_geometric_tolerance_with_modifiers_arena(
     aid: GeometricToleranceWithModifiersId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "GEOMETRIC_TOLERANCE_WITH_MODIFIERS.magnitude")?;
         match a {
@@ -31951,7 +35148,12 @@ fn resolve_geometrically_bounded_surface_shape_representation_arena(
     aid: GeometricallyBoundedSurfaceShapeRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(
             attrs,
@@ -31983,7 +35185,12 @@ fn resolve_geometrically_bounded_wireframe_shape_representation_arena(
     aid: GeometricallyBoundedWireframeShapeRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(
             attrs,
@@ -32015,7 +35222,12 @@ fn resolve_global_uncertainty_assigned_context_arena(
     aid: GlobalUncertaintyAssignedContextId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let uncertainty_v = {
         let a = req(attrs, 2, "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty")?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<UncertaintyMeasureWithUnitRef, String> { Ok(UncertaintyMeasureWithUnitRef::from_any(idmap.get(as_ref_id(e, "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty")?).ok_or_else(|| format!("GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty: dangling ref"))?).map_err(|e| format!("GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty: expected ref list, got {o:?}")) })?
@@ -32030,7 +35242,12 @@ fn resolve_global_unit_assigned_context_arena(
     aid: GlobalUnitAssignedContextId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let units_v = {
         let a = req(attrs, 2, "GLOBAL_UNIT_ASSIGNED_CONTEXT.units")?;
         (match a {
@@ -32064,7 +35281,12 @@ fn resolve_group_assignment_arena(
     aid: GroupAssignmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_group_v = {
         let a = req(attrs, 0, "GROUP_ASSIGNMENT.assigned_group")?;
         ((|| -> Result<GroupRef, String> {
@@ -32086,7 +35308,12 @@ fn resolve_hyperbola_arena(
     aid: HyperbolaId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let position_v = {
         let a = req(attrs, 1, "HYPERBOLA.position")?;
         ((|| -> Result<Axis2PlacementRef, String> {
@@ -32108,7 +35335,12 @@ fn resolve_id_attribute_arena(
     aid: IdAttributeId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let identified_item_v = {
         let a = req(attrs, 1, "ID_ATTRIBUTE.identified_item")?;
         ((|| -> Result<IdAttributeSelectRef, String> {
@@ -32130,7 +35362,12 @@ fn resolve_identification_assignment_arena(
     aid: IdentificationAssignmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let role_v = {
         let a = req(attrs, 1, "IDENTIFICATION_ASSIGNMENT.role")?;
         ((|| -> Result<IdentificationRoleRef, String> {
@@ -32152,7 +35389,12 @@ fn resolve_intersection_curve_arena(
     aid: IntersectionCurveId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let curve_3d_v = {
         let a = req(attrs, 1, "INTERSECTION_CURVE.curve_3d")?;
         ((|| -> Result<CurveRef, String> {
@@ -32198,7 +35440,12 @@ fn resolve_invisibility_arena(
     aid: InvisibilityId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let invisible_items_v = {
         let a = req(attrs, 0, "INVISIBILITY.invisible_items")?;
         (match a {
@@ -32232,7 +35479,12 @@ fn resolve_item_defined_transformation_arena(
     aid: ItemDefinedTransformationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let transform_item_1_v = {
         let a = req(attrs, 2, "ITEM_DEFINED_TRANSFORMATION.transform_item_1")?;
         ((|| -> Result<RepresentationItemRef, String> {
@@ -32276,7 +35528,12 @@ fn resolve_item_identified_representation_usage_arena(
     aid: ItemIdentifiedRepresentationUsageId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let definition_v = {
         let a = req(attrs, 2, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.definition")?;
         ((|| -> Result<ItemIdentifiedRepresentationUsageDefinitionRef, String> {
@@ -32339,7 +35596,12 @@ fn resolve_leader_curve_arena(
     aid: LeaderCurveId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styles_v = {
         let a = req(attrs, 1, "LEADER_CURVE.styles")?;
         (match a {
@@ -32381,7 +35643,12 @@ fn resolve_leader_directed_callout_arena(
     aid: LeaderDirectedCalloutId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let contents_v = {
         let a = req(attrs, 1, "LEADER_DIRECTED_CALLOUT.contents")?;
         (match a {
@@ -32415,7 +35682,12 @@ fn resolve_leader_terminator_arena(
     aid: LeaderTerminatorId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styles_v = {
         let a = req(attrs, 1, "LEADER_TERMINATOR.styles")?;
         (match a {
@@ -32471,7 +35743,12 @@ fn resolve_length_measure_with_unit_arena(
     aid: LengthMeasureWithUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let unit_component_v = {
         let a = req(attrs, 1, "LENGTH_MEASURE_WITH_UNIT.unit_component")?;
         ((|| -> Result<UnitRef, String> {
@@ -32495,7 +35772,12 @@ fn resolve_length_unit_arena(
     aid: LengthUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let dimensions_v = {
         let a = req(attrs, 0, "LENGTH_UNIT.dimensions")?;
         ((|| -> Result<DimensionalExponentsRef, String> {
@@ -32517,7 +35799,12 @@ fn resolve_line_arena(
     aid: LineId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let pnt_v = {
         let a = req(attrs, 1, "LINE.pnt")?;
         ((|| -> Result<CartesianPointRef, String> {
@@ -32551,7 +35838,12 @@ fn resolve_line_profile_tolerance_arena(
     aid: LineProfileToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "LINE_PROFILE_TOLERANCE.magnitude")?;
         match a {
@@ -32597,7 +35889,12 @@ fn resolve_local_time_arena(
     aid: LocalTimeId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let zone_v = {
         let a = req(attrs, 3, "LOCAL_TIME.zone")?;
         ((|| -> Result<CoordinatedUniversalTimeOffsetRef, String> {
@@ -32619,7 +35916,12 @@ fn resolve_make_from_usage_option_arena(
     aid: MakeFromUsageOptionId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_product_definition_v = {
         let a = req(
             attrs,
@@ -32683,7 +35985,12 @@ fn resolve_manifold_solid_brep_arena(
     aid: ManifoldSolidBrepId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let outer_v = {
         let a = req(attrs, 1, "MANIFOLD_SOLID_BREP.outer")?;
         ((|| -> Result<ClosedShellRef, String> {
@@ -32705,7 +36012,12 @@ fn resolve_manifold_surface_shape_representation_arena(
     aid: ManifoldSurfaceShapeRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(attrs, 1, "MANIFOLD_SURFACE_SHAPE_REPRESENTATION.items")?;
         (match a {
@@ -32764,7 +36076,12 @@ fn resolve_mapped_item_arena(
     aid: MappedItemId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let mapping_source_v = {
         let a = req(attrs, 1, "MAPPED_ITEM.mapping_source")?;
         ((|| -> Result<RepresentationMapRef, String> {
@@ -32798,7 +36115,12 @@ fn resolve_mass_measure_with_unit_arena(
     aid: MassMeasureWithUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let unit_component_v = {
         let a = req(attrs, 1, "MASS_MEASURE_WITH_UNIT.unit_component")?;
         ((|| -> Result<UnitRef, String> {
@@ -32822,7 +36144,12 @@ fn resolve_mass_unit_arena(
     aid: MassUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let dimensions_v = {
         let a = req(attrs, 0, "MASS_UNIT.dimensions")?;
         ((|| -> Result<DimensionalExponentsRef, String> {
@@ -32844,7 +36171,12 @@ fn resolve_measure_qualification_arena(
     aid: MeasureQualificationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let qualified_measure_v = {
         let a = req(attrs, 2, "MEASURE_QUALIFICATION.qualified_measure")?;
         ((|| -> Result<MeasureWithUnitRef, String> {
@@ -32892,7 +36224,12 @@ fn resolve_measure_representation_item_arena(
     aid: MeasureRepresentationItemId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let unit_component_v = {
         let a = req(attrs, 2, "MEASURE_REPRESENTATION_ITEM.unit_component")?;
         ((|| -> Result<UnitRef, String> {
@@ -32916,7 +36253,12 @@ fn resolve_measure_with_unit_arena(
     aid: MeasureWithUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let unit_component_v = {
         let a = req(attrs, 1, "MEASURE_WITH_UNIT.unit_component")?;
         ((|| -> Result<UnitRef, String> {
@@ -32938,7 +36280,12 @@ fn resolve_mechanical_context_arena(
     aid: MechanicalContextId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let frame_of_reference_v = {
         let a = req(attrs, 1, "MECHANICAL_CONTEXT.frame_of_reference")?;
         ((|| -> Result<ApplicationContextRef, String> {
@@ -32962,7 +36309,12 @@ fn resolve_mechanical_design_and_draughting_relationship_arena(
     aid: MechanicalDesignAndDraughtingRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let rep_1_v = {
         let a = req(
             attrs,
@@ -33024,7 +36376,12 @@ fn resolve_mechanical_design_geometric_presentation_representation_arena(
     aid: MechanicalDesignGeometricPresentationRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(
             attrs,
@@ -33056,7 +36413,12 @@ fn resolve_mechanical_design_presentation_representation_with_draughting_arena(
     aid: MechanicalDesignPresentationRepresentationWithDraughtingId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(
             attrs,
@@ -33088,7 +36450,12 @@ fn resolve_mechanical_design_shaded_presentation_representation_arena(
     aid: MechanicalDesignShadedPresentationRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(
             attrs,
@@ -33120,7 +36487,12 @@ fn resolve_model_geometric_view_arena(
     aid: ModelGeometricViewId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let item_v = {
         let a = req(attrs, 2, "MODEL_GEOMETRIC_VIEW.item")?;
         ((|| -> Result<RepresentationItemRef, String> {
@@ -33154,7 +36526,12 @@ fn resolve_modified_geometric_tolerance_arena(
     aid: ModifiedGeometricToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "MODIFIED_GEOMETRIC_TOLERANCE.magnitude")?;
         match a {
@@ -33206,7 +36583,12 @@ fn resolve_name_attribute_arena(
     aid: NameAttributeId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let named_item_v = {
         let a = req(attrs, 1, "NAME_ATTRIBUTE.named_item")?;
         ((|| -> Result<NameAttributeSelectRef, String> {
@@ -33228,7 +36610,12 @@ fn resolve_named_unit_arena(
     aid: NamedUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let dimensions_v = {
         let a = req(attrs, 0, "NAMED_UNIT.dimensions")?;
         match a {
@@ -33255,7 +36642,12 @@ fn resolve_next_assembly_usage_occurrence_arena(
     aid: NextAssemblyUsageOccurrenceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_product_definition_v = {
         let a = req(
             attrs,
@@ -33287,7 +36679,12 @@ fn resolve_offset_surface_arena(
     aid: OffsetSurfaceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let basis_surface_v = {
         let a = req(attrs, 1, "OFFSET_SURFACE.basis_surface")?;
         ((|| -> Result<SurfaceRef, String> {
@@ -33309,7 +36706,12 @@ fn resolve_one_direction_repeat_factor_arena(
     aid: OneDirectionRepeatFactorId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let repeat_factor_v = {
         let a = req(attrs, 1, "ONE_DIRECTION_REPEAT_FACTOR.repeat_factor")?;
         ((|| -> Result<VectorRef, String> {
@@ -33333,7 +36735,12 @@ fn resolve_open_shell_arena(
     aid: OpenShellId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let cfs_faces_v = {
         let a = req(attrs, 1, "OPEN_SHELL.cfs_faces")?;
         (match a {
@@ -33365,7 +36772,12 @@ fn resolve_organization_relationship_arena(
     aid: OrganizationRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_organization_v = {
         let a = req(attrs, 2, "ORGANIZATION_RELATIONSHIP.relating_organization")?;
         ((|| -> Result<OrganizationRef, String> {
@@ -33409,7 +36821,12 @@ fn resolve_organizational_address_arena(
     aid: OrganizationalAddressId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let organizations_v = {
         let a = req(attrs, 12, "ORGANIZATIONAL_ADDRESS.organizations")?;
         (match a {
@@ -33443,7 +36860,12 @@ fn resolve_organizational_project_arena(
     aid: OrganizationalProjectId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let responsible_organizations_v = {
         let a = req(attrs, 2, "ORGANIZATIONAL_PROJECT.responsible_organizations")?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<OrganizationRef, String> { Ok(OrganizationRef::from_any(idmap.get(as_ref_id(e, "ORGANIZATIONAL_PROJECT.responsible_organizations")?).ok_or_else(|| format!("ORGANIZATIONAL_PROJECT.responsible_organizations: dangling ref"))?).map_err(|e| format!("ORGANIZATIONAL_PROJECT.responsible_organizations: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("ORGANIZATIONAL_PROJECT.responsible_organizations: expected ref list, got {o:?}")) })?
@@ -33458,7 +36880,12 @@ fn resolve_organizational_project_relationship_arena(
     aid: OrganizationalProjectRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_organizational_project_v = {
         let a = req(
             attrs,
@@ -33490,7 +36917,12 @@ fn resolve_oriented_closed_shell_arena(
     aid: OrientedClosedShellId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let closed_shell_element_v = {
         let a = req(attrs, 2, "ORIENTED_CLOSED_SHELL.closed_shell_element")?;
         ((|| -> Result<ClosedShellRef, String> {
@@ -33514,7 +36946,12 @@ fn resolve_oriented_edge_arena(
     aid: OrientedEdgeId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let edge_element_v = {
         let a = req(attrs, 3, "ORIENTED_EDGE.edge_element")?;
         ((|| -> Result<EdgeRef, String> {
@@ -33536,7 +36973,12 @@ fn resolve_over_riding_styled_item_arena(
     aid: OverRidingStyledItemId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styles_v = {
         let a = req(attrs, 1, "OVER_RIDING_STYLED_ITEM.styles")?;
         (match a {
@@ -33596,7 +37038,12 @@ fn resolve_parallelism_tolerance_arena(
     aid: ParallelismToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "PARALLELISM_TOLERANCE.magnitude")?;
         match a {
@@ -33666,7 +37113,12 @@ fn resolve_path_arena(
     aid: PathId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let edge_list_v = {
         let a = req(attrs, 1, "PATH.edge_list")?;
         (match a {
@@ -33696,7 +37148,12 @@ fn resolve_pcurve_arena(
     aid: PcurveId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let basis_surface_v = {
         let a = req(attrs, 1, "PCURVE.basis_surface")?;
         ((|| -> Result<SurfaceRef, String> {
@@ -33730,7 +37187,12 @@ fn resolve_perpendicularity_tolerance_arena(
     aid: PerpendicularityToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "PERPENDICULARITY_TOLERANCE.magnitude")?;
         match a {
@@ -33804,7 +37266,12 @@ fn resolve_person_and_organization_arena(
     aid: PersonAndOrganizationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let the_person_v = {
         let a = req(attrs, 0, "PERSON_AND_ORGANIZATION.the_person")?;
         ((|| -> Result<PersonRef, String> {
@@ -33840,7 +37307,12 @@ fn resolve_person_and_organization_address_arena(
     aid: PersonAndOrganizationAddressId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let organizations_v = {
         let a = req(attrs, 12, "PERSON_AND_ORGANIZATION_ADDRESS.organizations")?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<OrganizationRef, String> { Ok(OrganizationRef::from_any(idmap.get(as_ref_id(e, "PERSON_AND_ORGANIZATION_ADDRESS.organizations")?).ok_or_else(|| format!("PERSON_AND_ORGANIZATION_ADDRESS.organizations: dangling ref"))?).map_err(|e| format!("PERSON_AND_ORGANIZATION_ADDRESS.organizations: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("PERSON_AND_ORGANIZATION_ADDRESS.organizations: expected ref list, got {o:?}")) })?
@@ -33879,7 +37351,12 @@ fn resolve_person_and_organization_assignment_arena(
     aid: PersonAndOrganizationAssignmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_person_and_organization_v = {
         let a = req(
             attrs,
@@ -33914,7 +37391,12 @@ fn resolve_personal_address_arena(
     aid: PersonalAddressId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let people_v = {
         let a = req(attrs, 12, "PERSONAL_ADDRESS.people")?;
         (match a {
@@ -33946,7 +37428,12 @@ fn resolve_placed_datum_target_feature_arena(
     aid: PlacedDatumTargetFeatureId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_shape_v = {
         let a = req(attrs, 2, "PLACED_DATUM_TARGET_FEATURE.of_shape")?;
         ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -33968,7 +37455,12 @@ fn resolve_placement_arena(
     aid: PlacementId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let location_v = {
         let a = req(attrs, 1, "PLACEMENT.location")?;
         ((|| -> Result<CartesianPointRef, String> {
@@ -33990,7 +37482,12 @@ fn resolve_planar_box_arena(
     aid: PlanarBoxId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let placement_v = {
         let a = req(attrs, 3, "PLANAR_BOX.placement")?;
         ((|| -> Result<Axis2PlacementRef, String> {
@@ -34012,7 +37509,12 @@ fn resolve_plane_arena(
     aid: PlaneId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let position_v = {
         let a = req(attrs, 1, "PLANE.position")?;
         ((|| -> Result<Axis2Placement3dRef, String> {
@@ -34034,7 +37536,12 @@ fn resolve_plane_angle_measure_with_unit_arena(
     aid: PlaneAngleMeasureWithUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let unit_component_v = {
         let a = req(attrs, 1, "PLANE_ANGLE_MEASURE_WITH_UNIT.unit_component")?;
         ((|| -> Result<UnitRef, String> {
@@ -34061,7 +37568,12 @@ fn resolve_plane_angle_unit_arena(
     aid: PlaneAngleUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let dimensions_v = {
         let a = req(attrs, 0, "PLANE_ANGLE_UNIT.dimensions")?;
         ((|| -> Result<DimensionalExponentsRef, String> {
@@ -34083,7 +37595,12 @@ fn resolve_plus_minus_tolerance_arena(
     aid: PlusMinusToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let range_v = {
         let a = req(attrs, 0, "PLUS_MINUS_TOLERANCE.range")?;
         ((|| -> Result<ToleranceMethodDefinitionRef, String> {
@@ -34119,7 +37636,12 @@ fn resolve_point_style_arena(
     aid: PointStyleId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let marker_v = {
         let a = req(attrs, 1, "POINT_STYLE.marker")?;
         match a {
@@ -34161,14 +37683,14 @@ fn resolve_point_style_arena(
                             if type_name == "DESCRIPTIVE_MEASURE" =>
                         {
                             SizeSelectRef::DescriptiveMeasure(
-                                read_string_select(a, "POINT_STYLE.marker_size")?.value,
+                                read_string_select(a, "POINT_STYLE.marker_size", tt)?.value,
                             )
                         }
                         Attribute::Typed { type_name, .. }
                             if type_name == "POSITIVE_LENGTH_MEASURE" =>
                         {
                             SizeSelectRef::PositiveLengthMeasure(
-                                read_measure_value(a, "POINT_STYLE.marker_size")?
+                                read_measure_value(a, "POINT_STYLE.marker_size", tt)?
                                     .value
                                     .as_f64(),
                             )
@@ -34212,7 +37734,12 @@ fn resolve_poly_loop_arena(
     aid: PolyLoopId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let polygon_v = {
         let a = req(attrs, 1, "POLY_LOOP.polygon")?;
         (match a {
@@ -34242,7 +37769,12 @@ fn resolve_polyline_arena(
     aid: PolylineId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let points_v = {
         let a = req(attrs, 1, "POLYLINE.points")?;
         (match a {
@@ -34272,7 +37804,12 @@ fn resolve_position_tolerance_arena(
     aid: PositionToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "POSITION_TOLERANCE.magnitude")?;
         match a {
@@ -34313,7 +37850,12 @@ fn resolve_presentation_area_arena(
     aid: PresentationAreaId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(attrs, 1, "PRESENTATION_AREA.items")?;
         (match a {
@@ -34357,7 +37899,12 @@ fn resolve_presentation_layer_assignment_arena(
     aid: PresentationLayerAssignmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_items_v = {
         let a = req(attrs, 2, "PRESENTATION_LAYER_ASSIGNMENT.assigned_items")?;
         (match a {
@@ -34398,7 +37945,12 @@ fn resolve_presentation_representation_arena(
     aid: PresentationRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(attrs, 1, "PRESENTATION_REPRESENTATION.items")?;
         (match a {
@@ -34449,7 +38001,12 @@ fn resolve_presentation_size_arena(
     aid: PresentationSizeId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let unit_v = {
         let a = req(attrs, 0, "PRESENTATION_SIZE.unit")?;
         ((|| -> Result<PresentationSizeAssignmentSelectRef, String> {
@@ -34483,7 +38040,12 @@ fn resolve_presentation_style_assignment_arena(
     aid: PresentationStyleAssignmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styles_v = {
         let a = req(attrs, 0, "PRESENTATION_STYLE_ASSIGNMENT.styles")?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<PresentationStyleSelectRef, String> { Ok(match e { Attribute::Typed { type_name, value } if type_name == "NULL_STYLE" => PresentationStyleSelectRef::NullStyle(match value.as_ref() { Attribute::Enum(s) => NullStyle::parse(s).ok_or_else(|| format!("PRESENTATION_STYLE_ASSIGNMENT.styles: bad enum NULL_STYLE {s:?}"))?, o => return Err(format!("PRESENTATION_STYLE_ASSIGNMENT.styles: enum NULL_STYLE: {o:?}")) }), _ => PresentationStyleSelectRef::from_any(idmap.get(as_ref_id(e, "PRESENTATION_STYLE_ASSIGNMENT.styles")?).ok_or_else(|| format!("PRESENTATION_STYLE_ASSIGNMENT.styles: dangling ref"))?).map_err(|e| format!("PRESENTATION_STYLE_ASSIGNMENT.styles: {e}"))? }) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("PRESENTATION_STYLE_ASSIGNMENT.styles: expected ref list, got {o:?}")) })?
@@ -34498,7 +38060,12 @@ fn resolve_presentation_style_by_context_arena(
     aid: PresentationStyleByContextId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styles_v = {
         let a = req(attrs, 0, "PRESENTATION_STYLE_BY_CONTEXT.styles")?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<PresentationStyleSelectRef, String> { Ok(match e { Attribute::Typed { type_name, value } if type_name == "NULL_STYLE" => PresentationStyleSelectRef::NullStyle(match value.as_ref() { Attribute::Enum(s) => NullStyle::parse(s).ok_or_else(|| format!("PRESENTATION_STYLE_BY_CONTEXT.styles: bad enum NULL_STYLE {s:?}"))?, o => return Err(format!("PRESENTATION_STYLE_BY_CONTEXT.styles: enum NULL_STYLE: {o:?}")) }), _ => PresentationStyleSelectRef::from_any(idmap.get(as_ref_id(e, "PRESENTATION_STYLE_BY_CONTEXT.styles")?).ok_or_else(|| format!("PRESENTATION_STYLE_BY_CONTEXT.styles: dangling ref"))?).map_err(|e| format!("PRESENTATION_STYLE_BY_CONTEXT.styles: {e}"))? }) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("PRESENTATION_STYLE_BY_CONTEXT.styles: expected ref list, got {o:?}")) })?
@@ -34527,7 +38094,12 @@ fn resolve_presentation_view_arena(
     aid: PresentationViewId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(attrs, 1, "PRESENTATION_VIEW.items")?;
         (match a {
@@ -34571,7 +38143,12 @@ fn resolve_presented_item_representation_arena(
     aid: PresentedItemRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let presentation_v = {
         let a = req(attrs, 0, "PRESENTED_ITEM_REPRESENTATION.presentation")?;
         ((|| -> Result<PresentationRepresentationSelectRef, String> {
@@ -34607,7 +38184,12 @@ fn resolve_product_arena(
     aid: ProductId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let frame_of_reference_v = {
         let a = req(attrs, 3, "PRODUCT.frame_of_reference")?;
         (match a {
@@ -34641,7 +38223,12 @@ fn resolve_product_category_relationship_arena(
     aid: ProductCategoryRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let category_v = {
         let a = req(attrs, 2, "PRODUCT_CATEGORY_RELATIONSHIP.category")?;
         ((|| -> Result<ProductCategoryRef, String> {
@@ -34679,7 +38266,12 @@ fn resolve_product_concept_arena(
     aid: ProductConceptId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let market_context_v = {
         let a = req(attrs, 3, "PRODUCT_CONCEPT.market_context")?;
         ((|| -> Result<ProductConceptContextRef, String> {
@@ -34701,7 +38293,12 @@ fn resolve_product_concept_context_arena(
     aid: ProductConceptContextId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let frame_of_reference_v = {
         let a = req(attrs, 1, "PRODUCT_CONCEPT_CONTEXT.frame_of_reference")?;
         ((|| -> Result<ApplicationContextRef, String> {
@@ -34725,7 +38322,12 @@ fn resolve_product_context_arena(
     aid: ProductContextId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let frame_of_reference_v = {
         let a = req(attrs, 1, "PRODUCT_CONTEXT.frame_of_reference")?;
         ((|| -> Result<ApplicationContextRef, String> {
@@ -34747,7 +38349,12 @@ fn resolve_product_definition_arena(
     aid: ProductDefinitionId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let formation_v = {
         let a = req(attrs, 2, "PRODUCT_DEFINITION.formation")?;
         ((|| -> Result<ProductDefinitionFormationRef, String> {
@@ -34783,7 +38390,12 @@ fn resolve_product_definition_context_arena(
     aid: ProductDefinitionContextId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let frame_of_reference_v = {
         let a = req(attrs, 1, "PRODUCT_DEFINITION_CONTEXT.frame_of_reference")?;
         ((|| -> Result<ApplicationContextRef, String> {
@@ -34810,7 +38422,12 @@ fn resolve_product_definition_context_association_arena(
     aid: ProductDefinitionContextAssociationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let definition_v = {
         let a = req(
             attrs,
@@ -34866,7 +38483,12 @@ fn resolve_product_definition_effectivity_arena(
     aid: ProductDefinitionEffectivityId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let usage_v = {
         let a = req(attrs, 1, "PRODUCT_DEFINITION_EFFECTIVITY.usage")?;
         ((|| -> Result<ProductDefinitionRelationshipRef, String> {
@@ -34888,7 +38510,12 @@ fn resolve_product_definition_formation_arena(
     aid: ProductDefinitionFormationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_product_v = {
         let a = req(attrs, 2, "PRODUCT_DEFINITION_FORMATION.of_product")?;
         ((|| -> Result<ProductRef, String> {
@@ -34912,7 +38539,12 @@ fn resolve_product_definition_formation_with_specified_source_arena(
     aid: ProductDefinitionFormationWithSpecifiedSourceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_product_v = {
         let a = req(
             attrs,
@@ -34935,7 +38567,12 @@ fn resolve_product_definition_occurrence_arena(
     aid: ProductDefinitionOccurrenceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let definition_v = {
         let a = req(attrs, 3, "PRODUCT_DEFINITION_OCCURRENCE.definition")?;
         match a {
@@ -34983,7 +38620,12 @@ fn resolve_product_definition_relationship_arena(
     aid: ProductDefinitionRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_product_definition_v = {
         let a = req(
             attrs,
@@ -35015,7 +38657,12 @@ fn resolve_product_definition_relationship_relationship_arena(
     aid: ProductDefinitionRelationshipRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_v = {
         let a = req(
             attrs,
@@ -35073,7 +38720,12 @@ fn resolve_product_definition_shape_arena(
     aid: ProductDefinitionShapeId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let definition_v = {
         let a = req(attrs, 2, "PRODUCT_DEFINITION_SHAPE.definition")?;
         ((|| -> Result<CharacterizedDefinitionRef, String> {
@@ -35095,7 +38747,12 @@ fn resolve_product_definition_substitute_arena(
     aid: ProductDefinitionSubstituteId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let context_relationship_v = {
         let a = req(
             attrs,
@@ -35147,7 +38804,12 @@ fn resolve_product_definition_usage_arena(
     aid: ProductDefinitionUsageId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_product_definition_v = {
         let a = req(
             attrs,
@@ -35201,7 +38863,12 @@ fn resolve_product_definition_with_associated_documents_arena(
     aid: ProductDefinitionWithAssociatedDocumentsId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let formation_v = {
         let a = req(
             attrs,
@@ -35256,7 +38923,12 @@ fn resolve_product_related_product_category_arena(
     aid: ProductRelatedProductCategoryId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let products_v = {
         let a = req(attrs, 2, "PRODUCT_RELATED_PRODUCT_CATEGORY.products")?;
         (match a {
@@ -35292,7 +38964,12 @@ fn resolve_projected_zone_definition_arena(
     aid: ProjectedZoneDefinitionId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let zone_v = {
         let a = req(attrs, 0, "PROJECTED_ZONE_DEFINITION.zone")?;
         ((|| -> Result<ToleranceZoneRef, String> {
@@ -35366,7 +39043,12 @@ fn resolve_property_definition_arena(
     aid: PropertyDefinitionId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let definition_v = {
         let a = req(attrs, 2, "PROPERTY_DEFINITION.definition")?;
         ((|| -> Result<CharacterizedDefinitionRef, String> {
@@ -35388,7 +39070,12 @@ fn resolve_property_definition_relationship_arena(
     aid: PropertyDefinitionRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_property_definition_v = {
         let a = req(
             attrs,
@@ -35420,7 +39107,12 @@ fn resolve_property_definition_representation_arena(
     aid: PropertyDefinitionRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let definition_v = {
         let a = req(attrs, 0, "PROPERTY_DEFINITION_REPRESENTATION.definition")?;
         ((|| -> Result<RepresentedDefinitionRef, String> {
@@ -35470,7 +39162,12 @@ fn resolve_qualified_representation_item_arena(
     aid: QualifiedRepresentationItemId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let qualifiers_v = {
         let a = req(attrs, 1, "QUALIFIED_REPRESENTATION_ITEM.qualifiers")?;
         (match a {
@@ -35506,7 +39203,12 @@ fn resolve_quasi_uniform_curve_arena(
     aid: QuasiUniformCurveId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let control_points_list_v = {
         let a = req(attrs, 2, "QUASI_UNIFORM_CURVE.control_points_list")?;
         (match a {
@@ -35540,7 +39242,12 @@ fn resolve_quasi_uniform_surface_arena(
     aid: QuasiUniformSurfaceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let control_points_list_v = {
         let a = req(attrs, 3, "QUASI_UNIFORM_SURFACE.control_points_list")?;
         (match a { Attribute::List(l) => l.iter().map(|e| match e { Attribute::List(l) => l.iter().map(|e| (|| -> Result<CartesianPointRef, String> { Ok(CartesianPointRef::from_any(idmap.get(as_ref_id(e, "QUASI_UNIFORM_SURFACE.control_points_list")?).ok_or_else(|| format!("QUASI_UNIFORM_SURFACE.control_points_list: dangling ref"))?).map_err(|e| format!("QUASI_UNIFORM_SURFACE.control_points_list: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("QUASI_UNIFORM_SURFACE.control_points_list: expected ref list, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("QUASI_UNIFORM_SURFACE.control_points_list: expected ref list, got {o:?}")) })?
@@ -35555,7 +39262,12 @@ fn resolve_ratio_measure_with_unit_arena(
     aid: RatioMeasureWithUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let unit_component_v = {
         let a = req(attrs, 1, "RATIO_MEASURE_WITH_UNIT.unit_component")?;
         ((|| -> Result<UnitRef, String> {
@@ -35579,7 +39291,12 @@ fn resolve_ratio_unit_arena(
     aid: RatioUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let dimensions_v = {
         let a = req(attrs, 0, "RATIO_UNIT.dimensions")?;
         ((|| -> Result<DimensionalExponentsRef, String> {
@@ -35601,7 +39318,12 @@ fn resolve_rational_b_spline_curve_arena(
     aid: RationalBSplineCurveId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let control_points_list_v = {
         let a = req(attrs, 2, "RATIONAL_B_SPLINE_CURVE.control_points_list")?;
         (match a {
@@ -35637,7 +39359,12 @@ fn resolve_rational_b_spline_surface_arena(
     aid: RationalBSplineSurfaceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let control_points_list_v = {
         let a = req(attrs, 3, "RATIONAL_B_SPLINE_SURFACE.control_points_list")?;
         (match a { Attribute::List(l) => l.iter().map(|e| match e { Attribute::List(l) => l.iter().map(|e| (|| -> Result<CartesianPointRef, String> { Ok(CartesianPointRef::from_any(idmap.get(as_ref_id(e, "RATIONAL_B_SPLINE_SURFACE.control_points_list")?).ok_or_else(|| format!("RATIONAL_B_SPLINE_SURFACE.control_points_list: dangling ref"))?).map_err(|e| format!("RATIONAL_B_SPLINE_SURFACE.control_points_list: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("RATIONAL_B_SPLINE_SURFACE.control_points_list: expected ref list, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("RATIONAL_B_SPLINE_SURFACE.control_points_list: expected ref list, got {o:?}")) })?
@@ -35652,7 +39379,12 @@ fn resolve_repositioned_tessellated_item_arena(
     aid: RepositionedTessellatedItemId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let location_v = {
         let a = req(attrs, 1, "REPOSITIONED_TESSELLATED_ITEM.location")?;
         ((|| -> Result<Axis2Placement3dRef, String> {
@@ -35676,7 +39408,12 @@ fn resolve_representation_arena(
     aid: RepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(attrs, 1, "REPRESENTATION.items")?;
         (match a {
@@ -35720,7 +39457,12 @@ fn resolve_representation_map_arena(
     aid: RepresentationMapId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let mapping_origin_v = {
         let a = req(attrs, 0, "REPRESENTATION_MAP.mapping_origin")?;
         ((|| -> Result<RepresentationItemRef, String> {
@@ -35756,7 +39498,12 @@ fn resolve_representation_reference_arena(
     aid: RepresentationReferenceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let context_of_items_v = {
         let a = req(attrs, 1, "REPRESENTATION_REFERENCE.context_of_items")?;
         ((|| -> Result<RepresentationContextReferenceRef, String> {
@@ -35780,7 +39527,12 @@ fn resolve_representation_relationship_arena(
     aid: RepresentationRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let rep_1_v = {
         let a = req(attrs, 2, "REPRESENTATION_RELATIONSHIP.rep_1")?;
         ((|| -> Result<RepresentationOrRepresentationReferenceRef, String> {
@@ -35814,7 +39566,12 @@ fn resolve_representation_relationship_with_transformation_arena(
     aid: RepresentationRelationshipWithTransformationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let rep_1_v = {
         let a = req(
             attrs,
@@ -35883,7 +39640,12 @@ fn resolve_resource_property_arena(
     aid: ResourcePropertyId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let resource_v = {
         let a = req(attrs, 2, "RESOURCE_PROPERTY.resource")?;
         ((|| -> Result<CharacterizedResourceDefinitionRef, String> {
@@ -35905,7 +39667,12 @@ fn resolve_role_association_arena(
     aid: RoleAssociationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let role_v = {
         let a = req(attrs, 0, "ROLE_ASSOCIATION.role")?;
         ((|| -> Result<ObjectRoleRef, String> {
@@ -35939,7 +39706,12 @@ fn resolve_roundness_tolerance_arena(
     aid: RoundnessToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "ROUNDNESS_TOLERANCE.magnitude")?;
         match a {
@@ -35982,7 +39754,12 @@ fn resolve_seam_curve_arena(
     aid: SeamCurveId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let curve_3d_v = {
         let a = req(attrs, 1, "SEAM_CURVE.curve_3d")?;
         ((|| -> Result<CurveRef, String> {
@@ -36028,7 +39805,12 @@ fn resolve_security_classification_arena(
     aid: SecurityClassificationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let security_level_v = {
         let a = req(attrs, 2, "SECURITY_CLASSIFICATION.security_level")?;
         ((|| -> Result<SecurityClassificationLevelRef, String> {
@@ -36052,7 +39834,12 @@ fn resolve_security_classification_assignment_arena(
     aid: SecurityClassificationAssignmentId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_security_classification_v = {
         let a = req(
             attrs,
@@ -36073,7 +39860,12 @@ fn resolve_shape_aspect_arena(
     aid: ShapeAspectId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_shape_v = {
         let a = req(attrs, 2, "SHAPE_ASPECT.of_shape")?;
         ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -36095,7 +39887,12 @@ fn resolve_shape_aspect_associativity_arena(
     aid: ShapeAspectAssociativityId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_shape_aspect_v = {
         let a = req(attrs, 2, "SHAPE_ASPECT_ASSOCIATIVITY.relating_shape_aspect")?;
         ((|| -> Result<ShapeAspectRef, String> {
@@ -36139,7 +39936,12 @@ fn resolve_shape_aspect_deriving_relationship_arena(
     aid: ShapeAspectDerivingRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_shape_aspect_v = {
         let a = req(
             attrs,
@@ -36197,7 +39999,12 @@ fn resolve_shape_aspect_relationship_arena(
     aid: ShapeAspectRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let relating_shape_aspect_v = {
         let a = req(attrs, 2, "SHAPE_ASPECT_RELATIONSHIP.relating_shape_aspect")?;
         ((|| -> Result<ShapeAspectRef, String> {
@@ -36241,7 +40048,12 @@ fn resolve_shape_definition_representation_arena(
     aid: ShapeDefinitionRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let definition_v = {
         let a = req(attrs, 0, "SHAPE_DEFINITION_REPRESENTATION.definition")?;
         ((|| -> Result<RepresentedDefinitionRef, String> {
@@ -36286,7 +40098,12 @@ fn resolve_shape_dimension_representation_arena(
     aid: ShapeDimensionRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(attrs, 1, "SHAPE_DIMENSION_REPRESENTATION.items")?;
         (match a {
@@ -36337,7 +40154,12 @@ fn resolve_shape_representation_arena(
     aid: ShapeRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(attrs, 1, "SHAPE_REPRESENTATION.items")?;
         (match a {
@@ -36385,7 +40207,12 @@ fn resolve_shape_representation_relationship_arena(
     aid: ShapeRepresentationRelationshipId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let rep_1_v = {
         let a = req(attrs, 2, "SHAPE_REPRESENTATION_RELATIONSHIP.rep_1")?;
         ((|| -> Result<RepresentationOrRepresentationReferenceRef, String> {
@@ -36423,7 +40250,12 @@ fn resolve_shape_representation_with_parameters_arena(
     aid: ShapeRepresentationWithParametersId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(attrs, 1, "SHAPE_REPRESENTATION_WITH_PARAMETERS.items")?;
         (match a {
@@ -36482,7 +40314,12 @@ fn resolve_shell_based_surface_model_arena(
     aid: ShellBasedSurfaceModelId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let sbsm_boundary_v = {
         let a = req(attrs, 1, "SHELL_BASED_SURFACE_MODEL.sbsm_boundary")?;
         (match a {
@@ -36516,7 +40353,12 @@ fn resolve_si_unit_arena(
     aid: SiUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let it = &mut model.si_unit_arena.items[aid.0 as usize];
     Ok(())
 }
@@ -36526,7 +40368,12 @@ fn resolve_solid_angle_unit_arena(
     aid: SolidAngleUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let dimensions_v = {
         let a = req(attrs, 0, "SOLID_ANGLE_UNIT.dimensions")?;
         ((|| -> Result<DimensionalExponentsRef, String> {
@@ -36548,7 +40395,12 @@ fn resolve_spherical_surface_arena(
     aid: SphericalSurfaceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let position_v = {
         let a = req(attrs, 1, "SPHERICAL_SURFACE.position")?;
         ((|| -> Result<Axis2Placement3dRef, String> {
@@ -36570,7 +40422,12 @@ fn resolve_start_request_arena(
     aid: StartRequestId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_action_request_v = {
         let a = req(attrs, 0, "START_REQUEST.assigned_action_request")?;
         ((|| -> Result<VersionedActionRequestRef, String> {
@@ -36614,7 +40471,12 @@ fn resolve_start_work_arena(
     aid: StartWorkId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let assigned_action_v = {
         let a = req(attrs, 0, "START_WORK.assigned_action")?;
         ((|| -> Result<ActionRef, String> {
@@ -36656,7 +40518,12 @@ fn resolve_straightness_tolerance_arena(
     aid: StraightnessToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "STRAIGHTNESS_TOLERANCE.magnitude")?;
         match a {
@@ -36702,7 +40569,12 @@ fn resolve_styled_item_arena(
     aid: StyledItemId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styles_v = {
         let a = req(attrs, 1, "STYLED_ITEM.styles")?;
         (match a {
@@ -36744,7 +40616,12 @@ fn resolve_surface_curve_arena(
     aid: SurfaceCurveId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let curve_3d_v = {
         let a = req(attrs, 1, "SURFACE_CURVE.curve_3d")?;
         ((|| -> Result<CurveRef, String> {
@@ -36790,7 +40667,12 @@ fn resolve_surface_of_linear_extrusion_arena(
     aid: SurfaceOfLinearExtrusionId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let swept_curve_v = {
         let a = req(attrs, 1, "SURFACE_OF_LINEAR_EXTRUSION.swept_curve")?;
         ((|| -> Result<CurveRef, String> {
@@ -36828,7 +40710,12 @@ fn resolve_surface_of_revolution_arena(
     aid: SurfaceOfRevolutionId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let swept_curve_v = {
         let a = req(attrs, 1, "SURFACE_OF_REVOLUTION.swept_curve")?;
         ((|| -> Result<CurveRef, String> {
@@ -36862,7 +40749,12 @@ fn resolve_surface_profile_tolerance_arena(
     aid: SurfaceProfileToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "SURFACE_PROFILE_TOLERANCE.magnitude")?;
         match a {
@@ -36912,7 +40804,12 @@ fn resolve_surface_rendering_properties_arena(
     aid: SurfaceRenderingPropertiesId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let rendered_colour_v = {
         let a = req(attrs, 0, "SURFACE_RENDERING_PROPERTIES.rendered_colour")?;
         ((|| -> Result<ColourRef, String> {
@@ -36939,7 +40836,12 @@ fn resolve_surface_side_style_arena(
     aid: SurfaceSideStyleId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styles_v = {
         let a = req(attrs, 1, "SURFACE_SIDE_STYLE.styles")?;
         (match a {
@@ -36973,7 +40875,12 @@ fn resolve_surface_style_boundary_arena(
     aid: SurfaceStyleBoundaryId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let style_of_boundary_v = {
         let a = req(attrs, 0, "SURFACE_STYLE_BOUNDARY.style_of_boundary")?;
         ((|| -> Result<CurveOrRenderRef, String> {
@@ -36997,7 +40904,12 @@ fn resolve_surface_style_control_grid_arena(
     aid: SurfaceStyleControlGridId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let style_of_control_grid_v = {
         let a = req(attrs, 0, "SURFACE_STYLE_CONTROL_GRID.style_of_control_grid")?;
         ((|| -> Result<CurveOrRenderRef, String> {
@@ -37024,7 +40936,12 @@ fn resolve_surface_style_fill_area_arena(
     aid: SurfaceStyleFillAreaId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let fill_area_v = {
         let a = req(attrs, 0, "SURFACE_STYLE_FILL_AREA.fill_area")?;
         ((|| -> Result<FillAreaStyleRef, String> {
@@ -37046,7 +40963,12 @@ fn resolve_surface_style_parameter_line_arena(
     aid: SurfaceStyleParameterLineId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let style_of_parameter_lines_v = {
         let a = req(
             attrs,
@@ -37079,7 +41001,12 @@ fn resolve_surface_style_rendering_arena(
     aid: SurfaceStyleRenderingId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let surface_colour_v = {
         let a = req(attrs, 1, "SURFACE_STYLE_RENDERING.surface_colour")?;
         ((|| -> Result<ColourRef, String> {
@@ -37103,7 +41030,12 @@ fn resolve_surface_style_rendering_with_properties_arena(
     aid: SurfaceStyleRenderingWithPropertiesId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let surface_colour_v = {
         let a = req(
             attrs,
@@ -37145,7 +41077,12 @@ fn resolve_surface_style_segmentation_curve_arena(
     aid: SurfaceStyleSegmentationCurveId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let style_of_segmentation_curve_v = {
         let a = req(
             attrs,
@@ -37166,7 +41103,12 @@ fn resolve_surface_style_silhouette_arena(
     aid: SurfaceStyleSilhouetteId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let style_of_silhouette_v = {
         let a = req(attrs, 0, "SURFACE_STYLE_SILHOUETTE.style_of_silhouette")?;
         ((|| -> Result<CurveOrRenderRef, String> {
@@ -37193,7 +41135,12 @@ fn resolve_surface_style_usage_arena(
     aid: SurfaceStyleUsageId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let style_v = {
         let a = req(attrs, 1, "SURFACE_STYLE_USAGE.style")?;
         ((|| -> Result<SurfaceSideStyleSelectRef, String> {
@@ -37215,7 +41162,12 @@ fn resolve_swept_surface_arena(
     aid: SweptSurfaceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let swept_curve_v = {
         let a = req(attrs, 1, "SWEPT_SURFACE.swept_curve")?;
         ((|| -> Result<CurveRef, String> {
@@ -37237,7 +41189,12 @@ fn resolve_symbol_colour_arena(
     aid: SymbolColourId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let colour_of_symbol_v = {
         let a = req(attrs, 0, "SYMBOL_COLOUR.colour_of_symbol")?;
         ((|| -> Result<ColourRef, String> {
@@ -37259,7 +41216,12 @@ fn resolve_symbol_representation_arena(
     aid: SymbolRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(attrs, 1, "SYMBOL_REPRESENTATION.items")?;
         (match a {
@@ -37307,7 +41269,12 @@ fn resolve_symbol_style_arena(
     aid: SymbolStyleId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let style_of_symbol_v = {
         let a = req(attrs, 1, "SYMBOL_STYLE.style_of_symbol")?;
         ((|| -> Result<SymbolStyleSelectRef, String> {
@@ -37329,7 +41296,12 @@ fn resolve_symbol_target_arena(
     aid: SymbolTargetId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let placement_v = {
         let a = req(attrs, 1, "SYMBOL_TARGET.placement")?;
         ((|| -> Result<Axis2PlacementRef, String> {
@@ -37351,7 +41323,12 @@ fn resolve_symmetry_tolerance_arena(
     aid: SymmetryToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "SYMMETRY_TOLERANCE.magnitude")?;
         match a {
@@ -37416,7 +41393,12 @@ fn resolve_terminator_symbol_arena(
     aid: TerminatorSymbolId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styles_v = {
         let a = req(attrs, 1, "TERMINATOR_SYMBOL.styles")?;
         (match a {
@@ -37472,7 +41454,12 @@ fn resolve_tessellated_annotation_occurrence_arena(
     aid: TessellatedAnnotationOccurrenceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let styles_v = {
         let a = req(attrs, 1, "TESSELLATED_ANNOTATION_OCCURRENCE.styles")?;
         (match a {
@@ -37522,7 +41509,12 @@ fn resolve_tessellated_curve_set_arena(
     aid: TessellatedCurveSetId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let coordinates_v = {
         let a = req(attrs, 1, "TESSELLATED_CURVE_SET.coordinates")?;
         ((|| -> Result<CoordinatesListRef, String> {
@@ -37544,7 +41536,12 @@ fn resolve_tessellated_face_arena(
     aid: TessellatedFaceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let coordinates_v = {
         let a = req(attrs, 1, "TESSELLATED_FACE.coordinates")?;
         ((|| -> Result<CoordinatesListRef, String> {
@@ -37585,7 +41582,12 @@ fn resolve_tessellated_geometric_set_arena(
     aid: TessellatedGeometricSetId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let children_v = {
         let a = req(attrs, 1, "TESSELLATED_GEOMETRIC_SET.children")?;
         (match a {
@@ -37619,7 +41621,12 @@ fn resolve_tessellated_shape_representation_arena(
     aid: TessellatedShapeRepresentationId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(attrs, 1, "TESSELLATED_SHAPE_REPRESENTATION.items")?;
         (match a {
@@ -37674,7 +41681,12 @@ fn resolve_tessellated_shell_arena(
     aid: TessellatedShellId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(attrs, 1, "TESSELLATED_SHELL.items")?;
         (match a {
@@ -37725,7 +41737,12 @@ fn resolve_tessellated_solid_arena(
     aid: TessellatedSolidId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let items_v = {
         let a = req(attrs, 1, "TESSELLATED_SOLID.items")?;
         (match a {
@@ -37776,7 +41793,12 @@ fn resolve_tessellated_surface_set_arena(
     aid: TessellatedSurfaceSetId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let coordinates_v = {
         let a = req(attrs, 1, "TESSELLATED_SURFACE_SET.coordinates")?;
         ((|| -> Result<CoordinatesListRef, String> {
@@ -37798,7 +41820,12 @@ fn resolve_text_literal_arena(
     aid: TextLiteralId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let placement_v = {
         let a = req(attrs, 2, "TEXT_LITERAL.placement")?;
         ((|| -> Result<Axis2PlacementRef, String> {
@@ -37832,7 +41859,12 @@ fn resolve_text_style_arena(
     aid: TextStyleId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let character_appearance_v = {
         let a = req(attrs, 1, "TEXT_STYLE.character_appearance")?;
         ((|| -> Result<CharacterStyleSelectRef, String> {
@@ -37854,7 +41886,12 @@ fn resolve_text_style_for_defined_font_arena(
     aid: TextStyleForDefinedFontId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let text_colour_v = {
         let a = req(attrs, 0, "TEXT_STYLE_FOR_DEFINED_FONT.text_colour")?;
         ((|| -> Result<ColourRef, String> {
@@ -37878,7 +41915,12 @@ fn resolve_text_style_with_box_characteristics_arena(
     aid: TextStyleWithBoxCharacteristicsId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let character_appearance_v = {
         let a = req(
             attrs,
@@ -37913,7 +41955,12 @@ fn resolve_time_unit_arena(
     aid: TimeUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let dimensions_v = {
         let a = req(attrs, 0, "TIME_UNIT.dimensions")?;
         ((|| -> Result<DimensionalExponentsRef, String> {
@@ -37935,7 +41982,12 @@ fn resolve_tolerance_value_arena(
     aid: ToleranceValueId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let lower_bound_v = {
         let a = req(attrs, 0, "TOLERANCE_VALUE.lower_bound")?;
         ((|| -> Result<MeasureWithUnitRef, String> {
@@ -37969,7 +42021,12 @@ fn resolve_tolerance_zone_arena(
     aid: ToleranceZoneId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_shape_v = {
         let a = req(attrs, 2, "TOLERANCE_ZONE.of_shape")?;
         ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -38027,7 +42084,12 @@ fn resolve_tolerance_zone_definition_arena(
     aid: ToleranceZoneDefinitionId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let zone_v = {
         let a = req(attrs, 0, "TOLERANCE_ZONE_DEFINITION.zone")?;
         ((|| -> Result<ToleranceZoneRef, String> {
@@ -38073,7 +42135,12 @@ fn resolve_tolerance_zone_with_datum_arena(
     aid: ToleranceZoneWithDatumId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let of_shape_v = {
         let a = req(attrs, 2, "TOLERANCE_ZONE_WITH_DATUM.of_shape")?;
         ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -38152,7 +42219,12 @@ fn resolve_toroidal_surface_arena(
     aid: ToroidalSurfaceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let position_v = {
         let a = req(attrs, 1, "TOROIDAL_SURFACE.position")?;
         ((|| -> Result<Axis2Placement3dRef, String> {
@@ -38174,7 +42246,12 @@ fn resolve_total_runout_tolerance_arena(
     aid: TotalRunoutToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "TOTAL_RUNOUT_TOLERANCE.magnitude")?;
         match a {
@@ -38244,7 +42321,12 @@ fn resolve_trimmed_curve_arena(
     aid: TrimmedCurveId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let basis_curve_v = {
         let a = req(attrs, 1, "TRIMMED_CURVE.basis_curve")?;
         ((|| -> Result<CurveRef, String> {
@@ -38268,7 +42350,7 @@ fn resolve_trimmed_curve_arena(
                                 if type_name == "PARAMETER_VALUE" =>
                             {
                                 TrimmingSelectRef::ParameterValue(
-                                    read_measure_value(e, "TRIMMED_CURVE.trim_1")?
+                                    read_measure_value(e, "TRIMMED_CURVE.trim_1", tt)?
                                         .value
                                         .as_f64(),
                                 )
@@ -38300,7 +42382,7 @@ fn resolve_trimmed_curve_arena(
                                 if type_name == "PARAMETER_VALUE" =>
                             {
                                 TrimmingSelectRef::ParameterValue(
-                                    read_measure_value(e, "TRIMMED_CURVE.trim_2")?
+                                    read_measure_value(e, "TRIMMED_CURVE.trim_2", tt)?
                                         .value
                                         .as_f64(),
                                 )
@@ -38332,7 +42414,12 @@ fn resolve_two_direction_repeat_factor_arena(
     aid: TwoDirectionRepeatFactorId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let repeat_factor_v = {
         let a = req(attrs, 1, "TWO_DIRECTION_REPEAT_FACTOR.repeat_factor")?;
         ((|| -> Result<VectorRef, String> {
@@ -38373,7 +42460,12 @@ fn resolve_uncertainty_measure_with_unit_arena(
     aid: UncertaintyMeasureWithUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let unit_component_v = {
         let a = req(attrs, 1, "UNCERTAINTY_MEASURE_WITH_UNIT.unit_component")?;
         ((|| -> Result<UnitRef, String> {
@@ -38400,7 +42492,12 @@ fn resolve_unequally_disposed_geometric_tolerance_arena(
     aid: UnequallyDisposedGeometricToleranceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let magnitude_v = {
         let a = req(attrs, 2, "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.magnitude")?;
         match a {
@@ -38456,7 +42553,12 @@ fn resolve_uniform_curve_arena(
     aid: UniformCurveId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let control_points_list_v = {
         let a = req(attrs, 2, "UNIFORM_CURVE.control_points_list")?;
         (match a {
@@ -38490,7 +42592,12 @@ fn resolve_uniform_surface_arena(
     aid: UniformSurfaceId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let control_points_list_v = {
         let a = req(attrs, 3, "UNIFORM_SURFACE.control_points_list")?;
         (match a {
@@ -38534,7 +42641,12 @@ fn resolve_vector_arena(
     aid: VectorId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let orientation_v = {
         let a = req(attrs, 1, "VECTOR.orientation")?;
         ((|| -> Result<DirectionRef, String> {
@@ -38556,7 +42668,12 @@ fn resolve_vertex_loop_arena(
     aid: VertexLoopId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let loop_vertex_v = {
         let a = req(attrs, 1, "VERTEX_LOOP.loop_vertex")?;
         ((|| -> Result<VertexRef, String> {
@@ -38578,7 +42695,12 @@ fn resolve_vertex_point_arena(
     aid: VertexPointId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let vertex_geometry_v = {
         let a = req(attrs, 1, "VERTEX_POINT.vertex_geometry")?;
         ((|| -> Result<PointRef, String> {
@@ -38600,7 +42722,12 @@ fn resolve_vertex_shell_arena(
     aid: VertexShellId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let vertex_shell_extent_v = {
         let a = req(attrs, 1, "VERTEX_SHELL.vertex_shell_extent")?;
         ((|| -> Result<VertexLoopRef, String> {
@@ -38622,7 +42749,12 @@ fn resolve_view_volume_arena(
     aid: ViewVolumeId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let projection_point_v = {
         let a = req(attrs, 1, "VIEW_VOLUME.projection_point")?;
         ((|| -> Result<CartesianPointRef, String> {
@@ -38656,7 +42788,12 @@ fn resolve_volume_unit_arena(
     aid: VolumeUnitId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let elements_v = {
         let a = req(attrs, 0, "VOLUME_UNIT.elements")?;
         (match a {
@@ -38688,7 +42825,12 @@ fn resolve_wire_shell_arena(
     aid: WireShellId,
     attrs: &[Attribute],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let wire_shell_extent_v = {
         let a = req(attrs, 1, "WIRE_SHELL.wire_shell_extent")?;
         (match a {
@@ -38717,32 +42859,35 @@ fn resolve_wire_shell_arena(
     Ok(())
 }
 
-fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, String> {
+fn read_complex_parts_norefs(
+    parts: &[RawEntityPart],
+    tt: &mut TextIn<'_>,
+) -> Result<Vec<UnitPart>, String> {
     parts.iter().map(|p| -> Result<UnitPart, String> { Ok(match p.name.as_str() {
-        "ACTION" => UnitPart::Action { name: (as_str(req(&p.attributes, 0, "ACTION.name")?, "ACTION.name"))?, description: match req(&p.attributes, 1, "ACTION.description")? { Attribute::Unset => None, other => Some((as_str(other, "ACTION.description"))?) }, chosen_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)), },
-        "ACTION_METHOD" => UnitPart::ActionMethod { name: (as_str(req(&p.attributes, 0, "ACTION_METHOD.name")?, "ACTION_METHOD.name"))?, description: match req(&p.attributes, 1, "ACTION_METHOD.description")? { Attribute::Unset => None, other => Some((as_str(other, "ACTION_METHOD.description"))?) }, consequence: (as_str(req(&p.attributes, 2, "ACTION_METHOD.consequence")?, "ACTION_METHOD.consequence"))?, purpose: (as_str(req(&p.attributes, 3, "ACTION_METHOD.purpose")?, "ACTION_METHOD.purpose"))?, },
-        "ACTION_METHOD_RELATIONSHIP" => UnitPart::ActionMethodRelationship { name: (as_str(req(&p.attributes, 0, "ACTION_METHOD_RELATIONSHIP.name")?, "ACTION_METHOD_RELATIONSHIP.name"))?, description: match req(&p.attributes, 1, "ACTION_METHOD_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "ACTION_METHOD_RELATIONSHIP.description"))?) }, relating_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)), related_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)), },
-        "ACTION_RELATIONSHIP" => UnitPart::ActionRelationship { name: (as_str(req(&p.attributes, 0, "ACTION_RELATIONSHIP.name")?, "ACTION_RELATIONSHIP.name"))?, description: match req(&p.attributes, 1, "ACTION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "ACTION_RELATIONSHIP.description"))?) }, relating_action: ActionRef::Action(ActionId(u32::MAX)), related_action: ActionRef::Action(ActionId(u32::MAX)), },
+        "ACTION" => UnitPart::Action { name: (as_text(req(&p.attributes, 0, "ACTION.name")?, "ACTION.name", tt))?, description: match req(&p.attributes, 1, "ACTION.description")? { Attribute::Unset => None, other => Some((as_text(other, "ACTION.description", tt))?) }, chosen_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)), },
+        "ACTION_METHOD" => UnitPart::ActionMethod { name: (as_text(req(&p.attributes, 0, "ACTION_METHOD.name")?, "ACTION_METHOD.name", tt))?, description: match req(&p.attributes, 1, "ACTION_METHOD.description")? { Attribute::Unset => None, other => Some((as_text(other, "ACTION_METHOD.description", tt))?) }, consequence: (as_text(req(&p.attributes, 2, "ACTION_METHOD.consequence")?, "ACTION_METHOD.consequence", tt))?, purpose: (as_text(req(&p.attributes, 3, "ACTION_METHOD.purpose")?, "ACTION_METHOD.purpose", tt))?, },
+        "ACTION_METHOD_RELATIONSHIP" => UnitPart::ActionMethodRelationship { name: (as_text(req(&p.attributes, 0, "ACTION_METHOD_RELATIONSHIP.name")?, "ACTION_METHOD_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 1, "ACTION_METHOD_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "ACTION_METHOD_RELATIONSHIP.description", tt))?) }, relating_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)), related_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)), },
+        "ACTION_RELATIONSHIP" => UnitPart::ActionRelationship { name: (as_text(req(&p.attributes, 0, "ACTION_RELATIONSHIP.name")?, "ACTION_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 1, "ACTION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "ACTION_RELATIONSHIP.description", tt))?) }, relating_action: ActionRef::Action(ActionId(u32::MAX)), related_action: ActionRef::Action(ActionId(u32::MAX)), },
         "ACTION_REQUEST_ASSIGNMENT" => UnitPart::ActionRequestAssignment { assigned_action_request: VersionedActionRequestRef::VersionedActionRequest(VersionedActionRequestId(u32::MAX)), },
-        "ACTION_RESOURCE" => UnitPart::ActionResource { name: (as_str(req(&p.attributes, 0, "ACTION_RESOURCE.name")?, "ACTION_RESOURCE.name"))?, description: match req(&p.attributes, 1, "ACTION_RESOURCE.description")? { Attribute::Unset => None, other => Some((as_str(other, "ACTION_RESOURCE.description"))?) }, usage: Vec::new(), kind: ActionResourceTypeRef::ActionResourceType(ActionResourceTypeId(u32::MAX)), },
-        "ACTION_RESOURCE_REQUIREMENT" => UnitPart::ActionResourceRequirement { name: (as_str(req(&p.attributes, 0, "ACTION_RESOURCE_REQUIREMENT.name")?, "ACTION_RESOURCE_REQUIREMENT.name"))?, description: (as_str(req(&p.attributes, 1, "ACTION_RESOURCE_REQUIREMENT.description")?, "ACTION_RESOURCE_REQUIREMENT.description"))?, kind: ResourceRequirementTypeRef::ResourceRequirementType(ResourceRequirementTypeId(u32::MAX)), operations: Vec::new(), },
-        "ADDRESS" => UnitPart::Address { internal_location: match req(&p.attributes, 0, "ADDRESS.internal_location")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.internal_location"))?) }, street_number: match req(&p.attributes, 1, "ADDRESS.street_number")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.street_number"))?) }, street: match req(&p.attributes, 2, "ADDRESS.street")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.street"))?) }, postal_box: match req(&p.attributes, 3, "ADDRESS.postal_box")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.postal_box"))?) }, town: match req(&p.attributes, 4, "ADDRESS.town")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.town"))?) }, region: match req(&p.attributes, 5, "ADDRESS.region")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.region"))?) }, postal_code: match req(&p.attributes, 6, "ADDRESS.postal_code")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.postal_code"))?) }, country: match req(&p.attributes, 7, "ADDRESS.country")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.country"))?) }, facsimile_number: match req(&p.attributes, 8, "ADDRESS.facsimile_number")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.facsimile_number"))?) }, telephone_number: match req(&p.attributes, 9, "ADDRESS.telephone_number")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.telephone_number"))?) }, electronic_mail_address: match req(&p.attributes, 10, "ADDRESS.electronic_mail_address")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.electronic_mail_address"))?) }, telex_number: match req(&p.attributes, 11, "ADDRESS.telex_number")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.telex_number"))?) }, },
+        "ACTION_RESOURCE" => UnitPart::ActionResource { name: (as_text(req(&p.attributes, 0, "ACTION_RESOURCE.name")?, "ACTION_RESOURCE.name", tt))?, description: match req(&p.attributes, 1, "ACTION_RESOURCE.description")? { Attribute::Unset => None, other => Some((as_text(other, "ACTION_RESOURCE.description", tt))?) }, usage: Vec::new(), kind: ActionResourceTypeRef::ActionResourceType(ActionResourceTypeId(u32::MAX)), },
+        "ACTION_RESOURCE_REQUIREMENT" => UnitPart::ActionResourceRequirement { name: (as_text(req(&p.attributes, 0, "ACTION_RESOURCE_REQUIREMENT.name")?, "ACTION_RESOURCE_REQUIREMENT.name", tt))?, description: (as_text(req(&p.attributes, 1, "ACTION_RESOURCE_REQUIREMENT.description")?, "ACTION_RESOURCE_REQUIREMENT.description", tt))?, kind: ResourceRequirementTypeRef::ResourceRequirementType(ResourceRequirementTypeId(u32::MAX)), operations: Vec::new(), },
+        "ADDRESS" => UnitPart::Address { internal_location: match req(&p.attributes, 0, "ADDRESS.internal_location")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.internal_location", tt))?) }, street_number: match req(&p.attributes, 1, "ADDRESS.street_number")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.street_number", tt))?) }, street: match req(&p.attributes, 2, "ADDRESS.street")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.street", tt))?) }, postal_box: match req(&p.attributes, 3, "ADDRESS.postal_box")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.postal_box", tt))?) }, town: match req(&p.attributes, 4, "ADDRESS.town")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.town", tt))?) }, region: match req(&p.attributes, 5, "ADDRESS.region")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.region", tt))?) }, postal_code: match req(&p.attributes, 6, "ADDRESS.postal_code")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.postal_code", tt))?) }, country: match req(&p.attributes, 7, "ADDRESS.country")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.country", tt))?) }, facsimile_number: match req(&p.attributes, 8, "ADDRESS.facsimile_number")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.facsimile_number", tt))?) }, telephone_number: match req(&p.attributes, 9, "ADDRESS.telephone_number")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.telephone_number", tt))?) }, electronic_mail_address: match req(&p.attributes, 10, "ADDRESS.electronic_mail_address")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.electronic_mail_address", tt))?) }, telex_number: match req(&p.attributes, 11, "ADDRESS.telex_number")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.telex_number", tt))?) }, },
         "ADVANCED_BREP_SHAPE_REPRESENTATION" => UnitPart::AdvancedBrepShapeRepresentation,
         "ADVANCED_FACE" => UnitPart::AdvancedFace,
         "ANNOTATION_CURVE_OCCURRENCE" => UnitPart::AnnotationCurveOccurrence,
         "ANNOTATION_FILL_AREA_OCCURRENCE" => UnitPart::AnnotationFillAreaOccurrence { fill_style_target: PointRef::ApllPoint(ApllPointId(u32::MAX)), },
         "ANNOTATION_OCCURRENCE" => UnitPart::AnnotationOccurrence,
         "ANNOTATION_OCCURRENCE_ASSOCIATIVITY" => UnitPart::AnnotationOccurrenceAssociativity,
-        "ANNOTATION_OCCURRENCE_RELATIONSHIP" => UnitPart::AnnotationOccurrenceRelationship { name: (as_str(req(&p.attributes, 0, "ANNOTATION_OCCURRENCE_RELATIONSHIP.name")?, "ANNOTATION_OCCURRENCE_RELATIONSHIP.name"))?, description: (as_str(req(&p.attributes, 1, "ANNOTATION_OCCURRENCE_RELATIONSHIP.description")?, "ANNOTATION_OCCURRENCE_RELATIONSHIP.description"))?, relating_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(u32::MAX)), related_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(u32::MAX)), },
+        "ANNOTATION_OCCURRENCE_RELATIONSHIP" => UnitPart::AnnotationOccurrenceRelationship { name: (as_text(req(&p.attributes, 0, "ANNOTATION_OCCURRENCE_RELATIONSHIP.name")?, "ANNOTATION_OCCURRENCE_RELATIONSHIP.name", tt))?, description: (as_text(req(&p.attributes, 1, "ANNOTATION_OCCURRENCE_RELATIONSHIP.description")?, "ANNOTATION_OCCURRENCE_RELATIONSHIP.description", tt))?, relating_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(u32::MAX)), related_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(u32::MAX)), },
         "ANNOTATION_PLACEHOLDER_OCCURRENCE" => UnitPart::AnnotationPlaceholderOccurrence { role: (match req(&p.attributes, 0, "ANNOTATION_PLACEHOLDER_OCCURRENCE.role")? { Attribute::Enum(s) => AnnotationPlaceholderOccurrenceRole::parse(s).ok_or_else(|| format!("ANNOTATION_PLACEHOLDER_OCCURRENCE.role: bad enum {s:?}")), o => Err(format!("ANNOTATION_PLACEHOLDER_OCCURRENCE.role: expected enum, got {o:?}")) })?, line_spacing: (as_real(req(&p.attributes, 1, "ANNOTATION_PLACEHOLDER_OCCURRENCE.line_spacing")?, "ANNOTATION_PLACEHOLDER_OCCURRENCE.line_spacing"))?, },
         "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE" => UnitPart::AnnotationPlaceholderOccurrenceWithLeaderLine { leader_line: Vec::new(), },
         "ANNOTATION_PLANE" => UnitPart::AnnotationPlane { elements: None, },
         "ANNOTATION_SYMBOL" => UnitPart::AnnotationSymbol,
         "ANNOTATION_SYMBOL_OCCURRENCE" => UnitPart::AnnotationSymbolOccurrence,
         "ANNOTATION_TEXT" => UnitPart::AnnotationText,
-        "ANNOTATION_TEXT_CHARACTER" => UnitPart::AnnotationTextCharacter { alignment: (as_str(req(&p.attributes, 0, "ANNOTATION_TEXT_CHARACTER.alignment")?, "ANNOTATION_TEXT_CHARACTER.alignment"))?, },
+        "ANNOTATION_TEXT_CHARACTER" => UnitPart::AnnotationTextCharacter { alignment: (as_text(req(&p.attributes, 0, "ANNOTATION_TEXT_CHARACTER.alignment")?, "ANNOTATION_TEXT_CHARACTER.alignment", tt))?, },
         "ANNOTATION_TEXT_OCCURRENCE" => UnitPart::AnnotationTextOccurrence,
-        "APPLICATION_CONTEXT_ELEMENT" => UnitPart::ApplicationContextElement { name: (as_str(req(&p.attributes, 0, "APPLICATION_CONTEXT_ELEMENT.name")?, "APPLICATION_CONTEXT_ELEMENT.name"))?, frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(u32::MAX)), },
+        "APPLICATION_CONTEXT_ELEMENT" => UnitPart::ApplicationContextElement { name: (as_text(req(&p.attributes, 0, "APPLICATION_CONTEXT_ELEMENT.name")?, "APPLICATION_CONTEXT_ELEMENT.name", tt))?, frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(u32::MAX)), },
         "APPLIED_APPROVAL_ASSIGNMENT" => UnitPart::AppliedApprovalAssignment { items: Vec::new(), },
         "APPLIED_DATE_AND_TIME_ASSIGNMENT" => UnitPart::AppliedDateAndTimeAssignment { items: Vec::new(), },
         "APPLIED_DOCUMENT_REFERENCE" => UnitPart::AppliedDocumentReference { items: Vec::new(), },
@@ -38753,8 +42898,8 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT" => UnitPart::AppliedSecurityClassificationAssignment { items: Vec::new(), },
         "APPROVAL_ASSIGNMENT" => UnitPart::ApprovalAssignment { assigned_approval: ApprovalRef::Approval(ApprovalId(u32::MAX)), },
         "AREA_IN_SET" => UnitPart::AreaInSet { area: PresentationAreaRef::PresentationArea(PresentationAreaId(u32::MAX)), in_set: PresentationSetRef::PresentationSet(PresentationSetId(u32::MAX)), },
-        "ASCRIBABLE_STATE_RELATIONSHIP" => UnitPart::AscribableStateRelationship { name: (as_str(req(&p.attributes, 0, "ASCRIBABLE_STATE_RELATIONSHIP.name")?, "ASCRIBABLE_STATE_RELATIONSHIP.name"))?, description: match req(&p.attributes, 1, "ASCRIBABLE_STATE_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "ASCRIBABLE_STATE_RELATIONSHIP.description"))?) }, relating_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(u32::MAX)), related_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(u32::MAX)), },
-        "ASSEMBLY_COMPONENT_USAGE" => UnitPart::AssemblyComponentUsage { reference_designator: match req(&p.attributes, 0, "ASSEMBLY_COMPONENT_USAGE.reference_designator")? { Attribute::Unset => None, other => Some((as_str(other, "ASSEMBLY_COMPONENT_USAGE.reference_designator"))?) }, },
+        "ASCRIBABLE_STATE_RELATIONSHIP" => UnitPart::AscribableStateRelationship { name: (as_text(req(&p.attributes, 0, "ASCRIBABLE_STATE_RELATIONSHIP.name")?, "ASCRIBABLE_STATE_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 1, "ASCRIBABLE_STATE_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "ASCRIBABLE_STATE_RELATIONSHIP.description", tt))?) }, relating_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(u32::MAX)), related_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(u32::MAX)), },
+        "ASSEMBLY_COMPONENT_USAGE" => UnitPart::AssemblyComponentUsage { reference_designator: match req(&p.attributes, 0, "ASSEMBLY_COMPONENT_USAGE.reference_designator")? { Attribute::Unset => None, other => Some((as_text(other, "ASSEMBLY_COMPONENT_USAGE.reference_designator", tt))?) }, },
         "B_SPLINE_CURVE" => UnitPart::BSplineCurve { degree: (as_int(req(&p.attributes, 0, "B_SPLINE_CURVE.degree")?, "B_SPLINE_CURVE.degree"))?, control_points_list: Vec::new(), curve_form: (match req(&p.attributes, 2, "B_SPLINE_CURVE.curve_form")? { Attribute::Enum(s) => BSplineCurveForm::parse(s).ok_or_else(|| format!("B_SPLINE_CURVE.curve_form: bad enum {s:?}")), o => Err(format!("B_SPLINE_CURVE.curve_form: expected enum, got {o:?}")) })?, closed_curve: (as_logical(req(&p.attributes, 3, "B_SPLINE_CURVE.closed_curve")?, "B_SPLINE_CURVE.closed_curve"))?, self_intersect: (as_logical(req(&p.attributes, 4, "B_SPLINE_CURVE.self_intersect")?, "B_SPLINE_CURVE.self_intersect"))?, },
         "B_SPLINE_CURVE_WITH_KNOTS" => UnitPart::BSplineCurveWithKnots { knot_multiplicities: (match req(&p.attributes, 0, "B_SPLINE_CURVE_WITH_KNOTS.knot_multiplicities")? { Attribute::List(l) => l.iter().map(|e| as_int(e, "B_SPLINE_CURVE_WITH_KNOTS.knot_multiplicities")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_CURVE_WITH_KNOTS.knot_multiplicities: expected list, got {o:?}")) })?, knots: (match req(&p.attributes, 1, "B_SPLINE_CURVE_WITH_KNOTS.knots")? { Attribute::List(l) => l.iter().map(|e| as_real(e, "B_SPLINE_CURVE_WITH_KNOTS.knots")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_CURVE_WITH_KNOTS.knots: expected list, got {o:?}")) })?, knot_spec: (match req(&p.attributes, 2, "B_SPLINE_CURVE_WITH_KNOTS.knot_spec")? { Attribute::Enum(s) => KnotType::parse(s).ok_or_else(|| format!("B_SPLINE_CURVE_WITH_KNOTS.knot_spec: bad enum {s:?}")), o => Err(format!("B_SPLINE_CURVE_WITH_KNOTS.knot_spec: expected enum, got {o:?}")) })?, },
         "B_SPLINE_SURFACE" => UnitPart::BSplineSurface { u_degree: (as_int(req(&p.attributes, 0, "B_SPLINE_SURFACE.u_degree")?, "B_SPLINE_SURFACE.u_degree"))?, v_degree: (as_int(req(&p.attributes, 1, "B_SPLINE_SURFACE.v_degree")?, "B_SPLINE_SURFACE.v_degree"))?, control_points_list: Vec::new(), surface_form: (match req(&p.attributes, 3, "B_SPLINE_SURFACE.surface_form")? { Attribute::Enum(s) => BSplineSurfaceForm::parse(s).ok_or_else(|| format!("B_SPLINE_SURFACE.surface_form: bad enum {s:?}")), o => Err(format!("B_SPLINE_SURFACE.surface_form: expected enum, got {o:?}")) })?, u_closed: (as_logical(req(&p.attributes, 4, "B_SPLINE_SURFACE.u_closed")?, "B_SPLINE_SURFACE.u_closed"))?, v_closed: (as_logical(req(&p.attributes, 5, "B_SPLINE_SURFACE.v_closed")?, "B_SPLINE_SURFACE.v_closed"))?, self_intersect: (as_logical(req(&p.attributes, 6, "B_SPLINE_SURFACE.self_intersect")?, "B_SPLINE_SURFACE.self_intersect"))?, },
@@ -38781,13 +42926,13 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "CHARACTER_GLYPH_STYLE_OUTLINE" => UnitPart::CharacterGlyphStyleOutline { outline_style: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)), },
         "CHARACTER_GLYPH_STYLE_STROKE" => UnitPart::CharacterGlyphStyleStroke { stroke_style: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)), },
         "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION" => UnitPart::CharacterizedItemWithinRepresentation { item: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), rep: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
-        "CHARACTERIZED_OBJECT" => UnitPart::CharacterizedObject { name: match req(&p.attributes, 0, "CHARACTERIZED_OBJECT.name")? { Attribute::Derived => None, other => Some((as_str(other, "CHARACTERIZED_OBJECT.name"))?) }, description: match req(&p.attributes, 1, "CHARACTERIZED_OBJECT.description")? { Attribute::Derived => None, other => Some((as_str(other, "CHARACTERIZED_OBJECT.description"))?) }, },
+        "CHARACTERIZED_OBJECT" => UnitPart::CharacterizedObject { name: match req(&p.attributes, 0, "CHARACTERIZED_OBJECT.name")? { Attribute::Derived => None, other => Some((as_text(other, "CHARACTERIZED_OBJECT.name", tt))?) }, description: match req(&p.attributes, 1, "CHARACTERIZED_OBJECT.description")? { Attribute::Derived => None, other => Some((as_text(other, "CHARACTERIZED_OBJECT.description", tt))?) }, },
         "CHARACTERIZED_REPRESENTATION" => UnitPart::CharacterizedRepresentation,
         "CIRCULAR_RUNOUT_TOLERANCE" => UnitPart::CircularRunoutTolerance,
         "CLOSED_SHELL" => UnitPart::ClosedShell,
         "COLOUR" => UnitPart::Colour,
         "COLOUR_RGB" => UnitPart::ColourRgb { red: (as_real(req(&p.attributes, 0, "COLOUR_RGB.red")?, "COLOUR_RGB.red"))?, green: (as_real(req(&p.attributes, 1, "COLOUR_RGB.green")?, "COLOUR_RGB.green"))?, blue: (as_real(req(&p.attributes, 2, "COLOUR_RGB.blue")?, "COLOUR_RGB.blue"))?, },
-        "COLOUR_SPECIFICATION" => UnitPart::ColourSpecification { name: (as_str(req(&p.attributes, 0, "COLOUR_SPECIFICATION.name")?, "COLOUR_SPECIFICATION.name"))?, },
+        "COLOUR_SPECIFICATION" => UnitPart::ColourSpecification { name: (as_text(req(&p.attributes, 0, "COLOUR_SPECIFICATION.name")?, "COLOUR_SPECIFICATION.name", tt))?, },
         "COMMON_DATUM" => UnitPart::CommonDatum,
         "COMPOSITE_CURVE" => UnitPart::CompositeCurve { segments: Vec::new(), self_intersect: (as_logical(req(&p.attributes, 1, "COMPOSITE_CURVE.self_intersect")?, "COMPOSITE_CURVE.self_intersect"))?, },
         "COMPOSITE_CURVE_SEGMENT" => UnitPart::CompositeCurveSegment { transition: (match req(&p.attributes, 0, "COMPOSITE_CURVE_SEGMENT.transition")? { Attribute::Enum(s) => TransitionCode::parse(s).ok_or_else(|| format!("COMPOSITE_CURVE_SEGMENT.transition: bad enum {s:?}")), o => Err(format!("COMPOSITE_CURVE_SEGMENT.transition: expected enum, got {o:?}")) })?, same_sense: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "COMPOSITE_CURVE_SEGMENT.same_sense")?, Attribute::Enum(s) if s == "T")))?, parent_curve: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)), },
@@ -38796,26 +42941,26 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "COMPOSITE_TEXT" => UnitPart::CompositeText { collected_text: Vec::new(), },
         "COMPOUND_REPRESENTATION_ITEM" => UnitPart::CompoundRepresentationItem { item_element: CompoundItemDefinitionRef::AdvancedFace(AdvancedFaceId(u32::MAX)), },
         "CONFIGURATION_EFFECTIVITY" => UnitPart::ConfigurationEffectivity { configuration: ConfigurationDesignRef::ConfigurationDesign(ConfigurationDesignId(u32::MAX)), },
-        "CONFIGURATION_ITEM" => UnitPart::ConfigurationItem { id: (as_str(req(&p.attributes, 0, "CONFIGURATION_ITEM.id")?, "CONFIGURATION_ITEM.id"))?, name: (as_str(req(&p.attributes, 1, "CONFIGURATION_ITEM.name")?, "CONFIGURATION_ITEM.name"))?, description: match req(&p.attributes, 2, "CONFIGURATION_ITEM.description")? { Attribute::Unset => None, other => Some((as_str(other, "CONFIGURATION_ITEM.description"))?) }, item_concept: ProductConceptRef::ProductConcept(ProductConceptId(u32::MAX)), purpose: match req(&p.attributes, 4, "CONFIGURATION_ITEM.purpose")? { Attribute::Unset => None, other => Some((as_str(other, "CONFIGURATION_ITEM.purpose"))?) }, },
+        "CONFIGURATION_ITEM" => UnitPart::ConfigurationItem { id: (as_text(req(&p.attributes, 0, "CONFIGURATION_ITEM.id")?, "CONFIGURATION_ITEM.id", tt))?, name: (as_text(req(&p.attributes, 1, "CONFIGURATION_ITEM.name")?, "CONFIGURATION_ITEM.name", tt))?, description: match req(&p.attributes, 2, "CONFIGURATION_ITEM.description")? { Attribute::Unset => None, other => Some((as_text(other, "CONFIGURATION_ITEM.description", tt))?) }, item_concept: ProductConceptRef::ProductConcept(ProductConceptId(u32::MAX)), purpose: match req(&p.attributes, 4, "CONFIGURATION_ITEM.purpose")? { Attribute::Unset => None, other => Some((as_text(other, "CONFIGURATION_ITEM.purpose", tt))?) }, },
         "CONNECTED_FACE_SET" => UnitPart::ConnectedFaceSet { cfs_faces: None, },
         "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP" => UnitPart::ConstructiveGeometryRepresentationRelationship,
         "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => UnitPart::ContextDependentOverRidingStyledItem { style_context: Vec::new(), },
-        "CONTEXT_DEPENDENT_UNIT" => UnitPart::ContextDependentUnit { name: (as_str(req(&p.attributes, 0, "CONTEXT_DEPENDENT_UNIT.name")?, "CONTEXT_DEPENDENT_UNIT.name"))?, },
-        "CONVERSION_BASED_UNIT" => UnitPart::ConversionBasedUnit { name: (as_str(req(&p.attributes, 0, "CONVERSION_BASED_UNIT.name")?, "CONVERSION_BASED_UNIT.name"))?, conversion_factor: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
+        "CONTEXT_DEPENDENT_UNIT" => UnitPart::ContextDependentUnit { name: (as_text(req(&p.attributes, 0, "CONTEXT_DEPENDENT_UNIT.name")?, "CONTEXT_DEPENDENT_UNIT.name", tt))?, },
+        "CONVERSION_BASED_UNIT" => UnitPart::ConversionBasedUnit { name: (as_text(req(&p.attributes, 0, "CONVERSION_BASED_UNIT.name")?, "CONVERSION_BASED_UNIT.name", tt))?, conversion_factor: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
         "CURVE" => UnitPart::Curve,
-        "CURVE_STYLE" => UnitPart::CurveStyle { name: (as_str(req(&p.attributes, 0, "CURVE_STYLE.name")?, "CURVE_STYLE.name"))?, curve_font: None, curve_width: None, curve_colour: None, },
-        "CURVE_STYLE_FONT" => UnitPart::CurveStyleFont { name: (as_str(req(&p.attributes, 0, "CURVE_STYLE_FONT.name")?, "CURVE_STYLE_FONT.name"))?, pattern_list: Vec::new(), },
-        "CURVE_STYLE_FONT_AND_SCALING" => UnitPart::CurveStyleFontAndScaling { name: (as_str(req(&p.attributes, 0, "CURVE_STYLE_FONT_AND_SCALING.name")?, "CURVE_STYLE_FONT_AND_SCALING.name"))?, curve_font: CurveStyleFontSelectRef::CurveStyleFont(CurveStyleFontId(u32::MAX)), curve_font_scaling: (as_real(req(&p.attributes, 2, "CURVE_STYLE_FONT_AND_SCALING.curve_font_scaling")?, "CURVE_STYLE_FONT_AND_SCALING.curve_font_scaling"))?, },
+        "CURVE_STYLE" => UnitPart::CurveStyle { name: (as_text(req(&p.attributes, 0, "CURVE_STYLE.name")?, "CURVE_STYLE.name", tt))?, curve_font: None, curve_width: None, curve_colour: None, },
+        "CURVE_STYLE_FONT" => UnitPart::CurveStyleFont { name: (as_text(req(&p.attributes, 0, "CURVE_STYLE_FONT.name")?, "CURVE_STYLE_FONT.name", tt))?, pattern_list: Vec::new(), },
+        "CURVE_STYLE_FONT_AND_SCALING" => UnitPart::CurveStyleFontAndScaling { name: (as_text(req(&p.attributes, 0, "CURVE_STYLE_FONT_AND_SCALING.name")?, "CURVE_STYLE_FONT_AND_SCALING.name", tt))?, curve_font: CurveStyleFontSelectRef::CurveStyleFont(CurveStyleFontId(u32::MAX)), curve_font_scaling: (as_real(req(&p.attributes, 2, "CURVE_STYLE_FONT_AND_SCALING.curve_font_scaling")?, "CURVE_STYLE_FONT_AND_SCALING.curve_font_scaling"))?, },
         "CURVE_STYLE_FONT_PATTERN" => UnitPart::CurveStyleFontPattern { visible_segment_length: (as_real(req(&p.attributes, 0, "CURVE_STYLE_FONT_PATTERN.visible_segment_length")?, "CURVE_STYLE_FONT_PATTERN.visible_segment_length"))?, invisible_segment_length: (as_real(req(&p.attributes, 1, "CURVE_STYLE_FONT_PATTERN.invisible_segment_length")?, "CURVE_STYLE_FONT_PATTERN.invisible_segment_length"))?, },
         "CYLINDRICITY_TOLERANCE" => UnitPart::CylindricityTolerance,
         "DATE" => UnitPart::Date { year_component: (as_int(req(&p.attributes, 0, "DATE.year_component")?, "DATE.year_component"))?, },
         "DATE_AND_TIME" => UnitPart::DateAndTime { date_component: DateRef::CalendarDate(CalendarDateId(u32::MAX)), time_component: LocalTimeRef::LocalTime(LocalTimeId(u32::MAX)), },
         "DATE_AND_TIME_ASSIGNMENT" => UnitPart::DateAndTimeAssignment { assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(u32::MAX)), role: DateTimeRoleRef::DateTimeRole(DateTimeRoleId(u32::MAX)), },
-        "DATUM" => UnitPart::Datum { identification: (as_str(req(&p.attributes, 0, "DATUM.identification")?, "DATUM.identification"))?, },
+        "DATUM" => UnitPart::Datum { identification: (as_text(req(&p.attributes, 0, "DATUM.identification")?, "DATUM.identification", tt))?, },
         "DATUM_FEATURE" => UnitPart::DatumFeature,
         "DATUM_REFERENCE" => UnitPart::DatumReference { precedence: (as_int(req(&p.attributes, 0, "DATUM_REFERENCE.precedence")?, "DATUM_REFERENCE.precedence"))?, referenced_datum: DatumRef::CommonDatum(CommonDatumId(u32::MAX)), },
         "DATUM_SYSTEM" => UnitPart::DatumSystem { constituents: Vec::new(), },
-        "DATUM_TARGET" => UnitPart::DatumTarget { target_id: (as_str(req(&p.attributes, 0, "DATUM_TARGET.target_id")?, "DATUM_TARGET.target_id"))?, },
+        "DATUM_TARGET" => UnitPart::DatumTarget { target_id: (as_text(req(&p.attributes, 0, "DATUM_TARGET.target_id")?, "DATUM_TARGET.target_id", tt))?, },
         "DEFAULT_MODEL_GEOMETRIC_VIEW" => UnitPart::DefaultModelGeometricView,
         "DEFINITIONAL_REPRESENTATION" => UnitPart::DefinitionalRepresentation,
         "DEFINITIONAL_REPRESENTATION_RELATIONSHIP" => UnitPart::DefinitionalRepresentationRelationship,
@@ -38823,16 +42968,16 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "DEGENERATE_TOROIDAL_SURFACE" => UnitPart::DegenerateToroidalSurface { select_outer: (Ok::<bool, String>(matches!(req(&p.attributes, 0, "DEGENERATE_TOROIDAL_SURFACE.select_outer")?, Attribute::Enum(s) if s == "T")))?, },
         "DERIVED_UNIT" => UnitPart::DerivedUnit { elements: Vec::new(), },
         "DESIGN_CONTEXT" => UnitPart::DesignContext,
-        "DIMENSIONAL_SIZE" => UnitPart::DimensionalSize { applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), name: (as_str(req(&p.attributes, 1, "DIMENSIONAL_SIZE.name")?, "DIMENSIONAL_SIZE.name"))?, },
+        "DIMENSIONAL_SIZE" => UnitPart::DimensionalSize { applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), name: (as_text(req(&p.attributes, 1, "DIMENSIONAL_SIZE.name")?, "DIMENSIONAL_SIZE.name", tt))?, },
         "DIRECTION" => UnitPart::Direction { direction_ratios: (match req(&p.attributes, 0, "DIRECTION.direction_ratios")? { Attribute::List(l) => Reals3::try_collect(l.iter().map(|e| as_real(e, "DIRECTION.direction_ratios")), "DIRECTION.direction_ratios"), o => Err(format!("DIRECTION.direction_ratios: expected list, got {o:?}")) })?, },
-        "DOCUMENT" => UnitPart::Document { id: (as_str(req(&p.attributes, 0, "DOCUMENT.id")?, "DOCUMENT.id"))?, name: (as_str(req(&p.attributes, 1, "DOCUMENT.name")?, "DOCUMENT.name"))?, description: match req(&p.attributes, 2, "DOCUMENT.description")? { Attribute::Unset => None, other => Some((as_str(other, "DOCUMENT.description"))?) }, kind: DocumentTypeRef::DocumentType(DocumentTypeId(u32::MAX)), },
+        "DOCUMENT" => UnitPart::Document { id: (as_text(req(&p.attributes, 0, "DOCUMENT.id")?, "DOCUMENT.id", tt))?, name: (as_text(req(&p.attributes, 1, "DOCUMENT.name")?, "DOCUMENT.name", tt))?, description: match req(&p.attributes, 2, "DOCUMENT.description")? { Attribute::Unset => None, other => Some((as_text(other, "DOCUMENT.description", tt))?) }, kind: DocumentTypeRef::DocumentType(DocumentTypeId(u32::MAX)), },
         "DOCUMENT_FILE" => UnitPart::DocumentFile,
-        "DOCUMENT_PRODUCT_ASSOCIATION" => UnitPart::DocumentProductAssociation { name: (as_str(req(&p.attributes, 0, "DOCUMENT_PRODUCT_ASSOCIATION.name")?, "DOCUMENT_PRODUCT_ASSOCIATION.name"))?, description: match req(&p.attributes, 1, "DOCUMENT_PRODUCT_ASSOCIATION.description")? { Attribute::Unset => None, other => Some((as_str(other, "DOCUMENT_PRODUCT_ASSOCIATION.description"))?) }, relating_document: DocumentRef::Document(DocumentId(u32::MAX)), related_product: ProductOrFormationOrDefinitionRef::Product(ProductId(u32::MAX)), },
+        "DOCUMENT_PRODUCT_ASSOCIATION" => UnitPart::DocumentProductAssociation { name: (as_text(req(&p.attributes, 0, "DOCUMENT_PRODUCT_ASSOCIATION.name")?, "DOCUMENT_PRODUCT_ASSOCIATION.name", tt))?, description: match req(&p.attributes, 1, "DOCUMENT_PRODUCT_ASSOCIATION.description")? { Attribute::Unset => None, other => Some((as_text(other, "DOCUMENT_PRODUCT_ASSOCIATION.description", tt))?) }, relating_document: DocumentRef::Document(DocumentId(u32::MAX)), related_product: ProductOrFormationOrDefinitionRef::Product(ProductId(u32::MAX)), },
         "DOCUMENT_PRODUCT_EQUIVALENCE" => UnitPart::DocumentProductEquivalence,
-        "DOCUMENT_REFERENCE" => UnitPart::DocumentReference { assigned_document: DocumentRef::Document(DocumentId(u32::MAX)), source: (as_str(req(&p.attributes, 1, "DOCUMENT_REFERENCE.source")?, "DOCUMENT_REFERENCE.source"))?, },
+        "DOCUMENT_REFERENCE" => UnitPart::DocumentReference { assigned_document: DocumentRef::Document(DocumentId(u32::MAX)), source: (as_text(req(&p.attributes, 1, "DOCUMENT_REFERENCE.source")?, "DOCUMENT_REFERENCE.source", tt))?, },
         "DRAUGHTING_ANNOTATION_OCCURRENCE" => UnitPart::DraughtingAnnotationOccurrence,
         "DRAUGHTING_CALLOUT" => UnitPart::DraughtingCallout { contents: Vec::new(), },
-        "DRAUGHTING_CALLOUT_RELATIONSHIP" => UnitPart::DraughtingCalloutRelationship { name: (as_str(req(&p.attributes, 0, "DRAUGHTING_CALLOUT_RELATIONSHIP.name")?, "DRAUGHTING_CALLOUT_RELATIONSHIP.name"))?, description: (as_str(req(&p.attributes, 1, "DRAUGHTING_CALLOUT_RELATIONSHIP.description")?, "DRAUGHTING_CALLOUT_RELATIONSHIP.description"))?, relating_draughting_callout: DraughtingCalloutRef::DraughtingCallout(DraughtingCalloutId(u32::MAX)), related_draughting_callout: DraughtingCalloutRef::DraughtingCallout(DraughtingCalloutId(u32::MAX)), },
+        "DRAUGHTING_CALLOUT_RELATIONSHIP" => UnitPart::DraughtingCalloutRelationship { name: (as_text(req(&p.attributes, 0, "DRAUGHTING_CALLOUT_RELATIONSHIP.name")?, "DRAUGHTING_CALLOUT_RELATIONSHIP.name", tt))?, description: (as_text(req(&p.attributes, 1, "DRAUGHTING_CALLOUT_RELATIONSHIP.description")?, "DRAUGHTING_CALLOUT_RELATIONSHIP.description", tt))?, relating_draughting_callout: DraughtingCalloutRef::DraughtingCallout(DraughtingCalloutId(u32::MAX)), related_draughting_callout: DraughtingCalloutRef::DraughtingCallout(DraughtingCalloutId(u32::MAX)), },
         "DRAUGHTING_MODEL" => UnitPart::DraughtingModel,
         "DRAUGHTING_MODEL_ITEM_ASSOCIATION" => UnitPart::DraughtingModelItemAssociation,
         "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER" => UnitPart::DraughtingModelItemAssociationWithPlaceholder { annotation_placeholder: AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId(u32::MAX)), },
@@ -38842,15 +42987,15 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "EDGE" => UnitPart::Edge { edge_start: None, edge_end: None, },
         "EDGE_CURVE" => UnitPart::EdgeCurve { edge_geometry: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)), same_sense: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "EDGE_CURVE.same_sense")?, Attribute::Enum(s) if s == "T")))?, },
         "EDGE_LOOP" => UnitPart::EdgeLoop,
-        "EFFECTIVITY" => UnitPart::Effectivity { id: (as_str(req(&p.attributes, 0, "EFFECTIVITY.id")?, "EFFECTIVITY.id"))?, },
+        "EFFECTIVITY" => UnitPart::Effectivity { id: (as_text(req(&p.attributes, 0, "EFFECTIVITY.id")?, "EFFECTIVITY.id", tt))?, },
         "ELEMENTARY_SURFACE" => UnitPart::ElementarySurface { position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)), },
         "EXPRESSION" => UnitPart::Expression,
         "EXTERNAL_IDENTIFICATION_ASSIGNMENT" => UnitPart::ExternalIdentificationAssignment { source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)), },
-        "EXTERNAL_SOURCE" => UnitPart::ExternalSource { source_id: (read_string_select(req(&p.attributes, 0, "EXTERNAL_SOURCE.source_id")?, "EXTERNAL_SOURCE.source_id"))?, },
+        "EXTERNAL_SOURCE" => UnitPart::ExternalSource { source_id: (read_string_select(req(&p.attributes, 0, "EXTERNAL_SOURCE.source_id")?, "EXTERNAL_SOURCE.source_id", tt))?, },
         "EXTERNALLY_DEFINED_CHARACTER_GLYPH" => UnitPart::ExternallyDefinedCharacterGlyph,
         "EXTERNALLY_DEFINED_CURVE_FONT" => UnitPart::ExternallyDefinedCurveFont,
         "EXTERNALLY_DEFINED_HATCH_STYLE" => UnitPart::ExternallyDefinedHatchStyle,
-        "EXTERNALLY_DEFINED_ITEM" => UnitPart::ExternallyDefinedItem { item_id: (read_string_select(req(&p.attributes, 0, "EXTERNALLY_DEFINED_ITEM.item_id")?, "EXTERNALLY_DEFINED_ITEM.item_id"))?, source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)), },
+        "EXTERNALLY_DEFINED_ITEM" => UnitPart::ExternallyDefinedItem { item_id: (read_string_select(req(&p.attributes, 0, "EXTERNALLY_DEFINED_ITEM.item_id")?, "EXTERNALLY_DEFINED_ITEM.item_id", tt))?, source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)), },
         "EXTERNALLY_DEFINED_STYLE" => UnitPart::ExternallyDefinedStyle,
         "EXTERNALLY_DEFINED_SYMBOL" => UnitPart::ExternallyDefinedSymbol,
         "EXTERNALLY_DEFINED_TEXT_FONT" => UnitPart::ExternallyDefinedTextFont,
@@ -38860,15 +43005,15 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "FACE_BOUND" => UnitPart::FaceBound { bound: LoopRef::EdgeLoop(EdgeLoopId(u32::MAX)), orientation: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "FACE_BOUND.orientation")?, Attribute::Enum(s) if s == "T")))?, },
         "FACE_OUTER_BOUND" => UnitPart::FaceOuterBound,
         "FACE_SURFACE" => UnitPart::FaceSurface { face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)), same_sense: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "FACE_SURFACE.same_sense")?, Attribute::Enum(s) if s == "T")))?, },
-        "FILL_AREA_STYLE" => UnitPart::FillAreaStyle { name: (as_str(req(&p.attributes, 0, "FILL_AREA_STYLE.name")?, "FILL_AREA_STYLE.name"))?, fill_styles: Vec::new(), },
+        "FILL_AREA_STYLE" => UnitPart::FillAreaStyle { name: (as_text(req(&p.attributes, 0, "FILL_AREA_STYLE.name")?, "FILL_AREA_STYLE.name", tt))?, fill_styles: Vec::new(), },
         "FILL_AREA_STYLE_HATCHING" => UnitPart::FillAreaStyleHatching { hatch_line_appearance: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)), start_of_next_hatch_line: OneDirectionRepeatFactorRef::OneDirectionRepeatFactor(OneDirectionRepeatFactorId(u32::MAX)), point_of_reference_hatch_line: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)), pattern_start: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)), hatch_line_angle: (as_real(req(&p.attributes, 4, "FILL_AREA_STYLE_HATCHING.hatch_line_angle")?, "FILL_AREA_STYLE_HATCHING.hatch_line_angle"))?, },
         "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE" => UnitPart::FillAreaStyleTileSymbolWithStyle { symbol: AnnotationSymbolOccurrenceRef::AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId(u32::MAX)), },
         "FILL_AREA_STYLE_TILES" => UnitPart::FillAreaStyleTiles { tiling_pattern: TwoDirectionRepeatFactorRef::TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId(u32::MAX)), tiles: Vec::new(), tiling_scale: (as_real(req(&p.attributes, 2, "FILL_AREA_STYLE_TILES.tiling_scale")?, "FILL_AREA_STYLE_TILES.tiling_scale"))?, },
         "FLATNESS_TOLERANCE" => UnitPart::FlatnessTolerance,
         "FOUNDED_ITEM" => UnitPart::FoundedItem,
-        "FUNCTIONALLY_DEFINED_TRANSFORMATION" => UnitPart::FunctionallyDefinedTransformation { name: (as_str(req(&p.attributes, 0, "FUNCTIONALLY_DEFINED_TRANSFORMATION.name")?, "FUNCTIONALLY_DEFINED_TRANSFORMATION.name"))?, description: match req(&p.attributes, 1, "FUNCTIONALLY_DEFINED_TRANSFORMATION.description")? { Attribute::Unset => None, other => Some((as_str(other, "FUNCTIONALLY_DEFINED_TRANSFORMATION.description"))?) }, },
+        "FUNCTIONALLY_DEFINED_TRANSFORMATION" => UnitPart::FunctionallyDefinedTransformation { name: (as_text(req(&p.attributes, 0, "FUNCTIONALLY_DEFINED_TRANSFORMATION.name")?, "FUNCTIONALLY_DEFINED_TRANSFORMATION.name", tt))?, description: match req(&p.attributes, 1, "FUNCTIONALLY_DEFINED_TRANSFORMATION.description")? { Attribute::Unset => None, other => Some((as_text(other, "FUNCTIONALLY_DEFINED_TRANSFORMATION.description", tt))?) }, },
         "GENERAL_DATUM_REFERENCE" => UnitPart::GeneralDatumReference { base: DatumOrCommonDatumRef::CommonDatum(CommonDatumId(u32::MAX)), modifiers: None, },
-        "GENERAL_PROPERTY" => UnitPart::GeneralProperty { id: (as_str(req(&p.attributes, 0, "GENERAL_PROPERTY.id")?, "GENERAL_PROPERTY.id"))?, name: (as_str(req(&p.attributes, 1, "GENERAL_PROPERTY.name")?, "GENERAL_PROPERTY.name"))?, description: match req(&p.attributes, 2, "GENERAL_PROPERTY.description")? { Attribute::Unset => None, other => Some((as_str(other, "GENERAL_PROPERTY.description"))?) }, },
+        "GENERAL_PROPERTY" => UnitPart::GeneralProperty { id: (as_text(req(&p.attributes, 0, "GENERAL_PROPERTY.id")?, "GENERAL_PROPERTY.id", tt))?, name: (as_text(req(&p.attributes, 1, "GENERAL_PROPERTY.name")?, "GENERAL_PROPERTY.name", tt))?, description: match req(&p.attributes, 2, "GENERAL_PROPERTY.description")? { Attribute::Unset => None, other => Some((as_text(other, "GENERAL_PROPERTY.description", tt))?) }, },
         "GENERIC_EXPRESSION" => UnitPart::GenericExpression,
         "GENERIC_LITERAL" => UnitPart::GenericLiteral,
         "GENERIC_PRODUCT_DEFINITION_REFERENCE" => UnitPart::GenericProductDefinitionReference { source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)), },
@@ -38877,7 +43022,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "GEOMETRIC_REPRESENTATION_CONTEXT" => UnitPart::GeometricRepresentationContext { coordinate_space_dimension: (as_int(req(&p.attributes, 0, "GEOMETRIC_REPRESENTATION_CONTEXT.coordinate_space_dimension")?, "GEOMETRIC_REPRESENTATION_CONTEXT.coordinate_space_dimension"))?, },
         "GEOMETRIC_REPRESENTATION_ITEM" => UnitPart::GeometricRepresentationItem,
         "GEOMETRIC_SET" => UnitPart::GeometricSet { elements: Vec::new(), },
-        "GEOMETRIC_TOLERANCE" => UnitPart::GeometricTolerance { name: (as_str(req(&p.attributes, 0, "GEOMETRIC_TOLERANCE.name")?, "GEOMETRIC_TOLERANCE.name"))?, description: match req(&p.attributes, 1, "GEOMETRIC_TOLERANCE.description")? { Attribute::Unset => None, other => Some((as_str(other, "GEOMETRIC_TOLERANCE.description"))?) }, magnitude: None, toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), },
+        "GEOMETRIC_TOLERANCE" => UnitPart::GeometricTolerance { name: (as_text(req(&p.attributes, 0, "GEOMETRIC_TOLERANCE.name")?, "GEOMETRIC_TOLERANCE.name", tt))?, description: match req(&p.attributes, 1, "GEOMETRIC_TOLERANCE.description")? { Attribute::Unset => None, other => Some((as_text(other, "GEOMETRIC_TOLERANCE.description", tt))?) }, magnitude: None, toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), },
         "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE" => UnitPart::GeometricToleranceWithDatumReference { datum_system: Vec::new(), },
         "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT" => UnitPart::GeometricToleranceWithDefinedAreaUnit { area_type: (match req(&p.attributes, 0, "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.area_type")? { Attribute::Enum(s) => AreaUnitType::parse(s).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.area_type: bad enum {s:?}")), o => Err(format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.area_type: expected enum, got {o:?}")) })?, second_unit_size: None, },
         "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT" => UnitPart::GeometricToleranceWithDefinedUnit { unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
@@ -38887,15 +43032,15 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION" => UnitPart::GeometricallyBoundedWireframeShapeRepresentation,
         "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT" => UnitPart::GlobalUncertaintyAssignedContext { uncertainty: Vec::new(), },
         "GLOBAL_UNIT_ASSIGNED_CONTEXT" => UnitPart::GlobalUnitAssignedContext { units: Vec::new(), },
-        "GROUP" => UnitPart::Group { name: (as_str(req(&p.attributes, 0, "GROUP.name")?, "GROUP.name"))?, description: match req(&p.attributes, 1, "GROUP.description")? { Attribute::Unset => None, other => Some((as_str(other, "GROUP.description"))?) }, },
+        "GROUP" => UnitPart::Group { name: (as_text(req(&p.attributes, 0, "GROUP.name")?, "GROUP.name", tt))?, description: match req(&p.attributes, 1, "GROUP.description")? { Attribute::Unset => None, other => Some((as_text(other, "GROUP.description", tt))?) }, },
         "GROUP_ASSIGNMENT" => UnitPart::GroupAssignment { assigned_group: GroupRef::Group(GroupId(u32::MAX)), },
-        "IDENTIFICATION_ASSIGNMENT" => UnitPart::IdentificationAssignment { assigned_id: (as_str(req(&p.attributes, 0, "IDENTIFICATION_ASSIGNMENT.assigned_id")?, "IDENTIFICATION_ASSIGNMENT.assigned_id"))?, role: IdentificationRoleRef::IdentificationRole(IdentificationRoleId(u32::MAX)), },
+        "IDENTIFICATION_ASSIGNMENT" => UnitPart::IdentificationAssignment { assigned_id: (as_text(req(&p.attributes, 0, "IDENTIFICATION_ASSIGNMENT.assigned_id")?, "IDENTIFICATION_ASSIGNMENT.assigned_id", tt))?, role: IdentificationRoleRef::IdentificationRole(IdentificationRoleId(u32::MAX)), },
         "INT_LITERAL" => UnitPart::IntLiteral,
         "INTEGER_REPRESENTATION_ITEM" => UnitPart::IntegerRepresentationItem,
         "INTERSECTION_CURVE" => UnitPart::IntersectionCurve,
         "INVISIBILITY" => UnitPart::Invisibility { invisible_items: Vec::new(), },
-        "ITEM_DEFINED_TRANSFORMATION" => UnitPart::ItemDefinedTransformation { name: (as_str(req(&p.attributes, 0, "ITEM_DEFINED_TRANSFORMATION.name")?, "ITEM_DEFINED_TRANSFORMATION.name"))?, description: match req(&p.attributes, 1, "ITEM_DEFINED_TRANSFORMATION.description")? { Attribute::Unset => None, other => Some((as_str(other, "ITEM_DEFINED_TRANSFORMATION.description"))?) }, transform_item_1: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), transform_item_2: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), },
-        "ITEM_IDENTIFIED_REPRESENTATION_USAGE" => UnitPart::ItemIdentifiedRepresentationUsage { name: (as_str(req(&p.attributes, 0, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.name")?, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.name"))?, description: match req(&p.attributes, 1, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.description")? { Attribute::Unset => None, other => Some((as_str(other, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.description"))?) }, definition: ItemIdentifiedRepresentationUsageDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), identified_item: ItemIdentifiedRepresentationUsageSelectRef::AdvancedFace(AdvancedFaceId(u32::MAX)), },
+        "ITEM_DEFINED_TRANSFORMATION" => UnitPart::ItemDefinedTransformation { name: (as_text(req(&p.attributes, 0, "ITEM_DEFINED_TRANSFORMATION.name")?, "ITEM_DEFINED_TRANSFORMATION.name", tt))?, description: match req(&p.attributes, 1, "ITEM_DEFINED_TRANSFORMATION.description")? { Attribute::Unset => None, other => Some((as_text(other, "ITEM_DEFINED_TRANSFORMATION.description", tt))?) }, transform_item_1: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), transform_item_2: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), },
+        "ITEM_IDENTIFIED_REPRESENTATION_USAGE" => UnitPart::ItemIdentifiedRepresentationUsage { name: (as_text(req(&p.attributes, 0, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.name")?, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.name", tt))?, description: match req(&p.attributes, 1, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.description")? { Attribute::Unset => None, other => Some((as_text(other, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.description", tt))?) }, definition: ItemIdentifiedRepresentationUsageDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), identified_item: ItemIdentifiedRepresentationUsageSelectRef::AdvancedFace(AdvancedFaceId(u32::MAX)), },
         "LEADER_CURVE" => UnitPart::LeaderCurve,
         "LEADER_DIRECTED_CALLOUT" => UnitPart::LeaderDirectedCallout,
         "LEADER_TERMINATOR" => UnitPart::LeaderTerminator,
@@ -38909,7 +43054,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "MAPPED_ITEM" => UnitPart::MappedItem { mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(u32::MAX)), mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), },
         "MASS_UNIT" => UnitPart::MassUnit,
         "MEASURE_REPRESENTATION_ITEM" => UnitPart::MeasureRepresentationItem,
-        "MEASURE_WITH_UNIT" => UnitPart::MeasureWithUnit { value_component: (read_measure_value(req(&p.attributes, 0, "MEASURE_WITH_UNIT.value_component")?, "MEASURE_WITH_UNIT.value_component"))?, unit_component: UnitRef::AreaUnit(AreaUnitId(u32::MAX)), },
+        "MEASURE_WITH_UNIT" => UnitPart::MeasureWithUnit { value_component: (read_measure_value(req(&p.attributes, 0, "MEASURE_WITH_UNIT.value_component")?, "MEASURE_WITH_UNIT.value_component", tt))?, unit_component: UnitRef::AreaUnit(AreaUnitId(u32::MAX)), },
         "MECHANICAL_CONTEXT" => UnitPart::MechanicalContext,
         "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP" => UnitPart::MechanicalDesignAndDraughtingRelationship,
         "MODEL_GEOMETRIC_VIEW" => UnitPart::ModelGeometricView,
@@ -38919,7 +43064,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "NUMERIC_EXPRESSION" => UnitPart::NumericExpression,
         "ONE_DIRECTION_REPEAT_FACTOR" => UnitPart::OneDirectionRepeatFactor { repeat_factor: VectorRef::Vector(VectorId(u32::MAX)), },
         "OPEN_SHELL" => UnitPart::OpenShell,
-        "ORGANIZATIONAL_ADDRESS" => UnitPart::OrganizationalAddress { organizations: Vec::new(), description: match req(&p.attributes, 1, "ORGANIZATIONAL_ADDRESS.description")? { Attribute::Unset => None, other => Some((as_str(other, "ORGANIZATIONAL_ADDRESS.description"))?) }, },
+        "ORGANIZATIONAL_ADDRESS" => UnitPart::OrganizationalAddress { organizations: Vec::new(), description: match req(&p.attributes, 1, "ORGANIZATIONAL_ADDRESS.description")? { Attribute::Unset => None, other => Some((as_text(other, "ORGANIZATIONAL_ADDRESS.description", tt))?) }, },
         "ORIENTED_CLOSED_SHELL" => UnitPart::OrientedClosedShell { closed_shell_element: ClosedShellRef::ClosedShell(ClosedShellId(u32::MAX)), orientation: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "ORIENTED_CLOSED_SHELL.orientation")?, Attribute::Enum(s) if s == "T")))?, },
         "ORIENTED_EDGE" => UnitPart::OrientedEdge { edge_element: EdgeRef::Edge(EdgeId(u32::MAX)), orientation: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "ORIENTED_EDGE.orientation")?, Attribute::Enum(s) if s == "T")))?, },
         "OVER_RIDING_STYLED_ITEM" => UnitPart::OverRidingStyledItem { over_ridden_style: StyledItemRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(u32::MAX)), },
@@ -38930,7 +43075,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "PERPENDICULARITY_TOLERANCE" => UnitPart::PerpendicularityTolerance,
         "PERSON_AND_ORGANIZATION_ADDRESS" => UnitPart::PersonAndOrganizationAddress,
         "PERSON_AND_ORGANIZATION_ASSIGNMENT" => UnitPart::PersonAndOrganizationAssignment { assigned_person_and_organization: PersonAndOrganizationRef::PersonAndOrganization(PersonAndOrganizationId(u32::MAX)), role: PersonAndOrganizationRoleRef::PersonAndOrganizationRole(PersonAndOrganizationRoleId(u32::MAX)), },
-        "PERSONAL_ADDRESS" => UnitPart::PersonalAddress { people: Vec::new(), description: match req(&p.attributes, 1, "PERSONAL_ADDRESS.description")? { Attribute::Unset => None, other => Some((as_str(other, "PERSONAL_ADDRESS.description"))?) }, },
+        "PERSONAL_ADDRESS" => UnitPart::PersonalAddress { people: Vec::new(), description: match req(&p.attributes, 1, "PERSONAL_ADDRESS.description")? { Attribute::Unset => None, other => Some((as_text(other, "PERSONAL_ADDRESS.description", tt))?) }, },
         "PLACED_DATUM_TARGET_FEATURE" => UnitPart::PlacedDatumTargetFeature,
         "PLACEMENT" => UnitPart::Placement { location: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)), },
         "PLANAR_BOX" => UnitPart::PlanarBox { placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)), },
@@ -38938,13 +43083,13 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "PLANE_ANGLE_MEASURE_WITH_UNIT" => UnitPart::PlaneAngleMeasureWithUnit,
         "PLANE_ANGLE_UNIT" => UnitPart::PlaneAngleUnit,
         "POINT" => UnitPart::Point,
-        "POINT_STYLE" => UnitPart::PointStyle { name: (as_str(req(&p.attributes, 0, "POINT_STYLE.name")?, "POINT_STYLE.name"))?, marker: None, marker_size: None, marker_colour: None, },
+        "POINT_STYLE" => UnitPart::PointStyle { name: (as_text(req(&p.attributes, 0, "POINT_STYLE.name")?, "POINT_STYLE.name", tt))?, marker: None, marker_size: None, marker_colour: None, },
         "POLY_LOOP" => UnitPart::PolyLoop { polygon: Vec::new(), },
         "POSITION_TOLERANCE" => UnitPart::PositionTolerance,
         "PRE_DEFINED_CHARACTER_GLYPH" => UnitPart::PreDefinedCharacterGlyph,
         "PRE_DEFINED_COLOUR" => UnitPart::PreDefinedColour,
         "PRE_DEFINED_CURVE_FONT" => UnitPart::PreDefinedCurveFont,
-        "PRE_DEFINED_ITEM" => UnitPart::PreDefinedItem { name: (as_str(req(&p.attributes, 0, "PRE_DEFINED_ITEM.name")?, "PRE_DEFINED_ITEM.name"))?, },
+        "PRE_DEFINED_ITEM" => UnitPart::PreDefinedItem { name: (as_text(req(&p.attributes, 0, "PRE_DEFINED_ITEM.name")?, "PRE_DEFINED_ITEM.name", tt))?, },
         "PRE_DEFINED_MARKER" => UnitPart::PreDefinedMarker,
         "PRE_DEFINED_POINT_MARKER_SYMBOL" => UnitPart::PreDefinedPointMarkerSymbol,
         "PRE_DEFINED_PRESENTATION_STYLE" => UnitPart::PreDefinedPresentationStyle,
@@ -38960,26 +43105,26 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "PRESENTATION_STYLE_BY_CONTEXT" => UnitPart::PresentationStyleByContext { style_context: StyleContextSelectRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
         "PRESENTATION_VIEW" => UnitPart::PresentationView,
         "PRESENTED_ITEM" => UnitPart::PresentedItem,
-        "PRODUCT" => UnitPart::Product { id: (as_str(req(&p.attributes, 0, "PRODUCT.id")?, "PRODUCT.id"))?, name: (as_str(req(&p.attributes, 1, "PRODUCT.name")?, "PRODUCT.name"))?, description: match req(&p.attributes, 2, "PRODUCT.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT.description"))?) }, frame_of_reference: Vec::new(), },
-        "PRODUCT_CATEGORY" => UnitPart::ProductCategory { name: (as_str(req(&p.attributes, 0, "PRODUCT_CATEGORY.name")?, "PRODUCT_CATEGORY.name"))?, description: match req(&p.attributes, 1, "PRODUCT_CATEGORY.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_CATEGORY.description"))?) }, },
-        "PRODUCT_CONCEPT" => UnitPart::ProductConcept { id: (as_str(req(&p.attributes, 0, "PRODUCT_CONCEPT.id")?, "PRODUCT_CONCEPT.id"))?, name: (as_str(req(&p.attributes, 1, "PRODUCT_CONCEPT.name")?, "PRODUCT_CONCEPT.name"))?, description: match req(&p.attributes, 2, "PRODUCT_CONCEPT.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_CONCEPT.description"))?) }, market_context: ProductConceptContextRef::ProductConceptContext(ProductConceptContextId(u32::MAX)), },
-        "PRODUCT_CONCEPT_FEATURE" => UnitPart::ProductConceptFeature { id: (as_str(req(&p.attributes, 0, "PRODUCT_CONCEPT_FEATURE.id")?, "PRODUCT_CONCEPT_FEATURE.id"))?, name: (as_str(req(&p.attributes, 1, "PRODUCT_CONCEPT_FEATURE.name")?, "PRODUCT_CONCEPT_FEATURE.name"))?, description: match req(&p.attributes, 2, "PRODUCT_CONCEPT_FEATURE.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_CONCEPT_FEATURE.description"))?) }, },
+        "PRODUCT" => UnitPart::Product { id: (as_text(req(&p.attributes, 0, "PRODUCT.id")?, "PRODUCT.id", tt))?, name: (as_text(req(&p.attributes, 1, "PRODUCT.name")?, "PRODUCT.name", tt))?, description: match req(&p.attributes, 2, "PRODUCT.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT.description", tt))?) }, frame_of_reference: Vec::new(), },
+        "PRODUCT_CATEGORY" => UnitPart::ProductCategory { name: (as_text(req(&p.attributes, 0, "PRODUCT_CATEGORY.name")?, "PRODUCT_CATEGORY.name", tt))?, description: match req(&p.attributes, 1, "PRODUCT_CATEGORY.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_CATEGORY.description", tt))?) }, },
+        "PRODUCT_CONCEPT" => UnitPart::ProductConcept { id: (as_text(req(&p.attributes, 0, "PRODUCT_CONCEPT.id")?, "PRODUCT_CONCEPT.id", tt))?, name: (as_text(req(&p.attributes, 1, "PRODUCT_CONCEPT.name")?, "PRODUCT_CONCEPT.name", tt))?, description: match req(&p.attributes, 2, "PRODUCT_CONCEPT.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_CONCEPT.description", tt))?) }, market_context: ProductConceptContextRef::ProductConceptContext(ProductConceptContextId(u32::MAX)), },
+        "PRODUCT_CONCEPT_FEATURE" => UnitPart::ProductConceptFeature { id: (as_text(req(&p.attributes, 0, "PRODUCT_CONCEPT_FEATURE.id")?, "PRODUCT_CONCEPT_FEATURE.id", tt))?, name: (as_text(req(&p.attributes, 1, "PRODUCT_CONCEPT_FEATURE.name")?, "PRODUCT_CONCEPT_FEATURE.name", tt))?, description: match req(&p.attributes, 2, "PRODUCT_CONCEPT_FEATURE.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_CONCEPT_FEATURE.description", tt))?) }, },
         "PRODUCT_CONCEPT_FEATURE_CATEGORY" => UnitPart::ProductConceptFeatureCategory,
-        "PRODUCT_CONTEXT" => UnitPart::ProductContext { discipline_type: (as_str(req(&p.attributes, 0, "PRODUCT_CONTEXT.discipline_type")?, "PRODUCT_CONTEXT.discipline_type"))?, },
-        "PRODUCT_DEFINITION" => UnitPart::ProductDefinition { id: (as_str(req(&p.attributes, 0, "PRODUCT_DEFINITION.id")?, "PRODUCT_DEFINITION.id"))?, description: match req(&p.attributes, 1, "PRODUCT_DEFINITION.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_DEFINITION.description"))?) }, formation: ProductDefinitionFormationRef::ProductDefinitionFormation(ProductDefinitionFormationId(u32::MAX)), frame_of_reference: ProductDefinitionContextRef::DesignContext(DesignContextId(u32::MAX)), },
-        "PRODUCT_DEFINITION_CONTEXT" => UnitPart::ProductDefinitionContext { life_cycle_stage: (as_str(req(&p.attributes, 0, "PRODUCT_DEFINITION_CONTEXT.life_cycle_stage")?, "PRODUCT_DEFINITION_CONTEXT.life_cycle_stage"))?, },
+        "PRODUCT_CONTEXT" => UnitPart::ProductContext { discipline_type: (as_text(req(&p.attributes, 0, "PRODUCT_CONTEXT.discipline_type")?, "PRODUCT_CONTEXT.discipline_type", tt))?, },
+        "PRODUCT_DEFINITION" => UnitPart::ProductDefinition { id: (as_text(req(&p.attributes, 0, "PRODUCT_DEFINITION.id")?, "PRODUCT_DEFINITION.id", tt))?, description: match req(&p.attributes, 1, "PRODUCT_DEFINITION.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_DEFINITION.description", tt))?) }, formation: ProductDefinitionFormationRef::ProductDefinitionFormation(ProductDefinitionFormationId(u32::MAX)), frame_of_reference: ProductDefinitionContextRef::DesignContext(DesignContextId(u32::MAX)), },
+        "PRODUCT_DEFINITION_CONTEXT" => UnitPart::ProductDefinitionContext { life_cycle_stage: (as_text(req(&p.attributes, 0, "PRODUCT_DEFINITION_CONTEXT.life_cycle_stage")?, "PRODUCT_DEFINITION_CONTEXT.life_cycle_stage", tt))?, },
         "PRODUCT_DEFINITION_EFFECTIVITY" => UnitPart::ProductDefinitionEffectivity { usage: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(u32::MAX)), },
-        "PRODUCT_DEFINITION_FORMATION" => UnitPart::ProductDefinitionFormation { id: (as_str(req(&p.attributes, 0, "PRODUCT_DEFINITION_FORMATION.id")?, "PRODUCT_DEFINITION_FORMATION.id"))?, description: match req(&p.attributes, 1, "PRODUCT_DEFINITION_FORMATION.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_DEFINITION_FORMATION.description"))?) }, of_product: ProductRef::Product(ProductId(u32::MAX)), },
+        "PRODUCT_DEFINITION_FORMATION" => UnitPart::ProductDefinitionFormation { id: (as_text(req(&p.attributes, 0, "PRODUCT_DEFINITION_FORMATION.id")?, "PRODUCT_DEFINITION_FORMATION.id", tt))?, description: match req(&p.attributes, 1, "PRODUCT_DEFINITION_FORMATION.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_DEFINITION_FORMATION.description", tt))?) }, of_product: ProductRef::Product(ProductId(u32::MAX)), },
         "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE" => UnitPart::ProductDefinitionFormationWithSpecifiedSource { make_or_buy: (match req(&p.attributes, 0, "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE.make_or_buy")? { Attribute::Enum(s) => Source::parse(s).ok_or_else(|| format!("PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE.make_or_buy: bad enum {s:?}")), o => Err(format!("PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE.make_or_buy: expected enum, got {o:?}")) })?, },
-        "PRODUCT_DEFINITION_OCCURRENCE" => UnitPart::ProductDefinitionOccurrence { id: (as_str(req(&p.attributes, 0, "PRODUCT_DEFINITION_OCCURRENCE.id")?, "PRODUCT_DEFINITION_OCCURRENCE.id"))?, name: match req(&p.attributes, 1, "PRODUCT_DEFINITION_OCCURRENCE.name")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_DEFINITION_OCCURRENCE.name"))?) }, description: match req(&p.attributes, 2, "PRODUCT_DEFINITION_OCCURRENCE.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_DEFINITION_OCCURRENCE.description"))?) }, definition: None, quantity: None, },
-        "PRODUCT_DEFINITION_RELATIONSHIP" => UnitPart::ProductDefinitionRelationship { id: (as_str(req(&p.attributes, 0, "PRODUCT_DEFINITION_RELATIONSHIP.id")?, "PRODUCT_DEFINITION_RELATIONSHIP.id"))?, name: (as_str(req(&p.attributes, 1, "PRODUCT_DEFINITION_RELATIONSHIP.name")?, "PRODUCT_DEFINITION_RELATIONSHIP.name"))?, description: match req(&p.attributes, 2, "PRODUCT_DEFINITION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_DEFINITION_RELATIONSHIP.description"))?) }, relating_product_definition: ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(GenericProductDefinitionReferenceId(u32::MAX)), related_product_definition: ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(GenericProductDefinitionReferenceId(u32::MAX)), },
-        "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP" => UnitPart::ProductDefinitionRelationshipRelationship { id: (as_str(req(&p.attributes, 0, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.id")?, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.id"))?, name: (as_str(req(&p.attributes, 1, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.name")?, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.name"))?, description: match req(&p.attributes, 2, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.description"))?) }, relating: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(u32::MAX)), related: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(u32::MAX)), },
+        "PRODUCT_DEFINITION_OCCURRENCE" => UnitPart::ProductDefinitionOccurrence { id: (as_text(req(&p.attributes, 0, "PRODUCT_DEFINITION_OCCURRENCE.id")?, "PRODUCT_DEFINITION_OCCURRENCE.id", tt))?, name: match req(&p.attributes, 1, "PRODUCT_DEFINITION_OCCURRENCE.name")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_DEFINITION_OCCURRENCE.name", tt))?) }, description: match req(&p.attributes, 2, "PRODUCT_DEFINITION_OCCURRENCE.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_DEFINITION_OCCURRENCE.description", tt))?) }, definition: None, quantity: None, },
+        "PRODUCT_DEFINITION_RELATIONSHIP" => UnitPart::ProductDefinitionRelationship { id: (as_text(req(&p.attributes, 0, "PRODUCT_DEFINITION_RELATIONSHIP.id")?, "PRODUCT_DEFINITION_RELATIONSHIP.id", tt))?, name: (as_text(req(&p.attributes, 1, "PRODUCT_DEFINITION_RELATIONSHIP.name")?, "PRODUCT_DEFINITION_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 2, "PRODUCT_DEFINITION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_DEFINITION_RELATIONSHIP.description", tt))?) }, relating_product_definition: ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(GenericProductDefinitionReferenceId(u32::MAX)), related_product_definition: ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(GenericProductDefinitionReferenceId(u32::MAX)), },
+        "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP" => UnitPart::ProductDefinitionRelationshipRelationship { id: (as_text(req(&p.attributes, 0, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.id")?, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.id", tt))?, name: (as_text(req(&p.attributes, 1, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.name")?, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 2, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.description", tt))?) }, relating: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(u32::MAX)), related: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(u32::MAX)), },
         "PRODUCT_DEFINITION_SHAPE" => UnitPart::ProductDefinitionShape,
         "PRODUCT_DEFINITION_USAGE" => UnitPart::ProductDefinitionUsage,
         "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS" => UnitPart::ProductDefinitionWithAssociatedDocuments { documentation_ids: Vec::new(), },
         "PRODUCT_RELATED_PRODUCT_CATEGORY" => UnitPart::ProductRelatedProductCategory { products: Vec::new(), },
         "PROJECTED_ZONE_DEFINITION" => UnitPart::ProjectedZoneDefinition { projection_end: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), projected_length: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
-        "PROPERTY_DEFINITION" => UnitPart::PropertyDefinition { name: (as_str(req(&p.attributes, 0, "PROPERTY_DEFINITION.name")?, "PROPERTY_DEFINITION.name"))?, description: match req(&p.attributes, 1, "PROPERTY_DEFINITION.description")? { Attribute::Unset => None, other => Some((as_str(other, "PROPERTY_DEFINITION.description"))?) }, definition: CharacterizedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), },
+        "PROPERTY_DEFINITION" => UnitPart::PropertyDefinition { name: (as_text(req(&p.attributes, 0, "PROPERTY_DEFINITION.name")?, "PROPERTY_DEFINITION.name", tt))?, description: match req(&p.attributes, 1, "PROPERTY_DEFINITION.description")? { Attribute::Unset => None, other => Some((as_text(other, "PROPERTY_DEFINITION.description", tt))?) }, definition: CharacterizedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), },
         "PROPERTY_DEFINITION_REPRESENTATION" => UnitPart::PropertyDefinitionRepresentation { definition: RepresentedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
         "QUALIFIED_REPRESENTATION_ITEM" => UnitPart::QualifiedRepresentationItem { qualifiers: Vec::new(), },
         "QUASI_UNIFORM_CURVE" => UnitPart::QuasiUniformCurve,
@@ -38991,18 +43136,18 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "REAL_LITERAL" => UnitPart::RealLiteral,
         "REAL_REPRESENTATION_ITEM" => UnitPart::RealRepresentationItem,
         "REPOSITIONED_TESSELLATED_ITEM" => UnitPart::RepositionedTessellatedItem { location: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)), },
-        "REPRESENTATION" => UnitPart::Representation { name: (as_str(req(&p.attributes, 0, "REPRESENTATION.name")?, "REPRESENTATION.name"))?, items: Vec::new(), context_of_items: RepresentationContextRef::GeometricRepresentationContext(GeometricRepresentationContextId(u32::MAX)), },
-        "REPRESENTATION_CONTEXT" => UnitPart::RepresentationContext { context_identifier: (as_str(req(&p.attributes, 0, "REPRESENTATION_CONTEXT.context_identifier")?, "REPRESENTATION_CONTEXT.context_identifier"))?, context_type: (as_str(req(&p.attributes, 1, "REPRESENTATION_CONTEXT.context_type")?, "REPRESENTATION_CONTEXT.context_type"))?, },
-        "REPRESENTATION_ITEM" => UnitPart::RepresentationItem { name: (as_str(req(&p.attributes, 0, "REPRESENTATION_ITEM.name")?, "REPRESENTATION_ITEM.name"))?, },
+        "REPRESENTATION" => UnitPart::Representation { name: (as_text(req(&p.attributes, 0, "REPRESENTATION.name")?, "REPRESENTATION.name", tt))?, items: Vec::new(), context_of_items: RepresentationContextRef::GeometricRepresentationContext(GeometricRepresentationContextId(u32::MAX)), },
+        "REPRESENTATION_CONTEXT" => UnitPart::RepresentationContext { context_identifier: (as_text(req(&p.attributes, 0, "REPRESENTATION_CONTEXT.context_identifier")?, "REPRESENTATION_CONTEXT.context_identifier", tt))?, context_type: (as_text(req(&p.attributes, 1, "REPRESENTATION_CONTEXT.context_type")?, "REPRESENTATION_CONTEXT.context_type", tt))?, },
+        "REPRESENTATION_ITEM" => UnitPart::RepresentationItem { name: (as_text(req(&p.attributes, 0, "REPRESENTATION_ITEM.name")?, "REPRESENTATION_ITEM.name", tt))?, },
         "REPRESENTATION_MAP" => UnitPart::RepresentationMap { mapping_origin: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), mapped_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
-        "REPRESENTATION_REFERENCE" => UnitPart::RepresentationReference { id: (as_str(req(&p.attributes, 0, "REPRESENTATION_REFERENCE.id")?, "REPRESENTATION_REFERENCE.id"))?, context_of_items: RepresentationContextReferenceRef::RepresentationContextReference(RepresentationContextReferenceId(u32::MAX)), },
-        "REPRESENTATION_RELATIONSHIP" => UnitPart::RepresentationRelationship { name: (as_str(req(&p.attributes, 0, "REPRESENTATION_RELATIONSHIP.name")?, "REPRESENTATION_RELATIONSHIP.name"))?, description: match req(&p.attributes, 1, "REPRESENTATION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "REPRESENTATION_RELATIONSHIP.description"))?) }, rep_1: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), rep_2: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
+        "REPRESENTATION_REFERENCE" => UnitPart::RepresentationReference { id: (as_text(req(&p.attributes, 0, "REPRESENTATION_REFERENCE.id")?, "REPRESENTATION_REFERENCE.id", tt))?, context_of_items: RepresentationContextReferenceRef::RepresentationContextReference(RepresentationContextReferenceId(u32::MAX)), },
+        "REPRESENTATION_RELATIONSHIP" => UnitPart::RepresentationRelationship { name: (as_text(req(&p.attributes, 0, "REPRESENTATION_RELATIONSHIP.name")?, "REPRESENTATION_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 1, "REPRESENTATION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "REPRESENTATION_RELATIONSHIP.description", tt))?) }, rep_1: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), rep_2: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
         "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION" => UnitPart::RepresentationRelationshipWithTransformation { transformation_operator: TransformationRef::FunctionallyDefinedTransformation(FunctionallyDefinedTransformationId(u32::MAX)), },
         "ROUNDNESS_TOLERANCE" => UnitPart::RoundnessTolerance,
         "SEAM_CURVE" => UnitPart::SeamCurve,
         "SECURITY_CLASSIFICATION_ASSIGNMENT" => UnitPart::SecurityClassificationAssignment { assigned_security_classification: SecurityClassificationRef::SecurityClassification(SecurityClassificationId(u32::MAX)), },
-        "SHAPE_ASPECT" => UnitPart::ShapeAspect { name: (as_str(req(&p.attributes, 0, "SHAPE_ASPECT.name")?, "SHAPE_ASPECT.name"))?, description: match req(&p.attributes, 1, "SHAPE_ASPECT.description")? { Attribute::Unset => None, other => Some((as_str(other, "SHAPE_ASPECT.description"))?) }, of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(u32::MAX)), product_definitional: match req(&p.attributes, 3, "SHAPE_ASPECT.product_definitional")? { Attribute::Derived => None, other => Some((as_logical(other, "SHAPE_ASPECT.product_definitional"))?) }, },
-        "SHAPE_ASPECT_RELATIONSHIP" => UnitPart::ShapeAspectRelationship { name: (as_str(req(&p.attributes, 0, "SHAPE_ASPECT_RELATIONSHIP.name")?, "SHAPE_ASPECT_RELATIONSHIP.name"))?, description: match req(&p.attributes, 1, "SHAPE_ASPECT_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "SHAPE_ASPECT_RELATIONSHIP.description"))?) }, relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), },
+        "SHAPE_ASPECT" => UnitPart::ShapeAspect { name: (as_text(req(&p.attributes, 0, "SHAPE_ASPECT.name")?, "SHAPE_ASPECT.name", tt))?, description: match req(&p.attributes, 1, "SHAPE_ASPECT.description")? { Attribute::Unset => None, other => Some((as_text(other, "SHAPE_ASPECT.description", tt))?) }, of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(u32::MAX)), product_definitional: match req(&p.attributes, 3, "SHAPE_ASPECT.product_definitional")? { Attribute::Derived => None, other => Some((as_logical(other, "SHAPE_ASPECT.product_definitional"))?) }, },
+        "SHAPE_ASPECT_RELATIONSHIP" => UnitPart::ShapeAspectRelationship { name: (as_text(req(&p.attributes, 0, "SHAPE_ASPECT_RELATIONSHIP.name")?, "SHAPE_ASPECT_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 1, "SHAPE_ASPECT_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "SHAPE_ASPECT_RELATIONSHIP.description", tt))?) }, relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), },
         "SHAPE_DEFINITION_REPRESENTATION" => UnitPart::ShapeDefinitionRepresentation,
         "SHAPE_DIMENSION_REPRESENTATION" => UnitPart::ShapeDimensionRepresentation,
         "SHAPE_REPRESENTATION" => UnitPart::ShapeRepresentation,
@@ -39015,18 +43160,18 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "SOLID_ANGLE_UNIT" => UnitPart::SolidAngleUnit,
         "SOLID_MODEL" => UnitPart::SolidModel,
         "START_REQUEST" => UnitPart::StartRequest { items: Vec::new(), },
-        "STATE_OBSERVED" => UnitPart::StateObserved { name: (as_str(req(&p.attributes, 0, "STATE_OBSERVED.name")?, "STATE_OBSERVED.name"))?, description: match req(&p.attributes, 1, "STATE_OBSERVED.description")? { Attribute::Unset => None, other => Some((as_str(other, "STATE_OBSERVED.description"))?) }, },
-        "STATE_TYPE" => UnitPart::StateType { name: (as_str(req(&p.attributes, 0, "STATE_TYPE.name")?, "STATE_TYPE.name"))?, description: match req(&p.attributes, 1, "STATE_TYPE.description")? { Attribute::Unset => None, other => Some((as_str(other, "STATE_TYPE.description"))?) }, },
+        "STATE_OBSERVED" => UnitPart::StateObserved { name: (as_text(req(&p.attributes, 0, "STATE_OBSERVED.name")?, "STATE_OBSERVED.name", tt))?, description: match req(&p.attributes, 1, "STATE_OBSERVED.description")? { Attribute::Unset => None, other => Some((as_text(other, "STATE_OBSERVED.description", tt))?) }, },
+        "STATE_TYPE" => UnitPart::StateType { name: (as_text(req(&p.attributes, 0, "STATE_TYPE.name")?, "STATE_TYPE.name", tt))?, description: match req(&p.attributes, 1, "STATE_TYPE.description")? { Attribute::Unset => None, other => Some((as_text(other, "STATE_TYPE.description", tt))?) }, },
         "STRAIGHTNESS_TOLERANCE" => UnitPart::StraightnessTolerance,
         "STYLED_ITEM" => UnitPart::StyledItem { styles: Vec::new(), item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
         "SURFACE" => UnitPart::Surface,
         "SURFACE_CURVE" => UnitPart::SurfaceCurve { curve_3d: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)), associated_geometry: Vec::new(), master_representation: (match req(&p.attributes, 2, "SURFACE_CURVE.master_representation")? { Attribute::Enum(s) => PreferredSurfaceCurveRepresentation::parse(s).ok_or_else(|| format!("SURFACE_CURVE.master_representation: bad enum {s:?}")), o => Err(format!("SURFACE_CURVE.master_representation: expected enum, got {o:?}")) })?, },
         "SURFACE_PROFILE_TOLERANCE" => UnitPart::SurfaceProfileTolerance,
-        "SURFACE_SIDE_STYLE" => UnitPart::SurfaceSideStyle { name: (as_str(req(&p.attributes, 0, "SURFACE_SIDE_STYLE.name")?, "SURFACE_SIDE_STYLE.name"))?, styles: Vec::new(), },
+        "SURFACE_SIDE_STYLE" => UnitPart::SurfaceSideStyle { name: (as_text(req(&p.attributes, 0, "SURFACE_SIDE_STYLE.name")?, "SURFACE_SIDE_STYLE.name", tt))?, styles: Vec::new(), },
         "SURFACE_STYLE_BOUNDARY" => UnitPart::SurfaceStyleBoundary { style_of_boundary: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), },
         "SURFACE_STYLE_CONTROL_GRID" => UnitPart::SurfaceStyleControlGrid { style_of_control_grid: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), },
         "SURFACE_STYLE_FILL_AREA" => UnitPart::SurfaceStyleFillArea { fill_area: FillAreaStyleRef::FillAreaStyle(FillAreaStyleId(u32::MAX)), },
-        "SURFACE_STYLE_PARAMETER_LINE" => UnitPart::SurfaceStyleParameterLine { style_of_parameter_lines: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), direction_counts: (match req(&p.attributes, 1, "SURFACE_STYLE_PARAMETER_LINE.direction_counts")? { Attribute::List(l) => l.iter().map(|e| read_int_measure_value(e, "SURFACE_STYLE_PARAMETER_LINE.direction_counts")).collect::<Result<Vec<_>, String>>(), o => Err(format!("SURFACE_STYLE_PARAMETER_LINE.direction_counts: expected list, got {o:?}")) })?, },
+        "SURFACE_STYLE_PARAMETER_LINE" => UnitPart::SurfaceStyleParameterLine { style_of_parameter_lines: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), direction_counts: (match req(&p.attributes, 1, "SURFACE_STYLE_PARAMETER_LINE.direction_counts")? { Attribute::List(l) => l.iter().map(|e| read_int_measure_value(e, "SURFACE_STYLE_PARAMETER_LINE.direction_counts", tt)).collect::<Result<Vec<_>, String>>(), o => Err(format!("SURFACE_STYLE_PARAMETER_LINE.direction_counts: expected list, got {o:?}")) })?, },
         "SURFACE_STYLE_REFLECTANCE_AMBIENT" => UnitPart::SurfaceStyleReflectanceAmbient { ambient_reflectance: (as_real(req(&p.attributes, 0, "SURFACE_STYLE_REFLECTANCE_AMBIENT.ambient_reflectance")?, "SURFACE_STYLE_REFLECTANCE_AMBIENT.ambient_reflectance"))?, },
         "SURFACE_STYLE_RENDERING" => UnitPart::SurfaceStyleRendering { rendering_method: (match req(&p.attributes, 0, "SURFACE_STYLE_RENDERING.rendering_method")? { Attribute::Enum(s) => ShadingSurfaceMethod::parse(s).ok_or_else(|| format!("SURFACE_STYLE_RENDERING.rendering_method: bad enum {s:?}")), o => Err(format!("SURFACE_STYLE_RENDERING.rendering_method: expected enum, got {o:?}")) })?, surface_colour: ColourRef::Colour(ColourId(u32::MAX)), },
         "SURFACE_STYLE_RENDERING_WITH_PROPERTIES" => UnitPart::SurfaceStyleRenderingWithProperties { properties: Vec::new(), },
@@ -39034,15 +43179,15 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "SURFACE_STYLE_SILHOUETTE" => UnitPart::SurfaceStyleSilhouette { style_of_silhouette: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), },
         "SURFACE_STYLE_USAGE" => UnitPart::SurfaceStyleUsage { side: (match req(&p.attributes, 0, "SURFACE_STYLE_USAGE.side")? { Attribute::Enum(s) => SurfaceSide::parse(s).ok_or_else(|| format!("SURFACE_STYLE_USAGE.side: bad enum {s:?}")), o => Err(format!("SURFACE_STYLE_USAGE.side: expected enum, got {o:?}")) })?, style: SurfaceSideStyleSelectRef::PreDefinedSurfaceSideStyle(PreDefinedSurfaceSideStyleId(u32::MAX)), },
         "SYMBOL_REPRESENTATION" => UnitPart::SymbolRepresentation,
-        "SYMBOL_STYLE" => UnitPart::SymbolStyle { name: (as_str(req(&p.attributes, 0, "SYMBOL_STYLE.name")?, "SYMBOL_STYLE.name"))?, style_of_symbol: SymbolStyleSelectRef::SymbolColour(SymbolColourId(u32::MAX)), },
+        "SYMBOL_STYLE" => UnitPart::SymbolStyle { name: (as_text(req(&p.attributes, 0, "SYMBOL_STYLE.name")?, "SYMBOL_STYLE.name", tt))?, style_of_symbol: SymbolStyleSelectRef::SymbolColour(SymbolColourId(u32::MAX)), },
         "TERMINATOR_SYMBOL" => UnitPart::TerminatorSymbol { annotated_curve: AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(u32::MAX)), },
         "TESSELLATED_GEOMETRIC_SET" => UnitPart::TessellatedGeometricSet { children: Vec::new(), },
         "TESSELLATED_ITEM" => UnitPart::TessellatedItem,
         "TESSELLATED_SHAPE_REPRESENTATION" => UnitPart::TessellatedShapeRepresentation,
         "TESSELLATED_STRUCTURED_ITEM" => UnitPart::TessellatedStructuredItem,
-        "TEXT_LITERAL" => UnitPart::TextLiteral { literal: (as_str(req(&p.attributes, 0, "TEXT_LITERAL.literal")?, "TEXT_LITERAL.literal"))?, placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)), alignment: (as_str(req(&p.attributes, 2, "TEXT_LITERAL.alignment")?, "TEXT_LITERAL.alignment"))?, path: (match req(&p.attributes, 3, "TEXT_LITERAL.path")? { Attribute::Enum(s) => TextPath::parse(s).ok_or_else(|| format!("TEXT_LITERAL.path: bad enum {s:?}")), o => Err(format!("TEXT_LITERAL.path: expected enum, got {o:?}")) })?, font: FontSelectRef::DraughtingPreDefinedTextFont(DraughtingPreDefinedTextFontId(u32::MAX)), },
-        "TEXT_STYLE" => UnitPart::TextStyle { name: (as_str(req(&p.attributes, 0, "TEXT_STYLE.name")?, "TEXT_STYLE.name"))?, character_appearance: CharacterStyleSelectRef::CharacterGlyphStyleOutline(CharacterGlyphStyleOutlineId(u32::MAX)), },
-        "TEXT_STYLE_WITH_BOX_CHARACTERISTICS" => UnitPart::TextStyleWithBoxCharacteristics { characteristics: (match req(&p.attributes, 0, "TEXT_STYLE_WITH_BOX_CHARACTERISTICS.characteristics")? { Attribute::List(l) => l.iter().map(|e| read_measure_value(e, "TEXT_STYLE_WITH_BOX_CHARACTERISTICS.characteristics")).collect::<Result<Vec<_>, String>>(), o => Err(format!("TEXT_STYLE_WITH_BOX_CHARACTERISTICS.characteristics: expected list, got {o:?}")) })?, },
+        "TEXT_LITERAL" => UnitPart::TextLiteral { literal: (as_text(req(&p.attributes, 0, "TEXT_LITERAL.literal")?, "TEXT_LITERAL.literal", tt))?, placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)), alignment: (as_text(req(&p.attributes, 2, "TEXT_LITERAL.alignment")?, "TEXT_LITERAL.alignment", tt))?, path: (match req(&p.attributes, 3, "TEXT_LITERAL.path")? { Attribute::Enum(s) => TextPath::parse(s).ok_or_else(|| format!("TEXT_LITERAL.path: bad enum {s:?}")), o => Err(format!("TEXT_LITERAL.path: expected enum, got {o:?}")) })?, font: FontSelectRef::DraughtingPreDefinedTextFont(DraughtingPreDefinedTextFontId(u32::MAX)), },
+        "TEXT_STYLE" => UnitPart::TextStyle { name: (as_text(req(&p.attributes, 0, "TEXT_STYLE.name")?, "TEXT_STYLE.name", tt))?, character_appearance: CharacterStyleSelectRef::CharacterGlyphStyleOutline(CharacterGlyphStyleOutlineId(u32::MAX)), },
+        "TEXT_STYLE_WITH_BOX_CHARACTERISTICS" => UnitPart::TextStyleWithBoxCharacteristics { characteristics: (match req(&p.attributes, 0, "TEXT_STYLE_WITH_BOX_CHARACTERISTICS.characteristics")? { Attribute::List(l) => l.iter().map(|e| read_measure_value(e, "TEXT_STYLE_WITH_BOX_CHARACTERISTICS.characteristics", tt)).collect::<Result<Vec<_>, String>>(), o => Err(format!("TEXT_STYLE_WITH_BOX_CHARACTERISTICS.characteristics: expected list, got {o:?}")) })?, },
         "TEXTURE_STYLE_SPECIFICATION" => UnitPart::TextureStyleSpecification,
         "TEXTURE_STYLE_TESSELLATION_SPECIFICATION" => UnitPart::TextureStyleTessellationSpecification,
         "TIME_UNIT" => UnitPart::TimeUnit,
@@ -39055,7 +43200,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE" => UnitPart::UnequallyDisposedGeometricTolerance { displacement: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
         "UNIFORM_CURVE" => UnitPart::UniformCurve,
         "UNIFORM_SURFACE" => UnitPart::UniformSurface,
-        "VALUE_REPRESENTATION_ITEM" => UnitPart::ValueRepresentationItem { value_component: (read_measure_value(req(&p.attributes, 0, "VALUE_REPRESENTATION_ITEM.value_component")?, "VALUE_REPRESENTATION_ITEM.value_component"))?, },
+        "VALUE_REPRESENTATION_ITEM" => UnitPart::ValueRepresentationItem { value_component: (read_measure_value(req(&p.attributes, 0, "VALUE_REPRESENTATION_ITEM.value_component")?, "VALUE_REPRESENTATION_ITEM.value_component", tt))?, },
         "VECTOR" => UnitPart::Vector { orientation: DirectionRef::Direction(DirectionId(u32::MAX)), magnitude: (as_real(req(&p.attributes, 1, "VECTOR.magnitude")?, "VECTOR.magnitude"))?, },
         "VERTEX" => UnitPart::Vertex,
         "VERTEX_POINT" => UnitPart::VertexPoint { vertex_geometry: PointRef::ApllPoint(ApllPointId(u32::MAX)), },
@@ -39069,7 +43214,12 @@ fn resolve_complex(
     aid: ComplexUnitId,
     parts: &[RawEntityPart],
     idmap: &IdMap,
+    dedup: &mut TextDedup,
 ) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
     let bag = &mut model.complex_unit_arena.items[aid.0 as usize];
     for (slot, p) in bag.parts.iter_mut().zip(parts.iter()) {
         match slot {
@@ -39906,14 +44056,15 @@ fn resolve_complex(
                                         if type_name == "DESCRIPTIVE_MEASURE" =>
                                     {
                                         SizeSelectRef::DescriptiveMeasure(
-                                            read_string_select(a, "CURVE_STYLE.curve_width")?.value,
+                                            read_string_select(a, "CURVE_STYLE.curve_width", tt)?
+                                                .value,
                                         )
                                     }
                                     Attribute::Typed { type_name, .. }
                                         if type_name == "POSITIVE_LENGTH_MEASURE" =>
                                     {
                                         SizeSelectRef::PositiveLengthMeasure(
-                                            read_measure_value(a, "CURVE_STYLE.curve_width")?
+                                            read_measure_value(a, "CURVE_STYLE.curve_width", tt)?
                                                 .value
                                                 .as_f64(),
                                         )
@@ -41198,14 +45349,15 @@ fn resolve_complex(
                                         if type_name == "DESCRIPTIVE_MEASURE" =>
                                     {
                                         SizeSelectRef::DescriptiveMeasure(
-                                            read_string_select(a, "POINT_STYLE.marker_size")?.value,
+                                            read_string_select(a, "POINT_STYLE.marker_size", tt)?
+                                                .value,
                                         )
                                     }
                                     Attribute::Typed { type_name, .. }
                                         if type_name == "POSITIVE_LENGTH_MEASURE" =>
                                     {
                                         SizeSelectRef::PositiveLengthMeasure(
-                                            read_measure_value(a, "POINT_STYLE.marker_size")?
+                                            read_measure_value(a, "POINT_STYLE.marker_size", tt)?
                                                 .value
                                                 .as_f64(),
                                         )
