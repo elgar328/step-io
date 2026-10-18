@@ -25,8 +25,8 @@
 //! [`Scene::model`].
 //!
 //! ```no_run
-//! let source = std::fs::read("part.step").unwrap();
-//! let (model, _report) = step_io::read(&source).unwrap();
+//! let file = std::fs::File::open("part.step").unwrap();
+//! let (model, _report) = step_io::read(file).unwrap();
 //! let scene = model.scene();
 //!
 //! // Assembly: definitions and their placed occurrences, top-down. Keep the

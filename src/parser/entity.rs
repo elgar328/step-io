@@ -190,8 +190,9 @@ pub enum Error {
         found: super::lexer::TokenKind,
         span: Span,
     },
-    /// Two entities share the same `#N` identifier.
-    DuplicateEntityId { id: u64, span: Span },
+    /// Two entities share the same `#N` identifier: the first repeat in the
+    /// file, at `line`, of the entity at `first_line`.
+    DuplicateEntityId { id: u64, line: u32, first_line: u32 },
     /// A required HEADER entity is missing.
     MissingHeaderEntity { name: &'static str },
     /// `FILE_SCHEMA` does not contain a list of strings.
@@ -201,12 +202,17 @@ pub enum Error {
     /// A parameter is nested deeper than [`MAX_NESTING_DEPTH`] — guards against a
     /// stack overflow on adversarially deep `(((…)))` / `A(B(C(…)))` input.
     ///
-    /// [`MAX_NESTING_DEPTH`]: super::p21::MAX_NESTING_DEPTH
+    /// [`MAX_NESTING_DEPTH`]: crate::parser::MAX_NESTING_DEPTH
     NestingTooDeep { span: Span },
     /// The file holds more than the reader can index: at most `u32::MAX`
     /// entities, and as many reference and text slots.
     /// `span` is the entity where reading stopped.
     TooLarge { span: Span },
+    /// Reading the input failed.
+    Io {
+        kind: std::io::ErrorKind,
+        message: String,
+    },
 }
 
 impl From<LexError> for Error {
@@ -234,10 +240,13 @@ impl std::fmt::Display for Error {
                 "parse error at line {}, column {}: expected {expected}, found {found:?}",
                 span.line, span.column,
             ),
-            Self::DuplicateEntityId { id, span } => write!(
+            Self::DuplicateEntityId {
+                id,
+                line,
+                first_line,
+            } => write!(
                 f,
-                "parse error at line {}, column {}: duplicate entity #{id}",
-                span.line, span.column,
+                "parse error at line {line}: duplicate entity #{id} (first at line {first_line})",
             ),
             Self::MissingHeaderEntity { name } => {
                 write!(f, "parse error: missing required HEADER entity {name}")
@@ -262,6 +271,7 @@ impl std::fmt::Display for Error {
                 "read error at line {}, column {}: the file is too large to read",
                 span.line, span.column,
             ),
+            Self::Io { message, .. } => write!(f, "read error: {message}"),
         }
     }
 }

@@ -17,6 +17,7 @@ exclude = ["schema/", ".github/"]
 
 [dependencies]
 logos = "0.16"
+memchr = "2"
 
 [lints.rust]
 # No step-io code uses `unsafe`.

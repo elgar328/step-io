@@ -1,36 +1,29 @@
 use std::borrow::Cow;
+use std::io::Read;
 
 use logos::Logos;
 
+use super::entity::Error;
+
 /// Position information for a lexed token.
 ///
-/// `start`/`end` are byte offsets into the source as given (the bytes of a
-/// file read with [`parse_bytes`](crate::parser::parse_bytes)). `line` is
-/// 1-indexed by `\n` occurrences. `column` is 1-indexed and counts characters,
-/// so a multibyte character advances it by one (in a file read as ISO 8859-1,
-/// every byte is a character).
+/// `start`/`end` are byte offsets into the input. `line` is 1-indexed by
+/// `\n` occurrences. `column` is 1-indexed and counts characters, so a
+/// multibyte character advances it by one (in an entity read as ISO 8859-1,
+/// every byte is a character; see [`parse`](crate::parser::parse)).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Span {
-    pub start: usize,
-    pub end: usize,
+    pub start: u64,
+    pub end: u64,
     pub line: u32,
     pub column: u32,
 }
 
-impl Span {
-    /// Return the slice of `source` that produced this token, for a source
-    /// given as text.
-    #[must_use]
-    pub fn slice<'a>(&self, source: &'a str) -> &'a str {
-        &source[self.start..self.end]
-    }
-}
-
 /// A lexed token carrying its kind and position.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Token {
-    pub kind: TokenKind,
-    pub span: Span,
+pub(crate) struct Token {
+    pub(crate) kind: TokenKind,
+    pub(crate) span: Span,
 }
 
 /// Lexical error categories.
@@ -82,55 +75,74 @@ impl std::fmt::Display for LexError {
 
 impl std::error::Error for LexError {}
 
-/// Tokenize a source string into a `Vec<Token>`, halting at the first
-/// lexical error. Callers that need streaming or custom recovery should
-/// construct a [`Lexer`] directly.
-///
-/// # Errors
-///
-/// Returns the first [`LexError`] encountered while scanning `source`.
-pub fn tokenize(source: &str) -> Result<Vec<Token>, LexError> {
-    Lexer::new(source).collect()
+/// Bytes asked of the input per read.
+const CHUNK: usize = 64 * 1024;
+
+/// Where the record splitter is: between tokens, or inside a string,
+/// comment or anchor (the only tokens that may hold a `;`).
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Split {
+    Plain,
+    Str,
+    Comment,
+    Anchor,
 }
 
-/// Stateful Part 21 lexer that tracks line/column positions and wraps
+/// Streaming Part 21 lexer that tracks line/column positions and wraps
 /// logos's byte-level lexer.
 ///
+/// The input is read a chunk at a time and cut into records, each running up
+/// to and including a `;` outside strings, comments and anchors: one entity
+/// with the blanks and comments before it. Tokens never cross a record's
+/// end, so each is lexed from the record alone and only the record being
+/// lexed (with the chunk after it) is held. A record reads as UTF-8 if its
+/// bytes are valid UTF-8, and as ISO 8859-1 otherwise.
+///
 /// `Lexer` owns its own single-token lookahead buffer (`peeked`) rather than
-/// relying on the standard `Peekable` adapter. This avoids the awkward
-/// `Option<&Result<Token, LexError>>` return type that `Peekable::peek`
-/// would produce and lets the parser stage use a simple `Option<&Token>`
-/// style API.
-pub struct Lexer<'src> {
-    source: &'src [u8],
-    /// The source as text when it is valid UTF-8; `None` reads it as
-    /// ISO 8859-1, one byte per character.
-    text: Option<&'src str>,
-    inner: logos::Lexer<'src, Raw>,
-    prev_end: usize,
+/// relying on the standard `Peekable` adapter, so the parser can borrow the
+/// peeked token.
+pub(crate) struct Lexer<R> {
+    input: R,
+    buf: Vec<u8>,
+    /// Input offset of `buf[0]`.
+    base: u64,
+    /// Next byte to lex.
+    pos: usize,
+    /// End of the record being lexed.
+    end: usize,
+    /// How far the splitter has looked for the next record's end, and what
+    /// it is inside of there.
+    scan: usize,
+    split: Split,
+    /// Watching for `<` (anchors) too, while rescanning a record that has
+    /// one.
+    careful: bool,
+    /// The input has no more bytes.
+    eof: bool,
+    /// The record being lexed reads as UTF-8 (else ISO 8859-1).
+    utf8: bool,
+    /// The record being lexed when it is UTF-8, as text: token text is cut
+    /// from it without checking the bytes again.
+    text: String,
     line: u32,
     column: u32,
-    peeked: Option<Result<Token, LexError>>,
+    peeked: Option<Result<Token, Error>>,
 }
 
-impl<'src> Lexer<'src> {
-    #[must_use]
-    pub fn new(source: &'src str) -> Self {
-        Self::with_text(source.as_bytes(), Some(source))
-    }
-
-    /// Lex a source given as bytes, read as UTF-8 if it is valid UTF-8 and as
-    /// ISO 8859-1 otherwise.
-    pub(crate) fn from_bytes(source: &'src [u8]) -> Self {
-        Self::with_text(source, std::str::from_utf8(source).ok())
-    }
-
-    fn with_text(source: &'src [u8], text: Option<&'src str>) -> Self {
+impl<R: Read> Lexer<R> {
+    pub(crate) fn new(input: R) -> Self {
         Self {
-            source,
-            text,
-            inner: Raw::lexer(source),
-            prev_end: 0,
+            input,
+            buf: Vec::new(),
+            base: 0,
+            pos: 0,
+            end: 0,
+            scan: 0,
+            split: Split::Plain,
+            careful: false,
+            eof: false,
+            utf8: true,
+            text: String::new(),
             line: 1,
             column: 1,
             peeked: None,
@@ -139,44 +151,218 @@ impl<'src> Lexer<'src> {
 
     /// Return a reference to the next token without consuming it. Repeated
     /// calls return the same token until [`Lexer::next`] is called.
-    pub fn peek(&mut self) -> Option<&Result<Token, LexError>> {
+    pub(crate) fn peek(&mut self) -> Option<&Result<Token, Error>> {
         if self.peeked.is_none() {
             self.peeked = self.next_from_inner();
         }
         self.peeked.as_ref()
     }
 
-    /// Walk through `source[start..end]` updating `line`/`column`: a column
-    /// per character, which in UTF-8 is a byte that does not continue one.
-    fn advance_over(&mut self, start: usize, end: usize) {
-        if start >= end {
-            return;
+    /// Read more of the input after the unread bytes, dropping the lexed
+    /// ones. `false` at the end of the input.
+    fn fill(&mut self) -> Result<bool, Error> {
+        if self.eof {
+            return Ok(false);
         }
-        let latin1 = self.text.is_none();
-        for &b in &self.source[start..end] {
-            if b == b'\n' {
-                self.line += 1;
-                self.column = 1;
-            } else if latin1 || b & 0xC0 != 0x80 {
-                self.column += 1;
+        if self.pos > 0 {
+            self.buf.drain(..self.pos);
+            self.base += self.pos as u64;
+            self.scan -= self.pos;
+            self.end -= self.pos;
+            self.pos = 0;
+        }
+        let n = self.buf.len();
+        self.buf.resize(n + CHUNK, 0);
+        loop {
+            match self.input.read(&mut self.buf[n..]) {
+                Ok(got) => {
+                    self.buf.truncate(n + got);
+                    self.eof = got == 0;
+                    return Ok(got > 0);
+                }
+                Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
+                Err(e) => {
+                    self.buf.truncate(n);
+                    self.eof = true;
+                    return Err(Error::Io {
+                        kind: e.kind(),
+                        message: e.to_string(),
+                    });
+                }
             }
         }
     }
 
-    /// The source text in `range`: borrowed when the source is UTF-8, decoded
-    /// from ISO 8859-1 otherwise.
-    fn text(&self, range: std::ops::Range<usize>) -> Cow<'src, str> {
-        match self.text {
-            Some(t) => Cow::Borrowed(t.get(range).unwrap_or_default()),
-            None => Cow::Owned(self.source[range].iter().map(|&b| char::from(b)).collect()),
+    /// The end of the next record, if the bytes read so far hold it: just
+    /// past the next `;` outside strings, comments and anchors. Stops short
+    /// of a byte whose meaning hangs on the one after it while that one is
+    /// still unread.
+    fn find_cut(&mut self) -> Option<usize> {
+        let cut = self.scan_for_cut()?;
+        // An anchor may hold a `;`. Anchors are rare, so a record is first
+        // cut without them, and cut again watching for them if it has a `<`.
+        if self.careful || memchr::memchr(b'<', &self.buf[self.pos..cut]).is_none() {
+            self.careful = false;
+            return Some(cut);
+        }
+        self.careful = true;
+        self.scan = self.pos;
+        self.split = Split::Plain;
+        let cut = self.scan_for_cut()?;
+        self.careful = false;
+        Some(cut)
+    }
+
+    /// [`find_cut`](Self::find_cut)'s scan, from where the last one stopped.
+    fn scan_for_cut(&mut self) -> Option<usize> {
+        let b = &self.buf;
+        let n = b.len();
+        let more = !self.eof;
+        let mut i = self.scan;
+        while i < n {
+            match self.split {
+                Split::Plain => {
+                    let hit = memchr::memchr3(b';', b'\'', b'/', &b[i..]);
+                    if self.careful {
+                        let run = hit.unwrap_or(n - i);
+                        if let Some(k) = memchr::memchr(b'<', &b[i..i + run]) {
+                            i += k + 1;
+                            self.split = Split::Anchor;
+                            continue;
+                        }
+                    }
+                    let Some(k) = hit else {
+                        i = n;
+                        break;
+                    };
+                    i += k;
+                    match (b[i], b.get(i + 1)) {
+                        (b';', _) => {
+                            self.scan = i + 1;
+                            return Some(i + 1);
+                        }
+                        (b'\'', _) => {
+                            i += 1;
+                            self.split = Split::Str;
+                        }
+                        (_, Some(b'*')) => {
+                            i += 2;
+                            self.split = Split::Comment;
+                        }
+                        (_, None) if more => break,
+                        _ => i += 1,
+                    }
+                }
+                // A quote ends the string unless another follows it.
+                Split::Str => match memchr::memchr(b'\'', &b[i..]) {
+                    None => i = n,
+                    Some(k) => {
+                        i += k;
+                        match b.get(i + 1) {
+                            Some(b'\'') => i += 2,
+                            None if more => break,
+                            _ => {
+                                i += 1;
+                                self.split = Split::Plain;
+                            }
+                        }
+                    }
+                },
+                Split::Comment => match memchr::memchr(b'*', &b[i..]) {
+                    None => i = n,
+                    Some(k) => {
+                        i += k;
+                        match b.get(i + 1) {
+                            Some(b'/') => {
+                                i += 2;
+                                self.split = Split::Plain;
+                            }
+                            None if more => break,
+                            _ => i += 1,
+                        }
+                    }
+                },
+                Split::Anchor => match memchr::memchr(b'>', &b[i..]) {
+                    None => i = n,
+                    Some(k) => {
+                        i += k + 1;
+                        self.split = Split::Plain;
+                    }
+                },
+            }
+        }
+        self.scan = i;
+        None
+    }
+
+    /// Make the next record the one being lexed; `false` at the end of the
+    /// input.
+    fn next_record(&mut self) -> Result<bool, Error> {
+        loop {
+            if let Some(cut) = self.find_cut() {
+                self.end = cut;
+                break;
+            }
+            if !self.fill()? {
+                self.end = self.buf.len();
+                self.scan = self.end;
+                break;
+            }
+        }
+        self.text.clear();
+        match std::str::from_utf8(&self.buf[self.pos..self.end]) {
+            Ok(t) => {
+                self.text.push_str(t);
+                self.utf8 = true;
+            }
+            Err(_) => self.utf8 = false,
+        }
+        Ok(self.end > self.pos)
+    }
+
+    /// Walk through `buf[start..end]` updating `line`/`column`: a column
+    /// per character, which in UTF-8 is a byte that does not continue one.
+    fn advance_over(&mut self, start: usize, end: usize) {
+        let latin1 = !self.utf8;
+        for &b in &self.buf[start..end] {
+            if b == b'\n' {
+                self.line = self.line.saturating_add(1);
+                self.column = 1;
+            } else if latin1 || b & 0xC0 != 0x80 {
+                self.column = self.column.saturating_add(1);
+            }
         }
     }
 
-    /// The source text in `range`, which the token rules keep to ASCII.
-    fn ascii(&self, range: std::ops::Range<usize>) -> &'src str {
-        match self.text {
-            Some(t) => t.get(range).unwrap_or_default(),
-            None => std::str::from_utf8(&self.source[range]).unwrap_or_default(),
+    /// The record start, for cutting token text from `text`.
+    fn record_start(&self) -> usize {
+        self.end - self.text.len()
+    }
+
+    /// The text of `buf[range]`: UTF-8 in a UTF-8 record, decoded from
+    /// ISO 8859-1 otherwise.
+    fn text(&self, range: std::ops::Range<usize>) -> Cow<'_, str> {
+        if self.utf8 {
+            let at = self.record_start();
+            Cow::Borrowed(
+                self.text
+                    .get(range.start - at..range.end - at)
+                    .unwrap_or_default(),
+            )
+        } else {
+            Cow::Owned(self.buf[range].iter().map(|&b| char::from(b)).collect())
+        }
+    }
+
+    /// The text of `buf[range]`, which the token rules keep to ASCII.
+    fn ascii(&self, range: std::ops::Range<usize>) -> &str {
+        if self.utf8 {
+            let at = self.record_start();
+            self.text
+                .get(range.start - at..range.end - at)
+                .unwrap_or_default()
+        } else {
+            std::str::from_utf8(&self.buf[range]).unwrap_or_default()
         }
     }
 
@@ -215,59 +401,73 @@ impl<'src> Lexer<'src> {
         })
     }
 
-    /// Pull the next token directly from logos, bypassing the peek buffer.
-    ///
-    /// This is the raw implementation used by both [`Lexer::next`] and
-    /// [`Lexer::peek`]; callers that want the buffered behavior should use
-    /// those public entry points instead.
-    fn next_from_inner(&mut self) -> Option<Result<Token, LexError>> {
-        let raw = self.inner.next()?;
-        if raw.is_err() && self.text.is_some() {
-            // An unmatched character spans all of its bytes, as when lexing text.
-            let rest = &self.source[self.inner.span().end..];
-            let more = rest.iter().take_while(|&&b| b & 0xC0 == 0x80).count();
-            self.inner.bump(more);
+    /// Lex the next token, bypassing the peek buffer.
+    fn next_from_inner(&mut self) -> Option<Result<Token, Error>> {
+        loop {
+            if self.pos < self.end {
+                let rec = &self.buf[self.pos..self.end];
+                let mut inner = Raw::lexer(rec);
+                if let Some(raw) = inner.next() {
+                    let mut r = inner.span();
+                    if raw.is_err() && self.utf8 {
+                        // An unmatched character spans all of its bytes.
+                        r.end += rec[r.end..]
+                            .iter()
+                            .take_while(|&&b| b & 0xC0 == 0x80)
+                            .count();
+                    }
+                    return Some(self.token(raw, self.pos + r.start..self.pos + r.end));
+                }
+                // Only blanks and comments are left in the record.
+                self.advance_over(self.pos, self.end);
+                self.pos = self.end;
+            }
+            match self.next_record() {
+                Ok(true) => {}
+                Ok(false) => return None,
+                Err(e) => return Some(Err(e)),
+            }
         }
-        let range = self.inner.span();
+    }
 
-        // Whitespace and comments skipped since the previous token.
-        self.advance_over(self.prev_end, range.start);
-
+    /// The token (or lexical error) a rule match at `buf[range]` makes, after
+    /// the blanks and comments before it.
+    fn token(
+        &mut self,
+        raw: Result<Raw, ()>,
+        range: std::ops::Range<usize>,
+    ) -> Result<Token, Error> {
+        self.advance_over(self.pos, range.start);
         // Position recorded on the span is the token's *start*.
-        let token_line = self.line;
-        let token_column = self.column;
-
-        // Walk through the token body so that the next iteration begins at
-        // the correct line/column. This is important for multiline string
-        // literals which may contain embedded newlines.
+        let (line, column) = (self.line, self.column);
+        // Walk through the token body so that the next token begins at the
+        // correct line/column (string literals may span lines).
         self.advance_over(range.start, range.end);
-        self.prev_end = range.end;
-
+        self.pos = range.end;
         let span = Span {
-            start: range.start,
-            end: range.end,
-            line: token_line,
-            column: token_column,
+            start: self.base + range.start as u64,
+            end: self.base + range.end as u64,
+            line,
+            column,
         };
-
         // A number out of range / non-finite is an InvalidNumber; a character
         // no rule matches, an UnexpectedCharacter.
-        let error = match raw.ok().map(|raw| self.token_kind(raw, range)) {
-            Some(Some(kind)) => return Some(Ok(Token { kind, span })),
+        let kind = match raw.ok().map(|raw| self.token_kind(raw, range.clone())) {
+            Some(Some(kind)) => return Ok(Token { kind, span }),
             Some(None) => LexErrorKind::InvalidNumber,
             None => LexErrorKind::UnexpectedCharacter,
         };
-        let snippet = truncate_to_chars(&self.text(span.start..span.end), 40);
-        Some(Err(LexError {
-            kind: error,
+        let snippet = truncate_to_chars(&self.text(range), 40);
+        Err(Error::Lex(LexError {
+            kind,
             span,
             snippet,
         }))
     }
 }
 
-impl Iterator for Lexer<'_> {
-    type Item = Result<Token, LexError>;
+impl<R: Read> Iterator for Lexer<R> {
+    type Item = Result<Token, Error>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(buffered) = self.peeked.take() {
@@ -391,16 +591,33 @@ enum Raw {
 mod tests {
     use super::*;
 
+    /// Lex `src` given as text.
+    fn lexer(src: &str) -> Lexer<&[u8]> {
+        Lexer::new(src.as_bytes())
+    }
+
+    /// Every token of `src`, or its first lexical error.
+    fn tokenize(src: &str) -> Result<Vec<Token>, LexError> {
+        lexer(src)
+            .map(|t| {
+                t.map_err(|e| match e {
+                    Error::Lex(e) => e,
+                    other => panic!("{other:?}"),
+                })
+            })
+            .collect()
+    }
+
     fn first_token(src: &str) -> TokenKind {
-        Lexer::new(src)
+        lexer(src)
             .next()
             .expect("expected at least one token")
             .expect("expected Ok token")
             .kind
     }
 
-    fn kinds(src: &str) -> impl Iterator<Item = Result<TokenKind, LexError>> + '_ {
-        Lexer::new(src).map(|t| t.map(|t| t.kind))
+    fn kinds(src: &str) -> impl Iterator<Item = Result<TokenKind, Error>> + '_ {
+        lexer(src).map(|t| t.map(|t| t.kind))
     }
 
     #[test]
@@ -662,7 +879,7 @@ mod tests {
     // --- Lexer wrapper (Span / line / column tracking) ---
 
     fn collect(src: &str) -> Vec<Token> {
-        Lexer::new(src)
+        lexer(src)
             .collect::<Result<Vec<_>, _>>()
             .expect("expected all tokens to lex successfully")
     }
@@ -737,21 +954,23 @@ mod tests {
     }
 
     #[test]
-    fn span_slice_roundtrip_matches_source() {
+    fn spans_cover_the_source_bytes() {
+        // No blanks between the tokens, so their spans tile the source.
         let source = "#1=LINE('',#2,#3);";
         let tokens = collect(source);
+        let mut at = 0;
         for tok in &tokens {
-            let slice = tok.span.slice(source);
-            // Slices must line up with byte offsets and decode as valid UTF-8.
-            assert_eq!(&source[tok.span.start..tok.span.end], slice);
+            assert_eq!(tok.span.start, at);
+            at = tok.span.end;
         }
+        assert_eq!(at, source.len() as u64);
     }
 
     // --- peek() ---
 
     #[test]
     fn peek_returns_same_token_twice() {
-        let mut lex = Lexer::new("HEADER ; DATA");
+        let mut lex = lexer("HEADER ; DATA");
         let first = lex.peek().cloned();
         let second = lex.peek().cloned();
         assert_eq!(first, second);
@@ -766,7 +985,7 @@ mod tests {
 
     #[test]
     fn peek_then_next_returns_buffered_token() {
-        let mut lex = Lexer::new("HEADER ; DATA");
+        let mut lex = lexer("HEADER ; DATA");
         let peeked = lex.peek().cloned();
         let next = lex.next();
         assert_eq!(peeked, next);
@@ -774,7 +993,7 @@ mod tests {
 
     #[test]
     fn peek_does_not_consume_token() {
-        let mut lex = Lexer::new("HEADER ; DATA");
+        let mut lex = lexer("HEADER ; DATA");
         let _ = lex.peek();
         // next() should yield the same token that was peeked, and then a
         // subsequent next() should yield the *following* token.
@@ -804,7 +1023,7 @@ mod tests {
 
     #[test]
     fn peek_at_end_returns_none() {
-        let mut lex = Lexer::new("HEADER");
+        let mut lex = lexer("HEADER");
         let _ = lex.next();
         assert!(lex.peek().is_none());
         assert!(lex.next().is_none());
@@ -865,7 +1084,7 @@ mod tests {
     }
 
     fn collect_bytes(src: &[u8]) -> Vec<Token> {
-        Lexer::from_bytes(src)
+        Lexer::new(src)
             .collect::<Result<Vec<_>, _>>()
             .expect("lexes")
     }
@@ -890,13 +1109,119 @@ mod tests {
 
     #[test]
     fn unexpected_multibyte_character_is_one_error() {
-        let mut lexer = Lexer::new("1 é 2");
+        let mut lexer = lexer("1 é 2");
         assert!(lexer.next().is_some_and(|t| t.is_ok()));
-        let err = lexer.next().unwrap().expect_err("é is not a token");
+        let Error::Lex(err) = lexer.next().unwrap().expect_err("é is not a token") else {
+            panic!("not a lexical error");
+        };
         assert_eq!((err.span.start, err.span.end, err.span.column), (2, 4, 3));
         assert_eq!(err.snippet, "é");
         let two = lexer.next().unwrap().expect("lexing goes on after it");
         assert_eq!((two.kind, two.span.column), (TokenKind::Integer(2), 5));
+    }
+
+    /// Hands out at most `step` bytes per read, and every other read is
+    /// interrupted.
+    struct Trickle<'a> {
+        src: &'a [u8],
+        step: usize,
+        interrupt: bool,
+    }
+
+    impl Read for Trickle<'_> {
+        fn read(&mut self, out: &mut [u8]) -> std::io::Result<usize> {
+            self.interrupt = !self.interrupt;
+            if self.interrupt {
+                return Err(std::io::ErrorKind::Interrupted.into());
+            }
+            let n = self.step.min(out.len()).min(self.src.len());
+            out[..n].copy_from_slice(&self.src[..n]);
+            self.src = &self.src[n..];
+            Ok(n)
+        }
+    }
+
+    /// The spans the lexer gives, error or not.
+    fn spans<R: Read>(lexer: Lexer<R>) -> Vec<(u64, u64, u32, u32)> {
+        lexer
+            .map(|t| {
+                let span = match t {
+                    Ok(t) => t.span,
+                    Err(Error::Lex(e)) => e.span,
+                    Err(e) => panic!("{e:?}"),
+                };
+                (span.start, span.end, span.line, span.column)
+            })
+            .collect()
+    }
+
+    /// Semicolons inside strings (also after a doubled quote), comments and
+    /// anchors do not end a record, and unclosed ones lex as they would in
+    /// one piece; so do inputs handed over a few bytes at a time.
+    #[test]
+    fn records_lex_as_the_whole_input_would() {
+        let sources: [&[u8]; 6] = [
+            b"HEADER;FILE_DESCRIPTION(('a;b','it''s;'),'2;1');\n/* c;o*m/ment; **/#1=X(<a;b>,'x''',.T.,\n1.5E+3,\"0F\",$,*,'\xC3\xA9;');#2=Y('');ENDSEC;",
+            b"#1=X('abc;);#2=Y(1);",
+            b"#1=X(1);/* open; comment",
+            b"#1=X(<open;anchor);#2=Y(1);",
+            b"#1=X('ab'';c');x/y;*/;",
+            b"END-ISO-10303-21;",
+        ];
+        for src in sources {
+            // The rules matched over the whole input in one go.
+            let mut whole = Raw::lexer(src);
+            let mut want = Vec::new();
+            while whole.next().is_some() {
+                want.push((whole.span().start as u64, whole.span().end as u64));
+            }
+            let got = spans(Lexer::new(src));
+            let got_ranges: Vec<_> = got.iter().map(|&(s, e, _, _)| (s, e)).collect();
+            assert_eq!(got_ranges, want, "{:?}", String::from_utf8_lossy(src));
+            for step in 1..=7 {
+                let trickle = Trickle {
+                    src,
+                    step,
+                    interrupt: false,
+                };
+                assert_eq!(spans(Lexer::new(trickle)), got, "step {step}");
+            }
+        }
+    }
+
+    /// Each record reads as UTF-8 when it is valid UTF-8 and as ISO 8859-1
+    /// otherwise, whatever the rest of the input is.
+    #[test]
+    fn each_record_picks_its_encoding() {
+        let tokens = collect_bytes(b"#1=X('\xE9');\n#2=X('\xC3\xA9');");
+        let strings: Vec<_> = tokens
+            .iter()
+            .filter_map(|t| match &t.kind {
+                TokenKind::String(s) => Some(s.as_str()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(strings, ["\u{E9}", "\u{E9}"]);
+    }
+
+    /// A failing input stops the lexer with `Error::Io`.
+    #[test]
+    fn input_failure_is_an_io_error() {
+        struct Broken;
+        impl Read for Broken {
+            fn read(&mut self, _: &mut [u8]) -> std::io::Result<usize> {
+                Err(std::io::Error::other("disk gone"))
+            }
+        }
+        let mut lexer = Lexer::new(Broken);
+        assert_eq!(
+            lexer.next(),
+            Some(Err(Error::Io {
+                kind: std::io::ErrorKind::Other,
+                message: "disk gone".into()
+            }))
+        );
+        assert_eq!(lexer.next(), None);
     }
 
     #[test]

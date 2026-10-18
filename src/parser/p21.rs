@@ -1,32 +1,27 @@
 use std::collections::BTreeMap;
+use std::io::Read;
 
 use super::entity::{Attribute, Error, Graph, ParseWarning, RawEntity, RawEntityPart};
 use super::lexer::{Lexer, Span, Token, TokenKind};
 use super::schema::SchemaId;
 
-/// Convenience function: parse a complete Part 21 source into an [`Graph`].
+/// Parse a Part 21 file into a [`Graph`], reading `input` a chunk at a time
+/// (no need to wrap it in a `BufReader`; pass `&mut r` to keep `r`).
 ///
-/// # Errors
-///
-/// Returns the first [`Error`] encountered.
-pub fn parse(source: &str) -> Result<Graph, Error> {
-    Parser::new(source).parse()
-}
-
-/// Parse a Part 21 source given as raw bytes. A source that is valid UTF-8
-/// reads as UTF-8; any other reads as ISO 8859-1 (Latin-1), which
-/// ISO 10303-21 §3.2 defines as the file format's default encoding.
+/// Each entity — with the blanks and comments before it — reads as UTF-8
+/// if its bytes are valid UTF-8, and as ISO 8859-1 (Latin-1) otherwise,
+/// which ISO 10303-21 §3.2 defines as the file format's default encoding.
 /// Real-world STEP files frequently embed raw non-ASCII bytes (Cyrillic,
 /// Latin-1) directly instead of using the spec's `\X\` / `\X2\` / `\X4\`
 /// escapes — those bytes decode losslessly under the fallback (every byte
-/// 0x00..0xFF maps 1:1 to U+0000..U+00FF). The bytes are read in place; only
-/// the strings are decoded.
+/// 0x00..0xFF maps 1:1 to U+0000..U+00FF).
 ///
 /// # Errors
 ///
-/// Returns the first [`Error`] encountered by the underlying parser.
-pub fn parse_bytes(bytes: &[u8]) -> Result<Graph, Error> {
-    Parser::from_bytes(bytes).parse()
+/// Returns the first [`Error`] encountered, or [`Error::Io`] if `input`
+/// fails.
+pub fn parse(input: impl Read) -> Result<Graph, Error> {
+    Parser::new(input).parse()
 }
 
 /// Everything in a Part 21 file before its DATA section's entities.
@@ -37,10 +32,6 @@ pub(crate) struct Prelude {
     pub(crate) anchors: Vec<(String, u64)>,
 }
 
-/// Recursive-descent parser for ISO 10303-21 (Part 21) files.
-///
-/// Consumes `self` on [`Parser::parse`] because the underlying [`Lexer`] is
-/// a one-pass iterator and cannot be rewound.
 /// Maximum parameter nesting depth. In practice STEP parameters nest only a few
 /// levels (nested LIST OF LIST, typed-wrapped measures); this bound of 64 is a
 /// large margin over any realistic file yet small enough that the
@@ -50,8 +41,12 @@ pub(crate) struct Prelude {
 /// stack-overflow abort.
 pub const MAX_NESTING_DEPTH: usize = 64;
 
-pub struct Parser<'src> {
-    lexer: Lexer<'src>,
+/// Recursive-descent parser for ISO 10303-21 (Part 21) files.
+///
+/// Consumes `self` on [`Parser::parse`] because the underlying [`Lexer`] is
+/// a one-pass reader and cannot be rewound.
+pub(crate) struct Parser<R> {
+    lexer: Lexer<R>,
     warnings: Vec<ParseWarning>,
     /// Current parameter nesting depth (guards against stack overflow).
     depth: usize,
@@ -60,20 +55,11 @@ pub struct Parser<'src> {
     lists: Vec<Vec<Attribute>>,
 }
 
-impl<'src> Parser<'src> {
-    #[must_use]
-    pub fn new(source: &'src str) -> Self {
-        Self::with_lexer(Lexer::new(source))
-    }
-
-    /// Parse a source given as bytes, read as [`parse_bytes`] describes.
-    pub(crate) fn from_bytes(source: &'src [u8]) -> Self {
-        Self::with_lexer(Lexer::from_bytes(source))
-    }
-
-    fn with_lexer(lexer: Lexer<'src>) -> Self {
+impl<R: Read> Parser<R> {
+    /// Parse `input`, read as [`parse`] describes.
+    pub(crate) fn new(input: R) -> Self {
         Self {
-            lexer,
+            lexer: Lexer::new(input),
             warnings: Vec::new(),
             depth: 0,
             lists: Vec::new(),
@@ -85,7 +71,7 @@ impl<'src> Parser<'src> {
     /// # Errors
     ///
     /// Returns a [`Error`] on the first structural or lexical problem.
-    pub fn parse(self) -> Result<Graph, Error> {
+    pub(crate) fn parse(self) -> Result<Graph, Error> {
         let mut this = self;
         this.parse_file()
     }
@@ -107,10 +93,11 @@ impl<'src> Parser<'src> {
         // A duplicate id wins over any error after it, as if the parse had
         // stopped there: report the first repeat in the file.
         entities.sort_unstable_by_key(|e| (e.id(), e.span().start));
-        if let Some(e) = first_duplicate(&entities) {
+        if let Some((first, repeat)) = first_duplicate(&entities) {
             return Err(Error::DuplicateEntityId {
-                id: e.id(),
-                span: e.span(),
+                id: repeat.id(),
+                line: repeat.span().line,
+                first_line: first.span().line,
             });
         }
         let warnings = end?;
@@ -647,7 +634,7 @@ impl<'src> Parser<'src> {
     fn peek_kind(&mut self) -> Result<&TokenKind, Error> {
         match self.lexer.peek() {
             Some(Ok(tok)) => Ok(&tok.kind),
-            Some(Err(err)) => Err(Error::Lex(err.clone())),
+            Some(Err(err)) => Err(err.clone()),
             None => Err(Error::UnexpectedEof {
                 expected: "any token",
             }),
@@ -708,13 +695,13 @@ impl<'src> Parser<'src> {
 }
 
 /// In entities sorted by `(id, span.start)`, the repeat of an id that comes
-/// first in the file.
-fn first_duplicate(sorted: &[RawEntity]) -> Option<&RawEntity> {
+/// first in the file, with the entity it repeats.
+fn first_duplicate(sorted: &[RawEntity]) -> Option<(&RawEntity, &RawEntity)> {
     sorted
         .windows(2)
         .filter(|w| w[0].id() == w[1].id())
-        .map(|w| &w[1])
-        .min_by_key(|e| e.span().start)
+        .map(|w| (&w[0], &w[1]))
+        .min_by_key(|(_, e)| e.span().start)
 }
 
 #[cfg(test)]
@@ -723,13 +710,13 @@ mod tests {
 
     #[test]
     fn parse_empty_input_errors() {
-        let err = parse("").unwrap_err();
+        let err = parse("".as_bytes()).unwrap_err();
         assert!(matches!(err, Error::UnexpectedEof { .. }));
     }
 
     #[test]
     fn parser_next_token_returns_eof_on_empty() {
-        let mut parser = Parser::new("");
+        let mut parser = Parser::new("".as_bytes());
         assert!(matches!(
             parser.next_token(),
             Err(Error::UnexpectedEof { .. })
@@ -738,7 +725,7 @@ mod tests {
 
     #[test]
     fn parser_peek_kind_returns_eof_on_empty() {
-        let mut parser = Parser::new("");
+        let mut parser = Parser::new("".as_bytes());
         assert!(matches!(
             parser.peek_kind(),
             Err(Error::UnexpectedEof { .. })
@@ -747,13 +734,13 @@ mod tests {
 
     #[test]
     fn parser_expect_semicolon_ok() {
-        let mut parser = Parser::new(";");
+        let mut parser = Parser::new(";".as_bytes());
         assert!(parser.expect_semicolon().is_ok());
     }
 
     #[test]
     fn parser_expect_semicolon_wrong_token() {
-        let mut parser = Parser::new("(");
+        let mut parser = Parser::new("(".as_bytes());
         let err = parser.expect_semicolon().unwrap_err();
         assert!(matches!(err, Error::UnexpectedToken { expected: ";", .. }));
     }
@@ -762,7 +749,7 @@ mod tests {
 
     /// Parse a single parameter by feeding it directly to `parse_parameter`.
     fn parse_single_attr(param_text: &str) -> Attribute {
-        let mut parser = Parser::new(param_text);
+        let mut parser = Parser::new(param_text.as_bytes());
         parser
             .parse_parameter()
             .unwrap_or_else(|e| panic!("parse_parameter failed on {param_text:?}: {e}"))
@@ -921,7 +908,7 @@ mod tests {
     // --- Entity instance parsing ---
 
     fn parse_entity(src: &str) -> RawEntity {
-        let mut parser = Parser::new(src);
+        let mut parser = Parser::new(src.as_bytes());
         parser
             .parse_entity_instance()
             .unwrap_or_else(|e| panic!("parse_entity_instance failed: {e}"))
@@ -1031,7 +1018,7 @@ mod tests {
 
     #[test]
     fn parse_empty_complex_entity_errors() {
-        let mut parser = Parser::new("#1 = ( );");
+        let mut parser = Parser::new("#1 = ( );".as_bytes());
         let err = parser.parse_entity_instance().unwrap_err();
         assert!(matches!(
             err,
@@ -1044,7 +1031,7 @@ mod tests {
 
     #[test]
     fn parse_entity_missing_semicolon_errors() {
-        let mut parser = Parser::new("#1 = LINE('', #2)");
+        let mut parser = Parser::new("#1 = LINE('', #2)".as_bytes());
         let err = parser.parse_entity_instance().unwrap_err();
         assert!(matches!(err, Error::UnexpectedEof { .. }));
     }
@@ -1072,7 +1059,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_bytes_accepts_latin1_byte_via_fallback() {
+    fn parse_accepts_latin1_byte_via_fallback() {
         // 0xC0 alone is not valid UTF-8 (it is a leading byte for a 2-byte
         // sequence). Latin-1 maps it to U+00C0 ('À').
         let buf = minimal_step_with_string_attr(&[0xC0]);
@@ -1080,7 +1067,7 @@ mod tests {
             std::str::from_utf8(&buf).is_err(),
             "fixture must be invalid UTF-8 to exercise the fallback"
         );
-        let graph = parse_bytes(&buf).expect("parse_bytes must accept Latin-1 fallback");
+        let graph = parse(&buf[..]).expect("parse must accept Latin-1 fallback");
         // FILE_DESCRIPTION is the first header entity; its first attribute
         // is a list of strings. The second string of that list carries our
         // injected byte.
@@ -1102,12 +1089,12 @@ mod tests {
     }
 
     #[test]
-    fn parse_bytes_passes_through_valid_utf8() {
+    fn parse_passes_through_valid_utf8() {
         // Valid UTF-8 'À' (0xC3 0x80) — the UTF-8 path is taken and the
         // character decodes identically.
         let buf = minimal_step_with_string_attr("À".as_bytes());
         assert!(std::str::from_utf8(&buf).is_ok());
-        let graph = parse_bytes(&buf).expect("valid UTF-8 must parse");
+        let graph = parse(&buf[..]).expect("valid UTF-8 must parse");
         let RawEntity::Simple { attributes, .. } = &graph.header[0] else {
             panic!();
         };
@@ -1140,7 +1127,7 @@ mod tests {
                    #1=CIRCULAR_AREA('testarea',#123,2.);\n\
                    ENDSEC;\n\
                    END-ISO-10303-21;\n";
-        let graph = parse(src).expect("ed.3 ANCHOR/REFERENCE must be tolerated");
+        let graph = parse(src.as_bytes()).expect("ed.3 ANCHOR/REFERENCE must be tolerated");
         assert_eq!(graph.entities.len(), 1);
         // REFERENCE recorded: #123 -> external anchor string.
         assert_eq!(
@@ -1173,7 +1160,7 @@ mod tests {
                    #1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
                    ENDSEC;\n\
                    END-ISO-10303-21;\n";
-        let graph = parse(src).expect("ed.3 SIGNATURE must be tolerated");
+        let graph = parse(src.as_bytes()).expect("ed.3 SIGNATURE must be tolerated");
         assert_eq!(graph.entities.len(), 1);
         assert!(
             graph
@@ -1195,7 +1182,7 @@ mod tests {
                    DATA;\n\
                    ENDSEC;\n\
                    END-ISO-10303-21;\n";
-        let graph = parse(src).expect("missing `;` must be tolerated");
+        let graph = parse(src.as_bytes()).expect("missing `;` must be tolerated");
         assert!(graph.warnings.iter().any(|w| matches!(
             w,
             ParseWarning::MissingHeaderSemicolon { entity_name, .. }
@@ -1219,7 +1206,7 @@ mod tests {
                    #4 = CARTESIAN_POINT('',(0.,0.,0.));\n\
                    ENDSEC;\n\
                    END-ISO-10303-21;\n";
-        let graph = parse(src).expect("empty attribute slot must be tolerated");
+        let graph = parse(src.as_bytes()).expect("empty attribute slot must be tolerated");
         // The fifth attribute of #1 is the omitted slot, normalised to Unset.
         let RawEntity::Simple { attributes, .. } = &graph.entities[&1] else {
             panic!("expected Simple entity");
@@ -1284,7 +1271,7 @@ mod tests {
     fn strings_are_decoded_in_header_and_data() {
         let src =
             escaped_strings_file("#1 = PRODUCT('\\X2\\D55CAE00\\X0\\ \\X\\B1 it''s','',$,());\n");
-        let graph = parse(&src).expect("parse");
+        let graph = parse(src.as_bytes()).expect("parse");
         assert_eq!(header_string(&graph, "FILE_DESCRIPTION"), "Volumenkörper");
         assert_eq!(
             header_string(&graph, "FILE_NAME"),
@@ -1297,7 +1284,7 @@ mod tests {
     #[test]
     fn undecodable_escapes_are_kept_with_a_warning() {
         let src = escaped_strings_file("#1 = PRODUCT('NAUO8\\Redondeo1','',$,());\n");
-        let graph = parse(&src).expect("parse");
+        let graph = parse(src.as_bytes()).expect("parse");
         assert_eq!(string_attr(&graph, 1), r"NAUO8\Redondeo1");
         assert!(matches!(
             graph.warnings[..],
@@ -1309,7 +1296,7 @@ mod tests {
     fn lower_case_hex_is_decoded_with_a_warning() {
         let src =
             escaped_strings_file("#1 = PRODUCT('\\X2\\c5d0\\X0\\\\X2\\c5d0\\X0\\','',$,());\n");
-        let graph = parse(&src).expect("parse");
+        let graph = parse(src.as_bytes()).expect("parse");
         assert_eq!(string_attr(&graph, 1), "에에");
         // One warning per string, however many runs it holds.
         assert!(matches!(

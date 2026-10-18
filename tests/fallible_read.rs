@@ -302,15 +302,23 @@ fn duplicate_ids_are_reported_at_the_first_repeat() {
     for footer in [FOOTER, "ENDSEC;\n", "#9=CARTESIAN_POINT(\n"] {
         let src = format!("{HEADER}{body}{footer}");
         match read(src.as_bytes()) {
-            Err(step_io::Error::DuplicateEntityId { id, span }) => {
+            Err(step_io::Error::DuplicateEntityId {
+                id,
+                line,
+                first_line,
+            }) => {
                 // The body starts on line 8.
-                assert_eq!((id, span.line), (5, 10), "footer {footer:?}");
+                assert_eq!((id, line, first_line), (5, 10, 8), "footer {footer:?}");
             }
             other => panic!("footer {footer:?}: {other:?}"),
         }
         assert!(matches!(
-            step_io::parser::parse(&src),
-            Err(step_io::Error::DuplicateEntityId { id: 5, .. })
+            step_io::parser::parse(src.as_bytes()),
+            Err(step_io::Error::DuplicateEntityId {
+                id: 5,
+                line: 10,
+                first_line: 8
+            })
         ));
     }
     // A repeat after the point where the file breaks is never reached.

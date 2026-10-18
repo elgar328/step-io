@@ -78,22 +78,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   changes.
 - Documentation and the crate description present step-io as STEP I/O for
   3D CAD applications rather than for CAD kernels.
+- `read()` and `parser::parse()` take any `std::io::Read` — a `File`, a
+  `&[u8]`, … — instead of the whole file as bytes, and read it a chunk at a
+  time, so the file is never held in memory: pass `File::open(path)?`
+  instead of `&std::fs::read(path)?`, and `text.as_bytes()` for text already
+  in memory. A failing input is the new `Error::Io`.
 - `read()` streams the file instead of holding all of it as raw entities
   until the model is built, and takes less than half as long: a 110 MB file
   of one million entities now reads in 0.7 s instead of 1.7 s, and the
-  process peaks at about 240 MB of memory instead of 760 MB, the file's own
-  110 MB included (with the smaller model described below). It reads the
-  same entities and values as before.
-- A file that is not valid UTF-8, and so reads as ISO 8859-1, is read in
-  place instead of from a decoded copy of the whole file, saving at least
-  the size of the file in memory: about 130 MB of heap for a 63 MB file. Its
-  strings decode as before. The `Span` offsets of such a file count the bytes
-  of the file, not of the decoded copy; lines and columns are unchanged.
-- `TokenKind` no longer implements `logos::Logos`; lex with `Lexer` or
-  `tokenize()`, which still take `&str`.
+  process peaks at about 130 MB of memory instead of 760 MB (with the
+  smaller model described below). It reads the same entities and values as
+  before.
+- Each entity, with the blanks and comments before it, reads as UTF-8 when
+  its bytes are valid UTF-8 and as ISO 8859-1 otherwise; the whole file used
+  to read one way or the other. A UTF-8 file with one broken character now
+  reads the rest of its text correctly instead of reading all of it as
+  ISO 8859-1.
+- The `parser` module keeps what reading a raw file needs: `parse`, `Graph`
+  and its entity types, `Error`, `LexError`, `LexErrorKind`, the `Span` and
+  `TokenKind` that errors carry, `MAX_NESTING_DEPTH` and the schema types.
+  `parse_bytes` (use `parse`), `Parser`, `Lexer`, `tokenize`, `Token`,
+  `Span::slice` and the `entity`, `lexer`, `p21` and `schema` submodules are
+  no longer public, and `TokenKind` no longer implements `logos::Logos`.
+- `Span::start` and `Span::end` are `u64`, so offsets past 4 GB stay exact on
+  32-bit targets.
+- `Error::DuplicateEntityId` gives the `line` of the repeat and the
+  `first_line` of the entity it repeats instead of a `span`.
 - Section markers (`HEADER`, `DATA`, `ENDSEC`, …) ignore ASCII case only, so
   `ENDſEC` no longer reads as `ENDSEC`.
-- The `Graph` that `parse()` and `parse_bytes()` return takes about 40% less
+- The `Graph` that `parse()` returns takes about 40% less
   memory, 300 MB instead of 480 MB for the same file, as its attribute lists
   are allocated at their exact length.
 - `Report::norm` lists the notes in the order of the entities in the file;

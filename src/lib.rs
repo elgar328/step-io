@@ -61,8 +61,8 @@
 //! ```no_run
 //! use step_io::scene::geometry::SurfaceKind;
 //!
-//! let source = std::fs::read("part.step").unwrap();
-//! let (model, report) = step_io::read(&source).unwrap();
+//! let file = std::fs::File::open("part.step").unwrap();
+//! let (model, report) = step_io::read(file).unwrap();
 //! // What the parser repaired on the way in; the rest of `report` accounts
 //! // for what was kept, normalized, or dropped.
 //! for w in &report.parse_warnings {

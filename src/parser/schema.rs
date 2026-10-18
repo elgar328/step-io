@@ -97,7 +97,7 @@ pub enum Stage {
 /// Structured identity of a file's `FILE_SCHEMA`: AP family, edition, and
 /// stage, plus the raw text.
 ///
-/// Derived by [`identify_schema`] from the `FILE_SCHEMA` descriptor — the
+/// Derived from the `FILE_SCHEMA` descriptor when a file is read — the
 /// schema-version token `{ ... 10303 <part> <version> ... }` is parsed
 /// generically (whitespace/arity tolerant) and mapped through the
 /// per-family catalog; an unrecognised name falls back to
@@ -170,7 +170,7 @@ impl std::fmt::Display for SchemaId {
 /// (`internal/SCHEMA_IDENTIFIER_CATALOG.md`); names without a usable token
 /// fall back to family recognition. The raw text is always preserved.
 #[must_use]
-pub fn identify_schema(file_schema: &[String]) -> SchemaId {
+pub(crate) fn identify_schema(file_schema: &[String]) -> SchemaId {
     let Some(raw) = NonEmptyStringList::try_from_vec(file_schema.to_vec()) else {
         // Spec violation: FILE_SCHEMA is LIST[1:?]. Lenient recovery.
         return SchemaId::default();

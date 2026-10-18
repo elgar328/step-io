@@ -38,7 +38,12 @@ pub(crate) struct Row {
     pub(crate) refs: u32,
     /// Position in the file (synthetic entities follow the input ones).
     pub(crate) seq: u32,
+    /// The line the entity starts on, for a duplicate id error (0 for
+    /// synthetic entities); it fills the row's alignment padding.
+    pub(crate) line: u32,
 }
+
+const _: () = assert!(std::mem::size_of::<Row>() == 32);
 
 /// Sort rows into id order, ties in file order.
 pub(crate) fn sort_rows(rows: &mut [Row]) {
@@ -46,13 +51,13 @@ pub(crate) fn sort_rows(rows: &mut [Row]) {
 }
 
 /// In rows sorted by [`sort_rows`], the repeat of an id that comes first in
-/// the file.
-pub(crate) fn first_duplicate(sorted: &[Row]) -> Option<Row> {
+/// the file, with the row it repeats.
+pub(crate) fn first_duplicate(sorted: &[Row]) -> Option<(Row, Row)> {
     sorted
         .windows(2)
         .filter(|w| w[0].id == w[1].id)
-        .map(|w| w[1])
-        .min_by_key(|r| r.seq)
+        .map(|w| (w[0], w[1]))
+        .min_by_key(|(_, r)| r.seq)
 }
 
 pub(crate) struct EntityTable {
@@ -200,6 +205,7 @@ mod tests {
                 arena: NONE,
                 refs: NONE,
                 seq,
+                line: 0,
             })
             .collect()
     }
@@ -238,8 +244,8 @@ mod tests {
         // #7 repeats at file positions 3 and 4, #2 at position 2.
         let mut r = rows(&[7, 2, 2, 7, 7]);
         sort_rows(&mut r);
-        let dup = first_duplicate(&r).unwrap();
-        assert_eq!((dup.id, dup.seq), (2, 2));
+        let (first, dup) = first_duplicate(&r).unwrap();
+        assert_eq!((dup.id, dup.seq, first.seq), (2, 2, 1));
         let mut r = rows(&[1, 2, 3]);
         sort_rows(&mut r);
         assert!(first_duplicate(&r).is_none());

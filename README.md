@@ -28,8 +28,8 @@ writes only modern AP242.
 Reading STEP into a CAD application or viewer:
 
 ```rust,no_run
-let source = std::fs::read("model.step").unwrap();
-let (model, report) = step_io::read(&source).unwrap();
+let file = std::fs::File::open("model.step").unwrap();
+let (model, report) = step_io::read(file).unwrap();
 let header = model.header(); // file name, authors, originating CAD system, schema, …
 
 for solid in model.scene().all_solids() {

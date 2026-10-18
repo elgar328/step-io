@@ -11,6 +11,7 @@
 //! parser repaired on the way in.
 
 use std::collections::BTreeMap;
+use std::io::Read;
 
 use crate::generated::generic_normalize;
 use crate::generated::model::{StepModel, TextDedup};
@@ -20,7 +21,6 @@ use crate::generated::read::{
     ref_field_slots, ref_slots, resolve_complex_entity, resolve_entity, shrink_arenas,
     simple_index,
 };
-use crate::parser::lexer::Span;
 use crate::parser::p21::Parser;
 use crate::parser::{Attribute, Error, ParseWarning, RawEntity, RawEntityPart};
 
@@ -139,6 +139,7 @@ impl Scan {
             arena: NONE,
             refs: NONE,
             seq: to_u32(self.rows.len()),
+            line: ent.span().line,
         };
         // A synthetic entity is added before the generic rules run: it stays
         // in the model even if they then drop the entity that references it.
@@ -198,6 +199,7 @@ impl Scan {
             arena: NONE,
             refs: NONE,
             seq: 0,
+            line: 0,
         };
         let mut build = Ok(());
         match simple_index("COLOUR") {
@@ -221,17 +223,14 @@ impl Scan {
     /// report a duplicate id, and number the synthetic entities.
     /// `end` = how the rest of the source parsed; a duplicate id among the
     /// entities read wins over its error, as the first error in the file.
-    fn finish(
-        mut self,
-        src: &[u8],
-        end: Result<Vec<ParseWarning>, Error>,
-    ) -> Result<Scanned, Error> {
+    fn finish(mut self, end: Result<Vec<ParseWarning>, Error>) -> Result<Scanned, Error> {
         let mut rows = std::mem::take(&mut self.rows);
         sort_rows(&mut rows);
-        if let Some(dup) = first_duplicate(&rows) {
+        if let Some((first, repeat)) = first_duplicate(&rows) {
             return Err(Error::DuplicateEntityId {
-                id: dup.id,
-                span: span_of(src, dup.seq),
+                id: repeat.id,
+                line: repeat.line,
+                first_line: first.line,
             });
         }
         let parse_warnings = end?;
@@ -279,27 +278,6 @@ impl Scan {
             parse_warnings,
         })
     }
-}
-
-/// The span of the `seq`-th entity of the source, for an error about it
-/// (parses the source again up to it).
-fn span_of(src: &[u8], seq: u32) -> Span {
-    let mut p = Parser::from_bytes(src);
-    let found = p.read_prelude().ok().and_then(|_| {
-        (0..=seq)
-            .map(|_| p.next_entity().ok().flatten())
-            .last()
-            .flatten()
-    });
-    found.map_or(
-        Span {
-            start: 0,
-            end: 0,
-            line: 0,
-            column: 0,
-        },
-        |e| e.span(),
-    )
 }
 
 /// The streamed source, ready for the drop pass and the resolve step.
@@ -534,11 +512,14 @@ fn resolve(
     fails
 }
 
-/// Read STEP source into the schema-faithful model, returning a provenance
+/// Read a STEP file into the schema-faithful model, returning a provenance
 /// `Report`.
 ///
-/// The source is read one entity at a time: each is normalized and built
-/// into the model as it is parsed, keeping only its references for later.
+/// `input` is read a chunk at a time (no need to wrap it in a `BufReader`;
+/// pass `&mut r` to keep `r`), and the file one entity at a time: each is
+/// normalized and built into the model as it is parsed, keeping only its
+/// references for later. Each entity reads as UTF-8 or ISO 8859-1 as
+/// [`parse`](crate::parser::parse) describes.
 /// The generated read is per-entity fallible: an entity whose own attributes
 /// the strict reader cannot consume is dropped (reason recorded), never
 /// panicking. A read failure pre-drops that entity in the next `drop_pass`,
@@ -548,22 +529,23 @@ fn resolve(
 /// `drop_pass` cascades them to a clean set).
 ///
 /// # Errors
-/// Returns a [`Error`] only if the source does not parse. A parsed source
-/// never fails the read: a malformed entity is dropped with a reason in
-/// [`Report::dropped`] (the generated read is structurally panic-free).
-pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
+/// Returns a [`Error`] only if the file does not parse, or [`Error::Io`] if
+/// `input` fails. A parsed file never fails the read: a malformed entity is
+/// dropped with a reason in [`Report::dropped`] (the generated read is
+/// structurally panic-free).
+pub fn read(input: impl Read) -> Result<(StepModel, Report), Error> {
     // Row positions and arena indices are 32-bit, `NONE` reserved.
-    read_at_most(src, NONE as usize)
+    read_at_most(input, NONE as usize)
 }
 
 /// [`read`] for a file of at most `limit` entities, synthetic ones
 /// included; past that it is [`Error::TooLarge`].
-fn read_at_most(src: &[u8], limit: usize) -> Result<(StepModel, Report), Error> {
+fn read_at_most(input: impl Read, limit: usize) -> Result<(StepModel, Report), Error> {
     /// ≤2 real iterations; one extra for slack (a violation degrades to dropping,
     /// not hanging — `debug_assert` flags non-convergence in dev).
     const MAX_ITERS: usize = 3;
 
-    let mut parser = Parser::from_bytes(src);
+    let mut parser = Parser::new(input);
     let prelude = parser.read_prelude()?;
     let header = crate::header::from_raw(&prelude.header, prelude.schema);
     let mut scan = Scan::default();
@@ -595,7 +577,7 @@ fn read_at_most(src: &[u8], limit: usize) -> Result<(StepModel, Report), Error> 
         n_in,
         n_synth,
         parse_warnings,
-    } = scan.finish(src, end)?;
+    } = scan.finish(end)?;
 
     // Outer cascade fixpoint: drop_pass (graph/ref validity) -> resolve
     // (own-attr and ref validity). Read failures feed `known_bad` so the next

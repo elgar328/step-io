@@ -390,11 +390,14 @@ mod tests {
     use crate::parser::parse;
 
     fn attrs(src: &str) -> Vec<Attribute> {
-        let g = parse(&format!(
-            "ISO-10303-21;HEADER;FILE_DESCRIPTION((''),'2;1');\
-             FILE_NAME('','',(''),(''),'','','');FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));ENDSEC;\
-             DATA;#1=X({src});ENDSEC;END-ISO-10303-21;"
-        ))
+        let g = parse(
+            format!(
+                "ISO-10303-21;HEADER;FILE_DESCRIPTION((''),'2;1');\
+                 FILE_NAME('','',(''),(''),'','','');FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));ENDSEC;\
+                 DATA;#1=X({src});ENDSEC;END-ISO-10303-21;"
+            )
+            .as_bytes(),
+        )
         .unwrap();
         match g.entities.into_values().next().unwrap() {
             crate::parser::RawEntity::Simple { attributes, .. } => attributes,
