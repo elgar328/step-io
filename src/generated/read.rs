@@ -10695,10 +10695,10 @@ fn build_apll_point_arena(attributes: &[Attribute]) -> Result<ApllPoint, String>
     Ok(ApllPoint {
         name: (as_str(req(attributes, 0, "APLL_POINT.name")?, "APLL_POINT.name"))?,
         coordinates: (match req(attributes, 1, "APLL_POINT.coordinates")? {
-            Attribute::List(l) => l
-                .iter()
-                .map(|e| as_real(e, "APLL_POINT.coordinates"))
-                .collect::<Result<Vec<_>, String>>(),
+            Attribute::List(l) => Reals3::try_collect(
+                l.iter().map(|e| as_real(e, "APLL_POINT.coordinates")),
+                "APLL_POINT.coordinates",
+            ),
             o => Err(format!("APLL_POINT.coordinates: expected list, got {o:?}")),
         })?,
         symbol_applied: (match req(attributes, 2, "APLL_POINT.symbol_applied")? {
@@ -10720,10 +10720,11 @@ fn build_apll_point_with_surface_arena(
             "APLL_POINT_WITH_SURFACE.name",
         ))?,
         coordinates: (match req(attributes, 1, "APLL_POINT_WITH_SURFACE.coordinates")? {
-            Attribute::List(l) => l
-                .iter()
-                .map(|e| as_real(e, "APLL_POINT_WITH_SURFACE.coordinates"))
-                .collect::<Result<Vec<_>, String>>(),
+            Attribute::List(l) => Reals3::try_collect(
+                l.iter()
+                    .map(|e| as_real(e, "APLL_POINT_WITH_SURFACE.coordinates")),
+                "APLL_POINT_WITH_SURFACE.coordinates",
+            ),
             o => Err(format!(
                 "APLL_POINT_WITH_SURFACE.coordinates: expected list, got {o:?}"
             )),
@@ -11585,10 +11586,10 @@ fn build_cartesian_point_arena(attributes: &[Attribute]) -> Result<CartesianPoin
             "CARTESIAN_POINT.name",
         ))?,
         coordinates: (match req(attributes, 1, "CARTESIAN_POINT.coordinates")? {
-            Attribute::List(l) => l
-                .iter()
-                .map(|e| as_real(e, "CARTESIAN_POINT.coordinates"))
-                .collect::<Result<Vec<_>, String>>(),
+            Attribute::List(l) => Reals3::try_collect(
+                l.iter().map(|e| as_real(e, "CARTESIAN_POINT.coordinates")),
+                "CARTESIAN_POINT.coordinates",
+            ),
             o => Err(format!(
                 "CARTESIAN_POINT.coordinates: expected list, got {o:?}"
             )),
@@ -11894,10 +11895,11 @@ fn build_complex_triangulated_face_arena(
             Attribute::List(l) => l
                 .iter()
                 .map(|e| match e {
-                    Attribute::List(l) => l
-                        .iter()
-                        .map(|e| as_real(e, "COMPLEX_TRIANGULATED_FACE.normals"))
-                        .collect::<Result<Vec<_>, String>>(),
+                    Attribute::List(l) => Reals3::try_collect(
+                        l.iter()
+                            .map(|e| as_real(e, "COMPLEX_TRIANGULATED_FACE.normals")),
+                        "COMPLEX_TRIANGULATED_FACE.normals",
+                    ),
                     o => Err(format!(
                         "COMPLEX_TRIANGULATED_FACE.normals: expected list, got {o:?}"
                     )),
@@ -11971,10 +11973,11 @@ fn build_complex_triangulated_surface_set_arena(
             Attribute::List(l) => l
                 .iter()
                 .map(|e| match e {
-                    Attribute::List(l) => l
-                        .iter()
-                        .map(|e| as_real(e, "COMPLEX_TRIANGULATED_SURFACE_SET.normals"))
-                        .collect::<Result<Vec<_>, String>>(),
+                    Attribute::List(l) => Reals3::try_collect(
+                        l.iter()
+                            .map(|e| as_real(e, "COMPLEX_TRIANGULATED_SURFACE_SET.normals")),
+                        "COMPLEX_TRIANGULATED_SURFACE_SET.normals",
+                    ),
                     o => Err(format!(
                         "COMPLEX_TRIANGULATED_SURFACE_SET.normals: expected list, got {o:?}"
                     )),
@@ -12418,10 +12421,11 @@ fn build_coordinates_list_arena(attributes: &[Attribute]) -> Result<CoordinatesL
             Attribute::List(l) => l
                 .iter()
                 .map(|e| match e {
-                    Attribute::List(l) => l
-                        .iter()
-                        .map(|e| as_real(e, "COORDINATES_LIST.position_coords"))
-                        .collect::<Result<Vec<_>, String>>(),
+                    Attribute::List(l) => Reals3::try_collect(
+                        l.iter()
+                            .map(|e| as_real(e, "COORDINATES_LIST.position_coords")),
+                        "COORDINATES_LIST.position_coords",
+                    ),
                     o => Err(format!(
                         "COORDINATES_LIST.position_coords: expected list, got {o:?}"
                     )),
@@ -13203,10 +13207,10 @@ fn build_direction_arena(attributes: &[Attribute]) -> Result<Direction, String> 
     Ok(Direction {
         name: (as_str(req(attributes, 0, "DIRECTION.name")?, "DIRECTION.name"))?,
         direction_ratios: (match req(attributes, 1, "DIRECTION.direction_ratios")? {
-            Attribute::List(l) => l
-                .iter()
-                .map(|e| as_real(e, "DIRECTION.direction_ratios"))
-                .collect::<Result<Vec<_>, String>>(),
+            Attribute::List(l) => Reals3::try_collect(
+                l.iter().map(|e| as_real(e, "DIRECTION.direction_ratios")),
+                "DIRECTION.direction_ratios",
+            ),
             o => Err(format!(
                 "DIRECTION.direction_ratios: expected list, got {o:?}"
             )),
@@ -17682,10 +17686,10 @@ fn build_tessellated_face_arena(attributes: &[Attribute]) -> Result<TessellatedF
             Attribute::List(l) => l
                 .iter()
                 .map(|e| match e {
-                    Attribute::List(l) => l
-                        .iter()
-                        .map(|e| as_real(e, "TESSELLATED_FACE.normals"))
-                        .collect::<Result<Vec<_>, String>>(),
+                    Attribute::List(l) => Reals3::try_collect(
+                        l.iter().map(|e| as_real(e, "TESSELLATED_FACE.normals")),
+                        "TESSELLATED_FACE.normals",
+                    ),
                     o => Err(format!(
                         "TESSELLATED_FACE.normals: expected list, got {o:?}"
                     )),
@@ -17785,10 +17789,11 @@ fn build_tessellated_surface_set_arena(
             Attribute::List(l) => l
                 .iter()
                 .map(|e| match e {
-                    Attribute::List(l) => l
-                        .iter()
-                        .map(|e| as_real(e, "TESSELLATED_SURFACE_SET.normals"))
-                        .collect::<Result<Vec<_>, String>>(),
+                    Attribute::List(l) => Reals3::try_collect(
+                        l.iter()
+                            .map(|e| as_real(e, "TESSELLATED_SURFACE_SET.normals")),
+                        "TESSELLATED_SURFACE_SET.normals",
+                    ),
                     o => Err(format!(
                         "TESSELLATED_SURFACE_SET.normals: expected list, got {o:?}"
                     )),
@@ -38819,7 +38824,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "DERIVED_UNIT" => UnitPart::DerivedUnit { elements: Vec::new(), },
         "DESIGN_CONTEXT" => UnitPart::DesignContext,
         "DIMENSIONAL_SIZE" => UnitPart::DimensionalSize { applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), name: (as_str(req(&p.attributes, 1, "DIMENSIONAL_SIZE.name")?, "DIMENSIONAL_SIZE.name"))?, },
-        "DIRECTION" => UnitPart::Direction { direction_ratios: (match req(&p.attributes, 0, "DIRECTION.direction_ratios")? { Attribute::List(l) => l.iter().map(|e| as_real(e, "DIRECTION.direction_ratios")).collect::<Result<Vec<_>, String>>(), o => Err(format!("DIRECTION.direction_ratios: expected list, got {o:?}")) })?, },
+        "DIRECTION" => UnitPart::Direction { direction_ratios: (match req(&p.attributes, 0, "DIRECTION.direction_ratios")? { Attribute::List(l) => Reals3::try_collect(l.iter().map(|e| as_real(e, "DIRECTION.direction_ratios")), "DIRECTION.direction_ratios"), o => Err(format!("DIRECTION.direction_ratios: expected list, got {o:?}")) })?, },
         "DOCUMENT" => UnitPart::Document { id: (as_str(req(&p.attributes, 0, "DOCUMENT.id")?, "DOCUMENT.id"))?, name: (as_str(req(&p.attributes, 1, "DOCUMENT.name")?, "DOCUMENT.name"))?, description: match req(&p.attributes, 2, "DOCUMENT.description")? { Attribute::Unset => None, other => Some((as_str(other, "DOCUMENT.description"))?) }, kind: DocumentTypeRef::DocumentType(DocumentTypeId(u32::MAX)), },
         "DOCUMENT_FILE" => UnitPart::DocumentFile,
         "DOCUMENT_PRODUCT_ASSOCIATION" => UnitPart::DocumentProductAssociation { name: (as_str(req(&p.attributes, 0, "DOCUMENT_PRODUCT_ASSOCIATION.name")?, "DOCUMENT_PRODUCT_ASSOCIATION.name"))?, description: match req(&p.attributes, 1, "DOCUMENT_PRODUCT_ASSOCIATION.description")? { Attribute::Unset => None, other => Some((as_str(other, "DOCUMENT_PRODUCT_ASSOCIATION.description"))?) }, relating_document: DocumentRef::Document(DocumentId(u32::MAX)), related_product: ProductOrFormationOrDefinitionRef::Product(ProductId(u32::MAX)), },

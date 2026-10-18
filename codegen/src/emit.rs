@@ -22,6 +22,7 @@ fn kind_type(ir: &ModelIr, k: &Kind) -> String {
     match k {
         Kind::Ref(t) => ir.ref_enums[t].rust.clone(),
         Kind::Vec(inner) => format!("Vec<{}>", kind_type(ir, inner)),
+        Kind::Reals3 { .. } => "Reals3".into(),
         Kind::Real => "f64".into(),
         Kind::Int => "i64".into(),
         Kind::Bool => "bool".into(),
@@ -116,6 +117,45 @@ impl Logical {
         match self { Self::True => ".T.", Self::False => ".F.", Self::Unknown => ".U." }
     }
 }
+
+/// A list of at most three reals held inline — a point's coordinates, a
+/// direction's ratios, a mesh vertex — read as a slice (`&[f64]`).
+#[derive(Clone, Copy, Default)]
+pub struct Reals3 { len: u8, values: [f64; 3] }
+impl Reals3 {
+    /// The values, or `None` for more than three.
+    pub fn from_slice(v: &[f64]) -> Option<Self> {
+        if v.len() > 3 { return None; }
+        let mut r = Self::default();
+        r.values[..v.len()].copy_from_slice(v);
+        r.len = v.len() as u8;
+        Some(r)
+    }
+    /// Collect read values; an error from one, or a fourth value, stops it.
+    pub(crate) fn try_collect(values: impl Iterator<Item = Result<f64, String>>, ctx: &str) -> Result<Self, String> {
+        let mut r = Self::default();
+        for v in values {
+            let v = v?;
+            let Some(slot) = r.values.get_mut(usize::from(r.len)) else {
+                return Err(format!("{ctx}: more than three values"));
+            };
+            *slot = v;
+            r.len += 1;
+        }
+        Ok(r)
+    }
+}
+impl std::ops::Deref for Reals3 {
+    type Target = [f64];
+    fn deref(&self) -> &[f64] { &self.values[..usize::from(self.len)] }
+}
+impl PartialEq for Reals3 { fn eq(&self, other: &Self) -> bool { **self == **other } }
+impl std::fmt::Debug for Reals3 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { (**self).fmt(f) }
+}
+impl From<[f64; 1]> for Reals3 { fn from(v: [f64; 1]) -> Self { Self { len: 1, values: [v[0], 0.0, 0.0] } } }
+impl From<[f64; 2]> for Reals3 { fn from(v: [f64; 2]) -> Self { Self { len: 2, values: [v[0], v[1], 0.0] } } }
+impl From<[f64; 3]> for Reals3 { fn from(v: [f64; 3]) -> Self { Self { len: 3, values: v } } }
 
 /// select-of-scalars: `Some(type_name)` = typed member `TYPE(v)`; `None` = bare.
 /// `value` is int-or-real because EXPRESS `number` members (count_measure,
@@ -897,6 +937,9 @@ fn scalar_fallible(ir: &ModelIr, k: &Kind, a: &str, ctx: &str) -> String {
                 "match {a} {{ Attribute::List(l) => l.iter().map(|e| {elem}).collect::<Result<Vec<_>, String>>(), o => Err(format!(\"{ctx}: expected list, got {{o:?}}\")) }}"
             )
         }
+        Kind::Reals3 { .. } => format!(
+            "match {a} {{ Attribute::List(l) => Reals3::try_collect(l.iter().map(|e| as_real(e, {ctx:?})), {ctx:?}), o => Err(format!(\"{ctx}: expected list, got {{o:?}}\")) }}"
+        ),
         Kind::Ref(_) => unreachable!(),
     }
 }
@@ -1449,7 +1492,17 @@ fn emit_render_one(s: &mut String, ir: &ModelIr) {
 /// Render one attribute to a `String` expression. `access` is the field
 /// accessor. An optional field renders `None` as `$`; a derivable field renders
 /// `None` as `*`.
+/// A `Reals3` writes like a list of reals (it reads as a slice).
+fn written_as(k: &Kind) -> std::borrow::Cow<'_, Kind> {
+    match k {
+        Kind::Reals3 { .. } => std::borrow::Cow::Owned(Kind::Vec(Box::new(Kind::Real))),
+        _ => std::borrow::Cow::Borrowed(k),
+    }
+}
+
 fn render_attr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, access: &str) -> String {
+    let written = written_as(k);
+    let k = &*written;
     let wrapped = optional || derivable;
     let none_tok = if derivable { "*" } else { "$" };
     match k {
@@ -1569,6 +1622,8 @@ fn render_scalar_ref(_ir: &ModelIr, k: &Kind, access: &str) -> String {
 }
 
 fn render_vec_elem(ir: &ModelIr, inner: &Kind) -> String {
+    let written = written_as(inner);
+    let inner = &*written;
     match inner {
         Kind::Ref(t) => {
             let re = &ir.ref_enums[t];
@@ -1822,6 +1877,8 @@ fn emit_all_iter(s: &mut String, _ir: &ModelIr) {
 
 /// Render a complex part attribute (the binder `id` is a `&T` reference).
 fn render_part_attr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, id: &str) -> String {
+    let written = written_as(k);
+    let k = &*written;
     let wrapped = optional || derivable;
     let none_tok = if derivable { "*" } else { "$" };
     match k {
@@ -1880,7 +1937,7 @@ fn sk_variant(k: &Kind) -> &'static str {
         Kind::Logical => "Log",
         Kind::Enum(_) => "Enum",
         Kind::Ref(_) => "Ref",
-        Kind::Vec(_) => "Vec",
+        Kind::Vec(_) | Kind::Reals3 { .. } => "Vec",
         Kind::MeasureSelect(_) => "Meas",
         // string-select required `$` normalizes to "" (read as bare).
         Kind::StringSelect(_) => "Str",
@@ -2013,8 +2070,15 @@ fn emit_slot_table<'a>(
                     Some(w) => format!("Some(\"{w}\")"),
                     None => "None".to_string(),
                 };
+                // Reals held inline (`Reals3`): 1 = the slot's list, 2 = each
+                // list in the slot's list.
+                let r3 = match &f.kind {
+                    Kind::Reals3 { .. } => 1,
+                    Kind::Vec(inner) if matches!(inner.as_ref(), Kind::Reals3 { .. }) => 2,
+                    _ => 0,
+                };
                 format!(
-                    "Slot{{k:Sk::{k},req:{req},der:{},swire:{swire}}}",
+                    "Slot{{k:Sk::{k},req:{req},der:{},swire:{swire},r3:{r3}}}",
                     f.derived
                 )
             })
@@ -2033,7 +2097,17 @@ pub fn emit_normalize(ir: &ModelIr, crate_path: &str) -> String {
         r#"#[derive(Clone, Copy)]
 enum Sk { Real, Int, Str, Bin, Bool, Log, Enum, Ref, Vec, Meas }
 #[derive(Clone, Copy)]
-struct Slot { k: Sk, req: bool, der: bool, swire: Option<&'static str> }
+struct Slot { k: Sk, req: bool, der: bool, swire: Option<&'static str>, r3: u8 }
+
+/// Does a list the model holds inline as `Reals3` (`r3` as in `Slot`) have
+/// more than three values?
+fn too_many_reals(r3: u8, a: &Attribute) -> bool {
+    match (r3, a) {
+        (1, Attribute::List(l)) => l.len() > 3,
+        (2, Attribute::List(l)) => l.iter().any(|e| matches!(e, Attribute::List(v) if v.len() > 3)),
+        _ => false,
+    }
+}
 
 /// Value-level canonical: signed-zero -0.0 -> +0.0, recursively (incl. lists).
 fn canon(a: &mut Attribute) {
@@ -2117,6 +2191,10 @@ fn norm_attrs(slots: &[Slot], attrs: &mut Vec<Attribute>, warns: &mut Vec<&'stat
                 NormAction::Unchanged => {}
                 NormAction::Rewrite(na, w) => { *a = na; warns.push(w); }
                 NormAction::Drop(w) => { *drop_out = Some(w); return false; }
+            }
+            if too_many_reals(s.r3, a) {
+                *drop_out = Some("list has more values than its type allows");
+                return false;
             }
         }
     }
@@ -2213,7 +2291,38 @@ fn author_card_check(
     f: &Field,
     expr_is_ref: bool,
 ) -> String {
-    if !matches!(f.kind, Kind::Vec(_)) || (f.min == 0 && f.max.is_none()) {
+    let mut s = author_card_check_outer(entity_upper, attribute, expr, f, expr_is_ref);
+    let inner = match &f.kind {
+        Kind::Vec(inner) => Some(inner.as_ref()),
+        _ => None,
+    };
+    if let Some(Kind::Reals3 { min, max }) = inner {
+        // The inner lists' bounds (`LIST OF LIST [3:3] OF real`).
+        let err = format!(
+            "return Err(AuthorError::Cardinality {{ entity: {entity_upper:?}, attribute: {attribute:?}, got: e.len(), min: {min}, max: Some({max}) }});"
+        );
+        let check =
+            format!("for e in v.iter() {{ if e.len() < {min} || e.len() > {max} {{ {err} }} }}");
+        let amp = if expr_is_ref { "" } else { "&" };
+        if f.optional || f.derivable {
+            s.push_str(&format!(
+                "        if let Some(v) = {amp}{expr} {{ {check} }}\n"
+            ));
+        } else {
+            s.push_str(&format!("        {{ let v = {amp}{expr}; {check} }}\n"));
+        }
+    }
+    s
+}
+
+fn author_card_check_outer(
+    entity_upper: &str,
+    attribute: &str,
+    expr: &str,
+    f: &Field,
+    expr_is_ref: bool,
+) -> String {
+    if !matches!(f.kind, Kind::Vec(_) | Kind::Reals3 { .. }) || (f.min == 0 && f.max.is_none()) {
         return String::new();
     }
     let min = f.min as usize;

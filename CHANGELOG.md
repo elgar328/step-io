@@ -52,6 +52,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Arena::indices()` iterates them. References and `EntityKey` take 8 bytes
   instead of 16. A file of more than about four billion entities fails to
   read with the new `Error::TooLarge`.
+- A list of at most three reals — a point's `coordinates`, a direction's
+  `direction_ratios`, a mesh vertex or normal — is a `Reals3` held inline
+  instead of a `Vec<f64>`, so it no longer allocates. It reads as a `&[f64]`;
+  build one from an array with `.into()` or from a slice with
+  `Reals3::from_slice`. `Ap242Author` takes `Reals3` for these fields and
+  now also checks the length of each inner list, such as a mesh vertex.
+- On read, such a list with more than three values is dropped as a
+  nonstandard value (`list has more values than its type allows`).
 - `Error` is `#[non_exhaustive]`, so matching on it needs a wildcard arm.
 - `DropKind` is `#[non_exhaustive]`, so matching on it needs a wildcard arm,
   and so is `DropReason`, whose fields read as before but which can no

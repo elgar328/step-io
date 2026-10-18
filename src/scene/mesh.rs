@@ -101,7 +101,7 @@ pub enum MeshNormals {
 type MeshParts<'m> = (
     &'m str,
     &'m m::CoordinatesListRef,
-    &'m [Vec<f64>],
+    &'m [m::Reals3],
     &'m [i64],
     &'m [Vec<i64>],
     &'m [Vec<i64>],

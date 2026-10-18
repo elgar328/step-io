@@ -27,7 +27,7 @@ fn resolves_forward_references_to_concrete_targets() {
 
     // LINE.pnt is a CartesianPointRef → its concrete CARTESIAN_POINT.
     match line.pnt.resolve(&model) {
-        CartesianPointRefView::CartesianPoint(p) => assert_eq!(p.coordinates, [2.0, 0.0, 0.0]),
+        CartesianPointRefView::CartesianPoint(p) => assert_eq!(p.coordinates[..], [2.0, 0.0, 0.0]),
         other => panic!("expected a cartesian point, got {other:?}"),
     }
 

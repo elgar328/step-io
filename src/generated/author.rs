@@ -1981,7 +1981,7 @@ impl Ap242Author {
     pub fn add_cartesian_point(
         &mut self,
         name: String,
-        coordinates: Vec<f64>,
+        coordinates: Reals3,
     ) -> Result<CartesianPointId, AuthorError> {
         {
             let x = &coordinates;
@@ -2518,13 +2518,27 @@ impl Ap242Author {
         name: String,
         coordinates: CoordinatesListRef,
         pnmax: i64,
-        normals: Vec<Vec<f64>>,
+        normals: Vec<Reals3>,
         geometric_link: Option<FaceOrSurfaceRef>,
         pnindex: Vec<i64>,
         triangle_strips: Vec<Vec<i64>>,
         triangle_fans: Vec<Vec<i64>>,
     ) -> Result<ComplexTriangulatedFaceId, AuthorError> {
         check_coordinates_list_ref(&self.model, &coordinates)?;
+        {
+            let v = &normals;
+            for e in v.iter() {
+                if e.len() < 3 || e.len() > 3 {
+                    return Err(AuthorError::Cardinality {
+                        entity: "COMPLEX_TRIANGULATED_FACE",
+                        attribute: "normals",
+                        got: e.len(),
+                        min: 3,
+                        max: Some(3),
+                    });
+                }
+            }
+        }
         if let Some(x) = &geometric_link {
             check_face_or_surface_ref(&self.model, x)?;
         }
@@ -2550,12 +2564,26 @@ impl Ap242Author {
         name: String,
         coordinates: CoordinatesListRef,
         pnmax: i64,
-        normals: Vec<Vec<f64>>,
+        normals: Vec<Reals3>,
         pnindex: Vec<i64>,
         triangle_strips: Vec<Vec<i64>>,
         triangle_fans: Vec<Vec<i64>>,
     ) -> Result<ComplexTriangulatedSurfaceSetId, AuthorError> {
         check_coordinates_list_ref(&self.model, &coordinates)?;
+        {
+            let v = &normals;
+            for e in v.iter() {
+                if e.len() < 3 || e.len() > 3 {
+                    return Err(AuthorError::Cardinality {
+                        entity: "COMPLEX_TRIANGULATED_SURFACE_SET",
+                        attribute: "normals",
+                        got: e.len(),
+                        min: 3,
+                        max: Some(3),
+                    });
+                }
+            }
+        }
         Ok(ComplexTriangulatedSurfaceSetId(
             self.model
                 .complex_triangulated_surface_set_arena
@@ -3090,7 +3118,7 @@ impl Ap242Author {
         &mut self,
         name: String,
         npoints: i64,
-        position_coords: Vec<Vec<f64>>,
+        position_coords: Vec<Reals3>,
     ) -> Result<CoordinatesListId, AuthorError> {
         {
             let x = &position_coords;
@@ -3102,6 +3130,20 @@ impl Ap242Author {
                     min: 1,
                     max: None,
                 });
+            }
+        }
+        {
+            let v = &position_coords;
+            for e in v.iter() {
+                if e.len() < 3 || e.len() > 3 {
+                    return Err(AuthorError::Cardinality {
+                        entity: "COORDINATES_LIST",
+                        attribute: "position_coords",
+                        got: e.len(),
+                        min: 3,
+                        max: Some(3),
+                    });
+                }
             }
         }
         Ok(CoordinatesListId(self.model.coordinates_list_arena.push(
@@ -3984,7 +4026,7 @@ impl Ap242Author {
     pub fn add_direction(
         &mut self,
         name: String,
-        direction_ratios: Vec<f64>,
+        direction_ratios: Reals3,
     ) -> Result<DirectionId, AuthorError> {
         {
             let x = &direction_ratios;
@@ -9815,10 +9857,24 @@ impl Ap242Author {
         name: String,
         coordinates: CoordinatesListRef,
         pnmax: i64,
-        normals: Vec<Vec<f64>>,
+        normals: Vec<Reals3>,
         geometric_link: Option<FaceOrSurfaceRef>,
     ) -> Result<TessellatedFaceId, AuthorError> {
         check_coordinates_list_ref(&self.model, &coordinates)?;
+        {
+            let v = &normals;
+            for e in v.iter() {
+                if e.len() < 3 || e.len() > 3 {
+                    return Err(AuthorError::Cardinality {
+                        entity: "TESSELLATED_FACE",
+                        attribute: "normals",
+                        got: e.len(),
+                        min: 3,
+                        max: Some(3),
+                    });
+                }
+            }
+        }
         if let Some(x) = &geometric_link {
             check_face_or_surface_ref(&self.model, x)?;
         }
@@ -9990,9 +10046,23 @@ impl Ap242Author {
         name: String,
         coordinates: CoordinatesListRef,
         pnmax: i64,
-        normals: Vec<Vec<f64>>,
+        normals: Vec<Reals3>,
     ) -> Result<TessellatedSurfaceSetId, AuthorError> {
         check_coordinates_list_ref(&self.model, &coordinates)?;
+        {
+            let v = &normals;
+            for e in v.iter() {
+                if e.len() < 3 || e.len() > 3 {
+                    return Err(AuthorError::Cardinality {
+                        entity: "TESSELLATED_SURFACE_SET",
+                        attribute: "normals",
+                        got: e.len(),
+                        min: 3,
+                        max: Some(3),
+                    });
+                }
+            }
+        }
         Ok(TessellatedSurfaceSetId(
             self.model
                 .tessellated_surface_set_arena

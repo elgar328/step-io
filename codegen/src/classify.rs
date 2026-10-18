@@ -8,7 +8,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::schema::{Schema, agg_inner, strip_optional};
+use crate::schema::{Schema, agg_bounds, agg_inner, strip_optional};
 
 /// How an attribute's resolved `ty` maps to a generated Rust field.
 #[derive(Debug, Clone, PartialEq)]
@@ -18,6 +18,12 @@ pub enum Kind {
     Ref(String),
     /// Aggregation -> Vec<inner>.
     Vec(Box<Kind>),
+    /// An aggregation of at most three reals (`LIST [min:max] OF real`,
+    /// `max <= 3`) -> `Reals3`, held inline. Carries the schema bounds.
+    Reals3 {
+        min: u32,
+        max: u32,
+    },
     Real,
     Int,
     Bool,
@@ -166,7 +172,11 @@ impl<'a> Resolver<'a> {
             return self.classify(inner.trim(), depth + 1);
         }
         if let Some(inner) = agg_inner(t) {
-            return Kind::Vec(Box::new(self.classify(inner, depth + 1)));
+            let inner = self.classify(inner, depth + 1);
+            if let (Kind::Real, Some((min, Some(max @ 0..=3)))) = (&inner, agg_bounds(t)) {
+                return Kind::Reals3 { min, max };
+            }
+            return Kind::Vec(Box::new(inner));
         }
         match t {
             "real" | "number" => return Kind::Real,

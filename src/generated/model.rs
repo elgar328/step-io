@@ -85,6 +85,79 @@ impl Logical {
     }
 }
 
+/// A list of at most three reals held inline — a point's coordinates, a
+/// direction's ratios, a mesh vertex — read as a slice (`&[f64]`).
+#[derive(Clone, Copy, Default)]
+pub struct Reals3 {
+    len: u8,
+    values: [f64; 3],
+}
+impl Reals3 {
+    /// The values, or `None` for more than three.
+    pub fn from_slice(v: &[f64]) -> Option<Self> {
+        if v.len() > 3 {
+            return None;
+        }
+        let mut r = Self::default();
+        r.values[..v.len()].copy_from_slice(v);
+        r.len = v.len() as u8;
+        Some(r)
+    }
+    /// Collect read values; an error from one, or a fourth value, stops it.
+    pub(crate) fn try_collect(
+        values: impl Iterator<Item = Result<f64, String>>,
+        ctx: &str,
+    ) -> Result<Self, String> {
+        let mut r = Self::default();
+        for v in values {
+            let v = v?;
+            let Some(slot) = r.values.get_mut(usize::from(r.len)) else {
+                return Err(format!("{ctx}: more than three values"));
+            };
+            *slot = v;
+            r.len += 1;
+        }
+        Ok(r)
+    }
+}
+impl std::ops::Deref for Reals3 {
+    type Target = [f64];
+    fn deref(&self) -> &[f64] {
+        &self.values[..usize::from(self.len)]
+    }
+}
+impl PartialEq for Reals3 {
+    fn eq(&self, other: &Self) -> bool {
+        **self == **other
+    }
+}
+impl std::fmt::Debug for Reals3 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        (**self).fmt(f)
+    }
+}
+impl From<[f64; 1]> for Reals3 {
+    fn from(v: [f64; 1]) -> Self {
+        Self {
+            len: 1,
+            values: [v[0], 0.0, 0.0],
+        }
+    }
+}
+impl From<[f64; 2]> for Reals3 {
+    fn from(v: [f64; 2]) -> Self {
+        Self {
+            len: 2,
+            values: [v[0], v[1], 0.0],
+        }
+    }
+}
+impl From<[f64; 3]> for Reals3 {
+    fn from(v: [f64; 3]) -> Self {
+        Self { len: 3, values: v }
+    }
+}
+
 /// select-of-scalars: `Some(type_name)` = typed member `TYPE(v)`; `None` = bare.
 /// `value` is int-or-real because EXPRESS `number` members (count_measure,
 /// numeric_measure) admit both; the token is preserved (2 stays 2, not 2.0).
@@ -14379,14 +14452,14 @@ pub struct AnnotationToModelLeaderLine {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ApllPoint {
     pub name: String,
-    pub coordinates: Vec<f64>,
+    pub coordinates: Reals3,
     pub symbol_applied: DesApllPointSymbol,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ApllPointWithSurface {
     pub name: String,
-    pub coordinates: Vec<f64>,
+    pub coordinates: Reals3,
     pub symbol_applied: DesApllPointSymbol,
     pub associated_surface: FaceSurfaceRef,
 }
@@ -14743,7 +14816,7 @@ pub struct CameraUsage {
 #[derive(Debug, Clone, PartialEq)]
 pub struct CartesianPoint {
     pub name: String,
-    pub coordinates: Vec<f64>,
+    pub coordinates: Reals3,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -14895,7 +14968,7 @@ pub struct ComplexTriangulatedFace {
     pub name: String,
     pub coordinates: CoordinatesListRef,
     pub pnmax: i64,
-    pub normals: Vec<Vec<f64>>,
+    pub normals: Vec<Reals3>,
     pub geometric_link: Option<FaceOrSurfaceRef>,
     pub pnindex: Vec<i64>,
     pub triangle_strips: Vec<Vec<i64>>,
@@ -14907,7 +14980,7 @@ pub struct ComplexTriangulatedSurfaceSet {
     pub name: String,
     pub coordinates: CoordinatesListRef,
     pub pnmax: i64,
-    pub normals: Vec<Vec<f64>>,
+    pub normals: Vec<Reals3>,
     pub pnindex: Vec<i64>,
     pub triangle_strips: Vec<Vec<i64>>,
     pub triangle_fans: Vec<Vec<i64>>,
@@ -15080,7 +15153,7 @@ pub struct CoordinatedUniversalTimeOffset {
 pub struct CoordinatesList {
     pub name: String,
     pub npoints: i64,
-    pub position_coords: Vec<Vec<f64>>,
+    pub position_coords: Vec<Reals3>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -15393,7 +15466,7 @@ pub struct DirectedDimensionalLocation {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Direction {
     pub name: String,
-    pub direction_ratios: Vec<f64>,
+    pub direction_ratios: Reals3,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -17307,7 +17380,7 @@ pub struct TessellatedFace {
     pub name: String,
     pub coordinates: CoordinatesListRef,
     pub pnmax: i64,
-    pub normals: Vec<Vec<f64>>,
+    pub normals: Vec<Reals3>,
     pub geometric_link: Option<FaceOrSurfaceRef>,
 }
 
@@ -17353,7 +17426,7 @@ pub struct TessellatedSurfaceSet {
     pub name: String,
     pub coordinates: CoordinatesListRef,
     pub pnmax: i64,
-    pub normals: Vec<Vec<f64>>,
+    pub normals: Vec<Reals3>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -17927,7 +18000,7 @@ pub enum UnitPart {
         name: String,
     },
     Direction {
-        direction_ratios: Vec<f64>,
+        direction_ratios: Reals3,
     },
     Document {
         id: String,

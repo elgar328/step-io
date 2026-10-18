@@ -787,9 +787,9 @@ impl StepBuilder {
     /// `AXIS2_PLACEMENT_3D` from a [`Frame`].
     fn placement(&mut self, f: &Frame) -> Result<m::Axis2Placement3dId, AuthorError> {
         let a = &mut self.author;
-        let location = a.add_cartesian_point(String::new(), f.origin.to_vec())?;
-        let axis = a.add_direction(String::new(), f.axis.to_vec())?;
-        let ref_direction = a.add_direction(String::new(), f.ref_dir.to_vec())?;
+        let location = a.add_cartesian_point(String::new(), f.origin.into())?;
+        let axis = a.add_direction(String::new(), f.axis.into())?;
+        let ref_direction = a.add_direction(String::new(), f.ref_dir.into())?;
         a.add_axis2_placement3d(
             String::new(),
             m::CartesianPointRef::CartesianPoint(location),
@@ -806,7 +806,7 @@ impl StepBuilder {
         row.iter()
             .map(|p| {
                 self.author
-                    .add_cartesian_point(String::new(), p.to_vec())
+                    .add_cartesian_point(String::new(), (*p).into())
                     .map(m::CartesianPointRef::CartesianPoint)
             })
             .collect()
@@ -817,8 +817,8 @@ impl StepBuilder {
         match profile {
             ProfileInput::Line(point, dir) => {
                 let a = &mut self.author;
-                let pnt = a.add_cartesian_point(String::new(), point.to_vec())?;
-                let orientation = a.add_direction(String::new(), dir.to_vec())?;
+                let pnt = a.add_cartesian_point(String::new(), (*point).into())?;
+                let orientation = a.add_direction(String::new(), (*dir).into())?;
                 let vector =
                     a.add_vector(String::new(), m::DirectionRef::Direction(orientation), 1.0)?;
                 let line = a.add_line(
@@ -968,7 +968,7 @@ impl StepBuilder {
     /// Propagates [`AuthorError`] from the strict constructors; the wiring
     /// here is fixed, so an error indicates a bug in the builder itself.
     pub fn vertex(&mut self, p: [f64; 3]) -> Result<Vertex, AuthorError> {
-        let point = self.author.add_cartesian_point(String::new(), p.to_vec())?;
+        let point = self.author.add_cartesian_point(String::new(), p.into())?;
         let vp = self
             .author
             .add_vertex_point(String::new(), m::PointRef::CartesianPoint(point))?;
@@ -1096,7 +1096,7 @@ impl StepBuilder {
                     [sweep[0] / len, sweep[1] / len, sweep[2] / len]
                 };
                 let a = &mut self.author;
-                let orientation = a.add_direction(String::new(), dir.to_vec())?;
+                let orientation = a.add_direction(String::new(), dir.into())?;
                 let vector =
                     a.add_vector(String::new(), m::DirectionRef::Direction(orientation), len)?;
                 let surf = a.add_surface_of_linear_extrusion(
@@ -1109,8 +1109,8 @@ impl StepBuilder {
             SurfaceInput::Revolution(profile, origin, axis) => {
                 let swept_curve = self.profile_geometry(&profile)?;
                 let a = &mut self.author;
-                let location = a.add_cartesian_point(String::new(), origin.to_vec())?;
-                let axis_dir = a.add_direction(String::new(), axis.to_vec())?;
+                let location = a.add_cartesian_point(String::new(), origin.into())?;
+                let axis_dir = a.add_direction(String::new(), axis.into())?;
                 let position = a.add_axis1_placement(
                     String::new(),
                     m::CartesianPointRef::CartesianPoint(location),
@@ -1376,12 +1376,12 @@ impl StepBuilder {
         let coordinates = a.add_coordinates_list(
             String::new(),
             npoints,
-            input.points.iter().map(|p| p.to_vec()).collect(),
+            input.points.iter().map(|&p| p.into()).collect(),
         )?;
-        let normals: Vec<Vec<f64>> = match &input.normals {
+        let normals: Vec<m::Reals3> = match &input.normals {
             MeshNormalsInput::None => Vec::new(),
-            MeshNormalsInput::Uniform(n) => vec![n.to_vec()],
-            MeshNormalsInput::PerVertex(rows) => rows.iter().map(|n| n.to_vec()).collect(),
+            MeshNormalsInput::Uniform(n) => vec![(*n).into()],
+            MeshNormalsInput::PerVertex(rows) => rows.iter().map(|&n| n.into()).collect(),
         };
         // One 3-index strip per triangle, 1-based. The read side's strip
         // decode swaps the last two indices of the first window, so encode

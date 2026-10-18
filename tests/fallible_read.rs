@@ -320,3 +320,25 @@ fn duplicate_ids_are_reported_at_the_first_repeat() {
         Err(e) if !matches!(e, step_io::Error::DuplicateEntityId { .. })
     ));
 }
+
+/// A point with more coordinates than `LIST [1:3]` allows is dropped as a
+/// nonstandard value, and what references it cascades; a two-coordinate point
+/// is within the bounds and kept.
+#[test]
+fn coordinates_past_the_bound_drop_the_point() {
+    let r = read_body(
+        "#1=CARTESIAN_POINT('',(0.,0.,0.,0.));\n\
+         #2=VERTEX_POINT('',#1);\n\
+         #3=CARTESIAN_POINT('',(0.,0.));\n",
+    );
+    assert_eq!(dropped_kind(&r, 1), Some(&DropKind::NonstandardValue));
+    let key = |id: u64| {
+        r.dropped
+            .iter()
+            .find(|(i, _)| *i == id)
+            .map(|(_, d)| d.key.as_str())
+    };
+    assert_eq!(key(1), Some("list has more values than its type allows"));
+    assert_eq!(dropped_kind(&r, 2), Some(&DropKind::Cascade));
+    assert_eq!(r.validated, 1, "{:?}", r.dropped);
+}

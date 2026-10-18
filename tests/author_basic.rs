@@ -10,13 +10,13 @@ fn authored_model_round_trips_with_zero_drops() {
     let mut a = Ap242Author::new();
 
     let origin = a
-        .add_cartesian_point(String::new(), vec![0.0, 0.0, 0.0])
+        .add_cartesian_point(String::new(), [0.0, 0.0, 0.0].into())
         .expect("point");
     let z = a
-        .add_direction(String::new(), vec![0.0, 0.0, 1.0])
+        .add_direction(String::new(), [0.0, 0.0, 1.0].into())
         .expect("dir z");
     let x = a
-        .add_direction(String::new(), vec![1.0, 0.0, 0.0])
+        .add_direction(String::new(), [1.0, 0.0, 0.0].into())
         .expect("dir x");
     let frame = a
         .add_axis2_placement3d(
@@ -62,10 +62,10 @@ fn illegal_reference_is_rejected_at_insertion() {
     // A trimming select pointing at an APLL point: the entity kind exists in
     // the universal model but is not AP242 — the constructor refuses it.
     let base = a
-        .add_cartesian_point(String::new(), vec![0.0, 0.0, 0.0])
+        .add_cartesian_point(String::new(), [0.0, 0.0, 0.0].into())
         .expect("point");
     let dir = a
-        .add_direction(String::new(), vec![1.0, 0.0, 0.0])
+        .add_direction(String::new(), [1.0, 0.0, 0.0].into())
         .expect("dir");
     let vec_ = a
         .add_vector(String::new(), m::DirectionRef::Direction(dir), 1.0)
@@ -123,7 +123,7 @@ fn complex_instances_round_trip_with_zero_drops() {
         .iter()
         .map(|c| {
             m::CartesianPointRef::CartesianPoint(
-                a.add_cartesian_point(String::new(), c.to_vec()).unwrap(),
+                a.add_cartesian_point(String::new(), (*c).into()).unwrap(),
             )
         })
         .collect();
@@ -457,7 +457,7 @@ fn aggregate_cardinality_is_enforced() {
 
     // DIRECTION.direction_ratios is LIST [2:3].
     let err = a
-        .add_direction(String::new(), vec![1.0])
+        .add_direction(String::new(), [1.0].into())
         .expect_err("one ratio is below the minimum");
     assert!(matches!(
         err,
@@ -469,12 +469,27 @@ fn aggregate_cardinality_is_enforced() {
             max: Some(3),
         }
     ));
-    let err = a
-        .add_direction(String::new(), vec![1.0, 0.0, 0.0, 0.0])
-        .expect_err("four ratios exceed the maximum");
-    assert!(matches!(err, AuthorError::Cardinality { got: 4, .. }));
-    a.add_direction(String::new(), vec![0.0, 0.0, 1.0])
+    assert!(
+        m::Reals3::from_slice(&[1.0, 0.0, 0.0, 0.0]).is_none(),
+        "four ratios do not fit the type"
+    );
+    a.add_direction(String::new(), [0.0, 0.0, 1.0].into())
         .expect("three ratios are fine");
+
+    // Inner lists are bounded too: a mesh vertex is LIST [3:3] OF REAL.
+    let err = a
+        .add_coordinates_list(String::new(), 1, vec![[1.0, 2.0].into()])
+        .expect_err("a two-coordinate vertex is below the minimum");
+    assert!(matches!(
+        err,
+        AuthorError::Cardinality {
+            entity: "COORDINATES_LIST",
+            attribute: "position_coords",
+            got: 2,
+            min: 3,
+            max: Some(3),
+        }
+    ));
 
     // Complex parts get the same guard: GLOBAL_UNIT_ASSIGNED_CONTEXT.units
     // is SET [1:?].
