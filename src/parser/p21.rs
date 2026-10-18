@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 use super::entity::{Attribute, Error, Graph, ParseWarning, RawEntity, RawEntityPart};
@@ -14,28 +13,20 @@ pub fn parse(source: &str) -> Result<Graph, Error> {
     Parser::new(source).parse()
 }
 
-/// Parse a Part 21 source given as raw bytes. Tries UTF-8 first; on
-/// failure falls back to ISO 8859-1 (Latin-1), which ISO 10303-21 §3.2
-/// defines as the file format's default encoding. Real-world STEP files
-/// frequently embed raw non-ASCII bytes (Cyrillic, Latin-1) directly
-/// instead of using the spec's `\X\` / `\X2\` / `\X4\` escapes — those
-/// bytes decode losslessly under the fallback (every byte 0x00..0xFF
-/// maps 1:1 to U+0000..U+00FF).
+/// Parse a Part 21 source given as raw bytes. A source that is valid UTF-8
+/// reads as UTF-8; any other reads as ISO 8859-1 (Latin-1), which
+/// ISO 10303-21 §3.2 defines as the file format's default encoding.
+/// Real-world STEP files frequently embed raw non-ASCII bytes (Cyrillic,
+/// Latin-1) directly instead of using the spec's `\X\` / `\X2\` / `\X4\`
+/// escapes — those bytes decode losslessly under the fallback (every byte
+/// 0x00..0xFF maps 1:1 to U+0000..U+00FF). The bytes are read in place; only
+/// the strings are decoded.
 ///
 /// # Errors
 ///
 /// Returns the first [`Error`] encountered by the underlying parser.
 pub fn parse_bytes(bytes: &[u8]) -> Result<Graph, Error> {
-    parse(&source_text(bytes))
-}
-
-/// The text of a Part 21 source given as bytes: UTF-8 if it is valid UTF-8,
-/// ISO 8859-1 otherwise (see [`parse_bytes`]).
-pub(crate) fn source_text(bytes: &[u8]) -> Cow<'_, str> {
-    match std::str::from_utf8(bytes) {
-        Ok(s) => Cow::Borrowed(s),
-        Err(_) => Cow::Owned(bytes.iter().map(|&b| b as char).collect()),
-    }
+    Parser::from_bytes(bytes).parse()
 }
 
 /// Everything in a Part 21 file before its DATA section's entities.
@@ -72,8 +63,17 @@ pub struct Parser<'src> {
 impl<'src> Parser<'src> {
     #[must_use]
     pub fn new(source: &'src str) -> Self {
+        Self::with_lexer(Lexer::new(source))
+    }
+
+    /// Parse a source given as bytes, read as [`parse_bytes`] describes.
+    pub(crate) fn from_bytes(source: &'src [u8]) -> Self {
+        Self::with_lexer(Lexer::from_bytes(source))
+    }
+
+    fn with_lexer(lexer: Lexer<'src>) -> Self {
         Self {
-            lexer: Lexer::new(source),
+            lexer,
             warnings: Vec::new(),
             depth: 0,
             lists: Vec::new(),

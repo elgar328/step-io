@@ -1,10 +1,14 @@
+use std::borrow::Cow;
+
 use logos::Logos;
 
 /// Position information for a lexed token.
 ///
-/// `start`/`end` are byte offsets into the source. `line` is 1-indexed by
-/// `\n` occurrences. `column` is 1-indexed and counts Unicode scalar values
-/// (chars), so multibyte characters advance the column by one.
+/// `start`/`end` are byte offsets into the source as given (the bytes of a
+/// file read with [`parse_bytes`](crate::parser::parse_bytes)). `line` is
+/// 1-indexed by `\n` occurrences. `column` is 1-indexed and counts characters,
+/// so a multibyte character advances it by one (in a file read as ISO 8859-1,
+/// every byte is a character).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Span {
     pub start: usize,
@@ -14,7 +18,8 @@ pub struct Span {
 }
 
 impl Span {
-    /// Return the slice of `source` that produced this token.
+    /// Return the slice of `source` that produced this token, for a source
+    /// given as text.
     #[must_use]
     pub fn slice<'a>(&self, source: &'a str) -> &'a str {
         &source[self.start..self.end]
@@ -97,8 +102,11 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, LexError> {
 /// would produce and lets the parser stage use a simple `Option<&Token>`
 /// style API.
 pub struct Lexer<'src> {
-    source: &'src str,
-    inner: logos::Lexer<'src, TokenKind>,
+    source: &'src [u8],
+    /// The source as text when it is valid UTF-8; `None` reads it as
+    /// ISO 8859-1, one byte per character.
+    text: Option<&'src str>,
+    inner: logos::Lexer<'src, Raw>,
     prev_end: usize,
     line: u32,
     column: u32,
@@ -108,9 +116,20 @@ pub struct Lexer<'src> {
 impl<'src> Lexer<'src> {
     #[must_use]
     pub fn new(source: &'src str) -> Self {
+        Self::with_text(source.as_bytes(), Some(source))
+    }
+
+    /// Lex a source given as bytes, read as UTF-8 if it is valid UTF-8 and as
+    /// ISO 8859-1 otherwise.
+    pub(crate) fn from_bytes(source: &'src [u8]) -> Self {
+        Self::with_text(source, std::str::from_utf8(source).ok())
+    }
+
+    fn with_text(source: &'src [u8], text: Option<&'src str>) -> Self {
         Self {
             source,
-            inner: TokenKind::lexer(source),
+            text,
+            inner: Raw::lexer(source),
             prev_end: 0,
             line: 1,
             column: 1,
@@ -127,19 +146,73 @@ impl<'src> Lexer<'src> {
         self.peeked.as_ref()
     }
 
-    /// Walk through `source[start..end]` updating `line`/`column`.
+    /// Walk through `source[start..end]` updating `line`/`column`: a column
+    /// per character, which in UTF-8 is a byte that does not continue one.
     fn advance_over(&mut self, start: usize, end: usize) {
         if start >= end {
             return;
         }
-        for ch in self.source[start..end].chars() {
-            if ch == '\n' {
+        let latin1 = self.text.is_none();
+        for &b in &self.source[start..end] {
+            if b == b'\n' {
                 self.line += 1;
                 self.column = 1;
-            } else {
+            } else if latin1 || b & 0xC0 != 0x80 {
                 self.column += 1;
             }
         }
+    }
+
+    /// The source text in `range`: borrowed when the source is UTF-8, decoded
+    /// from ISO 8859-1 otherwise.
+    fn text(&self, range: std::ops::Range<usize>) -> Cow<'src, str> {
+        match self.text {
+            Some(t) => Cow::Borrowed(t.get(range).unwrap_or_default()),
+            None => Cow::Owned(self.source[range].iter().map(|&b| char::from(b)).collect()),
+        }
+    }
+
+    /// The source text in `range`, which the token rules keep to ASCII.
+    fn ascii(&self, range: std::ops::Range<usize>) -> &'src str {
+        match self.text {
+            Some(t) => t.get(range).unwrap_or_default(),
+            None => std::str::from_utf8(&self.source[range]).unwrap_or_default(),
+        }
+    }
+
+    /// The token a matched rule stands for, with its value; `None` for a
+    /// number out of range or not finite.
+    fn token_kind(&self, raw: Raw, r: std::ops::Range<usize>) -> Option<TokenKind> {
+        let inner = r.start + 1..r.end - 1;
+        Some(match raw {
+            Raw::IsoStart => TokenKind::IsoStart,
+            Raw::IsoEnd => TokenKind::IsoEnd,
+            Raw::Header => TokenKind::Header,
+            Raw::Data => TokenKind::Data,
+            Raw::EndSec => TokenKind::EndSec,
+            Raw::LParen => TokenKind::LParen,
+            Raw::RParen => TokenKind::RParen,
+            Raw::Comma => TokenKind::Comma,
+            Raw::Semicolon => TokenKind::Semicolon,
+            Raw::Equals => TokenKind::Equals,
+            Raw::Asterisk => TokenKind::Asterisk,
+            Raw::Dollar => TokenKind::Dollar,
+            // Reject non-finite (e.g. `1.E999` -> inf) as an InvalidNumber
+            // error rather than letting inf into the model.
+            Raw::Real => TokenKind::Real(
+                self.ascii(r)
+                    .parse::<f64>()
+                    .ok()
+                    .filter(|f| f.is_finite())?,
+            ),
+            Raw::Integer => TokenKind::Integer(self.ascii(r).parse().ok()?),
+            Raw::String => TokenKind::String(self.text(inner).replace("''", "'")),
+            Raw::EntityRef => TokenKind::EntityRef(self.ascii(r.start + 1..r.end).parse().ok()?),
+            Raw::Enum => TokenKind::Enum(self.ascii(inner).to_owned()),
+            Raw::Binary => TokenKind::Binary(self.ascii(inner).to_owned()),
+            Raw::Keyword => TokenKind::Keyword(self.ascii(r).to_owned()),
+            Raw::AnchorRef => TokenKind::AnchorRef(self.text(r).into_owned()),
+        })
     }
 
     /// Pull the next token directly from logos, bypassing the peek buffer.
@@ -148,7 +221,13 @@ impl<'src> Lexer<'src> {
     /// [`Lexer::peek`]; callers that want the buffered behavior should use
     /// those public entry points instead.
     fn next_from_inner(&mut self) -> Option<Result<Token, LexError>> {
-        let kind_result = self.inner.next()?;
+        let raw = self.inner.next()?;
+        if raw.is_err() && self.text.is_some() {
+            // An unmatched character spans all of its bytes, as when lexing text.
+            let rest = &self.source[self.inner.span().end..];
+            let more = rest.iter().take_while(|&&b| b & 0xC0 == 0x80).count();
+            self.inner.bump(more);
+        }
         let range = self.inner.span();
 
         // Whitespace and comments skipped since the previous token.
@@ -171,27 +250,19 @@ impl<'src> Lexer<'src> {
             column: token_column,
         };
 
-        let Ok(kind) = kind_result else {
-            let raw = span.slice(self.source);
-            let snippet = truncate_to_chars(raw, 40);
-            // A rejected token starting with a digit (or sign/`#` then a digit)
-            // came from the Integer/Real/EntityRef callbacks returning None on an
-            // out-of-range / non-finite literal — classify it as InvalidNumber.
-            let mut cs = raw.chars();
-            let kind = match cs.next() {
-                Some(c) if c.is_ascii_digit() => LexErrorKind::InvalidNumber,
-                Some('#' | '+' | '-') if cs.next().is_some_and(|c| c.is_ascii_digit()) => {
-                    LexErrorKind::InvalidNumber
-                }
-                _ => LexErrorKind::UnexpectedCharacter,
-            };
-            return Some(Err(LexError {
-                kind,
-                span,
-                snippet,
-            }));
+        // A number out of range / non-finite is an InvalidNumber; a character
+        // no rule matches, an UnexpectedCharacter.
+        let error = match raw.ok().map(|raw| self.token_kind(raw, range)) {
+            Some(Some(kind)) => return Some(Ok(Token { kind, span })),
+            Some(None) => LexErrorKind::InvalidNumber,
+            None => LexErrorKind::UnexpectedCharacter,
         };
-        Some(Ok(Token { kind, span }))
+        let snippet = truncate_to_chars(&self.text(span.start..span.end), 40);
+        Some(Err(LexError {
+            kind: error,
+            span,
+            snippet,
+        }))
     }
 }
 
@@ -218,127 +289,102 @@ fn truncate_to_chars(s: &str, max_chars: usize) -> String {
 /// Part 21 token kinds.
 ///
 /// Variants cover every lexical construct defined in ISO 10303-21.
-#[derive(Logos, Debug, Clone, PartialEq)]
-#[logos(skip r"[ \t\r\n]+")]
-#[logos(skip r"/\*([^*]|\*+[^*/])*\*+/")]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TokenKind {
-    // --- Section keywords (priority 10 protects them from `Keyword`) ---
-    //
-    // Part 21 is case insensitive for keywords, so every section marker is
-    // matched with a case-insensitive regex via the `(?i)` flag. The hyphen
-    // in `ISO-10303-21` / `END-ISO-10303-21` keeps them outside the
-    // `Keyword` regex, which matches `[A-Za-z_][A-Za-z0-9_]*` only.
-    #[regex(r"(?i)ISO-10303-21", priority = 10)]
     IsoStart,
-
-    #[regex(r"(?i)END-ISO-10303-21", priority = 10)]
     IsoEnd,
-
-    #[regex(r"(?i)HEADER", priority = 10)]
     Header,
-
-    #[regex(r"(?i)DATA", priority = 10)]
     Data,
-
-    #[regex(r"(?i)ENDSEC", priority = 10)]
     EndSec,
-
-    #[token("(")]
     LParen,
-
-    #[token(")")]
     RParen,
-
-    #[token(",")]
     Comma,
-
-    #[token(";")]
     Semicolon,
-
-    #[token("=")]
     Equals,
-
     /// Derived attribute marker.
-    #[token("*")]
     Asterisk,
-
     /// Unset / optional attribute marker.
-    #[token("$")]
     Dollar,
-
     /// Real number — must contain a `.`; captures optional sign and exponent.
-    #[regex(
-        r"[+-]?[0-9]+\.[0-9]*([Ee][+-]?[0-9]+)?",
-        // Reject non-finite (e.g. `1.E999` -> inf): the callback returns None, so
-        // the lexer surfaces it as an InvalidNumber error rather than letting inf
-        // into the model.
-        |lex| lex.slice().parse::<f64>().ok().filter(|f| f.is_finite())
-    )]
     Real(f64),
-
     /// Integer — no decimal point; may carry a sign.
-    #[regex(
-        r"[+-]?[0-9]+",
-        |lex| lex.slice().parse::<i64>().ok()
-    )]
     Integer(i64),
-
     /// String literal enclosed in single quotes. Outer quotes are stripped
     /// and the `''` escape is decoded to a single `'`. The backslash escapes
     /// (`\X\HH`, `\X2\…\X0\`, `\X4\…\X0\`, …) and line breaks stay as
     /// written; the parser decodes them into [`Attribute::String`](crate::parser::Attribute::String).
-    #[regex(
-        r"'([^']|'')*'",
-        |lex| {
-            let s = lex.slice();
-            s[1..s.len() - 1].replace("''", "'")
-        }
-    )]
     String(String),
-
     /// Entity reference (`#N`). The numeric identifier is stored as `u64`.
-    #[regex(
-        r"#[0-9]+",
-        |lex| lex.slice()[1..].parse::<u64>().ok()
-    )]
     EntityRef(u64),
-
     /// Enumeration literal such as `.T.` or `.MILLI.`. The inner name is
     /// stored without the surrounding dots.
-    #[regex(
-        r"\.[A-Za-z_][A-Za-z0-9_]*\.",
-        |lex| {
-            let s = lex.slice();
-            s[1..s.len() - 1].to_string()
-        }
-    )]
     Enum(String),
-
     /// Hex-encoded binary literal, stored without the surrounding quotes.
     /// The leading hex digit (0–3) encodes the number of unused bits.
-    #[regex(
-        r#""[0-3][0-9A-Fa-f]*""#,
-        |lex| {
-            let s = lex.slice();
-            s[1..s.len() - 1].to_string()
-        }
-    )]
     Binary(String),
-
-    /// Identifier / entity type name. Does not include `-`, so hyphenated
-    /// section markers (handled above) never match this variant.
-    #[regex(
-        r"[A-Za-z_][A-Za-z0-9_]*",
-        |lex| lex.slice().to_string()
-    )]
+    /// Identifier / entity type name.
     Keyword(String),
-
     /// P21 edition 3 anchor reference (`<name>` or `<url#name>`). The
     /// whole bracketed form is captured as a single token; the parser
     /// currently discards these (ed.3 sections are skip-only — see
     /// [`crate::parser::ParseWarning::Ed3SectionDiscarded`]).
-    #[regex(r"<[^>]+>", |lex| lex.slice().to_string())]
     AnchorRef(String),
+}
+
+/// The rules the source's bytes are matched against, one per [`TokenKind`];
+/// the [`Lexer`] turns a match into the token with its value.
+#[derive(Logos, Debug, Clone, Copy, PartialEq)]
+#[logos(utf8 = false)]
+#[logos(skip r"[ \t\r\n]+")]
+#[logos(skip r"/\*((?-u:[^*])|\*+(?-u:[^*/]))*\*+/")]
+enum Raw {
+    // --- Section keywords (priority 10 protects them from `Keyword`) ---
+    //
+    // Part 21 is case insensitive for keywords, so every section marker is
+    // matched with an ASCII case-insensitive regex via the `(?i-u)` flags.
+    // The hyphen in `ISO-10303-21` / `END-ISO-10303-21` keeps them outside
+    // the `Keyword` regex, which matches `[A-Za-z_][A-Za-z0-9_]*` only.
+    #[regex(r"(?i-u)ISO-10303-21", priority = 10)]
+    IsoStart,
+    #[regex(r"(?i-u)END-ISO-10303-21", priority = 10)]
+    IsoEnd,
+    #[regex(r"(?i-u)HEADER", priority = 10)]
+    Header,
+    #[regex(r"(?i-u)DATA", priority = 10)]
+    Data,
+    #[regex(r"(?i-u)ENDSEC", priority = 10)]
+    EndSec,
+    #[token("(")]
+    LParen,
+    #[token(")")]
+    RParen,
+    #[token(",")]
+    Comma,
+    #[token(";")]
+    Semicolon,
+    #[token("=")]
+    Equals,
+    #[token("*")]
+    Asterisk,
+    #[token("$")]
+    Dollar,
+    #[regex(r"[+-]?[0-9]+\.[0-9]*([Ee][+-]?[0-9]+)?")]
+    Real,
+    #[regex(r"[+-]?[0-9]+")]
+    Integer,
+    // Any byte but a quote, or a doubled quote.
+    #[regex(r"'((?-u:[^'])|'')*'")]
+    String,
+    #[regex(r"#[0-9]+")]
+    EntityRef,
+    #[regex(r"\.[A-Za-z_][A-Za-z0-9_]*\.")]
+    Enum,
+    #[regex(r#""[0-3][0-9A-Fa-f]*""#)]
+    Binary,
+    #[regex(r"[A-Za-z_][A-Za-z0-9_]*")]
+    Keyword,
+    #[regex(r"<(?-u:[^>])+>")]
+    AnchorRef,
 }
 
 #[cfg(test)]
@@ -346,15 +392,20 @@ mod tests {
     use super::*;
 
     fn first_token(src: &str) -> TokenKind {
-        TokenKind::lexer(src)
+        Lexer::new(src)
             .next()
             .expect("expected at least one token")
             .expect("expected Ok token")
+            .kind
+    }
+
+    fn kinds(src: &str) -> impl Iterator<Item = Result<TokenKind, LexError>> + '_ {
+        Lexer::new(src).map(|t| t.map(|t| t.kind))
     }
 
     #[test]
     fn lex_punctuation() {
-        let mut lex = TokenKind::lexer("(),;=*$");
+        let mut lex = kinds("(),;=*$");
         assert_eq!(lex.next(), Some(Ok(TokenKind::LParen)));
         assert_eq!(lex.next(), Some(Ok(TokenKind::RParen)));
         assert_eq!(lex.next(), Some(Ok(TokenKind::Comma)));
@@ -407,7 +458,7 @@ mod tests {
     #[test]
     fn lex_real_wins_over_integer() {
         // Logos should match the longest pattern — "1.23" must not be lexed as Integer(1).
-        let mut lex = TokenKind::lexer("1.23");
+        let mut lex = kinds("1.23");
         assert_eq!(lex.next(), Some(Ok(TokenKind::Real(1.23))));
         assert_eq!(lex.next(), None);
     }
@@ -415,7 +466,7 @@ mod tests {
     #[test]
     fn lex_integer_when_no_dot() {
         // A bare "1" has no decimal point, so it is Integer, not Real.
-        let mut lex = TokenKind::lexer("1");
+        let mut lex = kinds("1");
         assert_eq!(lex.next(), Some(Ok(TokenKind::Integer(1))));
         assert_eq!(lex.next(), None);
     }
@@ -567,7 +618,7 @@ mod tests {
 
     #[test]
     fn lex_whitespace_skipped_between_tokens() {
-        let mut lex = TokenKind::lexer("HEADER  ;\n\tDATA");
+        let mut lex = kinds("HEADER  ;\n\tDATA");
         assert_eq!(lex.next(), Some(Ok(TokenKind::Header)));
         assert_eq!(lex.next(), Some(Ok(TokenKind::Semicolon)));
         assert_eq!(lex.next(), Some(Ok(TokenKind::Data)));
@@ -576,7 +627,7 @@ mod tests {
 
     #[test]
     fn lex_comment_skipped_between_tokens() {
-        let mut lex = TokenKind::lexer("1 /* ignored */ 2");
+        let mut lex = kinds("1 /* ignored */ 2");
         assert_eq!(lex.next(), Some(Ok(TokenKind::Integer(1))));
         assert_eq!(lex.next(), Some(Ok(TokenKind::Integer(2))));
         assert_eq!(lex.next(), None);
@@ -584,7 +635,7 @@ mod tests {
 
     #[test]
     fn lex_multiline_comment_skipped() {
-        let mut lex = TokenKind::lexer("1/* line1\nline2 */2");
+        let mut lex = kinds("1/* line1\nline2 */2");
         assert_eq!(lex.next(), Some(Ok(TokenKind::Integer(1))));
         assert_eq!(lex.next(), Some(Ok(TokenKind::Integer(2))));
         assert_eq!(lex.next(), None);
@@ -593,7 +644,7 @@ mod tests {
     #[test]
     fn lex_minimal_entity_line() {
         // A realistic Part 21 line: `#1=LINE('',#2,#3);`
-        let mut lex = TokenKind::lexer("#1=LINE('',#2,#3);");
+        let mut lex = kinds("#1=LINE('',#2,#3);");
         assert_eq!(lex.next(), Some(Ok(TokenKind::EntityRef(1))));
         assert_eq!(lex.next(), Some(Ok(TokenKind::Equals)));
         assert_eq!(lex.next(), Some(Ok(TokenKind::Keyword("LINE".into()))));
@@ -811,5 +862,48 @@ mod tests {
         fn assert_error<E: std::error::Error>(_: &E) {}
         let err = tokenize("@").expect_err("expected a lex error");
         assert_error(&err);
+    }
+
+    fn collect_bytes(src: &[u8]) -> Vec<Token> {
+        Lexer::from_bytes(src)
+            .collect::<Result<Vec<_>, _>>()
+            .expect("lexes")
+    }
+
+    #[test]
+    fn latin1_source_decodes_strings_and_counts_bytes() {
+        // 0xC0 and 0xE9 alone are not UTF-8, so the whole source is Latin-1.
+        let tokens = collect_bytes(b"'\xC0b' /* \xE9 */ <a\xE9> x");
+        assert_eq!(tokens[0].kind, TokenKind::String("\u{C0}b".into()));
+        assert_eq!(tokens[1].kind, TokenKind::AnchorRef("<a\u{E9}>".into()));
+        // Offsets count the bytes given; columns count one per byte.
+        assert_eq!((tokens[1].span.start, tokens[1].span.column), (13, 14));
+        assert_eq!((tokens[2].span.start, tokens[2].span.column), (18, 19));
+    }
+
+    #[test]
+    fn utf8_source_counts_columns_in_characters() {
+        let tokens = collect_bytes("'é' x".as_bytes());
+        assert_eq!(tokens[0].kind, TokenKind::String("é".into()));
+        assert_eq!((tokens[1].span.start, tokens[1].span.column), (5, 5));
+    }
+
+    #[test]
+    fn unexpected_multibyte_character_is_one_error() {
+        let mut lexer = Lexer::new("1 é 2");
+        assert!(lexer.next().is_some_and(|t| t.is_ok()));
+        let err = lexer.next().unwrap().expect_err("é is not a token");
+        assert_eq!((err.span.start, err.span.end, err.span.column), (2, 4, 3));
+        assert_eq!(err.snippet, "é");
+        let two = lexer.next().unwrap().expect("lexing goes on after it");
+        assert_eq!((two.kind, two.span.column), (TokenKind::Integer(2), 5));
+    }
+
+    #[test]
+    fn section_markers_ignore_ascii_case_only() {
+        assert_eq!(first_token("endsec"), TokenKind::EndSec);
+        assert_eq!(first_token("Iso-10303-21"), TokenKind::IsoStart);
+        // `ſ` folds to `s` in Unicode, not in Part 21.
+        assert_ne!(first_token("ENDſEC"), TokenKind::EndSec);
     }
 }

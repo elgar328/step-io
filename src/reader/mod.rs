@@ -21,7 +21,7 @@ use crate::generated::read::{
     simple_index,
 };
 use crate::parser::lexer::Span;
-use crate::parser::p21::{Parser, source_text};
+use crate::parser::p21::Parser;
 use crate::parser::{Attribute, Error, ParseWarning, RawEntity, RawEntityPart};
 
 mod entity_normalize;
@@ -219,7 +219,7 @@ impl Scan {
     /// entities read wins over its error, as the first error in the file.
     fn finish(
         mut self,
-        src: &str,
+        src: &[u8],
         end: Result<Vec<ParseWarning>, Error>,
     ) -> Result<Scanned, Error> {
         let mut rows = std::mem::take(&mut self.rows);
@@ -278,8 +278,8 @@ impl Scan {
 
 /// The span of the `seq`-th entity of the source, for an error about it
 /// (parses the source again up to it).
-fn span_of(src: &str, seq: u32) -> Span {
-    let mut p = Parser::new(src);
+fn span_of(src: &[u8], seq: u32) -> Span {
+    let mut p = Parser::from_bytes(src);
     let found = p.read_prelude().ok().and_then(|_| {
         (0..=seq)
             .map(|_| p.next_entity().ok().flatten())
@@ -549,8 +549,7 @@ pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
     /// not hanging — `debug_assert` flags non-convergence in dev).
     const MAX_ITERS: usize = 3;
 
-    let text = source_text(src);
-    let mut parser = Parser::new(&text);
+    let mut parser = Parser::from_bytes(src);
     let prelude = parser.read_prelude()?;
     let header = crate::header::from_raw(&prelude.header, prelude.schema);
     let mut scan = Scan::default();
@@ -571,7 +570,7 @@ pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
         n_in,
         n_synth,
         parse_warnings,
-    } = scan.finish(&text, end)?;
+    } = scan.finish(src, end)?;
 
     // Outer cascade fixpoint: drop_pass (graph/ref validity) -> resolve
     // (own-attr and ref validity). Read failures feed `known_bad` so the next
