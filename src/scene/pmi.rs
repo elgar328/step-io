@@ -59,25 +59,25 @@ impl Scene<'_> {
 /// [`Scene::dimensions`] and the per-part [`crate::scene::ProductDef`] queries.
 fn all_dimensions(cx: Ctx<'_>) -> Vec<Dimension<'_>> {
     let mut out = Vec::new();
-    for i in 0..cx.model.dimensional_size_arena.items.len() {
+    for i in cx.model.dimensional_size_arena.indices() {
         out.push(Dimension {
             cx,
             which: DimImpl::Size(m::DimensionalSizeId(i)),
         });
     }
-    for i in 0..cx.model.dimensional_location_arena.items.len() {
+    for i in cx.model.dimensional_location_arena.indices() {
         out.push(Dimension {
             cx,
             which: DimImpl::Location(m::DimensionalLocationId(i)),
         });
     }
-    for i in 0..cx.model.angular_size_arena.items.len() {
+    for i in cx.model.angular_size_arena.indices() {
         out.push(Dimension {
             cx,
             which: DimImpl::AngularSize(m::AngularSizeId(i)),
         });
     }
-    for i in 0..cx.model.angular_location_arena.items.len() {
+    for i in cx.model.angular_location_arena.indices() {
         out.push(Dimension {
             cx,
             which: DimImpl::AngularLocation(m::AngularLocationId(i)),
@@ -225,7 +225,7 @@ macro_rules! leaf_tolerances {
 
         fn push_dedicated_tolerances<'m>(cx: Ctx<'m>, out: &mut Vec<Tolerance<'m>>) {
             $(
-                for i in 0..cx.model.$arena.items.len() {
+                for i in cx.model.$arena.indices() {
                     out.push(Tolerance { cx, which: TolImpl::$ent(m::$id(i)) });
                 }
             )+
@@ -304,7 +304,7 @@ impl Scene<'_> {
 fn all_tolerances(cx: Ctx<'_>) -> Vec<Tolerance<'_>> {
     let mut out: Vec<Tolerance<'_>> = Vec::new();
     push_dedicated_tolerances(cx, &mut out);
-    for i in 0..cx.model.complex_unit_arena.items.len() {
+    for i in cx.model.complex_unit_arena.indices() {
         let cu = cx.model.complex_unit_arena.get(i);
         if cu
             .parts
@@ -433,13 +433,13 @@ impl Scene<'_> {
 /// [`Scene::datums`] and per-part queries.
 fn all_datums(cx: Ctx<'_>) -> Vec<Datum<'_>> {
     let mut out: Vec<Datum<'_>> = Vec::new();
-    for i in 0..cx.model.datum_arena.items.len() {
+    for i in cx.model.datum_arena.indices() {
         out.push(Datum {
             cx,
             which: DatumImpl::Datum(m::DatumId(i)),
         });
     }
-    for i in 0..cx.model.common_datum_arena.items.len() {
+    for i in cx.model.common_datum_arena.indices() {
         out.push(Datum {
             cx,
             which: DatumImpl::CommonDatum(m::CommonDatumId(i)),
@@ -769,7 +769,7 @@ macro_rules! feature_family {
         /// [`Scene::features`] enumerates.
         fn push_all_features<'m>(cx: Ctx<'m>, out: &mut Vec<Feature<'m>>) {
             $(
-                for i in 0..cx.model.$rarena.items.len() {
+                for i in cx.model.$rarena.indices() {
                     out.push(Feature { cx, which: FeatureImpl::$rent(m::$rid(i)) });
                 }
             )+

@@ -28,9 +28,15 @@ impl Scene<'_> {
     /// `BREP_WITH_VOIDS` (solids with internal cavities).
     pub fn all_solids(&self) -> impl Iterator<Item = Solid<'_>> + '_ {
         let cx = self.ctx();
-        let manifold = (0..cx.model.manifold_solid_brep_arena.items.len())
+        let manifold = cx
+            .model
+            .manifold_solid_brep_arena
+            .indices()
             .map(move |i| Solid::from_id(cx, m::ManifoldSolidBrepId(i)));
-        let with_voids = (0..cx.model.brep_with_voids_arena.items.len())
+        let with_voids = cx
+            .model
+            .brep_with_voids_arena
+            .indices()
             .map(move |i| Solid::from_void_id(cx, m::BrepWithVoidsId(i)));
         manifold.chain(with_voids)
     }
@@ -38,11 +44,11 @@ impl Scene<'_> {
     /// Every face in the model (`ADVANCED_FACE` and `FACE_SURFACE`).
     pub fn all_faces(&self) -> impl Iterator<Item = Face<'_>> + '_ {
         let cx = self.ctx();
-        let advanced = (0..cx.model.advanced_face_arena.items.len()).map(move |i| Face {
+        let advanced = cx.model.advanced_face_arena.indices().map(move |i| Face {
             cx,
             which: FaceImpl::Advanced(m::AdvancedFaceId(i)),
         });
-        let surfaces = (0..cx.model.face_surface_arena.items.len()).map(move |i| Face {
+        let surfaces = cx.model.face_surface_arena.indices().map(move |i| Face {
             cx,
             which: FaceImpl::Surface(m::FaceSurfaceId(i)),
         });
@@ -52,7 +58,7 @@ impl Scene<'_> {
     /// Every edge in the model (`EDGE_CURVE`).
     pub fn all_edges(&self) -> impl Iterator<Item = Edge<'_>> + '_ {
         let cx = self.ctx();
-        (0..cx.model.edge_curve_arena.items.len()).map(move |i| Edge {
+        cx.model.edge_curve_arena.indices().map(move |i| Edge {
             cx,
             id: m::EdgeCurveId(i),
         })
@@ -61,7 +67,7 @@ impl Scene<'_> {
     /// Every vertex in the model (`VERTEX_POINT`).
     pub fn all_vertices(&self) -> impl Iterator<Item = Vertex<'_>> + '_ {
         let cx = self.ctx();
-        (0..cx.model.vertex_point_arena.items.len()).map(move |i| Vertex {
+        cx.model.vertex_point_arena.indices().map(move |i| Vertex {
             cx,
             id: m::VertexPointId(i),
         })
@@ -70,10 +76,13 @@ impl Scene<'_> {
     /// Every geometric point in the model (`CARTESIAN_POINT`).
     pub fn all_points(&self) -> impl Iterator<Item = Point<'_>> + '_ {
         let cx = self.ctx();
-        (0..cx.model.cartesian_point_arena.items.len()).map(move |i| Point {
-            cx,
-            id: m::CartesianPointId(i),
-        })
+        cx.model
+            .cartesian_point_arena
+            .indices()
+            .map(move |i| Point {
+                cx,
+                id: m::CartesianPointId(i),
+            })
     }
 }
 

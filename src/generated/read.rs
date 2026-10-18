@@ -10061,13 +10061,13 @@ fn build_action_arena(attributes: &[Attribute]) -> Result<Action, String> {
             Attribute::Unset => None,
             other => Some((as_str(other, "ACTION.description"))?),
         },
-        chosen_method: ActionMethodRef::ActionMethod(ActionMethodId(usize::MAX)),
+        chosen_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)),
     })
 }
 
 fn build_action_assignment_arena(attributes: &[Attribute]) -> Result<ActionAssignment, String> {
     Ok(ActionAssignment {
-        assigned_action: ActionRef::Action(ActionId(usize::MAX)),
+        assigned_action: ActionRef::Action(ActionId(u32::MAX)),
     })
 }
 
@@ -10126,8 +10126,8 @@ fn build_action_method_relationship_arena(
             Attribute::Unset => None,
             other => Some((as_str(other, "ACTION_METHOD_RELATIONSHIP.description"))?),
         },
-        relating_method: ActionMethodRef::ActionMethod(ActionMethodId(usize::MAX)),
-        related_method: ActionMethodRef::ActionMethod(ActionMethodId(usize::MAX)),
+        relating_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)),
+        related_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)),
     })
 }
 
@@ -10141,7 +10141,7 @@ fn build_action_property_arena(attributes: &[Attribute]) -> Result<ActionPropert
             req(attributes, 1, "ACTION_PROPERTY.description")?,
             "ACTION_PROPERTY.description",
         ))?,
-        definition: CharacterizedActionDefinitionRef::Action(ActionId(usize::MAX)),
+        definition: CharacterizedActionDefinitionRef::Action(ActionId(u32::MAX)),
     })
 }
 
@@ -10155,8 +10155,8 @@ fn build_action_relationship_arena(attributes: &[Attribute]) -> Result<ActionRel
             Attribute::Unset => None,
             other => Some((as_str(other, "ACTION_RELATIONSHIP.description"))?),
         },
-        relating_action: ActionRef::Action(ActionId(usize::MAX)),
-        related_action: ActionRef::Action(ActionId(usize::MAX)),
+        relating_action: ActionRef::Action(ActionId(u32::MAX)),
+        related_action: ActionRef::Action(ActionId(u32::MAX)),
     })
 }
 
@@ -10165,7 +10165,7 @@ fn build_action_request_assignment_arena(
 ) -> Result<ActionRequestAssignment, String> {
     Ok(ActionRequestAssignment {
         assigned_action_request: VersionedActionRequestRef::VersionedActionRequest(
-            VersionedActionRequestId(usize::MAX),
+            VersionedActionRequestId(u32::MAX),
         ),
     })
 }
@@ -10174,9 +10174,9 @@ fn build_action_request_solution_arena(
     attributes: &[Attribute],
 ) -> Result<ActionRequestSolution, String> {
     Ok(ActionRequestSolution {
-        method: ActionMethodRef::ActionMethod(ActionMethodId(usize::MAX)),
+        method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)),
         request: VersionedActionRequestRef::VersionedActionRequest(VersionedActionRequestId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -10192,7 +10192,7 @@ fn build_action_resource_arena(attributes: &[Attribute]) -> Result<ActionResourc
             other => Some((as_str(other, "ACTION_RESOURCE.description"))?),
         },
         usage: Vec::new(),
-        kind: ActionResourceTypeRef::ActionResourceType(ActionResourceTypeId(usize::MAX)),
+        kind: ActionResourceTypeRef::ActionResourceType(ActionResourceTypeId(u32::MAX)),
     })
 }
 
@@ -10208,8 +10208,8 @@ fn build_action_resource_relationship_arena(
             Attribute::Unset => None,
             other => Some((as_str(other, "ACTION_RESOURCE_RELATIONSHIP.description"))?),
         },
-        relating_resource: ActionResourceRef::ActionResource(ActionResourceId(usize::MAX)),
-        related_resource: ActionResourceRef::ActionResource(ActionResourceId(usize::MAX)),
+        relating_resource: ActionResourceRef::ActionResource(ActionResourceId(u32::MAX)),
+        related_resource: ActionResourceRef::ActionResource(ActionResourceId(u32::MAX)),
     })
 }
 
@@ -10226,7 +10226,7 @@ fn build_action_resource_requirement_arena(
             "ACTION_RESOURCE_REQUIREMENT.description",
         ))?,
         kind: ResourceRequirementTypeRef::ResourceRequirementType(ResourceRequirementTypeId(
-            usize::MAX,
+            u32::MAX,
         )),
         operations: Vec::new(),
     })
@@ -10306,7 +10306,7 @@ fn build_advanced_brep_shape_representation_arena(
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -10318,7 +10318,7 @@ fn build_advanced_face_arena(attributes: &[Attribute]) -> Result<AdvancedFace, S
             "ADVANCED_FACE.name",
         ))?,
         bounds: Vec::new(),
-        face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(usize::MAX)),
+        face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)),
         same_sense: (Ok::<bool, String>(
             matches!(req(attributes, 3, "ADVANCED_FACE.same_sense")?, Attribute::Enum(s) if s == "T"),
         ))?,
@@ -10338,7 +10338,7 @@ fn build_all_around_shape_aspect_arena(
             other => Some((as_str(other, "ALL_AROUND_SHAPE_ASPECT.description"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
         product_definitional: (as_logical(
             req(
@@ -10362,10 +10362,10 @@ fn build_angular_location_arena(attributes: &[Attribute]) -> Result<AngularLocat
             other => Some((as_str(other, "ANGULAR_LOCATION.description"))?),
         },
         relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
         related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
         angle_selection: (match req(attributes, 4, "ANGULAR_LOCATION.angle_selection")? {
             Attribute::Enum(s) => AngleRelator::parse(s)
@@ -10379,7 +10379,7 @@ fn build_angular_location_arena(attributes: &[Attribute]) -> Result<AngularLocat
 
 fn build_angular_size_arena(attributes: &[Attribute]) -> Result<AngularSize, String> {
     Ok(AngularSize {
-        applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)),
+        applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)),
         name: (as_str(
             req(attributes, 1, "ANGULAR_SIZE.name")?,
             "ANGULAR_SIZE.name",
@@ -10408,7 +10408,7 @@ fn build_angularity_tolerance_arena(
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
         datum_system: Vec::new(),
     })
@@ -10423,7 +10423,7 @@ fn build_annotation_curve_occurrence_arena(
             "ANNOTATION_CURVE_OCCURRENCE.name",
         ))?,
         styles: Vec::new(),
-        item: CurveOrCurveSetRef::BSplineCurve(BSplineCurveId(usize::MAX)),
+        item: CurveOrCurveSetRef::BSplineCurve(BSplineCurveId(u32::MAX)),
     })
 }
 
@@ -10437,9 +10437,9 @@ fn build_annotation_fill_area_occurrence_arena(
         ))?,
         styles: Vec::new(),
         item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
-        fill_style_target: PointRef::ApllPoint(ApllPointId(usize::MAX)),
+        fill_style_target: PointRef::ApllPoint(ApllPointId(u32::MAX)),
     })
 }
 
@@ -10453,7 +10453,7 @@ fn build_annotation_occurrence_arena(
         ))?,
         styles: Vec::new(),
         item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
     })
 }
@@ -10475,10 +10475,10 @@ fn build_annotation_occurrence_associativity_arena(
             "ANNOTATION_OCCURRENCE_ASSOCIATIVITY.description",
         ))?,
         relating_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(
-            AnnotationCurveOccurrenceId(usize::MAX),
+            AnnotationCurveOccurrenceId(u32::MAX),
         ),
         related_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(
-            AnnotationCurveOccurrenceId(usize::MAX),
+            AnnotationCurveOccurrenceId(u32::MAX),
         ),
     })
 }
@@ -10500,10 +10500,10 @@ fn build_annotation_occurrence_relationship_arena(
             "ANNOTATION_OCCURRENCE_RELATIONSHIP.description",
         ))?,
         relating_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(
-            AnnotationCurveOccurrenceId(usize::MAX),
+            AnnotationCurveOccurrenceId(u32::MAX),
         ),
         related_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(
-            AnnotationCurveOccurrenceId(usize::MAX),
+            AnnotationCurveOccurrenceId(u32::MAX),
         ),
     })
 }
@@ -10530,7 +10530,7 @@ fn build_annotation_placeholder_occurrence_arena(
         ))?,
         styles: Vec::new(),
         item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
         role: (match req(attributes, 3, "ANNOTATION_PLACEHOLDER_OCCURRENCE.role")? {
             Attribute::Enum(s) => AnnotationPlaceholderOccurrenceRole::parse(s)
@@ -10564,7 +10564,7 @@ fn build_annotation_placeholder_occurrence_with_leader_line_arena(
         ))?,
         styles: Vec::new(),
         item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
         role: (match req(
             attributes,
@@ -10597,7 +10597,7 @@ fn build_annotation_plane_arena(attributes: &[Attribute]) -> Result<AnnotationPl
             "ANNOTATION_PLANE.name",
         ))?,
         styles: Vec::new(),
-        item: PlaneOrPlanarBoxRef::PlanarBox(PlanarBoxId(usize::MAX)),
+        item: PlaneOrPlanarBoxRef::PlanarBox(PlanarBoxId(u32::MAX)),
         elements: None,
     })
 }
@@ -10608,8 +10608,8 @@ fn build_annotation_symbol_arena(attributes: &[Attribute]) -> Result<AnnotationS
             req(attributes, 0, "ANNOTATION_SYMBOL.name")?,
             "ANNOTATION_SYMBOL.name",
         ))?,
-        mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(usize::MAX)),
-        mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+        mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(u32::MAX)),
+        mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
     })
 }
 
@@ -10622,7 +10622,7 @@ fn build_annotation_symbol_occurrence_arena(
             "ANNOTATION_SYMBOL_OCCURRENCE.name",
         ))?,
         styles: Vec::new(),
-        item: AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(AnnotationSymbolId(usize::MAX)),
+        item: AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(AnnotationSymbolId(u32::MAX)),
     })
 }
 
@@ -10632,8 +10632,8 @@ fn build_annotation_text_arena(attributes: &[Attribute]) -> Result<AnnotationTex
             req(attributes, 0, "ANNOTATION_TEXT.name")?,
             "ANNOTATION_TEXT.name",
         ))?,
-        mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(usize::MAX)),
-        mapping_target: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
+        mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(u32::MAX)),
+        mapping_target: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)),
     })
 }
 
@@ -10645,8 +10645,8 @@ fn build_annotation_text_character_arena(
             req(attributes, 0, "ANNOTATION_TEXT_CHARACTER.name")?,
             "ANNOTATION_TEXT_CHARACTER.name",
         ))?,
-        mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(usize::MAX)),
-        mapping_target: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
+        mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(u32::MAX)),
+        mapping_target: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)),
         alignment: (as_str(
             req(attributes, 3, "ANNOTATION_TEXT_CHARACTER.alignment")?,
             "ANNOTATION_TEXT_CHARACTER.alignment",
@@ -10663,7 +10663,7 @@ fn build_annotation_text_occurrence_arena(
             "ANNOTATION_TEXT_OCCURRENCE.name",
         ))?,
         styles: Vec::new(),
-        item: AnnotationTextOccurrenceItemRef::AnnotationText(AnnotationTextId(usize::MAX)),
+        item: AnnotationTextOccurrenceItemRef::AnnotationText(AnnotationTextId(u32::MAX)),
     })
 }
 
@@ -10735,7 +10735,7 @@ fn build_apll_point_with_surface_arena(
                 "APLL_POINT_WITH_SURFACE.symbol_applied: expected enum, got {o:?}"
             )),
         })?,
-        associated_surface: FaceSurfaceRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+        associated_surface: FaceSurfaceRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
     })
 }
 
@@ -10757,7 +10757,7 @@ fn build_application_context_element_arena(
             "APPLICATION_CONTEXT_ELEMENT.name",
         ))?,
         frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -10786,7 +10786,7 @@ fn build_application_protocol_definition_arena(
             )?,
             "APPLICATION_PROTOCOL_DEFINITION.application_protocol_year",
         ))?,
-        application: ApplicationContextRef::ApplicationContext(ApplicationContextId(usize::MAX)),
+        application: ApplicationContextRef::ApplicationContext(ApplicationContextId(u32::MAX)),
     })
 }
 
@@ -10794,7 +10794,7 @@ fn build_applied_approval_assignment_arena(
     attributes: &[Attribute],
 ) -> Result<AppliedApprovalAssignment, String> {
     Ok(AppliedApprovalAssignment {
-        assigned_approval: ApprovalRef::Approval(ApprovalId(usize::MAX)),
+        assigned_approval: ApprovalRef::Approval(ApprovalId(u32::MAX)),
         items: Vec::new(),
     })
 }
@@ -10803,8 +10803,8 @@ fn build_applied_date_and_time_assignment_arena(
     attributes: &[Attribute],
 ) -> Result<AppliedDateAndTimeAssignment, String> {
     Ok(AppliedDateAndTimeAssignment {
-        assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(usize::MAX)),
-        role: DateTimeRoleRef::DateTimeRole(DateTimeRoleId(usize::MAX)),
+        assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(u32::MAX)),
+        role: DateTimeRoleRef::DateTimeRole(DateTimeRoleId(u32::MAX)),
         items: Vec::new(),
     })
 }
@@ -10813,7 +10813,7 @@ fn build_applied_document_reference_arena(
     attributes: &[Attribute],
 ) -> Result<AppliedDocumentReference, String> {
     Ok(AppliedDocumentReference {
-        assigned_document: DocumentRef::Document(DocumentId(usize::MAX)),
+        assigned_document: DocumentRef::Document(DocumentId(u32::MAX)),
         source: (as_str(
             req(attributes, 1, "APPLIED_DOCUMENT_REFERENCE.source")?,
             "APPLIED_DOCUMENT_REFERENCE.source",
@@ -10834,8 +10834,8 @@ fn build_applied_external_identification_assignment_arena(
             )?,
             "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT.assigned_id",
         ))?,
-        role: IdentificationRoleRef::IdentificationRole(IdentificationRoleId(usize::MAX)),
-        source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+        role: IdentificationRoleRef::IdentificationRole(IdentificationRoleId(u32::MAX)),
+        source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
         items: Vec::new(),
     })
 }
@@ -10844,7 +10844,7 @@ fn build_applied_group_assignment_arena(
     attributes: &[Attribute],
 ) -> Result<AppliedGroupAssignment, String> {
     Ok(AppliedGroupAssignment {
-        assigned_group: GroupRef::Group(GroupId(usize::MAX)),
+        assigned_group: GroupRef::Group(GroupId(u32::MAX)),
         items: Vec::new(),
     })
 }
@@ -10854,10 +10854,10 @@ fn build_applied_person_and_organization_assignment_arena(
 ) -> Result<AppliedPersonAndOrganizationAssignment, String> {
     Ok(AppliedPersonAndOrganizationAssignment {
         assigned_person_and_organization: PersonAndOrganizationRef::PersonAndOrganization(
-            PersonAndOrganizationId(usize::MAX),
+            PersonAndOrganizationId(u32::MAX),
         ),
         role: PersonAndOrganizationRoleRef::PersonAndOrganizationRole(PersonAndOrganizationRoleId(
-            usize::MAX,
+            u32::MAX,
         )),
         items: Vec::new(),
     })
@@ -10874,7 +10874,7 @@ fn build_applied_security_classification_assignment_arena(
 ) -> Result<AppliedSecurityClassificationAssignment, String> {
     Ok(AppliedSecurityClassificationAssignment {
         assigned_security_classification: SecurityClassificationRef::SecurityClassification(
-            SecurityClassificationId(usize::MAX),
+            SecurityClassificationId(u32::MAX),
         ),
         items: Vec::new(),
     })
@@ -10882,21 +10882,21 @@ fn build_applied_security_classification_assignment_arena(
 
 fn build_approval_arena(attributes: &[Attribute]) -> Result<Approval, String> {
     Ok(Approval {
-        status: ApprovalStatusRef::ApprovalStatus(ApprovalStatusId(usize::MAX)),
+        status: ApprovalStatusRef::ApprovalStatus(ApprovalStatusId(u32::MAX)),
         level: (as_str(req(attributes, 1, "APPROVAL.level")?, "APPROVAL.level"))?,
     })
 }
 
 fn build_approval_assignment_arena(attributes: &[Attribute]) -> Result<ApprovalAssignment, String> {
     Ok(ApprovalAssignment {
-        assigned_approval: ApprovalRef::Approval(ApprovalId(usize::MAX)),
+        assigned_approval: ApprovalRef::Approval(ApprovalId(u32::MAX)),
     })
 }
 
 fn build_approval_date_time_arena(attributes: &[Attribute]) -> Result<ApprovalDateTime, String> {
     Ok(ApprovalDateTime {
-        date_time: DateTimeSelectRef::CalendarDate(CalendarDateId(usize::MAX)),
-        dated_approval: ApprovalRef::Approval(ApprovalId(usize::MAX)),
+        date_time: DateTimeSelectRef::CalendarDate(CalendarDateId(u32::MAX)),
+        dated_approval: ApprovalRef::Approval(ApprovalId(u32::MAX)),
     })
 }
 
@@ -10904,9 +10904,9 @@ fn build_approval_person_organization_arena(
     attributes: &[Attribute],
 ) -> Result<ApprovalPersonOrganization, String> {
     Ok(ApprovalPersonOrganization {
-        person_organization: PersonOrganizationSelectRef::Organization(OrganizationId(usize::MAX)),
-        authorized_approval: ApprovalRef::Approval(ApprovalId(usize::MAX)),
-        role: ApprovalRoleRef::ApprovalRole(ApprovalRoleId(usize::MAX)),
+        person_organization: PersonOrganizationSelectRef::Organization(OrganizationId(u32::MAX)),
+        authorized_approval: ApprovalRef::Approval(ApprovalId(u32::MAX)),
+        role: ApprovalRoleRef::ApprovalRole(ApprovalRoleId(u32::MAX)),
     })
 }
 
@@ -10933,7 +10933,7 @@ fn build_approximation_tolerance_arena(
 ) -> Result<ApproximationTolerance, String> {
     Ok(ApproximationTolerance {
         tolerance: ToleranceSelectRef::ApproximationToleranceDeviation(
-            ApproximationToleranceDeviationId(usize::MAX),
+            ApproximationToleranceDeviationId(u32::MAX),
         ),
     })
 }
@@ -11004,8 +11004,8 @@ fn build_approximation_tolerance_parameter_arena(
 
 fn build_area_in_set_arena(attributes: &[Attribute]) -> Result<AreaInSet, String> {
     Ok(AreaInSet {
-        area: PresentationAreaRef::PresentationArea(PresentationAreaId(usize::MAX)),
-        in_set: PresentationSetRef::PresentationSet(PresentationSetId(usize::MAX)),
+        area: PresentationAreaRef::PresentationArea(PresentationAreaId(u32::MAX)),
+        in_set: PresentationSetRef::PresentationSet(PresentationSetId(u32::MAX)),
     })
 }
 
@@ -11025,8 +11025,8 @@ fn build_ascribable_state_arena(attributes: &[Attribute]) -> Result<AscribableSt
             Attribute::Unset => None,
             other => Some((as_str(other, "ASCRIBABLE_STATE.description"))?),
         },
-        pertaining_state_type: StateTypeRef::StateType(StateTypeId(usize::MAX)),
-        ascribed_state_observed: StateObservedRef::StateObserved(StateObservedId(usize::MAX)),
+        pertaining_state_type: StateTypeRef::StateType(StateTypeId(u32::MAX)),
+        ascribed_state_observed: StateObservedRef::StateObserved(StateObservedId(u32::MAX)),
     })
 }
 
@@ -11042,12 +11042,8 @@ fn build_ascribable_state_relationship_arena(
             Attribute::Unset => None,
             other => Some((as_str(other, "ASCRIBABLE_STATE_RELATIONSHIP.description"))?),
         },
-        relating_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(
-            usize::MAX,
-        )),
-        related_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(
-            usize::MAX,
-        )),
+        relating_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(u32::MAX)),
+        related_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(u32::MAX)),
     })
 }
 
@@ -11069,11 +11065,11 @@ fn build_assembly_component_usage_arena(
         },
         relating_product_definition:
             ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
-                GenericProductDefinitionReferenceId(usize::MAX),
+                GenericProductDefinitionReferenceId(u32::MAX),
             ),
         related_product_definition:
             ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
-                GenericProductDefinitionReferenceId(usize::MAX),
+                GenericProductDefinitionReferenceId(u32::MAX),
             ),
         reference_designator: match req(
             attributes,
@@ -11096,7 +11092,7 @@ fn build_auxiliary_leader_line_arena(
         ))?,
         geometric_elements: Vec::new(),
         controlling_leader_line: AnnotationToModelLeaderLineRef::AnnotationToModelLeaderLine(
-            AnnotationToModelLeaderLineId(usize::MAX),
+            AnnotationToModelLeaderLineId(u32::MAX),
         ),
     })
 }
@@ -11107,7 +11103,7 @@ fn build_axis1_placement_arena(attributes: &[Attribute]) -> Result<Axis1Placemen
             req(attributes, 0, "AXIS1_PLACEMENT.name")?,
             "AXIS1_PLACEMENT.name",
         ))?,
-        location: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)),
+        location: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)),
         axis: None,
     })
 }
@@ -11118,7 +11114,7 @@ fn build_axis2_placement2d_arena(attributes: &[Attribute]) -> Result<Axis2Placem
             req(attributes, 0, "AXIS2_PLACEMENT_2D.name")?,
             "AXIS2_PLACEMENT_2D.name",
         ))?,
-        location: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)),
+        location: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)),
         ref_direction: None,
     })
 }
@@ -11129,7 +11125,7 @@ fn build_axis2_placement3d_arena(attributes: &[Attribute]) -> Result<Axis2Placem
             req(attributes, 0, "AXIS2_PLACEMENT_3D.name")?,
             "AXIS2_PLACEMENT_3D.name",
         ))?,
-        location: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)),
+        location: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)),
         axis: None,
         ref_direction: None,
     })
@@ -11430,9 +11426,9 @@ fn build_bounded_pcurve_arena(attributes: &[Attribute]) -> Result<BoundedPcurve,
             req(attributes, 0, "BOUNDED_PCURVE.name")?,
             "BOUNDED_PCURVE.name",
         ))?,
-        basis_surface: SurfaceRef::BSplineSurface(BSplineSurfaceId(usize::MAX)),
+        basis_surface: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)),
         reference_to_curve: DefinitionalRepresentationRef::DefinitionalRepresentation(
-            DefinitionalRepresentationId(usize::MAX),
+            DefinitionalRepresentationId(u32::MAX),
         ),
     })
 }
@@ -11454,7 +11450,7 @@ fn build_bounded_surface_curve_arena(
             req(attributes, 0, "BOUNDED_SURFACE_CURVE.name")?,
             "BOUNDED_SURFACE_CURVE.name",
         ))?,
-        curve_3d: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)),
+        curve_3d: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
         associated_geometry: Vec::new(),
         master_representation: (match req(
             attributes,
@@ -11477,7 +11473,7 @@ fn build_brep_with_voids_arena(attributes: &[Attribute]) -> Result<BrepWithVoids
             req(attributes, 0, "BREP_WITH_VOIDS.name")?,
             "BREP_WITH_VOIDS.name",
         ))?,
-        outer: ClosedShellRef::ClosedShell(ClosedShellId(usize::MAX)),
+        outer: ClosedShellRef::ClosedShell(ClosedShellId(u32::MAX)),
         voids: Vec::new(),
     })
 }
@@ -11505,8 +11501,8 @@ fn build_camera_image_arena(attributes: &[Attribute]) -> Result<CameraImage, Str
             req(attributes, 0, "CAMERA_IMAGE.name")?,
             "CAMERA_IMAGE.name",
         ))?,
-        mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(usize::MAX)),
-        mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+        mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(u32::MAX)),
+        mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
     })
 }
 
@@ -11518,8 +11514,8 @@ fn build_camera_image3d_with_scale_arena(
             req(attributes, 0, "CAMERA_IMAGE_3D_WITH_SCALE.name")?,
             "CAMERA_IMAGE_3D_WITH_SCALE.name",
         ))?,
-        mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(usize::MAX)),
-        mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+        mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(u32::MAX)),
+        mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
     })
 }
 
@@ -11538,10 +11534,8 @@ fn build_camera_model_d3_arena(attributes: &[Attribute]) -> Result<CameraModelD3
             req(attributes, 0, "CAMERA_MODEL_D3.name")?,
             "CAMERA_MODEL_D3.name",
         ))?,
-        view_reference_system: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(
-            usize::MAX,
-        )),
-        perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(usize::MAX)),
+        view_reference_system: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
+        perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(u32::MAX)),
     })
 }
 
@@ -11553,10 +11547,8 @@ fn build_camera_model_d3_multi_clipping_arena(
             req(attributes, 0, "CAMERA_MODEL_D3_MULTI_CLIPPING.name")?,
             "CAMERA_MODEL_D3_MULTI_CLIPPING.name",
         ))?,
-        view_reference_system: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(
-            usize::MAX,
-        )),
-        perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(usize::MAX)),
+        view_reference_system: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
+        perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(u32::MAX)),
         shape_clipping: Vec::new(),
     })
 }
@@ -11569,10 +11561,8 @@ fn build_camera_model_d3_with_hlhsr_arena(
             req(attributes, 0, "CAMERA_MODEL_D3_WITH_HLHSR.name")?,
             "CAMERA_MODEL_D3_WITH_HLHSR.name",
         ))?,
-        view_reference_system: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(
-            usize::MAX,
-        )),
-        perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(usize::MAX)),
+        view_reference_system: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
+        perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(u32::MAX)),
         hidden_line_surface_removal: (Ok::<bool, String>(
             matches!(req(attributes, 3, "CAMERA_MODEL_D3_WITH_HLHSR.hidden_line_surface_removal")?, Attribute::Enum(s) if s == "T"),
         ))?,
@@ -11581,9 +11571,9 @@ fn build_camera_model_d3_with_hlhsr_arena(
 
 fn build_camera_usage_arena(attributes: &[Attribute]) -> Result<CameraUsage, String> {
     Ok(CameraUsage {
-        mapping_origin: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+        mapping_origin: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
         mapped_representation: RepresentationRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
     })
 }
@@ -11608,7 +11598,7 @@ fn build_cartesian_point_arena(attributes: &[Attribute]) -> Result<CartesianPoin
 
 fn build_cc_design_approval_arena(attributes: &[Attribute]) -> Result<CcDesignApproval, String> {
     Ok(CcDesignApproval {
-        assigned_approval: ApprovalRef::Approval(ApprovalId(usize::MAX)),
+        assigned_approval: ApprovalRef::Approval(ApprovalId(u32::MAX)),
         items: Vec::new(),
     })
 }
@@ -11617,8 +11607,8 @@ fn build_cc_design_date_and_time_assignment_arena(
     attributes: &[Attribute],
 ) -> Result<CcDesignDateAndTimeAssignment, String> {
     Ok(CcDesignDateAndTimeAssignment {
-        assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(usize::MAX)),
-        role: DateTimeRoleRef::DateTimeRole(DateTimeRoleId(usize::MAX)),
+        assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(u32::MAX)),
+        role: DateTimeRoleRef::DateTimeRole(DateTimeRoleId(u32::MAX)),
         items: Vec::new(),
     })
 }
@@ -11628,10 +11618,10 @@ fn build_cc_design_person_and_organization_assignment_arena(
 ) -> Result<CcDesignPersonAndOrganizationAssignment, String> {
     Ok(CcDesignPersonAndOrganizationAssignment {
         assigned_person_and_organization: PersonAndOrganizationRef::PersonAndOrganization(
-            PersonAndOrganizationId(usize::MAX),
+            PersonAndOrganizationId(u32::MAX),
         ),
         role: PersonAndOrganizationRoleRef::PersonAndOrganizationRole(PersonAndOrganizationRoleId(
-            usize::MAX,
+            u32::MAX,
         )),
         items: Vec::new(),
     })
@@ -11642,7 +11632,7 @@ fn build_cc_design_security_classification_arena(
 ) -> Result<CcDesignSecurityClassification, String> {
     Ok(CcDesignSecurityClassification {
         assigned_security_classification: SecurityClassificationRef::SecurityClassification(
-            SecurityClassificationId(usize::MAX),
+            SecurityClassificationId(u32::MAX),
         ),
         items: Vec::new(),
     })
@@ -11659,7 +11649,7 @@ fn build_centre_of_symmetry_arena(attributes: &[Attribute]) -> Result<CentreOfSy
             other => Some((as_str(other, "CENTRE_OF_SYMMETRY.description"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
         product_definitional: (as_logical(
             req(attributes, 3, "CENTRE_OF_SYMMETRY.product_definitional")?,
@@ -11678,7 +11668,7 @@ fn build_certification_arena(attributes: &[Attribute]) -> Result<Certification, 
             req(attributes, 1, "CERTIFICATION.purpose")?,
             "CERTIFICATION.purpose",
         ))?,
-        kind: CertificationTypeRef::CertificationType(CertificationTypeId(usize::MAX)),
+        kind: CertificationTypeRef::CertificationType(CertificationTypeId(u32::MAX)),
     })
 }
 
@@ -11693,7 +11683,7 @@ fn build_certification_type_arena(attributes: &[Attribute]) -> Result<Certificat
 
 fn build_change_arena(attributes: &[Attribute]) -> Result<Change, String> {
     Ok(Change {
-        assigned_action: ActionRef::Action(ActionId(usize::MAX)),
+        assigned_action: ActionRef::Action(ActionId(u32::MAX)),
         items: Vec::new(),
     })
 }
@@ -11701,7 +11691,7 @@ fn build_change_arena(attributes: &[Attribute]) -> Result<Change, String> {
 fn build_change_request_arena(attributes: &[Attribute]) -> Result<ChangeRequest, String> {
     Ok(ChangeRequest {
         assigned_action_request: VersionedActionRequestRef::VersionedActionRequest(
-            VersionedActionRequestId(usize::MAX),
+            VersionedActionRequestId(u32::MAX),
         ),
         items: Vec::new(),
     })
@@ -11711,7 +11701,7 @@ fn build_character_glyph_style_outline_arena(
     attributes: &[Attribute],
 ) -> Result<CharacterGlyphStyleOutline, String> {
     Ok(CharacterGlyphStyleOutline {
-        outline_style: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)),
+        outline_style: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)),
     })
 }
 
@@ -11719,7 +11709,7 @@ fn build_character_glyph_style_stroke_arena(
     attributes: &[Attribute],
 ) -> Result<CharacterGlyphStyleStroke, String> {
     Ok(CharacterGlyphStyleStroke {
-        stroke_style: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)),
+        stroke_style: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)),
     })
 }
 
@@ -11748,9 +11738,9 @@ fn build_characterized_item_within_representation_arena(
                 ))?,
             ),
         },
-        item: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+        item: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
         rep: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -11776,7 +11766,7 @@ fn build_characterized_representation_arena(
     Ok(CharacterizedRepresentation {
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -11784,7 +11774,7 @@ fn build_characterized_representation_arena(
 fn build_circle_arena(attributes: &[Attribute]) -> Result<Circle, String> {
     Ok(Circle {
         name: (as_str(req(attributes, 0, "CIRCLE.name")?, "CIRCLE.name"))?,
-        position: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
+        position: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)),
         radius: (as_real(req(attributes, 2, "CIRCLE.radius")?, "CIRCLE.radius"))?,
     })
 }
@@ -11803,7 +11793,7 @@ fn build_circular_runout_tolerance_arena(
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
         datum_system: Vec::new(),
     })
@@ -11833,7 +11823,7 @@ fn build_coaxiality_tolerance_arena(
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
         datum_system: Vec::new(),
     })
@@ -11874,7 +11864,7 @@ fn build_common_datum_arena(attributes: &[Attribute]) -> Result<CommonDatum, Str
             other => Some((as_str(other, "COMMON_DATUM.description"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
         product_definitional: (as_logical(
             req(attributes, 3, "COMMON_DATUM.product_definitional")?,
@@ -11895,7 +11885,7 @@ fn build_complex_triangulated_face_arena(
             req(attributes, 0, "COMPLEX_TRIANGULATED_FACE.name")?,
             "COMPLEX_TRIANGULATED_FACE.name",
         ))?,
-        coordinates: CoordinatesListRef::CoordinatesList(CoordinatesListId(usize::MAX)),
+        coordinates: CoordinatesListRef::CoordinatesList(CoordinatesListId(u32::MAX)),
         pnmax: (as_int(
             req(attributes, 2, "COMPLEX_TRIANGULATED_FACE.pnmax")?,
             "COMPLEX_TRIANGULATED_FACE.pnmax",
@@ -11972,7 +11962,7 @@ fn build_complex_triangulated_surface_set_arena(
             req(attributes, 0, "COMPLEX_TRIANGULATED_SURFACE_SET.name")?,
             "COMPLEX_TRIANGULATED_SURFACE_SET.name",
         ))?,
-        coordinates: CoordinatesListRef::CoordinatesList(CoordinatesListId(usize::MAX)),
+        coordinates: CoordinatesListRef::CoordinatesList(CoordinatesListId(u32::MAX)),
         pnmax: (as_int(
             req(attributes, 2, "COMPLEX_TRIANGULATED_SURFACE_SET.pnmax")?,
             "COMPLEX_TRIANGULATED_SURFACE_SET.pnmax",
@@ -12076,7 +12066,7 @@ fn build_composite_curve_segment_arena(
         same_sense: (Ok::<bool, String>(
             matches!(req(attributes, 1, "COMPOSITE_CURVE_SEGMENT.same_sense")?, Attribute::Enum(s) if s == "T"),
         ))?,
-        parent_curve: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)),
+        parent_curve: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
     })
 }
 
@@ -12093,7 +12083,7 @@ fn build_composite_group_shape_aspect_arena(
             other => Some((as_str(other, "COMPOSITE_GROUP_SHAPE_ASPECT.description"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
         product_definitional: (as_logical(
             req(
@@ -12119,7 +12109,7 @@ fn build_composite_shape_aspect_arena(
             other => Some((as_str(other, "COMPOSITE_SHAPE_ASPECT.description"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
         product_definitional: (as_logical(
             req(attributes, 3, "COMPOSITE_SHAPE_ASPECT.product_definitional")?,
@@ -12146,7 +12136,7 @@ fn build_compound_representation_item_arena(
             req(attributes, 0, "COMPOUND_REPRESENTATION_ITEM.name")?,
             "COMPOUND_REPRESENTATION_ITEM.name",
         ))?,
-        item_element: CompoundItemDefinitionRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+        item_element: CompoundItemDefinitionRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
     })
 }
 
@@ -12164,7 +12154,7 @@ fn build_concentricity_tolerance_arena(
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
         datum_system: Vec::new(),
     })
@@ -12174,8 +12164,8 @@ fn build_configuration_design_arena(
     attributes: &[Attribute],
 ) -> Result<ConfigurationDesign, String> {
     Ok(ConfigurationDesign {
-        configuration: ConfigurationItemRef::ConfigurationItem(ConfigurationItemId(usize::MAX)),
-        design: ConfigurationDesignItemRef::ProductDefinition(ProductDefinitionId(usize::MAX)),
+        configuration: ConfigurationItemRef::ConfigurationItem(ConfigurationItemId(u32::MAX)),
+        design: ConfigurationDesignItemRef::ProductDefinition(ProductDefinitionId(u32::MAX)),
     })
 }
 
@@ -12188,11 +12178,9 @@ fn build_configuration_effectivity_arena(
             "CONFIGURATION_EFFECTIVITY.id",
         ))?,
         usage: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(
-            usize::MAX,
+            u32::MAX,
         )),
-        configuration: ConfigurationDesignRef::ConfigurationDesign(ConfigurationDesignId(
-            usize::MAX,
-        )),
+        configuration: ConfigurationDesignRef::ConfigurationDesign(ConfigurationDesignId(u32::MAX)),
     })
 }
 
@@ -12210,7 +12198,7 @@ fn build_configuration_item_arena(attributes: &[Attribute]) -> Result<Configurat
             Attribute::Unset => None,
             other => Some((as_str(other, "CONFIGURATION_ITEM.description"))?),
         },
-        item_concept: ProductConceptRef::ProductConcept(ProductConceptId(usize::MAX)),
+        item_concept: ProductConceptRef::ProductConcept(ProductConceptId(u32::MAX)),
         purpose: match req(attributes, 4, "CONFIGURATION_ITEM.purpose")? {
             Attribute::Unset => None,
             other => Some((as_str(other, "CONFIGURATION_ITEM.purpose"))?),
@@ -12221,7 +12209,7 @@ fn build_configuration_item_arena(attributes: &[Attribute]) -> Result<Configurat
 fn build_conic_arena(attributes: &[Attribute]) -> Result<Conic, String> {
     Ok(Conic {
         name: (as_str(req(attributes, 0, "CONIC.name")?, "CONIC.name"))?,
-        position: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
+        position: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)),
     })
 }
 
@@ -12231,7 +12219,7 @@ fn build_conical_surface_arena(attributes: &[Attribute]) -> Result<ConicalSurfac
             req(attributes, 0, "CONICAL_SURFACE.name")?,
             "CONICAL_SURFACE.name",
         ))?,
-        position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)),
+        position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
         radius: (as_real(
             req(attributes, 2, "CONICAL_SURFACE.radius")?,
             "CONICAL_SURFACE.radius",
@@ -12263,7 +12251,7 @@ fn build_constructive_geometry_representation_arena(
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -12274,8 +12262,8 @@ fn build_constructive_geometry_representation_relationship_arena(
     Ok(ConstructiveGeometryRepresentationRelationship {
         name: (as_str(req(attributes, 0, "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP.name")?, "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP.name"))?,
         description: match req(attributes, 1, "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP.description"))?) },
-        rep_1: ConstructiveGeometryRepresentationOrShapeRepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)),
-        rep_2: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)),
+        rep_1: ConstructiveGeometryRepresentationOrShapeRepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)),
+        rep_2: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)),
     })
 }
 
@@ -12293,10 +12281,10 @@ fn build_context_dependent_over_riding_styled_item_arena(
         ))?,
         styles: Vec::new(),
         item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
         over_ridden_style: StyledItemRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(
-            usize::MAX,
+            u32::MAX,
         )),
         style_context: Vec::new(),
     })
@@ -12308,10 +12296,10 @@ fn build_context_dependent_shape_representation_arena(
     Ok(ContextDependentShapeRepresentation {
         representation_relation:
             ShapeRepresentationRelationshipRef::ShapeRepresentationRelationship(
-                ShapeRepresentationRelationshipId(usize::MAX),
+                ShapeRepresentationRelationshipId(u32::MAX),
             ),
         represented_product_relation: ProductDefinitionShapeRef::ProductDefinitionShape(
-            ProductDefinitionShapeId(usize::MAX),
+            ProductDefinitionShapeId(u32::MAX),
         ),
     })
 }
@@ -12320,9 +12308,7 @@ fn build_context_dependent_unit_arena(
     attributes: &[Attribute],
 ) -> Result<ContextDependentUnit, String> {
     Ok(ContextDependentUnit {
-        dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(
-            usize::MAX,
-        )),
+        dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(u32::MAX)),
         name: (as_str(
             req(attributes, 1, "CONTEXT_DEPENDENT_UNIT.name")?,
             "CONTEXT_DEPENDENT_UNIT.name",
@@ -12343,7 +12329,7 @@ fn build_continuous_shape_aspect_arena(
             other => Some((as_str(other, "CONTINUOUS_SHAPE_ASPECT.description"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
         product_definitional: (as_logical(
             req(
@@ -12360,7 +12346,7 @@ fn build_contract_arena(attributes: &[Attribute]) -> Result<Contract, String> {
     Ok(Contract {
         name: (as_str(req(attributes, 0, "CONTRACT.name")?, "CONTRACT.name"))?,
         purpose: (as_str(req(attributes, 1, "CONTRACT.purpose")?, "CONTRACT.purpose"))?,
-        kind: ContractTypeRef::ContractType(ContractTypeId(usize::MAX)),
+        kind: ContractTypeRef::ContractType(ContractTypeId(u32::MAX)),
     })
 }
 
@@ -12377,15 +12363,13 @@ fn build_conversion_based_unit_arena(
     attributes: &[Attribute],
 ) -> Result<ConversionBasedUnit, String> {
     Ok(ConversionBasedUnit {
-        dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(
-            usize::MAX,
-        )),
+        dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(u32::MAX)),
         name: (as_str(
             req(attributes, 1, "CONVERSION_BASED_UNIT.name")?,
             "CONVERSION_BASED_UNIT.name",
         ))?,
         conversion_factor: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -12483,7 +12467,7 @@ fn build_curve_style_font_and_scaling_arena(
             req(attributes, 0, "CURVE_STYLE_FONT_AND_SCALING.name")?,
             "CURVE_STYLE_FONT_AND_SCALING.name",
         ))?,
-        curve_font: CurveStyleFontSelectRef::CurveStyleFont(CurveStyleFontId(usize::MAX)),
+        curve_font: CurveStyleFontSelectRef::CurveStyleFont(CurveStyleFontId(u32::MAX)),
         curve_font_scaling: (as_real(
             req(
                 attributes,
@@ -12530,7 +12514,7 @@ fn build_curve_style_rendering_arena(
             )),
         })?,
         rendering_properties: SurfaceRenderingPropertiesRef::SurfaceRenderingProperties(
-            SurfaceRenderingPropertiesId(usize::MAX),
+            SurfaceRenderingPropertiesId(u32::MAX),
         ),
     })
 }
@@ -12541,7 +12525,7 @@ fn build_cylindrical_surface_arena(attributes: &[Attribute]) -> Result<Cylindric
             req(attributes, 0, "CYLINDRICAL_SURFACE.name")?,
             "CYLINDRICAL_SURFACE.name",
         ))?,
-        position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)),
+        position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
         radius: (as_real(
             req(attributes, 2, "CYLINDRICAL_SURFACE.radius")?,
             "CYLINDRICAL_SURFACE.radius",
@@ -12563,7 +12547,7 @@ fn build_cylindricity_tolerance_arena(
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
     })
 }
@@ -12579,8 +12563,8 @@ fn build_date_arena(attributes: &[Attribute]) -> Result<Date, String> {
 
 fn build_date_and_time_arena(attributes: &[Attribute]) -> Result<DateAndTime, String> {
     Ok(DateAndTime {
-        date_component: DateRef::CalendarDate(CalendarDateId(usize::MAX)),
-        time_component: LocalTimeRef::LocalTime(LocalTimeId(usize::MAX)),
+        date_component: DateRef::CalendarDate(CalendarDateId(u32::MAX)),
+        time_component: LocalTimeRef::LocalTime(LocalTimeId(u32::MAX)),
     })
 }
 
@@ -12588,8 +12572,8 @@ fn build_date_and_time_assignment_arena(
     attributes: &[Attribute],
 ) -> Result<DateAndTimeAssignment, String> {
     Ok(DateAndTimeAssignment {
-        assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(usize::MAX)),
-        role: DateTimeRoleRef::DateTimeRole(DateTimeRoleId(usize::MAX)),
+        assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(u32::MAX)),
+        role: DateTimeRoleRef::DateTimeRole(DateTimeRoleId(u32::MAX)),
     })
 }
 
@@ -12616,7 +12600,7 @@ fn build_datum_arena(attributes: &[Attribute]) -> Result<Datum, String> {
             other => Some((as_str(other, "DATUM.description"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
         product_definitional: (as_logical(
             req(attributes, 3, "DATUM.product_definitional")?,
@@ -12640,7 +12624,7 @@ fn build_datum_feature_arena(attributes: &[Attribute]) -> Result<DatumFeature, S
             other => Some((as_str(other, "DATUM_FEATURE.description"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
         product_definitional: (as_logical(
             req(attributes, 3, "DATUM_FEATURE.product_definitional")?,
@@ -12655,7 +12639,7 @@ fn build_datum_reference_arena(attributes: &[Attribute]) -> Result<DatumReferenc
             req(attributes, 0, "DATUM_REFERENCE.precedence")?,
             "DATUM_REFERENCE.precedence",
         ))?,
-        referenced_datum: DatumRef::CommonDatum(CommonDatumId(usize::MAX)),
+        referenced_datum: DatumRef::CommonDatum(CommonDatumId(u32::MAX)),
     })
 }
 
@@ -12672,7 +12656,7 @@ fn build_datum_reference_compartment_arena(
             other => Some((as_str(other, "DATUM_REFERENCE_COMPARTMENT.description"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
         product_definitional: (as_logical(
             req(
@@ -12682,7 +12666,7 @@ fn build_datum_reference_compartment_arena(
             )?,
             "DATUM_REFERENCE_COMPARTMENT.product_definitional",
         ))?,
-        base: DatumOrCommonDatumRef::CommonDatum(CommonDatumId(usize::MAX)),
+        base: DatumOrCommonDatumRef::CommonDatum(CommonDatumId(u32::MAX)),
         modifiers: None,
     })
 }
@@ -12700,7 +12684,7 @@ fn build_datum_reference_element_arena(
             other => Some((as_str(other, "DATUM_REFERENCE_ELEMENT.description"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
         product_definitional: (as_logical(
             req(
@@ -12710,7 +12694,7 @@ fn build_datum_reference_element_arena(
             )?,
             "DATUM_REFERENCE_ELEMENT.product_definitional",
         ))?,
-        base: DatumOrCommonDatumRef::CommonDatum(CommonDatumId(usize::MAX)),
+        base: DatumOrCommonDatumRef::CommonDatum(CommonDatumId(u32::MAX)),
         modifiers: None,
     })
 }
@@ -12732,7 +12716,7 @@ fn build_datum_reference_modifier_with_value_arena(
             )),
         })?,
         modifier_value: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -12748,7 +12732,7 @@ fn build_datum_system_arena(attributes: &[Attribute]) -> Result<DatumSystem, Str
             other => Some((as_str(other, "DATUM_SYSTEM.description"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
         product_definitional: (as_logical(
             req(attributes, 3, "DATUM_SYSTEM.product_definitional")?,
@@ -12769,7 +12753,7 @@ fn build_datum_target_arena(attributes: &[Attribute]) -> Result<DatumTarget, Str
             other => Some((as_str(other, "DATUM_TARGET.description"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
         product_definitional: (as_logical(
             req(attributes, 3, "DATUM_TARGET.product_definitional")?,
@@ -12794,9 +12778,9 @@ fn build_default_model_geometric_view_arena(
             Attribute::Unset => None,
             other => Some((as_str(other, "DEFAULT_MODEL_GEOMETRIC_VIEW.description"))?),
         },
-        item: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+        item: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
         rep: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(
-            usize::MAX,
+            u32::MAX,
         )),
         name_1: (as_str(
             req(attributes, 4, "DEFAULT_MODEL_GEOMETRIC_VIEW.name_1")?,
@@ -12807,7 +12791,7 @@ fn build_default_model_geometric_view_arena(
             other => Some((as_str(other, "DEFAULT_MODEL_GEOMETRIC_VIEW.description_1"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -12821,9 +12805,9 @@ fn build_defined_character_glyph_arena(
             "DEFINED_CHARACTER_GLYPH.name",
         ))?,
         definition: DefinedGlyphSelectRef::ExternallyDefinedCharacterGlyph(
-            ExternallyDefinedCharacterGlyphId(usize::MAX),
+            ExternallyDefinedCharacterGlyphId(u32::MAX),
         ),
-        placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
+        placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)),
     })
 }
 
@@ -12834,9 +12818,9 @@ fn build_defined_symbol_arena(attributes: &[Attribute]) -> Result<DefinedSymbol,
             "DEFINED_SYMBOL.name",
         ))?,
         definition: DefinedSymbolSelectRef::ExternallyDefinedSymbol(ExternallyDefinedSymbolId(
-            usize::MAX,
+            u32::MAX,
         )),
-        target: SymbolTargetRef::SymbolTarget(SymbolTargetId(usize::MAX)),
+        target: SymbolTargetRef::SymbolTarget(SymbolTargetId(u32::MAX)),
     })
 }
 
@@ -12850,7 +12834,7 @@ fn build_definitional_representation_arena(
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -12881,10 +12865,10 @@ fn build_definitional_representation_relationship_arena(
             ),
         },
         rep_1: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
         rep_2: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
     })
 }
@@ -12915,10 +12899,10 @@ fn build_definitional_representation_relationship_with_same_context_arena(
             ),
         },
         rep_1: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
         rep_2: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
     })
 }
@@ -12931,7 +12915,7 @@ fn build_degenerate_toroidal_surface_arena(
             req(attributes, 0, "DEGENERATE_TOROIDAL_SURFACE.name")?,
             "DEGENERATE_TOROIDAL_SURFACE.name",
         ))?,
-        position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)),
+        position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
         major_radius: (as_real(
             req(attributes, 2, "DEGENERATE_TOROIDAL_SURFACE.major_radius")?,
             "DEGENERATE_TOROIDAL_SURFACE.major_radius",
@@ -12959,7 +12943,7 @@ fn build_derived_shape_aspect_arena(
             other => Some((as_str(other, "DERIVED_SHAPE_ASPECT.description"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
         product_definitional: (as_logical(
             req(attributes, 3, "DERIVED_SHAPE_ASPECT.product_definitional")?,
@@ -12978,7 +12962,7 @@ fn build_derived_unit_element_arena(
     attributes: &[Attribute],
 ) -> Result<DerivedUnitElement, String> {
     Ok(DerivedUnitElement {
-        unit: NamedUnitRef::ContextDependentUnit(ContextDependentUnitId(usize::MAX)),
+        unit: NamedUnitRef::ContextDependentUnit(ContextDependentUnitId(u32::MAX)),
         exponent: (as_real(
             req(attributes, 1, "DERIVED_UNIT_ELEMENT.exponent")?,
             "DERIVED_UNIT_ELEMENT.exponent",
@@ -12995,7 +12979,7 @@ fn build_description_attribute_arena(
             "DESCRIPTION_ATTRIBUTE.attribute_value",
         ))?,
         described_item: DescriptionAttributeSelectRef::ActionRequestSolution(
-            ActionRequestSolutionId(usize::MAX),
+            ActionRequestSolutionId(u32::MAX),
         ),
     })
 }
@@ -13022,7 +13006,7 @@ fn build_design_context_arena(attributes: &[Attribute]) -> Result<DesignContext,
             "DESIGN_CONTEXT.name",
         ))?,
         frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(
-            usize::MAX,
+            u32::MAX,
         )),
         life_cycle_stage: (as_str(
             req(attributes, 2, "DESIGN_CONTEXT.life_cycle_stage")?,
@@ -13035,9 +13019,9 @@ fn build_dimensional_characteristic_representation_arena(
     attributes: &[Attribute],
 ) -> Result<DimensionalCharacteristicRepresentation, String> {
     Ok(DimensionalCharacteristicRepresentation {
-        dimension: DimensionalCharacteristicRef::AngularLocation(AngularLocationId(usize::MAX)),
+        dimension: DimensionalCharacteristicRef::AngularLocation(AngularLocationId(u32::MAX)),
         representation: ShapeDimensionRepresentationRef::ShapeDimensionRepresentation(
-            ShapeDimensionRepresentationId(usize::MAX),
+            ShapeDimensionRepresentationId(u32::MAX),
         ),
     })
 }
@@ -13106,10 +13090,10 @@ fn build_dimensional_location_arena(
             other => Some((as_str(other, "DIMENSIONAL_LOCATION.description"))?),
         },
         relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
         related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -13127,18 +13111,18 @@ fn build_dimensional_location_with_path_arena(
             other => Some((as_str(other, "DIMENSIONAL_LOCATION_WITH_PATH.description"))?),
         },
         relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
         related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
-        path: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)),
+        path: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)),
     })
 }
 
 fn build_dimensional_size_arena(attributes: &[Attribute]) -> Result<DimensionalSize, String> {
     Ok(DimensionalSize {
-        applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)),
+        applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)),
         name: (as_str(
             req(attributes, 1, "DIMENSIONAL_SIZE.name")?,
             "DIMENSIONAL_SIZE.name",
@@ -13163,7 +13147,7 @@ fn build_dimensional_size_with_datum_feature_arena(
             other => Some((as_str(other, "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE.description"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
         product_definitional: (as_logical(
             req(
@@ -13173,7 +13157,7 @@ fn build_dimensional_size_with_datum_feature_arena(
             )?,
             "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE.product_definitional",
         ))?,
-        applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)),
+        applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)),
         name_1: (as_str(
             req(attributes, 5, "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE.name_1")?,
             "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE.name_1",
@@ -13185,12 +13169,12 @@ fn build_dimensional_size_with_path_arena(
     attributes: &[Attribute],
 ) -> Result<DimensionalSizeWithPath, String> {
     Ok(DimensionalSizeWithPath {
-        applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)),
+        applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)),
         name: (as_str(
             req(attributes, 1, "DIMENSIONAL_SIZE_WITH_PATH.name")?,
             "DIMENSIONAL_SIZE_WITH_PATH.name",
         ))?,
-        path: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)),
+        path: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)),
     })
 }
 
@@ -13207,10 +13191,10 @@ fn build_directed_dimensional_location_arena(
             other => Some((as_str(other, "DIRECTED_DIMENSIONAL_LOCATION.description"))?),
         },
         relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
         related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -13238,7 +13222,7 @@ fn build_document_arena(attributes: &[Attribute]) -> Result<Document, String> {
             Attribute::Unset => None,
             other => Some((as_str(other, "DOCUMENT.description"))?),
         },
-        kind: DocumentTypeRef::DocumentType(DocumentTypeId(usize::MAX)),
+        kind: DocumentTypeRef::DocumentType(DocumentTypeId(u32::MAX)),
     })
 }
 
@@ -13253,7 +13237,7 @@ fn build_document_file_arena(attributes: &[Attribute]) -> Result<DocumentFile, S
             Attribute::Unset => None,
             other => Some((as_str(other, "DOCUMENT_FILE.description"))?),
         },
-        kind: DocumentTypeRef::DocumentType(DocumentTypeId(usize::MAX)),
+        kind: DocumentTypeRef::DocumentType(DocumentTypeId(u32::MAX)),
         name_1: (as_str(
             req(attributes, 4, "DOCUMENT_FILE.name_1")?,
             "DOCUMENT_FILE.name_1",
@@ -13277,8 +13261,8 @@ fn build_document_product_association_arena(
             Attribute::Unset => None,
             other => Some((as_str(other, "DOCUMENT_PRODUCT_ASSOCIATION.description"))?),
         },
-        relating_document: DocumentRef::Document(DocumentId(usize::MAX)),
-        related_product: ProductOrFormationOrDefinitionRef::Product(ProductId(usize::MAX)),
+        relating_document: DocumentRef::Document(DocumentId(u32::MAX)),
+        related_product: ProductOrFormationOrDefinitionRef::Product(ProductId(u32::MAX)),
     })
 }
 
@@ -13294,14 +13278,14 @@ fn build_document_product_equivalence_arena(
             Attribute::Unset => None,
             other => Some((as_str(other, "DOCUMENT_PRODUCT_EQUIVALENCE.description"))?),
         },
-        relating_document: DocumentRef::Document(DocumentId(usize::MAX)),
-        related_product: ProductOrFormationOrDefinitionRef::Product(ProductId(usize::MAX)),
+        relating_document: DocumentRef::Document(DocumentId(u32::MAX)),
+        related_product: ProductOrFormationOrDefinitionRef::Product(ProductId(u32::MAX)),
     })
 }
 
 fn build_document_reference_arena(attributes: &[Attribute]) -> Result<DocumentReference, String> {
     Ok(DocumentReference {
-        assigned_document: DocumentRef::Document(DocumentId(usize::MAX)),
+        assigned_document: DocumentRef::Document(DocumentId(u32::MAX)),
         source: (as_str(
             req(attributes, 1, "DOCUMENT_REFERENCE.source")?,
             "DOCUMENT_REFERENCE.source",
@@ -13317,7 +13301,7 @@ fn build_document_representation_type_arena(
             req(attributes, 0, "DOCUMENT_REPRESENTATION_TYPE.name")?,
             "DOCUMENT_REPRESENTATION_TYPE.name",
         ))?,
-        represented_document: DocumentRef::Document(DocumentId(usize::MAX)),
+        represented_document: DocumentRef::Document(DocumentId(u32::MAX)),
     })
 }
 
@@ -13340,7 +13324,7 @@ fn build_draughting_annotation_occurrence_arena(
         ))?,
         styles: Vec::new(),
         item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
     })
 }
@@ -13368,10 +13352,10 @@ fn build_draughting_callout_relationship_arena(
             "DRAUGHTING_CALLOUT_RELATIONSHIP.description",
         ))?,
         relating_draughting_callout: DraughtingCalloutRef::DraughtingCallout(DraughtingCalloutId(
-            usize::MAX,
+            u32::MAX,
         )),
         related_draughting_callout: DraughtingCalloutRef::DraughtingCallout(DraughtingCalloutId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -13384,7 +13368,7 @@ fn build_draughting_model_arena(attributes: &[Attribute]) -> Result<DraughtingMo
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -13406,13 +13390,13 @@ fn build_draughting_model_item_association_arena(
             other => Some((as_str(other, "DRAUGHTING_MODEL_ITEM_ASSOCIATION.description"))?),
         },
         definition: DraughtingModelItemDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
         used_representation: AnnotationRepresentationSelectRef::DraughtingModel(DraughtingModelId(
-            usize::MAX,
+            u32::MAX,
         )),
         identified_item: DraughtingModelItemAssociationSelectRef::AnnotationCurveOccurrence(
-            AnnotationCurveOccurrenceId(usize::MAX),
+            AnnotationCurveOccurrenceId(u32::MAX),
         ),
     })
 }
@@ -13443,16 +13427,16 @@ fn build_draughting_model_item_association_with_placeholder_arena(
             ),
         },
         definition: DraughtingModelItemDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
         used_representation: AnnotationRepresentationSelectRef::DraughtingModel(DraughtingModelId(
-            usize::MAX,
+            u32::MAX,
         )),
         identified_item: DraughtingModelItemAssociationSelectRef::AnnotationCurveOccurrence(
-            AnnotationCurveOccurrenceId(usize::MAX),
+            AnnotationCurveOccurrenceId(u32::MAX),
         ),
         annotation_placeholder: AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrence(
-            AnnotationPlaceholderOccurrenceId(usize::MAX),
+            AnnotationPlaceholderOccurrenceId(u32::MAX),
         ),
     })
 }
@@ -13501,9 +13485,9 @@ fn build_edge_arena(attributes: &[Attribute]) -> Result<Edge, String> {
 fn build_edge_curve_arena(attributes: &[Attribute]) -> Result<EdgeCurve, String> {
     Ok(EdgeCurve {
         name: (as_str(req(attributes, 0, "EDGE_CURVE.name")?, "EDGE_CURVE.name"))?,
-        edge_start: VertexRef::Vertex(VertexId(usize::MAX)),
-        edge_end: VertexRef::Vertex(VertexId(usize::MAX)),
-        edge_geometry: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)),
+        edge_start: VertexRef::Vertex(VertexId(u32::MAX)),
+        edge_end: VertexRef::Vertex(VertexId(u32::MAX)),
+        edge_geometry: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
         same_sense: (Ok::<bool, String>(
             matches!(req(attributes, 4, "EDGE_CURVE.same_sense")?, Attribute::Enum(s) if s == "T"),
         ))?,
@@ -13529,14 +13513,14 @@ fn build_elementary_surface_arena(attributes: &[Attribute]) -> Result<Elementary
             req(attributes, 0, "ELEMENTARY_SURFACE.name")?,
             "ELEMENTARY_SURFACE.name",
         ))?,
-        position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)),
+        position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
     })
 }
 
 fn build_ellipse_arena(attributes: &[Attribute]) -> Result<Ellipse, String> {
     Ok(Ellipse {
         name: (as_str(req(attributes, 0, "ELLIPSE.name")?, "ELLIPSE.name"))?,
-        position: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
+        position: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)),
         semi_axis_1: (as_real(
             req(attributes, 2, "ELLIPSE.semi_axis_1")?,
             "ELLIPSE.semi_axis_1",
@@ -13564,8 +13548,8 @@ fn build_external_identification_assignment_arena(
             )?,
             "EXTERNAL_IDENTIFICATION_ASSIGNMENT.assigned_id",
         ))?,
-        role: IdentificationRoleRef::IdentificationRole(IdentificationRoleId(usize::MAX)),
-        source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+        role: IdentificationRoleRef::IdentificationRole(IdentificationRoleId(u32::MAX)),
+        source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
     })
 }
 
@@ -13586,7 +13570,7 @@ fn build_externally_defined_character_glyph_arena(
             req(attributes, 0, "EXTERNALLY_DEFINED_CHARACTER_GLYPH.item_id")?,
             "EXTERNALLY_DEFINED_CHARACTER_GLYPH.item_id",
         ))?,
-        source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+        source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
     })
 }
 
@@ -13598,7 +13582,7 @@ fn build_externally_defined_curve_font_arena(
             req(attributes, 0, "EXTERNALLY_DEFINED_CURVE_FONT.item_id")?,
             "EXTERNALLY_DEFINED_CURVE_FONT.item_id",
         ))?,
-        source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+        source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
     })
 }
 
@@ -13610,7 +13594,7 @@ fn build_externally_defined_hatch_style_arena(
             req(attributes, 0, "EXTERNALLY_DEFINED_HATCH_STYLE.item_id")?,
             "EXTERNALLY_DEFINED_HATCH_STYLE.item_id",
         ))?,
-        source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+        source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
         name: (as_str(
             req(attributes, 2, "EXTERNALLY_DEFINED_HATCH_STYLE.name")?,
             "EXTERNALLY_DEFINED_HATCH_STYLE.name",
@@ -13626,7 +13610,7 @@ fn build_externally_defined_item_arena(
             req(attributes, 0, "EXTERNALLY_DEFINED_ITEM.item_id")?,
             "EXTERNALLY_DEFINED_ITEM.item_id",
         ))?,
-        source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+        source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
     })
 }
 
@@ -13638,7 +13622,7 @@ fn build_externally_defined_style_arena(
             req(attributes, 0, "EXTERNALLY_DEFINED_STYLE.item_id")?,
             "EXTERNALLY_DEFINED_STYLE.item_id",
         ))?,
-        source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+        source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
     })
 }
 
@@ -13650,7 +13634,7 @@ fn build_externally_defined_symbol_arena(
             req(attributes, 0, "EXTERNALLY_DEFINED_SYMBOL.item_id")?,
             "EXTERNALLY_DEFINED_SYMBOL.item_id",
         ))?,
-        source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+        source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
     })
 }
 
@@ -13662,7 +13646,7 @@ fn build_externally_defined_text_font_arena(
             req(attributes, 0, "EXTERNALLY_DEFINED_TEXT_FONT.item_id")?,
             "EXTERNALLY_DEFINED_TEXT_FONT.item_id",
         ))?,
-        source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+        source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
     })
 }
 
@@ -13674,7 +13658,7 @@ fn build_externally_defined_tile_arena(
             req(attributes, 0, "EXTERNALLY_DEFINED_TILE.item_id")?,
             "EXTERNALLY_DEFINED_TILE.item_id",
         ))?,
-        source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+        source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
     })
 }
 
@@ -13686,7 +13670,7 @@ fn build_externally_defined_tile_style_arena(
             req(attributes, 0, "EXTERNALLY_DEFINED_TILE_STYLE.item_id")?,
             "EXTERNALLY_DEFINED_TILE_STYLE.item_id",
         ))?,
-        source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+        source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
         name: (as_str(
             req(attributes, 2, "EXTERNALLY_DEFINED_TILE_STYLE.name")?,
             "EXTERNALLY_DEFINED_TILE_STYLE.name",
@@ -13704,7 +13688,7 @@ fn build_face_arena(attributes: &[Attribute]) -> Result<Face, String> {
 fn build_face_bound_arena(attributes: &[Attribute]) -> Result<FaceBound, String> {
     Ok(FaceBound {
         name: (as_str(req(attributes, 0, "FACE_BOUND.name")?, "FACE_BOUND.name"))?,
-        bound: LoopRef::EdgeLoop(EdgeLoopId(usize::MAX)),
+        bound: LoopRef::EdgeLoop(EdgeLoopId(u32::MAX)),
         orientation: (Ok::<bool, String>(
             matches!(req(attributes, 2, "FACE_BOUND.orientation")?, Attribute::Enum(s) if s == "T"),
         ))?,
@@ -13717,7 +13701,7 @@ fn build_face_outer_bound_arena(attributes: &[Attribute]) -> Result<FaceOuterBou
             req(attributes, 0, "FACE_OUTER_BOUND.name")?,
             "FACE_OUTER_BOUND.name",
         ))?,
-        bound: LoopRef::EdgeLoop(EdgeLoopId(usize::MAX)),
+        bound: LoopRef::EdgeLoop(EdgeLoopId(u32::MAX)),
         orientation: (Ok::<bool, String>(
             matches!(req(attributes, 2, "FACE_OUTER_BOUND.orientation")?, Attribute::Enum(s) if s == "T"),
         ))?,
@@ -13731,7 +13715,7 @@ fn build_face_surface_arena(attributes: &[Attribute]) -> Result<FaceSurface, Str
             "FACE_SURFACE.name",
         ))?,
         bounds: Vec::new(),
-        face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(usize::MAX)),
+        face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)),
         same_sense: (Ok::<bool, String>(
             matches!(req(attributes, 3, "FACE_SURFACE.same_sense")?, Attribute::Enum(s) if s == "T"),
         ))?,
@@ -13755,10 +13739,10 @@ fn build_feature_for_datum_target_relationship_arena(
             other => Some((as_str(other, "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP.description"))?),
         },
         relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
         related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -13781,7 +13765,7 @@ fn build_fill_area_style_colour_arena(
             req(attributes, 0, "FILL_AREA_STYLE_COLOUR.name")?,
             "FILL_AREA_STYLE_COLOUR.name",
         ))?,
-        fill_colour: ColourRef::Colour(ColourId(usize::MAX)),
+        fill_colour: ColourRef::Colour(ColourId(u32::MAX)),
     })
 }
 
@@ -13793,12 +13777,12 @@ fn build_fill_area_style_hatching_arena(
             req(attributes, 0, "FILL_AREA_STYLE_HATCHING.name")?,
             "FILL_AREA_STYLE_HATCHING.name",
         ))?,
-        hatch_line_appearance: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)),
+        hatch_line_appearance: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)),
         start_of_next_hatch_line: OneDirectionRepeatFactorRef::OneDirectionRepeatFactor(
-            OneDirectionRepeatFactorId(usize::MAX),
+            OneDirectionRepeatFactorId(u32::MAX),
         ),
-        point_of_reference_hatch_line: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)),
-        pattern_start: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)),
+        point_of_reference_hatch_line: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)),
+        pattern_start: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)),
         hatch_line_angle: (as_real(
             req(attributes, 5, "FILL_AREA_STYLE_HATCHING.hatch_line_angle")?,
             "FILL_AREA_STYLE_HATCHING.hatch_line_angle",
@@ -13815,9 +13799,9 @@ fn build_fill_area_style_tile_coloured_region_arena(
             "FILL_AREA_STYLE_TILE_COLOURED_REGION.name",
         ))?,
         closed_curve: CurveOrAnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(
-            AnnotationCurveOccurrenceId(usize::MAX),
+            AnnotationCurveOccurrenceId(u32::MAX),
         ),
-        region_colour: ColourRef::Colour(ColourId(usize::MAX)),
+        region_colour: ColourRef::Colour(ColourId(u32::MAX)),
     })
 }
 
@@ -13830,7 +13814,7 @@ fn build_fill_area_style_tile_curve_with_style_arena(
             "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE.name",
         ))?,
         styled_curve: AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(
-            AnnotationCurveOccurrenceId(usize::MAX),
+            AnnotationCurveOccurrenceId(u32::MAX),
         ),
     })
 }
@@ -13844,7 +13828,7 @@ fn build_fill_area_style_tile_symbol_with_style_arena(
             "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE.name",
         ))?,
         symbol: AnnotationSymbolOccurrenceRef::AnnotationSymbolOccurrence(
-            AnnotationSymbolOccurrenceId(usize::MAX),
+            AnnotationSymbolOccurrenceId(u32::MAX),
         ),
     })
 }
@@ -13858,7 +13842,7 @@ fn build_fill_area_style_tiles_arena(
             "FILL_AREA_STYLE_TILES.name",
         ))?,
         tiling_pattern: TwoDirectionRepeatFactorRef::TwoDirectionRepeatFactor(
-            TwoDirectionRepeatFactorId(usize::MAX),
+            TwoDirectionRepeatFactorId(u32::MAX),
         ),
         tiles: Vec::new(),
         tiling_scale: (as_real(
@@ -13880,7 +13864,7 @@ fn build_flatness_tolerance_arena(attributes: &[Attribute]) -> Result<FlatnessTo
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
     })
 }
@@ -13921,7 +13905,7 @@ fn build_general_datum_reference_arena(
             other => Some((as_str(other, "GENERAL_DATUM_REFERENCE.description"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
         product_definitional: (as_logical(
             req(
@@ -13931,7 +13915,7 @@ fn build_general_datum_reference_arena(
             )?,
             "GENERAL_DATUM_REFERENCE.product_definitional",
         ))?,
-        base: DatumOrCommonDatumRef::CommonDatum(CommonDatumId(usize::MAX)),
+        base: DatumOrCommonDatumRef::CommonDatum(CommonDatumId(u32::MAX)),
         modifiers: None,
     })
 }
@@ -13965,8 +13949,8 @@ fn build_general_property_association_arena(
             Attribute::Unset => None,
             other => Some((as_str(other, "GENERAL_PROPERTY_ASSOCIATION.description"))?),
         },
-        base_definition: GeneralPropertyRef::GeneralProperty(GeneralPropertyId(usize::MAX)),
-        derived_definition: DerivedPropertySelectRef::ActionProperty(ActionPropertyId(usize::MAX)),
+        base_definition: GeneralPropertyRef::GeneralProperty(GeneralPropertyId(u32::MAX)),
+        derived_definition: DerivedPropertySelectRef::ActionProperty(ActionPropertyId(u32::MAX)),
     })
 }
 
@@ -13982,7 +13966,7 @@ fn build_generic_product_definition_reference_arena(
     attributes: &[Attribute],
 ) -> Result<GenericProductDefinitionReference, String> {
     Ok(GenericProductDefinitionReference {
-        source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)),
+        source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)),
     })
 }
 
@@ -14009,12 +13993,12 @@ fn build_geometric_item_specific_usage_arena(
             other => Some((as_str(other, "GEOMETRIC_ITEM_SPECIFIC_USAGE.description"))?),
         },
         definition: GeometricItemSpecificUsageSelectRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
         used_representation: ShapeModelRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
-        identified_item: GeometricModelItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+        identified_item: GeometricModelItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
     })
 }
 
@@ -14082,7 +14066,7 @@ fn build_geometric_tolerance_arena(attributes: &[Attribute]) -> Result<Geometric
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
     })
 }
@@ -14104,10 +14088,10 @@ fn build_geometric_tolerance_relationship_arena(
             "GEOMETRIC_TOLERANCE_RELATIONSHIP.description",
         ))?,
         relating_geometric_tolerance: GeometricToleranceRef::AngularityTolerance(
-            AngularityToleranceId(usize::MAX),
+            AngularityToleranceId(u32::MAX),
         ),
         related_geometric_tolerance: GeometricToleranceRef::AngularityTolerance(
-            AngularityToleranceId(usize::MAX),
+            AngularityToleranceId(u32::MAX),
         ),
     })
 }
@@ -14139,7 +14123,7 @@ fn build_geometric_tolerance_with_datum_reference_arena(
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
         datum_system: Vec::new(),
     })
@@ -14172,10 +14156,10 @@ fn build_geometric_tolerance_with_defined_area_unit_arena(
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
         unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(
-            LengthMeasureWithUnitId(usize::MAX),
+            LengthMeasureWithUnitId(u32::MAX),
         ),
         area_type: (match req(
             attributes,
@@ -14211,10 +14195,10 @@ fn build_geometric_tolerance_with_defined_unit_arena(
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
         unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(
-            LengthMeasureWithUnitId(usize::MAX),
+            LengthMeasureWithUnitId(u32::MAX),
         ),
     })
 }
@@ -14226,9 +14210,9 @@ fn build_geometric_tolerance_with_maximum_tolerance_arena(
         name: (as_str(req(attributes, 0, "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.name")?, "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.name"))?,
         description: match req(attributes, 1, "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.description")? { Attribute::Unset => None, other => Some((as_str(other, "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.description"))?) },
         magnitude: None,
-        toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)),
+        toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)),
         modifiers: (match req(attributes, 4, "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.modifiers")? { Attribute::List(l) => l.iter().map(|e| match e { Attribute::Enum(s) => GeometricToleranceModifier::parse(s).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.modifiers: bad enum {s:?}")), o => Err(format!("GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.modifiers: expected enum, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.modifiers: expected list, got {o:?}")) })?,
-        maximum_upper_tolerance: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(usize::MAX)),
+        maximum_upper_tolerance: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)),
     })
 }
 
@@ -14250,7 +14234,7 @@ fn build_geometric_tolerance_with_modifiers_arena(
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
         modifiers: (match req(
             attributes,
@@ -14289,7 +14273,7 @@ fn build_geometrically_bounded_surface_shape_representation_arena(
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -14308,7 +14292,7 @@ fn build_geometrically_bounded_wireframe_shape_representation_arena(
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -14369,14 +14353,14 @@ fn build_group_arena(attributes: &[Attribute]) -> Result<Group, String> {
 
 fn build_group_assignment_arena(attributes: &[Attribute]) -> Result<GroupAssignment, String> {
     Ok(GroupAssignment {
-        assigned_group: GroupRef::Group(GroupId(usize::MAX)),
+        assigned_group: GroupRef::Group(GroupId(u32::MAX)),
     })
 }
 
 fn build_hyperbola_arena(attributes: &[Attribute]) -> Result<Hyperbola, String> {
     Ok(Hyperbola {
         name: (as_str(req(attributes, 0, "HYPERBOLA.name")?, "HYPERBOLA.name"))?,
-        position: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
+        position: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)),
         semi_axis: (as_real(
             req(attributes, 2, "HYPERBOLA.semi_axis")?,
             "HYPERBOLA.semi_axis",
@@ -14394,7 +14378,7 @@ fn build_id_attribute_arena(attributes: &[Attribute]) -> Result<IdAttribute, Str
             req(attributes, 0, "ID_ATTRIBUTE.attribute_value")?,
             "ID_ATTRIBUTE.attribute_value",
         ))?,
-        identified_item: IdAttributeSelectRef::Action(ActionId(usize::MAX)),
+        identified_item: IdAttributeSelectRef::Action(ActionId(u32::MAX)),
     })
 }
 
@@ -14406,7 +14390,7 @@ fn build_identification_assignment_arena(
             req(attributes, 0, "IDENTIFICATION_ASSIGNMENT.assigned_id")?,
             "IDENTIFICATION_ASSIGNMENT.assigned_id",
         ))?,
-        role: IdentificationRoleRef::IdentificationRole(IdentificationRoleId(usize::MAX)),
+        role: IdentificationRoleRef::IdentificationRole(IdentificationRoleId(u32::MAX)),
     })
 }
 
@@ -14453,7 +14437,7 @@ fn build_intersection_curve_arena(attributes: &[Attribute]) -> Result<Intersecti
             req(attributes, 0, "INTERSECTION_CURVE.name")?,
             "INTERSECTION_CURVE.name",
         ))?,
-        curve_3d: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)),
+        curve_3d: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
         associated_geometry: Vec::new(),
         master_representation: (match req(
             attributes,
@@ -14487,8 +14471,8 @@ fn build_item_defined_transformation_arena(
             Attribute::Unset => None,
             other => Some((as_str(other, "ITEM_DEFINED_TRANSFORMATION.description"))?),
         },
-        transform_item_1: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
-        transform_item_2: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+        transform_item_1: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
+        transform_item_2: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
     })
 }
 
@@ -14509,13 +14493,13 @@ fn build_item_identified_representation_usage_arena(
             other => Some((as_str(other, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.description"))?),
         },
         definition: ItemIdentifiedRepresentationUsageDefinitionRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
         used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
         identified_item: ItemIdentifiedRepresentationUsageSelectRef::AdvancedFace(AdvancedFaceId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -14527,7 +14511,7 @@ fn build_leader_curve_arena(attributes: &[Attribute]) -> Result<LeaderCurve, Str
             "LEADER_CURVE.name",
         ))?,
         styles: Vec::new(),
-        item: CurveOrCurveSetRef::BSplineCurve(BSplineCurveId(usize::MAX)),
+        item: CurveOrCurveSetRef::BSplineCurve(BSplineCurveId(u32::MAX)),
     })
 }
 
@@ -14550,9 +14534,9 @@ fn build_leader_terminator_arena(attributes: &[Attribute]) -> Result<LeaderTermi
             "LEADER_TERMINATOR.name",
         ))?,
         styles: Vec::new(),
-        item: AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(AnnotationSymbolId(usize::MAX)),
+        item: AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(AnnotationSymbolId(u32::MAX)),
         annotated_curve: AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(
-            AnnotationCurveOccurrenceId(usize::MAX),
+            AnnotationCurveOccurrenceId(u32::MAX),
         ),
     })
 }
@@ -14565,15 +14549,13 @@ fn build_length_measure_with_unit_arena(
             req(attributes, 0, "LENGTH_MEASURE_WITH_UNIT.value_component")?,
             "LENGTH_MEASURE_WITH_UNIT.value_component",
         ))?,
-        unit_component: UnitRef::AreaUnit(AreaUnitId(usize::MAX)),
+        unit_component: UnitRef::AreaUnit(AreaUnitId(u32::MAX)),
     })
 }
 
 fn build_length_unit_arena(attributes: &[Attribute]) -> Result<LengthUnit, String> {
     Ok(LengthUnit {
-        dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(
-            usize::MAX,
-        )),
+        dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(u32::MAX)),
     })
 }
 
@@ -14601,8 +14583,8 @@ fn build_limits_and_fits_arena(attributes: &[Attribute]) -> Result<LimitsAndFits
 fn build_line_arena(attributes: &[Attribute]) -> Result<Line, String> {
     Ok(Line {
         name: (as_str(req(attributes, 0, "LINE.name")?, "LINE.name"))?,
-        pnt: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)),
-        dir: VectorRef::Vector(VectorId(usize::MAX)),
+        pnt: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)),
+        dir: VectorRef::Vector(VectorId(u32::MAX)),
     })
 }
 
@@ -14620,7 +14602,7 @@ fn build_line_profile_tolerance_arena(
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
     })
 }
@@ -14649,7 +14631,7 @@ fn build_local_time_arena(attributes: &[Attribute]) -> Result<LocalTime, String>
             other => Some((as_real(other, "LOCAL_TIME.second_component"))?),
         },
         zone: CoordinatedUniversalTimeOffsetRef::CoordinatedUniversalTimeOffset(
-            CoordinatedUniversalTimeOffsetId(usize::MAX),
+            CoordinatedUniversalTimeOffsetId(u32::MAX),
         ),
     })
 }
@@ -14678,11 +14660,11 @@ fn build_make_from_usage_option_arena(
         },
         relating_product_definition:
             ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
-                GenericProductDefinitionReferenceId(usize::MAX),
+                GenericProductDefinitionReferenceId(u32::MAX),
             ),
         related_product_definition:
             ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
-                GenericProductDefinitionReferenceId(usize::MAX),
+                GenericProductDefinitionReferenceId(u32::MAX),
             ),
         ranking: (as_int(
             req(attributes, 5, "MAKE_FROM_USAGE_OPTION.ranking")?,
@@ -14692,7 +14674,7 @@ fn build_make_from_usage_option_arena(
             req(attributes, 6, "MAKE_FROM_USAGE_OPTION.ranking_rationale")?,
             "MAKE_FROM_USAGE_OPTION.ranking_rationale",
         ))?,
-        quantity: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(usize::MAX)),
+        quantity: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)),
     })
 }
 
@@ -14702,7 +14684,7 @@ fn build_manifold_solid_brep_arena(attributes: &[Attribute]) -> Result<ManifoldS
             req(attributes, 0, "MANIFOLD_SOLID_BREP.name")?,
             "MANIFOLD_SOLID_BREP.name",
         ))?,
-        outer: ClosedShellRef::ClosedShell(ClosedShellId(usize::MAX)),
+        outer: ClosedShellRef::ClosedShell(ClosedShellId(u32::MAX)),
     })
 }
 
@@ -14716,7 +14698,7 @@ fn build_manifold_surface_shape_representation_arena(
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -14724,8 +14706,8 @@ fn build_manifold_surface_shape_representation_arena(
 fn build_mapped_item_arena(attributes: &[Attribute]) -> Result<MappedItem, String> {
     Ok(MappedItem {
         name: (as_str(req(attributes, 0, "MAPPED_ITEM.name")?, "MAPPED_ITEM.name"))?,
-        mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(usize::MAX)),
-        mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+        mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(u32::MAX)),
+        mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
     })
 }
 
@@ -14737,15 +14719,13 @@ fn build_mass_measure_with_unit_arena(
             req(attributes, 0, "MASS_MEASURE_WITH_UNIT.value_component")?,
             "MASS_MEASURE_WITH_UNIT.value_component",
         ))?,
-        unit_component: UnitRef::AreaUnit(AreaUnitId(usize::MAX)),
+        unit_component: UnitRef::AreaUnit(AreaUnitId(u32::MAX)),
     })
 }
 
 fn build_mass_unit_arena(attributes: &[Attribute]) -> Result<MassUnit, String> {
     Ok(MassUnit {
-        dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(
-            usize::MAX,
-        )),
+        dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(u32::MAX)),
     })
 }
 
@@ -14762,7 +14742,7 @@ fn build_measure_qualification_arena(
             "MEASURE_QUALIFICATION.description",
         ))?,
         qualified_measure: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(
-            usize::MAX,
+            u32::MAX,
         )),
         qualifiers: Vec::new(),
     })
@@ -14780,7 +14760,7 @@ fn build_measure_representation_item_arena(
             req(attributes, 1, "MEASURE_REPRESENTATION_ITEM.value_component")?,
             "MEASURE_REPRESENTATION_ITEM.value_component",
         ))?,
-        unit_component: UnitRef::AreaUnit(AreaUnitId(usize::MAX)),
+        unit_component: UnitRef::AreaUnit(AreaUnitId(u32::MAX)),
     })
 }
 
@@ -14790,7 +14770,7 @@ fn build_measure_with_unit_arena(attributes: &[Attribute]) -> Result<MeasureWith
             req(attributes, 0, "MEASURE_WITH_UNIT.value_component")?,
             "MEASURE_WITH_UNIT.value_component",
         ))?,
-        unit_component: UnitRef::AreaUnit(AreaUnitId(usize::MAX)),
+        unit_component: UnitRef::AreaUnit(AreaUnitId(u32::MAX)),
     })
 }
 
@@ -14801,7 +14781,7 @@ fn build_mechanical_context_arena(attributes: &[Attribute]) -> Result<Mechanical
             "MECHANICAL_CONTEXT.name",
         ))?,
         frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(
-            usize::MAX,
+            u32::MAX,
         )),
         discipline_type: (as_str(
             req(attributes, 2, "MECHANICAL_CONTEXT.discipline_type")?,
@@ -14836,10 +14816,10 @@ fn build_mechanical_design_and_draughting_relationship_arena(
             ),
         },
         rep_1: MechanicalDesignAndDraughtingRelationshipSelectRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
         rep_2: MechanicalDesignAndDraughtingRelationshipSelectRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
     })
 }
@@ -14858,7 +14838,7 @@ fn build_mechanical_design_geometric_presentation_representation_arena(
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -14877,7 +14857,7 @@ fn build_mechanical_design_presentation_representation_with_draughting_arena(
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -14896,7 +14876,7 @@ fn build_mechanical_design_shaded_presentation_representation_arena(
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -14913,9 +14893,9 @@ fn build_model_geometric_view_arena(
             Attribute::Unset => None,
             other => Some((as_str(other, "MODEL_GEOMETRIC_VIEW.description"))?),
         },
-        item: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+        item: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
         rep: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -14934,7 +14914,7 @@ fn build_modified_geometric_tolerance_arena(
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
         modifier: (match req(attributes, 4, "MODIFIED_GEOMETRIC_TOLERANCE.modifier")? {
             Attribute::Enum(s) => LimitCondition::parse(s)
@@ -14953,7 +14933,7 @@ fn build_name_attribute_arena(attributes: &[Attribute]) -> Result<NameAttribute,
             "NAME_ATTRIBUTE.attribute_value",
         ))?,
         named_item: NameAttributeSelectRef::ActionRequestSolution(ActionRequestSolutionId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -14980,11 +14960,11 @@ fn build_next_assembly_usage_occurrence_arena(
         },
         relating_product_definition:
             ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
-                GenericProductDefinitionReferenceId(usize::MAX),
+                GenericProductDefinitionReferenceId(u32::MAX),
             ),
         related_product_definition:
             ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
-                GenericProductDefinitionReferenceId(usize::MAX),
+                GenericProductDefinitionReferenceId(u32::MAX),
             ),
         reference_designator: match req(
             attributes,
@@ -15017,7 +14997,7 @@ fn build_offset_surface_arena(attributes: &[Attribute]) -> Result<OffsetSurface,
             req(attributes, 0, "OFFSET_SURFACE.name")?,
             "OFFSET_SURFACE.name",
         ))?,
-        basis_surface: SurfaceRef::BSplineSurface(BSplineSurfaceId(usize::MAX)),
+        basis_surface: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)),
         distance: (as_real(
             req(attributes, 2, "OFFSET_SURFACE.distance")?,
             "OFFSET_SURFACE.distance",
@@ -15037,7 +15017,7 @@ fn build_one_direction_repeat_factor_arena(
             req(attributes, 0, "ONE_DIRECTION_REPEAT_FACTOR.name")?,
             "ONE_DIRECTION_REPEAT_FACTOR.name",
         ))?,
-        repeat_factor: VectorRef::Vector(VectorId(usize::MAX)),
+        repeat_factor: VectorRef::Vector(VectorId(u32::MAX)),
     })
 }
 
@@ -15077,8 +15057,8 @@ fn build_organization_relationship_arena(
             Attribute::Unset => None,
             other => Some((as_str(other, "ORGANIZATION_RELATIONSHIP.description"))?),
         },
-        relating_organization: OrganizationRef::Organization(OrganizationId(usize::MAX)),
-        related_organization: OrganizationRef::Organization(OrganizationId(usize::MAX)),
+        relating_organization: OrganizationRef::Organization(OrganizationId(u32::MAX)),
+        related_organization: OrganizationRef::Organization(OrganizationId(u32::MAX)),
     })
 }
 
@@ -15224,10 +15204,10 @@ fn build_organizational_project_relationship_arena(
             other => Some((as_str(other, "ORGANIZATIONAL_PROJECT_RELATIONSHIP.description"))?),
         },
         relating_organizational_project: OrganizationalProjectRef::OrganizationalProject(
-            OrganizationalProjectId(usize::MAX),
+            OrganizationalProjectId(u32::MAX),
         ),
         related_organizational_project: OrganizationalProjectRef::OrganizationalProject(
-            OrganizationalProjectId(usize::MAX),
+            OrganizationalProjectId(u32::MAX),
         ),
     })
 }
@@ -15255,7 +15235,7 @@ fn build_oriented_closed_shell_arena(
             req(attributes, 0, "ORIENTED_CLOSED_SHELL.name")?,
             "ORIENTED_CLOSED_SHELL.name",
         ))?,
-        closed_shell_element: ClosedShellRef::ClosedShell(ClosedShellId(usize::MAX)),
+        closed_shell_element: ClosedShellRef::ClosedShell(ClosedShellId(u32::MAX)),
         orientation: (Ok::<bool, String>(
             matches!(req(attributes, 3, "ORIENTED_CLOSED_SHELL.orientation")?, Attribute::Enum(s) if s == "T"),
         ))?,
@@ -15268,7 +15248,7 @@ fn build_oriented_edge_arena(attributes: &[Attribute]) -> Result<OrientedEdge, S
             req(attributes, 0, "ORIENTED_EDGE.name")?,
             "ORIENTED_EDGE.name",
         ))?,
-        edge_element: EdgeRef::Edge(EdgeId(usize::MAX)),
+        edge_element: EdgeRef::Edge(EdgeId(u32::MAX)),
         orientation: (Ok::<bool, String>(
             matches!(req(attributes, 4, "ORIENTED_EDGE.orientation")?, Attribute::Enum(s) if s == "T"),
         ))?,
@@ -15285,10 +15265,10 @@ fn build_over_riding_styled_item_arena(
         ))?,
         styles: Vec::new(),
         item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
         over_ridden_style: StyledItemRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -15307,7 +15287,7 @@ fn build_parallelism_tolerance_arena(
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
         datum_system: Vec::new(),
     })
@@ -15346,9 +15326,9 @@ fn build_path_arena(attributes: &[Attribute]) -> Result<Path, String> {
 fn build_pcurve_arena(attributes: &[Attribute]) -> Result<Pcurve, String> {
     Ok(Pcurve {
         name: (as_str(req(attributes, 0, "PCURVE.name")?, "PCURVE.name"))?,
-        basis_surface: SurfaceRef::BSplineSurface(BSplineSurfaceId(usize::MAX)),
+        basis_surface: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)),
         reference_to_curve: DefinitionalRepresentationRef::DefinitionalRepresentation(
-            DefinitionalRepresentationId(usize::MAX),
+            DefinitionalRepresentationId(u32::MAX),
         ),
     })
 }
@@ -15367,7 +15347,7 @@ fn build_perpendicularity_tolerance_arena(
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
         datum_system: Vec::new(),
     })
@@ -15427,8 +15407,8 @@ fn build_person_and_organization_arena(
     attributes: &[Attribute],
 ) -> Result<PersonAndOrganization, String> {
     Ok(PersonAndOrganization {
-        the_person: PersonRef::Person(PersonId(usize::MAX)),
-        the_organization: OrganizationRef::Organization(OrganizationId(usize::MAX)),
+        the_person: PersonRef::Person(PersonId(u32::MAX)),
+        the_organization: OrganizationRef::Organization(OrganizationId(u32::MAX)),
     })
 }
 
@@ -15539,10 +15519,10 @@ fn build_person_and_organization_assignment_arena(
 ) -> Result<PersonAndOrganizationAssignment, String> {
     Ok(PersonAndOrganizationAssignment {
         assigned_person_and_organization: PersonAndOrganizationRef::PersonAndOrganization(
-            PersonAndOrganizationId(usize::MAX),
+            PersonAndOrganizationId(u32::MAX),
         ),
         role: PersonAndOrganizationRoleRef::PersonAndOrganizationRole(PersonAndOrganizationRoleId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -15633,7 +15613,7 @@ fn build_placed_datum_target_feature_arena(
             other => Some((as_str(other, "PLACED_DATUM_TARGET_FEATURE.description"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
         product_definitional: (as_logical(
             req(
@@ -15653,7 +15633,7 @@ fn build_placed_datum_target_feature_arena(
 fn build_placement_arena(attributes: &[Attribute]) -> Result<Placement, String> {
     Ok(Placement {
         name: (as_str(req(attributes, 0, "PLACEMENT.name")?, "PLACEMENT.name"))?,
-        location: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)),
+        location: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)),
     })
 }
 
@@ -15668,7 +15648,7 @@ fn build_planar_box_arena(attributes: &[Attribute]) -> Result<PlanarBox, String>
             req(attributes, 2, "PLANAR_BOX.size_in_y")?,
             "PLANAR_BOX.size_in_y",
         ))?,
-        placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
+        placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)),
     })
 }
 
@@ -15692,7 +15672,7 @@ fn build_planar_extent_arena(attributes: &[Attribute]) -> Result<PlanarExtent, S
 fn build_plane_arena(attributes: &[Attribute]) -> Result<Plane, String> {
     Ok(Plane {
         name: (as_str(req(attributes, 0, "PLANE.name")?, "PLANE.name"))?,
-        position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)),
+        position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
     })
 }
 
@@ -15708,15 +15688,13 @@ fn build_plane_angle_measure_with_unit_arena(
             )?,
             "PLANE_ANGLE_MEASURE_WITH_UNIT.value_component",
         ))?,
-        unit_component: UnitRef::AreaUnit(AreaUnitId(usize::MAX)),
+        unit_component: UnitRef::AreaUnit(AreaUnitId(u32::MAX)),
     })
 }
 
 fn build_plane_angle_unit_arena(attributes: &[Attribute]) -> Result<PlaneAngleUnit, String> {
     Ok(PlaneAngleUnit {
-        dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(
-            usize::MAX,
-        )),
+        dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(u32::MAX)),
     })
 }
 
@@ -15724,9 +15702,9 @@ fn build_plus_minus_tolerance_arena(
     attributes: &[Attribute],
 ) -> Result<PlusMinusTolerance, String> {
     Ok(PlusMinusTolerance {
-        range: ToleranceMethodDefinitionRef::LimitsAndFits(LimitsAndFitsId(usize::MAX)),
+        range: ToleranceMethodDefinitionRef::LimitsAndFits(LimitsAndFitsId(u32::MAX)),
         toleranced_dimension: DimensionalCharacteristicRef::AngularLocation(AngularLocationId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -15772,7 +15750,7 @@ fn build_position_tolerance_arena(attributes: &[Attribute]) -> Result<PositionTo
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
     })
 }
@@ -15916,7 +15894,7 @@ fn build_presentation_area_arena(attributes: &[Attribute]) -> Result<Presentatio
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -15947,7 +15925,7 @@ fn build_presentation_representation_arena(
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -15958,8 +15936,8 @@ fn build_presentation_set_arena(attributes: &[Attribute]) -> Result<Presentation
 
 fn build_presentation_size_arena(attributes: &[Attribute]) -> Result<PresentationSize, String> {
     Ok(PresentationSize {
-        unit: PresentationSizeAssignmentSelectRef::AreaInSet(AreaInSetId(usize::MAX)),
-        size: PlanarBoxRef::PlanarBox(PlanarBoxId(usize::MAX)),
+        unit: PresentationSizeAssignmentSelectRef::AreaInSet(AreaInSetId(u32::MAX)),
+        size: PlanarBoxRef::PlanarBox(PlanarBoxId(u32::MAX)),
     })
 }
 
@@ -15975,7 +15953,7 @@ fn build_presentation_style_by_context_arena(
     Ok(PresentationStyleByContext {
         styles: Vec::new(),
         style_context: StyleContextSelectRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
     })
 }
@@ -15988,7 +15966,7 @@ fn build_presentation_view_arena(attributes: &[Attribute]) -> Result<Presentatio
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -16002,9 +15980,9 @@ fn build_presented_item_representation_arena(
 ) -> Result<PresentedItemRepresentation, String> {
     Ok(PresentedItemRepresentation {
         presentation: PresentationRepresentationSelectRef::PresentationArea(PresentationAreaId(
-            usize::MAX,
+            u32::MAX,
         )),
-        item: PresentedItemRef::AppliedPresentedItem(AppliedPresentedItemId(usize::MAX)),
+        item: PresentedItemRef::AppliedPresentedItem(AppliedPresentedItemId(u32::MAX)),
     })
 }
 
@@ -16045,8 +16023,8 @@ fn build_product_category_relationship_arena(
             Attribute::Unset => None,
             other => Some((as_str(other, "PRODUCT_CATEGORY_RELATIONSHIP.description"))?),
         },
-        category: ProductCategoryRef::ProductCategory(ProductCategoryId(usize::MAX)),
-        sub_category: ProductCategoryRef::ProductCategory(ProductCategoryId(usize::MAX)),
+        category: ProductCategoryRef::ProductCategory(ProductCategoryId(u32::MAX)),
+        sub_category: ProductCategoryRef::ProductCategory(ProductCategoryId(u32::MAX)),
     })
 }
 
@@ -16065,7 +16043,7 @@ fn build_product_concept_arena(attributes: &[Attribute]) -> Result<ProductConcep
             other => Some((as_str(other, "PRODUCT_CONCEPT.description"))?),
         },
         market_context: ProductConceptContextRef::ProductConceptContext(ProductConceptContextId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -16079,7 +16057,7 @@ fn build_product_concept_context_arena(
             "PRODUCT_CONCEPT_CONTEXT.name",
         ))?,
         frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(
-            usize::MAX,
+            u32::MAX,
         )),
         market_segment_type: (as_str(
             req(attributes, 2, "PRODUCT_CONCEPT_CONTEXT.market_segment_type")?,
@@ -16133,7 +16111,7 @@ fn build_product_context_arena(attributes: &[Attribute]) -> Result<ProductContex
             "PRODUCT_CONTEXT.name",
         ))?,
         frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(
-            usize::MAX,
+            u32::MAX,
         )),
         discipline_type: (as_str(
             req(attributes, 2, "PRODUCT_CONTEXT.discipline_type")?,
@@ -16153,9 +16131,9 @@ fn build_product_definition_arena(attributes: &[Attribute]) -> Result<ProductDef
             other => Some((as_str(other, "PRODUCT_DEFINITION.description"))?),
         },
         formation: ProductDefinitionFormationRef::ProductDefinitionFormation(
-            ProductDefinitionFormationId(usize::MAX),
+            ProductDefinitionFormationId(u32::MAX),
         ),
-        frame_of_reference: ProductDefinitionContextRef::DesignContext(DesignContextId(usize::MAX)),
+        frame_of_reference: ProductDefinitionContextRef::DesignContext(DesignContextId(u32::MAX)),
     })
 }
 
@@ -16168,7 +16146,7 @@ fn build_product_definition_context_arena(
             "PRODUCT_DEFINITION_CONTEXT.name",
         ))?,
         frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(
-            usize::MAX,
+            u32::MAX,
         )),
         life_cycle_stage: (as_str(
             req(attributes, 2, "PRODUCT_DEFINITION_CONTEXT.life_cycle_stage")?,
@@ -16181,10 +16159,10 @@ fn build_product_definition_context_association_arena(
     attributes: &[Attribute],
 ) -> Result<ProductDefinitionContextAssociation, String> {
     Ok(ProductDefinitionContextAssociation {
-        definition: ProductDefinitionRef::ProductDefinition(ProductDefinitionId(usize::MAX)),
-        frame_of_reference: ProductDefinitionContextRef::DesignContext(DesignContextId(usize::MAX)),
+        definition: ProductDefinitionRef::ProductDefinition(ProductDefinitionId(u32::MAX)),
+        frame_of_reference: ProductDefinitionContextRef::DesignContext(DesignContextId(u32::MAX)),
         role: ProductDefinitionContextRoleRef::ProductDefinitionContextRole(
-            ProductDefinitionContextRoleId(usize::MAX),
+            ProductDefinitionContextRoleId(u32::MAX),
         ),
     })
 }
@@ -16213,7 +16191,7 @@ fn build_product_definition_effectivity_arena(
             "PRODUCT_DEFINITION_EFFECTIVITY.id",
         ))?,
         usage: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -16230,7 +16208,7 @@ fn build_product_definition_formation_arena(
             Attribute::Unset => None,
             other => Some((as_str(other, "PRODUCT_DEFINITION_FORMATION.description"))?),
         },
-        of_product: ProductRef::Product(ProductId(usize::MAX)),
+        of_product: ProductRef::Product(ProductId(u32::MAX)),
     })
 }
 
@@ -16259,7 +16237,7 @@ fn build_product_definition_formation_with_specified_source_arena(
                 ))?,
             ),
         },
-        of_product: ProductRef::Product(ProductId(usize::MAX)),
+        of_product: ProductRef::Product(ProductId(u32::MAX)),
         make_or_buy: (match req(
             attributes,
             3,
@@ -16316,11 +16294,11 @@ fn build_product_definition_relationship_arena(
         },
         relating_product_definition:
             ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
-                GenericProductDefinitionReferenceId(usize::MAX),
+                GenericProductDefinitionReferenceId(u32::MAX),
             ),
         related_product_definition:
             ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
-                GenericProductDefinitionReferenceId(usize::MAX),
+                GenericProductDefinitionReferenceId(u32::MAX),
             ),
     })
 }
@@ -16359,10 +16337,10 @@ fn build_product_definition_relationship_relationship_arena(
             ),
         },
         relating: ProductDefinitionRelationshipRef::AssemblyComponentUsage(
-            AssemblyComponentUsageId(usize::MAX),
+            AssemblyComponentUsageId(u32::MAX),
         ),
         related: ProductDefinitionRelationshipRef::AssemblyComponentUsage(
-            AssemblyComponentUsageId(usize::MAX),
+            AssemblyComponentUsageId(u32::MAX),
         ),
     })
 }
@@ -16380,7 +16358,7 @@ fn build_product_definition_shape_arena(
             other => Some((as_str(other, "PRODUCT_DEFINITION_SHAPE.description"))?),
         },
         definition: CharacterizedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -16394,10 +16372,10 @@ fn build_product_definition_substitute_arena(
             other => Some((as_str(other, "PRODUCT_DEFINITION_SUBSTITUTE.description"))?),
         },
         context_relationship: ProductDefinitionRelationshipRef::AssemblyComponentUsage(
-            AssemblyComponentUsageId(usize::MAX),
+            AssemblyComponentUsageId(u32::MAX),
         ),
         substitute_definition: ProductDefinitionRef::ProductDefinition(ProductDefinitionId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -16420,11 +16398,11 @@ fn build_product_definition_usage_arena(
         },
         relating_product_definition:
             ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
-                GenericProductDefinitionReferenceId(usize::MAX),
+                GenericProductDefinitionReferenceId(u32::MAX),
             ),
         related_product_definition:
             ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(
-                GenericProductDefinitionReferenceId(usize::MAX),
+                GenericProductDefinitionReferenceId(u32::MAX),
             ),
     })
 }
@@ -16455,9 +16433,9 @@ fn build_product_definition_with_associated_documents_arena(
             ),
         },
         formation: ProductDefinitionFormationRef::ProductDefinitionFormation(
-            ProductDefinitionFormationId(usize::MAX),
+            ProductDefinitionFormationId(u32::MAX),
         ),
-        frame_of_reference: ProductDefinitionContextRef::DesignContext(DesignContextId(usize::MAX)),
+        frame_of_reference: ProductDefinitionContextRef::DesignContext(DesignContextId(u32::MAX)),
         documentation_ids: Vec::new(),
     })
 }
@@ -16486,11 +16464,11 @@ fn build_projected_zone_definition_arena(
     attributes: &[Attribute],
 ) -> Result<ProjectedZoneDefinition, String> {
     Ok(ProjectedZoneDefinition {
-        zone: ToleranceZoneRef::ToleranceZone(ToleranceZoneId(usize::MAX)),
+        zone: ToleranceZoneRef::ToleranceZone(ToleranceZoneId(u32::MAX)),
         boundaries: Vec::new(),
-        projection_end: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)),
+        projection_end: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)),
         projected_length: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -16506,7 +16484,7 @@ fn build_property_definition_arena(attributes: &[Attribute]) -> Result<PropertyD
             other => Some((as_str(other, "PROPERTY_DEFINITION.description"))?),
         },
         definition: CharacterizedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -16528,10 +16506,10 @@ fn build_property_definition_relationship_arena(
             "PROPERTY_DEFINITION_RELATIONSHIP.description",
         ))?,
         relating_property_definition: PropertyDefinitionRef::ProductDefinitionShape(
-            ProductDefinitionShapeId(usize::MAX),
+            ProductDefinitionShapeId(u32::MAX),
         ),
         related_property_definition: PropertyDefinitionRef::ProductDefinitionShape(
-            ProductDefinitionShapeId(usize::MAX),
+            ProductDefinitionShapeId(u32::MAX),
         ),
     })
 }
@@ -16541,10 +16519,10 @@ fn build_property_definition_representation_arena(
 ) -> Result<PropertyDefinitionRepresentation, String> {
     Ok(PropertyDefinitionRepresentation {
         definition: RepresentedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
         used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
     })
 }
@@ -16637,15 +16615,13 @@ fn build_ratio_measure_with_unit_arena(
             req(attributes, 0, "RATIO_MEASURE_WITH_UNIT.value_component")?,
             "RATIO_MEASURE_WITH_UNIT.value_component",
         ))?,
-        unit_component: UnitRef::AreaUnit(AreaUnitId(usize::MAX)),
+        unit_component: UnitRef::AreaUnit(AreaUnitId(u32::MAX)),
     })
 }
 
 fn build_ratio_unit_arena(attributes: &[Attribute]) -> Result<RatioUnit, String> {
     Ok(RatioUnit {
-        dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(
-            usize::MAX,
-        )),
+        dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(u32::MAX)),
     })
 }
 
@@ -16777,7 +16753,7 @@ fn build_repositioned_tessellated_item_arena(
             req(attributes, 0, "REPOSITIONED_TESSELLATED_ITEM.name")?,
             "REPOSITIONED_TESSELLATED_ITEM.name",
         ))?,
-        location: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)),
+        location: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
     })
 }
 
@@ -16789,7 +16765,7 @@ fn build_representation_arena(attributes: &[Attribute]) -> Result<Representation
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -16835,9 +16811,9 @@ fn build_representation_item_arena(attributes: &[Attribute]) -> Result<Represent
 
 fn build_representation_map_arena(attributes: &[Attribute]) -> Result<RepresentationMap, String> {
     Ok(RepresentationMap {
-        mapping_origin: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)),
+        mapping_origin: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)),
         mapped_representation: RepresentationRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
     })
 }
@@ -16851,7 +16827,7 @@ fn build_representation_reference_arena(
             "REPRESENTATION_REFERENCE.id",
         ))?,
         context_of_items: RepresentationContextReferenceRef::RepresentationContextReference(
-            RepresentationContextReferenceId(usize::MAX),
+            RepresentationContextReferenceId(u32::MAX),
         ),
     })
 }
@@ -16869,10 +16845,10 @@ fn build_representation_relationship_arena(
             other => Some((as_str(other, "REPRESENTATION_RELATIONSHIP.description"))?),
         },
         rep_1: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
         rep_2: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
     })
 }
@@ -16903,13 +16879,13 @@ fn build_representation_relationship_with_transformation_arena(
             ),
         },
         rep_1: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
         rep_2: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
         transformation_operator: TransformationRef::FunctionallyDefinedTransformation(
-            FunctionallyDefinedTransformationId(usize::MAX),
+            FunctionallyDefinedTransformationId(u32::MAX),
         ),
     })
 }
@@ -16924,7 +16900,7 @@ fn build_resource_property_arena(attributes: &[Attribute]) -> Result<ResourcePro
             req(attributes, 1, "RESOURCE_PROPERTY.description")?,
             "RESOURCE_PROPERTY.description",
         ))?,
-        resource: CharacterizedResourceDefinitionRef::ActionResource(ActionResourceId(usize::MAX)),
+        resource: CharacterizedResourceDefinitionRef::ActionResource(ActionResourceId(u32::MAX)),
     })
 }
 
@@ -16945,8 +16921,8 @@ fn build_resource_requirement_type_arena(
 
 fn build_role_association_arena(attributes: &[Attribute]) -> Result<RoleAssociation, String> {
     Ok(RoleAssociation {
-        role: ObjectRoleRef::ObjectRole(ObjectRoleId(usize::MAX)),
-        item_with_role: RoleSelectRef::ActionAssignment(ActionAssignmentId(usize::MAX)),
+        role: ObjectRoleRef::ObjectRole(ObjectRoleId(u32::MAX)),
+        item_with_role: RoleSelectRef::ActionAssignment(ActionAssignmentId(u32::MAX)),
     })
 }
 
@@ -16962,7 +16938,7 @@ fn build_roundness_tolerance_arena(attributes: &[Attribute]) -> Result<Roundness
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
     })
 }
@@ -16970,7 +16946,7 @@ fn build_roundness_tolerance_arena(attributes: &[Attribute]) -> Result<Roundness
 fn build_seam_curve_arena(attributes: &[Attribute]) -> Result<SeamCurve, String> {
     Ok(SeamCurve {
         name: (as_str(req(attributes, 0, "SEAM_CURVE.name")?, "SEAM_CURVE.name"))?,
-        curve_3d: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)),
+        curve_3d: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
         associated_geometry: Vec::new(),
         master_representation: (match req(attributes, 3, "SEAM_CURVE.master_representation")? {
             Attribute::Enum(s) => PreferredSurfaceCurveRepresentation::parse(s)
@@ -16995,7 +16971,7 @@ fn build_security_classification_arena(
             "SECURITY_CLASSIFICATION.purpose",
         ))?,
         security_level: SecurityClassificationLevelRef::SecurityClassificationLevel(
-            SecurityClassificationLevelId(usize::MAX),
+            SecurityClassificationLevelId(u32::MAX),
         ),
     })
 }
@@ -17005,7 +16981,7 @@ fn build_security_classification_assignment_arena(
 ) -> Result<SecurityClassificationAssignment, String> {
     Ok(SecurityClassificationAssignment {
         assigned_security_classification: SecurityClassificationRef::SecurityClassification(
-            SecurityClassificationId(usize::MAX),
+            SecurityClassificationId(u32::MAX),
         ),
     })
 }
@@ -17032,7 +17008,7 @@ fn build_shape_aspect_arena(attributes: &[Attribute]) -> Result<ShapeAspect, Str
             other => Some((as_str(other, "SHAPE_ASPECT.description"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
         product_definitional: match req(attributes, 3, "SHAPE_ASPECT.product_definitional")? {
             Attribute::Derived => None,
@@ -17054,10 +17030,10 @@ fn build_shape_aspect_associativity_arena(
             other => Some((as_str(other, "SHAPE_ASPECT_ASSOCIATIVITY.description"))?),
         },
         relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
         related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -17079,10 +17055,10 @@ fn build_shape_aspect_deriving_relationship_arena(
             other => Some((as_str(other, "SHAPE_ASPECT_DERIVING_RELATIONSHIP.description"))?),
         },
         relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
         related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -17100,10 +17076,10 @@ fn build_shape_aspect_relationship_arena(
             other => Some((as_str(other, "SHAPE_ASPECT_RELATIONSHIP.description"))?),
         },
         relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
         related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -17113,10 +17089,10 @@ fn build_shape_definition_representation_arena(
 ) -> Result<ShapeDefinitionRepresentation, String> {
     Ok(ShapeDefinitionRepresentation {
         definition: RepresentedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(
-            usize::MAX,
+            u32::MAX,
         )),
         used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
     })
 }
@@ -17131,7 +17107,7 @@ fn build_shape_dimension_representation_arena(
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -17146,7 +17122,7 @@ fn build_shape_representation_arena(
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -17168,10 +17144,10 @@ fn build_shape_representation_relationship_arena(
             other => Some((as_str(other, "SHAPE_REPRESENTATION_RELATIONSHIP.description"))?),
         },
         rep_1: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
         rep_2: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
     })
 }
@@ -17186,7 +17162,7 @@ fn build_shape_representation_with_parameters_arena(
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -17239,9 +17215,7 @@ fn build_simple_numeric_expression_arena(
 
 fn build_solid_angle_unit_arena(attributes: &[Attribute]) -> Result<SolidAngleUnit, String> {
     Ok(SolidAngleUnit {
-        dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(
-            usize::MAX,
-        )),
+        dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(u32::MAX)),
     })
 }
 
@@ -17257,7 +17231,7 @@ fn build_spherical_surface_arena(attributes: &[Attribute]) -> Result<SphericalSu
             req(attributes, 0, "SPHERICAL_SURFACE.name")?,
             "SPHERICAL_SURFACE.name",
         ))?,
-        position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)),
+        position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
         radius: (as_real(
             req(attributes, 2, "SPHERICAL_SURFACE.radius")?,
             "SPHERICAL_SURFACE.radius",
@@ -17268,7 +17242,7 @@ fn build_spherical_surface_arena(attributes: &[Attribute]) -> Result<SphericalSu
 fn build_start_request_arena(attributes: &[Attribute]) -> Result<StartRequest, String> {
     Ok(StartRequest {
         assigned_action_request: VersionedActionRequestRef::VersionedActionRequest(
-            VersionedActionRequestId(usize::MAX),
+            VersionedActionRequestId(u32::MAX),
         ),
         items: Vec::new(),
     })
@@ -17276,7 +17250,7 @@ fn build_start_request_arena(attributes: &[Attribute]) -> Result<StartRequest, S
 
 fn build_start_work_arena(attributes: &[Attribute]) -> Result<StartWork, String> {
     Ok(StartWork {
-        assigned_action: ActionRef::Action(ActionId(usize::MAX)),
+        assigned_action: ActionRef::Action(ActionId(u32::MAX)),
         items: Vec::new(),
     })
 }
@@ -17318,7 +17292,7 @@ fn build_straightness_tolerance_arena(
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
     })
 }
@@ -17328,7 +17302,7 @@ fn build_styled_item_arena(attributes: &[Attribute]) -> Result<StyledItem, Strin
         name: (as_str(req(attributes, 0, "STYLED_ITEM.name")?, "STYLED_ITEM.name"))?,
         styles: Vec::new(),
         item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
     })
 }
@@ -17345,7 +17319,7 @@ fn build_surface_curve_arena(attributes: &[Attribute]) -> Result<SurfaceCurve, S
             req(attributes, 0, "SURFACE_CURVE.name")?,
             "SURFACE_CURVE.name",
         ))?,
-        curve_3d: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)),
+        curve_3d: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
         associated_geometry: Vec::new(),
         master_representation: (match req(attributes, 3, "SURFACE_CURVE.master_representation")? {
             Attribute::Enum(s) => PreferredSurfaceCurveRepresentation::parse(s)
@@ -17365,8 +17339,8 @@ fn build_surface_of_linear_extrusion_arena(
             req(attributes, 0, "SURFACE_OF_LINEAR_EXTRUSION.name")?,
             "SURFACE_OF_LINEAR_EXTRUSION.name",
         ))?,
-        swept_curve: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)),
-        extrusion_axis: VectorRef::Vector(VectorId(usize::MAX)),
+        swept_curve: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
+        extrusion_axis: VectorRef::Vector(VectorId(u32::MAX)),
     })
 }
 
@@ -17378,8 +17352,8 @@ fn build_surface_of_revolution_arena(
             req(attributes, 0, "SURFACE_OF_REVOLUTION.name")?,
             "SURFACE_OF_REVOLUTION.name",
         ))?,
-        swept_curve: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)),
-        axis_position: Axis1PlacementRef::Axis1Placement(Axis1PlacementId(usize::MAX)),
+        swept_curve: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
+        axis_position: Axis1PlacementRef::Axis1Placement(Axis1PlacementId(u32::MAX)),
     })
 }
 
@@ -17397,7 +17371,7 @@ fn build_surface_profile_tolerance_arena(
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
     })
 }
@@ -17406,7 +17380,7 @@ fn build_surface_rendering_properties_arena(
     attributes: &[Attribute],
 ) -> Result<SurfaceRenderingProperties, String> {
     Ok(SurfaceRenderingProperties {
-        rendered_colour: ColourRef::Colour(ColourId(usize::MAX)),
+        rendered_colour: ColourRef::Colour(ColourId(u32::MAX)),
     })
 }
 
@@ -17424,7 +17398,7 @@ fn build_surface_style_boundary_arena(
     attributes: &[Attribute],
 ) -> Result<SurfaceStyleBoundary, String> {
     Ok(SurfaceStyleBoundary {
-        style_of_boundary: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)),
+        style_of_boundary: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)),
     })
 }
 
@@ -17432,7 +17406,7 @@ fn build_surface_style_control_grid_arena(
     attributes: &[Attribute],
 ) -> Result<SurfaceStyleControlGrid, String> {
     Ok(SurfaceStyleControlGrid {
-        style_of_control_grid: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)),
+        style_of_control_grid: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)),
     })
 }
 
@@ -17440,7 +17414,7 @@ fn build_surface_style_fill_area_arena(
     attributes: &[Attribute],
 ) -> Result<SurfaceStyleFillArea, String> {
     Ok(SurfaceStyleFillArea {
-        fill_area: FillAreaStyleRef::FillAreaStyle(FillAreaStyleId(usize::MAX)),
+        fill_area: FillAreaStyleRef::FillAreaStyle(FillAreaStyleId(u32::MAX)),
     })
 }
 
@@ -17448,7 +17422,7 @@ fn build_surface_style_parameter_line_arena(
     attributes: &[Attribute],
 ) -> Result<SurfaceStyleParameterLine, String> {
     Ok(SurfaceStyleParameterLine {
-        style_of_parameter_lines: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)),
+        style_of_parameter_lines: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)),
         direction_counts: (match req(
             attributes,
             1,
@@ -17491,7 +17465,7 @@ fn build_surface_style_rendering_arena(
                 "SURFACE_STYLE_RENDERING.rendering_method: expected enum, got {o:?}"
             )),
         })?,
-        surface_colour: ColourRef::Colour(ColourId(usize::MAX)),
+        surface_colour: ColourRef::Colour(ColourId(u32::MAX)),
     })
 }
 
@@ -17511,7 +17485,7 @@ fn build_surface_style_rendering_with_properties_arena(
                 "SURFACE_STYLE_RENDERING_WITH_PROPERTIES.rendering_method: expected enum, got {o:?}"
             )),
         })?,
-        surface_colour: ColourRef::Colour(ColourId(usize::MAX)),
+        surface_colour: ColourRef::Colour(ColourId(u32::MAX)),
         properties: Vec::new(),
     })
 }
@@ -17520,7 +17494,7 @@ fn build_surface_style_segmentation_curve_arena(
     attributes: &[Attribute],
 ) -> Result<SurfaceStyleSegmentationCurve, String> {
     Ok(SurfaceStyleSegmentationCurve {
-        style_of_segmentation_curve: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)),
+        style_of_segmentation_curve: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)),
     })
 }
 
@@ -17528,7 +17502,7 @@ fn build_surface_style_silhouette_arena(
     attributes: &[Attribute],
 ) -> Result<SurfaceStyleSilhouette, String> {
     Ok(SurfaceStyleSilhouette {
-        style_of_silhouette: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)),
+        style_of_silhouette: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)),
     })
 }
 
@@ -17553,7 +17527,7 @@ fn build_surface_style_usage_arena(attributes: &[Attribute]) -> Result<SurfaceSt
             )),
         })?,
         style: SurfaceSideStyleSelectRef::PreDefinedSurfaceSideStyle(PreDefinedSurfaceSideStyleId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -17564,13 +17538,13 @@ fn build_swept_surface_arena(attributes: &[Attribute]) -> Result<SweptSurface, S
             req(attributes, 0, "SWEPT_SURFACE.name")?,
             "SWEPT_SURFACE.name",
         ))?,
-        swept_curve: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)),
+        swept_curve: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
     })
 }
 
 fn build_symbol_colour_arena(attributes: &[Attribute]) -> Result<SymbolColour, String> {
     Ok(SymbolColour {
-        colour_of_symbol: ColourRef::Colour(ColourId(usize::MAX)),
+        colour_of_symbol: ColourRef::Colour(ColourId(u32::MAX)),
     })
 }
 
@@ -17584,7 +17558,7 @@ fn build_symbol_representation_arena(
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -17595,7 +17569,7 @@ fn build_symbol_style_arena(attributes: &[Attribute]) -> Result<SymbolStyle, Str
             req(attributes, 0, "SYMBOL_STYLE.name")?,
             "SYMBOL_STYLE.name",
         ))?,
-        style_of_symbol: SymbolStyleSelectRef::SymbolColour(SymbolColourId(usize::MAX)),
+        style_of_symbol: SymbolStyleSelectRef::SymbolColour(SymbolColourId(u32::MAX)),
     })
 }
 
@@ -17605,7 +17579,7 @@ fn build_symbol_target_arena(attributes: &[Attribute]) -> Result<SymbolTarget, S
             req(attributes, 0, "SYMBOL_TARGET.name")?,
             "SYMBOL_TARGET.name",
         ))?,
-        placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
+        placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)),
         x_scale: (as_real(
             req(attributes, 2, "SYMBOL_TARGET.x_scale")?,
             "SYMBOL_TARGET.x_scale",
@@ -17629,7 +17603,7 @@ fn build_symmetry_tolerance_arena(attributes: &[Attribute]) -> Result<SymmetryTo
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
         datum_system: Vec::new(),
     })
@@ -17642,9 +17616,9 @@ fn build_terminator_symbol_arena(attributes: &[Attribute]) -> Result<TerminatorS
             "TERMINATOR_SYMBOL.name",
         ))?,
         styles: Vec::new(),
-        item: AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(AnnotationSymbolId(usize::MAX)),
+        item: AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(AnnotationSymbolId(u32::MAX)),
         annotated_curve: AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(
-            AnnotationCurveOccurrenceId(usize::MAX),
+            AnnotationCurveOccurrenceId(u32::MAX),
         ),
     })
 }
@@ -17659,7 +17633,7 @@ fn build_tessellated_annotation_occurrence_arena(
         ))?,
         styles: Vec::new(),
         item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
-            AdvancedBrepShapeRepresentationId(usize::MAX),
+            AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
     })
 }
@@ -17672,7 +17646,7 @@ fn build_tessellated_curve_set_arena(
             req(attributes, 0, "TESSELLATED_CURVE_SET.name")?,
             "TESSELLATED_CURVE_SET.name",
         ))?,
-        coordinates: CoordinatesListRef::CoordinatesList(CoordinatesListId(usize::MAX)),
+        coordinates: CoordinatesListRef::CoordinatesList(CoordinatesListId(u32::MAX)),
         line_strips: (match req(attributes, 2, "TESSELLATED_CURVE_SET.line_strips")? {
             Attribute::List(l) => l
                 .iter()
@@ -17699,7 +17673,7 @@ fn build_tessellated_face_arena(attributes: &[Attribute]) -> Result<TessellatedF
             req(attributes, 0, "TESSELLATED_FACE.name")?,
             "TESSELLATED_FACE.name",
         ))?,
-        coordinates: CoordinatesListRef::CoordinatesList(CoordinatesListId(usize::MAX)),
+        coordinates: CoordinatesListRef::CoordinatesList(CoordinatesListId(u32::MAX)),
         pnmax: (as_int(
             req(attributes, 2, "TESSELLATED_FACE.pnmax")?,
             "TESSELLATED_FACE.pnmax",
@@ -17756,7 +17730,7 @@ fn build_tessellated_shape_representation_arena(
         ))?,
         items: Vec::new(),
         context_of_items: RepresentationContextRef::GeometricRepresentationContext(
-            GeometricRepresentationContextId(usize::MAX),
+            GeometricRepresentationContextId(u32::MAX),
         ),
     })
 }
@@ -17802,7 +17776,7 @@ fn build_tessellated_surface_set_arena(
             req(attributes, 0, "TESSELLATED_SURFACE_SET.name")?,
             "TESSELLATED_SURFACE_SET.name",
         ))?,
-        coordinates: CoordinatesListRef::CoordinatesList(CoordinatesListId(usize::MAX)),
+        coordinates: CoordinatesListRef::CoordinatesList(CoordinatesListId(u32::MAX)),
         pnmax: (as_int(
             req(attributes, 2, "TESSELLATED_SURFACE_SET.pnmax")?,
             "TESSELLATED_SURFACE_SET.pnmax",
@@ -17848,7 +17822,7 @@ fn build_text_literal_arena(attributes: &[Attribute]) -> Result<TextLiteral, Str
             req(attributes, 1, "TEXT_LITERAL.literal")?,
             "TEXT_LITERAL.literal",
         ))?,
-        placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)),
+        placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)),
         alignment: (as_str(
             req(attributes, 3, "TEXT_LITERAL.alignment")?,
             "TEXT_LITERAL.alignment",
@@ -17859,9 +17833,7 @@ fn build_text_literal_arena(attributes: &[Attribute]) -> Result<TextLiteral, Str
             }
             o => Err(format!("TEXT_LITERAL.path: expected enum, got {o:?}")),
         })?,
-        font: FontSelectRef::DraughtingPreDefinedTextFont(DraughtingPreDefinedTextFontId(
-            usize::MAX,
-        )),
+        font: FontSelectRef::DraughtingPreDefinedTextFont(DraughtingPreDefinedTextFontId(u32::MAX)),
     })
 }
 
@@ -17869,7 +17841,7 @@ fn build_text_style_arena(attributes: &[Attribute]) -> Result<TextStyle, String>
     Ok(TextStyle {
         name: (as_str(req(attributes, 0, "TEXT_STYLE.name")?, "TEXT_STYLE.name"))?,
         character_appearance: CharacterStyleSelectRef::CharacterGlyphStyleOutline(
-            CharacterGlyphStyleOutlineId(usize::MAX),
+            CharacterGlyphStyleOutlineId(u32::MAX),
         ),
     })
 }
@@ -17878,7 +17850,7 @@ fn build_text_style_for_defined_font_arena(
     attributes: &[Attribute],
 ) -> Result<TextStyleForDefinedFont, String> {
     Ok(TextStyleForDefinedFont {
-        text_colour: ColourRef::Colour(ColourId(usize::MAX)),
+        text_colour: ColourRef::Colour(ColourId(u32::MAX)),
     })
 }
 
@@ -17891,7 +17863,7 @@ fn build_text_style_with_box_characteristics_arena(
             "TEXT_STYLE_WITH_BOX_CHARACTERISTICS.name",
         ))?,
         character_appearance: CharacterStyleSelectRef::CharacterGlyphStyleOutline(
-            CharacterGlyphStyleOutlineId(usize::MAX),
+            CharacterGlyphStyleOutlineId(u32::MAX),
         ),
         characteristics: (match req(
             attributes,
@@ -17925,16 +17897,14 @@ fn build_texture_style_tessellation_specification_arena(
 
 fn build_time_unit_arena(attributes: &[Attribute]) -> Result<TimeUnit, String> {
     Ok(TimeUnit {
-        dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(
-            usize::MAX,
-        )),
+        dimensions: DimensionalExponentsRef::DimensionalExponents(DimensionalExponentsId(u32::MAX)),
     })
 }
 
 fn build_tolerance_value_arena(attributes: &[Attribute]) -> Result<ToleranceValue, String> {
     Ok(ToleranceValue {
-        lower_bound: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(usize::MAX)),
-        upper_bound: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(usize::MAX)),
+        lower_bound: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)),
+        upper_bound: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)),
     })
 }
 
@@ -17949,14 +17919,14 @@ fn build_tolerance_zone_arena(attributes: &[Attribute]) -> Result<ToleranceZone,
             other => Some((as_str(other, "TOLERANCE_ZONE.description"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
         product_definitional: (as_logical(
             req(attributes, 3, "TOLERANCE_ZONE.product_definitional")?,
             "TOLERANCE_ZONE.product_definitional",
         ))?,
         defining_tolerance: Vec::new(),
-        form: ToleranceZoneFormRef::ToleranceZoneForm(ToleranceZoneFormId(usize::MAX)),
+        form: ToleranceZoneFormRef::ToleranceZoneForm(ToleranceZoneFormId(u32::MAX)),
     })
 }
 
@@ -17964,7 +17934,7 @@ fn build_tolerance_zone_definition_arena(
     attributes: &[Attribute],
 ) -> Result<ToleranceZoneDefinition, String> {
     Ok(ToleranceZoneDefinition {
-        zone: ToleranceZoneRef::ToleranceZone(ToleranceZoneId(usize::MAX)),
+        zone: ToleranceZoneRef::ToleranceZone(ToleranceZoneId(u32::MAX)),
         boundaries: Vec::new(),
     })
 }
@@ -17991,7 +17961,7 @@ fn build_tolerance_zone_with_datum_arena(
             other => Some((as_str(other, "TOLERANCE_ZONE_WITH_DATUM.description"))?),
         },
         of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(
-            usize::MAX,
+            u32::MAX,
         )),
         product_definitional: (as_logical(
             req(
@@ -18002,8 +17972,8 @@ fn build_tolerance_zone_with_datum_arena(
             "TOLERANCE_ZONE_WITH_DATUM.product_definitional",
         ))?,
         defining_tolerance: Vec::new(),
-        form: ToleranceZoneFormRef::ToleranceZoneForm(ToleranceZoneFormId(usize::MAX)),
-        datum_reference: DatumSystemRef::DatumSystem(DatumSystemId(usize::MAX)),
+        form: ToleranceZoneFormRef::ToleranceZoneForm(ToleranceZoneFormId(u32::MAX)),
+        datum_reference: DatumSystemRef::DatumSystem(DatumSystemId(u32::MAX)),
     })
 }
 
@@ -18024,7 +17994,7 @@ fn build_toroidal_surface_arena(attributes: &[Attribute]) -> Result<ToroidalSurf
             req(attributes, 0, "TOROIDAL_SURFACE.name")?,
             "TOROIDAL_SURFACE.name",
         ))?,
-        position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)),
+        position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)),
         major_radius: (as_real(
             req(attributes, 2, "TOROIDAL_SURFACE.major_radius")?,
             "TOROIDAL_SURFACE.major_radius",
@@ -18050,7 +18020,7 @@ fn build_total_runout_tolerance_arena(
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
         datum_system: Vec::new(),
     })
@@ -18062,7 +18032,7 @@ fn build_trimmed_curve_arena(attributes: &[Attribute]) -> Result<TrimmedCurve, S
             req(attributes, 0, "TRIMMED_CURVE.name")?,
             "TRIMMED_CURVE.name",
         ))?,
-        basis_curve: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)),
+        basis_curve: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)),
         trim_1: Vec::new(),
         trim_2: Vec::new(),
         sense_agreement: (Ok::<bool, String>(
@@ -18086,8 +18056,8 @@ fn build_two_direction_repeat_factor_arena(
             req(attributes, 0, "TWO_DIRECTION_REPEAT_FACTOR.name")?,
             "TWO_DIRECTION_REPEAT_FACTOR.name",
         ))?,
-        repeat_factor: VectorRef::Vector(VectorId(usize::MAX)),
-        second_repeat_factor: VectorRef::Vector(VectorId(usize::MAX)),
+        repeat_factor: VectorRef::Vector(VectorId(u32::MAX)),
+        second_repeat_factor: VectorRef::Vector(VectorId(u32::MAX)),
     })
 }
 
@@ -18112,7 +18082,7 @@ fn build_uncertainty_measure_with_unit_arena(
             )?,
             "UNCERTAINTY_MEASURE_WITH_UNIT.value_component",
         ))?,
-        unit_component: UnitRef::AreaUnit(AreaUnitId(usize::MAX)),
+        unit_component: UnitRef::AreaUnit(AreaUnitId(u32::MAX)),
         name: (as_str(
             req(attributes, 2, "UNCERTAINTY_MEASURE_WITH_UNIT.name")?,
             "UNCERTAINTY_MEASURE_WITH_UNIT.name",
@@ -18157,10 +18127,10 @@ fn build_unequally_disposed_geometric_tolerance_arena(
         },
         magnitude: None,
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
-            AllAroundShapeAspectId(usize::MAX),
+            AllAroundShapeAspectId(u32::MAX),
         ),
         displacement: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(
-            usize::MAX,
+            u32::MAX,
         )),
     })
 }
@@ -18260,7 +18230,7 @@ fn build_value_representation_item_arena(
 fn build_vector_arena(attributes: &[Attribute]) -> Result<Vector, String> {
     Ok(Vector {
         name: (as_str(req(attributes, 0, "VECTOR.name")?, "VECTOR.name"))?,
-        orientation: DirectionRef::Direction(DirectionId(usize::MAX)),
+        orientation: DirectionRef::Direction(DirectionId(u32::MAX)),
         magnitude: (as_real(req(attributes, 2, "VECTOR.magnitude")?, "VECTOR.magnitude"))?,
     })
 }
@@ -18297,7 +18267,7 @@ fn build_vertex_arena(attributes: &[Attribute]) -> Result<Vertex, String> {
 fn build_vertex_loop_arena(attributes: &[Attribute]) -> Result<VertexLoop, String> {
     Ok(VertexLoop {
         name: (as_str(req(attributes, 0, "VERTEX_LOOP.name")?, "VERTEX_LOOP.name"))?,
-        loop_vertex: VertexRef::Vertex(VertexId(usize::MAX)),
+        loop_vertex: VertexRef::Vertex(VertexId(u32::MAX)),
     })
 }
 
@@ -18307,7 +18277,7 @@ fn build_vertex_point_arena(attributes: &[Attribute]) -> Result<VertexPoint, Str
             req(attributes, 0, "VERTEX_POINT.name")?,
             "VERTEX_POINT.name",
         ))?,
-        vertex_geometry: PointRef::ApllPoint(ApllPointId(usize::MAX)),
+        vertex_geometry: PointRef::ApllPoint(ApllPointId(u32::MAX)),
     })
 }
 
@@ -18317,7 +18287,7 @@ fn build_vertex_shell_arena(attributes: &[Attribute]) -> Result<VertexShell, Str
             req(attributes, 0, "VERTEX_SHELL.name")?,
             "VERTEX_SHELL.name",
         ))?,
-        vertex_shell_extent: VertexLoopRef::VertexLoop(VertexLoopId(usize::MAX)),
+        vertex_shell_extent: VertexLoopRef::VertexLoop(VertexLoopId(u32::MAX)),
     })
 }
 
@@ -18330,7 +18300,7 @@ fn build_view_volume_arena(attributes: &[Attribute]) -> Result<ViewVolume, Strin
                 "VIEW_VOLUME.projection_type: expected enum, got {o:?}"
             )),
         })?,
-        projection_point: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)),
+        projection_point: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)),
         view_plane_distance: (as_real(
             req(attributes, 2, "VIEW_VOLUME.view_plane_distance")?,
             "VIEW_VOLUME.view_plane_distance",
@@ -18352,7 +18322,7 @@ fn build_view_volume_arena(attributes: &[Attribute]) -> Result<ViewVolume, Strin
         view_volume_sides_clipping: (Ok::<bool, String>(
             matches!(req(attributes, 7, "VIEW_VOLUME.view_volume_sides_clipping")?, Attribute::Enum(s) if s == "T"),
         ))?,
-        view_window: PlanarBoxRef::PlanarBox(PlanarBoxId(usize::MAX)),
+        view_window: PlanarBoxRef::PlanarBox(PlanarBoxId(u32::MAX)),
     })
 }
 
@@ -18373,7 +18343,7 @@ pub fn build_entity(
     model: &mut StepModel,
     ix: u16,
     attributes: &[Attribute],
-) -> Result<usize, String> {
+) -> Result<u32, String> {
     Ok(match ix {
         0 => model.action_arena.push(build_action_arena(attributes)?),
         1 => model
@@ -19837,7 +19807,7 @@ pub fn build_entity(
     })
 }
 
-pub fn key_of(ix: u16, i: usize) -> Option<EntityKey> {
+pub fn key_of(ix: u16, i: u32) -> Option<EntityKey> {
     Some(match ix {
         0 => EntityKey::Action(ActionId(i)),
         1 => EntityKey::ActionAssignment(ActionAssignmentId(i)),
@@ -20410,7 +20380,7 @@ pub fn key_of(ix: u16, i: usize) -> Option<EntityKey> {
 pub fn resolve_entity(
     model: &mut StepModel,
     ix: u16,
-    i: usize,
+    i: u32,
     attributes: &[Attribute],
     idmap: &IdMap,
 ) -> Result<(), String> {
@@ -21886,22 +21856,19 @@ pub fn resolve_entity(
     }
 }
 
-pub fn build_complex_entity(
-    model: &mut StepModel,
-    parts: &[RawEntityPart],
-) -> Result<usize, String> {
+pub fn build_complex_entity(model: &mut StepModel, parts: &[RawEntityPart]) -> Result<u32, String> {
     Ok(model.complex_unit_arena.push(ComplexUnit {
         parts: read_complex_parts_norefs(parts)?,
     }))
 }
 
-pub fn complex_key_of(i: usize) -> Option<EntityKey> {
+pub fn complex_key_of(i: u32) -> Option<EntityKey> {
     Some(EntityKey::ComplexUnit(ComplexUnitId(i)))
 }
 
 pub fn resolve_complex_entity(
     model: &mut StepModel,
-    i: usize,
+    i: u32,
     parts: &[RawEntityPart],
     idmap: &IdMap,
 ) -> Result<(), String> {
@@ -24428,7 +24395,7 @@ fn resolve_action_arena(
             .map_err(|e| format!("ACTION.chosen_method: {e}"))?)
         })())?
     };
-    let it = &mut model.action_arena.items[aid.0];
+    let it = &mut model.action_arena.items[aid.0 as usize];
     it.chosen_method = chosen_method_v;
     Ok(())
 }
@@ -24450,7 +24417,7 @@ fn resolve_action_assignment_arena(
             .map_err(|e| format!("ACTION_ASSIGNMENT.assigned_action: {e}"))?)
         })())?
     };
-    let it = &mut model.action_assignment_arena.items[aid.0];
+    let it = &mut model.action_assignment_arena.items[aid.0 as usize];
     it.assigned_action = assigned_action_v;
     Ok(())
 }
@@ -24484,7 +24451,7 @@ fn resolve_action_directive_arena(
             )),
         })?
     };
-    let it = &mut model.action_directive_arena.items[aid.0];
+    let it = &mut model.action_directive_arena.items[aid.0 as usize];
     it.requests = requests_v;
     Ok(())
 }
@@ -24521,7 +24488,7 @@ fn resolve_action_method_relationship_arena(
             .map_err(|e| format!("ACTION_METHOD_RELATIONSHIP.related_method: {e}"))?)
         })())?
     };
-    let it = &mut model.action_method_relationship_arena.items[aid.0];
+    let it = &mut model.action_method_relationship_arena.items[aid.0 as usize];
     it.relating_method = relating_method_v;
     it.related_method = related_method_v;
     Ok(())
@@ -24544,7 +24511,7 @@ fn resolve_action_property_arena(
             .map_err(|e| format!("ACTION_PROPERTY.definition: {e}"))?)
         })())?
     };
-    let it = &mut model.action_property_arena.items[aid.0];
+    let it = &mut model.action_property_arena.items[aid.0 as usize];
     it.definition = definition_v;
     Ok(())
 }
@@ -24577,7 +24544,7 @@ fn resolve_action_relationship_arena(
             .map_err(|e| format!("ACTION_RELATIONSHIP.related_action: {e}"))?)
         })())?
     };
-    let it = &mut model.action_relationship_arena.items[aid.0];
+    let it = &mut model.action_relationship_arena.items[aid.0 as usize];
     it.relating_action = relating_action_v;
     it.related_action = related_action_v;
     Ok(())
@@ -24609,7 +24576,7 @@ fn resolve_action_request_assignment_arena(
             .map_err(|e| format!("ACTION_REQUEST_ASSIGNMENT.assigned_action_request: {e}"))?)
         })())?
     };
-    let it = &mut model.action_request_assignment_arena.items[aid.0];
+    let it = &mut model.action_request_assignment_arena.items[aid.0 as usize];
     it.assigned_action_request = assigned_action_request_v;
     Ok(())
 }
@@ -24642,7 +24609,7 @@ fn resolve_action_request_solution_arena(
             .map_err(|e| format!("ACTION_REQUEST_SOLUTION.request: {e}"))?)
         })())?
     };
-    let it = &mut model.action_request_solution_arena.items[aid.0];
+    let it = &mut model.action_request_solution_arena.items[aid.0 as usize];
     it.method = method_v;
     it.request = request_v;
     Ok(())
@@ -24686,7 +24653,7 @@ fn resolve_action_resource_arena(
             .map_err(|e| format!("ACTION_RESOURCE.kind: {e}"))?)
         })())?
     };
-    let it = &mut model.action_resource_arena.items[aid.0];
+    let it = &mut model.action_resource_arena.items[aid.0 as usize];
     it.usage = usage_v;
     it.kind = kind_v;
     Ok(())
@@ -24730,7 +24697,7 @@ fn resolve_action_resource_relationship_arena(
             .map_err(|e| format!("ACTION_RESOURCE_RELATIONSHIP.related_resource: {e}"))?)
         })())?
     };
-    let it = &mut model.action_resource_relationship_arena.items[aid.0];
+    let it = &mut model.action_resource_relationship_arena.items[aid.0 as usize];
     it.relating_resource = relating_resource_v;
     it.related_resource = related_resource_v;
     Ok(())
@@ -24776,7 +24743,7 @@ fn resolve_action_resource_requirement_arena(
             )),
         })?
     };
-    let it = &mut model.action_resource_requirement_arena.items[aid.0];
+    let it = &mut model.action_resource_requirement_arena.items[aid.0 as usize];
     it.kind = kind_v;
     it.operations = operations_v;
     Ok(())
@@ -24833,7 +24800,7 @@ fn resolve_advanced_brep_shape_representation_arena(
             .map_err(|e| format!("ADVANCED_BREP_SHAPE_REPRESENTATION.context_of_items: {e}"))?)
         })())?
     };
-    let it = &mut model.advanced_brep_shape_representation_arena.items[aid.0];
+    let it = &mut model.advanced_brep_shape_representation_arena.items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -24877,7 +24844,7 @@ fn resolve_advanced_face_arena(
             .map_err(|e| format!("ADVANCED_FACE.face_geometry: {e}"))?)
         })())?
     };
-    let it = &mut model.advanced_face_arena.items[aid.0];
+    let it = &mut model.advanced_face_arena.items[aid.0 as usize];
     it.bounds = bounds_v;
     it.face_geometry = face_geometry_v;
     Ok(())
@@ -24900,7 +24867,7 @@ fn resolve_all_around_shape_aspect_arena(
             .map_err(|e| format!("ALL_AROUND_SHAPE_ASPECT.of_shape: {e}"))?)
         })())?
     };
-    let it = &mut model.all_around_shape_aspect_arena.items[aid.0];
+    let it = &mut model.all_around_shape_aspect_arena.items[aid.0 as usize];
     it.of_shape = of_shape_v;
     Ok(())
 }
@@ -24937,7 +24904,7 @@ fn resolve_angular_location_arena(
             .map_err(|e| format!("ANGULAR_LOCATION.related_shape_aspect: {e}"))?)
         })())?
     };
-    let it = &mut model.angular_location_arena.items[aid.0];
+    let it = &mut model.angular_location_arena.items[aid.0 as usize];
     it.relating_shape_aspect = relating_shape_aspect_v;
     it.related_shape_aspect = related_shape_aspect_v;
     Ok(())
@@ -24960,7 +24927,7 @@ fn resolve_angular_size_arena(
             .map_err(|e| format!("ANGULAR_SIZE.applies_to: {e}"))?)
         })())?
     };
-    let it = &mut model.angular_size_arena.items[aid.0];
+    let it = &mut model.angular_size_arena.items[aid.0 as usize];
     it.applies_to = applies_to_v;
     Ok(())
 }
@@ -25028,7 +24995,7 @@ fn resolve_angularity_tolerance_arena(
             )),
         })?
     };
-    let it = &mut model.angularity_tolerance_arena.items[aid.0];
+    let it = &mut model.angularity_tolerance_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     it.datum_system = datum_system_v;
@@ -25075,7 +25042,7 @@ fn resolve_annotation_curve_occurrence_arena(
             .map_err(|e| format!("ANNOTATION_CURVE_OCCURRENCE.item: {e}"))?)
         })())?
     };
-    let it = &mut model.annotation_curve_occurrence_arena.items[aid.0];
+    let it = &mut model.annotation_curve_occurrence_arena.items[aid.0 as usize];
     it.styles = styles_v;
     it.item = item_v;
     Ok(())
@@ -25141,7 +25108,7 @@ fn resolve_annotation_fill_area_occurrence_arena(
             .map_err(|e| format!("ANNOTATION_FILL_AREA_OCCURRENCE.fill_style_target: {e}"))?)
         })())?
     };
-    let it = &mut model.annotation_fill_area_occurrence_arena.items[aid.0];
+    let it = &mut model.annotation_fill_area_occurrence_arena.items[aid.0 as usize];
     it.styles = styles_v;
     it.item = item_v;
     it.fill_style_target = fill_style_target_v;
@@ -25188,7 +25155,7 @@ fn resolve_annotation_occurrence_arena(
             .map_err(|e| format!("ANNOTATION_OCCURRENCE.item: {e}"))?)
         })())?
     };
-    let it = &mut model.annotation_occurrence_arena.items[aid.0];
+    let it = &mut model.annotation_occurrence_arena.items[aid.0 as usize];
     it.styles = styles_v;
     it.item = item_v;
     Ok(())
@@ -25220,7 +25187,7 @@ fn resolve_annotation_occurrence_associativity_arena(
             Ok(AnnotationOccurrenceRef::from_any(idmap.get(as_ref_id(a, "ANNOTATION_OCCURRENCE_ASSOCIATIVITY.related_annotation_occurrence")?).ok_or_else(|| format!("ANNOTATION_OCCURRENCE_ASSOCIATIVITY.related_annotation_occurrence: dangling ref"))?).map_err(|e| format!("ANNOTATION_OCCURRENCE_ASSOCIATIVITY.related_annotation_occurrence: {e}"))?)
         })())?
     };
-    let it = &mut model.annotation_occurrence_associativity_arena.items[aid.0];
+    let it = &mut model.annotation_occurrence_associativity_arena.items[aid.0 as usize];
     it.relating_annotation_occurrence = relating_annotation_occurrence_v;
     it.related_annotation_occurrence = related_annotation_occurrence_v;
     Ok(())
@@ -25252,7 +25219,7 @@ fn resolve_annotation_occurrence_relationship_arena(
             Ok(AnnotationOccurrenceRef::from_any(idmap.get(as_ref_id(a, "ANNOTATION_OCCURRENCE_RELATIONSHIP.related_annotation_occurrence")?).ok_or_else(|| format!("ANNOTATION_OCCURRENCE_RELATIONSHIP.related_annotation_occurrence: dangling ref"))?).map_err(|e| format!("ANNOTATION_OCCURRENCE_RELATIONSHIP.related_annotation_occurrence: {e}"))?)
         })())?
     };
-    let it = &mut model.annotation_occurrence_relationship_arena.items[aid.0];
+    let it = &mut model.annotation_occurrence_relationship_arena.items[aid.0 as usize];
     it.relating_annotation_occurrence = relating_annotation_occurrence_v;
     it.related_annotation_occurrence = related_annotation_occurrence_v;
     Ok(())
@@ -25272,7 +25239,7 @@ fn resolve_annotation_placeholder_leader_line_arena(
         )?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<DesApllPointSelectRef, String> { Ok(DesApllPointSelectRef::from_any(idmap.get(as_ref_id(e, "ANNOTATION_PLACEHOLDER_LEADER_LINE.geometric_elements")?).ok_or_else(|| format!("ANNOTATION_PLACEHOLDER_LEADER_LINE.geometric_elements: dangling ref"))?).map_err(|e| format!("ANNOTATION_PLACEHOLDER_LEADER_LINE.geometric_elements: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("ANNOTATION_PLACEHOLDER_LEADER_LINE.geometric_elements: expected ref list, got {o:?}")) })?
     };
-    let it = &mut model.annotation_placeholder_leader_line_arena.items[aid.0];
+    let it = &mut model.annotation_placeholder_leader_line_arena.items[aid.0 as usize];
     it.geometric_elements = geometric_elements_v;
     Ok(())
 }
@@ -25321,7 +25288,7 @@ fn resolve_annotation_placeholder_occurrence_arena(
             .map_err(|e| format!("ANNOTATION_PLACEHOLDER_OCCURRENCE.item: {e}"))?)
         })())?
     };
-    let it = &mut model.annotation_placeholder_occurrence_arena.items[aid.0];
+    let it = &mut model.annotation_placeholder_occurrence_arena.items[aid.0 as usize];
     it.styles = styles_v;
     it.item = item_v;
     Ok(())
@@ -25373,7 +25340,7 @@ fn resolve_annotation_placeholder_occurrence_with_leader_line_arena(
     };
     let it = &mut model
         .annotation_placeholder_occurrence_with_leader_line_arena
-        .items[aid.0];
+        .items[aid.0 as usize];
     it.styles = styles_v;
     it.item = item_v;
     it.leader_line = leader_line_v;
@@ -25446,7 +25413,7 @@ fn resolve_annotation_plane_arena(
             ),
         }
     };
-    let it = &mut model.annotation_plane_arena.items[aid.0];
+    let it = &mut model.annotation_plane_arena.items[aid.0 as usize];
     it.styles = styles_v;
     it.item = item_v;
     it.elements = elements_v;
@@ -25481,7 +25448,7 @@ fn resolve_annotation_symbol_arena(
             .map_err(|e| format!("ANNOTATION_SYMBOL.mapping_target: {e}"))?)
         })())?
     };
-    let it = &mut model.annotation_symbol_arena.items[aid.0];
+    let it = &mut model.annotation_symbol_arena.items[aid.0 as usize];
     it.mapping_source = mapping_source_v;
     it.mapping_target = mapping_target_v;
     Ok(())
@@ -25527,7 +25494,7 @@ fn resolve_annotation_symbol_occurrence_arena(
             .map_err(|e| format!("ANNOTATION_SYMBOL_OCCURRENCE.item: {e}"))?)
         })())?
     };
-    let it = &mut model.annotation_symbol_occurrence_arena.items[aid.0];
+    let it = &mut model.annotation_symbol_occurrence_arena.items[aid.0 as usize];
     it.styles = styles_v;
     it.item = item_v;
     Ok(())
@@ -25561,7 +25528,7 @@ fn resolve_annotation_text_arena(
             .map_err(|e| format!("ANNOTATION_TEXT.mapping_target: {e}"))?)
         })())?
     };
-    let it = &mut model.annotation_text_arena.items[aid.0];
+    let it = &mut model.annotation_text_arena.items[aid.0 as usize];
     it.mapping_source = mapping_source_v;
     it.mapping_target = mapping_target_v;
     Ok(())
@@ -25599,7 +25566,7 @@ fn resolve_annotation_text_character_arena(
             .map_err(|e| format!("ANNOTATION_TEXT_CHARACTER.mapping_target: {e}"))?)
         })())?
     };
-    let it = &mut model.annotation_text_character_arena.items[aid.0];
+    let it = &mut model.annotation_text_character_arena.items[aid.0 as usize];
     it.mapping_source = mapping_source_v;
     it.mapping_target = mapping_target_v;
     Ok(())
@@ -25645,7 +25612,7 @@ fn resolve_annotation_text_occurrence_arena(
             .map_err(|e| format!("ANNOTATION_TEXT_OCCURRENCE.item: {e}"))?)
         })())?
     };
-    let it = &mut model.annotation_text_occurrence_arena.items[aid.0];
+    let it = &mut model.annotation_text_occurrence_arena.items[aid.0 as usize];
     it.styles = styles_v;
     it.item = item_v;
     Ok(())
@@ -25665,7 +25632,7 @@ fn resolve_annotation_to_annotation_leader_line_arena(
         )?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<DesApllPointSelectRef, String> { Ok(DesApllPointSelectRef::from_any(idmap.get(as_ref_id(e, "ANNOTATION_TO_ANNOTATION_LEADER_LINE.geometric_elements")?).ok_or_else(|| format!("ANNOTATION_TO_ANNOTATION_LEADER_LINE.geometric_elements: dangling ref"))?).map_err(|e| format!("ANNOTATION_TO_ANNOTATION_LEADER_LINE.geometric_elements: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("ANNOTATION_TO_ANNOTATION_LEADER_LINE.geometric_elements: expected ref list, got {o:?}")) })?
     };
-    let it = &mut model.annotation_to_annotation_leader_line_arena.items[aid.0];
+    let it = &mut model.annotation_to_annotation_leader_line_arena.items[aid.0 as usize];
     it.geometric_elements = geometric_elements_v;
     Ok(())
 }
@@ -25684,7 +25651,7 @@ fn resolve_annotation_to_model_leader_line_arena(
         )?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<DesApllPointSelectRef, String> { Ok(DesApllPointSelectRef::from_any(idmap.get(as_ref_id(e, "ANNOTATION_TO_MODEL_LEADER_LINE.geometric_elements")?).ok_or_else(|| format!("ANNOTATION_TO_MODEL_LEADER_LINE.geometric_elements: dangling ref"))?).map_err(|e| format!("ANNOTATION_TO_MODEL_LEADER_LINE.geometric_elements: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("ANNOTATION_TO_MODEL_LEADER_LINE.geometric_elements: expected ref list, got {o:?}")) })?
     };
-    let it = &mut model.annotation_to_model_leader_line_arena.items[aid.0];
+    let it = &mut model.annotation_to_model_leader_line_arena.items[aid.0 as usize];
     it.geometric_elements = geometric_elements_v;
     Ok(())
 }
@@ -25708,7 +25675,7 @@ fn resolve_apll_point_with_surface_arena(
             .map_err(|e| format!("APLL_POINT_WITH_SURFACE.associated_surface: {e}"))?)
         })())?
     };
-    let it = &mut model.apll_point_with_surface_arena.items[aid.0];
+    let it = &mut model.apll_point_with_surface_arena.items[aid.0 as usize];
     it.associated_surface = associated_surface_v;
     Ok(())
 }
@@ -25735,7 +25702,7 @@ fn resolve_application_context_element_arena(
             .map_err(|e| format!("APPLICATION_CONTEXT_ELEMENT.frame_of_reference: {e}"))?)
         })())?
     };
-    let it = &mut model.application_context_element_arena.items[aid.0];
+    let it = &mut model.application_context_element_arena.items[aid.0 as usize];
     it.frame_of_reference = frame_of_reference_v;
     Ok(())
 }
@@ -25759,7 +25726,7 @@ fn resolve_application_protocol_definition_arena(
             .map_err(|e| format!("APPLICATION_PROTOCOL_DEFINITION.application: {e}"))?)
         })())?
     };
-    let it = &mut model.application_protocol_definition_arena.items[aid.0];
+    let it = &mut model.application_protocol_definition_arena.items[aid.0 as usize];
     it.application = application_v;
     Ok(())
 }
@@ -25809,7 +25776,7 @@ fn resolve_applied_approval_assignment_arena(
             )),
         })?
     };
-    let it = &mut model.applied_approval_assignment_arena.items[aid.0];
+    let it = &mut model.applied_approval_assignment_arena.items[aid.0 as usize];
     it.assigned_approval = assigned_approval_v;
     it.items = items_v;
     Ok(())
@@ -25879,7 +25846,7 @@ fn resolve_applied_date_and_time_assignment_arena(
             )),
         })?
     };
-    let it = &mut model.applied_date_and_time_assignment_arena.items[aid.0];
+    let it = &mut model.applied_date_and_time_assignment_arena.items[aid.0 as usize];
     it.assigned_date_and_time = assigned_date_and_time_v;
     it.role = role_v;
     it.items = items_v;
@@ -25931,7 +25898,7 @@ fn resolve_applied_document_reference_arena(
             )),
         })?
     };
-    let it = &mut model.applied_document_reference_arena.items[aid.0];
+    let it = &mut model.applied_document_reference_arena.items[aid.0 as usize];
     it.assigned_document = assigned_document_v;
     it.items = items_v;
     Ok(())
@@ -25983,7 +25950,7 @@ fn resolve_applied_external_identification_assignment_arena(
         let a = req(attrs, 3, "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT.items")?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<ExternalIdentificationItemRef, String> { Ok(ExternalIdentificationItemRef::from_any(idmap.get(as_ref_id(e, "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT.items")?).ok_or_else(|| format!("APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT.items: dangling ref"))?).map_err(|e| format!("APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT.items: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT.items: expected ref list, got {o:?}")) })?
     };
-    let it = &mut model.applied_external_identification_assignment_arena.items[aid.0];
+    let it = &mut model.applied_external_identification_assignment_arena.items[aid.0 as usize];
     it.role = role_v;
     it.source = source_v;
     it.items = items_v;
@@ -26032,7 +25999,7 @@ fn resolve_applied_group_assignment_arena(
             )),
         })?
     };
-    let it = &mut model.applied_group_assignment_arena.items[aid.0];
+    let it = &mut model.applied_group_assignment_arena.items[aid.0 as usize];
     it.assigned_group = assigned_group_v;
     it.items = items_v;
     Ok(())
@@ -26074,7 +26041,7 @@ fn resolve_applied_person_and_organization_assignment_arena(
         let a = req(attrs, 2, "APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT.items")?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<PersonAndOrganizationItemRef, String> { Ok(PersonAndOrganizationItemRef::from_any(idmap.get(as_ref_id(e, "APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT.items")?).ok_or_else(|| format!("APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT.items: dangling ref"))?).map_err(|e| format!("APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT.items: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT.items: expected ref list, got {o:?}")) })?
     };
-    let it = &mut model.applied_person_and_organization_assignment_arena.items[aid.0];
+    let it = &mut model.applied_person_and_organization_assignment_arena.items[aid.0 as usize];
     it.assigned_person_and_organization = assigned_person_and_organization_v;
     it.role = role_v;
     it.items = items_v;
@@ -26110,7 +26077,7 @@ fn resolve_applied_presented_item_arena(
             )),
         })?
     };
-    let it = &mut model.applied_presented_item_arena.items[aid.0];
+    let it = &mut model.applied_presented_item_arena.items[aid.0 as usize];
     it.items = items_v;
     Ok(())
 }
@@ -26135,7 +26102,7 @@ fn resolve_applied_security_classification_assignment_arena(
         let a = req(attrs, 1, "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT.items")?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<SecurityClassificationItemRef, String> { Ok(SecurityClassificationItemRef::from_any(idmap.get(as_ref_id(e, "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT.items")?).ok_or_else(|| format!("APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT.items: dangling ref"))?).map_err(|e| format!("APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT.items: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT.items: expected ref list, got {o:?}")) })?
     };
-    let it = &mut model.applied_security_classification_assignment_arena.items[aid.0];
+    let it = &mut model.applied_security_classification_assignment_arena.items[aid.0 as usize];
     it.assigned_security_classification = assigned_security_classification_v;
     it.items = items_v;
     Ok(())
@@ -26158,7 +26125,7 @@ fn resolve_approval_arena(
             .map_err(|e| format!("APPROVAL.status: {e}"))?)
         })())?
     };
-    let it = &mut model.approval_arena.items[aid.0];
+    let it = &mut model.approval_arena.items[aid.0 as usize];
     it.status = status_v;
     Ok(())
 }
@@ -26182,7 +26149,7 @@ fn resolve_approval_assignment_arena(
             .map_err(|e| format!("APPROVAL_ASSIGNMENT.assigned_approval: {e}"))?)
         })())?
     };
-    let it = &mut model.approval_assignment_arena.items[aid.0];
+    let it = &mut model.approval_assignment_arena.items[aid.0 as usize];
     it.assigned_approval = assigned_approval_v;
     Ok(())
 }
@@ -26215,7 +26182,7 @@ fn resolve_approval_date_time_arena(
             .map_err(|e| format!("APPROVAL_DATE_TIME.dated_approval: {e}"))?)
         })())?
     };
-    let it = &mut model.approval_date_time_arena.items[aid.0];
+    let it = &mut model.approval_date_time_arena.items[aid.0 as usize];
     it.date_time = date_time_v;
     it.dated_approval = dated_approval_v;
     Ok(())
@@ -26270,7 +26237,7 @@ fn resolve_approval_person_organization_arena(
             .map_err(|e| format!("APPROVAL_PERSON_ORGANIZATION.role: {e}"))?)
         })())?
     };
-    let it = &mut model.approval_person_organization_arena.items[aid.0];
+    let it = &mut model.approval_person_organization_arena.items[aid.0 as usize];
     it.person_organization = person_organization_v;
     it.authorized_approval = authorized_approval_v;
     it.role = role_v;
@@ -26294,7 +26261,7 @@ fn resolve_approximation_tolerance_arena(
             .map_err(|e| format!("APPROXIMATION_TOLERANCE.tolerance: {e}"))?)
         })())?
     };
-    let it = &mut model.approximation_tolerance_arena.items[aid.0];
+    let it = &mut model.approximation_tolerance_arena.items[aid.0 as usize];
     it.tolerance = tolerance_v;
     Ok(())
 }
@@ -26327,7 +26294,7 @@ fn resolve_area_in_set_arena(
             .map_err(|e| format!("AREA_IN_SET.in_set: {e}"))?)
         })())?
     };
-    let it = &mut model.area_in_set_arena.items[aid.0];
+    let it = &mut model.area_in_set_arena.items[aid.0 as usize];
     it.area = area_v;
     it.in_set = in_set_v;
     Ok(())
@@ -26358,7 +26325,7 @@ fn resolve_area_unit_arena(
             o => Err(format!("AREA_UNIT.elements: expected ref list, got {o:?}")),
         })?
     };
-    let it = &mut model.area_unit_arena.items[aid.0];
+    let it = &mut model.area_unit_arena.items[aid.0 as usize];
     it.elements = elements_v;
     Ok(())
 }
@@ -26395,7 +26362,7 @@ fn resolve_ascribable_state_arena(
             .map_err(|e| format!("ASCRIBABLE_STATE.ascribed_state_observed: {e}"))?)
         })())?
     };
-    let it = &mut model.ascribable_state_arena.items[aid.0];
+    let it = &mut model.ascribable_state_arena.items[aid.0 as usize];
     it.pertaining_state_type = pertaining_state_type_v;
     it.ascribed_state_observed = ascribed_state_observed_v;
     Ok(())
@@ -26451,7 +26418,7 @@ fn resolve_ascribable_state_relationship_arena(
             .map_err(|e| format!("ASCRIBABLE_STATE_RELATIONSHIP.related_ascribable_state: {e}"))?)
         })())?
     };
-    let it = &mut model.ascribable_state_relationship_arena.items[aid.0];
+    let it = &mut model.ascribable_state_relationship_arena.items[aid.0 as usize];
     it.relating_ascribable_state = relating_ascribable_state_v;
     it.related_ascribable_state = related_ascribable_state_v;
     Ok(())
@@ -26505,7 +26472,7 @@ fn resolve_assembly_component_usage_arena(
             .map_err(|e| format!("ASSEMBLY_COMPONENT_USAGE.related_product_definition: {e}"))?)
         })())?
     };
-    let it = &mut model.assembly_component_usage_arena.items[aid.0];
+    let it = &mut model.assembly_component_usage_arena.items[aid.0 as usize];
     it.relating_product_definition = relating_product_definition_v;
     it.related_product_definition = related_product_definition_v;
     Ok(())
@@ -26558,7 +26525,7 @@ fn resolve_auxiliary_leader_line_arena(
             .map_err(|e| format!("AUXILIARY_LEADER_LINE.controlling_leader_line: {e}"))?)
         })())?
     };
-    let it = &mut model.auxiliary_leader_line_arena.items[aid.0];
+    let it = &mut model.auxiliary_leader_line_arena.items[aid.0 as usize];
     it.geometric_elements = geometric_elements_v;
     it.controlling_leader_line = controlling_leader_line_v;
     Ok(())
@@ -26597,7 +26564,7 @@ fn resolve_axis1_placement_arena(
             ),
         }
     };
-    let it = &mut model.axis1_placement_arena.items[aid.0];
+    let it = &mut model.axis1_placement_arena.items[aid.0 as usize];
     it.location = location_v;
     it.axis = axis_v;
     Ok(())
@@ -26638,7 +26605,7 @@ fn resolve_axis2_placement2d_arena(
             ),
         }
     };
-    let it = &mut model.axis2_placement2d_arena.items[aid.0];
+    let it = &mut model.axis2_placement2d_arena.items[aid.0 as usize];
     it.location = location_v;
     it.ref_direction = ref_direction_v;
     Ok(())
@@ -26695,7 +26662,7 @@ fn resolve_axis2_placement3d_arena(
             ),
         }
     };
-    let it = &mut model.axis2_placement3d_arena.items[aid.0];
+    let it = &mut model.axis2_placement3d_arena.items[aid.0 as usize];
     it.location = location_v;
     it.axis = axis_v;
     it.ref_direction = ref_direction_v;
@@ -26731,7 +26698,7 @@ fn resolve_b_spline_curve_arena(
             )),
         })?
     };
-    let it = &mut model.b_spline_curve_arena.items[aid.0];
+    let it = &mut model.b_spline_curve_arena.items[aid.0 as usize];
     it.control_points_list = control_points_list_v;
     Ok(())
 }
@@ -26746,7 +26713,7 @@ fn resolve_b_spline_curve_with_knots_arena(
         let a = req(attrs, 2, "B_SPLINE_CURVE_WITH_KNOTS.control_points_list")?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<CartesianPointRef, String> { Ok(CartesianPointRef::from_any(idmap.get(as_ref_id(e, "B_SPLINE_CURVE_WITH_KNOTS.control_points_list")?).ok_or_else(|| format!("B_SPLINE_CURVE_WITH_KNOTS.control_points_list: dangling ref"))?).map_err(|e| format!("B_SPLINE_CURVE_WITH_KNOTS.control_points_list: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_CURVE_WITH_KNOTS.control_points_list: expected ref list, got {o:?}")) })?
     };
-    let it = &mut model.b_spline_curve_with_knots_arena.items[aid.0];
+    let it = &mut model.b_spline_curve_with_knots_arena.items[aid.0 as usize];
     it.control_points_list = control_points_list_v;
     Ok(())
 }
@@ -26792,7 +26759,7 @@ fn resolve_b_spline_surface_arena(
             )),
         })?
     };
-    let it = &mut model.b_spline_surface_arena.items[aid.0];
+    let it = &mut model.b_spline_surface_arena.items[aid.0 as usize];
     it.control_points_list = control_points_list_v;
     Ok(())
 }
@@ -26807,7 +26774,7 @@ fn resolve_b_spline_surface_with_knots_arena(
         let a = req(attrs, 3, "B_SPLINE_SURFACE_WITH_KNOTS.control_points_list")?;
         (match a { Attribute::List(l) => l.iter().map(|e| match e { Attribute::List(l) => l.iter().map(|e| (|| -> Result<CartesianPointRef, String> { Ok(CartesianPointRef::from_any(idmap.get(as_ref_id(e, "B_SPLINE_SURFACE_WITH_KNOTS.control_points_list")?).ok_or_else(|| format!("B_SPLINE_SURFACE_WITH_KNOTS.control_points_list: dangling ref"))?).map_err(|e| format!("B_SPLINE_SURFACE_WITH_KNOTS.control_points_list: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_SURFACE_WITH_KNOTS.control_points_list: expected ref list, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_SURFACE_WITH_KNOTS.control_points_list: expected ref list, got {o:?}")) })?
     };
-    let it = &mut model.b_spline_surface_with_knots_arena.items[aid.0];
+    let it = &mut model.b_spline_surface_with_knots_arena.items[aid.0 as usize];
     it.control_points_list = control_points_list_v;
     Ok(())
 }
@@ -26841,7 +26808,7 @@ fn resolve_bezier_curve_arena(
             )),
         })?
     };
-    let it = &mut model.bezier_curve_arena.items[aid.0];
+    let it = &mut model.bezier_curve_arena.items[aid.0 as usize];
     it.control_points_list = control_points_list_v;
     Ok(())
 }
@@ -26885,7 +26852,7 @@ fn resolve_bezier_surface_arena(
             )),
         })?
     };
-    let it = &mut model.bezier_surface_arena.items[aid.0];
+    let it = &mut model.bezier_surface_arena.items[aid.0 as usize];
     it.control_points_list = control_points_list_v;
     Ok(())
 }
@@ -26918,7 +26885,7 @@ fn resolve_bounded_pcurve_arena(
             .map_err(|e| format!("BOUNDED_PCURVE.reference_to_curve: {e}"))?)
         })())?
     };
-    let it = &mut model.bounded_pcurve_arena.items[aid.0];
+    let it = &mut model.bounded_pcurve_arena.items[aid.0 as usize];
     it.basis_surface = basis_surface_v;
     it.reference_to_curve = reference_to_curve_v;
     Ok(())
@@ -26966,7 +26933,7 @@ fn resolve_bounded_surface_curve_arena(
             )),
         })?
     };
-    let it = &mut model.bounded_surface_curve_arena.items[aid.0];
+    let it = &mut model.bounded_surface_curve_arena.items[aid.0 as usize];
     it.curve_3d = curve_3d_v;
     it.associated_geometry = associated_geometry_v;
     Ok(())
@@ -27010,7 +26977,7 @@ fn resolve_brep_with_voids_arena(
             )),
         })?
     };
-    let it = &mut model.brep_with_voids_arena.items[aid.0];
+    let it = &mut model.brep_with_voids_arena.items[aid.0 as usize];
     it.outer = outer_v;
     it.voids = voids_v;
     Ok(())
@@ -27044,7 +27011,7 @@ fn resolve_camera_image_arena(
             .map_err(|e| format!("CAMERA_IMAGE.mapping_target: {e}"))?)
         })())?
     };
-    let it = &mut model.camera_image_arena.items[aid.0];
+    let it = &mut model.camera_image_arena.items[aid.0 as usize];
     it.mapping_source = mapping_source_v;
     it.mapping_target = mapping_target_v;
     Ok(())
@@ -27082,7 +27049,7 @@ fn resolve_camera_image3d_with_scale_arena(
             .map_err(|e| format!("CAMERA_IMAGE_3D_WITH_SCALE.mapping_target: {e}"))?)
         })())?
     };
-    let it = &mut model.camera_image3d_with_scale_arena.items[aid.0];
+    let it = &mut model.camera_image3d_with_scale_arena.items[aid.0 as usize];
     it.mapping_source = mapping_source_v;
     it.mapping_target = mapping_target_v;
     Ok(())
@@ -27120,7 +27087,7 @@ fn resolve_camera_model_d3_arena(
             .map_err(|e| format!("CAMERA_MODEL_D3.perspective_of_volume: {e}"))?)
         })())?
     };
-    let it = &mut model.camera_model_d3_arena.items[aid.0];
+    let it = &mut model.camera_model_d3_arena.items[aid.0 as usize];
     it.view_reference_system = view_reference_system_v;
     it.perspective_of_volume = perspective_of_volume_v;
     Ok(())
@@ -27180,7 +27147,7 @@ fn resolve_camera_model_d3_multi_clipping_arena(
         let a = req(attrs, 3, "CAMERA_MODEL_D3_MULTI_CLIPPING.shape_clipping")?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<CameraModelD3MultiClippingIntersectionSelectRef, String> { Ok(CameraModelD3MultiClippingIntersectionSelectRef::from_any(idmap.get(as_ref_id(e, "CAMERA_MODEL_D3_MULTI_CLIPPING.shape_clipping")?).ok_or_else(|| format!("CAMERA_MODEL_D3_MULTI_CLIPPING.shape_clipping: dangling ref"))?).map_err(|e| format!("CAMERA_MODEL_D3_MULTI_CLIPPING.shape_clipping: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("CAMERA_MODEL_D3_MULTI_CLIPPING.shape_clipping: expected ref list, got {o:?}")) })?
     };
-    let it = &mut model.camera_model_d3_multi_clipping_arena.items[aid.0];
+    let it = &mut model.camera_model_d3_multi_clipping_arena.items[aid.0 as usize];
     it.view_reference_system = view_reference_system_v;
     it.perspective_of_volume = perspective_of_volume_v;
     it.shape_clipping = shape_clipping_v;
@@ -27225,7 +27192,7 @@ fn resolve_camera_model_d3_with_hlhsr_arena(
             .map_err(|e| format!("CAMERA_MODEL_D3_WITH_HLHSR.perspective_of_volume: {e}"))?)
         })())?
     };
-    let it = &mut model.camera_model_d3_with_hlhsr_arena.items[aid.0];
+    let it = &mut model.camera_model_d3_with_hlhsr_arena.items[aid.0 as usize];
     it.view_reference_system = view_reference_system_v;
     it.perspective_of_volume = perspective_of_volume_v;
     Ok(())
@@ -27259,7 +27226,7 @@ fn resolve_camera_usage_arena(
             .map_err(|e| format!("CAMERA_USAGE.mapped_representation: {e}"))?)
         })())?
     };
-    let it = &mut model.camera_usage_arena.items[aid.0];
+    let it = &mut model.camera_usage_arena.items[aid.0 as usize];
     it.mapping_origin = mapping_origin_v;
     it.mapped_representation = mapped_representation_v;
     Ok(())
@@ -27303,7 +27270,7 @@ fn resolve_cc_design_approval_arena(
             )),
         })?
     };
-    let it = &mut model.cc_design_approval_arena.items[aid.0];
+    let it = &mut model.cc_design_approval_arena.items[aid.0 as usize];
     it.assigned_approval = assigned_approval_v;
     it.items = items_v;
     Ok(())
@@ -27363,7 +27330,7 @@ fn resolve_cc_design_date_and_time_assignment_arena(
             )),
         })?
     };
-    let it = &mut model.cc_design_date_and_time_assignment_arena.items[aid.0];
+    let it = &mut model.cc_design_date_and_time_assignment_arena.items[aid.0 as usize];
     it.assigned_date_and_time = assigned_date_and_time_v;
     it.role = role_v;
     it.items = items_v;
@@ -27416,7 +27383,7 @@ fn resolve_cc_design_person_and_organization_assignment_arena(
     };
     let it = &mut model
         .cc_design_person_and_organization_assignment_arena
-        .items[aid.0];
+        .items[aid.0 as usize];
     it.assigned_person_and_organization = assigned_person_and_organization_v;
     it.role = role_v;
     it.items = items_v;
@@ -27462,7 +27429,7 @@ fn resolve_cc_design_security_classification_arena(
             )),
         })?
     };
-    let it = &mut model.cc_design_security_classification_arena.items[aid.0];
+    let it = &mut model.cc_design_security_classification_arena.items[aid.0 as usize];
     it.assigned_security_classification = assigned_security_classification_v;
     it.items = items_v;
     Ok(())
@@ -27485,7 +27452,7 @@ fn resolve_centre_of_symmetry_arena(
             .map_err(|e| format!("CENTRE_OF_SYMMETRY.of_shape: {e}"))?)
         })())?
     };
-    let it = &mut model.centre_of_symmetry_arena.items[aid.0];
+    let it = &mut model.centre_of_symmetry_arena.items[aid.0 as usize];
     it.of_shape = of_shape_v;
     Ok(())
 }
@@ -27507,7 +27474,7 @@ fn resolve_certification_arena(
             .map_err(|e| format!("CERTIFICATION.kind: {e}"))?)
         })())?
     };
-    let it = &mut model.certification_arena.items[aid.0];
+    let it = &mut model.certification_arena.items[aid.0 as usize];
     it.kind = kind_v;
     Ok(())
 }
@@ -27548,7 +27515,7 @@ fn resolve_change_arena(
             o => Err(format!("CHANGE.items: expected ref list, got {o:?}")),
         })?
     };
-    let it = &mut model.change_arena.items[aid.0];
+    let it = &mut model.change_arena.items[aid.0 as usize];
     it.assigned_action = assigned_action_v;
     it.items = items_v;
     Ok(())
@@ -27594,7 +27561,7 @@ fn resolve_change_request_arena(
             )),
         })?
     };
-    let it = &mut model.change_request_arena.items[aid.0];
+    let it = &mut model.change_request_arena.items[aid.0 as usize];
     it.assigned_action_request = assigned_action_request_v;
     it.items = items_v;
     Ok(())
@@ -27619,7 +27586,7 @@ fn resolve_character_glyph_style_outline_arena(
             .map_err(|e| format!("CHARACTER_GLYPH_STYLE_OUTLINE.outline_style: {e}"))?)
         })())?
     };
-    let it = &mut model.character_glyph_style_outline_arena.items[aid.0];
+    let it = &mut model.character_glyph_style_outline_arena.items[aid.0 as usize];
     it.outline_style = outline_style_v;
     Ok(())
 }
@@ -27643,7 +27610,7 @@ fn resolve_character_glyph_style_stroke_arena(
             .map_err(|e| format!("CHARACTER_GLYPH_STYLE_STROKE.stroke_style: {e}"))?)
         })())?
     };
-    let it = &mut model.character_glyph_style_stroke_arena.items[aid.0];
+    let it = &mut model.character_glyph_style_stroke_arena.items[aid.0 as usize];
     it.stroke_style = stroke_style_v;
     Ok(())
 }
@@ -27686,7 +27653,7 @@ fn resolve_characterized_item_within_representation_arena(
             .map_err(|e| format!("CHARACTERIZED_ITEM_WITHIN_REPRESENTATION.rep: {e}"))?)
         })())?
     };
-    let it = &mut model.characterized_item_within_representation_arena.items[aid.0];
+    let it = &mut model.characterized_item_within_representation_arena.items[aid.0 as usize];
     it.item = item_v;
     it.rep = rep_v;
     Ok(())
@@ -27737,7 +27704,7 @@ fn resolve_characterized_representation_arena(
             .map_err(|e| format!("CHARACTERIZED_REPRESENTATION.context_of_items: {e}"))?)
         })())?
     };
-    let it = &mut model.characterized_representation_arena.items[aid.0];
+    let it = &mut model.characterized_representation_arena.items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -27760,7 +27727,7 @@ fn resolve_circle_arena(
             .map_err(|e| format!("CIRCLE.position: {e}"))?)
         })())?
     };
-    let it = &mut model.circle_arena.items[aid.0];
+    let it = &mut model.circle_arena.items[aid.0 as usize];
     it.position = position_v;
     Ok(())
 }
@@ -27832,7 +27799,7 @@ fn resolve_circular_runout_tolerance_arena(
             )),
         })?
     };
-    let it = &mut model.circular_runout_tolerance_arena.items[aid.0];
+    let it = &mut model.circular_runout_tolerance_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     it.datum_system = datum_system_v;
@@ -27866,7 +27833,7 @@ fn resolve_closed_shell_arena(
             )),
         })?
     };
-    let it = &mut model.closed_shell_arena.items[aid.0];
+    let it = &mut model.closed_shell_arena.items[aid.0 as usize];
     it.cfs_faces = cfs_faces_v;
     Ok(())
 }
@@ -27934,7 +27901,7 @@ fn resolve_coaxiality_tolerance_arena(
             )),
         })?
     };
-    let it = &mut model.coaxiality_tolerance_arena.items[aid.0];
+    let it = &mut model.coaxiality_tolerance_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     it.datum_system = datum_system_v;
@@ -27958,7 +27925,7 @@ fn resolve_common_datum_arena(
             .map_err(|e| format!("COMMON_DATUM.of_shape: {e}"))?)
         })())?
     };
-    let it = &mut model.common_datum_arena.items[aid.0];
+    let it = &mut model.common_datum_arena.items[aid.0 as usize];
     it.of_shape = of_shape_v;
     Ok(())
 }
@@ -28000,7 +27967,7 @@ fn resolve_complex_triangulated_face_arena(
             ),
         }
     };
-    let it = &mut model.complex_triangulated_face_arena.items[aid.0];
+    let it = &mut model.complex_triangulated_face_arena.items[aid.0 as usize];
     it.coordinates = coordinates_v;
     it.geometric_link = geometric_link_v;
     Ok(())
@@ -28028,7 +27995,7 @@ fn resolve_complex_triangulated_surface_set_arena(
             .map_err(|e| format!("COMPLEX_TRIANGULATED_SURFACE_SET.coordinates: {e}"))?)
         })())?
     };
-    let it = &mut model.complex_triangulated_surface_set_arena.items[aid.0];
+    let it = &mut model.complex_triangulated_surface_set_arena.items[aid.0 as usize];
     it.coordinates = coordinates_v;
     Ok(())
 }
@@ -28060,7 +28027,7 @@ fn resolve_composite_curve_arena(
             )),
         })?
     };
-    let it = &mut model.composite_curve_arena.items[aid.0];
+    let it = &mut model.composite_curve_arena.items[aid.0 as usize];
     it.segments = segments_v;
     Ok(())
 }
@@ -28082,7 +28049,7 @@ fn resolve_composite_curve_segment_arena(
             .map_err(|e| format!("COMPOSITE_CURVE_SEGMENT.parent_curve: {e}"))?)
         })())?
     };
-    let it = &mut model.composite_curve_segment_arena.items[aid.0];
+    let it = &mut model.composite_curve_segment_arena.items[aid.0 as usize];
     it.parent_curve = parent_curve_v;
     Ok(())
 }
@@ -28106,7 +28073,7 @@ fn resolve_composite_group_shape_aspect_arena(
             .map_err(|e| format!("COMPOSITE_GROUP_SHAPE_ASPECT.of_shape: {e}"))?)
         })())?
     };
-    let it = &mut model.composite_group_shape_aspect_arena.items[aid.0];
+    let it = &mut model.composite_group_shape_aspect_arena.items[aid.0 as usize];
     it.of_shape = of_shape_v;
     Ok(())
 }
@@ -28128,7 +28095,7 @@ fn resolve_composite_shape_aspect_arena(
             .map_err(|e| format!("COMPOSITE_SHAPE_ASPECT.of_shape: {e}"))?)
         })())?
     };
-    let it = &mut model.composite_shape_aspect_arena.items[aid.0];
+    let it = &mut model.composite_shape_aspect_arena.items[aid.0 as usize];
     it.of_shape = of_shape_v;
     Ok(())
 }
@@ -28162,7 +28129,7 @@ fn resolve_composite_text_arena(
             )),
         })?
     };
-    let it = &mut model.composite_text_arena.items[aid.0];
+    let it = &mut model.composite_text_arena.items[aid.0 as usize];
     it.collected_text = collected_text_v;
     Ok(())
 }
@@ -28179,7 +28146,7 @@ fn resolve_compound_representation_item_arena(
             Ok(match a { Attribute::Typed { type_name, value } if type_name == "LIST_REPRESENTATION_ITEM" => CompoundItemDefinitionRef::ListRepresentationItem(match value.as_ref() { Attribute::List(l) => l.iter().map(|e| RepresentationItemRef::from_any(idmap.get(as_ref_id(e, "COMPOUND_REPRESENTATION_ITEM.item_element")?).ok_or_else(|| format!("COMPOUND_REPRESENTATION_ITEM.item_element: dangling ref"))?)).collect::<Result<Vec<_>, String>>()?, o => return Err(format!("COMPOUND_REPRESENTATION_ITEM.item_element: agg list LIST_REPRESENTATION_ITEM: {o:?}")) }), Attribute::Typed { type_name, value } if type_name == "SET_REPRESENTATION_ITEM" => CompoundItemDefinitionRef::SetRepresentationItem(match value.as_ref() { Attribute::List(l) => l.iter().map(|e| RepresentationItemRef::from_any(idmap.get(as_ref_id(e, "COMPOUND_REPRESENTATION_ITEM.item_element")?).ok_or_else(|| format!("COMPOUND_REPRESENTATION_ITEM.item_element: dangling ref"))?)).collect::<Result<Vec<_>, String>>()?, o => return Err(format!("COMPOUND_REPRESENTATION_ITEM.item_element: agg list SET_REPRESENTATION_ITEM: {o:?}")) }), _ => CompoundItemDefinitionRef::from_any(idmap.get(as_ref_id(a, "COMPOUND_REPRESENTATION_ITEM.item_element")?).ok_or_else(|| format!("COMPOUND_REPRESENTATION_ITEM.item_element: dangling ref"))?).map_err(|e| format!("COMPOUND_REPRESENTATION_ITEM.item_element: {e}"))? })
         })())?
     };
-    let it = &mut model.compound_representation_item_arena.items[aid.0];
+    let it = &mut model.compound_representation_item_arena.items[aid.0 as usize];
     it.item_element = item_element_v;
     Ok(())
 }
@@ -28247,7 +28214,7 @@ fn resolve_concentricity_tolerance_arena(
             )),
         })?
     };
-    let it = &mut model.concentricity_tolerance_arena.items[aid.0];
+    let it = &mut model.concentricity_tolerance_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     it.datum_system = datum_system_v;
@@ -28282,7 +28249,7 @@ fn resolve_configuration_design_arena(
             .map_err(|e| format!("CONFIGURATION_DESIGN.design: {e}"))?)
         })())?
     };
-    let it = &mut model.configuration_design_arena.items[aid.0];
+    let it = &mut model.configuration_design_arena.items[aid.0 as usize];
     it.configuration = configuration_v;
     it.design = design_v;
     Ok(())
@@ -28318,7 +28285,7 @@ fn resolve_configuration_effectivity_arena(
             .map_err(|e| format!("CONFIGURATION_EFFECTIVITY.configuration: {e}"))?)
         })())?
     };
-    let it = &mut model.configuration_effectivity_arena.items[aid.0];
+    let it = &mut model.configuration_effectivity_arena.items[aid.0 as usize];
     it.usage = usage_v;
     it.configuration = configuration_v;
     Ok(())
@@ -28341,7 +28308,7 @@ fn resolve_configuration_item_arena(
             .map_err(|e| format!("CONFIGURATION_ITEM.item_concept: {e}"))?)
         })())?
     };
-    let it = &mut model.configuration_item_arena.items[aid.0];
+    let it = &mut model.configuration_item_arena.items[aid.0 as usize];
     it.item_concept = item_concept_v;
     Ok(())
 }
@@ -28363,7 +28330,7 @@ fn resolve_conic_arena(
             .map_err(|e| format!("CONIC.position: {e}"))?)
         })())?
     };
-    let it = &mut model.conic_arena.items[aid.0];
+    let it = &mut model.conic_arena.items[aid.0 as usize];
     it.position = position_v;
     Ok(())
 }
@@ -28385,7 +28352,7 @@ fn resolve_conical_surface_arena(
             .map_err(|e| format!("CONICAL_SURFACE.position: {e}"))?)
         })())?
     };
-    let it = &mut model.conical_surface_arena.items[aid.0];
+    let it = &mut model.conical_surface_arena.items[aid.0 as usize];
     it.position = position_v;
     Ok(())
 }
@@ -28424,7 +28391,7 @@ fn resolve_connected_face_set_arena(
             ),
         }
     };
-    let it = &mut model.connected_face_set_arena.items[aid.0];
+    let it = &mut model.connected_face_set_arena.items[aid.0 as usize];
     it.cfs_faces = cfs_faces_v;
     Ok(())
 }
@@ -28482,7 +28449,7 @@ fn resolve_constructive_geometry_representation_arena(
             .map_err(|e| format!("CONSTRUCTIVE_GEOMETRY_REPRESENTATION.context_of_items: {e}"))?)
         })())?
     };
-    let it = &mut model.constructive_geometry_representation_arena.items[aid.0];
+    let it = &mut model.constructive_geometry_representation_arena.items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -28528,7 +28495,7 @@ fn resolve_constructive_geometry_representation_relationship_arena(
     };
     let it = &mut model
         .constructive_geometry_representation_relationship_arena
-        .items[aid.0];
+        .items[aid.0 as usize];
     it.rep_1 = rep_1_v;
     it.rep_2 = rep_2_v;
     Ok(())
@@ -28578,7 +28545,7 @@ fn resolve_context_dependent_over_riding_styled_item_arena(
         )?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<StyleContextSelectRef, String> { Ok(StyleContextSelectRef::from_any(idmap.get(as_ref_id(e, "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context")?).ok_or_else(|| format!("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context: dangling ref"))?).map_err(|e| format!("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context: expected ref list, got {o:?}")) })?
     };
-    let it = &mut model.context_dependent_over_riding_styled_item_arena.items[aid.0];
+    let it = &mut model.context_dependent_over_riding_styled_item_arena.items[aid.0 as usize];
     it.styles = styles_v;
     it.item = item_v;
     it.over_ridden_style = over_ridden_style_v;
@@ -28612,7 +28579,7 @@ fn resolve_context_dependent_shape_representation_arena(
             Ok(ProductDefinitionShapeRef::from_any(idmap.get(as_ref_id(a, "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION.represented_product_relation")?).ok_or_else(|| format!("CONTEXT_DEPENDENT_SHAPE_REPRESENTATION.represented_product_relation: dangling ref"))?).map_err(|e| format!("CONTEXT_DEPENDENT_SHAPE_REPRESENTATION.represented_product_relation: {e}"))?)
         })())?
     };
-    let it = &mut model.context_dependent_shape_representation_arena.items[aid.0];
+    let it = &mut model.context_dependent_shape_representation_arena.items[aid.0 as usize];
     it.representation_relation = representation_relation_v;
     it.represented_product_relation = represented_product_relation_v;
     Ok(())
@@ -28635,7 +28602,7 @@ fn resolve_context_dependent_unit_arena(
             .map_err(|e| format!("CONTEXT_DEPENDENT_UNIT.dimensions: {e}"))?)
         })())?
     };
-    let it = &mut model.context_dependent_unit_arena.items[aid.0];
+    let it = &mut model.context_dependent_unit_arena.items[aid.0 as usize];
     it.dimensions = dimensions_v;
     Ok(())
 }
@@ -28657,7 +28624,7 @@ fn resolve_continuous_shape_aspect_arena(
             .map_err(|e| format!("CONTINUOUS_SHAPE_ASPECT.of_shape: {e}"))?)
         })())?
     };
-    let it = &mut model.continuous_shape_aspect_arena.items[aid.0];
+    let it = &mut model.continuous_shape_aspect_arena.items[aid.0 as usize];
     it.of_shape = of_shape_v;
     Ok(())
 }
@@ -28679,7 +28646,7 @@ fn resolve_contract_arena(
             .map_err(|e| format!("CONTRACT.kind: {e}"))?)
         })())?
     };
-    let it = &mut model.contract_arena.items[aid.0];
+    let it = &mut model.contract_arena.items[aid.0 as usize];
     it.kind = kind_v;
     Ok(())
 }
@@ -28714,7 +28681,7 @@ fn resolve_conversion_based_unit_arena(
             .map_err(|e| format!("CONVERSION_BASED_UNIT.conversion_factor: {e}"))?)
         })())?
     };
-    let it = &mut model.conversion_based_unit_arena.items[aid.0];
+    let it = &mut model.conversion_based_unit_arena.items[aid.0 as usize];
     it.dimensions = dimensions_v;
     it.conversion_factor = conversion_factor_v;
     Ok(())
@@ -28792,7 +28759,7 @@ fn resolve_curve_style_arena(
             ),
         }
     };
-    let it = &mut model.curve_style_arena.items[aid.0];
+    let it = &mut model.curve_style_arena.items[aid.0 as usize];
     it.curve_font = curve_font_v;
     it.curve_width = curve_width_v;
     it.curve_colour = curve_colour_v;
@@ -28828,7 +28795,7 @@ fn resolve_curve_style_font_arena(
             )),
         })?
     };
-    let it = &mut model.curve_style_font_arena.items[aid.0];
+    let it = &mut model.curve_style_font_arena.items[aid.0 as usize];
     it.pattern_list = pattern_list_v;
     Ok(())
 }
@@ -28852,7 +28819,7 @@ fn resolve_curve_style_font_and_scaling_arena(
             .map_err(|e| format!("CURVE_STYLE_FONT_AND_SCALING.curve_font: {e}"))?)
         })())?
     };
-    let it = &mut model.curve_style_font_and_scaling_arena.items[aid.0];
+    let it = &mut model.curve_style_font_and_scaling_arena.items[aid.0 as usize];
     it.curve_font = curve_font_v;
     Ok(())
 }
@@ -28876,7 +28843,7 @@ fn resolve_curve_style_rendering_arena(
             .map_err(|e| format!("CURVE_STYLE_RENDERING.rendering_properties: {e}"))?)
         })())?
     };
-    let it = &mut model.curve_style_rendering_arena.items[aid.0];
+    let it = &mut model.curve_style_rendering_arena.items[aid.0 as usize];
     it.rendering_properties = rendering_properties_v;
     Ok(())
 }
@@ -28898,7 +28865,7 @@ fn resolve_cylindrical_surface_arena(
             .map_err(|e| format!("CYLINDRICAL_SURFACE.position: {e}"))?)
         })())?
     };
-    let it = &mut model.cylindrical_surface_arena.items[aid.0];
+    let it = &mut model.cylindrical_surface_arena.items[aid.0 as usize];
     it.position = position_v;
     Ok(())
 }
@@ -28943,7 +28910,7 @@ fn resolve_cylindricity_tolerance_arena(
             .map_err(|e| format!("CYLINDRICITY_TOLERANCE.toleranced_shape_aspect: {e}"))?)
         })())?
     };
-    let it = &mut model.cylindricity_tolerance_arena.items[aid.0];
+    let it = &mut model.cylindricity_tolerance_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     Ok(())
@@ -28977,7 +28944,7 @@ fn resolve_date_and_time_arena(
             .map_err(|e| format!("DATE_AND_TIME.time_component: {e}"))?)
         })())?
     };
-    let it = &mut model.date_and_time_arena.items[aid.0];
+    let it = &mut model.date_and_time_arena.items[aid.0 as usize];
     it.date_component = date_component_v;
     it.time_component = time_component_v;
     Ok(())
@@ -29016,7 +28983,7 @@ fn resolve_date_and_time_assignment_arena(
             .map_err(|e| format!("DATE_AND_TIME_ASSIGNMENT.role: {e}"))?)
         })())?
     };
-    let it = &mut model.date_and_time_assignment_arena.items[aid.0];
+    let it = &mut model.date_and_time_assignment_arena.items[aid.0 as usize];
     it.assigned_date_and_time = assigned_date_and_time_v;
     it.role = role_v;
     Ok(())
@@ -29039,7 +29006,7 @@ fn resolve_datum_arena(
             .map_err(|e| format!("DATUM.of_shape: {e}"))?)
         })())?
     };
-    let it = &mut model.datum_arena.items[aid.0];
+    let it = &mut model.datum_arena.items[aid.0 as usize];
     it.of_shape = of_shape_v;
     Ok(())
 }
@@ -29061,7 +29028,7 @@ fn resolve_datum_feature_arena(
             .map_err(|e| format!("DATUM_FEATURE.of_shape: {e}"))?)
         })())?
     };
-    let it = &mut model.datum_feature_arena.items[aid.0];
+    let it = &mut model.datum_feature_arena.items[aid.0 as usize];
     it.of_shape = of_shape_v;
     Ok(())
 }
@@ -29083,7 +29050,7 @@ fn resolve_datum_reference_arena(
             .map_err(|e| format!("DATUM_REFERENCE.referenced_datum: {e}"))?)
         })())?
     };
-    let it = &mut model.datum_reference_arena.items[aid.0];
+    let it = &mut model.datum_reference_arena.items[aid.0 as usize];
     it.referenced_datum = referenced_datum_v;
     Ok(())
 }
@@ -29145,7 +29112,7 @@ fn resolve_datum_reference_compartment_arena(
         let a = req(attrs, 5, "DATUM_REFERENCE_COMPARTMENT.modifiers")?;
         match a { Attribute::Unset => None, _ => Some((match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<DatumReferenceModifierRef, String> { Ok(match e { Attribute::Typed { type_name, value } if type_name == "SIMPLE_DATUM_REFERENCE_MODIFIER" => DatumReferenceModifierRef::SimpleDatumReferenceModifier(match value.as_ref() { Attribute::Enum(s) => SimpleDatumReferenceModifier::parse(s).ok_or_else(|| format!("DATUM_REFERENCE_COMPARTMENT.modifiers: bad enum SIMPLE_DATUM_REFERENCE_MODIFIER {s:?}"))?, o => return Err(format!("DATUM_REFERENCE_COMPARTMENT.modifiers: enum SIMPLE_DATUM_REFERENCE_MODIFIER: {o:?}")) }), _ => DatumReferenceModifierRef::from_any(idmap.get(as_ref_id(e, "DATUM_REFERENCE_COMPARTMENT.modifiers")?).ok_or_else(|| format!("DATUM_REFERENCE_COMPARTMENT.modifiers: dangling ref"))?).map_err(|e| format!("DATUM_REFERENCE_COMPARTMENT.modifiers: {e}"))? }) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("DATUM_REFERENCE_COMPARTMENT.modifiers: expected ref list, got {o:?}")) })?) }
     };
-    let it = &mut model.datum_reference_compartment_arena.items[aid.0];
+    let it = &mut model.datum_reference_compartment_arena.items[aid.0 as usize];
     it.of_shape = of_shape_v;
     it.base = base_v;
     it.modifiers = modifiers_v;
@@ -29207,7 +29174,7 @@ fn resolve_datum_reference_element_arena(
         let a = req(attrs, 5, "DATUM_REFERENCE_ELEMENT.modifiers")?;
         match a { Attribute::Unset => None, _ => Some((match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<DatumReferenceModifierRef, String> { Ok(match e { Attribute::Typed { type_name, value } if type_name == "SIMPLE_DATUM_REFERENCE_MODIFIER" => DatumReferenceModifierRef::SimpleDatumReferenceModifier(match value.as_ref() { Attribute::Enum(s) => SimpleDatumReferenceModifier::parse(s).ok_or_else(|| format!("DATUM_REFERENCE_ELEMENT.modifiers: bad enum SIMPLE_DATUM_REFERENCE_MODIFIER {s:?}"))?, o => return Err(format!("DATUM_REFERENCE_ELEMENT.modifiers: enum SIMPLE_DATUM_REFERENCE_MODIFIER: {o:?}")) }), _ => DatumReferenceModifierRef::from_any(idmap.get(as_ref_id(e, "DATUM_REFERENCE_ELEMENT.modifiers")?).ok_or_else(|| format!("DATUM_REFERENCE_ELEMENT.modifiers: dangling ref"))?).map_err(|e| format!("DATUM_REFERENCE_ELEMENT.modifiers: {e}"))? }) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("DATUM_REFERENCE_ELEMENT.modifiers: expected ref list, got {o:?}")) })?) }
     };
-    let it = &mut model.datum_reference_element_arena.items[aid.0];
+    let it = &mut model.datum_reference_element_arena.items[aid.0 as usize];
     it.of_shape = of_shape_v;
     it.base = base_v;
     it.modifiers = modifiers_v;
@@ -29240,7 +29207,7 @@ fn resolve_datum_reference_modifier_with_value_arena(
             .map_err(|e| format!("DATUM_REFERENCE_MODIFIER_WITH_VALUE.modifier_value: {e}"))?)
         })())?
     };
-    let it = &mut model.datum_reference_modifier_with_value_arena.items[aid.0];
+    let it = &mut model.datum_reference_modifier_with_value_arena.items[aid.0 as usize];
     it.modifier_value = modifier_value_v;
     Ok(())
 }
@@ -29285,7 +29252,7 @@ fn resolve_datum_system_arena(
             )),
         })?
     };
-    let it = &mut model.datum_system_arena.items[aid.0];
+    let it = &mut model.datum_system_arena.items[aid.0 as usize];
     it.of_shape = of_shape_v;
     it.constituents = constituents_v;
     Ok(())
@@ -29308,7 +29275,7 @@ fn resolve_datum_target_arena(
             .map_err(|e| format!("DATUM_TARGET.of_shape: {e}"))?)
         })())?
     };
-    let it = &mut model.datum_target_arena.items[aid.0];
+    let it = &mut model.datum_target_arena.items[aid.0 as usize];
     it.of_shape = of_shape_v;
     Ok(())
 }
@@ -29354,7 +29321,7 @@ fn resolve_default_model_geometric_view_arena(
             .map_err(|e| format!("DEFAULT_MODEL_GEOMETRIC_VIEW.of_shape: {e}"))?)
         })())?
     };
-    let it = &mut model.default_model_geometric_view_arena.items[aid.0];
+    let it = &mut model.default_model_geometric_view_arena.items[aid.0 as usize];
     it.item = item_v;
     it.rep = rep_v;
     it.of_shape = of_shape_v;
@@ -29389,7 +29356,7 @@ fn resolve_defined_character_glyph_arena(
             .map_err(|e| format!("DEFINED_CHARACTER_GLYPH.placement: {e}"))?)
         })())?
     };
-    let it = &mut model.defined_character_glyph_arena.items[aid.0];
+    let it = &mut model.defined_character_glyph_arena.items[aid.0 as usize];
     it.definition = definition_v;
     it.placement = placement_v;
     Ok(())
@@ -29423,7 +29390,7 @@ fn resolve_defined_symbol_arena(
             .map_err(|e| format!("DEFINED_SYMBOL.target: {e}"))?)
         })())?
     };
-    let it = &mut model.defined_symbol_arena.items[aid.0];
+    let it = &mut model.defined_symbol_arena.items[aid.0 as usize];
     it.definition = definition_v;
     it.target = target_v;
     Ok(())
@@ -29474,7 +29441,7 @@ fn resolve_definitional_representation_arena(
             .map_err(|e| format!("DEFINITIONAL_REPRESENTATION.context_of_items: {e}"))?)
         })())?
     };
-    let it = &mut model.definitional_representation_arena.items[aid.0];
+    let it = &mut model.definitional_representation_arena.items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -29518,7 +29485,7 @@ fn resolve_definitional_representation_relationship_arena(
             .map_err(|e| format!("DEFINITIONAL_REPRESENTATION_RELATIONSHIP.rep_2: {e}"))?)
         })())?
     };
-    let it = &mut model.definitional_representation_relationship_arena.items[aid.0];
+    let it = &mut model.definitional_representation_relationship_arena.items[aid.0 as usize];
     it.rep_1 = rep_1_v;
     it.rep_2 = rep_2_v;
     Ok(())
@@ -29552,7 +29519,7 @@ fn resolve_definitional_representation_relationship_with_same_context_arena(
     };
     let it = &mut model
         .definitional_representation_relationship_with_same_context_arena
-        .items[aid.0];
+        .items[aid.0 as usize];
     it.rep_1 = rep_1_v;
     it.rep_2 = rep_2_v;
     Ok(())
@@ -29575,7 +29542,7 @@ fn resolve_degenerate_toroidal_surface_arena(
             .map_err(|e| format!("DEGENERATE_TOROIDAL_SURFACE.position: {e}"))?)
         })())?
     };
-    let it = &mut model.degenerate_toroidal_surface_arena.items[aid.0];
+    let it = &mut model.degenerate_toroidal_surface_arena.items[aid.0 as usize];
     it.position = position_v;
     Ok(())
 }
@@ -29597,7 +29564,7 @@ fn resolve_derived_shape_aspect_arena(
             .map_err(|e| format!("DERIVED_SHAPE_ASPECT.of_shape: {e}"))?)
         })())?
     };
-    let it = &mut model.derived_shape_aspect_arena.items[aid.0];
+    let it = &mut model.derived_shape_aspect_arena.items[aid.0 as usize];
     it.of_shape = of_shape_v;
     Ok(())
 }
@@ -29629,7 +29596,7 @@ fn resolve_derived_unit_arena(
             )),
         })?
     };
-    let it = &mut model.derived_unit_arena.items[aid.0];
+    let it = &mut model.derived_unit_arena.items[aid.0 as usize];
     it.elements = elements_v;
     Ok(())
 }
@@ -29651,7 +29618,7 @@ fn resolve_derived_unit_element_arena(
             .map_err(|e| format!("DERIVED_UNIT_ELEMENT.unit: {e}"))?)
         })())?
     };
-    let it = &mut model.derived_unit_element_arena.items[aid.0];
+    let it = &mut model.derived_unit_element_arena.items[aid.0 as usize];
     it.unit = unit_v;
     Ok(())
 }
@@ -29673,7 +29640,7 @@ fn resolve_description_attribute_arena(
             .map_err(|e| format!("DESCRIPTION_ATTRIBUTE.described_item: {e}"))?)
         })())?
     };
-    let it = &mut model.description_attribute_arena.items[aid.0];
+    let it = &mut model.description_attribute_arena.items[aid.0 as usize];
     it.described_item = described_item_v;
     Ok(())
 }
@@ -29695,7 +29662,7 @@ fn resolve_design_context_arena(
             .map_err(|e| format!("DESIGN_CONTEXT.frame_of_reference: {e}"))?)
         })())?
     };
-    let it = &mut model.design_context_arena.items[aid.0];
+    let it = &mut model.design_context_arena.items[aid.0 as usize];
     it.frame_of_reference = frame_of_reference_v;
     Ok(())
 }
@@ -29750,7 +29717,7 @@ fn resolve_dimensional_characteristic_representation_arena(
             })?)
         })())?
     };
-    let it = &mut model.dimensional_characteristic_representation_arena.items[aid.0];
+    let it = &mut model.dimensional_characteristic_representation_arena.items[aid.0 as usize];
     it.dimension = dimension_v;
     it.representation = representation_v;
     Ok(())
@@ -29788,7 +29755,7 @@ fn resolve_dimensional_location_arena(
             .map_err(|e| format!("DIMENSIONAL_LOCATION.related_shape_aspect: {e}"))?)
         })())?
     };
-    let it = &mut model.dimensional_location_arena.items[aid.0];
+    let it = &mut model.dimensional_location_arena.items[aid.0 as usize];
     it.relating_shape_aspect = relating_shape_aspect_v;
     it.related_shape_aspect = related_shape_aspect_v;
     Ok(())
@@ -29853,7 +29820,7 @@ fn resolve_dimensional_location_with_path_arena(
             .map_err(|e| format!("DIMENSIONAL_LOCATION_WITH_PATH.path: {e}"))?)
         })())?
     };
-    let it = &mut model.dimensional_location_with_path_arena.items[aid.0];
+    let it = &mut model.dimensional_location_with_path_arena.items[aid.0 as usize];
     it.relating_shape_aspect = relating_shape_aspect_v;
     it.related_shape_aspect = related_shape_aspect_v;
     it.path = path_v;
@@ -29877,7 +29844,7 @@ fn resolve_dimensional_size_arena(
             .map_err(|e| format!("DIMENSIONAL_SIZE.applies_to: {e}"))?)
         })())?
     };
-    let it = &mut model.dimensional_size_arena.items[aid.0];
+    let it = &mut model.dimensional_size_arena.items[aid.0 as usize];
     it.applies_to = applies_to_v;
     Ok(())
 }
@@ -29920,7 +29887,7 @@ fn resolve_dimensional_size_with_datum_feature_arena(
             .map_err(|e| format!("DIMENSIONAL_SIZE_WITH_DATUM_FEATURE.applies_to: {e}"))?)
         })())?
     };
-    let it = &mut model.dimensional_size_with_datum_feature_arena.items[aid.0];
+    let it = &mut model.dimensional_size_with_datum_feature_arena.items[aid.0 as usize];
     it.of_shape = of_shape_v;
     it.applies_to = applies_to_v;
     Ok(())
@@ -29956,7 +29923,7 @@ fn resolve_dimensional_size_with_path_arena(
             .map_err(|e| format!("DIMENSIONAL_SIZE_WITH_PATH.path: {e}"))?)
         })())?
     };
-    let it = &mut model.dimensional_size_with_path_arena.items[aid.0];
+    let it = &mut model.dimensional_size_with_path_arena.items[aid.0 as usize];
     it.applies_to = applies_to_v;
     it.path = path_v;
     Ok(())
@@ -30008,7 +29975,7 @@ fn resolve_directed_dimensional_location_arena(
             .map_err(|e| format!("DIRECTED_DIMENSIONAL_LOCATION.related_shape_aspect: {e}"))?)
         })())?
     };
-    let it = &mut model.directed_dimensional_location_arena.items[aid.0];
+    let it = &mut model.directed_dimensional_location_arena.items[aid.0 as usize];
     it.relating_shape_aspect = relating_shape_aspect_v;
     it.related_shape_aspect = related_shape_aspect_v;
     Ok(())
@@ -30031,7 +29998,7 @@ fn resolve_document_arena(
             .map_err(|e| format!("DOCUMENT.kind: {e}"))?)
         })())?
     };
-    let it = &mut model.document_arena.items[aid.0];
+    let it = &mut model.document_arena.items[aid.0 as usize];
     it.kind = kind_v;
     Ok(())
 }
@@ -30053,7 +30020,7 @@ fn resolve_document_file_arena(
             .map_err(|e| format!("DOCUMENT_FILE.kind: {e}"))?)
         })())?
     };
-    let it = &mut model.document_file_arena.items[aid.0];
+    let it = &mut model.document_file_arena.items[aid.0 as usize];
     it.kind = kind_v;
     Ok(())
 }
@@ -30096,7 +30063,7 @@ fn resolve_document_product_association_arena(
             .map_err(|e| format!("DOCUMENT_PRODUCT_ASSOCIATION.related_product: {e}"))?)
         })())?
     };
-    let it = &mut model.document_product_association_arena.items[aid.0];
+    let it = &mut model.document_product_association_arena.items[aid.0 as usize];
     it.relating_document = relating_document_v;
     it.related_product = related_product_v;
     Ok(())
@@ -30140,7 +30107,7 @@ fn resolve_document_product_equivalence_arena(
             .map_err(|e| format!("DOCUMENT_PRODUCT_EQUIVALENCE.related_product: {e}"))?)
         })())?
     };
-    let it = &mut model.document_product_equivalence_arena.items[aid.0];
+    let it = &mut model.document_product_equivalence_arena.items[aid.0 as usize];
     it.relating_document = relating_document_v;
     it.related_product = related_product_v;
     Ok(())
@@ -30163,7 +30130,7 @@ fn resolve_document_reference_arena(
             .map_err(|e| format!("DOCUMENT_REFERENCE.assigned_document: {e}"))?)
         })())?
     };
-    let it = &mut model.document_reference_arena.items[aid.0];
+    let it = &mut model.document_reference_arena.items[aid.0 as usize];
     it.assigned_document = assigned_document_v;
     Ok(())
 }
@@ -30194,7 +30161,7 @@ fn resolve_document_representation_type_arena(
             .map_err(|e| format!("DOCUMENT_REPRESENTATION_TYPE.represented_document: {e}"))?)
         })())?
     };
-    let it = &mut model.document_representation_type_arena.items[aid.0];
+    let it = &mut model.document_representation_type_arena.items[aid.0 as usize];
     it.represented_document = represented_document_v;
     Ok(())
 }
@@ -30241,7 +30208,7 @@ fn resolve_draughting_annotation_occurrence_arena(
             .map_err(|e| format!("DRAUGHTING_ANNOTATION_OCCURRENCE.item: {e}"))?)
         })())?
     };
-    let it = &mut model.draughting_annotation_occurrence_arena.items[aid.0];
+    let it = &mut model.draughting_annotation_occurrence_arena.items[aid.0 as usize];
     it.styles = styles_v;
     it.item = item_v;
     Ok(())
@@ -30276,7 +30243,7 @@ fn resolve_draughting_callout_arena(
             )),
         })?
     };
-    let it = &mut model.draughting_callout_arena.items[aid.0];
+    let it = &mut model.draughting_callout_arena.items[aid.0 as usize];
     it.contents = contents_v;
     Ok(())
 }
@@ -30307,7 +30274,7 @@ fn resolve_draughting_callout_relationship_arena(
             Ok(DraughtingCalloutRef::from_any(idmap.get(as_ref_id(a, "DRAUGHTING_CALLOUT_RELATIONSHIP.related_draughting_callout")?).ok_or_else(|| format!("DRAUGHTING_CALLOUT_RELATIONSHIP.related_draughting_callout: dangling ref"))?).map_err(|e| format!("DRAUGHTING_CALLOUT_RELATIONSHIP.related_draughting_callout: {e}"))?)
         })())?
     };
-    let it = &mut model.draughting_callout_relationship_arena.items[aid.0];
+    let it = &mut model.draughting_callout_relationship_arena.items[aid.0 as usize];
     it.relating_draughting_callout = relating_draughting_callout_v;
     it.related_draughting_callout = related_draughting_callout_v;
     Ok(())
@@ -30351,7 +30318,7 @@ fn resolve_draughting_model_arena(
             .map_err(|e| format!("DRAUGHTING_MODEL.context_of_items: {e}"))?)
         })())?
     };
-    let it = &mut model.draughting_model_arena.items[aid.0];
+    let it = &mut model.draughting_model_arena.items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -30421,7 +30388,7 @@ fn resolve_draughting_model_item_association_arena(
             .map_err(|e| format!("DRAUGHTING_MODEL_ITEM_ASSOCIATION.identified_item: {e}"))?)
         })())?
     };
-    let it = &mut model.draughting_model_item_association_arena.items[aid.0];
+    let it = &mut model.draughting_model_item_association_arena.items[aid.0 as usize];
     it.definition = definition_v;
     it.used_representation = used_representation_v;
     it.identified_item = identified_item_v;
@@ -30476,7 +30443,7 @@ fn resolve_draughting_model_item_association_with_placeholder_arena(
     };
     let it = &mut model
         .draughting_model_item_association_with_placeholder_arena
-        .items[aid.0];
+        .items[aid.0 as usize];
     it.definition = definition_v;
     it.used_representation = used_representation_v;
     it.identified_item = identified_item_v;
@@ -30522,7 +30489,7 @@ fn resolve_edge_arena(
             ),
         }
     };
-    let it = &mut model.edge_arena.items[aid.0];
+    let it = &mut model.edge_arena.items[aid.0 as usize];
     it.edge_start = edge_start_v;
     it.edge_end = edge_end_v;
     Ok(())
@@ -30567,7 +30534,7 @@ fn resolve_edge_curve_arena(
             .map_err(|e| format!("EDGE_CURVE.edge_geometry: {e}"))?)
         })())?
     };
-    let it = &mut model.edge_curve_arena.items[aid.0];
+    let it = &mut model.edge_curve_arena.items[aid.0 as usize];
     it.edge_start = edge_start_v;
     it.edge_end = edge_end_v;
     it.edge_geometry = edge_geometry_v;
@@ -30599,7 +30566,7 @@ fn resolve_edge_loop_arena(
             o => Err(format!("EDGE_LOOP.edge_list: expected ref list, got {o:?}")),
         })?
     };
-    let it = &mut model.edge_loop_arena.items[aid.0];
+    let it = &mut model.edge_loop_arena.items[aid.0 as usize];
     it.edge_list = edge_list_v;
     Ok(())
 }
@@ -30621,7 +30588,7 @@ fn resolve_elementary_surface_arena(
             .map_err(|e| format!("ELEMENTARY_SURFACE.position: {e}"))?)
         })())?
     };
-    let it = &mut model.elementary_surface_arena.items[aid.0];
+    let it = &mut model.elementary_surface_arena.items[aid.0 as usize];
     it.position = position_v;
     Ok(())
 }
@@ -30643,7 +30610,7 @@ fn resolve_ellipse_arena(
             .map_err(|e| format!("ELLIPSE.position: {e}"))?)
         })())?
     };
-    let it = &mut model.ellipse_arena.items[aid.0];
+    let it = &mut model.ellipse_arena.items[aid.0 as usize];
     it.position = position_v;
     Ok(())
 }
@@ -30680,7 +30647,7 @@ fn resolve_external_identification_assignment_arena(
             .map_err(|e| format!("EXTERNAL_IDENTIFICATION_ASSIGNMENT.source: {e}"))?)
         })())?
     };
-    let it = &mut model.external_identification_assignment_arena.items[aid.0];
+    let it = &mut model.external_identification_assignment_arena.items[aid.0 as usize];
     it.role = role_v;
     it.source = source_v;
     Ok(())
@@ -30705,7 +30672,7 @@ fn resolve_externally_defined_character_glyph_arena(
             .map_err(|e| format!("EXTERNALLY_DEFINED_CHARACTER_GLYPH.source: {e}"))?)
         })())?
     };
-    let it = &mut model.externally_defined_character_glyph_arena.items[aid.0];
+    let it = &mut model.externally_defined_character_glyph_arena.items[aid.0 as usize];
     it.source = source_v;
     Ok(())
 }
@@ -30727,7 +30694,7 @@ fn resolve_externally_defined_curve_font_arena(
             .map_err(|e| format!("EXTERNALLY_DEFINED_CURVE_FONT.source: {e}"))?)
         })())?
     };
-    let it = &mut model.externally_defined_curve_font_arena.items[aid.0];
+    let it = &mut model.externally_defined_curve_font_arena.items[aid.0 as usize];
     it.source = source_v;
     Ok(())
 }
@@ -30751,7 +30718,7 @@ fn resolve_externally_defined_hatch_style_arena(
             .map_err(|e| format!("EXTERNALLY_DEFINED_HATCH_STYLE.source: {e}"))?)
         })())?
     };
-    let it = &mut model.externally_defined_hatch_style_arena.items[aid.0];
+    let it = &mut model.externally_defined_hatch_style_arena.items[aid.0 as usize];
     it.source = source_v;
     Ok(())
 }
@@ -30773,7 +30740,7 @@ fn resolve_externally_defined_item_arena(
             .map_err(|e| format!("EXTERNALLY_DEFINED_ITEM.source: {e}"))?)
         })())?
     };
-    let it = &mut model.externally_defined_item_arena.items[aid.0];
+    let it = &mut model.externally_defined_item_arena.items[aid.0 as usize];
     it.source = source_v;
     Ok(())
 }
@@ -30795,7 +30762,7 @@ fn resolve_externally_defined_style_arena(
             .map_err(|e| format!("EXTERNALLY_DEFINED_STYLE.source: {e}"))?)
         })())?
     };
-    let it = &mut model.externally_defined_style_arena.items[aid.0];
+    let it = &mut model.externally_defined_style_arena.items[aid.0 as usize];
     it.source = source_v;
     Ok(())
 }
@@ -30817,7 +30784,7 @@ fn resolve_externally_defined_symbol_arena(
             .map_err(|e| format!("EXTERNALLY_DEFINED_SYMBOL.source: {e}"))?)
         })())?
     };
-    let it = &mut model.externally_defined_symbol_arena.items[aid.0];
+    let it = &mut model.externally_defined_symbol_arena.items[aid.0 as usize];
     it.source = source_v;
     Ok(())
 }
@@ -30839,7 +30806,7 @@ fn resolve_externally_defined_text_font_arena(
             .map_err(|e| format!("EXTERNALLY_DEFINED_TEXT_FONT.source: {e}"))?)
         })())?
     };
-    let it = &mut model.externally_defined_text_font_arena.items[aid.0];
+    let it = &mut model.externally_defined_text_font_arena.items[aid.0 as usize];
     it.source = source_v;
     Ok(())
 }
@@ -30861,7 +30828,7 @@ fn resolve_externally_defined_tile_arena(
             .map_err(|e| format!("EXTERNALLY_DEFINED_TILE.source: {e}"))?)
         })())?
     };
-    let it = &mut model.externally_defined_tile_arena.items[aid.0];
+    let it = &mut model.externally_defined_tile_arena.items[aid.0 as usize];
     it.source = source_v;
     Ok(())
 }
@@ -30883,7 +30850,7 @@ fn resolve_externally_defined_tile_style_arena(
             .map_err(|e| format!("EXTERNALLY_DEFINED_TILE_STYLE.source: {e}"))?)
         })())?
     };
-    let it = &mut model.externally_defined_tile_style_arena.items[aid.0];
+    let it = &mut model.externally_defined_tile_style_arena.items[aid.0 as usize];
     it.source = source_v;
     Ok(())
 }
@@ -30913,7 +30880,7 @@ fn resolve_face_arena(
             o => Err(format!("FACE.bounds: expected ref list, got {o:?}")),
         })?
     };
-    let it = &mut model.face_arena.items[aid.0];
+    let it = &mut model.face_arena.items[aid.0 as usize];
     it.bounds = bounds_v;
     Ok(())
 }
@@ -30935,7 +30902,7 @@ fn resolve_face_bound_arena(
             .map_err(|e| format!("FACE_BOUND.bound: {e}"))?)
         })())?
     };
-    let it = &mut model.face_bound_arena.items[aid.0];
+    let it = &mut model.face_bound_arena.items[aid.0 as usize];
     it.bound = bound_v;
     Ok(())
 }
@@ -30957,7 +30924,7 @@ fn resolve_face_outer_bound_arena(
             .map_err(|e| format!("FACE_OUTER_BOUND.bound: {e}"))?)
         })())?
     };
-    let it = &mut model.face_outer_bound_arena.items[aid.0];
+    let it = &mut model.face_outer_bound_arena.items[aid.0 as usize];
     it.bound = bound_v;
     Ok(())
 }
@@ -30998,7 +30965,7 @@ fn resolve_face_surface_arena(
             .map_err(|e| format!("FACE_SURFACE.face_geometry: {e}"))?)
         })())?
     };
-    let it = &mut model.face_surface_arena.items[aid.0];
+    let it = &mut model.face_surface_arena.items[aid.0 as usize];
     it.bounds = bounds_v;
     it.face_geometry = face_geometry_v;
     Ok(())
@@ -31030,7 +30997,7 @@ fn resolve_feature_for_datum_target_relationship_arena(
             Ok(ShapeAspectRef::from_any(idmap.get(as_ref_id(a, "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP.related_shape_aspect")?).ok_or_else(|| format!("FEATURE_FOR_DATUM_TARGET_RELATIONSHIP.related_shape_aspect: dangling ref"))?).map_err(|e| format!("FEATURE_FOR_DATUM_TARGET_RELATIONSHIP.related_shape_aspect: {e}"))?)
         })())?
     };
-    let it = &mut model.feature_for_datum_target_relationship_arena.items[aid.0];
+    let it = &mut model.feature_for_datum_target_relationship_arena.items[aid.0 as usize];
     it.relating_shape_aspect = relating_shape_aspect_v;
     it.related_shape_aspect = related_shape_aspect_v;
     Ok(())
@@ -31065,7 +31032,7 @@ fn resolve_fill_area_style_arena(
             )),
         })?
     };
-    let it = &mut model.fill_area_style_arena.items[aid.0];
+    let it = &mut model.fill_area_style_arena.items[aid.0 as usize];
     it.fill_styles = fill_styles_v;
     Ok(())
 }
@@ -31087,7 +31054,7 @@ fn resolve_fill_area_style_colour_arena(
             .map_err(|e| format!("FILL_AREA_STYLE_COLOUR.fill_colour: {e}"))?)
         })())?
     };
-    let it = &mut model.fill_area_style_colour_arena.items[aid.0];
+    let it = &mut model.fill_area_style_colour_arena.items[aid.0 as usize];
     it.fill_colour = fill_colour_v;
     Ok(())
 }
@@ -31169,7 +31136,7 @@ fn resolve_fill_area_style_hatching_arena(
             .map_err(|e| format!("FILL_AREA_STYLE_HATCHING.pattern_start: {e}"))?)
         })())?
     };
-    let it = &mut model.fill_area_style_hatching_arena.items[aid.0];
+    let it = &mut model.fill_area_style_hatching_arena.items[aid.0 as usize];
     it.hatch_line_appearance = hatch_line_appearance_v;
     it.start_of_next_hatch_line = start_of_next_hatch_line_v;
     it.point_of_reference_hatch_line = point_of_reference_hatch_line_v;
@@ -31223,7 +31190,7 @@ fn resolve_fill_area_style_tile_coloured_region_arena(
             .map_err(|e| format!("FILL_AREA_STYLE_TILE_COLOURED_REGION.region_colour: {e}"))?)
         })())?
     };
-    let it = &mut model.fill_area_style_tile_coloured_region_arena.items[aid.0];
+    let it = &mut model.fill_area_style_tile_coloured_region_arena.items[aid.0 as usize];
     it.closed_curve = closed_curve_v;
     it.region_colour = region_colour_v;
     Ok(())
@@ -31255,7 +31222,7 @@ fn resolve_fill_area_style_tile_curve_with_style_arena(
             .map_err(|e| format!("FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE.styled_curve: {e}"))?)
         })())?
     };
-    let it = &mut model.fill_area_style_tile_curve_with_style_arena.items[aid.0];
+    let it = &mut model.fill_area_style_tile_curve_with_style_arena.items[aid.0 as usize];
     it.styled_curve = styled_curve_v;
     Ok(())
 }
@@ -31282,7 +31249,7 @@ fn resolve_fill_area_style_tile_symbol_with_style_arena(
             .map_err(|e| format!("FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE.symbol: {e}"))?)
         })())?
     };
-    let it = &mut model.fill_area_style_tile_symbol_with_style_arena.items[aid.0];
+    let it = &mut model.fill_area_style_tile_symbol_with_style_arena.items[aid.0 as usize];
     it.symbol = symbol_v;
     Ok(())
 }
@@ -31327,7 +31294,7 @@ fn resolve_fill_area_style_tiles_arena(
             )),
         })?
     };
-    let it = &mut model.fill_area_style_tiles_arena.items[aid.0];
+    let it = &mut model.fill_area_style_tiles_arena.items[aid.0 as usize];
     it.tiling_pattern = tiling_pattern_v;
     it.tiles = tiles_v;
     Ok(())
@@ -31368,7 +31335,7 @@ fn resolve_flatness_tolerance_arena(
             .map_err(|e| format!("FLATNESS_TOLERANCE.toleranced_shape_aspect: {e}"))?)
         })())?
     };
-    let it = &mut model.flatness_tolerance_arena.items[aid.0];
+    let it = &mut model.flatness_tolerance_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     Ok(())
@@ -31429,7 +31396,7 @@ fn resolve_general_datum_reference_arena(
         let a = req(attrs, 5, "GENERAL_DATUM_REFERENCE.modifiers")?;
         match a { Attribute::Unset => None, _ => Some((match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<DatumReferenceModifierRef, String> { Ok(match e { Attribute::Typed { type_name, value } if type_name == "SIMPLE_DATUM_REFERENCE_MODIFIER" => DatumReferenceModifierRef::SimpleDatumReferenceModifier(match value.as_ref() { Attribute::Enum(s) => SimpleDatumReferenceModifier::parse(s).ok_or_else(|| format!("GENERAL_DATUM_REFERENCE.modifiers: bad enum SIMPLE_DATUM_REFERENCE_MODIFIER {s:?}"))?, o => return Err(format!("GENERAL_DATUM_REFERENCE.modifiers: enum SIMPLE_DATUM_REFERENCE_MODIFIER: {o:?}")) }), _ => DatumReferenceModifierRef::from_any(idmap.get(as_ref_id(e, "GENERAL_DATUM_REFERENCE.modifiers")?).ok_or_else(|| format!("GENERAL_DATUM_REFERENCE.modifiers: dangling ref"))?).map_err(|e| format!("GENERAL_DATUM_REFERENCE.modifiers: {e}"))? }) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("GENERAL_DATUM_REFERENCE.modifiers: expected ref list, got {o:?}")) })?) }
     };
-    let it = &mut model.general_datum_reference_arena.items[aid.0];
+    let it = &mut model.general_datum_reference_arena.items[aid.0 as usize];
     it.of_shape = of_shape_v;
     it.base = base_v;
     it.modifiers = modifiers_v;
@@ -31474,7 +31441,7 @@ fn resolve_general_property_association_arena(
             .map_err(|e| format!("GENERAL_PROPERTY_ASSOCIATION.derived_definition: {e}"))?)
         })())?
     };
-    let it = &mut model.general_property_association_arena.items[aid.0];
+    let it = &mut model.general_property_association_arena.items[aid.0 as usize];
     it.base_definition = base_definition_v;
     it.derived_definition = derived_definition_v;
     Ok(())
@@ -31499,7 +31466,7 @@ fn resolve_generic_product_definition_reference_arena(
             .map_err(|e| format!("GENERIC_PRODUCT_DEFINITION_REFERENCE.source: {e}"))?)
         })())?
     };
-    let it = &mut model.generic_product_definition_reference_arena.items[aid.0];
+    let it = &mut model.generic_product_definition_reference_arena.items[aid.0 as usize];
     it.source = source_v;
     Ok(())
 }
@@ -31533,7 +31500,7 @@ fn resolve_geometric_curve_set_arena(
             )),
         })?
     };
-    let it = &mut model.geometric_curve_set_arena.items[aid.0];
+    let it = &mut model.geometric_curve_set_arena.items[aid.0 as usize];
     it.elements = elements_v;
     Ok(())
 }
@@ -31593,7 +31560,7 @@ fn resolve_geometric_item_specific_usage_arena(
             .map_err(|e| format!("GEOMETRIC_ITEM_SPECIFIC_USAGE.identified_item: {e}"))?)
         })())?
     };
-    let it = &mut model.geometric_item_specific_usage_arena.items[aid.0];
+    let it = &mut model.geometric_item_specific_usage_arena.items[aid.0 as usize];
     it.definition = definition_v;
     it.used_representation = used_representation_v;
     it.identified_item = identified_item_v;
@@ -31627,7 +31594,7 @@ fn resolve_geometric_set_arena(
             )),
         })?
     };
-    let it = &mut model.geometric_set_arena.items[aid.0];
+    let it = &mut model.geometric_set_arena.items[aid.0 as usize];
     it.elements = elements_v;
     Ok(())
 }
@@ -31669,7 +31636,7 @@ fn resolve_geometric_tolerance_arena(
             .map_err(|e| format!("GEOMETRIC_TOLERANCE.toleranced_shape_aspect: {e}"))?)
         })())?
     };
-    let it = &mut model.geometric_tolerance_arena.items[aid.0];
+    let it = &mut model.geometric_tolerance_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     Ok(())
@@ -31701,7 +31668,7 @@ fn resolve_geometric_tolerance_relationship_arena(
             Ok(GeometricToleranceRef::from_any(idmap.get(as_ref_id(a, "GEOMETRIC_TOLERANCE_RELATIONSHIP.related_geometric_tolerance")?).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_RELATIONSHIP.related_geometric_tolerance: dangling ref"))?).map_err(|e| format!("GEOMETRIC_TOLERANCE_RELATIONSHIP.related_geometric_tolerance: {e}"))?)
         })())?
     };
-    let it = &mut model.geometric_tolerance_relationship_arena.items[aid.0];
+    let it = &mut model.geometric_tolerance_relationship_arena.items[aid.0 as usize];
     it.relating_geometric_tolerance = relating_geometric_tolerance_v;
     it.related_geometric_tolerance = related_geometric_tolerance_v;
     Ok(())
@@ -31746,7 +31713,7 @@ fn resolve_geometric_tolerance_with_datum_reference_arena(
         )?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<DatumSystemOrReferenceRef, String> { Ok(DatumSystemOrReferenceRef::from_any(idmap.get(as_ref_id(e, "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE.datum_system")?).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE.datum_system: dangling ref"))?).map_err(|e| format!("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE.datum_system: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE.datum_system: expected ref list, got {o:?}")) })?
     };
-    let it = &mut model.geometric_tolerance_with_datum_reference_arena.items[aid.0];
+    let it = &mut model.geometric_tolerance_with_datum_reference_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     it.datum_system = datum_system_v;
@@ -31821,7 +31788,7 @@ fn resolve_geometric_tolerance_with_defined_area_unit_arena(
             ),
         }
     };
-    let it = &mut model.geometric_tolerance_with_defined_area_unit_arena.items[aid.0];
+    let it = &mut model.geometric_tolerance_with_defined_area_unit_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     it.unit_size = unit_size_v;
@@ -31874,7 +31841,7 @@ fn resolve_geometric_tolerance_with_defined_unit_arena(
             .map_err(|e| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.unit_size: {e}"))?)
         })())?
     };
-    let it = &mut model.geometric_tolerance_with_defined_unit_arena.items[aid.0];
+    let it = &mut model.geometric_tolerance_with_defined_unit_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     it.unit_size = unit_size_v;
@@ -31922,7 +31889,7 @@ fn resolve_geometric_tolerance_with_maximum_tolerance_arena(
             Ok(LengthMeasureWithUnitRef::from_any(idmap.get(as_ref_id(a, "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.maximum_upper_tolerance")?).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.maximum_upper_tolerance: dangling ref"))?).map_err(|e| format!("GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.maximum_upper_tolerance: {e}"))?)
         })())?
     };
-    let it = &mut model.geometric_tolerance_with_maximum_tolerance_arena.items[aid.0];
+    let it = &mut model.geometric_tolerance_with_maximum_tolerance_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     it.maximum_upper_tolerance = maximum_upper_tolerance_v;
@@ -31968,7 +31935,7 @@ fn resolve_geometric_tolerance_with_modifiers_arena(
             Ok(GeometricToleranceTargetRef::from_any(idmap.get(as_ref_id(a, "GEOMETRIC_TOLERANCE_WITH_MODIFIERS.toleranced_shape_aspect")?).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS.toleranced_shape_aspect: dangling ref"))?).map_err(|e| format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS.toleranced_shape_aspect: {e}"))?)
         })())?
     };
-    let it = &mut model.geometric_tolerance_with_modifiers_arena.items[aid.0];
+    let it = &mut model.geometric_tolerance_with_modifiers_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     Ok(())
@@ -32000,7 +31967,7 @@ fn resolve_geometrically_bounded_surface_shape_representation_arena(
     };
     let it = &mut model
         .geometrically_bounded_surface_shape_representation_arena
-        .items[aid.0];
+        .items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -32032,7 +31999,7 @@ fn resolve_geometrically_bounded_wireframe_shape_representation_arena(
     };
     let it = &mut model
         .geometrically_bounded_wireframe_shape_representation_arena
-        .items[aid.0];
+        .items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -32048,7 +32015,7 @@ fn resolve_global_uncertainty_assigned_context_arena(
         let a = req(attrs, 2, "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty")?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<UncertaintyMeasureWithUnitRef, String> { Ok(UncertaintyMeasureWithUnitRef::from_any(idmap.get(as_ref_id(e, "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty")?).ok_or_else(|| format!("GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty: dangling ref"))?).map_err(|e| format!("GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty: expected ref list, got {o:?}")) })?
     };
-    let it = &mut model.global_uncertainty_assigned_context_arena.items[aid.0];
+    let it = &mut model.global_uncertainty_assigned_context_arena.items[aid.0 as usize];
     it.uncertainty = uncertainty_v;
     Ok(())
 }
@@ -32082,7 +32049,7 @@ fn resolve_global_unit_assigned_context_arena(
             )),
         })?
     };
-    let it = &mut model.global_unit_assigned_context_arena.items[aid.0];
+    let it = &mut model.global_unit_assigned_context_arena.items[aid.0 as usize];
     it.units = units_v;
     Ok(())
 }
@@ -32104,7 +32071,7 @@ fn resolve_group_assignment_arena(
             .map_err(|e| format!("GROUP_ASSIGNMENT.assigned_group: {e}"))?)
         })())?
     };
-    let it = &mut model.group_assignment_arena.items[aid.0];
+    let it = &mut model.group_assignment_arena.items[aid.0 as usize];
     it.assigned_group = assigned_group_v;
     Ok(())
 }
@@ -32126,7 +32093,7 @@ fn resolve_hyperbola_arena(
             .map_err(|e| format!("HYPERBOLA.position: {e}"))?)
         })())?
     };
-    let it = &mut model.hyperbola_arena.items[aid.0];
+    let it = &mut model.hyperbola_arena.items[aid.0 as usize];
     it.position = position_v;
     Ok(())
 }
@@ -32148,7 +32115,7 @@ fn resolve_id_attribute_arena(
             .map_err(|e| format!("ID_ATTRIBUTE.identified_item: {e}"))?)
         })())?
     };
-    let it = &mut model.id_attribute_arena.items[aid.0];
+    let it = &mut model.id_attribute_arena.items[aid.0 as usize];
     it.identified_item = identified_item_v;
     Ok(())
 }
@@ -32170,7 +32137,7 @@ fn resolve_identification_assignment_arena(
             .map_err(|e| format!("IDENTIFICATION_ASSIGNMENT.role: {e}"))?)
         })())?
     };
-    let it = &mut model.identification_assignment_arena.items[aid.0];
+    let it = &mut model.identification_assignment_arena.items[aid.0 as usize];
     it.role = role_v;
     Ok(())
 }
@@ -32215,7 +32182,7 @@ fn resolve_intersection_curve_arena(
             )),
         })?
     };
-    let it = &mut model.intersection_curve_arena.items[aid.0];
+    let it = &mut model.intersection_curve_arena.items[aid.0 as usize];
     it.curve_3d = curve_3d_v;
     it.associated_geometry = associated_geometry_v;
     Ok(())
@@ -32250,7 +32217,7 @@ fn resolve_invisibility_arena(
             )),
         })?
     };
-    let it = &mut model.invisibility_arena.items[aid.0];
+    let it = &mut model.invisibility_arena.items[aid.0 as usize];
     it.invisible_items = invisible_items_v;
     Ok(())
 }
@@ -32293,7 +32260,7 @@ fn resolve_item_defined_transformation_arena(
             .map_err(|e| format!("ITEM_DEFINED_TRANSFORMATION.transform_item_2: {e}"))?)
         })())?
     };
-    let it = &mut model.item_defined_transformation_arena.items[aid.0];
+    let it = &mut model.item_defined_transformation_arena.items[aid.0 as usize];
     it.transform_item_1 = transform_item_1_v;
     it.transform_item_2 = transform_item_2_v;
     Ok(())
@@ -32355,7 +32322,7 @@ fn resolve_item_identified_representation_usage_arena(
             Ok(match a { Attribute::Typed { type_name, value } if type_name == "LIST_REPRESENTATION_ITEM" => ItemIdentifiedRepresentationUsageSelectRef::ListRepresentationItem(match value.as_ref() { Attribute::List(l) => l.iter().map(|e| RepresentationItemRef::from_any(idmap.get(as_ref_id(e, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.identified_item")?).ok_or_else(|| format!("ITEM_IDENTIFIED_REPRESENTATION_USAGE.identified_item: dangling ref"))?)).collect::<Result<Vec<_>, String>>()?, o => return Err(format!("ITEM_IDENTIFIED_REPRESENTATION_USAGE.identified_item: agg list LIST_REPRESENTATION_ITEM: {o:?}")) }), Attribute::Typed { type_name, value } if type_name == "SET_REPRESENTATION_ITEM" => ItemIdentifiedRepresentationUsageSelectRef::SetRepresentationItem(match value.as_ref() { Attribute::List(l) => l.iter().map(|e| RepresentationItemRef::from_any(idmap.get(as_ref_id(e, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.identified_item")?).ok_or_else(|| format!("ITEM_IDENTIFIED_REPRESENTATION_USAGE.identified_item: dangling ref"))?)).collect::<Result<Vec<_>, String>>()?, o => return Err(format!("ITEM_IDENTIFIED_REPRESENTATION_USAGE.identified_item: agg list SET_REPRESENTATION_ITEM: {o:?}")) }), _ => ItemIdentifiedRepresentationUsageSelectRef::from_any(idmap.get(as_ref_id(a, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.identified_item")?).ok_or_else(|| format!("ITEM_IDENTIFIED_REPRESENTATION_USAGE.identified_item: dangling ref"))?).map_err(|e| format!("ITEM_IDENTIFIED_REPRESENTATION_USAGE.identified_item: {e}"))? })
         })())?
     };
-    let it = &mut model.item_identified_representation_usage_arena.items[aid.0];
+    let it = &mut model.item_identified_representation_usage_arena.items[aid.0 as usize];
     it.definition = definition_v;
     it.used_representation = used_representation_v;
     it.identified_item = identified_item_v;
@@ -32398,7 +32365,7 @@ fn resolve_leader_curve_arena(
             .map_err(|e| format!("LEADER_CURVE.item: {e}"))?)
         })())?
     };
-    let it = &mut model.leader_curve_arena.items[aid.0];
+    let it = &mut model.leader_curve_arena.items[aid.0 as usize];
     it.styles = styles_v;
     it.item = item_v;
     Ok(())
@@ -32433,7 +32400,7 @@ fn resolve_leader_directed_callout_arena(
             )),
         })?
     };
-    let it = &mut model.leader_directed_callout_arena.items[aid.0];
+    let it = &mut model.leader_directed_callout_arena.items[aid.0 as usize];
     it.contents = contents_v;
     Ok(())
 }
@@ -32487,7 +32454,7 @@ fn resolve_leader_terminator_arena(
             .map_err(|e| format!("LEADER_TERMINATOR.annotated_curve: {e}"))?)
         })())?
     };
-    let it = &mut model.leader_terminator_arena.items[aid.0];
+    let it = &mut model.leader_terminator_arena.items[aid.0 as usize];
     it.styles = styles_v;
     it.item = item_v;
     it.annotated_curve = annotated_curve_v;
@@ -32513,7 +32480,7 @@ fn resolve_length_measure_with_unit_arena(
             .map_err(|e| format!("LENGTH_MEASURE_WITH_UNIT.unit_component: {e}"))?)
         })())?
     };
-    let it = &mut model.length_measure_with_unit_arena.items[aid.0];
+    let it = &mut model.length_measure_with_unit_arena.items[aid.0 as usize];
     it.unit_component = unit_component_v;
     Ok(())
 }
@@ -32535,7 +32502,7 @@ fn resolve_length_unit_arena(
             .map_err(|e| format!("LENGTH_UNIT.dimensions: {e}"))?)
         })())?
     };
-    let it = &mut model.length_unit_arena.items[aid.0];
+    let it = &mut model.length_unit_arena.items[aid.0 as usize];
     it.dimensions = dimensions_v;
     Ok(())
 }
@@ -32568,7 +32535,7 @@ fn resolve_line_arena(
             .map_err(|e| format!("LINE.dir: {e}"))?)
         })())?
     };
-    let it = &mut model.line_arena.items[aid.0];
+    let it = &mut model.line_arena.items[aid.0 as usize];
     it.pnt = pnt_v;
     it.dir = dir_v;
     Ok(())
@@ -32614,7 +32581,7 @@ fn resolve_line_profile_tolerance_arena(
             .map_err(|e| format!("LINE_PROFILE_TOLERANCE.toleranced_shape_aspect: {e}"))?)
         })())?
     };
-    let it = &mut model.line_profile_tolerance_arena.items[aid.0];
+    let it = &mut model.line_profile_tolerance_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     Ok(())
@@ -32637,7 +32604,7 @@ fn resolve_local_time_arena(
             .map_err(|e| format!("LOCAL_TIME.zone: {e}"))?)
         })())?
     };
-    let it = &mut model.local_time_arena.items[aid.0];
+    let it = &mut model.local_time_arena.items[aid.0 as usize];
     it.zone = zone_v;
     Ok(())
 }
@@ -32699,7 +32666,7 @@ fn resolve_make_from_usage_option_arena(
             .map_err(|e| format!("MAKE_FROM_USAGE_OPTION.quantity: {e}"))?)
         })())?
     };
-    let it = &mut model.make_from_usage_option_arena.items[aid.0];
+    let it = &mut model.make_from_usage_option_arena.items[aid.0 as usize];
     it.relating_product_definition = relating_product_definition_v;
     it.related_product_definition = related_product_definition_v;
     it.quantity = quantity_v;
@@ -32723,7 +32690,7 @@ fn resolve_manifold_solid_brep_arena(
             .map_err(|e| format!("MANIFOLD_SOLID_BREP.outer: {e}"))?)
         })())?
     };
-    let it = &mut model.manifold_solid_brep_arena.items[aid.0];
+    let it = &mut model.manifold_solid_brep_arena.items[aid.0 as usize];
     it.outer = outer_v;
     Ok(())
 }
@@ -32781,7 +32748,7 @@ fn resolve_manifold_surface_shape_representation_arena(
             .map_err(|e| format!("MANIFOLD_SURFACE_SHAPE_REPRESENTATION.context_of_items: {e}"))?)
         })())?
     };
-    let it = &mut model.manifold_surface_shape_representation_arena.items[aid.0];
+    let it = &mut model.manifold_surface_shape_representation_arena.items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -32815,7 +32782,7 @@ fn resolve_mapped_item_arena(
             .map_err(|e| format!("MAPPED_ITEM.mapping_target: {e}"))?)
         })())?
     };
-    let it = &mut model.mapped_item_arena.items[aid.0];
+    let it = &mut model.mapped_item_arena.items[aid.0 as usize];
     it.mapping_source = mapping_source_v;
     it.mapping_target = mapping_target_v;
     Ok(())
@@ -32840,7 +32807,7 @@ fn resolve_mass_measure_with_unit_arena(
             .map_err(|e| format!("MASS_MEASURE_WITH_UNIT.unit_component: {e}"))?)
         })())?
     };
-    let it = &mut model.mass_measure_with_unit_arena.items[aid.0];
+    let it = &mut model.mass_measure_with_unit_arena.items[aid.0 as usize];
     it.unit_component = unit_component_v;
     Ok(())
 }
@@ -32862,7 +32829,7 @@ fn resolve_mass_unit_arena(
             .map_err(|e| format!("MASS_UNIT.dimensions: {e}"))?)
         })())?
     };
-    let it = &mut model.mass_unit_arena.items[aid.0];
+    let it = &mut model.mass_unit_arena.items[aid.0 as usize];
     it.dimensions = dimensions_v;
     Ok(())
 }
@@ -32909,7 +32876,7 @@ fn resolve_measure_qualification_arena(
             )),
         })?
     };
-    let it = &mut model.measure_qualification_arena.items[aid.0];
+    let it = &mut model.measure_qualification_arena.items[aid.0 as usize];
     it.qualified_measure = qualified_measure_v;
     it.qualifiers = qualifiers_v;
     Ok(())
@@ -32934,7 +32901,7 @@ fn resolve_measure_representation_item_arena(
             .map_err(|e| format!("MEASURE_REPRESENTATION_ITEM.unit_component: {e}"))?)
         })())?
     };
-    let it = &mut model.measure_representation_item_arena.items[aid.0];
+    let it = &mut model.measure_representation_item_arena.items[aid.0 as usize];
     it.unit_component = unit_component_v;
     Ok(())
 }
@@ -32956,7 +32923,7 @@ fn resolve_measure_with_unit_arena(
             .map_err(|e| format!("MEASURE_WITH_UNIT.unit_component: {e}"))?)
         })())?
     };
-    let it = &mut model.measure_with_unit_arena.items[aid.0];
+    let it = &mut model.measure_with_unit_arena.items[aid.0 as usize];
     it.unit_component = unit_component_v;
     Ok(())
 }
@@ -32980,7 +32947,7 @@ fn resolve_mechanical_context_arena(
             .map_err(|e| format!("MECHANICAL_CONTEXT.frame_of_reference: {e}"))?)
         })())?
     };
-    let it = &mut model.mechanical_context_arena.items[aid.0];
+    let it = &mut model.mechanical_context_arena.items[aid.0 as usize];
     it.frame_of_reference = frame_of_reference_v;
     Ok(())
 }
@@ -33041,7 +33008,7 @@ fn resolve_mechanical_design_and_draughting_relationship_arena(
     };
     let it = &mut model
         .mechanical_design_and_draughting_relationship_arena
-        .items[aid.0];
+        .items[aid.0 as usize];
     it.rep_1 = rep_1_v;
     it.rep_2 = rep_2_v;
     Ok(())
@@ -33073,7 +33040,7 @@ fn resolve_mechanical_design_geometric_presentation_representation_arena(
     };
     let it = &mut model
         .mechanical_design_geometric_presentation_representation_arena
-        .items[aid.0];
+        .items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -33105,7 +33072,7 @@ fn resolve_mechanical_design_presentation_representation_with_draughting_arena(
     };
     let it = &mut model
         .mechanical_design_presentation_representation_with_draughting_arena
-        .items[aid.0];
+        .items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -33137,7 +33104,7 @@ fn resolve_mechanical_design_shaded_presentation_representation_arena(
     };
     let it = &mut model
         .mechanical_design_shaded_presentation_representation_arena
-        .items[aid.0];
+        .items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -33171,7 +33138,7 @@ fn resolve_model_geometric_view_arena(
             .map_err(|e| format!("MODEL_GEOMETRIC_VIEW.rep: {e}"))?)
         })())?
     };
-    let it = &mut model.model_geometric_view_arena.items[aid.0];
+    let it = &mut model.model_geometric_view_arena.items[aid.0 as usize];
     it.item = item_v;
     it.rep = rep_v;
     Ok(())
@@ -33223,7 +33190,7 @@ fn resolve_modified_geometric_tolerance_arena(
             .map_err(|e| format!("MODIFIED_GEOMETRIC_TOLERANCE.toleranced_shape_aspect: {e}"))?)
         })())?
     };
-    let it = &mut model.modified_geometric_tolerance_arena.items[aid.0];
+    let it = &mut model.modified_geometric_tolerance_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     Ok(())
@@ -33246,7 +33213,7 @@ fn resolve_name_attribute_arena(
             .map_err(|e| format!("NAME_ATTRIBUTE.named_item: {e}"))?)
         })())?
     };
-    let it = &mut model.name_attribute_arena.items[aid.0];
+    let it = &mut model.name_attribute_arena.items[aid.0 as usize];
     it.named_item = named_item_v;
     Ok(())
 }
@@ -33273,7 +33240,7 @@ fn resolve_named_unit_arena(
             ),
         }
     };
-    let it = &mut model.named_unit_arena.items[aid.0];
+    let it = &mut model.named_unit_arena.items[aid.0 as usize];
     it.dimensions = dimensions_v;
     Ok(())
 }
@@ -33304,7 +33271,7 @@ fn resolve_next_assembly_usage_occurrence_arena(
             Ok(ProductDefinitionOrReferenceRef::from_any(idmap.get(as_ref_id(a, "NEXT_ASSEMBLY_USAGE_OCCURRENCE.related_product_definition")?).ok_or_else(|| format!("NEXT_ASSEMBLY_USAGE_OCCURRENCE.related_product_definition: dangling ref"))?).map_err(|e| format!("NEXT_ASSEMBLY_USAGE_OCCURRENCE.related_product_definition: {e}"))?)
         })())?
     };
-    let it = &mut model.next_assembly_usage_occurrence_arena.items[aid.0];
+    let it = &mut model.next_assembly_usage_occurrence_arena.items[aid.0 as usize];
     it.relating_product_definition = relating_product_definition_v;
     it.related_product_definition = related_product_definition_v;
     Ok(())
@@ -33327,7 +33294,7 @@ fn resolve_offset_surface_arena(
             .map_err(|e| format!("OFFSET_SURFACE.basis_surface: {e}"))?)
         })())?
     };
-    let it = &mut model.offset_surface_arena.items[aid.0];
+    let it = &mut model.offset_surface_arena.items[aid.0 as usize];
     it.basis_surface = basis_surface_v;
     Ok(())
 }
@@ -33351,7 +33318,7 @@ fn resolve_one_direction_repeat_factor_arena(
             .map_err(|e| format!("ONE_DIRECTION_REPEAT_FACTOR.repeat_factor: {e}"))?)
         })())?
     };
-    let it = &mut model.one_direction_repeat_factor_arena.items[aid.0];
+    let it = &mut model.one_direction_repeat_factor_arena.items[aid.0 as usize];
     it.repeat_factor = repeat_factor_v;
     Ok(())
 }
@@ -33383,7 +33350,7 @@ fn resolve_open_shell_arena(
             )),
         })?
     };
-    let it = &mut model.open_shell_arena.items[aid.0];
+    let it = &mut model.open_shell_arena.items[aid.0 as usize];
     it.cfs_faces = cfs_faces_v;
     Ok(())
 }
@@ -33426,7 +33393,7 @@ fn resolve_organization_relationship_arena(
             .map_err(|e| format!("ORGANIZATION_RELATIONSHIP.related_organization: {e}"))?)
         })())?
     };
-    let it = &mut model.organization_relationship_arena.items[aid.0];
+    let it = &mut model.organization_relationship_arena.items[aid.0 as usize];
     it.relating_organization = relating_organization_v;
     it.related_organization = related_organization_v;
     Ok(())
@@ -33461,7 +33428,7 @@ fn resolve_organizational_address_arena(
             )),
         })?
     };
-    let it = &mut model.organizational_address_arena.items[aid.0];
+    let it = &mut model.organizational_address_arena.items[aid.0 as usize];
     it.organizations = organizations_v;
     Ok(())
 }
@@ -33476,7 +33443,7 @@ fn resolve_organizational_project_arena(
         let a = req(attrs, 2, "ORGANIZATIONAL_PROJECT.responsible_organizations")?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<OrganizationRef, String> { Ok(OrganizationRef::from_any(idmap.get(as_ref_id(e, "ORGANIZATIONAL_PROJECT.responsible_organizations")?).ok_or_else(|| format!("ORGANIZATIONAL_PROJECT.responsible_organizations: dangling ref"))?).map_err(|e| format!("ORGANIZATIONAL_PROJECT.responsible_organizations: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("ORGANIZATIONAL_PROJECT.responsible_organizations: expected ref list, got {o:?}")) })?
     };
-    let it = &mut model.organizational_project_arena.items[aid.0];
+    let it = &mut model.organizational_project_arena.items[aid.0 as usize];
     it.responsible_organizations = responsible_organizations_v;
     Ok(())
 }
@@ -33507,7 +33474,7 @@ fn resolve_organizational_project_relationship_arena(
             Ok(OrganizationalProjectRef::from_any(idmap.get(as_ref_id(a, "ORGANIZATIONAL_PROJECT_RELATIONSHIP.related_organizational_project")?).ok_or_else(|| format!("ORGANIZATIONAL_PROJECT_RELATIONSHIP.related_organizational_project: dangling ref"))?).map_err(|e| format!("ORGANIZATIONAL_PROJECT_RELATIONSHIP.related_organizational_project: {e}"))?)
         })())?
     };
-    let it = &mut model.organizational_project_relationship_arena.items[aid.0];
+    let it = &mut model.organizational_project_relationship_arena.items[aid.0 as usize];
     it.relating_organizational_project = relating_organizational_project_v;
     it.related_organizational_project = related_organizational_project_v;
     Ok(())
@@ -33532,7 +33499,7 @@ fn resolve_oriented_closed_shell_arena(
             .map_err(|e| format!("ORIENTED_CLOSED_SHELL.closed_shell_element: {e}"))?)
         })())?
     };
-    let it = &mut model.oriented_closed_shell_arena.items[aid.0];
+    let it = &mut model.oriented_closed_shell_arena.items[aid.0 as usize];
     it.closed_shell_element = closed_shell_element_v;
     Ok(())
 }
@@ -33554,7 +33521,7 @@ fn resolve_oriented_edge_arena(
             .map_err(|e| format!("ORIENTED_EDGE.edge_element: {e}"))?)
         })())?
     };
-    let it = &mut model.oriented_edge_arena.items[aid.0];
+    let it = &mut model.oriented_edge_arena.items[aid.0 as usize];
     it.edge_element = edge_element_v;
     Ok(())
 }
@@ -33612,7 +33579,7 @@ fn resolve_over_riding_styled_item_arena(
             .map_err(|e| format!("OVER_RIDING_STYLED_ITEM.over_ridden_style: {e}"))?)
         })())?
     };
-    let it = &mut model.over_riding_styled_item_arena.items[aid.0];
+    let it = &mut model.over_riding_styled_item_arena.items[aid.0 as usize];
     it.styles = styles_v;
     it.item = item_v;
     it.over_ridden_style = over_ridden_style_v;
@@ -33682,7 +33649,7 @@ fn resolve_parallelism_tolerance_arena(
             )),
         })?
     };
-    let it = &mut model.parallelism_tolerance_arena.items[aid.0];
+    let it = &mut model.parallelism_tolerance_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     it.datum_system = datum_system_v;
@@ -33714,7 +33681,7 @@ fn resolve_path_arena(
             o => Err(format!("PATH.edge_list: expected ref list, got {o:?}")),
         })?
     };
-    let it = &mut model.path_arena.items[aid.0];
+    let it = &mut model.path_arena.items[aid.0 as usize];
     it.edge_list = edge_list_v;
     Ok(())
 }
@@ -33747,7 +33714,7 @@ fn resolve_pcurve_arena(
             .map_err(|e| format!("PCURVE.reference_to_curve: {e}"))?)
         })())?
     };
-    let it = &mut model.pcurve_arena.items[aid.0];
+    let it = &mut model.pcurve_arena.items[aid.0 as usize];
     it.basis_surface = basis_surface_v;
     it.reference_to_curve = reference_to_curve_v;
     Ok(())
@@ -33820,7 +33787,7 @@ fn resolve_perpendicularity_tolerance_arena(
             )),
         })?
     };
-    let it = &mut model.perpendicularity_tolerance_arena.items[aid.0];
+    let it = &mut model.perpendicularity_tolerance_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     it.datum_system = datum_system_v;
@@ -33857,7 +33824,7 @@ fn resolve_person_and_organization_arena(
             .map_err(|e| format!("PERSON_AND_ORGANIZATION.the_organization: {e}"))?)
         })())?
     };
-    let it = &mut model.person_and_organization_arena.items[aid.0];
+    let it = &mut model.person_and_organization_arena.items[aid.0 as usize];
     it.the_person = the_person_v;
     it.the_organization = the_organization_v;
     Ok(())
@@ -33896,7 +33863,7 @@ fn resolve_person_and_organization_address_arena(
             )),
         })?
     };
-    let it = &mut model.person_and_organization_address_arena.items[aid.0];
+    let it = &mut model.person_and_organization_address_arena.items[aid.0 as usize];
     it.organizations = organizations_v;
     it.people = people_v;
     Ok(())
@@ -33931,7 +33898,7 @@ fn resolve_person_and_organization_assignment_arena(
             .map_err(|e| format!("PERSON_AND_ORGANIZATION_ASSIGNMENT.role: {e}"))?)
         })())?
     };
-    let it = &mut model.person_and_organization_assignment_arena.items[aid.0];
+    let it = &mut model.person_and_organization_assignment_arena.items[aid.0 as usize];
     it.assigned_person_and_organization = assigned_person_and_organization_v;
     it.role = role_v;
     Ok(())
@@ -33964,7 +33931,7 @@ fn resolve_personal_address_arena(
             )),
         })?
     };
-    let it = &mut model.personal_address_arena.items[aid.0];
+    let it = &mut model.personal_address_arena.items[aid.0 as usize];
     it.people = people_v;
     Ok(())
 }
@@ -33986,7 +33953,7 @@ fn resolve_placed_datum_target_feature_arena(
             .map_err(|e| format!("PLACED_DATUM_TARGET_FEATURE.of_shape: {e}"))?)
         })())?
     };
-    let it = &mut model.placed_datum_target_feature_arena.items[aid.0];
+    let it = &mut model.placed_datum_target_feature_arena.items[aid.0 as usize];
     it.of_shape = of_shape_v;
     Ok(())
 }
@@ -34008,7 +33975,7 @@ fn resolve_placement_arena(
             .map_err(|e| format!("PLACEMENT.location: {e}"))?)
         })())?
     };
-    let it = &mut model.placement_arena.items[aid.0];
+    let it = &mut model.placement_arena.items[aid.0 as usize];
     it.location = location_v;
     Ok(())
 }
@@ -34030,7 +33997,7 @@ fn resolve_planar_box_arena(
             .map_err(|e| format!("PLANAR_BOX.placement: {e}"))?)
         })())?
     };
-    let it = &mut model.planar_box_arena.items[aid.0];
+    let it = &mut model.planar_box_arena.items[aid.0 as usize];
     it.placement = placement_v;
     Ok(())
 }
@@ -34052,7 +34019,7 @@ fn resolve_plane_arena(
             .map_err(|e| format!("PLANE.position: {e}"))?)
         })())?
     };
-    let it = &mut model.plane_arena.items[aid.0];
+    let it = &mut model.plane_arena.items[aid.0 as usize];
     it.position = position_v;
     Ok(())
 }
@@ -34079,7 +34046,7 @@ fn resolve_plane_angle_measure_with_unit_arena(
             .map_err(|e| format!("PLANE_ANGLE_MEASURE_WITH_UNIT.unit_component: {e}"))?)
         })())?
     };
-    let it = &mut model.plane_angle_measure_with_unit_arena.items[aid.0];
+    let it = &mut model.plane_angle_measure_with_unit_arena.items[aid.0 as usize];
     it.unit_component = unit_component_v;
     Ok(())
 }
@@ -34101,7 +34068,7 @@ fn resolve_plane_angle_unit_arena(
             .map_err(|e| format!("PLANE_ANGLE_UNIT.dimensions: {e}"))?)
         })())?
     };
-    let it = &mut model.plane_angle_unit_arena.items[aid.0];
+    let it = &mut model.plane_angle_unit_arena.items[aid.0 as usize];
     it.dimensions = dimensions_v;
     Ok(())
 }
@@ -34136,7 +34103,7 @@ fn resolve_plus_minus_tolerance_arena(
             .map_err(|e| format!("PLUS_MINUS_TOLERANCE.toleranced_dimension: {e}"))?)
         })())?
     };
-    let it = &mut model.plus_minus_tolerance_arena.items[aid.0];
+    let it = &mut model.plus_minus_tolerance_arena.items[aid.0 as usize];
     it.range = range_v;
     it.toleranced_dimension = toleranced_dimension_v;
     Ok(())
@@ -34228,7 +34195,7 @@ fn resolve_point_style_arena(
             ),
         }
     };
-    let it = &mut model.point_style_arena.items[aid.0];
+    let it = &mut model.point_style_arena.items[aid.0 as usize];
     it.marker = marker_v;
     it.marker_size = marker_size_v;
     it.marker_colour = marker_colour_v;
@@ -34260,7 +34227,7 @@ fn resolve_poly_loop_arena(
             o => Err(format!("POLY_LOOP.polygon: expected ref list, got {o:?}")),
         })?
     };
-    let it = &mut model.poly_loop_arena.items[aid.0];
+    let it = &mut model.poly_loop_arena.items[aid.0 as usize];
     it.polygon = polygon_v;
     Ok(())
 }
@@ -34290,7 +34257,7 @@ fn resolve_polyline_arena(
             o => Err(format!("POLYLINE.points: expected ref list, got {o:?}")),
         })?
     };
-    let it = &mut model.polyline_arena.items[aid.0];
+    let it = &mut model.polyline_arena.items[aid.0 as usize];
     it.points = points_v;
     Ok(())
 }
@@ -34330,7 +34297,7 @@ fn resolve_position_tolerance_arena(
             .map_err(|e| format!("POSITION_TOLERANCE.toleranced_shape_aspect: {e}"))?)
         })())?
     };
-    let it = &mut model.position_tolerance_arena.items[aid.0];
+    let it = &mut model.position_tolerance_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     Ok(())
@@ -34374,7 +34341,7 @@ fn resolve_presentation_area_arena(
             .map_err(|e| format!("PRESENTATION_AREA.context_of_items: {e}"))?)
         })())?
     };
-    let it = &mut model.presentation_area_arena.items[aid.0];
+    let it = &mut model.presentation_area_arena.items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -34416,7 +34383,7 @@ fn resolve_presentation_layer_assignment_arena(
             )),
         })?
     };
-    let it = &mut model.presentation_layer_assignment_arena.items[aid.0];
+    let it = &mut model.presentation_layer_assignment_arena.items[aid.0 as usize];
     it.assigned_items = assigned_items_v;
     Ok(())
 }
@@ -34466,7 +34433,7 @@ fn resolve_presentation_representation_arena(
             .map_err(|e| format!("PRESENTATION_REPRESENTATION.context_of_items: {e}"))?)
         })())?
     };
-    let it = &mut model.presentation_representation_arena.items[aid.0];
+    let it = &mut model.presentation_representation_arena.items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -34500,7 +34467,7 @@ fn resolve_presentation_size_arena(
             .map_err(|e| format!("PRESENTATION_SIZE.size: {e}"))?)
         })())?
     };
-    let it = &mut model.presentation_size_arena.items[aid.0];
+    let it = &mut model.presentation_size_arena.items[aid.0 as usize];
     it.unit = unit_v;
     it.size = size_v;
     Ok(())
@@ -34516,7 +34483,7 @@ fn resolve_presentation_style_assignment_arena(
         let a = req(attrs, 0, "PRESENTATION_STYLE_ASSIGNMENT.styles")?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<PresentationStyleSelectRef, String> { Ok(match e { Attribute::Typed { type_name, value } if type_name == "NULL_STYLE" => PresentationStyleSelectRef::NullStyle(match value.as_ref() { Attribute::Enum(s) => NullStyle::parse(s).ok_or_else(|| format!("PRESENTATION_STYLE_ASSIGNMENT.styles: bad enum NULL_STYLE {s:?}"))?, o => return Err(format!("PRESENTATION_STYLE_ASSIGNMENT.styles: enum NULL_STYLE: {o:?}")) }), _ => PresentationStyleSelectRef::from_any(idmap.get(as_ref_id(e, "PRESENTATION_STYLE_ASSIGNMENT.styles")?).ok_or_else(|| format!("PRESENTATION_STYLE_ASSIGNMENT.styles: dangling ref"))?).map_err(|e| format!("PRESENTATION_STYLE_ASSIGNMENT.styles: {e}"))? }) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("PRESENTATION_STYLE_ASSIGNMENT.styles: expected ref list, got {o:?}")) })?
     };
-    let it = &mut model.presentation_style_assignment_arena.items[aid.0];
+    let it = &mut model.presentation_style_assignment_arena.items[aid.0 as usize];
     it.styles = styles_v;
     Ok(())
 }
@@ -34544,7 +34511,7 @@ fn resolve_presentation_style_by_context_arena(
             .map_err(|e| format!("PRESENTATION_STYLE_BY_CONTEXT.style_context: {e}"))?)
         })())?
     };
-    let it = &mut model.presentation_style_by_context_arena.items[aid.0];
+    let it = &mut model.presentation_style_by_context_arena.items[aid.0 as usize];
     it.styles = styles_v;
     it.style_context = style_context_v;
     Ok(())
@@ -34588,7 +34555,7 @@ fn resolve_presentation_view_arena(
             .map_err(|e| format!("PRESENTATION_VIEW.context_of_items: {e}"))?)
         })())?
     };
-    let it = &mut model.presentation_view_arena.items[aid.0];
+    let it = &mut model.presentation_view_arena.items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -34624,7 +34591,7 @@ fn resolve_presented_item_representation_arena(
             .map_err(|e| format!("PRESENTED_ITEM_REPRESENTATION.item: {e}"))?)
         })())?
     };
-    let it = &mut model.presented_item_representation_arena.items[aid.0];
+    let it = &mut model.presented_item_representation_arena.items[aid.0 as usize];
     it.presentation = presentation_v;
     it.item = item_v;
     Ok(())
@@ -34659,7 +34626,7 @@ fn resolve_product_arena(
             )),
         })?
     };
-    let it = &mut model.product_arena.items[aid.0];
+    let it = &mut model.product_arena.items[aid.0 as usize];
     it.frame_of_reference = frame_of_reference_v;
     Ok(())
 }
@@ -34696,7 +34663,7 @@ fn resolve_product_category_relationship_arena(
             .map_err(|e| format!("PRODUCT_CATEGORY_RELATIONSHIP.sub_category: {e}"))?)
         })())?
     };
-    let it = &mut model.product_category_relationship_arena.items[aid.0];
+    let it = &mut model.product_category_relationship_arena.items[aid.0 as usize];
     it.category = category_v;
     it.sub_category = sub_category_v;
     Ok(())
@@ -34719,7 +34686,7 @@ fn resolve_product_concept_arena(
             .map_err(|e| format!("PRODUCT_CONCEPT.market_context: {e}"))?)
         })())?
     };
-    let it = &mut model.product_concept_arena.items[aid.0];
+    let it = &mut model.product_concept_arena.items[aid.0 as usize];
     it.market_context = market_context_v;
     Ok(())
 }
@@ -34743,7 +34710,7 @@ fn resolve_product_concept_context_arena(
             .map_err(|e| format!("PRODUCT_CONCEPT_CONTEXT.frame_of_reference: {e}"))?)
         })())?
     };
-    let it = &mut model.product_concept_context_arena.items[aid.0];
+    let it = &mut model.product_concept_context_arena.items[aid.0 as usize];
     it.frame_of_reference = frame_of_reference_v;
     Ok(())
 }
@@ -34765,7 +34732,7 @@ fn resolve_product_context_arena(
             .map_err(|e| format!("PRODUCT_CONTEXT.frame_of_reference: {e}"))?)
         })())?
     };
-    let it = &mut model.product_context_arena.items[aid.0];
+    let it = &mut model.product_context_arena.items[aid.0 as usize];
     it.frame_of_reference = frame_of_reference_v;
     Ok(())
 }
@@ -34800,7 +34767,7 @@ fn resolve_product_definition_arena(
             .map_err(|e| format!("PRODUCT_DEFINITION.frame_of_reference: {e}"))?)
         })())?
     };
-    let it = &mut model.product_definition_arena.items[aid.0];
+    let it = &mut model.product_definition_arena.items[aid.0 as usize];
     it.formation = formation_v;
     it.frame_of_reference = frame_of_reference_v;
     Ok(())
@@ -34828,7 +34795,7 @@ fn resolve_product_definition_context_arena(
             .map_err(|e| format!("PRODUCT_DEFINITION_CONTEXT.frame_of_reference: {e}"))?)
         })())?
     };
-    let it = &mut model.product_definition_context_arena.items[aid.0];
+    let it = &mut model.product_definition_context_arena.items[aid.0 as usize];
     it.frame_of_reference = frame_of_reference_v;
     Ok(())
 }
@@ -34882,7 +34849,7 @@ fn resolve_product_definition_context_association_arena(
             .map_err(|e| format!("PRODUCT_DEFINITION_CONTEXT_ASSOCIATION.role: {e}"))?)
         })())?
     };
-    let it = &mut model.product_definition_context_association_arena.items[aid.0];
+    let it = &mut model.product_definition_context_association_arena.items[aid.0 as usize];
     it.definition = definition_v;
     it.frame_of_reference = frame_of_reference_v;
     it.role = role_v;
@@ -34906,7 +34873,7 @@ fn resolve_product_definition_effectivity_arena(
             .map_err(|e| format!("PRODUCT_DEFINITION_EFFECTIVITY.usage: {e}"))?)
         })())?
     };
-    let it = &mut model.product_definition_effectivity_arena.items[aid.0];
+    let it = &mut model.product_definition_effectivity_arena.items[aid.0 as usize];
     it.usage = usage_v;
     Ok(())
 }
@@ -34930,7 +34897,7 @@ fn resolve_product_definition_formation_arena(
             .map_err(|e| format!("PRODUCT_DEFINITION_FORMATION.of_product: {e}"))?)
         })())?
     };
-    let it = &mut model.product_definition_formation_arena.items[aid.0];
+    let it = &mut model.product_definition_formation_arena.items[aid.0 as usize];
     it.of_product = of_product_v;
     Ok(())
 }
@@ -34953,7 +34920,7 @@ fn resolve_product_definition_formation_with_specified_source_arena(
     };
     let it = &mut model
         .product_definition_formation_with_specified_source_arena
-        .items[aid.0];
+        .items[aid.0 as usize];
     it.of_product = of_product_v;
     Ok(())
 }
@@ -35000,7 +34967,7 @@ fn resolve_product_definition_occurrence_arena(
             ),
         }
     };
-    let it = &mut model.product_definition_occurrence_arena.items[aid.0];
+    let it = &mut model.product_definition_occurrence_arena.items[aid.0 as usize];
     it.definition = definition_v;
     it.quantity = quantity_v;
     Ok(())
@@ -35032,7 +34999,7 @@ fn resolve_product_definition_relationship_arena(
             Ok(ProductDefinitionOrReferenceRef::from_any(idmap.get(as_ref_id(a, "PRODUCT_DEFINITION_RELATIONSHIP.related_product_definition")?).ok_or_else(|| format!("PRODUCT_DEFINITION_RELATIONSHIP.related_product_definition: dangling ref"))?).map_err(|e| format!("PRODUCT_DEFINITION_RELATIONSHIP.related_product_definition: {e}"))?)
         })())?
     };
-    let it = &mut model.product_definition_relationship_arena.items[aid.0];
+    let it = &mut model.product_definition_relationship_arena.items[aid.0 as usize];
     it.relating_product_definition = relating_product_definition_v;
     it.related_product_definition = related_product_definition_v;
     Ok(())
@@ -35090,7 +35057,7 @@ fn resolve_product_definition_relationship_relationship_arena(
     };
     let it = &mut model
         .product_definition_relationship_relationship_arena
-        .items[aid.0];
+        .items[aid.0 as usize];
     it.relating = relating_v;
     it.related = related_v;
     Ok(())
@@ -35113,7 +35080,7 @@ fn resolve_product_definition_shape_arena(
             .map_err(|e| format!("PRODUCT_DEFINITION_SHAPE.definition: {e}"))?)
         })())?
     };
-    let it = &mut model.product_definition_shape_arena.items[aid.0];
+    let it = &mut model.product_definition_shape_arena.items[aid.0 as usize];
     it.definition = definition_v;
     Ok(())
 }
@@ -35164,7 +35131,7 @@ fn resolve_product_definition_substitute_arena(
             .map_err(|e| format!("PRODUCT_DEFINITION_SUBSTITUTE.substitute_definition: {e}"))?)
         })())?
     };
-    let it = &mut model.product_definition_substitute_arena.items[aid.0];
+    let it = &mut model.product_definition_substitute_arena.items[aid.0 as usize];
     it.context_relationship = context_relationship_v;
     it.substitute_definition = substitute_definition_v;
     Ok(())
@@ -35218,7 +35185,7 @@ fn resolve_product_definition_usage_arena(
             .map_err(|e| format!("PRODUCT_DEFINITION_USAGE.related_product_definition: {e}"))?)
         })())?
     };
-    let it = &mut model.product_definition_usage_arena.items[aid.0];
+    let it = &mut model.product_definition_usage_arena.items[aid.0 as usize];
     it.relating_product_definition = relating_product_definition_v;
     it.related_product_definition = related_product_definition_v;
     Ok(())
@@ -35272,7 +35239,7 @@ fn resolve_product_definition_with_associated_documents_arena(
     };
     let it = &mut model
         .product_definition_with_associated_documents_arena
-        .items[aid.0];
+        .items[aid.0 as usize];
     it.formation = formation_v;
     it.frame_of_reference = frame_of_reference_v;
     it.documentation_ids = documentation_ids_v;
@@ -35310,7 +35277,7 @@ fn resolve_product_related_product_category_arena(
             )),
         })?
     };
-    let it = &mut model.product_related_product_category_arena.items[aid.0];
+    let it = &mut model.product_related_product_category_arena.items[aid.0 as usize];
     it.products = products_v;
     Ok(())
 }
@@ -35381,7 +35348,7 @@ fn resolve_projected_zone_definition_arena(
             .map_err(|e| format!("PROJECTED_ZONE_DEFINITION.projected_length: {e}"))?)
         })())?
     };
-    let it = &mut model.projected_zone_definition_arena.items[aid.0];
+    let it = &mut model.projected_zone_definition_arena.items[aid.0 as usize];
     it.zone = zone_v;
     it.boundaries = boundaries_v;
     it.projection_end = projection_end_v;
@@ -35406,7 +35373,7 @@ fn resolve_property_definition_arena(
             .map_err(|e| format!("PROPERTY_DEFINITION.definition: {e}"))?)
         })())?
     };
-    let it = &mut model.property_definition_arena.items[aid.0];
+    let it = &mut model.property_definition_arena.items[aid.0 as usize];
     it.definition = definition_v;
     Ok(())
 }
@@ -35437,7 +35404,7 @@ fn resolve_property_definition_relationship_arena(
             Ok(PropertyDefinitionRef::from_any(idmap.get(as_ref_id(a, "PROPERTY_DEFINITION_RELATIONSHIP.related_property_definition")?).ok_or_else(|| format!("PROPERTY_DEFINITION_RELATIONSHIP.related_property_definition: dangling ref"))?).map_err(|e| format!("PROPERTY_DEFINITION_RELATIONSHIP.related_property_definition: {e}"))?)
         })())?
     };
-    let it = &mut model.property_definition_relationship_arena.items[aid.0];
+    let it = &mut model.property_definition_relationship_arena.items[aid.0 as usize];
     it.relating_property_definition = relating_property_definition_v;
     it.related_property_definition = related_property_definition_v;
     Ok(())
@@ -35487,7 +35454,7 @@ fn resolve_property_definition_representation_arena(
             .map_err(|e| format!("PROPERTY_DEFINITION_REPRESENTATION.used_representation: {e}"))?)
         })())?
     };
-    let it = &mut model.property_definition_representation_arena.items[aid.0];
+    let it = &mut model.property_definition_representation_arena.items[aid.0 as usize];
     it.definition = definition_v;
     it.used_representation = used_representation_v;
     Ok(())
@@ -35524,7 +35491,7 @@ fn resolve_qualified_representation_item_arena(
             )),
         })?
     };
-    let it = &mut model.qualified_representation_item_arena.items[aid.0];
+    let it = &mut model.qualified_representation_item_arena.items[aid.0 as usize];
     it.qualifiers = qualifiers_v;
     Ok(())
 }
@@ -35558,7 +35525,7 @@ fn resolve_quasi_uniform_curve_arena(
             )),
         })?
     };
-    let it = &mut model.quasi_uniform_curve_arena.items[aid.0];
+    let it = &mut model.quasi_uniform_curve_arena.items[aid.0 as usize];
     it.control_points_list = control_points_list_v;
     Ok(())
 }
@@ -35573,7 +35540,7 @@ fn resolve_quasi_uniform_surface_arena(
         let a = req(attrs, 3, "QUASI_UNIFORM_SURFACE.control_points_list")?;
         (match a { Attribute::List(l) => l.iter().map(|e| match e { Attribute::List(l) => l.iter().map(|e| (|| -> Result<CartesianPointRef, String> { Ok(CartesianPointRef::from_any(idmap.get(as_ref_id(e, "QUASI_UNIFORM_SURFACE.control_points_list")?).ok_or_else(|| format!("QUASI_UNIFORM_SURFACE.control_points_list: dangling ref"))?).map_err(|e| format!("QUASI_UNIFORM_SURFACE.control_points_list: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("QUASI_UNIFORM_SURFACE.control_points_list: expected ref list, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("QUASI_UNIFORM_SURFACE.control_points_list: expected ref list, got {o:?}")) })?
     };
-    let it = &mut model.quasi_uniform_surface_arena.items[aid.0];
+    let it = &mut model.quasi_uniform_surface_arena.items[aid.0 as usize];
     it.control_points_list = control_points_list_v;
     Ok(())
 }
@@ -35597,7 +35564,7 @@ fn resolve_ratio_measure_with_unit_arena(
             .map_err(|e| format!("RATIO_MEASURE_WITH_UNIT.unit_component: {e}"))?)
         })())?
     };
-    let it = &mut model.ratio_measure_with_unit_arena.items[aid.0];
+    let it = &mut model.ratio_measure_with_unit_arena.items[aid.0 as usize];
     it.unit_component = unit_component_v;
     Ok(())
 }
@@ -35619,7 +35586,7 @@ fn resolve_ratio_unit_arena(
             .map_err(|e| format!("RATIO_UNIT.dimensions: {e}"))?)
         })())?
     };
-    let it = &mut model.ratio_unit_arena.items[aid.0];
+    let it = &mut model.ratio_unit_arena.items[aid.0 as usize];
     it.dimensions = dimensions_v;
     Ok(())
 }
@@ -35655,7 +35622,7 @@ fn resolve_rational_b_spline_curve_arena(
             )),
         })?
     };
-    let it = &mut model.rational_b_spline_curve_arena.items[aid.0];
+    let it = &mut model.rational_b_spline_curve_arena.items[aid.0 as usize];
     it.control_points_list = control_points_list_v;
     Ok(())
 }
@@ -35670,7 +35637,7 @@ fn resolve_rational_b_spline_surface_arena(
         let a = req(attrs, 3, "RATIONAL_B_SPLINE_SURFACE.control_points_list")?;
         (match a { Attribute::List(l) => l.iter().map(|e| match e { Attribute::List(l) => l.iter().map(|e| (|| -> Result<CartesianPointRef, String> { Ok(CartesianPointRef::from_any(idmap.get(as_ref_id(e, "RATIONAL_B_SPLINE_SURFACE.control_points_list")?).ok_or_else(|| format!("RATIONAL_B_SPLINE_SURFACE.control_points_list: dangling ref"))?).map_err(|e| format!("RATIONAL_B_SPLINE_SURFACE.control_points_list: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("RATIONAL_B_SPLINE_SURFACE.control_points_list: expected ref list, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("RATIONAL_B_SPLINE_SURFACE.control_points_list: expected ref list, got {o:?}")) })?
     };
-    let it = &mut model.rational_b_spline_surface_arena.items[aid.0];
+    let it = &mut model.rational_b_spline_surface_arena.items[aid.0 as usize];
     it.control_points_list = control_points_list_v;
     Ok(())
 }
@@ -35694,7 +35661,7 @@ fn resolve_repositioned_tessellated_item_arena(
             .map_err(|e| format!("REPOSITIONED_TESSELLATED_ITEM.location: {e}"))?)
         })())?
     };
-    let it = &mut model.repositioned_tessellated_item_arena.items[aid.0];
+    let it = &mut model.repositioned_tessellated_item_arena.items[aid.0 as usize];
     it.location = location_v;
     Ok(())
 }
@@ -35737,7 +35704,7 @@ fn resolve_representation_arena(
             .map_err(|e| format!("REPRESENTATION.context_of_items: {e}"))?)
         })())?
     };
-    let it = &mut model.representation_arena.items[aid.0];
+    let it = &mut model.representation_arena.items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -35773,7 +35740,7 @@ fn resolve_representation_map_arena(
             .map_err(|e| format!("REPRESENTATION_MAP.mapped_representation: {e}"))?)
         })())?
     };
-    let it = &mut model.representation_map_arena.items[aid.0];
+    let it = &mut model.representation_map_arena.items[aid.0 as usize];
     it.mapping_origin = mapping_origin_v;
     it.mapped_representation = mapped_representation_v;
     Ok(())
@@ -35798,7 +35765,7 @@ fn resolve_representation_reference_arena(
             .map_err(|e| format!("REPRESENTATION_REFERENCE.context_of_items: {e}"))?)
         })())?
     };
-    let it = &mut model.representation_reference_arena.items[aid.0];
+    let it = &mut model.representation_reference_arena.items[aid.0 as usize];
     it.context_of_items = context_of_items_v;
     Ok(())
 }
@@ -35831,7 +35798,7 @@ fn resolve_representation_relationship_arena(
             .map_err(|e| format!("REPRESENTATION_RELATIONSHIP.rep_2: {e}"))?)
         })())?
     };
-    let it = &mut model.representation_relationship_arena.items[aid.0];
+    let it = &mut model.representation_relationship_arena.items[aid.0 as usize];
     it.rep_1 = rep_1_v;
     it.rep_2 = rep_2_v;
     Ok(())
@@ -35899,7 +35866,7 @@ fn resolve_representation_relationship_with_transformation_arena(
     };
     let it = &mut model
         .representation_relationship_with_transformation_arena
-        .items[aid.0];
+        .items[aid.0 as usize];
     it.rep_1 = rep_1_v;
     it.rep_2 = rep_2_v;
     it.transformation_operator = transformation_operator_v;
@@ -35923,7 +35890,7 @@ fn resolve_resource_property_arena(
             .map_err(|e| format!("RESOURCE_PROPERTY.resource: {e}"))?)
         })())?
     };
-    let it = &mut model.resource_property_arena.items[aid.0];
+    let it = &mut model.resource_property_arena.items[aid.0 as usize];
     it.resource = resource_v;
     Ok(())
 }
@@ -35956,7 +35923,7 @@ fn resolve_role_association_arena(
             .map_err(|e| format!("ROLE_ASSOCIATION.item_with_role: {e}"))?)
         })())?
     };
-    let it = &mut model.role_association_arena.items[aid.0];
+    let it = &mut model.role_association_arena.items[aid.0 as usize];
     it.role = role_v;
     it.item_with_role = item_with_role_v;
     Ok(())
@@ -35999,7 +35966,7 @@ fn resolve_roundness_tolerance_arena(
             .map_err(|e| format!("ROUNDNESS_TOLERANCE.toleranced_shape_aspect: {e}"))?)
         })())?
     };
-    let it = &mut model.roundness_tolerance_arena.items[aid.0];
+    let it = &mut model.roundness_tolerance_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     Ok(())
@@ -36045,7 +36012,7 @@ fn resolve_seam_curve_arena(
             )),
         })?
     };
-    let it = &mut model.seam_curve_arena.items[aid.0];
+    let it = &mut model.seam_curve_arena.items[aid.0 as usize];
     it.curve_3d = curve_3d_v;
     it.associated_geometry = associated_geometry_v;
     Ok(())
@@ -36070,7 +36037,7 @@ fn resolve_security_classification_arena(
             .map_err(|e| format!("SECURITY_CLASSIFICATION.security_level: {e}"))?)
         })())?
     };
-    let it = &mut model.security_classification_arena.items[aid.0];
+    let it = &mut model.security_classification_arena.items[aid.0 as usize];
     it.security_level = security_level_v;
     Ok(())
 }
@@ -36091,7 +36058,7 @@ fn resolve_security_classification_assignment_arena(
             Ok(SecurityClassificationRef::from_any(idmap.get(as_ref_id(a, "SECURITY_CLASSIFICATION_ASSIGNMENT.assigned_security_classification")?).ok_or_else(|| format!("SECURITY_CLASSIFICATION_ASSIGNMENT.assigned_security_classification: dangling ref"))?).map_err(|e| format!("SECURITY_CLASSIFICATION_ASSIGNMENT.assigned_security_classification: {e}"))?)
         })())?
     };
-    let it = &mut model.security_classification_assignment_arena.items[aid.0];
+    let it = &mut model.security_classification_assignment_arena.items[aid.0 as usize];
     it.assigned_security_classification = assigned_security_classification_v;
     Ok(())
 }
@@ -36113,7 +36080,7 @@ fn resolve_shape_aspect_arena(
             .map_err(|e| format!("SHAPE_ASPECT.of_shape: {e}"))?)
         })())?
     };
-    let it = &mut model.shape_aspect_arena.items[aid.0];
+    let it = &mut model.shape_aspect_arena.items[aid.0 as usize];
     it.of_shape = of_shape_v;
     Ok(())
 }
@@ -36156,7 +36123,7 @@ fn resolve_shape_aspect_associativity_arena(
             .map_err(|e| format!("SHAPE_ASPECT_ASSOCIATIVITY.related_shape_aspect: {e}"))?)
         })())?
     };
-    let it = &mut model.shape_aspect_associativity_arena.items[aid.0];
+    let it = &mut model.shape_aspect_associativity_arena.items[aid.0 as usize];
     it.relating_shape_aspect = relating_shape_aspect_v;
     it.related_shape_aspect = related_shape_aspect_v;
     Ok(())
@@ -36214,7 +36181,7 @@ fn resolve_shape_aspect_deriving_relationship_arena(
             .map_err(|e| format!("SHAPE_ASPECT_DERIVING_RELATIONSHIP.related_shape_aspect: {e}"))?)
         })())?
     };
-    let it = &mut model.shape_aspect_deriving_relationship_arena.items[aid.0];
+    let it = &mut model.shape_aspect_deriving_relationship_arena.items[aid.0 as usize];
     it.relating_shape_aspect = relating_shape_aspect_v;
     it.related_shape_aspect = related_shape_aspect_v;
     Ok(())
@@ -36258,7 +36225,7 @@ fn resolve_shape_aspect_relationship_arena(
             .map_err(|e| format!("SHAPE_ASPECT_RELATIONSHIP.related_shape_aspect: {e}"))?)
         })())?
     };
-    let it = &mut model.shape_aspect_relationship_arena.items[aid.0];
+    let it = &mut model.shape_aspect_relationship_arena.items[aid.0 as usize];
     it.relating_shape_aspect = relating_shape_aspect_v;
     it.related_shape_aspect = related_shape_aspect_v;
     Ok(())
@@ -36303,7 +36270,7 @@ fn resolve_shape_definition_representation_arena(
             .map_err(|e| format!("SHAPE_DEFINITION_REPRESENTATION.used_representation: {e}"))?)
         })())?
     };
-    let it = &mut model.shape_definition_representation_arena.items[aid.0];
+    let it = &mut model.shape_definition_representation_arena.items[aid.0 as usize];
     it.definition = definition_v;
     it.used_representation = used_representation_v;
     Ok(())
@@ -36354,7 +36321,7 @@ fn resolve_shape_dimension_representation_arena(
             .map_err(|e| format!("SHAPE_DIMENSION_REPRESENTATION.context_of_items: {e}"))?)
         })())?
     };
-    let it = &mut model.shape_dimension_representation_arena.items[aid.0];
+    let it = &mut model.shape_dimension_representation_arena.items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -36402,7 +36369,7 @@ fn resolve_shape_representation_arena(
             .map_err(|e| format!("SHAPE_REPRESENTATION.context_of_items: {e}"))?)
         })())?
     };
-    let it = &mut model.shape_representation_arena.items[aid.0];
+    let it = &mut model.shape_representation_arena.items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -36440,7 +36407,7 @@ fn resolve_shape_representation_relationship_arena(
             .map_err(|e| format!("SHAPE_REPRESENTATION_RELATIONSHIP.rep_2: {e}"))?)
         })())?
     };
-    let it = &mut model.shape_representation_relationship_arena.items[aid.0];
+    let it = &mut model.shape_representation_relationship_arena.items[aid.0 as usize];
     it.rep_1 = rep_1_v;
     it.rep_2 = rep_2_v;
     Ok(())
@@ -36499,7 +36466,7 @@ fn resolve_shape_representation_with_parameters_arena(
             .map_err(|e| format!("SHAPE_REPRESENTATION_WITH_PARAMETERS.context_of_items: {e}"))?)
         })())?
     };
-    let it = &mut model.shape_representation_with_parameters_arena.items[aid.0];
+    let it = &mut model.shape_representation_with_parameters_arena.items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -36534,7 +36501,7 @@ fn resolve_shell_based_surface_model_arena(
             )),
         })?
     };
-    let it = &mut model.shell_based_surface_model_arena.items[aid.0];
+    let it = &mut model.shell_based_surface_model_arena.items[aid.0 as usize];
     it.sbsm_boundary = sbsm_boundary_v;
     Ok(())
 }
@@ -36545,7 +36512,7 @@ fn resolve_si_unit_arena(
     attrs: &[Attribute],
     idmap: &IdMap,
 ) -> Result<(), String> {
-    let it = &mut model.si_unit_arena.items[aid.0];
+    let it = &mut model.si_unit_arena.items[aid.0 as usize];
     Ok(())
 }
 
@@ -36566,7 +36533,7 @@ fn resolve_solid_angle_unit_arena(
             .map_err(|e| format!("SOLID_ANGLE_UNIT.dimensions: {e}"))?)
         })())?
     };
-    let it = &mut model.solid_angle_unit_arena.items[aid.0];
+    let it = &mut model.solid_angle_unit_arena.items[aid.0 as usize];
     it.dimensions = dimensions_v;
     Ok(())
 }
@@ -36588,7 +36555,7 @@ fn resolve_spherical_surface_arena(
             .map_err(|e| format!("SPHERICAL_SURFACE.position: {e}"))?)
         })())?
     };
-    let it = &mut model.spherical_surface_arena.items[aid.0];
+    let it = &mut model.spherical_surface_arena.items[aid.0 as usize];
     it.position = position_v;
     Ok(())
 }
@@ -36631,7 +36598,7 @@ fn resolve_start_request_arena(
             o => Err(format!("START_REQUEST.items: expected ref list, got {o:?}")),
         })?
     };
-    let it = &mut model.start_request_arena.items[aid.0];
+    let it = &mut model.start_request_arena.items[aid.0 as usize];
     it.assigned_action_request = assigned_action_request_v;
     it.items = items_v;
     Ok(())
@@ -36673,7 +36640,7 @@ fn resolve_start_work_arena(
             o => Err(format!("START_WORK.items: expected ref list, got {o:?}")),
         })?
     };
-    let it = &mut model.start_work_arena.items[aid.0];
+    let it = &mut model.start_work_arena.items[aid.0 as usize];
     it.assigned_action = assigned_action_v;
     it.items = items_v;
     Ok(())
@@ -36719,7 +36686,7 @@ fn resolve_straightness_tolerance_arena(
             .map_err(|e| format!("STRAIGHTNESS_TOLERANCE.toleranced_shape_aspect: {e}"))?)
         })())?
     };
-    let it = &mut model.straightness_tolerance_arena.items[aid.0];
+    let it = &mut model.straightness_tolerance_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     Ok(())
@@ -36761,7 +36728,7 @@ fn resolve_styled_item_arena(
             .map_err(|e| format!("STYLED_ITEM.item: {e}"))?)
         })())?
     };
-    let it = &mut model.styled_item_arena.items[aid.0];
+    let it = &mut model.styled_item_arena.items[aid.0 as usize];
     it.styles = styles_v;
     it.item = item_v;
     Ok(())
@@ -36807,7 +36774,7 @@ fn resolve_surface_curve_arena(
             )),
         })?
     };
-    let it = &mut model.surface_curve_arena.items[aid.0];
+    let it = &mut model.surface_curve_arena.items[aid.0 as usize];
     it.curve_3d = curve_3d_v;
     it.associated_geometry = associated_geometry_v;
     Ok(())
@@ -36845,7 +36812,7 @@ fn resolve_surface_of_linear_extrusion_arena(
             .map_err(|e| format!("SURFACE_OF_LINEAR_EXTRUSION.extrusion_axis: {e}"))?)
         })())?
     };
-    let it = &mut model.surface_of_linear_extrusion_arena.items[aid.0];
+    let it = &mut model.surface_of_linear_extrusion_arena.items[aid.0 as usize];
     it.swept_curve = swept_curve_v;
     it.extrusion_axis = extrusion_axis_v;
     Ok(())
@@ -36879,7 +36846,7 @@ fn resolve_surface_of_revolution_arena(
             .map_err(|e| format!("SURFACE_OF_REVOLUTION.axis_position: {e}"))?)
         })())?
     };
-    let it = &mut model.surface_of_revolution_arena.items[aid.0];
+    let it = &mut model.surface_of_revolution_arena.items[aid.0 as usize];
     it.swept_curve = swept_curve_v;
     it.axis_position = axis_position_v;
     Ok(())
@@ -36929,7 +36896,7 @@ fn resolve_surface_profile_tolerance_arena(
             .map_err(|e| format!("SURFACE_PROFILE_TOLERANCE.toleranced_shape_aspect: {e}"))?)
         })())?
     };
-    let it = &mut model.surface_profile_tolerance_arena.items[aid.0];
+    let it = &mut model.surface_profile_tolerance_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     Ok(())
@@ -36957,7 +36924,7 @@ fn resolve_surface_rendering_properties_arena(
             .map_err(|e| format!("SURFACE_RENDERING_PROPERTIES.rendered_colour: {e}"))?)
         })())?
     };
-    let it = &mut model.surface_rendering_properties_arena.items[aid.0];
+    let it = &mut model.surface_rendering_properties_arena.items[aid.0 as usize];
     it.rendered_colour = rendered_colour_v;
     Ok(())
 }
@@ -36991,7 +36958,7 @@ fn resolve_surface_side_style_arena(
             )),
         })?
     };
-    let it = &mut model.surface_side_style_arena.items[aid.0];
+    let it = &mut model.surface_side_style_arena.items[aid.0 as usize];
     it.styles = styles_v;
     Ok(())
 }
@@ -37015,7 +36982,7 @@ fn resolve_surface_style_boundary_arena(
             .map_err(|e| format!("SURFACE_STYLE_BOUNDARY.style_of_boundary: {e}"))?)
         })())?
     };
-    let it = &mut model.surface_style_boundary_arena.items[aid.0];
+    let it = &mut model.surface_style_boundary_arena.items[aid.0 as usize];
     it.style_of_boundary = style_of_boundary_v;
     Ok(())
 }
@@ -37042,7 +37009,7 @@ fn resolve_surface_style_control_grid_arena(
             .map_err(|e| format!("SURFACE_STYLE_CONTROL_GRID.style_of_control_grid: {e}"))?)
         })())?
     };
-    let it = &mut model.surface_style_control_grid_arena.items[aid.0];
+    let it = &mut model.surface_style_control_grid_arena.items[aid.0 as usize];
     it.style_of_control_grid = style_of_control_grid_v;
     Ok(())
 }
@@ -37064,7 +37031,7 @@ fn resolve_surface_style_fill_area_arena(
             .map_err(|e| format!("SURFACE_STYLE_FILL_AREA.fill_area: {e}"))?)
         })())?
     };
-    let it = &mut model.surface_style_fill_area_arena.items[aid.0];
+    let it = &mut model.surface_style_fill_area_arena.items[aid.0 as usize];
     it.fill_area = fill_area_v;
     Ok(())
 }
@@ -37097,7 +37064,7 @@ fn resolve_surface_style_parameter_line_arena(
             .map_err(|e| format!("SURFACE_STYLE_PARAMETER_LINE.style_of_parameter_lines: {e}"))?)
         })())?
     };
-    let it = &mut model.surface_style_parameter_line_arena.items[aid.0];
+    let it = &mut model.surface_style_parameter_line_arena.items[aid.0 as usize];
     it.style_of_parameter_lines = style_of_parameter_lines_v;
     Ok(())
 }
@@ -37121,7 +37088,7 @@ fn resolve_surface_style_rendering_arena(
             .map_err(|e| format!("SURFACE_STYLE_RENDERING.surface_colour: {e}"))?)
         })())?
     };
-    let it = &mut model.surface_style_rendering_arena.items[aid.0];
+    let it = &mut model.surface_style_rendering_arena.items[aid.0 as usize];
     it.surface_colour = surface_colour_v;
     Ok(())
 }
@@ -37162,7 +37129,7 @@ fn resolve_surface_style_rendering_with_properties_arena(
         )?;
         (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<RenderingPropertiesSelectRef, String> { Ok(RenderingPropertiesSelectRef::from_any(idmap.get(as_ref_id(e, "SURFACE_STYLE_RENDERING_WITH_PROPERTIES.properties")?).ok_or_else(|| format!("SURFACE_STYLE_RENDERING_WITH_PROPERTIES.properties: dangling ref"))?).map_err(|e| format!("SURFACE_STYLE_RENDERING_WITH_PROPERTIES.properties: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("SURFACE_STYLE_RENDERING_WITH_PROPERTIES.properties: expected ref list, got {o:?}")) })?
     };
-    let it = &mut model.surface_style_rendering_with_properties_arena.items[aid.0];
+    let it = &mut model.surface_style_rendering_with_properties_arena.items[aid.0 as usize];
     it.surface_colour = surface_colour_v;
     it.properties = properties_v;
     Ok(())
@@ -37184,7 +37151,7 @@ fn resolve_surface_style_segmentation_curve_arena(
             Ok(CurveOrRenderRef::from_any(idmap.get(as_ref_id(a, "SURFACE_STYLE_SEGMENTATION_CURVE.style_of_segmentation_curve")?).ok_or_else(|| format!("SURFACE_STYLE_SEGMENTATION_CURVE.style_of_segmentation_curve: dangling ref"))?).map_err(|e| format!("SURFACE_STYLE_SEGMENTATION_CURVE.style_of_segmentation_curve: {e}"))?)
         })())?
     };
-    let it = &mut model.surface_style_segmentation_curve_arena.items[aid.0];
+    let it = &mut model.surface_style_segmentation_curve_arena.items[aid.0 as usize];
     it.style_of_segmentation_curve = style_of_segmentation_curve_v;
     Ok(())
 }
@@ -37211,7 +37178,7 @@ fn resolve_surface_style_silhouette_arena(
             .map_err(|e| format!("SURFACE_STYLE_SILHOUETTE.style_of_silhouette: {e}"))?)
         })())?
     };
-    let it = &mut model.surface_style_silhouette_arena.items[aid.0];
+    let it = &mut model.surface_style_silhouette_arena.items[aid.0 as usize];
     it.style_of_silhouette = style_of_silhouette_v;
     Ok(())
 }
@@ -37233,7 +37200,7 @@ fn resolve_surface_style_usage_arena(
             .map_err(|e| format!("SURFACE_STYLE_USAGE.style: {e}"))?)
         })())?
     };
-    let it = &mut model.surface_style_usage_arena.items[aid.0];
+    let it = &mut model.surface_style_usage_arena.items[aid.0 as usize];
     it.style = style_v;
     Ok(())
 }
@@ -37255,7 +37222,7 @@ fn resolve_swept_surface_arena(
             .map_err(|e| format!("SWEPT_SURFACE.swept_curve: {e}"))?)
         })())?
     };
-    let it = &mut model.swept_surface_arena.items[aid.0];
+    let it = &mut model.swept_surface_arena.items[aid.0 as usize];
     it.swept_curve = swept_curve_v;
     Ok(())
 }
@@ -37277,7 +37244,7 @@ fn resolve_symbol_colour_arena(
             .map_err(|e| format!("SYMBOL_COLOUR.colour_of_symbol: {e}"))?)
         })())?
     };
-    let it = &mut model.symbol_colour_arena.items[aid.0];
+    let it = &mut model.symbol_colour_arena.items[aid.0 as usize];
     it.colour_of_symbol = colour_of_symbol_v;
     Ok(())
 }
@@ -37324,7 +37291,7 @@ fn resolve_symbol_representation_arena(
             .map_err(|e| format!("SYMBOL_REPRESENTATION.context_of_items: {e}"))?)
         })())?
     };
-    let it = &mut model.symbol_representation_arena.items[aid.0];
+    let it = &mut model.symbol_representation_arena.items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -37347,7 +37314,7 @@ fn resolve_symbol_style_arena(
             .map_err(|e| format!("SYMBOL_STYLE.style_of_symbol: {e}"))?)
         })())?
     };
-    let it = &mut model.symbol_style_arena.items[aid.0];
+    let it = &mut model.symbol_style_arena.items[aid.0 as usize];
     it.style_of_symbol = style_of_symbol_v;
     Ok(())
 }
@@ -37369,7 +37336,7 @@ fn resolve_symbol_target_arena(
             .map_err(|e| format!("SYMBOL_TARGET.placement: {e}"))?)
         })())?
     };
-    let it = &mut model.symbol_target_arena.items[aid.0];
+    let it = &mut model.symbol_target_arena.items[aid.0 as usize];
     it.placement = placement_v;
     Ok(())
 }
@@ -37432,7 +37399,7 @@ fn resolve_symmetry_tolerance_arena(
             )),
         })?
     };
-    let it = &mut model.symmetry_tolerance_arena.items[aid.0];
+    let it = &mut model.symmetry_tolerance_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     it.datum_system = datum_system_v;
@@ -37488,7 +37455,7 @@ fn resolve_terminator_symbol_arena(
             .map_err(|e| format!("TERMINATOR_SYMBOL.annotated_curve: {e}"))?)
         })())?
     };
-    let it = &mut model.terminator_symbol_arena.items[aid.0];
+    let it = &mut model.terminator_symbol_arena.items[aid.0 as usize];
     it.styles = styles_v;
     it.item = item_v;
     it.annotated_curve = annotated_curve_v;
@@ -37539,7 +37506,7 @@ fn resolve_tessellated_annotation_occurrence_arena(
             .map_err(|e| format!("TESSELLATED_ANNOTATION_OCCURRENCE.item: {e}"))?)
         })())?
     };
-    let it = &mut model.tessellated_annotation_occurrence_arena.items[aid.0];
+    let it = &mut model.tessellated_annotation_occurrence_arena.items[aid.0 as usize];
     it.styles = styles_v;
     it.item = item_v;
     Ok(())
@@ -37562,7 +37529,7 @@ fn resolve_tessellated_curve_set_arena(
             .map_err(|e| format!("TESSELLATED_CURVE_SET.coordinates: {e}"))?)
         })())?
     };
-    let it = &mut model.tessellated_curve_set_arena.items[aid.0];
+    let it = &mut model.tessellated_curve_set_arena.items[aid.0 as usize];
     it.coordinates = coordinates_v;
     Ok(())
 }
@@ -37602,7 +37569,7 @@ fn resolve_tessellated_face_arena(
             ),
         }
     };
-    let it = &mut model.tessellated_face_arena.items[aid.0];
+    let it = &mut model.tessellated_face_arena.items[aid.0 as usize];
     it.coordinates = coordinates_v;
     it.geometric_link = geometric_link_v;
     Ok(())
@@ -37637,7 +37604,7 @@ fn resolve_tessellated_geometric_set_arena(
             )),
         })?
     };
-    let it = &mut model.tessellated_geometric_set_arena.items[aid.0];
+    let it = &mut model.tessellated_geometric_set_arena.items[aid.0 as usize];
     it.children = children_v;
     Ok(())
 }
@@ -37691,7 +37658,7 @@ fn resolve_tessellated_shape_representation_arena(
             .map_err(|e| format!("TESSELLATED_SHAPE_REPRESENTATION.context_of_items: {e}"))?)
         })())?
     };
-    let it = &mut model.tessellated_shape_representation_arena.items[aid.0];
+    let it = &mut model.tessellated_shape_representation_arena.items[aid.0 as usize];
     it.items = items_v;
     it.context_of_items = context_of_items_v;
     Ok(())
@@ -37742,7 +37709,7 @@ fn resolve_tessellated_shell_arena(
             ),
         }
     };
-    let it = &mut model.tessellated_shell_arena.items[aid.0];
+    let it = &mut model.tessellated_shell_arena.items[aid.0 as usize];
     it.items = items_v;
     it.topological_link = topological_link_v;
     Ok(())
@@ -37793,7 +37760,7 @@ fn resolve_tessellated_solid_arena(
             ),
         }
     };
-    let it = &mut model.tessellated_solid_arena.items[aid.0];
+    let it = &mut model.tessellated_solid_arena.items[aid.0 as usize];
     it.items = items_v;
     it.geometric_link = geometric_link_v;
     Ok(())
@@ -37816,7 +37783,7 @@ fn resolve_tessellated_surface_set_arena(
             .map_err(|e| format!("TESSELLATED_SURFACE_SET.coordinates: {e}"))?)
         })())?
     };
-    let it = &mut model.tessellated_surface_set_arena.items[aid.0];
+    let it = &mut model.tessellated_surface_set_arena.items[aid.0 as usize];
     it.coordinates = coordinates_v;
     Ok(())
 }
@@ -37849,7 +37816,7 @@ fn resolve_text_literal_arena(
             .map_err(|e| format!("TEXT_LITERAL.font: {e}"))?)
         })())?
     };
-    let it = &mut model.text_literal_arena.items[aid.0];
+    let it = &mut model.text_literal_arena.items[aid.0 as usize];
     it.placement = placement_v;
     it.font = font_v;
     Ok(())
@@ -37872,7 +37839,7 @@ fn resolve_text_style_arena(
             .map_err(|e| format!("TEXT_STYLE.character_appearance: {e}"))?)
         })())?
     };
-    let it = &mut model.text_style_arena.items[aid.0];
+    let it = &mut model.text_style_arena.items[aid.0 as usize];
     it.character_appearance = character_appearance_v;
     Ok(())
 }
@@ -37896,7 +37863,7 @@ fn resolve_text_style_for_defined_font_arena(
             .map_err(|e| format!("TEXT_STYLE_FOR_DEFINED_FONT.text_colour: {e}"))?)
         })())?
     };
-    let it = &mut model.text_style_for_defined_font_arena.items[aid.0];
+    let it = &mut model.text_style_for_defined_font_arena.items[aid.0 as usize];
     it.text_colour = text_colour_v;
     Ok(())
 }
@@ -37931,7 +37898,7 @@ fn resolve_text_style_with_box_characteristics_arena(
             })?)
         })())?
     };
-    let it = &mut model.text_style_with_box_characteristics_arena.items[aid.0];
+    let it = &mut model.text_style_with_box_characteristics_arena.items[aid.0 as usize];
     it.character_appearance = character_appearance_v;
     Ok(())
 }
@@ -37953,7 +37920,7 @@ fn resolve_time_unit_arena(
             .map_err(|e| format!("TIME_UNIT.dimensions: {e}"))?)
         })())?
     };
-    let it = &mut model.time_unit_arena.items[aid.0];
+    let it = &mut model.time_unit_arena.items[aid.0 as usize];
     it.dimensions = dimensions_v;
     Ok(())
 }
@@ -37986,7 +37953,7 @@ fn resolve_tolerance_value_arena(
             .map_err(|e| format!("TOLERANCE_VALUE.upper_bound: {e}"))?)
         })())?
     };
-    let it = &mut model.tolerance_value_arena.items[aid.0];
+    let it = &mut model.tolerance_value_arena.items[aid.0 as usize];
     it.lower_bound = lower_bound_v;
     it.upper_bound = upper_bound_v;
     Ok(())
@@ -38043,7 +38010,7 @@ fn resolve_tolerance_zone_arena(
             .map_err(|e| format!("TOLERANCE_ZONE.form: {e}"))?)
         })())?
     };
-    let it = &mut model.tolerance_zone_arena.items[aid.0];
+    let it = &mut model.tolerance_zone_arena.items[aid.0 as usize];
     it.of_shape = of_shape_v;
     it.defining_tolerance = defining_tolerance_v;
     it.form = form_v;
@@ -38090,7 +38057,7 @@ fn resolve_tolerance_zone_definition_arena(
             )),
         })?
     };
-    let it = &mut model.tolerance_zone_definition_arena.items[aid.0];
+    let it = &mut model.tolerance_zone_definition_arena.items[aid.0 as usize];
     it.zone = zone_v;
     it.boundaries = boundaries_v;
     Ok(())
@@ -38167,7 +38134,7 @@ fn resolve_tolerance_zone_with_datum_arena(
             .map_err(|e| format!("TOLERANCE_ZONE_WITH_DATUM.datum_reference: {e}"))?)
         })())?
     };
-    let it = &mut model.tolerance_zone_with_datum_arena.items[aid.0];
+    let it = &mut model.tolerance_zone_with_datum_arena.items[aid.0 as usize];
     it.of_shape = of_shape_v;
     it.defining_tolerance = defining_tolerance_v;
     it.form = form_v;
@@ -38192,7 +38159,7 @@ fn resolve_toroidal_surface_arena(
             .map_err(|e| format!("TOROIDAL_SURFACE.position: {e}"))?)
         })())?
     };
-    let it = &mut model.toroidal_surface_arena.items[aid.0];
+    let it = &mut model.toroidal_surface_arena.items[aid.0 as usize];
     it.position = position_v;
     Ok(())
 }
@@ -38260,7 +38227,7 @@ fn resolve_total_runout_tolerance_arena(
             )),
         })?
     };
-    let it = &mut model.total_runout_tolerance_arena.items[aid.0];
+    let it = &mut model.total_runout_tolerance_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     it.datum_system = datum_system_v;
@@ -38348,7 +38315,7 @@ fn resolve_trimmed_curve_arena(
             )),
         })?
     };
-    let it = &mut model.trimmed_curve_arena.items[aid.0];
+    let it = &mut model.trimmed_curve_arena.items[aid.0 as usize];
     it.basis_curve = basis_curve_v;
     it.trim_1 = trim_1_v;
     it.trim_2 = trim_2_v;
@@ -38390,7 +38357,7 @@ fn resolve_two_direction_repeat_factor_arena(
             .map_err(|e| format!("TWO_DIRECTION_REPEAT_FACTOR.second_repeat_factor: {e}"))?)
         })())?
     };
-    let it = &mut model.two_direction_repeat_factor_arena.items[aid.0];
+    let it = &mut model.two_direction_repeat_factor_arena.items[aid.0 as usize];
     it.repeat_factor = repeat_factor_v;
     it.second_repeat_factor = second_repeat_factor_v;
     Ok(())
@@ -38418,7 +38385,7 @@ fn resolve_uncertainty_measure_with_unit_arena(
             .map_err(|e| format!("UNCERTAINTY_MEASURE_WITH_UNIT.unit_component: {e}"))?)
         })())?
     };
-    let it = &mut model.uncertainty_measure_with_unit_arena.items[aid.0];
+    let it = &mut model.uncertainty_measure_with_unit_arena.items[aid.0 as usize];
     it.unit_component = unit_component_v;
     Ok(())
 }
@@ -38472,7 +38439,7 @@ fn resolve_unequally_disposed_geometric_tolerance_arena(
             .map_err(|e| format!("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.displacement: {e}"))?)
         })())?
     };
-    let it = &mut model.unequally_disposed_geometric_tolerance_arena.items[aid.0];
+    let it = &mut model.unequally_disposed_geometric_tolerance_arena.items[aid.0 as usize];
     it.magnitude = magnitude_v;
     it.toleranced_shape_aspect = toleranced_shape_aspect_v;
     it.displacement = displacement_v;
@@ -38508,7 +38475,7 @@ fn resolve_uniform_curve_arena(
             )),
         })?
     };
-    let it = &mut model.uniform_curve_arena.items[aid.0];
+    let it = &mut model.uniform_curve_arena.items[aid.0 as usize];
     it.control_points_list = control_points_list_v;
     Ok(())
 }
@@ -38552,7 +38519,7 @@ fn resolve_uniform_surface_arena(
             )),
         })?
     };
-    let it = &mut model.uniform_surface_arena.items[aid.0];
+    let it = &mut model.uniform_surface_arena.items[aid.0 as usize];
     it.control_points_list = control_points_list_v;
     Ok(())
 }
@@ -38574,7 +38541,7 @@ fn resolve_vector_arena(
             .map_err(|e| format!("VECTOR.orientation: {e}"))?)
         })())?
     };
-    let it = &mut model.vector_arena.items[aid.0];
+    let it = &mut model.vector_arena.items[aid.0 as usize];
     it.orientation = orientation_v;
     Ok(())
 }
@@ -38596,7 +38563,7 @@ fn resolve_vertex_loop_arena(
             .map_err(|e| format!("VERTEX_LOOP.loop_vertex: {e}"))?)
         })())?
     };
-    let it = &mut model.vertex_loop_arena.items[aid.0];
+    let it = &mut model.vertex_loop_arena.items[aid.0 as usize];
     it.loop_vertex = loop_vertex_v;
     Ok(())
 }
@@ -38618,7 +38585,7 @@ fn resolve_vertex_point_arena(
             .map_err(|e| format!("VERTEX_POINT.vertex_geometry: {e}"))?)
         })())?
     };
-    let it = &mut model.vertex_point_arena.items[aid.0];
+    let it = &mut model.vertex_point_arena.items[aid.0 as usize];
     it.vertex_geometry = vertex_geometry_v;
     Ok(())
 }
@@ -38640,7 +38607,7 @@ fn resolve_vertex_shell_arena(
             .map_err(|e| format!("VERTEX_SHELL.vertex_shell_extent: {e}"))?)
         })())?
     };
-    let it = &mut model.vertex_shell_arena.items[aid.0];
+    let it = &mut model.vertex_shell_arena.items[aid.0 as usize];
     it.vertex_shell_extent = vertex_shell_extent_v;
     Ok(())
 }
@@ -38673,7 +38640,7 @@ fn resolve_view_volume_arena(
             .map_err(|e| format!("VIEW_VOLUME.view_window: {e}"))?)
         })())?
     };
-    let it = &mut model.view_volume_arena.items[aid.0];
+    let it = &mut model.view_volume_arena.items[aid.0 as usize];
     it.projection_point = projection_point_v;
     it.view_window = view_window_v;
     Ok(())
@@ -38706,7 +38673,7 @@ fn resolve_volume_unit_arena(
             )),
         })?
     };
-    let it = &mut model.volume_unit_arena.items[aid.0];
+    let it = &mut model.volume_unit_arena.items[aid.0 as usize];
     it.elements = elements_v;
     Ok(())
 }
@@ -38740,28 +38707,28 @@ fn resolve_wire_shell_arena(
             )),
         })?
     };
-    let it = &mut model.wire_shell_arena.items[aid.0];
+    let it = &mut model.wire_shell_arena.items[aid.0 as usize];
     it.wire_shell_extent = wire_shell_extent_v;
     Ok(())
 }
 
 fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, String> {
     parts.iter().map(|p| -> Result<UnitPart, String> { Ok(match p.name.as_str() {
-        "ACTION" => UnitPart::Action { name: (as_str(req(&p.attributes, 0, "ACTION.name")?, "ACTION.name"))?, description: match req(&p.attributes, 1, "ACTION.description")? { Attribute::Unset => None, other => Some((as_str(other, "ACTION.description"))?) }, chosen_method: ActionMethodRef::ActionMethod(ActionMethodId(usize::MAX)), },
+        "ACTION" => UnitPart::Action { name: (as_str(req(&p.attributes, 0, "ACTION.name")?, "ACTION.name"))?, description: match req(&p.attributes, 1, "ACTION.description")? { Attribute::Unset => None, other => Some((as_str(other, "ACTION.description"))?) }, chosen_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)), },
         "ACTION_METHOD" => UnitPart::ActionMethod { name: (as_str(req(&p.attributes, 0, "ACTION_METHOD.name")?, "ACTION_METHOD.name"))?, description: match req(&p.attributes, 1, "ACTION_METHOD.description")? { Attribute::Unset => None, other => Some((as_str(other, "ACTION_METHOD.description"))?) }, consequence: (as_str(req(&p.attributes, 2, "ACTION_METHOD.consequence")?, "ACTION_METHOD.consequence"))?, purpose: (as_str(req(&p.attributes, 3, "ACTION_METHOD.purpose")?, "ACTION_METHOD.purpose"))?, },
-        "ACTION_METHOD_RELATIONSHIP" => UnitPart::ActionMethodRelationship { name: (as_str(req(&p.attributes, 0, "ACTION_METHOD_RELATIONSHIP.name")?, "ACTION_METHOD_RELATIONSHIP.name"))?, description: match req(&p.attributes, 1, "ACTION_METHOD_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "ACTION_METHOD_RELATIONSHIP.description"))?) }, relating_method: ActionMethodRef::ActionMethod(ActionMethodId(usize::MAX)), related_method: ActionMethodRef::ActionMethod(ActionMethodId(usize::MAX)), },
-        "ACTION_RELATIONSHIP" => UnitPart::ActionRelationship { name: (as_str(req(&p.attributes, 0, "ACTION_RELATIONSHIP.name")?, "ACTION_RELATIONSHIP.name"))?, description: match req(&p.attributes, 1, "ACTION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "ACTION_RELATIONSHIP.description"))?) }, relating_action: ActionRef::Action(ActionId(usize::MAX)), related_action: ActionRef::Action(ActionId(usize::MAX)), },
-        "ACTION_REQUEST_ASSIGNMENT" => UnitPart::ActionRequestAssignment { assigned_action_request: VersionedActionRequestRef::VersionedActionRequest(VersionedActionRequestId(usize::MAX)), },
-        "ACTION_RESOURCE" => UnitPart::ActionResource { name: (as_str(req(&p.attributes, 0, "ACTION_RESOURCE.name")?, "ACTION_RESOURCE.name"))?, description: match req(&p.attributes, 1, "ACTION_RESOURCE.description")? { Attribute::Unset => None, other => Some((as_str(other, "ACTION_RESOURCE.description"))?) }, usage: Vec::new(), kind: ActionResourceTypeRef::ActionResourceType(ActionResourceTypeId(usize::MAX)), },
-        "ACTION_RESOURCE_REQUIREMENT" => UnitPart::ActionResourceRequirement { name: (as_str(req(&p.attributes, 0, "ACTION_RESOURCE_REQUIREMENT.name")?, "ACTION_RESOURCE_REQUIREMENT.name"))?, description: (as_str(req(&p.attributes, 1, "ACTION_RESOURCE_REQUIREMENT.description")?, "ACTION_RESOURCE_REQUIREMENT.description"))?, kind: ResourceRequirementTypeRef::ResourceRequirementType(ResourceRequirementTypeId(usize::MAX)), operations: Vec::new(), },
+        "ACTION_METHOD_RELATIONSHIP" => UnitPart::ActionMethodRelationship { name: (as_str(req(&p.attributes, 0, "ACTION_METHOD_RELATIONSHIP.name")?, "ACTION_METHOD_RELATIONSHIP.name"))?, description: match req(&p.attributes, 1, "ACTION_METHOD_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "ACTION_METHOD_RELATIONSHIP.description"))?) }, relating_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)), related_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)), },
+        "ACTION_RELATIONSHIP" => UnitPart::ActionRelationship { name: (as_str(req(&p.attributes, 0, "ACTION_RELATIONSHIP.name")?, "ACTION_RELATIONSHIP.name"))?, description: match req(&p.attributes, 1, "ACTION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "ACTION_RELATIONSHIP.description"))?) }, relating_action: ActionRef::Action(ActionId(u32::MAX)), related_action: ActionRef::Action(ActionId(u32::MAX)), },
+        "ACTION_REQUEST_ASSIGNMENT" => UnitPart::ActionRequestAssignment { assigned_action_request: VersionedActionRequestRef::VersionedActionRequest(VersionedActionRequestId(u32::MAX)), },
+        "ACTION_RESOURCE" => UnitPart::ActionResource { name: (as_str(req(&p.attributes, 0, "ACTION_RESOURCE.name")?, "ACTION_RESOURCE.name"))?, description: match req(&p.attributes, 1, "ACTION_RESOURCE.description")? { Attribute::Unset => None, other => Some((as_str(other, "ACTION_RESOURCE.description"))?) }, usage: Vec::new(), kind: ActionResourceTypeRef::ActionResourceType(ActionResourceTypeId(u32::MAX)), },
+        "ACTION_RESOURCE_REQUIREMENT" => UnitPart::ActionResourceRequirement { name: (as_str(req(&p.attributes, 0, "ACTION_RESOURCE_REQUIREMENT.name")?, "ACTION_RESOURCE_REQUIREMENT.name"))?, description: (as_str(req(&p.attributes, 1, "ACTION_RESOURCE_REQUIREMENT.description")?, "ACTION_RESOURCE_REQUIREMENT.description"))?, kind: ResourceRequirementTypeRef::ResourceRequirementType(ResourceRequirementTypeId(u32::MAX)), operations: Vec::new(), },
         "ADDRESS" => UnitPart::Address { internal_location: match req(&p.attributes, 0, "ADDRESS.internal_location")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.internal_location"))?) }, street_number: match req(&p.attributes, 1, "ADDRESS.street_number")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.street_number"))?) }, street: match req(&p.attributes, 2, "ADDRESS.street")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.street"))?) }, postal_box: match req(&p.attributes, 3, "ADDRESS.postal_box")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.postal_box"))?) }, town: match req(&p.attributes, 4, "ADDRESS.town")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.town"))?) }, region: match req(&p.attributes, 5, "ADDRESS.region")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.region"))?) }, postal_code: match req(&p.attributes, 6, "ADDRESS.postal_code")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.postal_code"))?) }, country: match req(&p.attributes, 7, "ADDRESS.country")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.country"))?) }, facsimile_number: match req(&p.attributes, 8, "ADDRESS.facsimile_number")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.facsimile_number"))?) }, telephone_number: match req(&p.attributes, 9, "ADDRESS.telephone_number")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.telephone_number"))?) }, electronic_mail_address: match req(&p.attributes, 10, "ADDRESS.electronic_mail_address")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.electronic_mail_address"))?) }, telex_number: match req(&p.attributes, 11, "ADDRESS.telex_number")? { Attribute::Unset => None, other => Some((as_str(other, "ADDRESS.telex_number"))?) }, },
         "ADVANCED_BREP_SHAPE_REPRESENTATION" => UnitPart::AdvancedBrepShapeRepresentation,
         "ADVANCED_FACE" => UnitPart::AdvancedFace,
         "ANNOTATION_CURVE_OCCURRENCE" => UnitPart::AnnotationCurveOccurrence,
-        "ANNOTATION_FILL_AREA_OCCURRENCE" => UnitPart::AnnotationFillAreaOccurrence { fill_style_target: PointRef::ApllPoint(ApllPointId(usize::MAX)), },
+        "ANNOTATION_FILL_AREA_OCCURRENCE" => UnitPart::AnnotationFillAreaOccurrence { fill_style_target: PointRef::ApllPoint(ApllPointId(u32::MAX)), },
         "ANNOTATION_OCCURRENCE" => UnitPart::AnnotationOccurrence,
         "ANNOTATION_OCCURRENCE_ASSOCIATIVITY" => UnitPart::AnnotationOccurrenceAssociativity,
-        "ANNOTATION_OCCURRENCE_RELATIONSHIP" => UnitPart::AnnotationOccurrenceRelationship { name: (as_str(req(&p.attributes, 0, "ANNOTATION_OCCURRENCE_RELATIONSHIP.name")?, "ANNOTATION_OCCURRENCE_RELATIONSHIP.name"))?, description: (as_str(req(&p.attributes, 1, "ANNOTATION_OCCURRENCE_RELATIONSHIP.description")?, "ANNOTATION_OCCURRENCE_RELATIONSHIP.description"))?, relating_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(usize::MAX)), related_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(usize::MAX)), },
+        "ANNOTATION_OCCURRENCE_RELATIONSHIP" => UnitPart::AnnotationOccurrenceRelationship { name: (as_str(req(&p.attributes, 0, "ANNOTATION_OCCURRENCE_RELATIONSHIP.name")?, "ANNOTATION_OCCURRENCE_RELATIONSHIP.name"))?, description: (as_str(req(&p.attributes, 1, "ANNOTATION_OCCURRENCE_RELATIONSHIP.description")?, "ANNOTATION_OCCURRENCE_RELATIONSHIP.description"))?, relating_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(u32::MAX)), related_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(u32::MAX)), },
         "ANNOTATION_PLACEHOLDER_OCCURRENCE" => UnitPart::AnnotationPlaceholderOccurrence { role: (match req(&p.attributes, 0, "ANNOTATION_PLACEHOLDER_OCCURRENCE.role")? { Attribute::Enum(s) => AnnotationPlaceholderOccurrenceRole::parse(s).ok_or_else(|| format!("ANNOTATION_PLACEHOLDER_OCCURRENCE.role: bad enum {s:?}")), o => Err(format!("ANNOTATION_PLACEHOLDER_OCCURRENCE.role: expected enum, got {o:?}")) })?, line_spacing: (as_real(req(&p.attributes, 1, "ANNOTATION_PLACEHOLDER_OCCURRENCE.line_spacing")?, "ANNOTATION_PLACEHOLDER_OCCURRENCE.line_spacing"))?, },
         "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE" => UnitPart::AnnotationPlaceholderOccurrenceWithLeaderLine { leader_line: Vec::new(), },
         "ANNOTATION_PLANE" => UnitPart::AnnotationPlane { elements: None, },
@@ -38770,7 +38737,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "ANNOTATION_TEXT" => UnitPart::AnnotationText,
         "ANNOTATION_TEXT_CHARACTER" => UnitPart::AnnotationTextCharacter { alignment: (as_str(req(&p.attributes, 0, "ANNOTATION_TEXT_CHARACTER.alignment")?, "ANNOTATION_TEXT_CHARACTER.alignment"))?, },
         "ANNOTATION_TEXT_OCCURRENCE" => UnitPart::AnnotationTextOccurrence,
-        "APPLICATION_CONTEXT_ELEMENT" => UnitPart::ApplicationContextElement { name: (as_str(req(&p.attributes, 0, "APPLICATION_CONTEXT_ELEMENT.name")?, "APPLICATION_CONTEXT_ELEMENT.name"))?, frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(usize::MAX)), },
+        "APPLICATION_CONTEXT_ELEMENT" => UnitPart::ApplicationContextElement { name: (as_str(req(&p.attributes, 0, "APPLICATION_CONTEXT_ELEMENT.name")?, "APPLICATION_CONTEXT_ELEMENT.name"))?, frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(u32::MAX)), },
         "APPLIED_APPROVAL_ASSIGNMENT" => UnitPart::AppliedApprovalAssignment { items: Vec::new(), },
         "APPLIED_DATE_AND_TIME_ASSIGNMENT" => UnitPart::AppliedDateAndTimeAssignment { items: Vec::new(), },
         "APPLIED_DOCUMENT_REFERENCE" => UnitPart::AppliedDocumentReference { items: Vec::new(), },
@@ -38779,9 +38746,9 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT" => UnitPart::AppliedPersonAndOrganizationAssignment { items: Vec::new(), },
         "APPLIED_PRESENTED_ITEM" => UnitPart::AppliedPresentedItem { items: Vec::new(), },
         "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT" => UnitPart::AppliedSecurityClassificationAssignment { items: Vec::new(), },
-        "APPROVAL_ASSIGNMENT" => UnitPart::ApprovalAssignment { assigned_approval: ApprovalRef::Approval(ApprovalId(usize::MAX)), },
-        "AREA_IN_SET" => UnitPart::AreaInSet { area: PresentationAreaRef::PresentationArea(PresentationAreaId(usize::MAX)), in_set: PresentationSetRef::PresentationSet(PresentationSetId(usize::MAX)), },
-        "ASCRIBABLE_STATE_RELATIONSHIP" => UnitPart::AscribableStateRelationship { name: (as_str(req(&p.attributes, 0, "ASCRIBABLE_STATE_RELATIONSHIP.name")?, "ASCRIBABLE_STATE_RELATIONSHIP.name"))?, description: match req(&p.attributes, 1, "ASCRIBABLE_STATE_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "ASCRIBABLE_STATE_RELATIONSHIP.description"))?) }, relating_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(usize::MAX)), related_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(usize::MAX)), },
+        "APPROVAL_ASSIGNMENT" => UnitPart::ApprovalAssignment { assigned_approval: ApprovalRef::Approval(ApprovalId(u32::MAX)), },
+        "AREA_IN_SET" => UnitPart::AreaInSet { area: PresentationAreaRef::PresentationArea(PresentationAreaId(u32::MAX)), in_set: PresentationSetRef::PresentationSet(PresentationSetId(u32::MAX)), },
+        "ASCRIBABLE_STATE_RELATIONSHIP" => UnitPart::AscribableStateRelationship { name: (as_str(req(&p.attributes, 0, "ASCRIBABLE_STATE_RELATIONSHIP.name")?, "ASCRIBABLE_STATE_RELATIONSHIP.name"))?, description: match req(&p.attributes, 1, "ASCRIBABLE_STATE_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "ASCRIBABLE_STATE_RELATIONSHIP.description"))?) }, relating_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(u32::MAX)), related_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(u32::MAX)), },
         "ASSEMBLY_COMPONENT_USAGE" => UnitPart::AssemblyComponentUsage { reference_designator: match req(&p.attributes, 0, "ASSEMBLY_COMPONENT_USAGE.reference_designator")? { Attribute::Unset => None, other => Some((as_str(other, "ASSEMBLY_COMPONENT_USAGE.reference_designator"))?) }, },
         "B_SPLINE_CURVE" => UnitPart::BSplineCurve { degree: (as_int(req(&p.attributes, 0, "B_SPLINE_CURVE.degree")?, "B_SPLINE_CURVE.degree"))?, control_points_list: Vec::new(), curve_form: (match req(&p.attributes, 2, "B_SPLINE_CURVE.curve_form")? { Attribute::Enum(s) => BSplineCurveForm::parse(s).ok_or_else(|| format!("B_SPLINE_CURVE.curve_form: bad enum {s:?}")), o => Err(format!("B_SPLINE_CURVE.curve_form: expected enum, got {o:?}")) })?, closed_curve: (as_logical(req(&p.attributes, 3, "B_SPLINE_CURVE.closed_curve")?, "B_SPLINE_CURVE.closed_curve"))?, self_intersect: (as_logical(req(&p.attributes, 4, "B_SPLINE_CURVE.self_intersect")?, "B_SPLINE_CURVE.self_intersect"))?, },
         "B_SPLINE_CURVE_WITH_KNOTS" => UnitPart::BSplineCurveWithKnots { knot_multiplicities: (match req(&p.attributes, 0, "B_SPLINE_CURVE_WITH_KNOTS.knot_multiplicities")? { Attribute::List(l) => l.iter().map(|e| as_int(e, "B_SPLINE_CURVE_WITH_KNOTS.knot_multiplicities")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_CURVE_WITH_KNOTS.knot_multiplicities: expected list, got {o:?}")) })?, knots: (match req(&p.attributes, 1, "B_SPLINE_CURVE_WITH_KNOTS.knots")? { Attribute::List(l) => l.iter().map(|e| as_real(e, "B_SPLINE_CURVE_WITH_KNOTS.knots")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_CURVE_WITH_KNOTS.knots: expected list, got {o:?}")) })?, knot_spec: (match req(&p.attributes, 2, "B_SPLINE_CURVE_WITH_KNOTS.knot_spec")? { Attribute::Enum(s) => KnotType::parse(s).ok_or_else(|| format!("B_SPLINE_CURVE_WITH_KNOTS.knot_spec: bad enum {s:?}")), o => Err(format!("B_SPLINE_CURVE_WITH_KNOTS.knot_spec: expected enum, got {o:?}")) })?, },
@@ -38797,7 +38764,7 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "CAMERA_IMAGE" => UnitPart::CameraImage,
         "CAMERA_IMAGE_3D_WITH_SCALE" => UnitPart::CameraImage3dWithScale,
         "CAMERA_MODEL" => UnitPart::CameraModel,
-        "CAMERA_MODEL_D3" => UnitPart::CameraModelD3 { view_reference_system: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)), perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(usize::MAX)), },
+        "CAMERA_MODEL_D3" => UnitPart::CameraModelD3 { view_reference_system: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)), perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(u32::MAX)), },
         "CAMERA_MODEL_D3_MULTI_CLIPPING" => UnitPart::CameraModelD3MultiClipping { shape_clipping: Vec::new(), },
         "CAMERA_MODEL_D3_WITH_HLHSR" => UnitPart::CameraModelD3WithHlhsr { hidden_line_surface_removal: (Ok::<bool, String>(matches!(req(&p.attributes, 0, "CAMERA_MODEL_D3_WITH_HLHSR.hidden_line_surface_removal")?, Attribute::Enum(s) if s == "T")))?, },
         "CAMERA_USAGE" => UnitPart::CameraUsage,
@@ -38806,9 +38773,9 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT" => UnitPart::CcDesignPersonAndOrganizationAssignment { items: Vec::new(), },
         "CC_DESIGN_SECURITY_CLASSIFICATION" => UnitPart::CcDesignSecurityClassification { items: Vec::new(), },
         "CHANGE_REQUEST" => UnitPart::ChangeRequest { items: Vec::new(), },
-        "CHARACTER_GLYPH_STYLE_OUTLINE" => UnitPart::CharacterGlyphStyleOutline { outline_style: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)), },
-        "CHARACTER_GLYPH_STYLE_STROKE" => UnitPart::CharacterGlyphStyleStroke { stroke_style: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)), },
-        "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION" => UnitPart::CharacterizedItemWithinRepresentation { item: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)), rep: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)), },
+        "CHARACTER_GLYPH_STYLE_OUTLINE" => UnitPart::CharacterGlyphStyleOutline { outline_style: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)), },
+        "CHARACTER_GLYPH_STYLE_STROKE" => UnitPart::CharacterGlyphStyleStroke { stroke_style: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)), },
+        "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION" => UnitPart::CharacterizedItemWithinRepresentation { item: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), rep: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
         "CHARACTERIZED_OBJECT" => UnitPart::CharacterizedObject { name: match req(&p.attributes, 0, "CHARACTERIZED_OBJECT.name")? { Attribute::Derived => None, other => Some((as_str(other, "CHARACTERIZED_OBJECT.name"))?) }, description: match req(&p.attributes, 1, "CHARACTERIZED_OBJECT.description")? { Attribute::Derived => None, other => Some((as_str(other, "CHARACTERIZED_OBJECT.description"))?) }, },
         "CHARACTERIZED_REPRESENTATION" => UnitPart::CharacterizedRepresentation,
         "CIRCULAR_RUNOUT_TOLERANCE" => UnitPart::CircularRunoutTolerance,
@@ -38818,30 +38785,30 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "COLOUR_SPECIFICATION" => UnitPart::ColourSpecification { name: (as_str(req(&p.attributes, 0, "COLOUR_SPECIFICATION.name")?, "COLOUR_SPECIFICATION.name"))?, },
         "COMMON_DATUM" => UnitPart::CommonDatum,
         "COMPOSITE_CURVE" => UnitPart::CompositeCurve { segments: Vec::new(), self_intersect: (as_logical(req(&p.attributes, 1, "COMPOSITE_CURVE.self_intersect")?, "COMPOSITE_CURVE.self_intersect"))?, },
-        "COMPOSITE_CURVE_SEGMENT" => UnitPart::CompositeCurveSegment { transition: (match req(&p.attributes, 0, "COMPOSITE_CURVE_SEGMENT.transition")? { Attribute::Enum(s) => TransitionCode::parse(s).ok_or_else(|| format!("COMPOSITE_CURVE_SEGMENT.transition: bad enum {s:?}")), o => Err(format!("COMPOSITE_CURVE_SEGMENT.transition: expected enum, got {o:?}")) })?, same_sense: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "COMPOSITE_CURVE_SEGMENT.same_sense")?, Attribute::Enum(s) if s == "T")))?, parent_curve: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)), },
+        "COMPOSITE_CURVE_SEGMENT" => UnitPart::CompositeCurveSegment { transition: (match req(&p.attributes, 0, "COMPOSITE_CURVE_SEGMENT.transition")? { Attribute::Enum(s) => TransitionCode::parse(s).ok_or_else(|| format!("COMPOSITE_CURVE_SEGMENT.transition: bad enum {s:?}")), o => Err(format!("COMPOSITE_CURVE_SEGMENT.transition: expected enum, got {o:?}")) })?, same_sense: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "COMPOSITE_CURVE_SEGMENT.same_sense")?, Attribute::Enum(s) if s == "T")))?, parent_curve: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)), },
         "COMPOSITE_GROUP_SHAPE_ASPECT" => UnitPart::CompositeGroupShapeAspect,
         "COMPOSITE_SHAPE_ASPECT" => UnitPart::CompositeShapeAspect,
         "COMPOSITE_TEXT" => UnitPart::CompositeText { collected_text: Vec::new(), },
-        "COMPOUND_REPRESENTATION_ITEM" => UnitPart::CompoundRepresentationItem { item_element: CompoundItemDefinitionRef::AdvancedFace(AdvancedFaceId(usize::MAX)), },
-        "CONFIGURATION_EFFECTIVITY" => UnitPart::ConfigurationEffectivity { configuration: ConfigurationDesignRef::ConfigurationDesign(ConfigurationDesignId(usize::MAX)), },
-        "CONFIGURATION_ITEM" => UnitPart::ConfigurationItem { id: (as_str(req(&p.attributes, 0, "CONFIGURATION_ITEM.id")?, "CONFIGURATION_ITEM.id"))?, name: (as_str(req(&p.attributes, 1, "CONFIGURATION_ITEM.name")?, "CONFIGURATION_ITEM.name"))?, description: match req(&p.attributes, 2, "CONFIGURATION_ITEM.description")? { Attribute::Unset => None, other => Some((as_str(other, "CONFIGURATION_ITEM.description"))?) }, item_concept: ProductConceptRef::ProductConcept(ProductConceptId(usize::MAX)), purpose: match req(&p.attributes, 4, "CONFIGURATION_ITEM.purpose")? { Attribute::Unset => None, other => Some((as_str(other, "CONFIGURATION_ITEM.purpose"))?) }, },
+        "COMPOUND_REPRESENTATION_ITEM" => UnitPart::CompoundRepresentationItem { item_element: CompoundItemDefinitionRef::AdvancedFace(AdvancedFaceId(u32::MAX)), },
+        "CONFIGURATION_EFFECTIVITY" => UnitPart::ConfigurationEffectivity { configuration: ConfigurationDesignRef::ConfigurationDesign(ConfigurationDesignId(u32::MAX)), },
+        "CONFIGURATION_ITEM" => UnitPart::ConfigurationItem { id: (as_str(req(&p.attributes, 0, "CONFIGURATION_ITEM.id")?, "CONFIGURATION_ITEM.id"))?, name: (as_str(req(&p.attributes, 1, "CONFIGURATION_ITEM.name")?, "CONFIGURATION_ITEM.name"))?, description: match req(&p.attributes, 2, "CONFIGURATION_ITEM.description")? { Attribute::Unset => None, other => Some((as_str(other, "CONFIGURATION_ITEM.description"))?) }, item_concept: ProductConceptRef::ProductConcept(ProductConceptId(u32::MAX)), purpose: match req(&p.attributes, 4, "CONFIGURATION_ITEM.purpose")? { Attribute::Unset => None, other => Some((as_str(other, "CONFIGURATION_ITEM.purpose"))?) }, },
         "CONNECTED_FACE_SET" => UnitPart::ConnectedFaceSet { cfs_faces: None, },
         "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP" => UnitPart::ConstructiveGeometryRepresentationRelationship,
         "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => UnitPart::ContextDependentOverRidingStyledItem { style_context: Vec::new(), },
         "CONTEXT_DEPENDENT_UNIT" => UnitPart::ContextDependentUnit { name: (as_str(req(&p.attributes, 0, "CONTEXT_DEPENDENT_UNIT.name")?, "CONTEXT_DEPENDENT_UNIT.name"))?, },
-        "CONVERSION_BASED_UNIT" => UnitPart::ConversionBasedUnit { name: (as_str(req(&p.attributes, 0, "CONVERSION_BASED_UNIT.name")?, "CONVERSION_BASED_UNIT.name"))?, conversion_factor: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(usize::MAX)), },
+        "CONVERSION_BASED_UNIT" => UnitPart::ConversionBasedUnit { name: (as_str(req(&p.attributes, 0, "CONVERSION_BASED_UNIT.name")?, "CONVERSION_BASED_UNIT.name"))?, conversion_factor: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
         "CURVE" => UnitPart::Curve,
         "CURVE_STYLE" => UnitPart::CurveStyle { name: (as_str(req(&p.attributes, 0, "CURVE_STYLE.name")?, "CURVE_STYLE.name"))?, curve_font: None, curve_width: None, curve_colour: None, },
         "CURVE_STYLE_FONT" => UnitPart::CurveStyleFont { name: (as_str(req(&p.attributes, 0, "CURVE_STYLE_FONT.name")?, "CURVE_STYLE_FONT.name"))?, pattern_list: Vec::new(), },
-        "CURVE_STYLE_FONT_AND_SCALING" => UnitPart::CurveStyleFontAndScaling { name: (as_str(req(&p.attributes, 0, "CURVE_STYLE_FONT_AND_SCALING.name")?, "CURVE_STYLE_FONT_AND_SCALING.name"))?, curve_font: CurveStyleFontSelectRef::CurveStyleFont(CurveStyleFontId(usize::MAX)), curve_font_scaling: (as_real(req(&p.attributes, 2, "CURVE_STYLE_FONT_AND_SCALING.curve_font_scaling")?, "CURVE_STYLE_FONT_AND_SCALING.curve_font_scaling"))?, },
+        "CURVE_STYLE_FONT_AND_SCALING" => UnitPart::CurveStyleFontAndScaling { name: (as_str(req(&p.attributes, 0, "CURVE_STYLE_FONT_AND_SCALING.name")?, "CURVE_STYLE_FONT_AND_SCALING.name"))?, curve_font: CurveStyleFontSelectRef::CurveStyleFont(CurveStyleFontId(u32::MAX)), curve_font_scaling: (as_real(req(&p.attributes, 2, "CURVE_STYLE_FONT_AND_SCALING.curve_font_scaling")?, "CURVE_STYLE_FONT_AND_SCALING.curve_font_scaling"))?, },
         "CURVE_STYLE_FONT_PATTERN" => UnitPart::CurveStyleFontPattern { visible_segment_length: (as_real(req(&p.attributes, 0, "CURVE_STYLE_FONT_PATTERN.visible_segment_length")?, "CURVE_STYLE_FONT_PATTERN.visible_segment_length"))?, invisible_segment_length: (as_real(req(&p.attributes, 1, "CURVE_STYLE_FONT_PATTERN.invisible_segment_length")?, "CURVE_STYLE_FONT_PATTERN.invisible_segment_length"))?, },
         "CYLINDRICITY_TOLERANCE" => UnitPart::CylindricityTolerance,
         "DATE" => UnitPart::Date { year_component: (as_int(req(&p.attributes, 0, "DATE.year_component")?, "DATE.year_component"))?, },
-        "DATE_AND_TIME" => UnitPart::DateAndTime { date_component: DateRef::CalendarDate(CalendarDateId(usize::MAX)), time_component: LocalTimeRef::LocalTime(LocalTimeId(usize::MAX)), },
-        "DATE_AND_TIME_ASSIGNMENT" => UnitPart::DateAndTimeAssignment { assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(usize::MAX)), role: DateTimeRoleRef::DateTimeRole(DateTimeRoleId(usize::MAX)), },
+        "DATE_AND_TIME" => UnitPart::DateAndTime { date_component: DateRef::CalendarDate(CalendarDateId(u32::MAX)), time_component: LocalTimeRef::LocalTime(LocalTimeId(u32::MAX)), },
+        "DATE_AND_TIME_ASSIGNMENT" => UnitPart::DateAndTimeAssignment { assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(u32::MAX)), role: DateTimeRoleRef::DateTimeRole(DateTimeRoleId(u32::MAX)), },
         "DATUM" => UnitPart::Datum { identification: (as_str(req(&p.attributes, 0, "DATUM.identification")?, "DATUM.identification"))?, },
         "DATUM_FEATURE" => UnitPart::DatumFeature,
-        "DATUM_REFERENCE" => UnitPart::DatumReference { precedence: (as_int(req(&p.attributes, 0, "DATUM_REFERENCE.precedence")?, "DATUM_REFERENCE.precedence"))?, referenced_datum: DatumRef::CommonDatum(CommonDatumId(usize::MAX)), },
+        "DATUM_REFERENCE" => UnitPart::DatumReference { precedence: (as_int(req(&p.attributes, 0, "DATUM_REFERENCE.precedence")?, "DATUM_REFERENCE.precedence"))?, referenced_datum: DatumRef::CommonDatum(CommonDatumId(u32::MAX)), },
         "DATUM_SYSTEM" => UnitPart::DatumSystem { constituents: Vec::new(), },
         "DATUM_TARGET" => UnitPart::DatumTarget { target_id: (as_str(req(&p.attributes, 0, "DATUM_TARGET.target_id")?, "DATUM_TARGET.target_id"))?, },
         "DEFAULT_MODEL_GEOMETRIC_VIEW" => UnitPart::DefaultModelGeometricView,
@@ -38851,79 +38818,79 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "DEGENERATE_TOROIDAL_SURFACE" => UnitPart::DegenerateToroidalSurface { select_outer: (Ok::<bool, String>(matches!(req(&p.attributes, 0, "DEGENERATE_TOROIDAL_SURFACE.select_outer")?, Attribute::Enum(s) if s == "T")))?, },
         "DERIVED_UNIT" => UnitPart::DerivedUnit { elements: Vec::new(), },
         "DESIGN_CONTEXT" => UnitPart::DesignContext,
-        "DIMENSIONAL_SIZE" => UnitPart::DimensionalSize { applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)), name: (as_str(req(&p.attributes, 1, "DIMENSIONAL_SIZE.name")?, "DIMENSIONAL_SIZE.name"))?, },
+        "DIMENSIONAL_SIZE" => UnitPart::DimensionalSize { applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), name: (as_str(req(&p.attributes, 1, "DIMENSIONAL_SIZE.name")?, "DIMENSIONAL_SIZE.name"))?, },
         "DIRECTION" => UnitPart::Direction { direction_ratios: (match req(&p.attributes, 0, "DIRECTION.direction_ratios")? { Attribute::List(l) => l.iter().map(|e| as_real(e, "DIRECTION.direction_ratios")).collect::<Result<Vec<_>, String>>(), o => Err(format!("DIRECTION.direction_ratios: expected list, got {o:?}")) })?, },
-        "DOCUMENT" => UnitPart::Document { id: (as_str(req(&p.attributes, 0, "DOCUMENT.id")?, "DOCUMENT.id"))?, name: (as_str(req(&p.attributes, 1, "DOCUMENT.name")?, "DOCUMENT.name"))?, description: match req(&p.attributes, 2, "DOCUMENT.description")? { Attribute::Unset => None, other => Some((as_str(other, "DOCUMENT.description"))?) }, kind: DocumentTypeRef::DocumentType(DocumentTypeId(usize::MAX)), },
+        "DOCUMENT" => UnitPart::Document { id: (as_str(req(&p.attributes, 0, "DOCUMENT.id")?, "DOCUMENT.id"))?, name: (as_str(req(&p.attributes, 1, "DOCUMENT.name")?, "DOCUMENT.name"))?, description: match req(&p.attributes, 2, "DOCUMENT.description")? { Attribute::Unset => None, other => Some((as_str(other, "DOCUMENT.description"))?) }, kind: DocumentTypeRef::DocumentType(DocumentTypeId(u32::MAX)), },
         "DOCUMENT_FILE" => UnitPart::DocumentFile,
-        "DOCUMENT_PRODUCT_ASSOCIATION" => UnitPart::DocumentProductAssociation { name: (as_str(req(&p.attributes, 0, "DOCUMENT_PRODUCT_ASSOCIATION.name")?, "DOCUMENT_PRODUCT_ASSOCIATION.name"))?, description: match req(&p.attributes, 1, "DOCUMENT_PRODUCT_ASSOCIATION.description")? { Attribute::Unset => None, other => Some((as_str(other, "DOCUMENT_PRODUCT_ASSOCIATION.description"))?) }, relating_document: DocumentRef::Document(DocumentId(usize::MAX)), related_product: ProductOrFormationOrDefinitionRef::Product(ProductId(usize::MAX)), },
+        "DOCUMENT_PRODUCT_ASSOCIATION" => UnitPart::DocumentProductAssociation { name: (as_str(req(&p.attributes, 0, "DOCUMENT_PRODUCT_ASSOCIATION.name")?, "DOCUMENT_PRODUCT_ASSOCIATION.name"))?, description: match req(&p.attributes, 1, "DOCUMENT_PRODUCT_ASSOCIATION.description")? { Attribute::Unset => None, other => Some((as_str(other, "DOCUMENT_PRODUCT_ASSOCIATION.description"))?) }, relating_document: DocumentRef::Document(DocumentId(u32::MAX)), related_product: ProductOrFormationOrDefinitionRef::Product(ProductId(u32::MAX)), },
         "DOCUMENT_PRODUCT_EQUIVALENCE" => UnitPart::DocumentProductEquivalence,
-        "DOCUMENT_REFERENCE" => UnitPart::DocumentReference { assigned_document: DocumentRef::Document(DocumentId(usize::MAX)), source: (as_str(req(&p.attributes, 1, "DOCUMENT_REFERENCE.source")?, "DOCUMENT_REFERENCE.source"))?, },
+        "DOCUMENT_REFERENCE" => UnitPart::DocumentReference { assigned_document: DocumentRef::Document(DocumentId(u32::MAX)), source: (as_str(req(&p.attributes, 1, "DOCUMENT_REFERENCE.source")?, "DOCUMENT_REFERENCE.source"))?, },
         "DRAUGHTING_ANNOTATION_OCCURRENCE" => UnitPart::DraughtingAnnotationOccurrence,
         "DRAUGHTING_CALLOUT" => UnitPart::DraughtingCallout { contents: Vec::new(), },
-        "DRAUGHTING_CALLOUT_RELATIONSHIP" => UnitPart::DraughtingCalloutRelationship { name: (as_str(req(&p.attributes, 0, "DRAUGHTING_CALLOUT_RELATIONSHIP.name")?, "DRAUGHTING_CALLOUT_RELATIONSHIP.name"))?, description: (as_str(req(&p.attributes, 1, "DRAUGHTING_CALLOUT_RELATIONSHIP.description")?, "DRAUGHTING_CALLOUT_RELATIONSHIP.description"))?, relating_draughting_callout: DraughtingCalloutRef::DraughtingCallout(DraughtingCalloutId(usize::MAX)), related_draughting_callout: DraughtingCalloutRef::DraughtingCallout(DraughtingCalloutId(usize::MAX)), },
+        "DRAUGHTING_CALLOUT_RELATIONSHIP" => UnitPart::DraughtingCalloutRelationship { name: (as_str(req(&p.attributes, 0, "DRAUGHTING_CALLOUT_RELATIONSHIP.name")?, "DRAUGHTING_CALLOUT_RELATIONSHIP.name"))?, description: (as_str(req(&p.attributes, 1, "DRAUGHTING_CALLOUT_RELATIONSHIP.description")?, "DRAUGHTING_CALLOUT_RELATIONSHIP.description"))?, relating_draughting_callout: DraughtingCalloutRef::DraughtingCallout(DraughtingCalloutId(u32::MAX)), related_draughting_callout: DraughtingCalloutRef::DraughtingCallout(DraughtingCalloutId(u32::MAX)), },
         "DRAUGHTING_MODEL" => UnitPart::DraughtingModel,
         "DRAUGHTING_MODEL_ITEM_ASSOCIATION" => UnitPart::DraughtingModelItemAssociation,
-        "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER" => UnitPart::DraughtingModelItemAssociationWithPlaceholder { annotation_placeholder: AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId(usize::MAX)), },
+        "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER" => UnitPart::DraughtingModelItemAssociationWithPlaceholder { annotation_placeholder: AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId(u32::MAX)), },
         "DRAUGHTING_PRE_DEFINED_COLOUR" => UnitPart::DraughtingPreDefinedColour,
         "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => UnitPart::DraughtingPreDefinedCurveFont,
         "DRAUGHTING_PRE_DEFINED_TEXT_FONT" => UnitPart::DraughtingPreDefinedTextFont,
         "EDGE" => UnitPart::Edge { edge_start: None, edge_end: None, },
-        "EDGE_CURVE" => UnitPart::EdgeCurve { edge_geometry: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)), same_sense: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "EDGE_CURVE.same_sense")?, Attribute::Enum(s) if s == "T")))?, },
+        "EDGE_CURVE" => UnitPart::EdgeCurve { edge_geometry: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)), same_sense: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "EDGE_CURVE.same_sense")?, Attribute::Enum(s) if s == "T")))?, },
         "EDGE_LOOP" => UnitPart::EdgeLoop,
         "EFFECTIVITY" => UnitPart::Effectivity { id: (as_str(req(&p.attributes, 0, "EFFECTIVITY.id")?, "EFFECTIVITY.id"))?, },
-        "ELEMENTARY_SURFACE" => UnitPart::ElementarySurface { position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)), },
+        "ELEMENTARY_SURFACE" => UnitPart::ElementarySurface { position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)), },
         "EXPRESSION" => UnitPart::Expression,
-        "EXTERNAL_IDENTIFICATION_ASSIGNMENT" => UnitPart::ExternalIdentificationAssignment { source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)), },
+        "EXTERNAL_IDENTIFICATION_ASSIGNMENT" => UnitPart::ExternalIdentificationAssignment { source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)), },
         "EXTERNAL_SOURCE" => UnitPart::ExternalSource { source_id: (read_string_select(req(&p.attributes, 0, "EXTERNAL_SOURCE.source_id")?, "EXTERNAL_SOURCE.source_id"))?, },
         "EXTERNALLY_DEFINED_CHARACTER_GLYPH" => UnitPart::ExternallyDefinedCharacterGlyph,
         "EXTERNALLY_DEFINED_CURVE_FONT" => UnitPart::ExternallyDefinedCurveFont,
         "EXTERNALLY_DEFINED_HATCH_STYLE" => UnitPart::ExternallyDefinedHatchStyle,
-        "EXTERNALLY_DEFINED_ITEM" => UnitPart::ExternallyDefinedItem { item_id: (read_string_select(req(&p.attributes, 0, "EXTERNALLY_DEFINED_ITEM.item_id")?, "EXTERNALLY_DEFINED_ITEM.item_id"))?, source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)), },
+        "EXTERNALLY_DEFINED_ITEM" => UnitPart::ExternallyDefinedItem { item_id: (read_string_select(req(&p.attributes, 0, "EXTERNALLY_DEFINED_ITEM.item_id")?, "EXTERNALLY_DEFINED_ITEM.item_id"))?, source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)), },
         "EXTERNALLY_DEFINED_STYLE" => UnitPart::ExternallyDefinedStyle,
         "EXTERNALLY_DEFINED_SYMBOL" => UnitPart::ExternallyDefinedSymbol,
         "EXTERNALLY_DEFINED_TEXT_FONT" => UnitPart::ExternallyDefinedTextFont,
         "EXTERNALLY_DEFINED_TILE" => UnitPart::ExternallyDefinedTile,
         "EXTERNALLY_DEFINED_TILE_STYLE" => UnitPart::ExternallyDefinedTileStyle,
         "FACE" => UnitPart::Face { bounds: Vec::new(), },
-        "FACE_BOUND" => UnitPart::FaceBound { bound: LoopRef::EdgeLoop(EdgeLoopId(usize::MAX)), orientation: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "FACE_BOUND.orientation")?, Attribute::Enum(s) if s == "T")))?, },
+        "FACE_BOUND" => UnitPart::FaceBound { bound: LoopRef::EdgeLoop(EdgeLoopId(u32::MAX)), orientation: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "FACE_BOUND.orientation")?, Attribute::Enum(s) if s == "T")))?, },
         "FACE_OUTER_BOUND" => UnitPart::FaceOuterBound,
-        "FACE_SURFACE" => UnitPart::FaceSurface { face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(usize::MAX)), same_sense: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "FACE_SURFACE.same_sense")?, Attribute::Enum(s) if s == "T")))?, },
+        "FACE_SURFACE" => UnitPart::FaceSurface { face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)), same_sense: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "FACE_SURFACE.same_sense")?, Attribute::Enum(s) if s == "T")))?, },
         "FILL_AREA_STYLE" => UnitPart::FillAreaStyle { name: (as_str(req(&p.attributes, 0, "FILL_AREA_STYLE.name")?, "FILL_AREA_STYLE.name"))?, fill_styles: Vec::new(), },
-        "FILL_AREA_STYLE_HATCHING" => UnitPart::FillAreaStyleHatching { hatch_line_appearance: CurveStyleRef::CurveStyle(CurveStyleId(usize::MAX)), start_of_next_hatch_line: OneDirectionRepeatFactorRef::OneDirectionRepeatFactor(OneDirectionRepeatFactorId(usize::MAX)), point_of_reference_hatch_line: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)), pattern_start: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)), hatch_line_angle: (as_real(req(&p.attributes, 4, "FILL_AREA_STYLE_HATCHING.hatch_line_angle")?, "FILL_AREA_STYLE_HATCHING.hatch_line_angle"))?, },
-        "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE" => UnitPart::FillAreaStyleTileSymbolWithStyle { symbol: AnnotationSymbolOccurrenceRef::AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId(usize::MAX)), },
-        "FILL_AREA_STYLE_TILES" => UnitPart::FillAreaStyleTiles { tiling_pattern: TwoDirectionRepeatFactorRef::TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId(usize::MAX)), tiles: Vec::new(), tiling_scale: (as_real(req(&p.attributes, 2, "FILL_AREA_STYLE_TILES.tiling_scale")?, "FILL_AREA_STYLE_TILES.tiling_scale"))?, },
+        "FILL_AREA_STYLE_HATCHING" => UnitPart::FillAreaStyleHatching { hatch_line_appearance: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)), start_of_next_hatch_line: OneDirectionRepeatFactorRef::OneDirectionRepeatFactor(OneDirectionRepeatFactorId(u32::MAX)), point_of_reference_hatch_line: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)), pattern_start: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)), hatch_line_angle: (as_real(req(&p.attributes, 4, "FILL_AREA_STYLE_HATCHING.hatch_line_angle")?, "FILL_AREA_STYLE_HATCHING.hatch_line_angle"))?, },
+        "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE" => UnitPart::FillAreaStyleTileSymbolWithStyle { symbol: AnnotationSymbolOccurrenceRef::AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId(u32::MAX)), },
+        "FILL_AREA_STYLE_TILES" => UnitPart::FillAreaStyleTiles { tiling_pattern: TwoDirectionRepeatFactorRef::TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId(u32::MAX)), tiles: Vec::new(), tiling_scale: (as_real(req(&p.attributes, 2, "FILL_AREA_STYLE_TILES.tiling_scale")?, "FILL_AREA_STYLE_TILES.tiling_scale"))?, },
         "FLATNESS_TOLERANCE" => UnitPart::FlatnessTolerance,
         "FOUNDED_ITEM" => UnitPart::FoundedItem,
         "FUNCTIONALLY_DEFINED_TRANSFORMATION" => UnitPart::FunctionallyDefinedTransformation { name: (as_str(req(&p.attributes, 0, "FUNCTIONALLY_DEFINED_TRANSFORMATION.name")?, "FUNCTIONALLY_DEFINED_TRANSFORMATION.name"))?, description: match req(&p.attributes, 1, "FUNCTIONALLY_DEFINED_TRANSFORMATION.description")? { Attribute::Unset => None, other => Some((as_str(other, "FUNCTIONALLY_DEFINED_TRANSFORMATION.description"))?) }, },
-        "GENERAL_DATUM_REFERENCE" => UnitPart::GeneralDatumReference { base: DatumOrCommonDatumRef::CommonDatum(CommonDatumId(usize::MAX)), modifiers: None, },
+        "GENERAL_DATUM_REFERENCE" => UnitPart::GeneralDatumReference { base: DatumOrCommonDatumRef::CommonDatum(CommonDatumId(u32::MAX)), modifiers: None, },
         "GENERAL_PROPERTY" => UnitPart::GeneralProperty { id: (as_str(req(&p.attributes, 0, "GENERAL_PROPERTY.id")?, "GENERAL_PROPERTY.id"))?, name: (as_str(req(&p.attributes, 1, "GENERAL_PROPERTY.name")?, "GENERAL_PROPERTY.name"))?, description: match req(&p.attributes, 2, "GENERAL_PROPERTY.description")? { Attribute::Unset => None, other => Some((as_str(other, "GENERAL_PROPERTY.description"))?) }, },
         "GENERIC_EXPRESSION" => UnitPart::GenericExpression,
         "GENERIC_LITERAL" => UnitPart::GenericLiteral,
-        "GENERIC_PRODUCT_DEFINITION_REFERENCE" => UnitPart::GenericProductDefinitionReference { source: ExternalSourceRef::ExternalSource(ExternalSourceId(usize::MAX)), },
+        "GENERIC_PRODUCT_DEFINITION_REFERENCE" => UnitPart::GenericProductDefinitionReference { source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)), },
         "GEOMETRIC_CURVE_SET" => UnitPart::GeometricCurveSet,
         "GEOMETRIC_ITEM_SPECIFIC_USAGE" => UnitPart::GeometricItemSpecificUsage,
         "GEOMETRIC_REPRESENTATION_CONTEXT" => UnitPart::GeometricRepresentationContext { coordinate_space_dimension: (as_int(req(&p.attributes, 0, "GEOMETRIC_REPRESENTATION_CONTEXT.coordinate_space_dimension")?, "GEOMETRIC_REPRESENTATION_CONTEXT.coordinate_space_dimension"))?, },
         "GEOMETRIC_REPRESENTATION_ITEM" => UnitPart::GeometricRepresentationItem,
         "GEOMETRIC_SET" => UnitPart::GeometricSet { elements: Vec::new(), },
-        "GEOMETRIC_TOLERANCE" => UnitPart::GeometricTolerance { name: (as_str(req(&p.attributes, 0, "GEOMETRIC_TOLERANCE.name")?, "GEOMETRIC_TOLERANCE.name"))?, description: match req(&p.attributes, 1, "GEOMETRIC_TOLERANCE.description")? { Attribute::Unset => None, other => Some((as_str(other, "GEOMETRIC_TOLERANCE.description"))?) }, magnitude: None, toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)), },
+        "GEOMETRIC_TOLERANCE" => UnitPart::GeometricTolerance { name: (as_str(req(&p.attributes, 0, "GEOMETRIC_TOLERANCE.name")?, "GEOMETRIC_TOLERANCE.name"))?, description: match req(&p.attributes, 1, "GEOMETRIC_TOLERANCE.description")? { Attribute::Unset => None, other => Some((as_str(other, "GEOMETRIC_TOLERANCE.description"))?) }, magnitude: None, toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), },
         "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE" => UnitPart::GeometricToleranceWithDatumReference { datum_system: Vec::new(), },
         "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT" => UnitPart::GeometricToleranceWithDefinedAreaUnit { area_type: (match req(&p.attributes, 0, "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.area_type")? { Attribute::Enum(s) => AreaUnitType::parse(s).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.area_type: bad enum {s:?}")), o => Err(format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.area_type: expected enum, got {o:?}")) })?, second_unit_size: None, },
-        "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT" => UnitPart::GeometricToleranceWithDefinedUnit { unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(usize::MAX)), },
-        "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE" => UnitPart::GeometricToleranceWithMaximumTolerance { maximum_upper_tolerance: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(usize::MAX)), },
+        "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT" => UnitPart::GeometricToleranceWithDefinedUnit { unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
+        "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE" => UnitPart::GeometricToleranceWithMaximumTolerance { maximum_upper_tolerance: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
         "GEOMETRIC_TOLERANCE_WITH_MODIFIERS" => UnitPart::GeometricToleranceWithModifiers { modifiers: (match req(&p.attributes, 0, "GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers")? { Attribute::List(l) => l.iter().map(|e| match e { Attribute::Enum(s) => GeometricToleranceModifier::parse(s).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers: bad enum {s:?}")), o => Err(format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers: expected enum, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers: expected list, got {o:?}")) })?, },
         "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION" => UnitPart::GeometricallyBoundedSurfaceShapeRepresentation,
         "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION" => UnitPart::GeometricallyBoundedWireframeShapeRepresentation,
         "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT" => UnitPart::GlobalUncertaintyAssignedContext { uncertainty: Vec::new(), },
         "GLOBAL_UNIT_ASSIGNED_CONTEXT" => UnitPart::GlobalUnitAssignedContext { units: Vec::new(), },
         "GROUP" => UnitPart::Group { name: (as_str(req(&p.attributes, 0, "GROUP.name")?, "GROUP.name"))?, description: match req(&p.attributes, 1, "GROUP.description")? { Attribute::Unset => None, other => Some((as_str(other, "GROUP.description"))?) }, },
-        "GROUP_ASSIGNMENT" => UnitPart::GroupAssignment { assigned_group: GroupRef::Group(GroupId(usize::MAX)), },
-        "IDENTIFICATION_ASSIGNMENT" => UnitPart::IdentificationAssignment { assigned_id: (as_str(req(&p.attributes, 0, "IDENTIFICATION_ASSIGNMENT.assigned_id")?, "IDENTIFICATION_ASSIGNMENT.assigned_id"))?, role: IdentificationRoleRef::IdentificationRole(IdentificationRoleId(usize::MAX)), },
+        "GROUP_ASSIGNMENT" => UnitPart::GroupAssignment { assigned_group: GroupRef::Group(GroupId(u32::MAX)), },
+        "IDENTIFICATION_ASSIGNMENT" => UnitPart::IdentificationAssignment { assigned_id: (as_str(req(&p.attributes, 0, "IDENTIFICATION_ASSIGNMENT.assigned_id")?, "IDENTIFICATION_ASSIGNMENT.assigned_id"))?, role: IdentificationRoleRef::IdentificationRole(IdentificationRoleId(u32::MAX)), },
         "INT_LITERAL" => UnitPart::IntLiteral,
         "INTEGER_REPRESENTATION_ITEM" => UnitPart::IntegerRepresentationItem,
         "INTERSECTION_CURVE" => UnitPart::IntersectionCurve,
         "INVISIBILITY" => UnitPart::Invisibility { invisible_items: Vec::new(), },
-        "ITEM_DEFINED_TRANSFORMATION" => UnitPart::ItemDefinedTransformation { name: (as_str(req(&p.attributes, 0, "ITEM_DEFINED_TRANSFORMATION.name")?, "ITEM_DEFINED_TRANSFORMATION.name"))?, description: match req(&p.attributes, 1, "ITEM_DEFINED_TRANSFORMATION.description")? { Attribute::Unset => None, other => Some((as_str(other, "ITEM_DEFINED_TRANSFORMATION.description"))?) }, transform_item_1: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)), transform_item_2: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)), },
-        "ITEM_IDENTIFIED_REPRESENTATION_USAGE" => UnitPart::ItemIdentifiedRepresentationUsage { name: (as_str(req(&p.attributes, 0, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.name")?, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.name"))?, description: match req(&p.attributes, 1, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.description")? { Attribute::Unset => None, other => Some((as_str(other, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.description"))?) }, definition: ItemIdentifiedRepresentationUsageDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)), used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)), identified_item: ItemIdentifiedRepresentationUsageSelectRef::AdvancedFace(AdvancedFaceId(usize::MAX)), },
+        "ITEM_DEFINED_TRANSFORMATION" => UnitPart::ItemDefinedTransformation { name: (as_str(req(&p.attributes, 0, "ITEM_DEFINED_TRANSFORMATION.name")?, "ITEM_DEFINED_TRANSFORMATION.name"))?, description: match req(&p.attributes, 1, "ITEM_DEFINED_TRANSFORMATION.description")? { Attribute::Unset => None, other => Some((as_str(other, "ITEM_DEFINED_TRANSFORMATION.description"))?) }, transform_item_1: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), transform_item_2: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), },
+        "ITEM_IDENTIFIED_REPRESENTATION_USAGE" => UnitPart::ItemIdentifiedRepresentationUsage { name: (as_str(req(&p.attributes, 0, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.name")?, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.name"))?, description: match req(&p.attributes, 1, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.description")? { Attribute::Unset => None, other => Some((as_str(other, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.description"))?) }, definition: ItemIdentifiedRepresentationUsageDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), identified_item: ItemIdentifiedRepresentationUsageSelectRef::AdvancedFace(AdvancedFaceId(u32::MAX)), },
         "LEADER_CURVE" => UnitPart::LeaderCurve,
         "LEADER_DIRECTED_CALLOUT" => UnitPart::LeaderDirectedCallout,
         "LEADER_TERMINATOR" => UnitPart::LeaderTerminator,
@@ -38932,12 +38899,12 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "LINE_PROFILE_TOLERANCE" => UnitPart::LineProfileTolerance,
         "LITERAL_NUMBER" => UnitPart::LiteralNumber { the_value: (as_real(req(&p.attributes, 0, "LITERAL_NUMBER.the_value")?, "LITERAL_NUMBER.the_value"))?, },
         "LOOP" => UnitPart::Loop,
-        "MANIFOLD_SOLID_BREP" => UnitPart::ManifoldSolidBrep { outer: ClosedShellRef::ClosedShell(ClosedShellId(usize::MAX)), },
+        "MANIFOLD_SOLID_BREP" => UnitPart::ManifoldSolidBrep { outer: ClosedShellRef::ClosedShell(ClosedShellId(u32::MAX)), },
         "MANIFOLD_SURFACE_SHAPE_REPRESENTATION" => UnitPart::ManifoldSurfaceShapeRepresentation,
-        "MAPPED_ITEM" => UnitPart::MappedItem { mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(usize::MAX)), mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)), },
+        "MAPPED_ITEM" => UnitPart::MappedItem { mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(u32::MAX)), mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), },
         "MASS_UNIT" => UnitPart::MassUnit,
         "MEASURE_REPRESENTATION_ITEM" => UnitPart::MeasureRepresentationItem,
-        "MEASURE_WITH_UNIT" => UnitPart::MeasureWithUnit { value_component: (read_measure_value(req(&p.attributes, 0, "MEASURE_WITH_UNIT.value_component")?, "MEASURE_WITH_UNIT.value_component"))?, unit_component: UnitRef::AreaUnit(AreaUnitId(usize::MAX)), },
+        "MEASURE_WITH_UNIT" => UnitPart::MeasureWithUnit { value_component: (read_measure_value(req(&p.attributes, 0, "MEASURE_WITH_UNIT.value_component")?, "MEASURE_WITH_UNIT.value_component"))?, unit_component: UnitRef::AreaUnit(AreaUnitId(u32::MAX)), },
         "MECHANICAL_CONTEXT" => UnitPart::MechanicalContext,
         "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP" => UnitPart::MechanicalDesignAndDraughtingRelationship,
         "MODEL_GEOMETRIC_VIEW" => UnitPart::ModelGeometricView,
@@ -38945,23 +38912,23 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "NAMED_UNIT" => UnitPart::NamedUnit { dimensions: None, },
         "NEXT_ASSEMBLY_USAGE_OCCURRENCE" => UnitPart::NextAssemblyUsageOccurrence,
         "NUMERIC_EXPRESSION" => UnitPart::NumericExpression,
-        "ONE_DIRECTION_REPEAT_FACTOR" => UnitPart::OneDirectionRepeatFactor { repeat_factor: VectorRef::Vector(VectorId(usize::MAX)), },
+        "ONE_DIRECTION_REPEAT_FACTOR" => UnitPart::OneDirectionRepeatFactor { repeat_factor: VectorRef::Vector(VectorId(u32::MAX)), },
         "OPEN_SHELL" => UnitPart::OpenShell,
         "ORGANIZATIONAL_ADDRESS" => UnitPart::OrganizationalAddress { organizations: Vec::new(), description: match req(&p.attributes, 1, "ORGANIZATIONAL_ADDRESS.description")? { Attribute::Unset => None, other => Some((as_str(other, "ORGANIZATIONAL_ADDRESS.description"))?) }, },
-        "ORIENTED_CLOSED_SHELL" => UnitPart::OrientedClosedShell { closed_shell_element: ClosedShellRef::ClosedShell(ClosedShellId(usize::MAX)), orientation: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "ORIENTED_CLOSED_SHELL.orientation")?, Attribute::Enum(s) if s == "T")))?, },
-        "ORIENTED_EDGE" => UnitPart::OrientedEdge { edge_element: EdgeRef::Edge(EdgeId(usize::MAX)), orientation: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "ORIENTED_EDGE.orientation")?, Attribute::Enum(s) if s == "T")))?, },
-        "OVER_RIDING_STYLED_ITEM" => UnitPart::OverRidingStyledItem { over_ridden_style: StyledItemRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(usize::MAX)), },
+        "ORIENTED_CLOSED_SHELL" => UnitPart::OrientedClosedShell { closed_shell_element: ClosedShellRef::ClosedShell(ClosedShellId(u32::MAX)), orientation: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "ORIENTED_CLOSED_SHELL.orientation")?, Attribute::Enum(s) if s == "T")))?, },
+        "ORIENTED_EDGE" => UnitPart::OrientedEdge { edge_element: EdgeRef::Edge(EdgeId(u32::MAX)), orientation: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "ORIENTED_EDGE.orientation")?, Attribute::Enum(s) if s == "T")))?, },
+        "OVER_RIDING_STYLED_ITEM" => UnitPart::OverRidingStyledItem { over_ridden_style: StyledItemRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(u32::MAX)), },
         "PARALLELISM_TOLERANCE" => UnitPart::ParallelismTolerance,
         "PARAMETRIC_REPRESENTATION_CONTEXT" => UnitPart::ParametricRepresentationContext,
         "PATH" => UnitPart::Path { edge_list: Vec::new(), },
-        "PCURVE" => UnitPart::Pcurve { basis_surface: SurfaceRef::BSplineSurface(BSplineSurfaceId(usize::MAX)), reference_to_curve: DefinitionalRepresentationRef::DefinitionalRepresentation(DefinitionalRepresentationId(usize::MAX)), },
+        "PCURVE" => UnitPart::Pcurve { basis_surface: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)), reference_to_curve: DefinitionalRepresentationRef::DefinitionalRepresentation(DefinitionalRepresentationId(u32::MAX)), },
         "PERPENDICULARITY_TOLERANCE" => UnitPart::PerpendicularityTolerance,
         "PERSON_AND_ORGANIZATION_ADDRESS" => UnitPart::PersonAndOrganizationAddress,
-        "PERSON_AND_ORGANIZATION_ASSIGNMENT" => UnitPart::PersonAndOrganizationAssignment { assigned_person_and_organization: PersonAndOrganizationRef::PersonAndOrganization(PersonAndOrganizationId(usize::MAX)), role: PersonAndOrganizationRoleRef::PersonAndOrganizationRole(PersonAndOrganizationRoleId(usize::MAX)), },
+        "PERSON_AND_ORGANIZATION_ASSIGNMENT" => UnitPart::PersonAndOrganizationAssignment { assigned_person_and_organization: PersonAndOrganizationRef::PersonAndOrganization(PersonAndOrganizationId(u32::MAX)), role: PersonAndOrganizationRoleRef::PersonAndOrganizationRole(PersonAndOrganizationRoleId(u32::MAX)), },
         "PERSONAL_ADDRESS" => UnitPart::PersonalAddress { people: Vec::new(), description: match req(&p.attributes, 1, "PERSONAL_ADDRESS.description")? { Attribute::Unset => None, other => Some((as_str(other, "PERSONAL_ADDRESS.description"))?) }, },
         "PLACED_DATUM_TARGET_FEATURE" => UnitPart::PlacedDatumTargetFeature,
-        "PLACEMENT" => UnitPart::Placement { location: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)), },
-        "PLANAR_BOX" => UnitPart::PlanarBox { placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)), },
+        "PLACEMENT" => UnitPart::Placement { location: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)), },
+        "PLANAR_BOX" => UnitPart::PlanarBox { placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)), },
         "PLANAR_EXTENT" => UnitPart::PlanarExtent { size_in_x: (as_real(req(&p.attributes, 0, "PLANAR_EXTENT.size_in_x")?, "PLANAR_EXTENT.size_in_x"))?, size_in_y: (as_real(req(&p.attributes, 1, "PLANAR_EXTENT.size_in_y")?, "PLANAR_EXTENT.size_in_y"))?, },
         "PLANE_ANGLE_MEASURE_WITH_UNIT" => UnitPart::PlaneAngleMeasureWithUnit,
         "PLANE_ANGLE_UNIT" => UnitPart::PlaneAngleUnit,
@@ -38985,30 +38952,30 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "PRESENTATION_REPRESENTATION" => UnitPart::PresentationRepresentation,
         "PRESENTATION_SET" => UnitPart::PresentationSet,
         "PRESENTATION_STYLE_ASSIGNMENT" => UnitPart::PresentationStyleAssignment { styles: Vec::new(), },
-        "PRESENTATION_STYLE_BY_CONTEXT" => UnitPart::PresentationStyleByContext { style_context: StyleContextSelectRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)), },
+        "PRESENTATION_STYLE_BY_CONTEXT" => UnitPart::PresentationStyleByContext { style_context: StyleContextSelectRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
         "PRESENTATION_VIEW" => UnitPart::PresentationView,
         "PRESENTED_ITEM" => UnitPart::PresentedItem,
         "PRODUCT" => UnitPart::Product { id: (as_str(req(&p.attributes, 0, "PRODUCT.id")?, "PRODUCT.id"))?, name: (as_str(req(&p.attributes, 1, "PRODUCT.name")?, "PRODUCT.name"))?, description: match req(&p.attributes, 2, "PRODUCT.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT.description"))?) }, frame_of_reference: Vec::new(), },
         "PRODUCT_CATEGORY" => UnitPart::ProductCategory { name: (as_str(req(&p.attributes, 0, "PRODUCT_CATEGORY.name")?, "PRODUCT_CATEGORY.name"))?, description: match req(&p.attributes, 1, "PRODUCT_CATEGORY.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_CATEGORY.description"))?) }, },
-        "PRODUCT_CONCEPT" => UnitPart::ProductConcept { id: (as_str(req(&p.attributes, 0, "PRODUCT_CONCEPT.id")?, "PRODUCT_CONCEPT.id"))?, name: (as_str(req(&p.attributes, 1, "PRODUCT_CONCEPT.name")?, "PRODUCT_CONCEPT.name"))?, description: match req(&p.attributes, 2, "PRODUCT_CONCEPT.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_CONCEPT.description"))?) }, market_context: ProductConceptContextRef::ProductConceptContext(ProductConceptContextId(usize::MAX)), },
+        "PRODUCT_CONCEPT" => UnitPart::ProductConcept { id: (as_str(req(&p.attributes, 0, "PRODUCT_CONCEPT.id")?, "PRODUCT_CONCEPT.id"))?, name: (as_str(req(&p.attributes, 1, "PRODUCT_CONCEPT.name")?, "PRODUCT_CONCEPT.name"))?, description: match req(&p.attributes, 2, "PRODUCT_CONCEPT.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_CONCEPT.description"))?) }, market_context: ProductConceptContextRef::ProductConceptContext(ProductConceptContextId(u32::MAX)), },
         "PRODUCT_CONCEPT_FEATURE" => UnitPart::ProductConceptFeature { id: (as_str(req(&p.attributes, 0, "PRODUCT_CONCEPT_FEATURE.id")?, "PRODUCT_CONCEPT_FEATURE.id"))?, name: (as_str(req(&p.attributes, 1, "PRODUCT_CONCEPT_FEATURE.name")?, "PRODUCT_CONCEPT_FEATURE.name"))?, description: match req(&p.attributes, 2, "PRODUCT_CONCEPT_FEATURE.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_CONCEPT_FEATURE.description"))?) }, },
         "PRODUCT_CONCEPT_FEATURE_CATEGORY" => UnitPart::ProductConceptFeatureCategory,
         "PRODUCT_CONTEXT" => UnitPart::ProductContext { discipline_type: (as_str(req(&p.attributes, 0, "PRODUCT_CONTEXT.discipline_type")?, "PRODUCT_CONTEXT.discipline_type"))?, },
-        "PRODUCT_DEFINITION" => UnitPart::ProductDefinition { id: (as_str(req(&p.attributes, 0, "PRODUCT_DEFINITION.id")?, "PRODUCT_DEFINITION.id"))?, description: match req(&p.attributes, 1, "PRODUCT_DEFINITION.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_DEFINITION.description"))?) }, formation: ProductDefinitionFormationRef::ProductDefinitionFormation(ProductDefinitionFormationId(usize::MAX)), frame_of_reference: ProductDefinitionContextRef::DesignContext(DesignContextId(usize::MAX)), },
+        "PRODUCT_DEFINITION" => UnitPart::ProductDefinition { id: (as_str(req(&p.attributes, 0, "PRODUCT_DEFINITION.id")?, "PRODUCT_DEFINITION.id"))?, description: match req(&p.attributes, 1, "PRODUCT_DEFINITION.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_DEFINITION.description"))?) }, formation: ProductDefinitionFormationRef::ProductDefinitionFormation(ProductDefinitionFormationId(u32::MAX)), frame_of_reference: ProductDefinitionContextRef::DesignContext(DesignContextId(u32::MAX)), },
         "PRODUCT_DEFINITION_CONTEXT" => UnitPart::ProductDefinitionContext { life_cycle_stage: (as_str(req(&p.attributes, 0, "PRODUCT_DEFINITION_CONTEXT.life_cycle_stage")?, "PRODUCT_DEFINITION_CONTEXT.life_cycle_stage"))?, },
-        "PRODUCT_DEFINITION_EFFECTIVITY" => UnitPart::ProductDefinitionEffectivity { usage: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(usize::MAX)), },
-        "PRODUCT_DEFINITION_FORMATION" => UnitPart::ProductDefinitionFormation { id: (as_str(req(&p.attributes, 0, "PRODUCT_DEFINITION_FORMATION.id")?, "PRODUCT_DEFINITION_FORMATION.id"))?, description: match req(&p.attributes, 1, "PRODUCT_DEFINITION_FORMATION.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_DEFINITION_FORMATION.description"))?) }, of_product: ProductRef::Product(ProductId(usize::MAX)), },
+        "PRODUCT_DEFINITION_EFFECTIVITY" => UnitPart::ProductDefinitionEffectivity { usage: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(u32::MAX)), },
+        "PRODUCT_DEFINITION_FORMATION" => UnitPart::ProductDefinitionFormation { id: (as_str(req(&p.attributes, 0, "PRODUCT_DEFINITION_FORMATION.id")?, "PRODUCT_DEFINITION_FORMATION.id"))?, description: match req(&p.attributes, 1, "PRODUCT_DEFINITION_FORMATION.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_DEFINITION_FORMATION.description"))?) }, of_product: ProductRef::Product(ProductId(u32::MAX)), },
         "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE" => UnitPart::ProductDefinitionFormationWithSpecifiedSource { make_or_buy: (match req(&p.attributes, 0, "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE.make_or_buy")? { Attribute::Enum(s) => Source::parse(s).ok_or_else(|| format!("PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE.make_or_buy: bad enum {s:?}")), o => Err(format!("PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE.make_or_buy: expected enum, got {o:?}")) })?, },
         "PRODUCT_DEFINITION_OCCURRENCE" => UnitPart::ProductDefinitionOccurrence { id: (as_str(req(&p.attributes, 0, "PRODUCT_DEFINITION_OCCURRENCE.id")?, "PRODUCT_DEFINITION_OCCURRENCE.id"))?, name: match req(&p.attributes, 1, "PRODUCT_DEFINITION_OCCURRENCE.name")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_DEFINITION_OCCURRENCE.name"))?) }, description: match req(&p.attributes, 2, "PRODUCT_DEFINITION_OCCURRENCE.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_DEFINITION_OCCURRENCE.description"))?) }, definition: None, quantity: None, },
-        "PRODUCT_DEFINITION_RELATIONSHIP" => UnitPart::ProductDefinitionRelationship { id: (as_str(req(&p.attributes, 0, "PRODUCT_DEFINITION_RELATIONSHIP.id")?, "PRODUCT_DEFINITION_RELATIONSHIP.id"))?, name: (as_str(req(&p.attributes, 1, "PRODUCT_DEFINITION_RELATIONSHIP.name")?, "PRODUCT_DEFINITION_RELATIONSHIP.name"))?, description: match req(&p.attributes, 2, "PRODUCT_DEFINITION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_DEFINITION_RELATIONSHIP.description"))?) }, relating_product_definition: ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(GenericProductDefinitionReferenceId(usize::MAX)), related_product_definition: ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(GenericProductDefinitionReferenceId(usize::MAX)), },
-        "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP" => UnitPart::ProductDefinitionRelationshipRelationship { id: (as_str(req(&p.attributes, 0, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.id")?, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.id"))?, name: (as_str(req(&p.attributes, 1, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.name")?, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.name"))?, description: match req(&p.attributes, 2, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.description"))?) }, relating: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(usize::MAX)), related: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(usize::MAX)), },
+        "PRODUCT_DEFINITION_RELATIONSHIP" => UnitPart::ProductDefinitionRelationship { id: (as_str(req(&p.attributes, 0, "PRODUCT_DEFINITION_RELATIONSHIP.id")?, "PRODUCT_DEFINITION_RELATIONSHIP.id"))?, name: (as_str(req(&p.attributes, 1, "PRODUCT_DEFINITION_RELATIONSHIP.name")?, "PRODUCT_DEFINITION_RELATIONSHIP.name"))?, description: match req(&p.attributes, 2, "PRODUCT_DEFINITION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_DEFINITION_RELATIONSHIP.description"))?) }, relating_product_definition: ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(GenericProductDefinitionReferenceId(u32::MAX)), related_product_definition: ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(GenericProductDefinitionReferenceId(u32::MAX)), },
+        "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP" => UnitPart::ProductDefinitionRelationshipRelationship { id: (as_str(req(&p.attributes, 0, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.id")?, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.id"))?, name: (as_str(req(&p.attributes, 1, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.name")?, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.name"))?, description: match req(&p.attributes, 2, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.description"))?) }, relating: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(u32::MAX)), related: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(u32::MAX)), },
         "PRODUCT_DEFINITION_SHAPE" => UnitPart::ProductDefinitionShape,
         "PRODUCT_DEFINITION_USAGE" => UnitPart::ProductDefinitionUsage,
         "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS" => UnitPart::ProductDefinitionWithAssociatedDocuments { documentation_ids: Vec::new(), },
         "PRODUCT_RELATED_PRODUCT_CATEGORY" => UnitPart::ProductRelatedProductCategory { products: Vec::new(), },
-        "PROJECTED_ZONE_DEFINITION" => UnitPart::ProjectedZoneDefinition { projection_end: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)), projected_length: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(usize::MAX)), },
-        "PROPERTY_DEFINITION" => UnitPart::PropertyDefinition { name: (as_str(req(&p.attributes, 0, "PROPERTY_DEFINITION.name")?, "PROPERTY_DEFINITION.name"))?, description: match req(&p.attributes, 1, "PROPERTY_DEFINITION.description")? { Attribute::Unset => None, other => Some((as_str(other, "PROPERTY_DEFINITION.description"))?) }, definition: CharacterizedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)), },
-        "PROPERTY_DEFINITION_REPRESENTATION" => UnitPart::PropertyDefinitionRepresentation { definition: RepresentedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)), used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)), },
+        "PROJECTED_ZONE_DEFINITION" => UnitPart::ProjectedZoneDefinition { projection_end: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), projected_length: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
+        "PROPERTY_DEFINITION" => UnitPart::PropertyDefinition { name: (as_str(req(&p.attributes, 0, "PROPERTY_DEFINITION.name")?, "PROPERTY_DEFINITION.name"))?, description: match req(&p.attributes, 1, "PROPERTY_DEFINITION.description")? { Attribute::Unset => None, other => Some((as_str(other, "PROPERTY_DEFINITION.description"))?) }, definition: CharacterizedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), },
+        "PROPERTY_DEFINITION_REPRESENTATION" => UnitPart::PropertyDefinitionRepresentation { definition: RepresentedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
         "QUALIFIED_REPRESENTATION_ITEM" => UnitPart::QualifiedRepresentationItem { qualifiers: Vec::new(), },
         "QUASI_UNIFORM_CURVE" => UnitPart::QuasiUniformCurve,
         "QUASI_UNIFORM_SURFACE" => UnitPart::QuasiUniformSurface,
@@ -39018,19 +38985,19 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "RATIONAL_B_SPLINE_SURFACE" => UnitPart::RationalBSplineSurface { weights_data: (match req(&p.attributes, 0, "RATIONAL_B_SPLINE_SURFACE.weights_data")? { Attribute::List(l) => l.iter().map(|e| match e { Attribute::List(l) => l.iter().map(|e| as_real(e, "RATIONAL_B_SPLINE_SURFACE.weights_data")).collect::<Result<Vec<_>, String>>(), o => Err(format!("RATIONAL_B_SPLINE_SURFACE.weights_data: expected list, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("RATIONAL_B_SPLINE_SURFACE.weights_data: expected list, got {o:?}")) })?, },
         "REAL_LITERAL" => UnitPart::RealLiteral,
         "REAL_REPRESENTATION_ITEM" => UnitPart::RealRepresentationItem,
-        "REPOSITIONED_TESSELLATED_ITEM" => UnitPart::RepositionedTessellatedItem { location: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(usize::MAX)), },
-        "REPRESENTATION" => UnitPart::Representation { name: (as_str(req(&p.attributes, 0, "REPRESENTATION.name")?, "REPRESENTATION.name"))?, items: Vec::new(), context_of_items: RepresentationContextRef::GeometricRepresentationContext(GeometricRepresentationContextId(usize::MAX)), },
+        "REPOSITIONED_TESSELLATED_ITEM" => UnitPart::RepositionedTessellatedItem { location: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)), },
+        "REPRESENTATION" => UnitPart::Representation { name: (as_str(req(&p.attributes, 0, "REPRESENTATION.name")?, "REPRESENTATION.name"))?, items: Vec::new(), context_of_items: RepresentationContextRef::GeometricRepresentationContext(GeometricRepresentationContextId(u32::MAX)), },
         "REPRESENTATION_CONTEXT" => UnitPart::RepresentationContext { context_identifier: (as_str(req(&p.attributes, 0, "REPRESENTATION_CONTEXT.context_identifier")?, "REPRESENTATION_CONTEXT.context_identifier"))?, context_type: (as_str(req(&p.attributes, 1, "REPRESENTATION_CONTEXT.context_type")?, "REPRESENTATION_CONTEXT.context_type"))?, },
         "REPRESENTATION_ITEM" => UnitPart::RepresentationItem { name: (as_str(req(&p.attributes, 0, "REPRESENTATION_ITEM.name")?, "REPRESENTATION_ITEM.name"))?, },
-        "REPRESENTATION_MAP" => UnitPart::RepresentationMap { mapping_origin: RepresentationItemRef::AdvancedFace(AdvancedFaceId(usize::MAX)), mapped_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)), },
-        "REPRESENTATION_REFERENCE" => UnitPart::RepresentationReference { id: (as_str(req(&p.attributes, 0, "REPRESENTATION_REFERENCE.id")?, "REPRESENTATION_REFERENCE.id"))?, context_of_items: RepresentationContextReferenceRef::RepresentationContextReference(RepresentationContextReferenceId(usize::MAX)), },
-        "REPRESENTATION_RELATIONSHIP" => UnitPart::RepresentationRelationship { name: (as_str(req(&p.attributes, 0, "REPRESENTATION_RELATIONSHIP.name")?, "REPRESENTATION_RELATIONSHIP.name"))?, description: match req(&p.attributes, 1, "REPRESENTATION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "REPRESENTATION_RELATIONSHIP.description"))?) }, rep_1: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)), rep_2: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)), },
-        "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION" => UnitPart::RepresentationRelationshipWithTransformation { transformation_operator: TransformationRef::FunctionallyDefinedTransformation(FunctionallyDefinedTransformationId(usize::MAX)), },
+        "REPRESENTATION_MAP" => UnitPart::RepresentationMap { mapping_origin: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), mapped_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
+        "REPRESENTATION_REFERENCE" => UnitPart::RepresentationReference { id: (as_str(req(&p.attributes, 0, "REPRESENTATION_REFERENCE.id")?, "REPRESENTATION_REFERENCE.id"))?, context_of_items: RepresentationContextReferenceRef::RepresentationContextReference(RepresentationContextReferenceId(u32::MAX)), },
+        "REPRESENTATION_RELATIONSHIP" => UnitPart::RepresentationRelationship { name: (as_str(req(&p.attributes, 0, "REPRESENTATION_RELATIONSHIP.name")?, "REPRESENTATION_RELATIONSHIP.name"))?, description: match req(&p.attributes, 1, "REPRESENTATION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "REPRESENTATION_RELATIONSHIP.description"))?) }, rep_1: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), rep_2: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
+        "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION" => UnitPart::RepresentationRelationshipWithTransformation { transformation_operator: TransformationRef::FunctionallyDefinedTransformation(FunctionallyDefinedTransformationId(u32::MAX)), },
         "ROUNDNESS_TOLERANCE" => UnitPart::RoundnessTolerance,
         "SEAM_CURVE" => UnitPart::SeamCurve,
-        "SECURITY_CLASSIFICATION_ASSIGNMENT" => UnitPart::SecurityClassificationAssignment { assigned_security_classification: SecurityClassificationRef::SecurityClassification(SecurityClassificationId(usize::MAX)), },
-        "SHAPE_ASPECT" => UnitPart::ShapeAspect { name: (as_str(req(&p.attributes, 0, "SHAPE_ASPECT.name")?, "SHAPE_ASPECT.name"))?, description: match req(&p.attributes, 1, "SHAPE_ASPECT.description")? { Attribute::Unset => None, other => Some((as_str(other, "SHAPE_ASPECT.description"))?) }, of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(usize::MAX)), product_definitional: match req(&p.attributes, 3, "SHAPE_ASPECT.product_definitional")? { Attribute::Derived => None, other => Some((as_logical(other, "SHAPE_ASPECT.product_definitional"))?) }, },
-        "SHAPE_ASPECT_RELATIONSHIP" => UnitPart::ShapeAspectRelationship { name: (as_str(req(&p.attributes, 0, "SHAPE_ASPECT_RELATIONSHIP.name")?, "SHAPE_ASPECT_RELATIONSHIP.name"))?, description: match req(&p.attributes, 1, "SHAPE_ASPECT_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "SHAPE_ASPECT_RELATIONSHIP.description"))?) }, relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)), related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(usize::MAX)), },
+        "SECURITY_CLASSIFICATION_ASSIGNMENT" => UnitPart::SecurityClassificationAssignment { assigned_security_classification: SecurityClassificationRef::SecurityClassification(SecurityClassificationId(u32::MAX)), },
+        "SHAPE_ASPECT" => UnitPart::ShapeAspect { name: (as_str(req(&p.attributes, 0, "SHAPE_ASPECT.name")?, "SHAPE_ASPECT.name"))?, description: match req(&p.attributes, 1, "SHAPE_ASPECT.description")? { Attribute::Unset => None, other => Some((as_str(other, "SHAPE_ASPECT.description"))?) }, of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(u32::MAX)), product_definitional: match req(&p.attributes, 3, "SHAPE_ASPECT.product_definitional")? { Attribute::Derived => None, other => Some((as_logical(other, "SHAPE_ASPECT.product_definitional"))?) }, },
+        "SHAPE_ASPECT_RELATIONSHIP" => UnitPart::ShapeAspectRelationship { name: (as_str(req(&p.attributes, 0, "SHAPE_ASPECT_RELATIONSHIP.name")?, "SHAPE_ASPECT_RELATIONSHIP.name"))?, description: match req(&p.attributes, 1, "SHAPE_ASPECT_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_str(other, "SHAPE_ASPECT_RELATIONSHIP.description"))?) }, relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), },
         "SHAPE_DEFINITION_REPRESENTATION" => UnitPart::ShapeDefinitionRepresentation,
         "SHAPE_DIMENSION_REPRESENTATION" => UnitPart::ShapeDimensionRepresentation,
         "SHAPE_REPRESENTATION" => UnitPart::ShapeRepresentation,
@@ -39046,48 +39013,48 @@ fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, S
         "STATE_OBSERVED" => UnitPart::StateObserved { name: (as_str(req(&p.attributes, 0, "STATE_OBSERVED.name")?, "STATE_OBSERVED.name"))?, description: match req(&p.attributes, 1, "STATE_OBSERVED.description")? { Attribute::Unset => None, other => Some((as_str(other, "STATE_OBSERVED.description"))?) }, },
         "STATE_TYPE" => UnitPart::StateType { name: (as_str(req(&p.attributes, 0, "STATE_TYPE.name")?, "STATE_TYPE.name"))?, description: match req(&p.attributes, 1, "STATE_TYPE.description")? { Attribute::Unset => None, other => Some((as_str(other, "STATE_TYPE.description"))?) }, },
         "STRAIGHTNESS_TOLERANCE" => UnitPart::StraightnessTolerance,
-        "STYLED_ITEM" => UnitPart::StyledItem { styles: Vec::new(), item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(usize::MAX)), },
+        "STYLED_ITEM" => UnitPart::StyledItem { styles: Vec::new(), item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
         "SURFACE" => UnitPart::Surface,
-        "SURFACE_CURVE" => UnitPart::SurfaceCurve { curve_3d: CurveRef::BSplineCurve(BSplineCurveId(usize::MAX)), associated_geometry: Vec::new(), master_representation: (match req(&p.attributes, 2, "SURFACE_CURVE.master_representation")? { Attribute::Enum(s) => PreferredSurfaceCurveRepresentation::parse(s).ok_or_else(|| format!("SURFACE_CURVE.master_representation: bad enum {s:?}")), o => Err(format!("SURFACE_CURVE.master_representation: expected enum, got {o:?}")) })?, },
+        "SURFACE_CURVE" => UnitPart::SurfaceCurve { curve_3d: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)), associated_geometry: Vec::new(), master_representation: (match req(&p.attributes, 2, "SURFACE_CURVE.master_representation")? { Attribute::Enum(s) => PreferredSurfaceCurveRepresentation::parse(s).ok_or_else(|| format!("SURFACE_CURVE.master_representation: bad enum {s:?}")), o => Err(format!("SURFACE_CURVE.master_representation: expected enum, got {o:?}")) })?, },
         "SURFACE_PROFILE_TOLERANCE" => UnitPart::SurfaceProfileTolerance,
         "SURFACE_SIDE_STYLE" => UnitPart::SurfaceSideStyle { name: (as_str(req(&p.attributes, 0, "SURFACE_SIDE_STYLE.name")?, "SURFACE_SIDE_STYLE.name"))?, styles: Vec::new(), },
-        "SURFACE_STYLE_BOUNDARY" => UnitPart::SurfaceStyleBoundary { style_of_boundary: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)), },
-        "SURFACE_STYLE_CONTROL_GRID" => UnitPart::SurfaceStyleControlGrid { style_of_control_grid: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)), },
-        "SURFACE_STYLE_FILL_AREA" => UnitPart::SurfaceStyleFillArea { fill_area: FillAreaStyleRef::FillAreaStyle(FillAreaStyleId(usize::MAX)), },
-        "SURFACE_STYLE_PARAMETER_LINE" => UnitPart::SurfaceStyleParameterLine { style_of_parameter_lines: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)), direction_counts: (match req(&p.attributes, 1, "SURFACE_STYLE_PARAMETER_LINE.direction_counts")? { Attribute::List(l) => l.iter().map(|e| read_int_measure_value(e, "SURFACE_STYLE_PARAMETER_LINE.direction_counts")).collect::<Result<Vec<_>, String>>(), o => Err(format!("SURFACE_STYLE_PARAMETER_LINE.direction_counts: expected list, got {o:?}")) })?, },
+        "SURFACE_STYLE_BOUNDARY" => UnitPart::SurfaceStyleBoundary { style_of_boundary: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), },
+        "SURFACE_STYLE_CONTROL_GRID" => UnitPart::SurfaceStyleControlGrid { style_of_control_grid: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), },
+        "SURFACE_STYLE_FILL_AREA" => UnitPart::SurfaceStyleFillArea { fill_area: FillAreaStyleRef::FillAreaStyle(FillAreaStyleId(u32::MAX)), },
+        "SURFACE_STYLE_PARAMETER_LINE" => UnitPart::SurfaceStyleParameterLine { style_of_parameter_lines: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), direction_counts: (match req(&p.attributes, 1, "SURFACE_STYLE_PARAMETER_LINE.direction_counts")? { Attribute::List(l) => l.iter().map(|e| read_int_measure_value(e, "SURFACE_STYLE_PARAMETER_LINE.direction_counts")).collect::<Result<Vec<_>, String>>(), o => Err(format!("SURFACE_STYLE_PARAMETER_LINE.direction_counts: expected list, got {o:?}")) })?, },
         "SURFACE_STYLE_REFLECTANCE_AMBIENT" => UnitPart::SurfaceStyleReflectanceAmbient { ambient_reflectance: (as_real(req(&p.attributes, 0, "SURFACE_STYLE_REFLECTANCE_AMBIENT.ambient_reflectance")?, "SURFACE_STYLE_REFLECTANCE_AMBIENT.ambient_reflectance"))?, },
-        "SURFACE_STYLE_RENDERING" => UnitPart::SurfaceStyleRendering { rendering_method: (match req(&p.attributes, 0, "SURFACE_STYLE_RENDERING.rendering_method")? { Attribute::Enum(s) => ShadingSurfaceMethod::parse(s).ok_or_else(|| format!("SURFACE_STYLE_RENDERING.rendering_method: bad enum {s:?}")), o => Err(format!("SURFACE_STYLE_RENDERING.rendering_method: expected enum, got {o:?}")) })?, surface_colour: ColourRef::Colour(ColourId(usize::MAX)), },
+        "SURFACE_STYLE_RENDERING" => UnitPart::SurfaceStyleRendering { rendering_method: (match req(&p.attributes, 0, "SURFACE_STYLE_RENDERING.rendering_method")? { Attribute::Enum(s) => ShadingSurfaceMethod::parse(s).ok_or_else(|| format!("SURFACE_STYLE_RENDERING.rendering_method: bad enum {s:?}")), o => Err(format!("SURFACE_STYLE_RENDERING.rendering_method: expected enum, got {o:?}")) })?, surface_colour: ColourRef::Colour(ColourId(u32::MAX)), },
         "SURFACE_STYLE_RENDERING_WITH_PROPERTIES" => UnitPart::SurfaceStyleRenderingWithProperties { properties: Vec::new(), },
-        "SURFACE_STYLE_SEGMENTATION_CURVE" => UnitPart::SurfaceStyleSegmentationCurve { style_of_segmentation_curve: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)), },
-        "SURFACE_STYLE_SILHOUETTE" => UnitPart::SurfaceStyleSilhouette { style_of_silhouette: CurveOrRenderRef::CurveStyle(CurveStyleId(usize::MAX)), },
-        "SURFACE_STYLE_USAGE" => UnitPart::SurfaceStyleUsage { side: (match req(&p.attributes, 0, "SURFACE_STYLE_USAGE.side")? { Attribute::Enum(s) => SurfaceSide::parse(s).ok_or_else(|| format!("SURFACE_STYLE_USAGE.side: bad enum {s:?}")), o => Err(format!("SURFACE_STYLE_USAGE.side: expected enum, got {o:?}")) })?, style: SurfaceSideStyleSelectRef::PreDefinedSurfaceSideStyle(PreDefinedSurfaceSideStyleId(usize::MAX)), },
+        "SURFACE_STYLE_SEGMENTATION_CURVE" => UnitPart::SurfaceStyleSegmentationCurve { style_of_segmentation_curve: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), },
+        "SURFACE_STYLE_SILHOUETTE" => UnitPart::SurfaceStyleSilhouette { style_of_silhouette: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), },
+        "SURFACE_STYLE_USAGE" => UnitPart::SurfaceStyleUsage { side: (match req(&p.attributes, 0, "SURFACE_STYLE_USAGE.side")? { Attribute::Enum(s) => SurfaceSide::parse(s).ok_or_else(|| format!("SURFACE_STYLE_USAGE.side: bad enum {s:?}")), o => Err(format!("SURFACE_STYLE_USAGE.side: expected enum, got {o:?}")) })?, style: SurfaceSideStyleSelectRef::PreDefinedSurfaceSideStyle(PreDefinedSurfaceSideStyleId(u32::MAX)), },
         "SYMBOL_REPRESENTATION" => UnitPart::SymbolRepresentation,
-        "SYMBOL_STYLE" => UnitPart::SymbolStyle { name: (as_str(req(&p.attributes, 0, "SYMBOL_STYLE.name")?, "SYMBOL_STYLE.name"))?, style_of_symbol: SymbolStyleSelectRef::SymbolColour(SymbolColourId(usize::MAX)), },
-        "TERMINATOR_SYMBOL" => UnitPart::TerminatorSymbol { annotated_curve: AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(usize::MAX)), },
+        "SYMBOL_STYLE" => UnitPart::SymbolStyle { name: (as_str(req(&p.attributes, 0, "SYMBOL_STYLE.name")?, "SYMBOL_STYLE.name"))?, style_of_symbol: SymbolStyleSelectRef::SymbolColour(SymbolColourId(u32::MAX)), },
+        "TERMINATOR_SYMBOL" => UnitPart::TerminatorSymbol { annotated_curve: AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(u32::MAX)), },
         "TESSELLATED_GEOMETRIC_SET" => UnitPart::TessellatedGeometricSet { children: Vec::new(), },
         "TESSELLATED_ITEM" => UnitPart::TessellatedItem,
         "TESSELLATED_SHAPE_REPRESENTATION" => UnitPart::TessellatedShapeRepresentation,
         "TESSELLATED_STRUCTURED_ITEM" => UnitPart::TessellatedStructuredItem,
-        "TEXT_LITERAL" => UnitPart::TextLiteral { literal: (as_str(req(&p.attributes, 0, "TEXT_LITERAL.literal")?, "TEXT_LITERAL.literal"))?, placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(usize::MAX)), alignment: (as_str(req(&p.attributes, 2, "TEXT_LITERAL.alignment")?, "TEXT_LITERAL.alignment"))?, path: (match req(&p.attributes, 3, "TEXT_LITERAL.path")? { Attribute::Enum(s) => TextPath::parse(s).ok_or_else(|| format!("TEXT_LITERAL.path: bad enum {s:?}")), o => Err(format!("TEXT_LITERAL.path: expected enum, got {o:?}")) })?, font: FontSelectRef::DraughtingPreDefinedTextFont(DraughtingPreDefinedTextFontId(usize::MAX)), },
-        "TEXT_STYLE" => UnitPart::TextStyle { name: (as_str(req(&p.attributes, 0, "TEXT_STYLE.name")?, "TEXT_STYLE.name"))?, character_appearance: CharacterStyleSelectRef::CharacterGlyphStyleOutline(CharacterGlyphStyleOutlineId(usize::MAX)), },
+        "TEXT_LITERAL" => UnitPart::TextLiteral { literal: (as_str(req(&p.attributes, 0, "TEXT_LITERAL.literal")?, "TEXT_LITERAL.literal"))?, placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)), alignment: (as_str(req(&p.attributes, 2, "TEXT_LITERAL.alignment")?, "TEXT_LITERAL.alignment"))?, path: (match req(&p.attributes, 3, "TEXT_LITERAL.path")? { Attribute::Enum(s) => TextPath::parse(s).ok_or_else(|| format!("TEXT_LITERAL.path: bad enum {s:?}")), o => Err(format!("TEXT_LITERAL.path: expected enum, got {o:?}")) })?, font: FontSelectRef::DraughtingPreDefinedTextFont(DraughtingPreDefinedTextFontId(u32::MAX)), },
+        "TEXT_STYLE" => UnitPart::TextStyle { name: (as_str(req(&p.attributes, 0, "TEXT_STYLE.name")?, "TEXT_STYLE.name"))?, character_appearance: CharacterStyleSelectRef::CharacterGlyphStyleOutline(CharacterGlyphStyleOutlineId(u32::MAX)), },
         "TEXT_STYLE_WITH_BOX_CHARACTERISTICS" => UnitPart::TextStyleWithBoxCharacteristics { characteristics: (match req(&p.attributes, 0, "TEXT_STYLE_WITH_BOX_CHARACTERISTICS.characteristics")? { Attribute::List(l) => l.iter().map(|e| read_measure_value(e, "TEXT_STYLE_WITH_BOX_CHARACTERISTICS.characteristics")).collect::<Result<Vec<_>, String>>(), o => Err(format!("TEXT_STYLE_WITH_BOX_CHARACTERISTICS.characteristics: expected list, got {o:?}")) })?, },
         "TEXTURE_STYLE_SPECIFICATION" => UnitPart::TextureStyleSpecification,
         "TEXTURE_STYLE_TESSELLATION_SPECIFICATION" => UnitPart::TextureStyleTessellationSpecification,
         "TIME_UNIT" => UnitPart::TimeUnit,
-        "TOLERANCE_ZONE" => UnitPart::ToleranceZone { defining_tolerance: Vec::new(), form: ToleranceZoneFormRef::ToleranceZoneForm(ToleranceZoneFormId(usize::MAX)), },
-        "TOLERANCE_ZONE_DEFINITION" => UnitPart::ToleranceZoneDefinition { zone: ToleranceZoneRef::ToleranceZone(ToleranceZoneId(usize::MAX)), boundaries: Vec::new(), },
-        "TOLERANCE_ZONE_WITH_DATUM" => UnitPart::ToleranceZoneWithDatum { datum_reference: DatumSystemRef::DatumSystem(DatumSystemId(usize::MAX)), },
+        "TOLERANCE_ZONE" => UnitPart::ToleranceZone { defining_tolerance: Vec::new(), form: ToleranceZoneFormRef::ToleranceZoneForm(ToleranceZoneFormId(u32::MAX)), },
+        "TOLERANCE_ZONE_DEFINITION" => UnitPart::ToleranceZoneDefinition { zone: ToleranceZoneRef::ToleranceZone(ToleranceZoneId(u32::MAX)), boundaries: Vec::new(), },
+        "TOLERANCE_ZONE_WITH_DATUM" => UnitPart::ToleranceZoneWithDatum { datum_reference: DatumSystemRef::DatumSystem(DatumSystemId(u32::MAX)), },
         "TOPOLOGICAL_REPRESENTATION_ITEM" => UnitPart::TopologicalRepresentationItem,
         "TOROIDAL_SURFACE" => UnitPart::ToroidalSurface { major_radius: (as_real(req(&p.attributes, 0, "TOROIDAL_SURFACE.major_radius")?, "TOROIDAL_SURFACE.major_radius"))?, minor_radius: (as_real(req(&p.attributes, 1, "TOROIDAL_SURFACE.minor_radius")?, "TOROIDAL_SURFACE.minor_radius"))?, },
-        "TWO_DIRECTION_REPEAT_FACTOR" => UnitPart::TwoDirectionRepeatFactor { second_repeat_factor: VectorRef::Vector(VectorId(usize::MAX)), },
-        "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE" => UnitPart::UnequallyDisposedGeometricTolerance { displacement: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(usize::MAX)), },
+        "TWO_DIRECTION_REPEAT_FACTOR" => UnitPart::TwoDirectionRepeatFactor { second_repeat_factor: VectorRef::Vector(VectorId(u32::MAX)), },
+        "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE" => UnitPart::UnequallyDisposedGeometricTolerance { displacement: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
         "UNIFORM_CURVE" => UnitPart::UniformCurve,
         "UNIFORM_SURFACE" => UnitPart::UniformSurface,
         "VALUE_REPRESENTATION_ITEM" => UnitPart::ValueRepresentationItem { value_component: (read_measure_value(req(&p.attributes, 0, "VALUE_REPRESENTATION_ITEM.value_component")?, "VALUE_REPRESENTATION_ITEM.value_component"))?, },
-        "VECTOR" => UnitPart::Vector { orientation: DirectionRef::Direction(DirectionId(usize::MAX)), magnitude: (as_real(req(&p.attributes, 1, "VECTOR.magnitude")?, "VECTOR.magnitude"))?, },
+        "VECTOR" => UnitPart::Vector { orientation: DirectionRef::Direction(DirectionId(u32::MAX)), magnitude: (as_real(req(&p.attributes, 1, "VECTOR.magnitude")?, "VECTOR.magnitude"))?, },
         "VERTEX" => UnitPart::Vertex,
-        "VERTEX_POINT" => UnitPart::VertexPoint { vertex_geometry: PointRef::ApllPoint(ApllPointId(usize::MAX)), },
-        "VIEW_VOLUME" => UnitPart::ViewVolume { projection_type: (match req(&p.attributes, 0, "VIEW_VOLUME.projection_type")? { Attribute::Enum(s) => CentralOrParallel::parse(s).ok_or_else(|| format!("VIEW_VOLUME.projection_type: bad enum {s:?}")), o => Err(format!("VIEW_VOLUME.projection_type: expected enum, got {o:?}")) })?, projection_point: CartesianPointRef::ApllPoint(ApllPointId(usize::MAX)), view_plane_distance: (as_real(req(&p.attributes, 2, "VIEW_VOLUME.view_plane_distance")?, "VIEW_VOLUME.view_plane_distance"))?, front_plane_distance: (as_real(req(&p.attributes, 3, "VIEW_VOLUME.front_plane_distance")?, "VIEW_VOLUME.front_plane_distance"))?, front_plane_clipping: (Ok::<bool, String>(matches!(req(&p.attributes, 4, "VIEW_VOLUME.front_plane_clipping")?, Attribute::Enum(s) if s == "T")))?, back_plane_distance: (as_real(req(&p.attributes, 5, "VIEW_VOLUME.back_plane_distance")?, "VIEW_VOLUME.back_plane_distance"))?, back_plane_clipping: (Ok::<bool, String>(matches!(req(&p.attributes, 6, "VIEW_VOLUME.back_plane_clipping")?, Attribute::Enum(s) if s == "T")))?, view_volume_sides_clipping: (Ok::<bool, String>(matches!(req(&p.attributes, 7, "VIEW_VOLUME.view_volume_sides_clipping")?, Attribute::Enum(s) if s == "T")))?, view_window: PlanarBoxRef::PlanarBox(PlanarBoxId(usize::MAX)), },
+        "VERTEX_POINT" => UnitPart::VertexPoint { vertex_geometry: PointRef::ApllPoint(ApllPointId(u32::MAX)), },
+        "VIEW_VOLUME" => UnitPart::ViewVolume { projection_type: (match req(&p.attributes, 0, "VIEW_VOLUME.projection_type")? { Attribute::Enum(s) => CentralOrParallel::parse(s).ok_or_else(|| format!("VIEW_VOLUME.projection_type: bad enum {s:?}")), o => Err(format!("VIEW_VOLUME.projection_type: expected enum, got {o:?}")) })?, projection_point: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)), view_plane_distance: (as_real(req(&p.attributes, 2, "VIEW_VOLUME.view_plane_distance")?, "VIEW_VOLUME.view_plane_distance"))?, front_plane_distance: (as_real(req(&p.attributes, 3, "VIEW_VOLUME.front_plane_distance")?, "VIEW_VOLUME.front_plane_distance"))?, front_plane_clipping: (Ok::<bool, String>(matches!(req(&p.attributes, 4, "VIEW_VOLUME.front_plane_clipping")?, Attribute::Enum(s) if s == "T")))?, back_plane_distance: (as_real(req(&p.attributes, 5, "VIEW_VOLUME.back_plane_distance")?, "VIEW_VOLUME.back_plane_distance"))?, back_plane_clipping: (Ok::<bool, String>(matches!(req(&p.attributes, 6, "VIEW_VOLUME.back_plane_clipping")?, Attribute::Enum(s) if s == "T")))?, view_volume_sides_clipping: (Ok::<bool, String>(matches!(req(&p.attributes, 7, "VIEW_VOLUME.view_volume_sides_clipping")?, Attribute::Enum(s) if s == "T")))?, view_window: PlanarBoxRef::PlanarBox(PlanarBoxId(u32::MAX)), },
         other => return Err(format!("unknown complex part: {other}")),
     }) }).collect::<Result<Vec<_>, String>>()
 }
@@ -39098,7 +39065,7 @@ fn resolve_complex(
     parts: &[RawEntityPart],
     idmap: &IdMap,
 ) -> Result<(), String> {
-    let bag = &mut model.complex_unit_arena.items[aid.0];
+    let bag = &mut model.complex_unit_arena.items[aid.0 as usize];
     for (slot, p) in bag.parts.iter_mut().zip(parts.iter()) {
         match slot {
             UnitPart::Action { chosen_method, .. } => {

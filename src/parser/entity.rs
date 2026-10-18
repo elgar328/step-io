@@ -178,6 +178,7 @@ impl Graph {
 /// Lexer errors are wrapped in [`Error::Lex`]; the remaining variants
 /// describe structural problems detected during parsing.
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub enum Error {
     /// A lexical error bubbled up from the tokenizer.
     Lex(LexError),
@@ -202,6 +203,10 @@ pub enum Error {
     ///
     /// [`MAX_NESTING_DEPTH`]: super::p21::MAX_NESTING_DEPTH
     NestingTooDeep { span: Span },
+    /// The file holds more than the reader can index: at most
+    /// `u32::MAX - 1` entities, and as many reference and text slots.
+    /// `span` is the entity where reading stopped.
+    TooLarge { span: Span },
 }
 
 impl From<LexError> for Error {
@@ -250,6 +255,11 @@ impl std::fmt::Display for Error {
             Self::NestingTooDeep { span } => write!(
                 f,
                 "parse error at line {}, column {}: parameter nesting too deep",
+                span.line, span.column,
+            ),
+            Self::TooLarge { span } => write!(
+                f,
+                "read error at line {}, column {}: the file is too large to read",
                 span.line, span.column,
             ),
         }

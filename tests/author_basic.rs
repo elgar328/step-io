@@ -434,7 +434,7 @@ fn cyclic_constructor_rolls_back_on_dangling_reference() {
     // Direct rollback proof: a shape-representation anchor makes a valid
     // NEXT insertion possible in another arena, and the closure of a third
     // cyclic attempt still sees id 0 — both failed insertions were popped.
-    let seen = std::cell::Cell::new(usize::MAX);
+    let seen = std::cell::Cell::new(u32::MAX);
     let _ = a.add_dimensional_size_with_datum_feature_cyclic(|id| {
         seen.set(id.0);
         m::DimensionalSizeWithDatumFeature {

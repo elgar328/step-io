@@ -159,7 +159,7 @@ impl Scan {
                 Some(ix) => {
                     row.member = Member::Simple(ix);
                     match build_entity(&mut self.model, ix, &attributes) {
-                        Ok(i) => row.arena = to_u32(i),
+                        Ok(i) => row.arena = i,
                         Err(e) => self.build_fail.push((id, e)),
                     }
                     row.refs = self
@@ -175,7 +175,7 @@ impl Scan {
                 if let Some(pixs) = pixs.filter(|p| !p.is_empty()) {
                     row.member = Member::Complex;
                     match build_complex_entity(&mut self.model, &parts) {
-                        Ok(i) => row.arena = to_u32(i),
+                        Ok(i) => row.arena = i,
                         Err(e) => self.build_fail.push((id, e)),
                     }
                     row.refs = self
@@ -202,7 +202,7 @@ impl Scan {
             Some(ix) => {
                 row.member = Member::Simple(ix);
                 match build_entity(&mut self.model, ix, &[]) {
-                    Ok(i) => row.arena = to_u32(i),
+                    Ok(i) => row.arena = i,
                     Err(e) => build = Err(e),
                 }
             }
@@ -510,7 +510,7 @@ fn resolve(
         if !kept[pos] || row.arena == NONE || row.refs == NONE {
             continue;
         }
-        let i = row.arena as usize;
+        let i = row.arena;
         let r = match row.member {
             Member::Simple(ix) if !ref_field_slots(ix).is_empty() => {
                 refs.restore_simple(row.refs, &mut attrs);
@@ -547,6 +547,13 @@ fn resolve(
 /// never fails the read: a malformed entity is dropped with a reason in
 /// [`Report::dropped`] (the generated read is structurally panic-free).
 pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
+    // Row positions and arena indices are 32-bit, `NONE` reserved.
+    read_at_most(src, NONE as usize)
+}
+
+/// [`read`] for a file of at most `limit` entities, synthetic ones
+/// included; past that it is [`Error::TooLarge`].
+fn read_at_most(src: &[u8], limit: usize) -> Result<(StepModel, Report), Error> {
     /// ≤2 real iterations; one extra for slack (a violation degrades to dropping,
     /// not hanging — `debug_assert` flags non-convergence in dev).
     const MAX_ITERS: usize = 3;
@@ -557,7 +564,14 @@ pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
     let mut scan = Scan::default();
     let end = loop {
         match parser.next_entity() {
-            Ok(Some(ent)) => scan.entity(ent),
+            Ok(Some(ent)) => {
+                let at = ent.span();
+                scan.entity(ent);
+                // Like a parse error, this yields to a duplicate id before it.
+                if scan.rows.len() + scan.synthetic.len() > limit || scan.refs.overflowed() {
+                    break Err(Error::TooLarge { span: at });
+                }
+            }
             Ok(None) => break parser.finish(),
             Err(e) => break Err(e),
         }
@@ -661,6 +675,33 @@ pub fn read(src: &[u8]) -> Result<(StepModel, Report), Error> {
 #[cfg(test)]
 mod tests {
     use crate::generated::model::Arena;
+    use crate::parser::Error;
+
+    /// Past the entity limit the read stops with `TooLarge`, at the entity
+    /// that went over; a duplicate id before it is still reported first.
+    #[test]
+    fn too_many_entities_is_an_error() {
+        let src = |body: &str| {
+            format!(
+                "ISO-10303-21;HEADER;FILE_DESCRIPTION((''),'2;1');\
+                 FILE_NAME('','',(''),(''),'','','');FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));ENDSEC;\
+                 DATA;\n{body}ENDSEC;END-ISO-10303-21;"
+            )
+        };
+        let three = "#1=CARTESIAN_POINT('',(0.,0.,0.));\n#2=CARTESIAN_POINT('',(0.,0.,0.));\n\
+                     #3=CARTESIAN_POINT('',(0.,0.,0.));\n";
+        assert!(super::read_at_most(src(three).as_bytes(), 3).is_ok());
+        match super::read_at_most(src(three).as_bytes(), 2) {
+            Err(Error::TooLarge { span }) => assert_eq!(span.line, 4),
+            other => panic!("{other:?}"),
+        }
+        let dup = "#1=CARTESIAN_POINT('',(0.,0.,0.));\n#1=CARTESIAN_POINT('',(0.,0.,0.));\n\
+                   #3=CARTESIAN_POINT('',(0.,0.,0.));\n";
+        assert!(matches!(
+            super::read_at_most(src(dup).as_bytes(), 2),
+            Err(Error::DuplicateEntityId { id: 1, .. })
+        ));
+    }
 
     /// `retain_order` keeps exactly the listed items, in the listed order,
     /// whatever cycles the permutation has.

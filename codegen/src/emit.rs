@@ -70,8 +70,12 @@ pub fn emit_model(ir: &ModelIr) -> String {
 pub struct Arena<T> { pub items: Vec<T> }
 impl<T> Default for Arena<T> { fn default() -> Self { Arena { items: Vec::new() } } }
 impl<T> Arena<T> {
-    pub fn push(&mut self, v: T) -> usize { let i = self.items.len(); self.items.push(v); i }
-    pub fn get(&self, i: usize) -> &T { &self.items[i] }
+    /// Append an item and return its index. An arena holds at most
+    /// `u32::MAX` items (the reader rejects larger files).
+    pub fn push(&mut self, v: T) -> u32 { let i = self.items.len() as u32; self.items.push(v); i }
+    pub fn get(&self, i: u32) -> &T { &self.items[i as usize] }
+    /// The indices of the items, in order.
+    pub fn indices(&self) -> std::ops::Range<u32> { 0..self.items.len() as u32 }
     /// Keep the items at the distinct indices `order`, in that order, and drop
     /// the rest. Permutes in place, without a second copy of the items.
     pub(crate) fn retain_order(&mut self, order: &[u32]) {
@@ -167,7 +171,7 @@ pub struct IntMeasureValue { pub type_name: Option<String>, pub value: i64 }
     for se in &ir.simples {
         writeln!(
             s,
-            "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct {}Id(pub usize);",
+            "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct {}Id(pub u32);",
             se.rust
         )
         .unwrap();
@@ -175,7 +179,7 @@ pub struct IntMeasureValue { pub type_name: Option<String>, pub value: i64 }
     if ir.has_part_bag {
         writeln!(
             s,
-            "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct ComplexUnitId(pub usize);"
+            "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct ComplexUnitId(pub u32);"
         )
         .unwrap();
     }
@@ -278,7 +282,7 @@ pub fn emit_walk(ir: &ModelIr) -> String {
     for se in &ir.simples {
         writeln!(
             s,
-            "    for i in 0..model.{}.items.len() {{ f(EntityKey::{}({}Id(i))); }}",
+            "    for i in 0..model.{}.items.len() as u32 {{ f(EntityKey::{}({}Id(i))); }}",
             arena_field(&se.rust),
             se.rust,
             se.rust
@@ -287,7 +291,7 @@ pub fn emit_walk(ir: &ModelIr) -> String {
     }
     if ir.has_part_bag {
         s.push_str(
-            "    for i in 0..model.complex_unit_arena.items.len() { f(EntityKey::ComplexUnit(ComplexUnitId(i))); }\n",
+            "    for i in 0..model.complex_unit_arena.items.len() as u32 { f(EntityKey::ComplexUnit(ComplexUnitId(i))); }\n",
         );
     }
     s.push_str("}\n");
@@ -673,7 +677,7 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
     // The reader builds each entity as it streams past (`build_entity`), keeps
     // the ref slots, and resolves them once the file is read
     // (`resolve_entity`); `finalize_arenas` puts the arenas in id order first.
-    s.push_str("pub fn build_entity(model: &mut StepModel, ix: u16, attributes: &[Attribute]) -> Result<usize, String> {\n    Ok(match ix {\n");
+    s.push_str("pub fn build_entity(model: &mut StepModel, ix: u16, attributes: &[Attribute]) -> Result<u32, String> {\n    Ok(match ix {\n");
     for (ix, se) in ir.simples.iter().enumerate() {
         let af = arena_field(&se.rust);
         writeln!(
@@ -684,13 +688,13 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
     }
     s.push_str("        _ => return Err(format!(\"no entity type #{ix}\")),\n    })\n}\n\n");
 
-    s.push_str("pub fn key_of(ix: u16, i: usize) -> Option<EntityKey> {\n    Some(match ix {\n");
+    s.push_str("pub fn key_of(ix: u16, i: u32) -> Option<EntityKey> {\n    Some(match ix {\n");
     for (ix, se) in ir.simples.iter().enumerate() {
         writeln!(s, "        {ix} => EntityKey::{0}({0}Id(i)),", se.rust).unwrap();
     }
     s.push_str("        _ => return None,\n    })\n}\n\n");
 
-    s.push_str("pub fn resolve_entity(model: &mut StepModel, ix: u16, i: usize, attributes: &[Attribute], idmap: &IdMap) -> Result<(), String> {\n    match ix {\n");
+    s.push_str("pub fn resolve_entity(model: &mut StepModel, ix: u16, i: u32, attributes: &[Attribute], idmap: &IdMap) -> Result<(), String> {\n    match ix {\n");
     for (ix, se) in ir.simples.iter().enumerate() {
         if se.fields.iter().any(|f| has_ref(&f.kind)) {
             let af = arena_field(&se.rust);
@@ -705,13 +709,13 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
     s.push_str("        _ => Ok(()),\n    }\n}\n\n");
 
     if ir.has_part_bag {
-        s.push_str("pub fn build_complex_entity(model: &mut StepModel, parts: &[RawEntityPart]) -> Result<usize, String> {\n    Ok(model.complex_unit_arena.push(ComplexUnit { parts: read_complex_parts_norefs(parts)? }))\n}\n\n");
-        s.push_str("pub fn complex_key_of(i: usize) -> Option<EntityKey> {\n    Some(EntityKey::ComplexUnit(ComplexUnitId(i)))\n}\n\n");
-        s.push_str("pub fn resolve_complex_entity(model: &mut StepModel, i: usize, parts: &[RawEntityPart], idmap: &IdMap) -> Result<(), String> {\n    resolve_complex(model, ComplexUnitId(i), parts, idmap)\n}\n\n");
+        s.push_str("pub fn build_complex_entity(model: &mut StepModel, parts: &[RawEntityPart]) -> Result<u32, String> {\n    Ok(model.complex_unit_arena.push(ComplexUnit { parts: read_complex_parts_norefs(parts)? }))\n}\n\n");
+        s.push_str("pub fn complex_key_of(i: u32) -> Option<EntityKey> {\n    Some(EntityKey::ComplexUnit(ComplexUnitId(i)))\n}\n\n");
+        s.push_str("pub fn resolve_complex_entity(model: &mut StepModel, i: u32, parts: &[RawEntityPart], idmap: &IdMap) -> Result<(), String> {\n    resolve_complex(model, ComplexUnitId(i), parts, idmap)\n}\n\n");
     } else {
-        s.push_str("pub fn build_complex_entity(_model: &mut StepModel, _parts: &[RawEntityPart]) -> Result<usize, String> {\n    Err(\"no complex entities are modeled\".to_string())\n}\n\n");
-        s.push_str("pub fn complex_key_of(_i: usize) -> Option<EntityKey> {\n    None\n}\n\n");
-        s.push_str("pub fn resolve_complex_entity(_model: &mut StepModel, _i: usize, _parts: &[RawEntityPart], _idmap: &IdMap) -> Result<(), String> {\n    Ok(())\n}\n\n");
+        s.push_str("pub fn build_complex_entity(_model: &mut StepModel, _parts: &[RawEntityPart]) -> Result<u32, String> {\n    Err(\"no complex entities are modeled\".to_string())\n}\n\n");
+        s.push_str("pub fn complex_key_of(_i: u32) -> Option<EntityKey> {\n    None\n}\n\n");
+        s.push_str("pub fn resolve_complex_entity(_model: &mut StepModel, _i: u32, _parts: &[RawEntityPart], _idmap: &IdMap) -> Result<(), String> {\n    Ok(())\n}\n\n");
     }
 
     // `order[ix]` = the arena indices of type `ix` to keep, in id order.
@@ -811,9 +815,9 @@ fn ref_placeholder(ir: &ModelIr, k: &Kind, optional: bool) -> String {
             let re = &ir.ref_enums[t];
             // pick any arm for the placeholder
             if let Some((variant, target)) = re.simple_arms.first() {
-                format!("{}::{}({}Id(usize::MAX))", re.rust, variant, target)
+                format!("{}::{}({}Id(u32::MAX))", re.rust, variant, target)
             } else if re.has_complex {
-                format!("{}::Complex(ComplexUnitId(usize::MAX))", re.rust)
+                format!("{}::Complex(ComplexUnitId(u32::MAX))", re.rust)
             } else if let Some((variant, _, _)) = re.aggregate.first() {
                 // aggregate-only select (no single arm): empty-vec placeholder.
                 format!("{}::{}(Vec::new())", re.rust, variant)
@@ -922,7 +926,7 @@ fn emit_resolve(s: &mut String, ir: &ModelIr, se: &SimpleEnt) {
         }
         idx += 1;
     }
-    writeln!(s, "    let it = &mut model.{af}.items[aid.0];").unwrap();
+    writeln!(s, "    let it = &mut model.{af}.items[aid.0 as usize];").unwrap();
     for (id, f) in idents(&se.fields) {
         if f.derived || !has_ref(&f.kind) {
             continue;
@@ -1064,7 +1068,7 @@ fn emit_complex_read(s: &mut String, ir: &ModelIr) {
 
     // pass2: patch ref part attrs
     s.push_str("fn resolve_complex(model: &mut StepModel, aid: ComplexUnitId, parts: &[RawEntityPart], idmap: &IdMap) -> Result<(), String> {\n");
-    s.push_str("    let bag = &mut model.complex_unit_arena.items[aid.0];\n");
+    s.push_str("    let bag = &mut model.complex_unit_arena.items[aid.0 as usize];\n");
     s.push_str("    for (slot, p) in bag.parts.iter_mut().zip(parts.iter()) {\n");
     s.push_str("        match slot {\n");
     for p in &ir.parts {
@@ -1187,28 +1191,30 @@ fn step_str(s: &str) -> String {
     for se in &ir.simples {
         writeln!(
             s,
-            "        EntityKey::{}(i) => self.{}[i.0],",
+            "        EntityKey::{}(i) => self.{}[i.0 as usize],",
             se.rust,
             ids_field(&se.rust)
         )
         .unwrap();
     }
     if ir.has_part_bag {
-        s.push_str("        EntityKey::ComplexUnit(i) => self.complex_ids[i.0],\n");
+        s.push_str("        EntityKey::ComplexUnit(i) => self.complex_ids[i.0 as usize],\n");
     }
     s.push_str("    } }\n\n");
     s.push_str("    fn set_id(&mut self, any: EntityKey, n: u64) { match any {\n");
     for se in &ir.simples {
         writeln!(
             s,
-            "        EntityKey::{}(i) => self.{}[i.0] = Some(n),",
+            "        EntityKey::{}(i) => self.{}[i.0 as usize] = Some(n),",
             se.rust,
             ids_field(&se.rust)
         )
         .unwrap();
     }
     if ir.has_part_bag {
-        s.push_str("        EntityKey::ComplexUnit(i) => self.complex_ids[i.0] = Some(n),\n");
+        s.push_str(
+            "        EntityKey::ComplexUnit(i) => self.complex_ids[i.0 as usize] = Some(n),\n",
+        );
     }
     s.push_str("    } }\n\n");
 
@@ -1615,7 +1621,7 @@ fn emit_ref_id_of(s: &mut String, re: &RefEnum) {
     for (variant, target) in &re.simple_arms {
         writeln!(
             s,
-            "        {}::{variant}(i) => self.{}[i.0].expect(\"dep id assigned\"),",
+            "        {}::{variant}(i) => self.{}[i.0 as usize].expect(\"dep id assigned\"),",
             re.rust,
             ids_field(target)
         )
@@ -1624,7 +1630,7 @@ fn emit_ref_id_of(s: &mut String, re: &RefEnum) {
     if re.has_complex {
         writeln!(
             s,
-            "        {}::Complex(i) => self.complex_ids[i.0].expect(\"dep id assigned\"),",
+            "        {}::Complex(i) => self.complex_ids[i.0 as usize].expect(\"dep id assigned\"),",
             re.rust
         )
         .unwrap();
@@ -1742,12 +1748,12 @@ fn emit_writer_primitives(s: &mut String, ir: &ModelIr) {
     // all_ids: every node, arena order (the former emit_all roots block).
     s.push_str("    pub(crate) fn all_ids(&self) -> Vec<EntityKey> {\n        let mut roots: Vec<EntityKey> = Vec::new();\n");
     if ir.has_part_bag {
-        s.push_str("        for i in 0..self.model.complex_unit_arena.items.len() { roots.push(EntityKey::ComplexUnit(ComplexUnitId(i))); }\n");
+        s.push_str("        for i in 0..self.model.complex_unit_arena.items.len() as u32 { roots.push(EntityKey::ComplexUnit(ComplexUnitId(i))); }\n");
     }
     for se in &ir.simples {
         writeln!(
             s,
-            "        for i in 0..self.model.{}.items.len() {{ roots.push(EntityKey::{}({}Id(i))); }}",
+            "        for i in 0..self.model.{}.items.len() as u32 {{ roots.push(EntityKey::{}({}Id(i))); }}",
             arena_field(&se.rust),
             se.rust,
             se.rust
@@ -2468,7 +2474,7 @@ impl Ap242Author {
         .unwrap();
         writeln!(
             s,
-            "        let id = {}Id(self.model.{arena}.items.len());\n        self.model.{arena}.push(build(id));\n        if let Err(e) = cyclic_check_{snake}(&self.model, id.0) {{\n            self.model.{arena}.items.pop();\n            return Err(e);\n        }}\n        Ok(id)\n    }}",
+            "        let id = {}Id(self.model.{arena}.items.len() as u32);\n        self.model.{arena}.push(build(id));\n        if let Err(e) = cyclic_check_{snake}(&self.model, id.0) {{\n            self.model.{arena}.items.pop();\n            return Err(e);\n        }}\n        Ok(id)\n    }}",
             se.rust,
             arena = arena_field(&se.rust)
         )
@@ -2476,14 +2482,14 @@ impl Ap242Author {
 
         writeln!(
             cyclic_checks,
-            "fn cyclic_check_{snake}(model: &StepModel, id: usize) -> Result<(), AuthorError> {{"
+            "fn cyclic_check_{snake}(model: &StepModel, id: u32) -> Result<(), AuthorError> {{"
         )
         .unwrap();
         for (ident, f) in idents(&se.fields) {
             if f.derived {
                 continue;
             }
-            let expr = format!("model.{}.items[id].{ident}", arena_field(&se.rust));
+            let expr = format!("model.{}.items[id as usize].{ident}", arena_field(&se.rust));
             let check = author_check_expr(
                 ir,
                 &f.kind,
@@ -2813,7 +2819,7 @@ fn emit_author_ref_checks(
             if legal.contains(upper) {
                 writeln!(
                     s,
-                    "        {r}::{variant}(i) => {{ if i.0 >= model.{}.items.len() {{ return Err(AuthorError::DanglingRef {{ entity: {upper:?} }}); }} }}",
+                    "        {r}::{variant}(i) => {{ if i.0 as usize >= model.{}.items.len() {{ return Err(AuthorError::DanglingRef {{ entity: {upper:?} }}); }} }}",
                     arena_field(target)
                 )
                 .unwrap();
@@ -2843,7 +2849,7 @@ fn emit_author_ref_checks(
         if re.has_complex {
             writeln!(
                 s,
-                "        {r}::Complex(i) => {{ if i.0 >= model.complex_unit_arena.items.len() {{ return Err(AuthorError::DanglingRef {{ entity: \"COMPLEX\" }}); }} }}"
+                "        {r}::Complex(i) => {{ if i.0 as usize >= model.complex_unit_arena.items.len() {{ return Err(AuthorError::DanglingRef {{ entity: \"COMPLEX\" }}); }} }}"
             )
             .unwrap();
         }

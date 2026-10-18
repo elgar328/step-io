@@ -13,13 +13,19 @@ impl<T> Default for Arena<T> {
     }
 }
 impl<T> Arena<T> {
-    pub fn push(&mut self, v: T) -> usize {
-        let i = self.items.len();
+    /// Append an item and return its index. An arena holds at most
+    /// `u32::MAX` items (the reader rejects larger files).
+    pub fn push(&mut self, v: T) -> u32 {
+        let i = self.items.len() as u32;
         self.items.push(v);
         i
     }
-    pub fn get(&self, i: usize) -> &T {
-        &self.items[i]
+    pub fn get(&self, i: u32) -> &T {
+        &self.items[i as usize]
+    }
+    /// The indices of the items, in order.
+    pub fn indices(&self) -> std::ops::Range<u32> {
+        0..self.items.len() as u32
     }
     /// Keep the items at the distinct indices `order`, in that order, and drop
     /// the rest. Permutes in place, without a second copy of the items.
@@ -1114,1007 +1120,1007 @@ impl TrimmingPreference {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionId(pub usize);
+pub struct ActionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionAssignmentId(pub usize);
+pub struct ActionAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionDirectiveId(pub usize);
+pub struct ActionDirectiveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionMethodId(pub usize);
+pub struct ActionMethodId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionMethodRelationshipId(pub usize);
+pub struct ActionMethodRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionPropertyId(pub usize);
+pub struct ActionPropertyId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionRelationshipId(pub usize);
+pub struct ActionRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionRequestAssignmentId(pub usize);
+pub struct ActionRequestAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionRequestSolutionId(pub usize);
+pub struct ActionRequestSolutionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionResourceId(pub usize);
+pub struct ActionResourceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionResourceRelationshipId(pub usize);
+pub struct ActionResourceRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionResourceRequirementId(pub usize);
+pub struct ActionResourceRequirementId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionResourceTypeId(pub usize);
+pub struct ActionResourceTypeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AddressId(pub usize);
+pub struct AddressId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AdvancedBrepShapeRepresentationId(pub usize);
+pub struct AdvancedBrepShapeRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AdvancedFaceId(pub usize);
+pub struct AdvancedFaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AllAroundShapeAspectId(pub usize);
+pub struct AllAroundShapeAspectId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AngularLocationId(pub usize);
+pub struct AngularLocationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AngularSizeId(pub usize);
+pub struct AngularSizeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AngularityToleranceId(pub usize);
+pub struct AngularityToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationCurveOccurrenceId(pub usize);
+pub struct AnnotationCurveOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationFillAreaOccurrenceId(pub usize);
+pub struct AnnotationFillAreaOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationOccurrenceId(pub usize);
+pub struct AnnotationOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationOccurrenceAssociativityId(pub usize);
+pub struct AnnotationOccurrenceAssociativityId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationOccurrenceRelationshipId(pub usize);
+pub struct AnnotationOccurrenceRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationPlaceholderLeaderLineId(pub usize);
+pub struct AnnotationPlaceholderLeaderLineId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationPlaceholderOccurrenceId(pub usize);
+pub struct AnnotationPlaceholderOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationPlaceholderOccurrenceWithLeaderLineId(pub usize);
+pub struct AnnotationPlaceholderOccurrenceWithLeaderLineId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationPlaneId(pub usize);
+pub struct AnnotationPlaneId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationSymbolId(pub usize);
+pub struct AnnotationSymbolId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationSymbolOccurrenceId(pub usize);
+pub struct AnnotationSymbolOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationTextId(pub usize);
+pub struct AnnotationTextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationTextCharacterId(pub usize);
+pub struct AnnotationTextCharacterId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationTextOccurrenceId(pub usize);
+pub struct AnnotationTextOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationToAnnotationLeaderLineId(pub usize);
+pub struct AnnotationToAnnotationLeaderLineId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationToModelLeaderLineId(pub usize);
+pub struct AnnotationToModelLeaderLineId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApllPointId(pub usize);
+pub struct ApllPointId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApllPointWithSurfaceId(pub usize);
+pub struct ApllPointWithSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApplicationContextId(pub usize);
+pub struct ApplicationContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApplicationContextElementId(pub usize);
+pub struct ApplicationContextElementId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApplicationProtocolDefinitionId(pub usize);
+pub struct ApplicationProtocolDefinitionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AppliedApprovalAssignmentId(pub usize);
+pub struct AppliedApprovalAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AppliedDateAndTimeAssignmentId(pub usize);
+pub struct AppliedDateAndTimeAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AppliedDocumentReferenceId(pub usize);
+pub struct AppliedDocumentReferenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AppliedExternalIdentificationAssignmentId(pub usize);
+pub struct AppliedExternalIdentificationAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AppliedGroupAssignmentId(pub usize);
+pub struct AppliedGroupAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AppliedPersonAndOrganizationAssignmentId(pub usize);
+pub struct AppliedPersonAndOrganizationAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AppliedPresentedItemId(pub usize);
+pub struct AppliedPresentedItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AppliedSecurityClassificationAssignmentId(pub usize);
+pub struct AppliedSecurityClassificationAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApprovalId(pub usize);
+pub struct ApprovalId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApprovalAssignmentId(pub usize);
+pub struct ApprovalAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApprovalDateTimeId(pub usize);
+pub struct ApprovalDateTimeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApprovalPersonOrganizationId(pub usize);
+pub struct ApprovalPersonOrganizationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApprovalRoleId(pub usize);
+pub struct ApprovalRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApprovalStatusId(pub usize);
+pub struct ApprovalStatusId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApproximationToleranceId(pub usize);
+pub struct ApproximationToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApproximationToleranceDeviationId(pub usize);
+pub struct ApproximationToleranceDeviationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApproximationToleranceParameterId(pub usize);
+pub struct ApproximationToleranceParameterId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AreaInSetId(pub usize);
+pub struct AreaInSetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AreaUnitId(pub usize);
+pub struct AreaUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AscribableStateId(pub usize);
+pub struct AscribableStateId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AscribableStateRelationshipId(pub usize);
+pub struct AscribableStateRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AssemblyComponentUsageId(pub usize);
+pub struct AssemblyComponentUsageId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AuxiliaryLeaderLineId(pub usize);
+pub struct AuxiliaryLeaderLineId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Axis1PlacementId(pub usize);
+pub struct Axis1PlacementId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Axis2Placement2dId(pub usize);
+pub struct Axis2Placement2dId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Axis2Placement3dId(pub usize);
+pub struct Axis2Placement3dId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BSplineCurveId(pub usize);
+pub struct BSplineCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BSplineCurveWithKnotsId(pub usize);
+pub struct BSplineCurveWithKnotsId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BSplineSurfaceId(pub usize);
+pub struct BSplineSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BSplineSurfaceWithKnotsId(pub usize);
+pub struct BSplineSurfaceWithKnotsId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BezierCurveId(pub usize);
+pub struct BezierCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BezierSurfaceId(pub usize);
+pub struct BezierSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BoundedCurveId(pub usize);
+pub struct BoundedCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BoundedPcurveId(pub usize);
+pub struct BoundedPcurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BoundedSurfaceId(pub usize);
+pub struct BoundedSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BoundedSurfaceCurveId(pub usize);
+pub struct BoundedSurfaceCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BrepWithVoidsId(pub usize);
+pub struct BrepWithVoidsId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CalendarDateId(pub usize);
+pub struct CalendarDateId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CameraImageId(pub usize);
+pub struct CameraImageId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CameraImage3dWithScaleId(pub usize);
+pub struct CameraImage3dWithScaleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CameraModelId(pub usize);
+pub struct CameraModelId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CameraModelD3Id(pub usize);
+pub struct CameraModelD3Id(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CameraModelD3MultiClippingId(pub usize);
+pub struct CameraModelD3MultiClippingId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CameraModelD3WithHlhsrId(pub usize);
+pub struct CameraModelD3WithHlhsrId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CameraUsageId(pub usize);
+pub struct CameraUsageId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CartesianPointId(pub usize);
+pub struct CartesianPointId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CcDesignApprovalId(pub usize);
+pub struct CcDesignApprovalId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CcDesignDateAndTimeAssignmentId(pub usize);
+pub struct CcDesignDateAndTimeAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CcDesignPersonAndOrganizationAssignmentId(pub usize);
+pub struct CcDesignPersonAndOrganizationAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CcDesignSecurityClassificationId(pub usize);
+pub struct CcDesignSecurityClassificationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CentreOfSymmetryId(pub usize);
+pub struct CentreOfSymmetryId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CertificationId(pub usize);
+pub struct CertificationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CertificationTypeId(pub usize);
+pub struct CertificationTypeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ChangeId(pub usize);
+pub struct ChangeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ChangeRequestId(pub usize);
+pub struct ChangeRequestId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CharacterGlyphStyleOutlineId(pub usize);
+pub struct CharacterGlyphStyleOutlineId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CharacterGlyphStyleStrokeId(pub usize);
+pub struct CharacterGlyphStyleStrokeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CharacterizedItemWithinRepresentationId(pub usize);
+pub struct CharacterizedItemWithinRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CharacterizedObjectId(pub usize);
+pub struct CharacterizedObjectId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CharacterizedRepresentationId(pub usize);
+pub struct CharacterizedRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CircleId(pub usize);
+pub struct CircleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CircularRunoutToleranceId(pub usize);
+pub struct CircularRunoutToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ClosedShellId(pub usize);
+pub struct ClosedShellId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CoaxialityToleranceId(pub usize);
+pub struct CoaxialityToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ColourId(pub usize);
+pub struct ColourId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ColourRgbId(pub usize);
+pub struct ColourRgbId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ColourSpecificationId(pub usize);
+pub struct ColourSpecificationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CommonDatumId(pub usize);
+pub struct CommonDatumId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ComplexTriangulatedFaceId(pub usize);
+pub struct ComplexTriangulatedFaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ComplexTriangulatedSurfaceSetId(pub usize);
+pub struct ComplexTriangulatedSurfaceSetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CompositeCurveId(pub usize);
+pub struct CompositeCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CompositeCurveSegmentId(pub usize);
+pub struct CompositeCurveSegmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CompositeGroupShapeAspectId(pub usize);
+pub struct CompositeGroupShapeAspectId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CompositeShapeAspectId(pub usize);
+pub struct CompositeShapeAspectId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CompositeTextId(pub usize);
+pub struct CompositeTextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CompoundRepresentationItemId(pub usize);
+pub struct CompoundRepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConcentricityToleranceId(pub usize);
+pub struct ConcentricityToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConfigurationDesignId(pub usize);
+pub struct ConfigurationDesignId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConfigurationEffectivityId(pub usize);
+pub struct ConfigurationEffectivityId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConfigurationItemId(pub usize);
+pub struct ConfigurationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConicId(pub usize);
+pub struct ConicId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConicalSurfaceId(pub usize);
+pub struct ConicalSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConnectedFaceSetId(pub usize);
+pub struct ConnectedFaceSetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConstructiveGeometryRepresentationId(pub usize);
+pub struct ConstructiveGeometryRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConstructiveGeometryRepresentationRelationshipId(pub usize);
+pub struct ConstructiveGeometryRepresentationRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ContextDependentOverRidingStyledItemId(pub usize);
+pub struct ContextDependentOverRidingStyledItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ContextDependentShapeRepresentationId(pub usize);
+pub struct ContextDependentShapeRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ContextDependentUnitId(pub usize);
+pub struct ContextDependentUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ContinuousShapeAspectId(pub usize);
+pub struct ContinuousShapeAspectId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ContractId(pub usize);
+pub struct ContractId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ContractTypeId(pub usize);
+pub struct ContractTypeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConversionBasedUnitId(pub usize);
+pub struct ConversionBasedUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CoordinatedUniversalTimeOffsetId(pub usize);
+pub struct CoordinatedUniversalTimeOffsetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CoordinatesListId(pub usize);
+pub struct CoordinatesListId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CurveId(pub usize);
+pub struct CurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CurveStyleId(pub usize);
+pub struct CurveStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CurveStyleFontId(pub usize);
+pub struct CurveStyleFontId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CurveStyleFontAndScalingId(pub usize);
+pub struct CurveStyleFontAndScalingId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CurveStyleFontPatternId(pub usize);
+pub struct CurveStyleFontPatternId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CurveStyleRenderingId(pub usize);
+pub struct CurveStyleRenderingId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CylindricalSurfaceId(pub usize);
+pub struct CylindricalSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CylindricityToleranceId(pub usize);
+pub struct CylindricityToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DateId(pub usize);
+pub struct DateId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DateAndTimeId(pub usize);
+pub struct DateAndTimeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DateAndTimeAssignmentId(pub usize);
+pub struct DateAndTimeAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DateRoleId(pub usize);
+pub struct DateRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DateTimeRoleId(pub usize);
+pub struct DateTimeRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DatumId(pub usize);
+pub struct DatumId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DatumFeatureId(pub usize);
+pub struct DatumFeatureId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DatumReferenceId(pub usize);
+pub struct DatumReferenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DatumReferenceCompartmentId(pub usize);
+pub struct DatumReferenceCompartmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DatumReferenceElementId(pub usize);
+pub struct DatumReferenceElementId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DatumReferenceModifierWithValueId(pub usize);
+pub struct DatumReferenceModifierWithValueId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DatumSystemId(pub usize);
+pub struct DatumSystemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DatumTargetId(pub usize);
+pub struct DatumTargetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DefaultModelGeometricViewId(pub usize);
+pub struct DefaultModelGeometricViewId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DefinedCharacterGlyphId(pub usize);
+pub struct DefinedCharacterGlyphId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DefinedSymbolId(pub usize);
+pub struct DefinedSymbolId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DefinitionalRepresentationId(pub usize);
+pub struct DefinitionalRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DefinitionalRepresentationRelationshipId(pub usize);
+pub struct DefinitionalRepresentationRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DefinitionalRepresentationRelationshipWithSameContextId(pub usize);
+pub struct DefinitionalRepresentationRelationshipWithSameContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DegenerateToroidalSurfaceId(pub usize);
+pub struct DegenerateToroidalSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DerivedShapeAspectId(pub usize);
+pub struct DerivedShapeAspectId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DerivedUnitId(pub usize);
+pub struct DerivedUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DerivedUnitElementId(pub usize);
+pub struct DerivedUnitElementId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DescriptionAttributeId(pub usize);
+pub struct DescriptionAttributeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DescriptiveRepresentationItemId(pub usize);
+pub struct DescriptiveRepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DesignContextId(pub usize);
+pub struct DesignContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DimensionalCharacteristicRepresentationId(pub usize);
+pub struct DimensionalCharacteristicRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DimensionalExponentsId(pub usize);
+pub struct DimensionalExponentsId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DimensionalLocationId(pub usize);
+pub struct DimensionalLocationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DimensionalLocationWithPathId(pub usize);
+pub struct DimensionalLocationWithPathId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DimensionalSizeId(pub usize);
+pub struct DimensionalSizeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DimensionalSizeWithDatumFeatureId(pub usize);
+pub struct DimensionalSizeWithDatumFeatureId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DimensionalSizeWithPathId(pub usize);
+pub struct DimensionalSizeWithPathId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DirectedDimensionalLocationId(pub usize);
+pub struct DirectedDimensionalLocationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DirectionId(pub usize);
+pub struct DirectionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DocumentId(pub usize);
+pub struct DocumentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DocumentFileId(pub usize);
+pub struct DocumentFileId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DocumentProductAssociationId(pub usize);
+pub struct DocumentProductAssociationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DocumentProductEquivalenceId(pub usize);
+pub struct DocumentProductEquivalenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DocumentReferenceId(pub usize);
+pub struct DocumentReferenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DocumentRepresentationTypeId(pub usize);
+pub struct DocumentRepresentationTypeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DocumentTypeId(pub usize);
+pub struct DocumentTypeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DraughtingAnnotationOccurrenceId(pub usize);
+pub struct DraughtingAnnotationOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DraughtingCalloutId(pub usize);
+pub struct DraughtingCalloutId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DraughtingCalloutRelationshipId(pub usize);
+pub struct DraughtingCalloutRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DraughtingModelId(pub usize);
+pub struct DraughtingModelId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DraughtingModelItemAssociationId(pub usize);
+pub struct DraughtingModelItemAssociationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DraughtingModelItemAssociationWithPlaceholderId(pub usize);
+pub struct DraughtingModelItemAssociationWithPlaceholderId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DraughtingPreDefinedColourId(pub usize);
+pub struct DraughtingPreDefinedColourId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DraughtingPreDefinedCurveFontId(pub usize);
+pub struct DraughtingPreDefinedCurveFontId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DraughtingPreDefinedTextFontId(pub usize);
+pub struct DraughtingPreDefinedTextFontId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct EdgeId(pub usize);
+pub struct EdgeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct EdgeCurveId(pub usize);
+pub struct EdgeCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct EdgeLoopId(pub usize);
+pub struct EdgeLoopId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct EffectivityId(pub usize);
+pub struct EffectivityId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ElementarySurfaceId(pub usize);
+pub struct ElementarySurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct EllipseId(pub usize);
+pub struct EllipseId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExpressionId(pub usize);
+pub struct ExpressionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternalIdentificationAssignmentId(pub usize);
+pub struct ExternalIdentificationAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternalSourceId(pub usize);
+pub struct ExternalSourceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternallyDefinedCharacterGlyphId(pub usize);
+pub struct ExternallyDefinedCharacterGlyphId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternallyDefinedCurveFontId(pub usize);
+pub struct ExternallyDefinedCurveFontId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternallyDefinedHatchStyleId(pub usize);
+pub struct ExternallyDefinedHatchStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternallyDefinedItemId(pub usize);
+pub struct ExternallyDefinedItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternallyDefinedStyleId(pub usize);
+pub struct ExternallyDefinedStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternallyDefinedSymbolId(pub usize);
+pub struct ExternallyDefinedSymbolId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternallyDefinedTextFontId(pub usize);
+pub struct ExternallyDefinedTextFontId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternallyDefinedTileId(pub usize);
+pub struct ExternallyDefinedTileId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternallyDefinedTileStyleId(pub usize);
+pub struct ExternallyDefinedTileStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FaceId(pub usize);
+pub struct FaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FaceBoundId(pub usize);
+pub struct FaceBoundId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FaceOuterBoundId(pub usize);
+pub struct FaceOuterBoundId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FaceSurfaceId(pub usize);
+pub struct FaceSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FeatureForDatumTargetRelationshipId(pub usize);
+pub struct FeatureForDatumTargetRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FillAreaStyleId(pub usize);
+pub struct FillAreaStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FillAreaStyleColourId(pub usize);
+pub struct FillAreaStyleColourId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FillAreaStyleHatchingId(pub usize);
+pub struct FillAreaStyleHatchingId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FillAreaStyleTileColouredRegionId(pub usize);
+pub struct FillAreaStyleTileColouredRegionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FillAreaStyleTileCurveWithStyleId(pub usize);
+pub struct FillAreaStyleTileCurveWithStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FillAreaStyleTileSymbolWithStyleId(pub usize);
+pub struct FillAreaStyleTileSymbolWithStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FillAreaStyleTilesId(pub usize);
+pub struct FillAreaStyleTilesId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FlatnessToleranceId(pub usize);
+pub struct FlatnessToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FoundedItemId(pub usize);
+pub struct FoundedItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FunctionallyDefinedTransformationId(pub usize);
+pub struct FunctionallyDefinedTransformationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeneralDatumReferenceId(pub usize);
+pub struct GeneralDatumReferenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeneralPropertyId(pub usize);
+pub struct GeneralPropertyId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeneralPropertyAssociationId(pub usize);
+pub struct GeneralPropertyAssociationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GenericExpressionId(pub usize);
+pub struct GenericExpressionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GenericLiteralId(pub usize);
+pub struct GenericLiteralId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GenericProductDefinitionReferenceId(pub usize);
+pub struct GenericProductDefinitionReferenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricCurveSetId(pub usize);
+pub struct GeometricCurveSetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricItemSpecificUsageId(pub usize);
+pub struct GeometricItemSpecificUsageId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricRepresentationContextId(pub usize);
+pub struct GeometricRepresentationContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricRepresentationItemId(pub usize);
+pub struct GeometricRepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricSetId(pub usize);
+pub struct GeometricSetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricToleranceId(pub usize);
+pub struct GeometricToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricToleranceRelationshipId(pub usize);
+pub struct GeometricToleranceRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricToleranceWithDatumReferenceId(pub usize);
+pub struct GeometricToleranceWithDatumReferenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricToleranceWithDefinedAreaUnitId(pub usize);
+pub struct GeometricToleranceWithDefinedAreaUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricToleranceWithDefinedUnitId(pub usize);
+pub struct GeometricToleranceWithDefinedUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricToleranceWithMaximumToleranceId(pub usize);
+pub struct GeometricToleranceWithMaximumToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricToleranceWithModifiersId(pub usize);
+pub struct GeometricToleranceWithModifiersId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricallyBoundedSurfaceShapeRepresentationId(pub usize);
+pub struct GeometricallyBoundedSurfaceShapeRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricallyBoundedWireframeShapeRepresentationId(pub usize);
+pub struct GeometricallyBoundedWireframeShapeRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GlobalUncertaintyAssignedContextId(pub usize);
+pub struct GlobalUncertaintyAssignedContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GlobalUnitAssignedContextId(pub usize);
+pub struct GlobalUnitAssignedContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GroupId(pub usize);
+pub struct GroupId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GroupAssignmentId(pub usize);
+pub struct GroupAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct HyperbolaId(pub usize);
+pub struct HyperbolaId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct IdAttributeId(pub usize);
+pub struct IdAttributeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct IdentificationAssignmentId(pub usize);
+pub struct IdentificationAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct IdentificationRoleId(pub usize);
+pub struct IdentificationRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct IntLiteralId(pub usize);
+pub struct IntLiteralId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct IntegerRepresentationItemId(pub usize);
+pub struct IntegerRepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct IntersectionCurveId(pub usize);
+pub struct IntersectionCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct InvisibilityId(pub usize);
+pub struct InvisibilityId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ItemDefinedTransformationId(pub usize);
+pub struct ItemDefinedTransformationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ItemIdentifiedRepresentationUsageId(pub usize);
+pub struct ItemIdentifiedRepresentationUsageId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LeaderCurveId(pub usize);
+pub struct LeaderCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LeaderDirectedCalloutId(pub usize);
+pub struct LeaderDirectedCalloutId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LeaderTerminatorId(pub usize);
+pub struct LeaderTerminatorId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LengthMeasureWithUnitId(pub usize);
+pub struct LengthMeasureWithUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LengthUnitId(pub usize);
+pub struct LengthUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LimitsAndFitsId(pub usize);
+pub struct LimitsAndFitsId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LineId(pub usize);
+pub struct LineId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LineProfileToleranceId(pub usize);
+pub struct LineProfileToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LiteralNumberId(pub usize);
+pub struct LiteralNumberId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LocalTimeId(pub usize);
+pub struct LocalTimeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LoopId(pub usize);
+pub struct LoopId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MakeFromUsageOptionId(pub usize);
+pub struct MakeFromUsageOptionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ManifoldSolidBrepId(pub usize);
+pub struct ManifoldSolidBrepId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ManifoldSurfaceShapeRepresentationId(pub usize);
+pub struct ManifoldSurfaceShapeRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MappedItemId(pub usize);
+pub struct MappedItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MassMeasureWithUnitId(pub usize);
+pub struct MassMeasureWithUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MassUnitId(pub usize);
+pub struct MassUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MeasureQualificationId(pub usize);
+pub struct MeasureQualificationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MeasureRepresentationItemId(pub usize);
+pub struct MeasureRepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MeasureWithUnitId(pub usize);
+pub struct MeasureWithUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MechanicalContextId(pub usize);
+pub struct MechanicalContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MechanicalDesignAndDraughtingRelationshipId(pub usize);
+pub struct MechanicalDesignAndDraughtingRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MechanicalDesignGeometricPresentationRepresentationId(pub usize);
+pub struct MechanicalDesignGeometricPresentationRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MechanicalDesignPresentationRepresentationWithDraughtingId(pub usize);
+pub struct MechanicalDesignPresentationRepresentationWithDraughtingId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MechanicalDesignShadedPresentationRepresentationId(pub usize);
+pub struct MechanicalDesignShadedPresentationRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ModelGeometricViewId(pub usize);
+pub struct ModelGeometricViewId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ModifiedGeometricToleranceId(pub usize);
+pub struct ModifiedGeometricToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct NameAttributeId(pub usize);
+pub struct NameAttributeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct NamedUnitId(pub usize);
+pub struct NamedUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct NextAssemblyUsageOccurrenceId(pub usize);
+pub struct NextAssemblyUsageOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct NumericExpressionId(pub usize);
+pub struct NumericExpressionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ObjectRoleId(pub usize);
+pub struct ObjectRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OffsetSurfaceId(pub usize);
+pub struct OffsetSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OneDirectionRepeatFactorId(pub usize);
+pub struct OneDirectionRepeatFactorId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OpenShellId(pub usize);
+pub struct OpenShellId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrganizationId(pub usize);
+pub struct OrganizationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrganizationRelationshipId(pub usize);
+pub struct OrganizationRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrganizationRoleId(pub usize);
+pub struct OrganizationRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrganizationTypeId(pub usize);
+pub struct OrganizationTypeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrganizationTypeRoleId(pub usize);
+pub struct OrganizationTypeRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrganizationalAddressId(pub usize);
+pub struct OrganizationalAddressId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrganizationalProjectId(pub usize);
+pub struct OrganizationalProjectId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrganizationalProjectRelationshipId(pub usize);
+pub struct OrganizationalProjectRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrganizationalProjectRoleId(pub usize);
+pub struct OrganizationalProjectRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrientedClosedShellId(pub usize);
+pub struct OrientedClosedShellId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrientedEdgeId(pub usize);
+pub struct OrientedEdgeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OverRidingStyledItemId(pub usize);
+pub struct OverRidingStyledItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ParallelismToleranceId(pub usize);
+pub struct ParallelismToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ParametricRepresentationContextId(pub usize);
+pub struct ParametricRepresentationContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PathId(pub usize);
+pub struct PathId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PcurveId(pub usize);
+pub struct PcurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PerpendicularityToleranceId(pub usize);
+pub struct PerpendicularityToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PersonId(pub usize);
+pub struct PersonId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PersonAndOrganizationId(pub usize);
+pub struct PersonAndOrganizationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PersonAndOrganizationAddressId(pub usize);
+pub struct PersonAndOrganizationAddressId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PersonAndOrganizationAssignmentId(pub usize);
+pub struct PersonAndOrganizationAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PersonAndOrganizationRoleId(pub usize);
+pub struct PersonAndOrganizationRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PersonalAddressId(pub usize);
+pub struct PersonalAddressId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PlacedDatumTargetFeatureId(pub usize);
+pub struct PlacedDatumTargetFeatureId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PlacementId(pub usize);
+pub struct PlacementId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PlanarBoxId(pub usize);
+pub struct PlanarBoxId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PlanarExtentId(pub usize);
+pub struct PlanarExtentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PlaneId(pub usize);
+pub struct PlaneId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PlaneAngleMeasureWithUnitId(pub usize);
+pub struct PlaneAngleMeasureWithUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PlaneAngleUnitId(pub usize);
+pub struct PlaneAngleUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PlusMinusToleranceId(pub usize);
+pub struct PlusMinusToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PointId(pub usize);
+pub struct PointId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PointStyleId(pub usize);
+pub struct PointStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PolyLoopId(pub usize);
+pub struct PolyLoopId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PolylineId(pub usize);
+pub struct PolylineId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PositionToleranceId(pub usize);
+pub struct PositionToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedCharacterGlyphId(pub usize);
+pub struct PreDefinedCharacterGlyphId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedColourId(pub usize);
+pub struct PreDefinedColourId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedCurveFontId(pub usize);
+pub struct PreDefinedCurveFontId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedItemId(pub usize);
+pub struct PreDefinedItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedMarkerId(pub usize);
+pub struct PreDefinedMarkerId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedPointMarkerSymbolId(pub usize);
+pub struct PreDefinedPointMarkerSymbolId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedPresentationStyleId(pub usize);
+pub struct PreDefinedPresentationStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedSurfaceSideStyleId(pub usize);
+pub struct PreDefinedSurfaceSideStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedSymbolId(pub usize);
+pub struct PreDefinedSymbolId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedTerminatorSymbolId(pub usize);
+pub struct PreDefinedTerminatorSymbolId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedTextFontId(pub usize);
+pub struct PreDefinedTextFontId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedTileId(pub usize);
+pub struct PreDefinedTileId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PrecisionQualifierId(pub usize);
+pub struct PrecisionQualifierId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentationAreaId(pub usize);
+pub struct PresentationAreaId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentationLayerAssignmentId(pub usize);
+pub struct PresentationLayerAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentationRepresentationId(pub usize);
+pub struct PresentationRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentationSetId(pub usize);
+pub struct PresentationSetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentationSizeId(pub usize);
+pub struct PresentationSizeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentationStyleAssignmentId(pub usize);
+pub struct PresentationStyleAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentationStyleByContextId(pub usize);
+pub struct PresentationStyleByContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentationViewId(pub usize);
+pub struct PresentationViewId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentedItemId(pub usize);
+pub struct PresentedItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentedItemRepresentationId(pub usize);
+pub struct PresentedItemRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductId(pub usize);
+pub struct ProductId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductCategoryId(pub usize);
+pub struct ProductCategoryId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductCategoryRelationshipId(pub usize);
+pub struct ProductCategoryRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductConceptId(pub usize);
+pub struct ProductConceptId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductConceptContextId(pub usize);
+pub struct ProductConceptContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductConceptFeatureId(pub usize);
+pub struct ProductConceptFeatureId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductConceptFeatureCategoryId(pub usize);
+pub struct ProductConceptFeatureCategoryId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductContextId(pub usize);
+pub struct ProductContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionId(pub usize);
+pub struct ProductDefinitionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionContextId(pub usize);
+pub struct ProductDefinitionContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionContextAssociationId(pub usize);
+pub struct ProductDefinitionContextAssociationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionContextRoleId(pub usize);
+pub struct ProductDefinitionContextRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionEffectivityId(pub usize);
+pub struct ProductDefinitionEffectivityId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionFormationId(pub usize);
+pub struct ProductDefinitionFormationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionFormationWithSpecifiedSourceId(pub usize);
+pub struct ProductDefinitionFormationWithSpecifiedSourceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionOccurrenceId(pub usize);
+pub struct ProductDefinitionOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionRelationshipId(pub usize);
+pub struct ProductDefinitionRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionRelationshipRelationshipId(pub usize);
+pub struct ProductDefinitionRelationshipRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionShapeId(pub usize);
+pub struct ProductDefinitionShapeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionSubstituteId(pub usize);
+pub struct ProductDefinitionSubstituteId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionUsageId(pub usize);
+pub struct ProductDefinitionUsageId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionWithAssociatedDocumentsId(pub usize);
+pub struct ProductDefinitionWithAssociatedDocumentsId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductRelatedProductCategoryId(pub usize);
+pub struct ProductRelatedProductCategoryId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProjectedZoneDefinitionId(pub usize);
+pub struct ProjectedZoneDefinitionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PropertyDefinitionId(pub usize);
+pub struct PropertyDefinitionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PropertyDefinitionRelationshipId(pub usize);
+pub struct PropertyDefinitionRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PropertyDefinitionRepresentationId(pub usize);
+pub struct PropertyDefinitionRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct QualifiedRepresentationItemId(pub usize);
+pub struct QualifiedRepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct QuasiUniformCurveId(pub usize);
+pub struct QuasiUniformCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct QuasiUniformSurfaceId(pub usize);
+pub struct QuasiUniformSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RatioMeasureWithUnitId(pub usize);
+pub struct RatioMeasureWithUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RatioUnitId(pub usize);
+pub struct RatioUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RationalBSplineCurveId(pub usize);
+pub struct RationalBSplineCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RationalBSplineSurfaceId(pub usize);
+pub struct RationalBSplineSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RealLiteralId(pub usize);
+pub struct RealLiteralId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RealRepresentationItemId(pub usize);
+pub struct RealRepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RepositionedTessellatedItemId(pub usize);
+pub struct RepositionedTessellatedItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RepresentationId(pub usize);
+pub struct RepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RepresentationContextId(pub usize);
+pub struct RepresentationContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RepresentationContextReferenceId(pub usize);
+pub struct RepresentationContextReferenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RepresentationItemId(pub usize);
+pub struct RepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RepresentationMapId(pub usize);
+pub struct RepresentationMapId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RepresentationReferenceId(pub usize);
+pub struct RepresentationReferenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RepresentationRelationshipId(pub usize);
+pub struct RepresentationRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RepresentationRelationshipWithTransformationId(pub usize);
+pub struct RepresentationRelationshipWithTransformationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ResourcePropertyId(pub usize);
+pub struct ResourcePropertyId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ResourceRequirementTypeId(pub usize);
+pub struct ResourceRequirementTypeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RoleAssociationId(pub usize);
+pub struct RoleAssociationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RoundnessToleranceId(pub usize);
+pub struct RoundnessToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SeamCurveId(pub usize);
+pub struct SeamCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SecurityClassificationId(pub usize);
+pub struct SecurityClassificationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SecurityClassificationAssignmentId(pub usize);
+pub struct SecurityClassificationAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SecurityClassificationLevelId(pub usize);
+pub struct SecurityClassificationLevelId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShapeAspectId(pub usize);
+pub struct ShapeAspectId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShapeAspectAssociativityId(pub usize);
+pub struct ShapeAspectAssociativityId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShapeAspectDerivingRelationshipId(pub usize);
+pub struct ShapeAspectDerivingRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShapeAspectRelationshipId(pub usize);
+pub struct ShapeAspectRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShapeDefinitionRepresentationId(pub usize);
+pub struct ShapeDefinitionRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShapeDimensionRepresentationId(pub usize);
+pub struct ShapeDimensionRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShapeRepresentationId(pub usize);
+pub struct ShapeRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShapeRepresentationRelationshipId(pub usize);
+pub struct ShapeRepresentationRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShapeRepresentationWithParametersId(pub usize);
+pub struct ShapeRepresentationWithParametersId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShellBasedSurfaceModelId(pub usize);
+pub struct ShellBasedSurfaceModelId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SiUnitId(pub usize);
+pub struct SiUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SimpleGenericExpressionId(pub usize);
+pub struct SimpleGenericExpressionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SimpleNumericExpressionId(pub usize);
+pub struct SimpleNumericExpressionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SolidAngleUnitId(pub usize);
+pub struct SolidAngleUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SolidModelId(pub usize);
+pub struct SolidModelId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SphericalSurfaceId(pub usize);
+pub struct SphericalSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct StartRequestId(pub usize);
+pub struct StartRequestId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct StartWorkId(pub usize);
+pub struct StartWorkId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct StateObservedId(pub usize);
+pub struct StateObservedId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct StateTypeId(pub usize);
+pub struct StateTypeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct StraightnessToleranceId(pub usize);
+pub struct StraightnessToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct StyledItemId(pub usize);
+pub struct StyledItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceId(pub usize);
+pub struct SurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceCurveId(pub usize);
+pub struct SurfaceCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceOfLinearExtrusionId(pub usize);
+pub struct SurfaceOfLinearExtrusionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceOfRevolutionId(pub usize);
+pub struct SurfaceOfRevolutionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceProfileToleranceId(pub usize);
+pub struct SurfaceProfileToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceRenderingPropertiesId(pub usize);
+pub struct SurfaceRenderingPropertiesId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceSideStyleId(pub usize);
+pub struct SurfaceSideStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleBoundaryId(pub usize);
+pub struct SurfaceStyleBoundaryId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleControlGridId(pub usize);
+pub struct SurfaceStyleControlGridId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleFillAreaId(pub usize);
+pub struct SurfaceStyleFillAreaId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleParameterLineId(pub usize);
+pub struct SurfaceStyleParameterLineId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleReflectanceAmbientId(pub usize);
+pub struct SurfaceStyleReflectanceAmbientId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleRenderingId(pub usize);
+pub struct SurfaceStyleRenderingId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleRenderingWithPropertiesId(pub usize);
+pub struct SurfaceStyleRenderingWithPropertiesId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleSegmentationCurveId(pub usize);
+pub struct SurfaceStyleSegmentationCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleSilhouetteId(pub usize);
+pub struct SurfaceStyleSilhouetteId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleTransparentId(pub usize);
+pub struct SurfaceStyleTransparentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleUsageId(pub usize);
+pub struct SurfaceStyleUsageId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SweptSurfaceId(pub usize);
+pub struct SweptSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SymbolColourId(pub usize);
+pub struct SymbolColourId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SymbolRepresentationId(pub usize);
+pub struct SymbolRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SymbolStyleId(pub usize);
+pub struct SymbolStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SymbolTargetId(pub usize);
+pub struct SymbolTargetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SymmetryToleranceId(pub usize);
+pub struct SymmetryToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TerminatorSymbolId(pub usize);
+pub struct TerminatorSymbolId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedAnnotationOccurrenceId(pub usize);
+pub struct TessellatedAnnotationOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedCurveSetId(pub usize);
+pub struct TessellatedCurveSetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedFaceId(pub usize);
+pub struct TessellatedFaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedGeometricSetId(pub usize);
+pub struct TessellatedGeometricSetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedItemId(pub usize);
+pub struct TessellatedItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedShapeRepresentationId(pub usize);
+pub struct TessellatedShapeRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedShellId(pub usize);
+pub struct TessellatedShellId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedSolidId(pub usize);
+pub struct TessellatedSolidId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedStructuredItemId(pub usize);
+pub struct TessellatedStructuredItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedSurfaceSetId(pub usize);
+pub struct TessellatedSurfaceSetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TextFontId(pub usize);
+pub struct TextFontId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TextLiteralId(pub usize);
+pub struct TextLiteralId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TextStyleId(pub usize);
+pub struct TextStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TextStyleForDefinedFontId(pub usize);
+pub struct TextStyleForDefinedFontId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TextStyleWithBoxCharacteristicsId(pub usize);
+pub struct TextStyleWithBoxCharacteristicsId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TextureStyleSpecificationId(pub usize);
+pub struct TextureStyleSpecificationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TextureStyleTessellationSpecificationId(pub usize);
+pub struct TextureStyleTessellationSpecificationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TimeUnitId(pub usize);
+pub struct TimeUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ToleranceValueId(pub usize);
+pub struct ToleranceValueId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ToleranceZoneId(pub usize);
+pub struct ToleranceZoneId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ToleranceZoneDefinitionId(pub usize);
+pub struct ToleranceZoneDefinitionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ToleranceZoneFormId(pub usize);
+pub struct ToleranceZoneFormId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ToleranceZoneWithDatumId(pub usize);
+pub struct ToleranceZoneWithDatumId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TopologicalRepresentationItemId(pub usize);
+pub struct TopologicalRepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ToroidalSurfaceId(pub usize);
+pub struct ToroidalSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TotalRunoutToleranceId(pub usize);
+pub struct TotalRunoutToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TrimmedCurveId(pub usize);
+pub struct TrimmedCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TwoDirectionRepeatFactorId(pub usize);
+pub struct TwoDirectionRepeatFactorId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TypeQualifierId(pub usize);
+pub struct TypeQualifierId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UncertaintyMeasureWithUnitId(pub usize);
+pub struct UncertaintyMeasureWithUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UncertaintyQualifierId(pub usize);
+pub struct UncertaintyQualifierId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UnequallyDisposedGeometricToleranceId(pub usize);
+pub struct UnequallyDisposedGeometricToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UniformCurveId(pub usize);
+pub struct UniformCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UniformSurfaceId(pub usize);
+pub struct UniformSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ValueFormatTypeQualifierId(pub usize);
+pub struct ValueFormatTypeQualifierId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ValueRepresentationItemId(pub usize);
+pub struct ValueRepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct VectorId(pub usize);
+pub struct VectorId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct VersionedActionRequestId(pub usize);
+pub struct VersionedActionRequestId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct VertexId(pub usize);
+pub struct VertexId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct VertexLoopId(pub usize);
+pub struct VertexLoopId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct VertexPointId(pub usize);
+pub struct VertexPointId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct VertexShellId(pub usize);
+pub struct VertexShellId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ViewVolumeId(pub usize);
+pub struct ViewVolumeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct VolumeUnitId(pub usize);
+pub struct VolumeUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct WireShellId(pub usize);
+pub struct WireShellId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ComplexUnitId(pub usize);
+pub struct ComplexUnitId(pub u32);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EntityKey {

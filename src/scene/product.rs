@@ -22,7 +22,7 @@ impl Scene<'_> {
     /// Every product (`PRODUCT`) in the model.
     pub fn all_products(&self) -> impl Iterator<Item = Product<'_>> + '_ {
         let cx = self.ctx();
-        (0..cx.model.product_arena.items.len()).map(move |i| Product {
+        cx.model.product_arena.indices().map(move |i| Product {
             cx,
             id: m::ProductId(i),
         })
@@ -31,15 +31,18 @@ impl Scene<'_> {
     /// Every product definition (`PRODUCT_DEFINITION`) in the model.
     pub fn all_product_definitions(&self) -> impl Iterator<Item = ProductDef<'_>> + '_ {
         let cx = self.ctx();
-        let plain = (0..cx.model.product_definition_arena.items.len()).map(move |i| ProductDef {
-            cx,
-            which: PdImpl::Plain(m::ProductDefinitionId(i)),
-        });
-        let with_docs = (0..cx
+        let plain = cx
+            .model
+            .product_definition_arena
+            .indices()
+            .map(move |i| ProductDef {
+                cx,
+                which: PdImpl::Plain(m::ProductDefinitionId(i)),
+            });
+        let with_docs = cx
             .model
             .product_definition_with_associated_documents_arena
-            .items
-            .len())
+            .indices()
             .map(move |i| ProductDef {
                 cx,
                 which: PdImpl::WithDocs(m::ProductDefinitionWithAssociatedDocumentsId(i)),
@@ -1175,10 +1178,13 @@ impl Scene<'_> {
     /// drawing/PMI view instancing).
     pub fn all_mapped_instances(&self) -> impl Iterator<Item = MappedInstance<'_>> + '_ {
         let cx = self.ctx();
-        (0..cx.model.mapped_item_arena.items.len()).map(move |i| MappedInstance {
-            cx,
-            id: m::MappedItemId(i),
-        })
+        cx.model
+            .mapped_item_arena
+            .indices()
+            .map(move |i| MappedInstance {
+                cx,
+                id: m::MappedItemId(i),
+            })
     }
 }
 

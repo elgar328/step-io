@@ -21,14 +21,22 @@ impl Scene<'_> {
     /// the precise b-rep solid where the file provides one).
     pub fn all_mesh_groups(&self) -> impl Iterator<Item = MeshGroup<'_>> + '_ {
         let cx = self.ctx();
-        let solids = (0..cx.model.tessellated_solid_arena.items.len()).map(move |i| MeshGroup {
-            cx,
-            which: GroupImpl::Solid(m::TessellatedSolidId(i)),
-        });
-        let shells = (0..cx.model.tessellated_shell_arena.items.len()).map(move |i| MeshGroup {
-            cx,
-            which: GroupImpl::Shell(m::TessellatedShellId(i)),
-        });
+        let solids = cx
+            .model
+            .tessellated_solid_arena
+            .indices()
+            .map(move |i| MeshGroup {
+                cx,
+                which: GroupImpl::Solid(m::TessellatedSolidId(i)),
+            });
+        let shells = cx
+            .model
+            .tessellated_shell_arena
+            .indices()
+            .map(move |i| MeshGroup {
+                cx,
+                which: GroupImpl::Shell(m::TessellatedShellId(i)),
+            });
         solids.chain(shells)
     }
 
@@ -36,19 +44,30 @@ impl Scene<'_> {
     /// `COMPLEX_TRIANGULATED_SURFACE_SET` and plain `TESSELLATED_FACE`).
     pub fn all_meshes(&self) -> impl Iterator<Item = Mesh<'_>> + '_ {
         let cx = self.ctx();
-        let faces = (0..cx.model.complex_triangulated_face_arena.items.len()).map(move |i| Mesh {
-            cx,
-            which: MeshImpl::ComplexFace(m::ComplexTriangulatedFaceId(i)),
-        });
-        let sets =
-            (0..cx.model.complex_triangulated_surface_set_arena.items.len()).map(move |i| Mesh {
+        let faces = cx
+            .model
+            .complex_triangulated_face_arena
+            .indices()
+            .map(move |i| Mesh {
+                cx,
+                which: MeshImpl::ComplexFace(m::ComplexTriangulatedFaceId(i)),
+            });
+        let sets = cx
+            .model
+            .complex_triangulated_surface_set_arena
+            .indices()
+            .map(move |i| Mesh {
                 cx,
                 which: MeshImpl::ComplexSurfaceSet(m::ComplexTriangulatedSurfaceSetId(i)),
             });
-        let plain = (0..cx.model.tessellated_face_arena.items.len()).map(move |i| Mesh {
-            cx,
-            which: MeshImpl::PlainFace(m::TessellatedFaceId(i)),
-        });
+        let plain = cx
+            .model
+            .tessellated_face_arena
+            .indices()
+            .map(move |i| Mesh {
+                cx,
+                which: MeshImpl::PlainFace(m::TessellatedFaceId(i)),
+            });
         faces.chain(sets).chain(plain)
     }
 }

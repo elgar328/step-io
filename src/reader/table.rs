@@ -129,7 +129,7 @@ impl EntityTable {
         if row.arena == NONE {
             return None;
         }
-        let i = row.arena as usize;
+        let i = row.arena;
         match row.member {
             Member::Simple(ix) => key_of(ix, i),
             Member::Complex => complex_key_of(i),

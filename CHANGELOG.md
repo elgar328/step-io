@@ -47,6 +47,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   arm.
 - `Report` is `#[non_exhaustive]`. Its fields read as before, but it can no
   longer be built with a struct literal outside step-io.
+- Entity ids and arena indices are 32-bit: each `…Id` wraps a `u32`,
+  `Arena::push` returns a `u32`, `Arena::get` takes one, and the new
+  `Arena::indices()` iterates them. References and `EntityKey` take 8 bytes
+  instead of 16. A file of more than about four billion entities fails to
+  read with the new `Error::TooLarge`.
+- `Error` is `#[non_exhaustive]`, so matching on it needs a wildcard arm.
 - `DropKind` is `#[non_exhaustive]`, so matching on it needs a wildcard arm,
   and so is `DropReason`, whose fields read as before but which can no
   longer be built with a struct literal outside step-io.

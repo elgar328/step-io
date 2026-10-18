@@ -60,6 +60,8 @@ fn kept_slot(fields: &[u16], i: usize, a: &Attribute) -> bool {
 pub(crate) struct RefStore {
     chunks: Vec<Vec<Tok>>,
     len: usize,
+    /// A position or count no longer fit in 32 bits.
+    overflow: bool,
     pool: String,
     synth_ids: Vec<u64>,
 }
@@ -79,10 +81,24 @@ impl RefStore {
         self.chunks[i >> CHUNK_BITS][i & (CHUNK - 1)]
     }
 
+    /// `n` as a token field, noting when it does not fit.
+    fn fit(&mut self, n: usize) -> u32 {
+        u32::try_from(n).unwrap_or_else(|_| {
+            self.overflow = true;
+            u32::MAX
+        })
+    }
+
+    /// Whether a position or count has outgrown the 32-bit token fields;
+    /// what was stored since is then unusable.
+    pub(crate) fn overflowed(&self) -> bool {
+        self.overflow || self.len >= super::table::NONE as usize
+    }
+
     fn text(&mut self, s: &str) -> (u32, u32) {
-        let at = u32::try_from(self.pool.len()).unwrap_or(u32::MAX);
+        let at = self.fit(self.pool.len());
         self.pool.push_str(s);
-        (at, u32::try_from(s.len()).unwrap_or(u32::MAX))
+        (at, self.fit(s.len()))
     }
 
     fn pooled(&self, (at, n): (u32, u32)) -> &str {
@@ -90,8 +106,8 @@ impl RefStore {
         self.pool.get(at..at + n as usize).unwrap_or("")
     }
 
-    fn start(&self) -> u32 {
-        u32::try_from(self.len).unwrap_or(super::table::NONE)
+    fn start(&mut self) -> u32 {
+        self.fit(self.len)
     }
 
     fn push_value(&mut self, a: &Attribute) {
@@ -114,7 +130,8 @@ impl RefStore {
             Attribute::Unset => Tok::Unset,
             Attribute::Derived => Tok::Derived,
             Attribute::List(l) => {
-                self.push(Tok::List(u32::try_from(l.len()).unwrap_or(u32::MAX)));
+                let n = self.fit(l.len());
+                self.push(Tok::List(n));
                 for e in l {
                     self.push_value(e);
                 }
@@ -142,16 +159,18 @@ impl RefStore {
             .enumerate()
             .filter(|&(i, a)| kept_slot(fields, i, a))
             .count();
+        let (attrs_n, slots) = (self.fit(attrs.len()), self.fit(kept));
         self.push(Tok::Part {
             pix,
-            attrs: u32::try_from(attrs.len()).unwrap_or(u32::MAX),
-            slots: u32::try_from(kept).unwrap_or(u32::MAX),
+            attrs: attrs_n,
+            slots,
         });
         for (i, a) in attrs.iter().enumerate() {
             if !kept_slot(fields, i, a) {
                 continue;
             }
-            self.push(Tok::Slot(u32::try_from(i).unwrap_or(u32::MAX)));
+            let idx = self.fit(i);
+            self.push(Tok::Slot(idx));
             match synth {
                 Some((slot, k)) if slot == i => self.push(Tok::Synth(k)),
                 _ => self.push_value(a),
@@ -192,7 +211,8 @@ impl RefStore {
             return super::table::NONE;
         }
         let at = self.start();
-        self.push(Tok::Complex(u32::try_from(parts.len()).unwrap_or(u32::MAX)));
+        let n = self.fit(parts.len());
+        self.push(Tok::Complex(n));
         for (p, &pix) in parts.iter().zip(pixs) {
             self.push_part(pix, &p.attributes, fields(pix), None);
         }
