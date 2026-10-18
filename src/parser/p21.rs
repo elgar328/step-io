@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 use super::entity::{Attribute, Error, Graph, ParseWarning, RawEntity, RawEntityPart};
@@ -25,12 +26,24 @@ pub fn parse(source: &str) -> Result<Graph, Error> {
 ///
 /// Returns the first [`Error`] encountered by the underlying parser.
 pub fn parse_bytes(bytes: &[u8]) -> Result<Graph, Error> {
-    if let Ok(s) = std::str::from_utf8(bytes) {
-        parse(s)
-    } else {
-        let s: String = bytes.iter().map(|&b| b as char).collect();
-        parse(&s)
+    parse(&source_text(bytes))
+}
+
+/// The text of a Part 21 source given as bytes: UTF-8 if it is valid UTF-8,
+/// ISO 8859-1 otherwise (see [`parse_bytes`]).
+pub(crate) fn source_text(bytes: &[u8]) -> Cow<'_, str> {
+    match std::str::from_utf8(bytes) {
+        Ok(s) => Cow::Borrowed(s),
+        Err(_) => Cow::Owned(bytes.iter().map(|&b| b as char).collect()),
     }
+}
+
+/// Everything in a Part 21 file before its DATA section's entities.
+pub(crate) struct Prelude {
+    pub(crate) schema: SchemaId,
+    pub(crate) header: Vec<RawEntity>,
+    pub(crate) external_references: BTreeMap<u64, String>,
+    pub(crate) anchors: Vec<(String, u64)>,
 }
 
 /// Recursive-descent parser for ISO 10303-21 (Part 21) files.
@@ -51,6 +64,9 @@ pub struct Parser<'src> {
     warnings: Vec<ParseWarning>,
     /// Current parameter nesting depth (guards against stack overflow).
     depth: usize,
+    /// Scratch lists, one per nesting level in use, so each parsed list is
+    /// allocated once at its exact length.
+    lists: Vec<Vec<Attribute>>,
 }
 
 impl<'src> Parser<'src> {
@@ -60,6 +76,7 @@ impl<'src> Parser<'src> {
             lexer: Lexer::new(source),
             warnings: Vec::new(),
             depth: 0,
+            lists: Vec::new(),
         }
     }
 
@@ -78,6 +95,38 @@ impl<'src> Parser<'src> {
     // ------------------------------------------------------------------
 
     fn parse_file(&mut self) -> Result<Graph, Error> {
+        let prelude = self.read_prelude()?;
+        let mut entities = Vec::new();
+        let end = loop {
+            match self.next_entity() {
+                Ok(Some(e)) => entities.push(e),
+                Ok(None) => break self.finish(),
+                Err(e) => break Err(e),
+            }
+        };
+        // A duplicate id wins over any error after it, as if the parse had
+        // stopped there: report the first repeat in the file.
+        entities.sort_unstable_by_key(|e| (e.id(), e.span().start));
+        if let Some(e) = first_duplicate(&entities) {
+            return Err(Error::DuplicateEntityId {
+                id: e.id(),
+                span: e.span(),
+            });
+        }
+        let warnings = end?;
+        Ok(Graph {
+            schema: prelude.schema,
+            header: prelude.header,
+            entities: entities.into_iter().map(|e| (e.id(), e)).collect(),
+            external_references: prelude.external_references,
+            anchors: prelude.anchors,
+            warnings,
+        })
+    }
+
+    /// Parse up to and including `DATA;`: the ISO line, the HEADER section,
+    /// and any P21 edition 3 sections.
+    pub(crate) fn read_prelude(&mut self) -> Result<Prelude, Error> {
         // ISO-10303-21;
         self.expect_token_kind(&TokenKind::IsoStart, "ISO-10303-21")?;
         self.expect_semicolon()?;
@@ -99,10 +148,30 @@ impl<'src> Parser<'src> {
             self.parse_or_skip_ed3_section(&mut external_references, &mut anchors)?;
         }
 
-        // DATA; ... ENDSEC;
+        // DATA;
         self.expect_token_kind(&TokenKind::Data, "DATA")?;
         self.expect_semicolon()?;
-        let entities = self.parse_data_section()?;
+        Ok(Prelude {
+            schema,
+            header,
+            external_references,
+            anchors,
+        })
+    }
+
+    /// The next entity of the DATA section, in file order, or `None` at its
+    /// `ENDSEC`.
+    pub(crate) fn next_entity(&mut self) -> Result<Option<RawEntity>, Error> {
+        if matches!(self.peek_kind()?, TokenKind::EndSec) {
+            return Ok(None);
+        }
+        self.parse_entity_instance().map(Some)
+    }
+
+    /// Parse the end of the file after the last entity, and return the
+    /// warnings collected along the way.
+    pub(crate) fn finish(&mut self) -> Result<Vec<ParseWarning>, Error> {
+        // ENDSEC;
         self.expect_token_kind(&TokenKind::EndSec, "ENDSEC")?;
         self.expect_semicolon()?;
 
@@ -119,15 +188,7 @@ impl<'src> Parser<'src> {
                 span: tok.span,
             });
         }
-
-        Ok(Graph {
-            schema,
-            header,
-            entities,
-            external_references,
-            anchors,
-            warnings: std::mem::take(&mut self.warnings),
-        })
+        Ok(std::mem::take(&mut self.warnings))
     }
 
     // ------------------------------------------------------------------
@@ -313,26 +374,6 @@ impl<'src> Parser<'src> {
     }
 
     // ------------------------------------------------------------------
-    // DATA section
-    // ------------------------------------------------------------------
-
-    /// Parse the DATA section content (between `DATA;` and `ENDSEC;`).
-    fn parse_data_section(&mut self) -> Result<BTreeMap<u64, RawEntity>, Error> {
-        let mut entities = BTreeMap::new();
-
-        while !matches!(self.peek_kind()?, TokenKind::EndSec) {
-            let entity = self.parse_entity_instance()?;
-            let id = entity.id();
-            let span = entity.span();
-            if entities.insert(id, entity).is_some() {
-                return Err(Error::DuplicateEntityId { id, span });
-            }
-        }
-
-        Ok(entities)
-    }
-
-    // ------------------------------------------------------------------
     // Entity instance parsing
     // ------------------------------------------------------------------
 
@@ -444,18 +485,21 @@ impl<'src> Parser<'src> {
     /// Parse comma-separated parameters until a `)` is encountered.
     /// The `)` is **not** consumed — the caller is responsible.
     fn parse_list_value(&mut self) -> Result<Vec<Attribute>, Error> {
-        let mut items = Vec::new();
         // Empty list `()`.
         if matches!(self.peek_kind()?, TokenKind::RParen) {
-            return Ok(items);
+            return Ok(Vec::new());
         }
+        let mut items = self.lists.pop().unwrap_or_default();
         items.push(self.parse_parameter_or_unset_if_empty()?);
         while matches!(self.peek_kind()?, TokenKind::Comma) {
             // Consume the comma.
             self.next_token()?;
             items.push(self.parse_parameter_or_unset_if_empty()?);
         }
-        Ok(items)
+        let mut list = Vec::with_capacity(items.len());
+        list.append(&mut items);
+        self.lists.push(items);
+        Ok(list)
     }
 
     /// Like [`Self::parse_parameter`] but tolerates a blank attribute
@@ -661,6 +705,16 @@ impl<'src> Parser<'src> {
     fn expect_equals(&mut self) -> Result<Span, Error> {
         Ok(self.expect(|k| matches!(k, TokenKind::Equals), "=")?.span)
     }
+}
+
+/// In entities sorted by `(id, span.start)`, the repeat of an id that comes
+/// first in the file.
+fn first_duplicate(sorted: &[RawEntity]) -> Option<&RawEntity> {
+    sorted
+        .windows(2)
+        .filter(|w| w[0].id() == w[1].id())
+        .map(|w| &w[1])
+        .min_by_key(|e| e.span().start)
 }
 
 #[cfg(test)]

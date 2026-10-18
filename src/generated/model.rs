@@ -21,6 +21,37 @@ impl<T> Arena<T> {
     pub fn get(&self, i: usize) -> &T {
         &self.items[i]
     }
+    /// Keep the items at the distinct indices `order`, in that order, and drop
+    /// the rest. Permutes in place, without a second copy of the items.
+    pub(crate) fn retain_order(&mut self, order: &[u32]) {
+        let n = self.items.len();
+        if order.iter().enumerate().all(|(p, &i)| i as usize == p) {
+            self.items.truncate(order.len());
+            return;
+        }
+        // src[p] = the index whose item ends up at p; the dropped ones fill the tail.
+        let mut kept = vec![false; n];
+        for &i in order {
+            kept[i as usize] = true;
+        }
+        let mut src: Vec<u32> = Vec::with_capacity(n);
+        src.extend_from_slice(order);
+        src.extend((0..n as u32).filter(|&i| !kept[i as usize]));
+        drop(kept);
+        for start in 0..n {
+            let mut j = start;
+            loop {
+                let from = src[j] as usize;
+                src[j] = j as u32;
+                if from == start {
+                    break;
+                }
+                self.items.swap(j, from);
+                j = from;
+            }
+        }
+        self.items.truncate(order.len());
+    }
 }
 
 /// EXPRESS LOGICAL (.T./.F./.U.).

@@ -2,7 +2,6 @@
 // Schema-faithful model + generic 2-pass read + topo write.
 
 use crate::parser::{Attribute, RawEntity};
-use std::collections::BTreeMap;
 
 #[derive(Clone, Copy)]
 enum Sk {
@@ -153,49 +152,33 @@ fn norm_attrs(
     true
 }
 
-/// Normalize the raw graph in place. Returns the surviving map (non-normalizable
-/// entities removed; their referrers cascade-drop later via the drop pass) plus
-/// two separate channels: `warns` = rewrite notes (fix, kept), `slot_drops` =
-/// `(id, reason)` per entity removed here (surfaced as drops).
-pub fn normalize(
-    mut map: BTreeMap<u64, RawEntity>,
-) -> (
-    BTreeMap<u64, RawEntity>,
-    Vec<&'static str>,
-    Vec<(u64, &'static str)>,
-) {
-    let mut warns: Vec<&'static str> = Vec::new();
-    let mut slot_drops: Vec<(u64, &'static str)> = Vec::new();
-    for (&id, ent) in map.iter_mut() {
-        let mut drop_reason: Option<&'static str> = None;
-        let keep = match ent {
-            RawEntity::Simple {
-                name, attributes, ..
-            } => norm_attrs(simple_slots(name), attributes, &mut warns, &mut drop_reason),
-            RawEntity::Complex { parts, .. } => {
-                let mut ok = true;
-                for p in parts.iter_mut() {
-                    if !norm_attrs(
-                        part_slots(&p.name),
-                        &mut p.attributes,
-                        &mut warns,
-                        &mut drop_reason,
-                    ) {
-                        ok = false;
-                        break;
-                    }
-                }
-                ok
-            }
-        };
-        if !keep {
-            slot_drops.push((id, drop_reason.unwrap_or("unspecified")));
-        }
+/// Normalize one entity in place. Rewrites push to `warns` (norm channel), kept
+/// even when the entity is then dropped; a non-normalizable slot returns its
+/// reason (a nonstandard-value drop; its referrers cascade later via the drop
+/// pass).
+pub fn normalize_entity(
+    ent: &mut RawEntity,
+    warns: &mut Vec<&'static str>,
+) -> Result<(), &'static str> {
+    let mut drop_reason: Option<&'static str> = None;
+    let keep = match ent {
+        RawEntity::Simple {
+            name, attributes, ..
+        } => norm_attrs(simple_slots(name), attributes, warns, &mut drop_reason),
+        RawEntity::Complex { parts, .. } => parts.iter_mut().all(|p| {
+            norm_attrs(
+                part_slots(&p.name),
+                &mut p.attributes,
+                warns,
+                &mut drop_reason,
+            )
+        }),
+    };
+    if keep {
+        Ok(())
+    } else {
+        Err(drop_reason.unwrap_or("unspecified"))
     }
-    for (id, _) in &slot_drops {
-        map.remove(id);
-    }
-    (map, warns, slot_drops)
 }
 
 fn simple_slots(n: &str) -> &'static [Slot] {

@@ -72,6 +72,33 @@ impl<T> Default for Arena<T> { fn default() -> Self { Arena { items: Vec::new() 
 impl<T> Arena<T> {
     pub fn push(&mut self, v: T) -> usize { let i = self.items.len(); self.items.push(v); i }
     pub fn get(&self, i: usize) -> &T { &self.items[i] }
+    /// Keep the items at the distinct indices `order`, in that order, and drop
+    /// the rest. Permutes in place, without a second copy of the items.
+    pub(crate) fn retain_order(&mut self, order: &[u32]) {
+        let n = self.items.len();
+        if order.iter().enumerate().all(|(p, &i)| i as usize == p) {
+            self.items.truncate(order.len());
+            return;
+        }
+        // src[p] = the index whose item ends up at p; the dropped ones fill the tail.
+        let mut kept = vec![false; n];
+        for &i in order { kept[i as usize] = true; }
+        let mut src: Vec<u32> = Vec::with_capacity(n);
+        src.extend_from_slice(order);
+        src.extend((0..n as u32).filter(|&i| !kept[i as usize]));
+        drop(kept);
+        for start in 0..n {
+            let mut j = start;
+            loop {
+                let from = src[j] as usize;
+                src[j] = j as u32;
+                if from == start { break; }
+                self.items.swap(j, from);
+                j = from;
+            }
+        }
+        self.items.truncate(order.len());
+    }
 }
 
 /// EXPRESS LOGICAL (.T./.F./.U.).
@@ -461,7 +488,7 @@ fn has_ref(k: &Kind) -> bool {
 pub fn emit_read(ir: &ModelIr, crate_path: &str) -> String {
     let mut s = String::from(HEADER);
     s.push_str(&format!(
-        "use {crate_path}::parser::{{Attribute, RawEntity, RawEntityPart}};\nuse {crate_path}::reader::index::{{EntityIndex, IdMap, Member}};\nuse super::model::*;\n\n"
+        "use {crate_path}::parser::{{Attribute, RawEntityPart}};\nuse {crate_path}::reader::table::IdMap;\nuse super::model::*;\n\n"
     ));
 
     // scalar readers (fallible)
@@ -562,19 +589,32 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
     .unwrap();
     s.push_str("pub fn simple_index(name: &str) -> Option<u16> {\n    SIMPLE_INDEX.binary_search_by(|(n, _)| (*n).cmp(name)).ok().map(|i| SIMPLE_INDEX[i].1)\n}\n\n");
 
-    // ---- dispatch table for complex part-bag ----
-    if ir.has_part_bag {
-        let names: Vec<String> = ir.parts.iter().map(|p| format!("\"{}\"", p.name)).collect();
-        writeln!(
-            s,
-            "pub const COMPLEX_PART_NAMES: &[&str] = &[{}];",
-            names.join(", ")
-        )
-        .unwrap();
-        s.push_str("pub fn is_complex_unit(parts: &[RawEntityPart]) -> bool { !parts.is_empty() && parts.iter().all(|p| COMPLEX_PART_NAMES.contains(&p.name.as_str())) }\n\n");
-    } else {
-        s.push_str("pub const COMPLEX_PART_NAMES: &[&str] = &[];\npub fn is_complex_unit(_parts: &[RawEntityPart]) -> bool { false }\n\n");
-    }
+    // ---- complex part-bag names, indexed like SIMPLE_NAMES ----
+    let names: Vec<String> = ir.parts.iter().map(|p| format!("\"{}\"", p.name)).collect();
+    writeln!(
+        s,
+        "pub const COMPLEX_PART_NAMES: &[&str] = &[{}];",
+        names.join(", ")
+    )
+    .unwrap();
+    let mut parts_by_name: Vec<(&str, usize)> = ir
+        .parts
+        .iter()
+        .enumerate()
+        .map(|(i, p)| (p.name.as_str(), i))
+        .collect();
+    parts_by_name.sort_unstable();
+    let parts_by_name: Vec<String> = parts_by_name
+        .iter()
+        .map(|(n, i)| format!("(\"{n}\", {i})"))
+        .collect();
+    writeln!(
+        s,
+        "const COMPLEX_PART_INDEX: &[(&str, u16)] = &[{}];",
+        parts_by_name.join(", ")
+    )
+    .unwrap();
+    s.push_str("pub fn complex_part_index(name: &str) -> Option<u16> {\n    COMPLEX_PART_INDEX.binary_search_by(|(n, _)| (*n).cmp(name)).ok().map(|i| COMPLEX_PART_INDEX[i].1)\n}\n\n");
 
     // ---- per-slot ref allow-list (nonstandard-ref detection) ----
     // For each ref slot of each entity/part: the standard target types this slot
@@ -589,30 +629,39 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
         .enumerate()
         .map(|(i, se)| (se.rust.as_str(), i))
         .collect();
-    // Simple entities are keyed by their SIMPLE_NAMES index; complex parts
-    // (rare) by name.
+    // Simple entities are keyed by their SIMPLE_NAMES index, complex parts by
+    // their COMPLEX_PART_NAMES index.
     emit_ref_slot_table(
         &mut s,
         "ref_slots",
-        "ix: u16",
         "ix",
         ir,
         &rust_to_index,
-        ir.simples
-            .iter()
-            .enumerate()
-            .map(|(i, se)| (i.to_string(), &se.fields)),
+        ir.simples.iter().enumerate().map(|(i, se)| (i, &se.fields)),
     );
     emit_ref_slot_table(
         &mut s,
         "complex_ref_slots",
-        "n: &str",
-        "n",
+        "pix",
         ir,
         &rust_to_index,
-        ir.parts
-            .iter()
-            .map(|p| (format!("\"{}\"", p.name), &p.fields)),
+        ir.parts.iter().enumerate().map(|(i, p)| (i, &p.fields)),
+    );
+
+    // ---- attribute positions resolved in pass 2 ----
+    // The reader keeps these slots (and any other slot holding a reference)
+    // of each entity for resolving once the whole file is read.
+    emit_ref_field_slots(
+        &mut s,
+        "ref_field_slots",
+        "ix",
+        ir.simples.iter().map(|se| &se.fields),
+    );
+    emit_ref_field_slots(
+        &mut s,
+        "complex_ref_field_slots",
+        "pix",
+        ir.parts.iter().map(|p| &p.fields),
     );
 
     // ---- build_* fns (pass1, fallible) ----
@@ -620,105 +669,81 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
         emit_build(&mut s, ir, se);
     }
 
-    // ---- read() ----
-    s.push_str(
-        "pub fn read<'a>(index: &'a EntityIndex<'a>, kept: &[bool]) -> (StepModel, IdMap<'a>, Vec<(u64, String)>) {\n",
-    );
-    s.push_str("    let mut model = StepModel::default();\n");
-    s.push_str("    let mut idmap = IdMap::new(index);\n");
-    s.push_str("    let mut read_drops: Vec<(u64, String)> = Vec::new();\n");
-    // pending lists for pass 2
-    for se in &ir.simples {
+    // ---- per-entity entry points, dispatched by type index ----
+    // The reader builds each entity as it streams past (`build_entity`), keeps
+    // the ref slots, and resolves them once the file is read
+    // (`resolve_entity`); `finalize_arenas` puts the arenas in id order first.
+    s.push_str("pub fn build_entity(model: &mut StepModel, ix: u16, attributes: &[Attribute]) -> Result<usize, String> {\n    Ok(match ix {\n");
+    for (ix, se) in ir.simples.iter().enumerate() {
+        let af = arena_field(&se.rust);
+        writeln!(
+            s,
+            "        {ix} => model.{af}.push(build_{af}(attributes)?),"
+        )
+        .unwrap();
+    }
+    s.push_str("        _ => return Err(format!(\"no entity type #{ix}\")),\n    })\n}\n\n");
+
+    s.push_str("pub fn key_of(ix: u16, i: usize) -> Option<EntityKey> {\n    Some(match ix {\n");
+    for (ix, se) in ir.simples.iter().enumerate() {
+        writeln!(s, "        {ix} => EntityKey::{0}({0}Id(i)),", se.rust).unwrap();
+    }
+    s.push_str("        _ => return None,\n    })\n}\n\n");
+
+    s.push_str("pub fn resolve_entity(model: &mut StepModel, ix: u16, i: usize, attributes: &[Attribute], idmap: &IdMap) -> Result<(), String> {\n    match ix {\n");
+    for (ix, se) in ir.simples.iter().enumerate() {
         if se.fields.iter().any(|f| has_ref(&f.kind)) {
+            let af = arena_field(&se.rust);
             writeln!(
                 s,
-                "    let mut pending_{}: Vec<({}Id, u64, &[Attribute])> = Vec::new();",
-                arena_field(&se.rust),
+                "        {ix} => resolve_{af}(model, {}Id(i), attributes, idmap),",
                 se.rust
             )
             .unwrap();
         }
     }
+    s.push_str("        _ => Ok(()),\n    }\n}\n\n");
+
     if ir.has_part_bag {
-        s.push_str("    let mut pending_complex: Vec<(ComplexUnitId, u64, &[RawEntityPart])> = Vec::new();\n");
+        s.push_str("pub fn build_complex_entity(model: &mut StepModel, parts: &[RawEntityPart]) -> Result<usize, String> {\n    Ok(model.complex_unit_arena.push(ComplexUnit { parts: read_complex_parts_norefs(parts)? }))\n}\n\n");
+        s.push_str("pub fn complex_key_of(i: usize) -> Option<EntityKey> {\n    Some(EntityKey::ComplexUnit(ComplexUnitId(i)))\n}\n\n");
+        s.push_str("pub fn resolve_complex_entity(model: &mut StepModel, i: usize, parts: &[RawEntityPart], idmap: &IdMap) -> Result<(), String> {\n    resolve_complex(model, ComplexUnitId(i), parts, idmap)\n}\n\n");
+    } else {
+        s.push_str("pub fn build_complex_entity(_model: &mut StepModel, _parts: &[RawEntityPart]) -> Result<usize, String> {\n    Err(\"no complex entities are modeled\".to_string())\n}\n\n");
+        s.push_str("pub fn complex_key_of(_i: usize) -> Option<EntityKey> {\n    None\n}\n\n");
+        s.push_str("pub fn resolve_complex_entity(_model: &mut StepModel, _i: usize, _parts: &[RawEntityPart], _idmap: &IdMap) -> Result<(), String> {\n    Ok(())\n}\n\n");
     }
 
-    // Walk the index in id order but build only kept entities (no clone: the
-    // kept flags come from drop_pass, entities are borrowed from the graph).
-    s.push_str("    for pos in 0..index.len() {\n        if !kept[pos] { continue; }\n        let id = index.id(pos);\n        match (index.entity(pos), index.member(pos)) {\n");
-    // simple dispatch arms (by type index) — pass1 build is fallible; an
-    // unreadable own-attr drops just this entity (no panic, surfaced as reason).
+    // `order[ix]` = the arena indices of type `ix` to keep, in id order.
+    s.push_str(
+        "pub fn finalize_arenas(model: &mut StepModel, order: &[Vec<u32>], complex: &[u32]) {\n",
+    );
     for (ix, se) in ir.simples.iter().enumerate() {
         let af = arena_field(&se.rust);
-        let has_r = se.fields.iter().any(|f| has_ref(&f.kind));
         writeln!(
             s,
-            "            (RawEntity::Simple {{ attributes, .. }}, Member::Simple({ix})) => {{ // {}",
-            se.name
+            "    model.{af}.retain_order(order.get({ix}).map_or(&[], Vec::as_slice));"
         )
         .unwrap();
-        writeln!(s, "                match build_{af}(attributes) {{").unwrap();
-        s.push_str("                    Ok(v) => {\n");
-        writeln!(
-            s,
-            "                        let aid = {}Id(model.{af}.push(v));",
-            se.rust
-        )
-        .unwrap();
-        writeln!(
-            s,
-            "                        idmap.insert(id, EntityKey::{}(aid));",
-            se.rust
-        )
-        .unwrap();
-        if has_r {
-            writeln!(
-                s,
-                "                        pending_{af}.push((aid, id, attributes));"
-            )
-            .unwrap();
-        }
-        s.push_str("                    }\n");
-        s.push_str("                    Err(e) => read_drops.push((id, e)),\n");
-        s.push_str("                }\n");
-        s.push_str("            }\n");
     }
-    // complex dispatch
     if ir.has_part_bag {
-        s.push_str("            (RawEntity::Complex { parts, .. }, Member::Complex) => {\n");
-        s.push_str("                match read_complex_parts_norefs(parts) {\n");
-        s.push_str("                    Ok(bag) => {\n");
-        s.push_str("                        let aid = ComplexUnitId(model.complex_unit_arena.push(ComplexUnit { parts: bag }));\n");
-        s.push_str("                        idmap.insert(id, EntityKey::ComplexUnit(aid));\n");
-        s.push_str("                        pending_complex.push((aid, id, parts));\n");
-        s.push_str("                    }\n");
-        s.push_str("                    Err(e) => read_drops.push((id, e)),\n");
-        s.push_str("                }\n");
-        s.push_str("            }\n");
+        s.push_str("    model.complex_unit_arena.retain_order(complex);\n");
     }
-    s.push_str("            _ => {}\n        }\n    }\n");
+    s.push_str("}\n\n");
 
-    // ---- pass 2 (fallible ref resolution) ----
+    s.push_str("pub fn shrink_arenas(model: &mut StepModel) {\n");
     for se in &ir.simples {
-        if !se.fields.iter().any(|f| has_ref(&f.kind)) {
-            continue;
-        }
-        let af = arena_field(&se.rust);
-        writeln!(s, "    for (aid, raw, attributes) in pending_{af} {{").unwrap();
         writeln!(
             s,
-            "        if let Err(e) = resolve_{af}(&mut model, aid, attributes, &idmap) {{ read_drops.push((raw, e)); }}"
+            "    model.{}.items.shrink_to_fit();",
+            arena_field(&se.rust)
         )
         .unwrap();
-        s.push_str("    }\n");
     }
     if ir.has_part_bag {
-        s.push_str("    for (aid, raw, parts) in pending_complex {\n");
-        s.push_str(
-            "        if let Err(e) = resolve_complex(&mut model, aid, parts, &idmap) { read_drops.push((raw, e)); }\n    }\n",
-        );
+        s.push_str("    model.complex_unit_arena.items.shrink_to_fit();\n");
     }
-    s.push_str("    (model, idmap, read_drops)\n}\n\n");
+    s.push_str("}\n\n");
 
     // ---- resolve fns ----
     for se in &ir.simples {
@@ -914,7 +939,7 @@ fn emit_resolve(s: &mut String, ir: &ModelIr, se: &SimpleEnt) {
 /// usable both at field level (caller adds `?`) and as a Vec element (collected).
 fn resolve_ref_one(re: &RefEnum, aref: &str, ctx: &str) -> String {
     let single = format!(
-        "{}::from_any(*idmap.get(&as_ref_id({aref}, {ctx:?})?).ok_or_else(|| format!(\"{ctx}: dangling ref\"))?).map_err(|e| format!(\"{ctx}: {{e}}\"))?",
+        "{}::from_any(idmap.get(as_ref_id({aref}, {ctx:?})?).ok_or_else(|| format!(\"{ctx}: dangling ref\"))?).map_err(|e| format!(\"{ctx}: {{e}}\"))?",
         re.rust
     );
     let mut arms: Vec<String> = Vec::new();
@@ -926,7 +951,7 @@ fn resolve_ref_one(re: &RefEnum, aref: &str, ctx: &str) -> String {
     }
     for (agg_variant, elt_ref, wire) in &re.aggregate {
         arms.push(format!(
-            "Attribute::Typed {{ type_name, value }} if type_name == \"{wire}\" => {}::{}(match value.as_ref() {{ Attribute::List(l) => l.iter().map(|e| {}::from_any(*idmap.get(&as_ref_id(e, {ctx:?})?).ok_or_else(|| format!(\"{ctx}: dangling ref\"))?)).collect::<Result<Vec<_>, String>>()?, o => return Err(format!(\"{ctx}: agg list {wire}: {{o:?}}\")) }}),",
+            "Attribute::Typed {{ type_name, value }} if type_name == \"{wire}\" => {}::{}(match value.as_ref() {{ Attribute::List(l) => l.iter().map(|e| {}::from_any(idmap.get(as_ref_id(e, {ctx:?})?).ok_or_else(|| format!(\"{ctx}: dangling ref\"))?)).collect::<Result<Vec<_>, String>>()?, o => return Err(format!(\"{ctx}: agg list {wire}: {{o:?}}\")) }}),",
             re.rust, agg_variant, elt_ref
         ));
     }
@@ -1832,10 +1857,10 @@ fn render_part_attr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, id:
 
 // ===========================================================================
 // normalize.rs — strict-input normalization (slot-kind general rules).
-// Runs on the raw graph BEFORE the strict read: rewrites non-standard values to
-// standard (record a NormCase note), or — when not normalizable (required ref =
-// `$`) — drops the entity (its referrers cascade-drop via the round-trip subset
-// escape filter). The model/read stay strict; nothing here bends them.
+// Runs on each raw entity BEFORE the strict read: rewrites non-standard values
+// to standard (record a NormCase note), or — when not normalizable (required
+// ref = `$`) — drops the entity (its referrers cascade-drop via the drop pass).
+// The model/read stay strict; nothing here bends them.
 // ===========================================================================
 
 /// Top-level slot kind tag for the normalize rule table.
@@ -1886,13 +1911,12 @@ fn emit_ref_slot_table<'a>(
     s: &mut String,
     fname: &str,
     param: &str,
-    scrutinee: &str,
     ir: &ModelIr,
     rust_to_index: &std::collections::HashMap<&str, usize>,
-    ents: impl Iterator<Item = (String, &'a Vec<Field>)>,
+    ents: impl Iterator<Item = (usize, &'a Vec<Field>)>,
 ) {
-    writeln!(s, "pub fn {fname}({param}) -> &'static [RefSlot] {{").unwrap();
-    writeln!(s, "    match {scrutinee} {{").unwrap();
+    writeln!(s, "pub fn {fname}({param}: u16) -> &'static [RefSlot] {{").unwrap();
+    writeln!(s, "    match {param} {{").unwrap();
     for (name, fields) in ents {
         let slots: Vec<String> = fields
             .iter()
@@ -1925,6 +1949,30 @@ fn emit_ref_slot_table<'a>(
             .collect();
         if !slots.is_empty() {
             writeln!(s, "        {} => &[{}],", name, slots.join(",")).unwrap();
+        }
+    }
+    s.push_str("        _ => &[],\n    }\n}\n\n");
+}
+
+/// `fn {fname}({param}: u16) -> &'static [u16]`: the attribute positions of
+/// the fields resolved in pass 2 (counting derived slots, as the wire does).
+fn emit_ref_field_slots<'a>(
+    s: &mut String,
+    fname: &str,
+    param: &str,
+    ents: impl Iterator<Item = &'a Vec<Field>>,
+) {
+    writeln!(s, "pub fn {fname}({param}: u16) -> &'static [u16] {{").unwrap();
+    writeln!(s, "    match {param} {{").unwrap();
+    for (i, fields) in ents.enumerate() {
+        let slots: Vec<String> = fields
+            .iter()
+            .enumerate()
+            .filter(|(_, f)| !f.derived && has_ref(&f.kind))
+            .map(|(idx, _)| idx.to_string())
+            .collect();
+        if !slots.is_empty() {
+            writeln!(s, "        {i} => &[{}],", slots.join(",")).unwrap();
         }
     }
     s.push_str("        _ => &[],\n    }\n}\n\n");
@@ -1973,7 +2021,7 @@ fn emit_slot_table<'a>(
 pub fn emit_normalize(ir: &ModelIr, crate_path: &str) -> String {
     let mut s = String::from(HEADER);
     s.push_str(&format!(
-        "use std::collections::BTreeMap;\nuse {crate_path}::parser::{{Attribute, RawEntity}};\n\n"
+        "use {crate_path}::parser::{{Attribute, RawEntity}};\n\n"
     ));
     s.push_str(
         r#"#[derive(Clone, Copy)]
@@ -2069,38 +2117,21 @@ fn norm_attrs(slots: &[Slot], attrs: &mut Vec<Attribute>, warns: &mut Vec<&'stat
     true
 }
 
-/// Normalize the raw graph in place. Returns the surviving map (non-normalizable
-/// entities removed; their referrers cascade-drop later via the drop pass) plus
-/// two separate channels: `warns` = rewrite notes (fix, kept), `slot_drops` =
-/// `(id, reason)` per entity removed here (surfaced as drops).
-pub fn normalize(mut map: BTreeMap<u64, RawEntity>) -> (BTreeMap<u64, RawEntity>, Vec<&'static str>, Vec<(u64, &'static str)>) {
-    let mut warns: Vec<&'static str> = Vec::new();
-    let mut slot_drops: Vec<(u64, &'static str)> = Vec::new();
-    for (&id, ent) in map.iter_mut() {
-        let mut drop_reason: Option<&'static str> = None;
-        let keep = match ent {
-            RawEntity::Simple { name, attributes, .. } => {
-                norm_attrs(simple_slots(name), attributes, &mut warns, &mut drop_reason)
-            }
-            RawEntity::Complex { parts, .. } => {
-                let mut ok = true;
-                for p in parts.iter_mut() {
-                    if !norm_attrs(part_slots(&p.name), &mut p.attributes, &mut warns, &mut drop_reason) {
-                        ok = false;
-                        break;
-                    }
-                }
-                ok
-            }
-        };
-        if !keep {
-            slot_drops.push((id, drop_reason.unwrap_or("unspecified")));
+/// Normalize one entity in place. Rewrites push to `warns` (norm channel), kept
+/// even when the entity is then dropped; a non-normalizable slot returns its
+/// reason (a nonstandard-value drop; its referrers cascade later via the drop
+/// pass).
+pub fn normalize_entity(ent: &mut RawEntity, warns: &mut Vec<&'static str>) -> Result<(), &'static str> {
+    let mut drop_reason: Option<&'static str> = None;
+    let keep = match ent {
+        RawEntity::Simple { name, attributes, .. } => {
+            norm_attrs(simple_slots(name), attributes, warns, &mut drop_reason)
         }
-    }
-    for (id, _) in &slot_drops {
-        map.remove(id);
-    }
-    (map, warns, slot_drops)
+        RawEntity::Complex { parts, .. } => {
+            parts.iter_mut().all(|p| norm_attrs(part_slots(&p.name), &mut p.attributes, warns, &mut drop_reason))
+        }
+    };
+    if keep { Ok(()) } else { Err(drop_reason.unwrap_or("unspecified")) }
 }
 
 "#,

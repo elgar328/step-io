@@ -52,9 +52,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   changes.
 - Documentation and the crate description present step-io as STEP I/O for
   3D CAD applications rather than for CAD kernels.
-- `read()` takes about half as long on large files: a 110 MB file of one
-  million entities now reads in 0.8 s instead of 1.7 s. It also peaks at
-  slightly less memory. The model and the report it returns are unchanged.
+- `read()` streams the file instead of holding all of it as raw entities
+  until the model is built, and takes less than half as long: a 110 MB file
+  of one million entities now reads in 0.7 s instead of 1.7 s, and the
+  process peaks at about 300 MB of memory instead of 760 MB, the file's own
+  110 MB included. The model it returns is unchanged.
+- The `Graph` that `parse()` and `parse_bytes()` return takes about 40% less
+  memory, 300 MB instead of 480 MB for the same file, as its attribute lists
+  are allocated at their exact length.
+- `Report::norm` lists the notes in the order of the entities in the file;
+  it used to list the entity-specific fixes first and the generic ones after,
+  each in id order.
+- `Report::dropped` is sorted by entity id.
+- An entity dropped because it references an entity that normalization
+  dropped now carries that entity's reason in its cascade label, such as
+  `via-required reference is missing`, instead of `via-dangling`, which now
+  means only a reference to an id the file does not define.
 
 ### Fixed
 
