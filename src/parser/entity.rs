@@ -203,8 +203,8 @@ pub enum Error {
     ///
     /// [`MAX_NESTING_DEPTH`]: super::p21::MAX_NESTING_DEPTH
     NestingTooDeep { span: Span },
-    /// The file holds more than the reader can index: at most
-    /// `u32::MAX - 1` entities, and as many reference and text slots.
+    /// The file holds more than the reader can index: at most `u32::MAX`
+    /// entities, and as many reference and text slots.
     /// `span` is the entity where reading stopped.
     TooLarge { span: Span },
 }

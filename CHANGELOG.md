@@ -81,14 +81,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `read()` streams the file instead of holding all of it as raw entities
   until the model is built, and takes less than half as long: a 110 MB file
   of one million entities now reads in 0.7 s instead of 1.7 s, and the
-  process peaks at about 300 MB of memory instead of 760 MB, the file's own
-  110 MB included. The model it returns is unchanged.
+  process peaks at about 240 MB of memory instead of 760 MB, the file's own
+  110 MB included (with the smaller model described below). It reads the
+  same entities and values as before.
 - A file that is not valid UTF-8, and so reads as ISO 8859-1, is read in
   place instead of from a decoded copy of the whole file, saving at least
-  the size of the file in memory: a 63 MB file now peaks at 160 MB of heap
-  instead of 290 MB. Its strings decode as before. The `Span` offsets of such
-  a file count the bytes of the file, not of the decoded copy; lines and
-  columns are unchanged.
+  the size of the file in memory: about 130 MB of heap for a 63 MB file. Its
+  strings decode as before. The `Span` offsets of such a file count the bytes
+  of the file, not of the decoded copy; lines and columns are unchanged.
 - `TokenKind` no longer implements `logos::Logos`; lex with `Lexer` or
   `tokenize()`, which still take `&str`.
 - Section markers (`HEADER`, `DATA`, `ENDSEC`, …) ignore ASCII case only, so
