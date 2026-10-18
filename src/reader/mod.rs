@@ -44,6 +44,7 @@ use table::{EntityTable, IdMap, Labels, Member, NONE, Row, first_duplicate, sort
 /// no policy layer (normalize / `drop_pass`) classified it — a frontier signal:
 /// investigate and absorb via normalize or `nonstd_ref`.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[non_exhaustive]
 pub enum DropKind {
     NonstandardValue,
     Unimplemented,
@@ -56,6 +57,7 @@ pub enum DropKind {
 /// <TYPE>` / a slot-rule name / `via-<root>`). Aggregated as instance counts per
 /// reason.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[non_exhaustive]
 pub struct DropReason {
     pub kind: DropKind,
     pub key: String,

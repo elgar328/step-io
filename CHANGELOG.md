@@ -47,6 +47,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   arm.
 - `Report` is `#[non_exhaustive]`. Its fields read as before, but it can no
   longer be built with a struct literal outside step-io.
+- `DropKind` is `#[non_exhaustive]`, so matching on it needs a wildcard arm,
+  and so is `DropReason`, whose fields read as before but which can no
+  longer be built with a struct literal outside step-io.
 - `StepBuilder` writes `APPLICATION_PROTOCOL_DEFINITION` with year 2020 (AP242
   edition 2) instead of 2011. Readers ignore the value; only the output text
   changes.
