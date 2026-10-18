@@ -115,8 +115,9 @@ pub(crate) struct Lexer<R> {
     scan: usize,
     split: Split,
     /// Watching for `<` (anchors) too, while rescanning a record that has
-    /// one.
+    /// one; and how far the record has been checked for one.
     careful: bool,
+    checked: usize,
     /// The input has no more bytes.
     eof: bool,
     /// The record being lexed reads as UTF-8 (else ISO 8859-1).
@@ -140,6 +141,7 @@ impl<R: Read> Lexer<R> {
             scan: 0,
             split: Split::Plain,
             careful: false,
+            checked: 0,
             eof: false,
             utf8: true,
             text: String::new(),
@@ -169,6 +171,7 @@ impl<R: Read> Lexer<R> {
             self.base += self.pos as u64;
             self.scan -= self.pos;
             self.end -= self.pos;
+            self.checked = self.checked.saturating_sub(self.pos);
             self.pos = 0;
         }
         let n = self.buf.len();
@@ -182,7 +185,9 @@ impl<R: Read> Lexer<R> {
                 }
                 Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
                 Err(e) => {
-                    self.buf.truncate(n);
+                    // Nothing more is lexed after a failed read.
+                    self.buf.clear();
+                    (self.end, self.scan, self.checked) = (0, 0, 0);
                     self.eof = true;
                     return Err(Error::Io {
                         kind: e.kind(),
@@ -198,19 +203,26 @@ impl<R: Read> Lexer<R> {
     /// of a byte whose meaning hangs on the one after it while that one is
     /// still unread.
     fn find_cut(&mut self) -> Option<usize> {
-        let cut = self.scan_for_cut()?;
-        // An anchor may hold a `;`. Anchors are rare, so a record is first
-        // cut without them, and cut again watching for them if it has a `<`.
-        if self.careful || memchr::memchr(b'<', &self.buf[self.pos..cut]).is_none() {
-            self.careful = false;
-            return Some(cut);
+        let mut found = self.scan_for_cut();
+        // An anchor may hold a `;` or a `'`. Anchors are rare, so a record is
+        // first scanned without them, and again watching for them as soon as
+        // a `<` shows in what was scanned.
+        if !self.careful {
+            let upto = found.unwrap_or(self.scan);
+            let from = self.checked.max(self.pos);
+            let anchor = memchr::memchr(b'<', &self.buf[from..upto]).is_some();
+            self.checked = upto;
+            if anchor {
+                self.careful = true;
+                self.scan = self.pos;
+                self.split = Split::Plain;
+                found = self.scan_for_cut();
+            }
         }
-        self.careful = true;
-        self.scan = self.pos;
-        self.split = Split::Plain;
-        let cut = self.scan_for_cut()?;
-        self.careful = false;
-        Some(cut)
+        if found.is_some() {
+            self.careful = false;
+        }
+        found
     }
 
     /// [`find_cut`](Self::find_cut)'s scan, from where the last one stopped.
@@ -1160,12 +1172,13 @@ mod tests {
     /// one piece; so do inputs handed over a few bytes at a time.
     #[test]
     fn records_lex_as_the_whole_input_would() {
-        let sources: [&[u8]; 6] = [
+        let sources: [&[u8]; 7] = [
             b"HEADER;FILE_DESCRIPTION(('a;b','it''s;'),'2;1');\n/* c;o*m/ment; **/#1=X(<a;b>,'x''',.T.,\n1.5E+3,\"0F\",$,*,'\xC3\xA9;');#2=Y('');ENDSEC;",
             b"#1=X('abc;);#2=Y(1);",
             b"#1=X(1);/* open; comment",
             b"#1=X(<open;anchor);#2=Y(1);",
             b"#1=X('ab'';c');x/y;*/;",
+            b"#1=X(<a'b;c>);#2=Y('z');",
             b"END-ISO-10303-21;",
         ];
         for src in sources {
@@ -1213,14 +1226,19 @@ mod tests {
                 Err(std::io::Error::other("disk gone"))
             }
         }
+        let io_error = Some(Err(Error::Io {
+            kind: std::io::ErrorKind::Other,
+            message: "disk gone".into(),
+        }));
         let mut lexer = Lexer::new(Broken);
-        assert_eq!(
-            lexer.next(),
-            Some(Err(Error::Io {
-                kind: std::io::ErrorKind::Other,
-                message: "disk gone".into()
-            }))
-        );
+        assert_eq!(lexer.next(), io_error);
+        assert_eq!(lexer.next(), None);
+        // What was read before the failure lexes; what is left of the record
+        // it broke off in does not.
+        let mut lexer = Lexer::new(b"#1=X(1);#2=Y(".chain(Broken));
+        let kinds: Vec<_> = lexer.by_ref().take(7).map(|t| t.map(|t| t.kind)).collect();
+        assert_eq!(kinds.last(), Some(&Ok(TokenKind::Semicolon)));
+        assert_eq!(lexer.next(), io_error);
         assert_eq!(lexer.next(), None);
     }
 

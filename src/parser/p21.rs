@@ -1036,7 +1036,7 @@ mod tests {
         assert!(matches!(err, Error::UnexpectedEof { .. }));
     }
 
-    // --- parse_bytes: non-UTF-8 input ---
+    // --- non-UTF-8 input ---
 
     fn minimal_step_with_string_attr(s_bytes: &[u8]) -> Vec<u8> {
         let prefix = b"ISO-10303-21;\n\
