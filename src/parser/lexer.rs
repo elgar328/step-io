@@ -78,6 +78,22 @@ impl std::error::Error for LexError {}
 /// Bytes asked of the input per read.
 const CHUNK: usize = 64 * 1024;
 
+/// UTF-8 records up to this long are copied as text once checked, so their
+/// tokens are cut from it unchecked; a longer one (a large mesh, say) is not,
+/// so it is not held twice, and its tokens are checked one by one.
+const COPY_MAX: usize = CHUNK;
+
+/// How the record being lexed reads.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Coding {
+    /// UTF-8, copied into `Lexer::text`.
+    Copied,
+    /// UTF-8, too long to copy.
+    Utf8,
+    /// ISO 8859-1.
+    Latin1,
+}
+
 /// Where the record splitter is: between tokens, or inside a string,
 /// comment or anchor (the only tokens that may hold a `;`).
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -120,10 +136,9 @@ pub(crate) struct Lexer<R> {
     checked: usize,
     /// The input has no more bytes.
     eof: bool,
-    /// The record being lexed reads as UTF-8 (else ISO 8859-1).
-    utf8: bool,
-    /// The record being lexed when it is UTF-8, as text: token text is cut
-    /// from it without checking the bytes again.
+    coding: Coding,
+    /// The record being lexed when it is [`Coding::Copied`]: token text is
+    /// cut from it without checking the bytes again.
     text: String,
     line: u32,
     column: u32,
@@ -143,7 +158,7 @@ impl<R: Read> Lexer<R> {
             careful: false,
             checked: 0,
             eof: false,
-            utf8: true,
+            coding: Coding::Copied,
             text: String::new(),
             line: 1,
             column: 1,
@@ -322,20 +337,21 @@ impl<R: Read> Lexer<R> {
             }
         }
         self.text.clear();
-        match std::str::from_utf8(&self.buf[self.pos..self.end]) {
-            Ok(t) => {
+        self.coding = match std::str::from_utf8(&self.buf[self.pos..self.end]) {
+            Ok(t) if t.len() <= COPY_MAX => {
                 self.text.push_str(t);
-                self.utf8 = true;
+                Coding::Copied
             }
-            Err(_) => self.utf8 = false,
-        }
+            Ok(_) => Coding::Utf8,
+            Err(_) => Coding::Latin1,
+        };
         Ok(self.end > self.pos)
     }
 
     /// Walk through `buf[start..end]` updating `line`/`column`: a column
     /// per character, which in UTF-8 is a byte that does not continue one.
     fn advance_over(&mut self, start: usize, end: usize) {
-        let latin1 = !self.utf8;
+        let latin1 = self.coding == Coding::Latin1;
         for &b in &self.buf[start..end] {
             if b == b'\n' {
                 self.line = self.line.saturating_add(1);
@@ -346,36 +362,32 @@ impl<R: Read> Lexer<R> {
         }
     }
 
-    /// The record start, for cutting token text from `text`.
-    fn record_start(&self) -> usize {
-        self.end - self.text.len()
-    }
-
-    /// The text of `buf[range]`: UTF-8 in a UTF-8 record, decoded from
-    /// ISO 8859-1 otherwise.
-    fn text(&self, range: std::ops::Range<usize>) -> Cow<'_, str> {
-        if self.utf8 {
-            let at = self.record_start();
-            Cow::Borrowed(
-                self.text
-                    .get(range.start - at..range.end - at)
-                    .unwrap_or_default(),
-            )
-        } else {
-            Cow::Owned(self.buf[range].iter().map(|&b| char::from(b)).collect())
-        }
-    }
-
-    /// The text of `buf[range]`, which the token rules keep to ASCII.
-    fn ascii(&self, range: std::ops::Range<usize>) -> &str {
-        if self.utf8 {
-            let at = self.record_start();
+    /// The text of `buf[range]` in a UTF-8 record (or in any record, for a
+    /// range the token rules keep to ASCII).
+    fn utf8_text(&self, range: std::ops::Range<usize>) -> &str {
+        if self.coding == Coding::Copied {
+            let at = self.end - self.text.len();
             self.text
                 .get(range.start - at..range.end - at)
                 .unwrap_or_default()
         } else {
             std::str::from_utf8(&self.buf[range]).unwrap_or_default()
         }
+    }
+
+    /// The text of `buf[range]`: UTF-8 in a UTF-8 record, decoded from
+    /// ISO 8859-1 otherwise.
+    fn text(&self, range: std::ops::Range<usize>) -> Cow<'_, str> {
+        if self.coding == Coding::Latin1 {
+            Cow::Owned(self.buf[range].iter().map(|&b| char::from(b)).collect())
+        } else {
+            Cow::Borrowed(self.utf8_text(range))
+        }
+    }
+
+    /// The text of `buf[range]`, which the token rules keep to ASCII.
+    fn ascii(&self, range: std::ops::Range<usize>) -> &str {
+        self.utf8_text(range)
     }
 
     /// The token a matched rule stands for, with its value; `None` for a
@@ -421,7 +433,7 @@ impl<R: Read> Lexer<R> {
                 let mut inner = Raw::lexer(rec);
                 if let Some(raw) = inner.next() {
                     let mut r = inner.span();
-                    if raw.is_err() && self.utf8 {
+                    if raw.is_err() && self.coding != Coding::Latin1 {
                         // An unmatched character spans all of its bytes.
                         r.end += rec[r.end..]
                             .iter()
@@ -1215,6 +1227,26 @@ mod tests {
             })
             .collect();
         assert_eq!(strings, ["\u{E9}", "\u{E9}"]);
+    }
+
+    /// A UTF-8 record too long to copy as text reads the same.
+    #[test]
+    fn long_records_read_without_a_copy() {
+        let names: Vec<String> = (0..20000).map(|i| format!("'é{i}'")).collect();
+        let src = format!("#1=X(({}));#2=Y('ü');", names.join(","));
+        assert!(src.len() > COPY_MAX);
+        let mut lexer = Lexer::new(src.as_bytes());
+        let mut strings = Vec::new();
+        while let Some(t) = lexer.next() {
+            if let TokenKind::String(s) = t.expect("lexes").kind {
+                // The first record is not copied; the second is.
+                strings.push((s, lexer.coding == Coding::Copied));
+            }
+        }
+        assert_eq!(strings.len(), 20001);
+        assert_eq!(strings[0], ("é0".to_string(), false));
+        assert_eq!(strings[19999], ("é19999".to_string(), false));
+        assert_eq!(strings[20000], ("ü".to_string(), true));
     }
 
     /// A failing input stops the lexer with `Error::Io`.
