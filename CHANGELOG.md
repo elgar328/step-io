@@ -100,6 +100,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   instead of its text. Write it with
   `step_io::write(&b.finish()?, File::create(path)?)?`, or into a
   `Vec<u8>` to get the text.
+- `StepModel::ref_graph()`, which the scene handles build on first use,
+  holds its index in two flat arrays instead of a map of lists: for a model
+  of one million entities it takes 16 MB instead of 97 MB and builds in
+  13 ms instead of 67 ms. `RefGraph::referrers()` returns the same entities
+  in the same order.
 - Each entity, with the blanks and comments before it, reads as UTF-8 when
   its bytes are valid UTF-8 and as ISO 8859-1 otherwise; the whole file used
   to read one way or the other. A UTF-8 file with one broken character now

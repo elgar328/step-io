@@ -356,6 +356,29 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
     }
     writeln!(s, "}}\n").unwrap();
 
+    // EntityKey::kind_index: the variant's number (declaration order) and arena
+    // index, so a key maps onto a dense number (RefGraph).
+    let kinds = ir.simples.len() + usize::from(ir.has_part_bag);
+    writeln!(
+        s,
+        "impl EntityKey {{\n    /// How many kinds of key there are.\n    pub(crate) const KINDS: usize = {kinds};\n\n    \
+         /// The key's kind, numbered in declaration order, and its arena index.\n    \
+         pub(crate) fn kind_index(self) -> (usize, u32) {{\n        match self {{"
+    )
+    .unwrap();
+    for (k, se) in ir.simples.iter().enumerate() {
+        writeln!(s, "            EntityKey::{}(i) => ({k}, i.0),", se.rust).unwrap();
+    }
+    if ir.has_part_bag {
+        writeln!(
+            s,
+            "            EntityKey::ComplexUnit(i) => ({}, i.0),",
+            ir.simples.len()
+        )
+        .unwrap();
+    }
+    writeln!(s, "        }}\n    }}\n}}\n").unwrap();
+
     // Ref enums.
     let mut refs: Vec<_> = ir.ref_enums.values().collect();
     refs.sort_by(|a, b| a.rust.cmp(&b.rust));
@@ -1470,11 +1493,12 @@ fn collect_deps_elem(ir: &ModelIr, k: &Kind) -> Option<String> {
     }
 }
 
-/// Emit `deps_of(any, out)`: push the EntityKey deps of an entity (simple or complex
-/// part-bag). Self-edges are filtered by the driver, not here.
+/// Emit `deps_of(model, any, out)`: push the EntityKey deps of an entity (simple or
+/// complex part-bag). Self-edges are filtered by the driver, not here. It reads only
+/// the model, so `RefGraph` calls it without a `Writer`.
 fn emit_deps_of(s: &mut String, ir: &ModelIr) {
     s.push_str(
-        "    pub(crate) fn deps_of(&self, any: EntityKey, out: &mut Vec<EntityKey>) { match any {\n",
+        "    pub(crate) fn deps_of(model: &StepModel, any: EntityKey, out: &mut Vec<EntityKey>) { match any {\n",
     );
     for se in &ir.simples {
         let af = arena_field(&se.rust);
@@ -1500,7 +1524,7 @@ fn emit_deps_of(s: &mut String, ir: &ModelIr) {
         } else {
             writeln!(
                 s,
-                "        EntityKey::{}(id) => {{ let it = self.model.{}.get(id.0); {} }},",
+                "        EntityKey::{}(id) => {{ let it = model.{}.get(id.0); {} }},",
                 se.rust, af, body
             )
             .unwrap();
@@ -1508,7 +1532,7 @@ fn emit_deps_of(s: &mut String, ir: &ModelIr) {
     }
     if ir.has_part_bag {
         s.push_str(
-            "        EntityKey::ComplexUnit(id) => { let cu = self.model.complex_unit_arena.get(id.0); for part in &cu.parts { match part {\n",
+            "        EntityKey::ComplexUnit(id) => { let cu = model.complex_unit_arena.get(id.0); for part in &cu.parts { match part {\n",
         );
         for p in &ir.parts {
             let kept = idents(&p.fields);
@@ -1990,7 +2014,7 @@ fn emit_all_iter(s: &mut String, _ir: &ModelIr) {
                 on_path.insert(any);
                 stack.push((any, true));
                 let mut deps: Vec<EntityKey> = Vec::new();
-                self.deps_of(any, &mut deps);
+                Self::deps_of(self.model, any, &mut deps);
                 for d in deps.into_iter().rev() {
                     if d == any { continue; }
                     if self.get_id(d).is_some() { continue; }

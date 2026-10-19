@@ -23494,60 +23494,60 @@ impl<'a> Writer<'a> {
         }
     }
 
-    pub(crate) fn deps_of(&self, any: EntityKey, out: &mut Vec<EntityKey>) {
+    pub(crate) fn deps_of(model: &StepModel, any: EntityKey, out: &mut Vec<EntityKey>) {
         match any {
             EntityKey::Action(id) => {
-                let it = self.model.action_arena.get(id.0);
+                let it = model.action_arena.get(id.0);
                 Self::deps_ref_action_method(&it.chosen_method, out);
             }
             EntityKey::ActionAssignment(id) => {
-                let it = self.model.action_assignment_arena.get(id.0);
+                let it = model.action_assignment_arena.get(id.0);
                 Self::deps_ref_action(&it.assigned_action, out);
             }
             EntityKey::ActionDirective(id) => {
-                let it = self.model.action_directive_arena.get(id.0);
+                let it = model.action_directive_arena.get(id.0);
                 for e in &it.requests {
                     Self::deps_ref_versioned_action_request(e, out);
                 }
             }
             EntityKey::ActionMethod(_) => {}
             EntityKey::ActionMethodRelationship(id) => {
-                let it = self.model.action_method_relationship_arena.get(id.0);
+                let it = model.action_method_relationship_arena.get(id.0);
                 Self::deps_ref_action_method(&it.relating_method, out);
                 Self::deps_ref_action_method(&it.related_method, out);
             }
             EntityKey::ActionProperty(id) => {
-                let it = self.model.action_property_arena.get(id.0);
+                let it = model.action_property_arena.get(id.0);
                 Self::deps_ref_characterized_action_definition(&it.definition, out);
             }
             EntityKey::ActionRelationship(id) => {
-                let it = self.model.action_relationship_arena.get(id.0);
+                let it = model.action_relationship_arena.get(id.0);
                 Self::deps_ref_action(&it.relating_action, out);
                 Self::deps_ref_action(&it.related_action, out);
             }
             EntityKey::ActionRequestAssignment(id) => {
-                let it = self.model.action_request_assignment_arena.get(id.0);
+                let it = model.action_request_assignment_arena.get(id.0);
                 Self::deps_ref_versioned_action_request(&it.assigned_action_request, out);
             }
             EntityKey::ActionRequestSolution(id) => {
-                let it = self.model.action_request_solution_arena.get(id.0);
+                let it = model.action_request_solution_arena.get(id.0);
                 Self::deps_ref_action_method(&it.method, out);
                 Self::deps_ref_versioned_action_request(&it.request, out);
             }
             EntityKey::ActionResource(id) => {
-                let it = self.model.action_resource_arena.get(id.0);
+                let it = model.action_resource_arena.get(id.0);
                 for e in &it.usage {
                     Self::deps_ref_supported_item(e, out);
                 }
                 Self::deps_ref_action_resource_type(&it.kind, out);
             }
             EntityKey::ActionResourceRelationship(id) => {
-                let it = self.model.action_resource_relationship_arena.get(id.0);
+                let it = model.action_resource_relationship_arena.get(id.0);
                 Self::deps_ref_action_resource(&it.relating_resource, out);
                 Self::deps_ref_action_resource(&it.related_resource, out);
             }
             EntityKey::ActionResourceRequirement(id) => {
-                let it = self.model.action_resource_requirement_arena.get(id.0);
+                let it = model.action_resource_requirement_arena.get(id.0);
                 Self::deps_ref_resource_requirement_type(&it.kind, out);
                 for e in &it.operations {
                     Self::deps_ref_characterized_action_definition(e, out);
@@ -23556,37 +23556,34 @@ impl<'a> Writer<'a> {
             EntityKey::ActionResourceType(_) => {}
             EntityKey::Address(_) => {}
             EntityKey::AdvancedBrepShapeRepresentation(id) => {
-                let it = self
-                    .model
-                    .advanced_brep_shape_representation_arena
-                    .get(id.0);
+                let it = model.advanced_brep_shape_representation_arena.get(id.0);
                 for e in &it.items {
                     Self::deps_ref_representation_item(e, out);
                 }
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
             EntityKey::AdvancedFace(id) => {
-                let it = self.model.advanced_face_arena.get(id.0);
+                let it = model.advanced_face_arena.get(id.0);
                 for e in &it.bounds {
                     Self::deps_ref_face_bound(e, out);
                 }
                 Self::deps_ref_surface(&it.face_geometry, out);
             }
             EntityKey::AllAroundShapeAspect(id) => {
-                let it = self.model.all_around_shape_aspect_arena.get(id.0);
+                let it = model.all_around_shape_aspect_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
             }
             EntityKey::AngularLocation(id) => {
-                let it = self.model.angular_location_arena.get(id.0);
+                let it = model.angular_location_arena.get(id.0);
                 Self::deps_ref_shape_aspect(&it.relating_shape_aspect, out);
                 Self::deps_ref_shape_aspect(&it.related_shape_aspect, out);
             }
             EntityKey::AngularSize(id) => {
-                let it = self.model.angular_size_arena.get(id.0);
+                let it = model.angular_size_arena.get(id.0);
                 Self::deps_ref_shape_aspect(&it.applies_to, out);
             }
             EntityKey::AngularityTolerance(id) => {
-                let it = self.model.angularity_tolerance_arena.get(id.0);
+                let it = model.angularity_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
@@ -23596,14 +23593,14 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::AnnotationCurveOccurrence(id) => {
-                let it = self.model.annotation_curve_occurrence_arena.get(id.0);
+                let it = model.annotation_curve_occurrence_arena.get(id.0);
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
                 Self::deps_ref_curve_or_curve_set(&it.item, out);
             }
             EntityKey::AnnotationFillAreaOccurrence(id) => {
-                let it = self.model.annotation_fill_area_occurrence_arena.get(id.0);
+                let it = model.annotation_fill_area_occurrence_arena.get(id.0);
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
@@ -23611,47 +23608,37 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_point(&it.fill_style_target, out);
             }
             EntityKey::AnnotationOccurrence(id) => {
-                let it = self.model.annotation_occurrence_arena.get(id.0);
+                let it = model.annotation_occurrence_arena.get(id.0);
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
                 Self::deps_ref_styled_item_target(&it.item, out);
             }
             EntityKey::AnnotationOccurrenceAssociativity(id) => {
-                let it = self
-                    .model
-                    .annotation_occurrence_associativity_arena
-                    .get(id.0);
+                let it = model.annotation_occurrence_associativity_arena.get(id.0);
                 Self::deps_ref_annotation_occurrence(&it.relating_annotation_occurrence, out);
                 Self::deps_ref_annotation_occurrence(&it.related_annotation_occurrence, out);
             }
             EntityKey::AnnotationOccurrenceRelationship(id) => {
-                let it = self
-                    .model
-                    .annotation_occurrence_relationship_arena
-                    .get(id.0);
+                let it = model.annotation_occurrence_relationship_arena.get(id.0);
                 Self::deps_ref_annotation_occurrence(&it.relating_annotation_occurrence, out);
                 Self::deps_ref_annotation_occurrence(&it.related_annotation_occurrence, out);
             }
             EntityKey::AnnotationPlaceholderLeaderLine(id) => {
-                let it = self
-                    .model
-                    .annotation_placeholder_leader_line_arena
-                    .get(id.0);
+                let it = model.annotation_placeholder_leader_line_arena.get(id.0);
                 for e in &it.geometric_elements {
                     Self::deps_ref_des_apll_point_select(e, out);
                 }
             }
             EntityKey::AnnotationPlaceholderOccurrence(id) => {
-                let it = self.model.annotation_placeholder_occurrence_arena.get(id.0);
+                let it = model.annotation_placeholder_occurrence_arena.get(id.0);
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
                 Self::deps_ref_styled_item_target(&it.item, out);
             }
             EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(id) => {
-                let it = self
-                    .model
+                let it = model
                     .annotation_placeholder_occurrence_with_leader_line_arena
                     .get(id.0);
                 for e in &it.styles {
@@ -23663,7 +23650,7 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::AnnotationPlane(id) => {
-                let it = self.model.annotation_plane_arena.get(id.0);
+                let it = model.annotation_plane_arena.get(id.0);
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
@@ -23675,72 +23662,69 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::AnnotationSymbol(id) => {
-                let it = self.model.annotation_symbol_arena.get(id.0);
+                let it = model.annotation_symbol_arena.get(id.0);
                 Self::deps_ref_representation_map(&it.mapping_source, out);
                 Self::deps_ref_representation_item(&it.mapping_target, out);
             }
             EntityKey::AnnotationSymbolOccurrence(id) => {
-                let it = self.model.annotation_symbol_occurrence_arena.get(id.0);
+                let it = model.annotation_symbol_occurrence_arena.get(id.0);
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
                 Self::deps_ref_annotation_symbol_occurrence_item(&it.item, out);
             }
             EntityKey::AnnotationText(id) => {
-                let it = self.model.annotation_text_arena.get(id.0);
+                let it = model.annotation_text_arena.get(id.0);
                 Self::deps_ref_representation_map(&it.mapping_source, out);
                 Self::deps_ref_axis2_placement(&it.mapping_target, out);
             }
             EntityKey::AnnotationTextCharacter(id) => {
-                let it = self.model.annotation_text_character_arena.get(id.0);
+                let it = model.annotation_text_character_arena.get(id.0);
                 Self::deps_ref_representation_map(&it.mapping_source, out);
                 Self::deps_ref_axis2_placement(&it.mapping_target, out);
             }
             EntityKey::AnnotationTextOccurrence(id) => {
-                let it = self.model.annotation_text_occurrence_arena.get(id.0);
+                let it = model.annotation_text_occurrence_arena.get(id.0);
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
                 Self::deps_ref_annotation_text_occurrence_item(&it.item, out);
             }
             EntityKey::AnnotationToAnnotationLeaderLine(id) => {
-                let it = self
-                    .model
-                    .annotation_to_annotation_leader_line_arena
-                    .get(id.0);
+                let it = model.annotation_to_annotation_leader_line_arena.get(id.0);
                 for e in &it.geometric_elements {
                     Self::deps_ref_des_apll_point_select(e, out);
                 }
             }
             EntityKey::AnnotationToModelLeaderLine(id) => {
-                let it = self.model.annotation_to_model_leader_line_arena.get(id.0);
+                let it = model.annotation_to_model_leader_line_arena.get(id.0);
                 for e in &it.geometric_elements {
                     Self::deps_ref_des_apll_point_select(e, out);
                 }
             }
             EntityKey::ApllPoint(_) => {}
             EntityKey::ApllPointWithSurface(id) => {
-                let it = self.model.apll_point_with_surface_arena.get(id.0);
+                let it = model.apll_point_with_surface_arena.get(id.0);
                 Self::deps_ref_face_surface(&it.associated_surface, out);
             }
             EntityKey::ApplicationContext(_) => {}
             EntityKey::ApplicationContextElement(id) => {
-                let it = self.model.application_context_element_arena.get(id.0);
+                let it = model.application_context_element_arena.get(id.0);
                 Self::deps_ref_application_context(&it.frame_of_reference, out);
             }
             EntityKey::ApplicationProtocolDefinition(id) => {
-                let it = self.model.application_protocol_definition_arena.get(id.0);
+                let it = model.application_protocol_definition_arena.get(id.0);
                 Self::deps_ref_application_context(&it.application, out);
             }
             EntityKey::AppliedApprovalAssignment(id) => {
-                let it = self.model.applied_approval_assignment_arena.get(id.0);
+                let it = model.applied_approval_assignment_arena.get(id.0);
                 Self::deps_ref_approval(&it.assigned_approval, out);
                 for e in &it.items {
                     Self::deps_ref_approval_item(e, out);
                 }
             }
             EntityKey::AppliedDateAndTimeAssignment(id) => {
-                let it = self.model.applied_date_and_time_assignment_arena.get(id.0);
+                let it = model.applied_date_and_time_assignment_arena.get(id.0);
                 Self::deps_ref_date_and_time(&it.assigned_date_and_time, out);
                 Self::deps_ref_date_time_role(&it.role, out);
                 for e in &it.items {
@@ -23748,15 +23732,14 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::AppliedDocumentReference(id) => {
-                let it = self.model.applied_document_reference_arena.get(id.0);
+                let it = model.applied_document_reference_arena.get(id.0);
                 Self::deps_ref_document(&it.assigned_document, out);
                 for e in &it.items {
                     Self::deps_ref_document_reference_item(e, out);
                 }
             }
             EntityKey::AppliedExternalIdentificationAssignment(id) => {
-                let it = self
-                    .model
+                let it = model
                     .applied_external_identification_assignment_arena
                     .get(id.0);
                 Self::deps_ref_identification_role(&it.role, out);
@@ -23766,15 +23749,14 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::AppliedGroupAssignment(id) => {
-                let it = self.model.applied_group_assignment_arena.get(id.0);
+                let it = model.applied_group_assignment_arena.get(id.0);
                 Self::deps_ref_group(&it.assigned_group, out);
                 for e in &it.items {
                     Self::deps_ref_groupable_item(e, out);
                 }
             }
             EntityKey::AppliedPersonAndOrganizationAssignment(id) => {
-                let it = self
-                    .model
+                let it = model
                     .applied_person_and_organization_assignment_arena
                     .get(id.0);
                 Self::deps_ref_person_and_organization(&it.assigned_person_and_organization, out);
@@ -23784,14 +23766,13 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::AppliedPresentedItem(id) => {
-                let it = self.model.applied_presented_item_arena.get(id.0);
+                let it = model.applied_presented_item_arena.get(id.0);
                 for e in &it.items {
                     Self::deps_ref_presented_item_select(e, out);
                 }
             }
             EntityKey::AppliedSecurityClassificationAssignment(id) => {
-                let it = self
-                    .model
+                let it = model
                     .applied_security_classification_assignment_arena
                     .get(id.0);
                 Self::deps_ref_security_classification(&it.assigned_security_classification, out);
@@ -23800,20 +23781,20 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::Approval(id) => {
-                let it = self.model.approval_arena.get(id.0);
+                let it = model.approval_arena.get(id.0);
                 Self::deps_ref_approval_status(&it.status, out);
             }
             EntityKey::ApprovalAssignment(id) => {
-                let it = self.model.approval_assignment_arena.get(id.0);
+                let it = model.approval_assignment_arena.get(id.0);
                 Self::deps_ref_approval(&it.assigned_approval, out);
             }
             EntityKey::ApprovalDateTime(id) => {
-                let it = self.model.approval_date_time_arena.get(id.0);
+                let it = model.approval_date_time_arena.get(id.0);
                 Self::deps_ref_date_time_select(&it.date_time, out);
                 Self::deps_ref_approval(&it.dated_approval, out);
             }
             EntityKey::ApprovalPersonOrganization(id) => {
-                let it = self.model.approval_person_organization_arena.get(id.0);
+                let it = model.approval_person_organization_arena.get(id.0);
                 Self::deps_ref_person_organization_select(&it.person_organization, out);
                 Self::deps_ref_approval(&it.authorized_approval, out);
                 Self::deps_ref_approval_role(&it.role, out);
@@ -23821,34 +23802,34 @@ impl<'a> Writer<'a> {
             EntityKey::ApprovalRole(_) => {}
             EntityKey::ApprovalStatus(_) => {}
             EntityKey::ApproximationTolerance(id) => {
-                let it = self.model.approximation_tolerance_arena.get(id.0);
+                let it = model.approximation_tolerance_arena.get(id.0);
                 Self::deps_ref_tolerance_select(&it.tolerance, out);
             }
             EntityKey::ApproximationToleranceDeviation(_) => {}
             EntityKey::ApproximationToleranceParameter(_) => {}
             EntityKey::AreaInSet(id) => {
-                let it = self.model.area_in_set_arena.get(id.0);
+                let it = model.area_in_set_arena.get(id.0);
                 Self::deps_ref_presentation_area(&it.area, out);
                 Self::deps_ref_presentation_set(&it.in_set, out);
             }
             EntityKey::AreaUnit(id) => {
-                let it = self.model.area_unit_arena.get(id.0);
+                let it = model.area_unit_arena.get(id.0);
                 for e in &it.elements {
                     Self::deps_ref_derived_unit_element(e, out);
                 }
             }
             EntityKey::AscribableState(id) => {
-                let it = self.model.ascribable_state_arena.get(id.0);
+                let it = model.ascribable_state_arena.get(id.0);
                 Self::deps_ref_state_type(&it.pertaining_state_type, out);
                 Self::deps_ref_state_observed(&it.ascribed_state_observed, out);
             }
             EntityKey::AscribableStateRelationship(id) => {
-                let it = self.model.ascribable_state_relationship_arena.get(id.0);
+                let it = model.ascribable_state_relationship_arena.get(id.0);
                 Self::deps_ref_ascribable_state(&it.relating_ascribable_state, out);
                 Self::deps_ref_ascribable_state(&it.related_ascribable_state, out);
             }
             EntityKey::AssemblyComponentUsage(id) => {
-                let it = self.model.assembly_component_usage_arena.get(id.0);
+                let it = model.assembly_component_usage_arena.get(id.0);
                 Self::deps_ref_product_definition_or_reference(
                     &it.relating_product_definition,
                     out,
@@ -23856,28 +23837,28 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_product_definition_or_reference(&it.related_product_definition, out);
             }
             EntityKey::AuxiliaryLeaderLine(id) => {
-                let it = self.model.auxiliary_leader_line_arena.get(id.0);
+                let it = model.auxiliary_leader_line_arena.get(id.0);
                 for e in &it.geometric_elements {
                     Self::deps_ref_des_apll_point_select(e, out);
                 }
                 Self::deps_ref_annotation_to_model_leader_line(&it.controlling_leader_line, out);
             }
             EntityKey::Axis1Placement(id) => {
-                let it = self.model.axis1_placement_arena.get(id.0);
+                let it = model.axis1_placement_arena.get(id.0);
                 Self::deps_ref_cartesian_point(&it.location, out);
                 if let Some(r) = &it.axis {
                     Self::deps_ref_direction(r, out);
                 }
             }
             EntityKey::Axis2Placement2d(id) => {
-                let it = self.model.axis2_placement2d_arena.get(id.0);
+                let it = model.axis2_placement2d_arena.get(id.0);
                 Self::deps_ref_cartesian_point(&it.location, out);
                 if let Some(r) = &it.ref_direction {
                     Self::deps_ref_direction(r, out);
                 }
             }
             EntityKey::Axis2Placement3d(id) => {
-                let it = self.model.axis2_placement3d_arena.get(id.0);
+                let it = model.axis2_placement3d_arena.get(id.0);
                 Self::deps_ref_cartesian_point(&it.location, out);
                 if let Some(r) = &it.axis {
                     Self::deps_ref_direction(r, out);
@@ -23887,19 +23868,19 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::BSplineCurve(id) => {
-                let it = self.model.b_spline_curve_arena.get(id.0);
+                let it = model.b_spline_curve_arena.get(id.0);
                 for e in &it.control_points_list {
                     Self::deps_ref_cartesian_point(e, out);
                 }
             }
             EntityKey::BSplineCurveWithKnots(id) => {
-                let it = self.model.b_spline_curve_with_knots_arena.get(id.0);
+                let it = model.b_spline_curve_with_knots_arena.get(id.0);
                 for e in &it.control_points_list {
                     Self::deps_ref_cartesian_point(e, out);
                 }
             }
             EntityKey::BSplineSurface(id) => {
-                let it = self.model.b_spline_surface_arena.get(id.0);
+                let it = model.b_spline_surface_arena.get(id.0);
                 for e in &it.control_points_list {
                     for e in e {
                         Self::deps_ref_cartesian_point(e, out);
@@ -23907,7 +23888,7 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::BSplineSurfaceWithKnots(id) => {
-                let it = self.model.b_spline_surface_with_knots_arena.get(id.0);
+                let it = model.b_spline_surface_with_knots_arena.get(id.0);
                 for e in &it.control_points_list {
                     for e in e {
                         Self::deps_ref_cartesian_point(e, out);
@@ -23915,13 +23896,13 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::BezierCurve(id) => {
-                let it = self.model.bezier_curve_arena.get(id.0);
+                let it = model.bezier_curve_arena.get(id.0);
                 for e in &it.control_points_list {
                     Self::deps_ref_cartesian_point(e, out);
                 }
             }
             EntityKey::BezierSurface(id) => {
-                let it = self.model.bezier_surface_arena.get(id.0);
+                let it = model.bezier_surface_arena.get(id.0);
                 for e in &it.control_points_list {
                     for e in e {
                         Self::deps_ref_cartesian_point(e, out);
@@ -23930,20 +23911,20 @@ impl<'a> Writer<'a> {
             }
             EntityKey::BoundedCurve(_) => {}
             EntityKey::BoundedPcurve(id) => {
-                let it = self.model.bounded_pcurve_arena.get(id.0);
+                let it = model.bounded_pcurve_arena.get(id.0);
                 Self::deps_ref_surface(&it.basis_surface, out);
                 Self::deps_ref_definitional_representation(&it.reference_to_curve, out);
             }
             EntityKey::BoundedSurface(_) => {}
             EntityKey::BoundedSurfaceCurve(id) => {
-                let it = self.model.bounded_surface_curve_arena.get(id.0);
+                let it = model.bounded_surface_curve_arena.get(id.0);
                 Self::deps_ref_curve(&it.curve_3d, out);
                 for e in &it.associated_geometry {
                     Self::deps_ref_pcurve_or_surface(e, out);
                 }
             }
             EntityKey::BrepWithVoids(id) => {
-                let it = self.model.brep_with_voids_arena.get(id.0);
+                let it = model.brep_with_voids_arena.get(id.0);
                 Self::deps_ref_closed_shell(&it.outer, out);
                 for e in &it.voids {
                     Self::deps_ref_oriented_closed_shell(e, out);
@@ -23951,23 +23932,23 @@ impl<'a> Writer<'a> {
             }
             EntityKey::CalendarDate(_) => {}
             EntityKey::CameraImage(id) => {
-                let it = self.model.camera_image_arena.get(id.0);
+                let it = model.camera_image_arena.get(id.0);
                 Self::deps_ref_representation_map(&it.mapping_source, out);
                 Self::deps_ref_representation_item(&it.mapping_target, out);
             }
             EntityKey::CameraImage3dWithScale(id) => {
-                let it = self.model.camera_image3d_with_scale_arena.get(id.0);
+                let it = model.camera_image3d_with_scale_arena.get(id.0);
                 Self::deps_ref_representation_map(&it.mapping_source, out);
                 Self::deps_ref_representation_item(&it.mapping_target, out);
             }
             EntityKey::CameraModel(_) => {}
             EntityKey::CameraModelD3(id) => {
-                let it = self.model.camera_model_d3_arena.get(id.0);
+                let it = model.camera_model_d3_arena.get(id.0);
                 Self::deps_ref_axis2_placement3d(&it.view_reference_system, out);
                 Self::deps_ref_view_volume(&it.perspective_of_volume, out);
             }
             EntityKey::CameraModelD3MultiClipping(id) => {
-                let it = self.model.camera_model_d3_multi_clipping_arena.get(id.0);
+                let it = model.camera_model_d3_multi_clipping_arena.get(id.0);
                 Self::deps_ref_axis2_placement3d(&it.view_reference_system, out);
                 Self::deps_ref_view_volume(&it.perspective_of_volume, out);
                 for e in &it.shape_clipping {
@@ -23975,28 +23956,25 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::CameraModelD3WithHlhsr(id) => {
-                let it = self.model.camera_model_d3_with_hlhsr_arena.get(id.0);
+                let it = model.camera_model_d3_with_hlhsr_arena.get(id.0);
                 Self::deps_ref_axis2_placement3d(&it.view_reference_system, out);
                 Self::deps_ref_view_volume(&it.perspective_of_volume, out);
             }
             EntityKey::CameraUsage(id) => {
-                let it = self.model.camera_usage_arena.get(id.0);
+                let it = model.camera_usage_arena.get(id.0);
                 Self::deps_ref_representation_item(&it.mapping_origin, out);
                 Self::deps_ref_representation(&it.mapped_representation, out);
             }
             EntityKey::CartesianPoint(_) => {}
             EntityKey::CcDesignApproval(id) => {
-                let it = self.model.cc_design_approval_arena.get(id.0);
+                let it = model.cc_design_approval_arena.get(id.0);
                 Self::deps_ref_approval(&it.assigned_approval, out);
                 for e in &it.items {
                     Self::deps_ref_approved_item(e, out);
                 }
             }
             EntityKey::CcDesignDateAndTimeAssignment(id) => {
-                let it = self
-                    .model
-                    .cc_design_date_and_time_assignment_arena
-                    .get(id.0);
+                let it = model.cc_design_date_and_time_assignment_arena.get(id.0);
                 Self::deps_ref_date_and_time(&it.assigned_date_and_time, out);
                 Self::deps_ref_date_time_role(&it.role, out);
                 for e in &it.items {
@@ -24004,8 +23982,7 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::CcDesignPersonAndOrganizationAssignment(id) => {
-                let it = self
-                    .model
+                let it = model
                     .cc_design_person_and_organization_assignment_arena
                     .get(id.0);
                 Self::deps_ref_person_and_organization(&it.assigned_person_and_organization, out);
@@ -24015,46 +23992,45 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::CcDesignSecurityClassification(id) => {
-                let it = self.model.cc_design_security_classification_arena.get(id.0);
+                let it = model.cc_design_security_classification_arena.get(id.0);
                 Self::deps_ref_security_classification(&it.assigned_security_classification, out);
                 for e in &it.items {
                     Self::deps_ref_cc_classified_item(e, out);
                 }
             }
             EntityKey::CentreOfSymmetry(id) => {
-                let it = self.model.centre_of_symmetry_arena.get(id.0);
+                let it = model.centre_of_symmetry_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
             }
             EntityKey::Certification(id) => {
-                let it = self.model.certification_arena.get(id.0);
+                let it = model.certification_arena.get(id.0);
                 Self::deps_ref_certification_type(&it.kind, out);
             }
             EntityKey::CertificationType(_) => {}
             EntityKey::Change(id) => {
-                let it = self.model.change_arena.get(id.0);
+                let it = model.change_arena.get(id.0);
                 Self::deps_ref_action(&it.assigned_action, out);
                 for e in &it.items {
                     Self::deps_ref_work_item(e, out);
                 }
             }
             EntityKey::ChangeRequest(id) => {
-                let it = self.model.change_request_arena.get(id.0);
+                let it = model.change_request_arena.get(id.0);
                 Self::deps_ref_versioned_action_request(&it.assigned_action_request, out);
                 for e in &it.items {
                     Self::deps_ref_change_request_item(e, out);
                 }
             }
             EntityKey::CharacterGlyphStyleOutline(id) => {
-                let it = self.model.character_glyph_style_outline_arena.get(id.0);
+                let it = model.character_glyph_style_outline_arena.get(id.0);
                 Self::deps_ref_curve_style(&it.outline_style, out);
             }
             EntityKey::CharacterGlyphStyleStroke(id) => {
-                let it = self.model.character_glyph_style_stroke_arena.get(id.0);
+                let it = model.character_glyph_style_stroke_arena.get(id.0);
                 Self::deps_ref_curve_style(&it.stroke_style, out);
             }
             EntityKey::CharacterizedItemWithinRepresentation(id) => {
-                let it = self
-                    .model
+                let it = model
                     .characterized_item_within_representation_arena
                     .get(id.0);
                 Self::deps_ref_representation_item(&it.item, out);
@@ -24062,18 +24038,18 @@ impl<'a> Writer<'a> {
             }
             EntityKey::CharacterizedObject(_) => {}
             EntityKey::CharacterizedRepresentation(id) => {
-                let it = self.model.characterized_representation_arena.get(id.0);
+                let it = model.characterized_representation_arena.get(id.0);
                 for e in &it.items {
                     Self::deps_ref_representation_item(e, out);
                 }
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
             EntityKey::Circle(id) => {
-                let it = self.model.circle_arena.get(id.0);
+                let it = model.circle_arena.get(id.0);
                 Self::deps_ref_axis2_placement(&it.position, out);
             }
             EntityKey::CircularRunoutTolerance(id) => {
-                let it = self.model.circular_runout_tolerance_arena.get(id.0);
+                let it = model.circular_runout_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
@@ -24083,13 +24059,13 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::ClosedShell(id) => {
-                let it = self.model.closed_shell_arena.get(id.0);
+                let it = model.closed_shell_arena.get(id.0);
                 for e in &it.cfs_faces {
                     Self::deps_ref_face(e, out);
                 }
             }
             EntityKey::CoaxialityTolerance(id) => {
-                let it = self.model.coaxiality_tolerance_arena.get(id.0);
+                let it = model.coaxiality_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
@@ -24102,50 +24078,50 @@ impl<'a> Writer<'a> {
             EntityKey::ColourRgb(_) => {}
             EntityKey::ColourSpecification(_) => {}
             EntityKey::CommonDatum(id) => {
-                let it = self.model.common_datum_arena.get(id.0);
+                let it = model.common_datum_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
             }
             EntityKey::ComplexTriangulatedFace(id) => {
-                let it = self.model.complex_triangulated_face_arena.get(id.0);
+                let it = model.complex_triangulated_face_arena.get(id.0);
                 Self::deps_ref_coordinates_list(&it.coordinates, out);
                 if let Some(r) = &it.geometric_link {
                     Self::deps_ref_face_or_surface(r, out);
                 }
             }
             EntityKey::ComplexTriangulatedSurfaceSet(id) => {
-                let it = self.model.complex_triangulated_surface_set_arena.get(id.0);
+                let it = model.complex_triangulated_surface_set_arena.get(id.0);
                 Self::deps_ref_coordinates_list(&it.coordinates, out);
             }
             EntityKey::CompositeCurve(id) => {
-                let it = self.model.composite_curve_arena.get(id.0);
+                let it = model.composite_curve_arena.get(id.0);
                 for e in &it.segments {
                     Self::deps_ref_composite_curve_segment(e, out);
                 }
             }
             EntityKey::CompositeCurveSegment(id) => {
-                let it = self.model.composite_curve_segment_arena.get(id.0);
+                let it = model.composite_curve_segment_arena.get(id.0);
                 Self::deps_ref_curve(&it.parent_curve, out);
             }
             EntityKey::CompositeGroupShapeAspect(id) => {
-                let it = self.model.composite_group_shape_aspect_arena.get(id.0);
+                let it = model.composite_group_shape_aspect_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
             }
             EntityKey::CompositeShapeAspect(id) => {
-                let it = self.model.composite_shape_aspect_arena.get(id.0);
+                let it = model.composite_shape_aspect_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
             }
             EntityKey::CompositeText(id) => {
-                let it = self.model.composite_text_arena.get(id.0);
+                let it = model.composite_text_arena.get(id.0);
                 for e in &it.collected_text {
                     Self::deps_ref_text_or_character(e, out);
                 }
             }
             EntityKey::CompoundRepresentationItem(id) => {
-                let it = self.model.compound_representation_item_arena.get(id.0);
+                let it = model.compound_representation_item_arena.get(id.0);
                 Self::deps_ref_compound_item_definition(&it.item_element, out);
             }
             EntityKey::ConcentricityTolerance(id) => {
-                let it = self.model.concentricity_tolerance_arena.get(id.0);
+                let it = model.concentricity_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
@@ -24155,29 +24131,29 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::ConfigurationDesign(id) => {
-                let it = self.model.configuration_design_arena.get(id.0);
+                let it = model.configuration_design_arena.get(id.0);
                 Self::deps_ref_configuration_item(&it.configuration, out);
                 Self::deps_ref_configuration_design_item(&it.design, out);
             }
             EntityKey::ConfigurationEffectivity(id) => {
-                let it = self.model.configuration_effectivity_arena.get(id.0);
+                let it = model.configuration_effectivity_arena.get(id.0);
                 Self::deps_ref_product_definition_relationship(&it.usage, out);
                 Self::deps_ref_configuration_design(&it.configuration, out);
             }
             EntityKey::ConfigurationItem(id) => {
-                let it = self.model.configuration_item_arena.get(id.0);
+                let it = model.configuration_item_arena.get(id.0);
                 Self::deps_ref_product_concept(&it.item_concept, out);
             }
             EntityKey::Conic(id) => {
-                let it = self.model.conic_arena.get(id.0);
+                let it = model.conic_arena.get(id.0);
                 Self::deps_ref_axis2_placement(&it.position, out);
             }
             EntityKey::ConicalSurface(id) => {
-                let it = self.model.conical_surface_arena.get(id.0);
+                let it = model.conical_surface_arena.get(id.0);
                 Self::deps_ref_axis2_placement3d(&it.position, out);
             }
             EntityKey::ConnectedFaceSet(id) => {
-                let it = self.model.connected_face_set_arena.get(id.0);
+                let it = model.connected_face_set_arena.get(id.0);
                 if let Some(v) = &it.cfs_faces {
                     for e in v {
                         Self::deps_ref_face(e, out);
@@ -24185,18 +24161,14 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::ConstructiveGeometryRepresentation(id) => {
-                let it = self
-                    .model
-                    .constructive_geometry_representation_arena
-                    .get(id.0);
+                let it = model.constructive_geometry_representation_arena.get(id.0);
                 for e in &it.items {
                     Self::deps_ref_representation_item(e, out);
                 }
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
             EntityKey::ConstructiveGeometryRepresentationRelationship(id) => {
-                let it = self
-                    .model
+                let it = model
                     .constructive_geometry_representation_relationship_arena
                     .get(id.0);
                 Self::deps_ref_constructive_geometry_representation_or_shape_representation(
@@ -24205,8 +24177,7 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_representation_or_representation_reference(&it.rep_2, out);
             }
             EntityKey::ContextDependentOverRidingStyledItem(id) => {
-                let it = self
-                    .model
+                let it = model
                     .context_dependent_over_riding_styled_item_arena
                     .get(id.0);
                 for e in &it.styles {
@@ -24219,28 +24190,25 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::ContextDependentShapeRepresentation(id) => {
-                let it = self
-                    .model
-                    .context_dependent_shape_representation_arena
-                    .get(id.0);
+                let it = model.context_dependent_shape_representation_arena.get(id.0);
                 Self::deps_ref_shape_representation_relationship(&it.representation_relation, out);
                 Self::deps_ref_product_definition_shape(&it.represented_product_relation, out);
             }
             EntityKey::ContextDependentUnit(id) => {
-                let it = self.model.context_dependent_unit_arena.get(id.0);
+                let it = model.context_dependent_unit_arena.get(id.0);
                 Self::deps_ref_dimensional_exponents(&it.dimensions, out);
             }
             EntityKey::ContinuousShapeAspect(id) => {
-                let it = self.model.continuous_shape_aspect_arena.get(id.0);
+                let it = model.continuous_shape_aspect_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
             }
             EntityKey::Contract(id) => {
-                let it = self.model.contract_arena.get(id.0);
+                let it = model.contract_arena.get(id.0);
                 Self::deps_ref_contract_type(&it.kind, out);
             }
             EntityKey::ContractType(_) => {}
             EntityKey::ConversionBasedUnit(id) => {
-                let it = self.model.conversion_based_unit_arena.get(id.0);
+                let it = model.conversion_based_unit_arena.get(id.0);
                 Self::deps_ref_dimensional_exponents(&it.dimensions, out);
                 Self::deps_ref_measure_with_unit(&it.conversion_factor, out);
             }
@@ -24248,7 +24216,7 @@ impl<'a> Writer<'a> {
             EntityKey::CoordinatesList(_) => {}
             EntityKey::Curve(_) => {}
             EntityKey::CurveStyle(id) => {
-                let it = self.model.curve_style_arena.get(id.0);
+                let it = model.curve_style_arena.get(id.0);
                 if let Some(r) = &it.curve_font {
                     Self::deps_ref_curve_font_or_scaled_curve_font_select(r, out);
                 }
@@ -24260,26 +24228,26 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::CurveStyleFont(id) => {
-                let it = self.model.curve_style_font_arena.get(id.0);
+                let it = model.curve_style_font_arena.get(id.0);
                 for e in &it.pattern_list {
                     Self::deps_ref_curve_style_font_pattern(e, out);
                 }
             }
             EntityKey::CurveStyleFontAndScaling(id) => {
-                let it = self.model.curve_style_font_and_scaling_arena.get(id.0);
+                let it = model.curve_style_font_and_scaling_arena.get(id.0);
                 Self::deps_ref_curve_style_font_select(&it.curve_font, out);
             }
             EntityKey::CurveStyleFontPattern(_) => {}
             EntityKey::CurveStyleRendering(id) => {
-                let it = self.model.curve_style_rendering_arena.get(id.0);
+                let it = model.curve_style_rendering_arena.get(id.0);
                 Self::deps_ref_surface_rendering_properties(&it.rendering_properties, out);
             }
             EntityKey::CylindricalSurface(id) => {
-                let it = self.model.cylindrical_surface_arena.get(id.0);
+                let it = model.cylindrical_surface_arena.get(id.0);
                 Self::deps_ref_axis2_placement3d(&it.position, out);
             }
             EntityKey::CylindricityTolerance(id) => {
-                let it = self.model.cylindricity_tolerance_arena.get(id.0);
+                let it = model.cylindricity_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
@@ -24287,31 +24255,31 @@ impl<'a> Writer<'a> {
             }
             EntityKey::Date(_) => {}
             EntityKey::DateAndTime(id) => {
-                let it = self.model.date_and_time_arena.get(id.0);
+                let it = model.date_and_time_arena.get(id.0);
                 Self::deps_ref_date(&it.date_component, out);
                 Self::deps_ref_local_time(&it.time_component, out);
             }
             EntityKey::DateAndTimeAssignment(id) => {
-                let it = self.model.date_and_time_assignment_arena.get(id.0);
+                let it = model.date_and_time_assignment_arena.get(id.0);
                 Self::deps_ref_date_and_time(&it.assigned_date_and_time, out);
                 Self::deps_ref_date_time_role(&it.role, out);
             }
             EntityKey::DateRole(_) => {}
             EntityKey::DateTimeRole(_) => {}
             EntityKey::Datum(id) => {
-                let it = self.model.datum_arena.get(id.0);
+                let it = model.datum_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
             }
             EntityKey::DatumFeature(id) => {
-                let it = self.model.datum_feature_arena.get(id.0);
+                let it = model.datum_feature_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
             }
             EntityKey::DatumReference(id) => {
-                let it = self.model.datum_reference_arena.get(id.0);
+                let it = model.datum_reference_arena.get(id.0);
                 Self::deps_ref_datum(&it.referenced_datum, out);
             }
             EntityKey::DatumReferenceCompartment(id) => {
-                let it = self.model.datum_reference_compartment_arena.get(id.0);
+                let it = model.datum_reference_compartment_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
                 Self::deps_ref_datum_or_common_datum(&it.base, out);
                 if let Some(v) = &it.modifiers {
@@ -24321,7 +24289,7 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::DatumReferenceElement(id) => {
-                let it = self.model.datum_reference_element_arena.get(id.0);
+                let it = model.datum_reference_element_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
                 Self::deps_ref_datum_or_common_datum(&it.base, out);
                 if let Some(v) = &it.modifiers {
@@ -24331,92 +24299,86 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::DatumReferenceModifierWithValue(id) => {
-                let it = self
-                    .model
-                    .datum_reference_modifier_with_value_arena
-                    .get(id.0);
+                let it = model.datum_reference_modifier_with_value_arena.get(id.0);
                 Self::deps_ref_length_measure_with_unit(&it.modifier_value, out);
             }
             EntityKey::DatumSystem(id) => {
-                let it = self.model.datum_system_arena.get(id.0);
+                let it = model.datum_system_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
                 for e in &it.constituents {
                     Self::deps_ref_datum_reference_compartment(e, out);
                 }
             }
             EntityKey::DatumTarget(id) => {
-                let it = self.model.datum_target_arena.get(id.0);
+                let it = model.datum_target_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
             }
             EntityKey::DefaultModelGeometricView(id) => {
-                let it = self.model.default_model_geometric_view_arena.get(id.0);
+                let it = model.default_model_geometric_view_arena.get(id.0);
                 Self::deps_ref_representation_item(&it.item, out);
                 Self::deps_ref_representation(&it.rep, out);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
             }
             EntityKey::DefinedCharacterGlyph(id) => {
-                let it = self.model.defined_character_glyph_arena.get(id.0);
+                let it = model.defined_character_glyph_arena.get(id.0);
                 Self::deps_ref_defined_glyph_select(&it.definition, out);
                 Self::deps_ref_axis2_placement(&it.placement, out);
             }
             EntityKey::DefinedSymbol(id) => {
-                let it = self.model.defined_symbol_arena.get(id.0);
+                let it = model.defined_symbol_arena.get(id.0);
                 Self::deps_ref_defined_symbol_select(&it.definition, out);
                 Self::deps_ref_symbol_target(&it.target, out);
             }
             EntityKey::DefinitionalRepresentation(id) => {
-                let it = self.model.definitional_representation_arena.get(id.0);
+                let it = model.definitional_representation_arena.get(id.0);
                 for e in &it.items {
                     Self::deps_ref_representation_item(e, out);
                 }
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
             EntityKey::DefinitionalRepresentationRelationship(id) => {
-                let it = self
-                    .model
+                let it = model
                     .definitional_representation_relationship_arena
                     .get(id.0);
                 Self::deps_ref_representation_or_representation_reference(&it.rep_1, out);
                 Self::deps_ref_representation_or_representation_reference(&it.rep_2, out);
             }
             EntityKey::DefinitionalRepresentationRelationshipWithSameContext(id) => {
-                let it = self
-                    .model
+                let it = model
                     .definitional_representation_relationship_with_same_context_arena
                     .get(id.0);
                 Self::deps_ref_representation_or_representation_reference(&it.rep_1, out);
                 Self::deps_ref_representation_or_representation_reference(&it.rep_2, out);
             }
             EntityKey::DegenerateToroidalSurface(id) => {
-                let it = self.model.degenerate_toroidal_surface_arena.get(id.0);
+                let it = model.degenerate_toroidal_surface_arena.get(id.0);
                 Self::deps_ref_axis2_placement3d(&it.position, out);
             }
             EntityKey::DerivedShapeAspect(id) => {
-                let it = self.model.derived_shape_aspect_arena.get(id.0);
+                let it = model.derived_shape_aspect_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
             }
             EntityKey::DerivedUnit(id) => {
-                let it = self.model.derived_unit_arena.get(id.0);
+                let it = model.derived_unit_arena.get(id.0);
                 for e in &it.elements {
                     Self::deps_ref_derived_unit_element(e, out);
                 }
             }
             EntityKey::DerivedUnitElement(id) => {
-                let it = self.model.derived_unit_element_arena.get(id.0);
+                let it = model.derived_unit_element_arena.get(id.0);
                 Self::deps_ref_named_unit(&it.unit, out);
             }
             EntityKey::DescriptionAttribute(id) => {
-                let it = self.model.description_attribute_arena.get(id.0);
+                let it = model.description_attribute_arena.get(id.0);
                 Self::deps_ref_description_attribute_select(&it.described_item, out);
             }
             EntityKey::DescriptiveRepresentationItem(_) => {}
             EntityKey::DesignContext(id) => {
-                let it = self.model.design_context_arena.get(id.0);
+                let it = model.design_context_arena.get(id.0);
                 Self::deps_ref_application_context(&it.frame_of_reference, out);
             }
             EntityKey::DimensionalCharacteristicRepresentation(id) => {
-                let it = self
-                    .model
+                let it = model
                     .dimensional_characteristic_representation_arena
                     .get(id.0);
                 Self::deps_ref_dimensional_characteristic(&it.dimension, out);
@@ -24424,100 +24386,96 @@ impl<'a> Writer<'a> {
             }
             EntityKey::DimensionalExponents(_) => {}
             EntityKey::DimensionalLocation(id) => {
-                let it = self.model.dimensional_location_arena.get(id.0);
+                let it = model.dimensional_location_arena.get(id.0);
                 Self::deps_ref_shape_aspect(&it.relating_shape_aspect, out);
                 Self::deps_ref_shape_aspect(&it.related_shape_aspect, out);
             }
             EntityKey::DimensionalLocationWithPath(id) => {
-                let it = self.model.dimensional_location_with_path_arena.get(id.0);
+                let it = model.dimensional_location_with_path_arena.get(id.0);
                 Self::deps_ref_shape_aspect(&it.relating_shape_aspect, out);
                 Self::deps_ref_shape_aspect(&it.related_shape_aspect, out);
                 Self::deps_ref_shape_aspect(&it.path, out);
             }
             EntityKey::DimensionalSize(id) => {
-                let it = self.model.dimensional_size_arena.get(id.0);
+                let it = model.dimensional_size_arena.get(id.0);
                 Self::deps_ref_shape_aspect(&it.applies_to, out);
             }
             EntityKey::DimensionalSizeWithDatumFeature(id) => {
-                let it = self
-                    .model
-                    .dimensional_size_with_datum_feature_arena
-                    .get(id.0);
+                let it = model.dimensional_size_with_datum_feature_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
                 Self::deps_ref_shape_aspect(&it.applies_to, out);
             }
             EntityKey::DimensionalSizeWithPath(id) => {
-                let it = self.model.dimensional_size_with_path_arena.get(id.0);
+                let it = model.dimensional_size_with_path_arena.get(id.0);
                 Self::deps_ref_shape_aspect(&it.applies_to, out);
                 Self::deps_ref_shape_aspect(&it.path, out);
             }
             EntityKey::DirectedDimensionalLocation(id) => {
-                let it = self.model.directed_dimensional_location_arena.get(id.0);
+                let it = model.directed_dimensional_location_arena.get(id.0);
                 Self::deps_ref_shape_aspect(&it.relating_shape_aspect, out);
                 Self::deps_ref_shape_aspect(&it.related_shape_aspect, out);
             }
             EntityKey::Direction(_) => {}
             EntityKey::Document(id) => {
-                let it = self.model.document_arena.get(id.0);
+                let it = model.document_arena.get(id.0);
                 Self::deps_ref_document_type(&it.kind, out);
             }
             EntityKey::DocumentFile(id) => {
-                let it = self.model.document_file_arena.get(id.0);
+                let it = model.document_file_arena.get(id.0);
                 Self::deps_ref_document_type(&it.kind, out);
             }
             EntityKey::DocumentProductAssociation(id) => {
-                let it = self.model.document_product_association_arena.get(id.0);
+                let it = model.document_product_association_arena.get(id.0);
                 Self::deps_ref_document(&it.relating_document, out);
                 Self::deps_ref_product_or_formation_or_definition(&it.related_product, out);
             }
             EntityKey::DocumentProductEquivalence(id) => {
-                let it = self.model.document_product_equivalence_arena.get(id.0);
+                let it = model.document_product_equivalence_arena.get(id.0);
                 Self::deps_ref_document(&it.relating_document, out);
                 Self::deps_ref_product_or_formation_or_definition(&it.related_product, out);
             }
             EntityKey::DocumentReference(id) => {
-                let it = self.model.document_reference_arena.get(id.0);
+                let it = model.document_reference_arena.get(id.0);
                 Self::deps_ref_document(&it.assigned_document, out);
             }
             EntityKey::DocumentRepresentationType(id) => {
-                let it = self.model.document_representation_type_arena.get(id.0);
+                let it = model.document_representation_type_arena.get(id.0);
                 Self::deps_ref_document(&it.represented_document, out);
             }
             EntityKey::DocumentType(_) => {}
             EntityKey::DraughtingAnnotationOccurrence(id) => {
-                let it = self.model.draughting_annotation_occurrence_arena.get(id.0);
+                let it = model.draughting_annotation_occurrence_arena.get(id.0);
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
                 Self::deps_ref_styled_item_target(&it.item, out);
             }
             EntityKey::DraughtingCallout(id) => {
-                let it = self.model.draughting_callout_arena.get(id.0);
+                let it = model.draughting_callout_arena.get(id.0);
                 for e in &it.contents {
                     Self::deps_ref_draughting_callout_element(e, out);
                 }
             }
             EntityKey::DraughtingCalloutRelationship(id) => {
-                let it = self.model.draughting_callout_relationship_arena.get(id.0);
+                let it = model.draughting_callout_relationship_arena.get(id.0);
                 Self::deps_ref_draughting_callout(&it.relating_draughting_callout, out);
                 Self::deps_ref_draughting_callout(&it.related_draughting_callout, out);
             }
             EntityKey::DraughtingModel(id) => {
-                let it = self.model.draughting_model_arena.get(id.0);
+                let it = model.draughting_model_arena.get(id.0);
                 for e in &it.items {
                     Self::deps_ref_representation_item(e, out);
                 }
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
             EntityKey::DraughtingModelItemAssociation(id) => {
-                let it = self.model.draughting_model_item_association_arena.get(id.0);
+                let it = model.draughting_model_item_association_arena.get(id.0);
                 Self::deps_ref_draughting_model_item_definition(&it.definition, out);
                 Self::deps_ref_annotation_representation_select(&it.used_representation, out);
                 Self::deps_ref_draughting_model_item_association_select(&it.identified_item, out);
             }
             EntityKey::DraughtingModelItemAssociationWithPlaceholder(id) => {
-                let it = self
-                    .model
+                let it = model
                     .draughting_model_item_association_with_placeholder_arena
                     .get(id.0);
                 Self::deps_ref_draughting_model_item_definition(&it.definition, out);
@@ -24529,7 +24487,7 @@ impl<'a> Writer<'a> {
             EntityKey::DraughtingPreDefinedCurveFont(_) => {}
             EntityKey::DraughtingPreDefinedTextFont(_) => {}
             EntityKey::Edge(id) => {
-                let it = self.model.edge_arena.get(id.0);
+                let it = model.edge_arena.get(id.0);
                 if let Some(r) = &it.edge_start {
                     Self::deps_ref_vertex(r, out);
                 }
@@ -24538,152 +24496,134 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::EdgeCurve(id) => {
-                let it = self.model.edge_curve_arena.get(id.0);
+                let it = model.edge_curve_arena.get(id.0);
                 Self::deps_ref_vertex(&it.edge_start, out);
                 Self::deps_ref_vertex(&it.edge_end, out);
                 Self::deps_ref_curve(&it.edge_geometry, out);
             }
             EntityKey::EdgeLoop(id) => {
-                let it = self.model.edge_loop_arena.get(id.0);
+                let it = model.edge_loop_arena.get(id.0);
                 for e in &it.edge_list {
                     Self::deps_ref_oriented_edge(e, out);
                 }
             }
             EntityKey::Effectivity(_) => {}
             EntityKey::ElementarySurface(id) => {
-                let it = self.model.elementary_surface_arena.get(id.0);
+                let it = model.elementary_surface_arena.get(id.0);
                 Self::deps_ref_axis2_placement3d(&it.position, out);
             }
             EntityKey::Ellipse(id) => {
-                let it = self.model.ellipse_arena.get(id.0);
+                let it = model.ellipse_arena.get(id.0);
                 Self::deps_ref_axis2_placement(&it.position, out);
             }
             EntityKey::Expression(_) => {}
             EntityKey::ExternalIdentificationAssignment(id) => {
-                let it = self
-                    .model
-                    .external_identification_assignment_arena
-                    .get(id.0);
+                let it = model.external_identification_assignment_arena.get(id.0);
                 Self::deps_ref_identification_role(&it.role, out);
                 Self::deps_ref_external_source(&it.source, out);
             }
             EntityKey::ExternalSource(_) => {}
             EntityKey::ExternallyDefinedCharacterGlyph(id) => {
-                let it = self
-                    .model
-                    .externally_defined_character_glyph_arena
-                    .get(id.0);
+                let it = model.externally_defined_character_glyph_arena.get(id.0);
                 Self::deps_ref_external_source(&it.source, out);
             }
             EntityKey::ExternallyDefinedCurveFont(id) => {
-                let it = self.model.externally_defined_curve_font_arena.get(id.0);
+                let it = model.externally_defined_curve_font_arena.get(id.0);
                 Self::deps_ref_external_source(&it.source, out);
             }
             EntityKey::ExternallyDefinedHatchStyle(id) => {
-                let it = self.model.externally_defined_hatch_style_arena.get(id.0);
+                let it = model.externally_defined_hatch_style_arena.get(id.0);
                 Self::deps_ref_external_source(&it.source, out);
             }
             EntityKey::ExternallyDefinedItem(id) => {
-                let it = self.model.externally_defined_item_arena.get(id.0);
+                let it = model.externally_defined_item_arena.get(id.0);
                 Self::deps_ref_external_source(&it.source, out);
             }
             EntityKey::ExternallyDefinedStyle(id) => {
-                let it = self.model.externally_defined_style_arena.get(id.0);
+                let it = model.externally_defined_style_arena.get(id.0);
                 Self::deps_ref_external_source(&it.source, out);
             }
             EntityKey::ExternallyDefinedSymbol(id) => {
-                let it = self.model.externally_defined_symbol_arena.get(id.0);
+                let it = model.externally_defined_symbol_arena.get(id.0);
                 Self::deps_ref_external_source(&it.source, out);
             }
             EntityKey::ExternallyDefinedTextFont(id) => {
-                let it = self.model.externally_defined_text_font_arena.get(id.0);
+                let it = model.externally_defined_text_font_arena.get(id.0);
                 Self::deps_ref_external_source(&it.source, out);
             }
             EntityKey::ExternallyDefinedTile(id) => {
-                let it = self.model.externally_defined_tile_arena.get(id.0);
+                let it = model.externally_defined_tile_arena.get(id.0);
                 Self::deps_ref_external_source(&it.source, out);
             }
             EntityKey::ExternallyDefinedTileStyle(id) => {
-                let it = self.model.externally_defined_tile_style_arena.get(id.0);
+                let it = model.externally_defined_tile_style_arena.get(id.0);
                 Self::deps_ref_external_source(&it.source, out);
             }
             EntityKey::Face(id) => {
-                let it = self.model.face_arena.get(id.0);
+                let it = model.face_arena.get(id.0);
                 for e in &it.bounds {
                     Self::deps_ref_face_bound(e, out);
                 }
             }
             EntityKey::FaceBound(id) => {
-                let it = self.model.face_bound_arena.get(id.0);
+                let it = model.face_bound_arena.get(id.0);
                 Self::deps_ref_loop(&it.bound, out);
             }
             EntityKey::FaceOuterBound(id) => {
-                let it = self.model.face_outer_bound_arena.get(id.0);
+                let it = model.face_outer_bound_arena.get(id.0);
                 Self::deps_ref_loop(&it.bound, out);
             }
             EntityKey::FaceSurface(id) => {
-                let it = self.model.face_surface_arena.get(id.0);
+                let it = model.face_surface_arena.get(id.0);
                 for e in &it.bounds {
                     Self::deps_ref_face_bound(e, out);
                 }
                 Self::deps_ref_surface(&it.face_geometry, out);
             }
             EntityKey::FeatureForDatumTargetRelationship(id) => {
-                let it = self
-                    .model
-                    .feature_for_datum_target_relationship_arena
-                    .get(id.0);
+                let it = model.feature_for_datum_target_relationship_arena.get(id.0);
                 Self::deps_ref_shape_aspect(&it.relating_shape_aspect, out);
                 Self::deps_ref_shape_aspect(&it.related_shape_aspect, out);
             }
             EntityKey::FillAreaStyle(id) => {
-                let it = self.model.fill_area_style_arena.get(id.0);
+                let it = model.fill_area_style_arena.get(id.0);
                 for e in &it.fill_styles {
                     Self::deps_ref_fill_style_select(e, out);
                 }
             }
             EntityKey::FillAreaStyleColour(id) => {
-                let it = self.model.fill_area_style_colour_arena.get(id.0);
+                let it = model.fill_area_style_colour_arena.get(id.0);
                 Self::deps_ref_colour(&it.fill_colour, out);
             }
             EntityKey::FillAreaStyleHatching(id) => {
-                let it = self.model.fill_area_style_hatching_arena.get(id.0);
+                let it = model.fill_area_style_hatching_arena.get(id.0);
                 Self::deps_ref_curve_style(&it.hatch_line_appearance, out);
                 Self::deps_ref_one_direction_repeat_factor(&it.start_of_next_hatch_line, out);
                 Self::deps_ref_cartesian_point(&it.point_of_reference_hatch_line, out);
                 Self::deps_ref_cartesian_point(&it.pattern_start, out);
             }
             EntityKey::FillAreaStyleTileColouredRegion(id) => {
-                let it = self
-                    .model
-                    .fill_area_style_tile_coloured_region_arena
-                    .get(id.0);
+                let it = model.fill_area_style_tile_coloured_region_arena.get(id.0);
                 Self::deps_ref_curve_or_annotation_curve_occurrence(&it.closed_curve, out);
                 Self::deps_ref_colour(&it.region_colour, out);
             }
             EntityKey::FillAreaStyleTileCurveWithStyle(id) => {
-                let it = self
-                    .model
-                    .fill_area_style_tile_curve_with_style_arena
-                    .get(id.0);
+                let it = model.fill_area_style_tile_curve_with_style_arena.get(id.0);
                 Self::deps_ref_annotation_curve_occurrence(&it.styled_curve, out);
             }
             EntityKey::FillAreaStyleTileSymbolWithStyle(id) => {
-                let it = self
-                    .model
-                    .fill_area_style_tile_symbol_with_style_arena
-                    .get(id.0);
+                let it = model.fill_area_style_tile_symbol_with_style_arena.get(id.0);
                 Self::deps_ref_annotation_symbol_occurrence(&it.symbol, out);
             }
             EntityKey::FillAreaStyleTiles(id) => {
-                let it = self.model.fill_area_style_tiles_arena.get(id.0);
+                let it = model.fill_area_style_tiles_arena.get(id.0);
                 Self::deps_ref_two_direction_repeat_factor(&it.tiling_pattern, out);
                 for e in &it.tiles {
                     Self::deps_ref_fill_area_style_tile_shape_select(e, out);
                 }
             }
             EntityKey::FlatnessTolerance(id) => {
-                let it = self.model.flatness_tolerance_arena.get(id.0);
+                let it = model.flatness_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
@@ -24692,7 +24632,7 @@ impl<'a> Writer<'a> {
             EntityKey::FoundedItem(_) => {}
             EntityKey::FunctionallyDefinedTransformation(_) => {}
             EntityKey::GeneralDatumReference(id) => {
-                let it = self.model.general_datum_reference_arena.get(id.0);
+                let it = model.general_datum_reference_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
                 Self::deps_ref_datum_or_common_datum(&it.base, out);
                 if let Some(v) = &it.modifiers {
@@ -24703,27 +24643,24 @@ impl<'a> Writer<'a> {
             }
             EntityKey::GeneralProperty(_) => {}
             EntityKey::GeneralPropertyAssociation(id) => {
-                let it = self.model.general_property_association_arena.get(id.0);
+                let it = model.general_property_association_arena.get(id.0);
                 Self::deps_ref_general_property(&it.base_definition, out);
                 Self::deps_ref_derived_property_select(&it.derived_definition, out);
             }
             EntityKey::GenericExpression(_) => {}
             EntityKey::GenericLiteral(_) => {}
             EntityKey::GenericProductDefinitionReference(id) => {
-                let it = self
-                    .model
-                    .generic_product_definition_reference_arena
-                    .get(id.0);
+                let it = model.generic_product_definition_reference_arena.get(id.0);
                 Self::deps_ref_external_source(&it.source, out);
             }
             EntityKey::GeometricCurveSet(id) => {
-                let it = self.model.geometric_curve_set_arena.get(id.0);
+                let it = model.geometric_curve_set_arena.get(id.0);
                 for e in &it.elements {
                     Self::deps_ref_geometric_set_select(e, out);
                 }
             }
             EntityKey::GeometricItemSpecificUsage(id) => {
-                let it = self.model.geometric_item_specific_usage_arena.get(id.0);
+                let it = model.geometric_item_specific_usage_arena.get(id.0);
                 Self::deps_ref_geometric_item_specific_usage_select(&it.definition, out);
                 Self::deps_ref_shape_model(&it.used_representation, out);
                 Self::deps_ref_geometric_model_item(&it.identified_item, out);
@@ -24731,26 +24668,25 @@ impl<'a> Writer<'a> {
             EntityKey::GeometricRepresentationContext(_) => {}
             EntityKey::GeometricRepresentationItem(_) => {}
             EntityKey::GeometricSet(id) => {
-                let it = self.model.geometric_set_arena.get(id.0);
+                let it = model.geometric_set_arena.get(id.0);
                 for e in &it.elements {
                     Self::deps_ref_geometric_set_select(e, out);
                 }
             }
             EntityKey::GeometricTolerance(id) => {
-                let it = self.model.geometric_tolerance_arena.get(id.0);
+                let it = model.geometric_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
             }
             EntityKey::GeometricToleranceRelationship(id) => {
-                let it = self.model.geometric_tolerance_relationship_arena.get(id.0);
+                let it = model.geometric_tolerance_relationship_arena.get(id.0);
                 Self::deps_ref_geometric_tolerance(&it.relating_geometric_tolerance, out);
                 Self::deps_ref_geometric_tolerance(&it.related_geometric_tolerance, out);
             }
             EntityKey::GeometricToleranceWithDatumReference(id) => {
-                let it = self
-                    .model
+                let it = model
                     .geometric_tolerance_with_datum_reference_arena
                     .get(id.0);
                 if let Some(r) = &it.magnitude {
@@ -24762,8 +24698,7 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::GeometricToleranceWithDefinedAreaUnit(id) => {
-                let it = self
-                    .model
+                let it = model
                     .geometric_tolerance_with_defined_area_unit_arena
                     .get(id.0);
                 if let Some(r) = &it.magnitude {
@@ -24776,10 +24711,7 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::GeometricToleranceWithDefinedUnit(id) => {
-                let it = self
-                    .model
-                    .geometric_tolerance_with_defined_unit_arena
-                    .get(id.0);
+                let it = model.geometric_tolerance_with_defined_unit_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
@@ -24787,8 +24719,7 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_length_or_plane_angle_measure_with_unit_select(&it.unit_size, out);
             }
             EntityKey::GeometricToleranceWithMaximumTolerance(id) => {
-                let it = self
-                    .model
+                let it = model
                     .geometric_tolerance_with_maximum_tolerance_arena
                     .get(id.0);
                 if let Some(r) = &it.magnitude {
@@ -24798,18 +24729,14 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_length_measure_with_unit(&it.maximum_upper_tolerance, out);
             }
             EntityKey::GeometricToleranceWithModifiers(id) => {
-                let it = self
-                    .model
-                    .geometric_tolerance_with_modifiers_arena
-                    .get(id.0);
+                let it = model.geometric_tolerance_with_modifiers_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
             }
             EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(id) => {
-                let it = self
-                    .model
+                let it = model
                     .geometrically_bounded_surface_shape_representation_arena
                     .get(id.0);
                 for e in &it.items {
@@ -24818,8 +24745,7 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
             EntityKey::GeometricallyBoundedWireframeShapeRepresentation(id) => {
-                let it = self
-                    .model
+                let it = model
                     .geometrically_bounded_wireframe_shape_representation_arena
                     .get(id.0);
                 for e in &it.items {
@@ -24828,63 +24754,57 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
             EntityKey::GlobalUncertaintyAssignedContext(id) => {
-                let it = self
-                    .model
-                    .global_uncertainty_assigned_context_arena
-                    .get(id.0);
+                let it = model.global_uncertainty_assigned_context_arena.get(id.0);
                 for e in &it.uncertainty {
                     Self::deps_ref_uncertainty_measure_with_unit(e, out);
                 }
             }
             EntityKey::GlobalUnitAssignedContext(id) => {
-                let it = self.model.global_unit_assigned_context_arena.get(id.0);
+                let it = model.global_unit_assigned_context_arena.get(id.0);
                 for e in &it.units {
                     Self::deps_ref_unit(e, out);
                 }
             }
             EntityKey::Group(_) => {}
             EntityKey::GroupAssignment(id) => {
-                let it = self.model.group_assignment_arena.get(id.0);
+                let it = model.group_assignment_arena.get(id.0);
                 Self::deps_ref_group(&it.assigned_group, out);
             }
             EntityKey::Hyperbola(id) => {
-                let it = self.model.hyperbola_arena.get(id.0);
+                let it = model.hyperbola_arena.get(id.0);
                 Self::deps_ref_axis2_placement(&it.position, out);
             }
             EntityKey::IdAttribute(id) => {
-                let it = self.model.id_attribute_arena.get(id.0);
+                let it = model.id_attribute_arena.get(id.0);
                 Self::deps_ref_id_attribute_select(&it.identified_item, out);
             }
             EntityKey::IdentificationAssignment(id) => {
-                let it = self.model.identification_assignment_arena.get(id.0);
+                let it = model.identification_assignment_arena.get(id.0);
                 Self::deps_ref_identification_role(&it.role, out);
             }
             EntityKey::IdentificationRole(_) => {}
             EntityKey::IntLiteral(_) => {}
             EntityKey::IntegerRepresentationItem(_) => {}
             EntityKey::IntersectionCurve(id) => {
-                let it = self.model.intersection_curve_arena.get(id.0);
+                let it = model.intersection_curve_arena.get(id.0);
                 Self::deps_ref_curve(&it.curve_3d, out);
                 for e in &it.associated_geometry {
                     Self::deps_ref_pcurve_or_surface(e, out);
                 }
             }
             EntityKey::Invisibility(id) => {
-                let it = self.model.invisibility_arena.get(id.0);
+                let it = model.invisibility_arena.get(id.0);
                 for e in &it.invisible_items {
                     Self::deps_ref_invisible_item(e, out);
                 }
             }
             EntityKey::ItemDefinedTransformation(id) => {
-                let it = self.model.item_defined_transformation_arena.get(id.0);
+                let it = model.item_defined_transformation_arena.get(id.0);
                 Self::deps_ref_representation_item(&it.transform_item_1, out);
                 Self::deps_ref_representation_item(&it.transform_item_2, out);
             }
             EntityKey::ItemIdentifiedRepresentationUsage(id) => {
-                let it = self
-                    .model
-                    .item_identified_representation_usage_arena
-                    .get(id.0);
+                let it = model.item_identified_representation_usage_arena.get(id.0);
                 Self::deps_ref_item_identified_representation_usage_definition(&it.definition, out);
                 Self::deps_ref_representation(&it.used_representation, out);
                 Self::deps_ref_item_identified_representation_usage_select(
@@ -24893,20 +24813,20 @@ impl<'a> Writer<'a> {
                 );
             }
             EntityKey::LeaderCurve(id) => {
-                let it = self.model.leader_curve_arena.get(id.0);
+                let it = model.leader_curve_arena.get(id.0);
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
                 Self::deps_ref_curve_or_curve_set(&it.item, out);
             }
             EntityKey::LeaderDirectedCallout(id) => {
-                let it = self.model.leader_directed_callout_arena.get(id.0);
+                let it = model.leader_directed_callout_arena.get(id.0);
                 for e in &it.contents {
                     Self::deps_ref_draughting_callout_element(e, out);
                 }
             }
             EntityKey::LeaderTerminator(id) => {
-                let it = self.model.leader_terminator_arena.get(id.0);
+                let it = model.leader_terminator_arena.get(id.0);
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
@@ -24914,21 +24834,21 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_annotation_curve_occurrence(&it.annotated_curve, out);
             }
             EntityKey::LengthMeasureWithUnit(id) => {
-                let it = self.model.length_measure_with_unit_arena.get(id.0);
+                let it = model.length_measure_with_unit_arena.get(id.0);
                 Self::deps_ref_unit(&it.unit_component, out);
             }
             EntityKey::LengthUnit(id) => {
-                let it = self.model.length_unit_arena.get(id.0);
+                let it = model.length_unit_arena.get(id.0);
                 Self::deps_ref_dimensional_exponents(&it.dimensions, out);
             }
             EntityKey::LimitsAndFits(_) => {}
             EntityKey::Line(id) => {
-                let it = self.model.line_arena.get(id.0);
+                let it = model.line_arena.get(id.0);
                 Self::deps_ref_cartesian_point(&it.pnt, out);
                 Self::deps_ref_vector(&it.dir, out);
             }
             EntityKey::LineProfileTolerance(id) => {
-                let it = self.model.line_profile_tolerance_arena.get(id.0);
+                let it = model.line_profile_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
@@ -24936,12 +24856,12 @@ impl<'a> Writer<'a> {
             }
             EntityKey::LiteralNumber(_) => {}
             EntityKey::LocalTime(id) => {
-                let it = self.model.local_time_arena.get(id.0);
+                let it = model.local_time_arena.get(id.0);
                 Self::deps_ref_coordinated_universal_time_offset(&it.zone, out);
             }
             EntityKey::Loop(_) => {}
             EntityKey::MakeFromUsageOption(id) => {
-                let it = self.model.make_from_usage_option_arena.get(id.0);
+                let it = model.make_from_usage_option_arena.get(id.0);
                 Self::deps_ref_product_definition_or_reference(
                     &it.relating_product_definition,
                     out,
@@ -24950,62 +24870,57 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_measure_with_unit(&it.quantity, out);
             }
             EntityKey::ManifoldSolidBrep(id) => {
-                let it = self.model.manifold_solid_brep_arena.get(id.0);
+                let it = model.manifold_solid_brep_arena.get(id.0);
                 Self::deps_ref_closed_shell(&it.outer, out);
             }
             EntityKey::ManifoldSurfaceShapeRepresentation(id) => {
-                let it = self
-                    .model
-                    .manifold_surface_shape_representation_arena
-                    .get(id.0);
+                let it = model.manifold_surface_shape_representation_arena.get(id.0);
                 for e in &it.items {
                     Self::deps_ref_representation_item(e, out);
                 }
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
             EntityKey::MappedItem(id) => {
-                let it = self.model.mapped_item_arena.get(id.0);
+                let it = model.mapped_item_arena.get(id.0);
                 Self::deps_ref_representation_map(&it.mapping_source, out);
                 Self::deps_ref_representation_item(&it.mapping_target, out);
             }
             EntityKey::MassMeasureWithUnit(id) => {
-                let it = self.model.mass_measure_with_unit_arena.get(id.0);
+                let it = model.mass_measure_with_unit_arena.get(id.0);
                 Self::deps_ref_unit(&it.unit_component, out);
             }
             EntityKey::MassUnit(id) => {
-                let it = self.model.mass_unit_arena.get(id.0);
+                let it = model.mass_unit_arena.get(id.0);
                 Self::deps_ref_dimensional_exponents(&it.dimensions, out);
             }
             EntityKey::MeasureQualification(id) => {
-                let it = self.model.measure_qualification_arena.get(id.0);
+                let it = model.measure_qualification_arena.get(id.0);
                 Self::deps_ref_measure_with_unit(&it.qualified_measure, out);
                 for e in &it.qualifiers {
                     Self::deps_ref_value_qualifier(e, out);
                 }
             }
             EntityKey::MeasureRepresentationItem(id) => {
-                let it = self.model.measure_representation_item_arena.get(id.0);
+                let it = model.measure_representation_item_arena.get(id.0);
                 Self::deps_ref_unit(&it.unit_component, out);
             }
             EntityKey::MeasureWithUnit(id) => {
-                let it = self.model.measure_with_unit_arena.get(id.0);
+                let it = model.measure_with_unit_arena.get(id.0);
                 Self::deps_ref_unit(&it.unit_component, out);
             }
             EntityKey::MechanicalContext(id) => {
-                let it = self.model.mechanical_context_arena.get(id.0);
+                let it = model.mechanical_context_arena.get(id.0);
                 Self::deps_ref_application_context(&it.frame_of_reference, out);
             }
             EntityKey::MechanicalDesignAndDraughtingRelationship(id) => {
-                let it = self
-                    .model
+                let it = model
                     .mechanical_design_and_draughting_relationship_arena
                     .get(id.0);
                 Self::deps_ref_mechanical_design_and_draughting_relationship_select(&it.rep_1, out);
                 Self::deps_ref_mechanical_design_and_draughting_relationship_select(&it.rep_2, out);
             }
             EntityKey::MechanicalDesignGeometricPresentationRepresentation(id) => {
-                let it = self
-                    .model
+                let it = model
                     .mechanical_design_geometric_presentation_representation_arena
                     .get(id.0);
                 for e in &it.items {
@@ -25014,8 +24929,7 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
             EntityKey::MechanicalDesignPresentationRepresentationWithDraughting(id) => {
-                let it = self
-                    .model
+                let it = model
                     .mechanical_design_presentation_representation_with_draughting_arena
                     .get(id.0);
                 for e in &it.items {
@@ -25024,8 +24938,7 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
             EntityKey::MechanicalDesignShadedPresentationRepresentation(id) => {
-                let it = self
-                    .model
+                let it = model
                     .mechanical_design_shaded_presentation_representation_arena
                     .get(id.0);
                 for e in &it.items {
@@ -25034,29 +24947,29 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
             EntityKey::ModelGeometricView(id) => {
-                let it = self.model.model_geometric_view_arena.get(id.0);
+                let it = model.model_geometric_view_arena.get(id.0);
                 Self::deps_ref_representation_item(&it.item, out);
                 Self::deps_ref_representation(&it.rep, out);
             }
             EntityKey::ModifiedGeometricTolerance(id) => {
-                let it = self.model.modified_geometric_tolerance_arena.get(id.0);
+                let it = model.modified_geometric_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
             }
             EntityKey::NameAttribute(id) => {
-                let it = self.model.name_attribute_arena.get(id.0);
+                let it = model.name_attribute_arena.get(id.0);
                 Self::deps_ref_name_attribute_select(&it.named_item, out);
             }
             EntityKey::NamedUnit(id) => {
-                let it = self.model.named_unit_arena.get(id.0);
+                let it = model.named_unit_arena.get(id.0);
                 if let Some(r) = &it.dimensions {
                     Self::deps_ref_dimensional_exponents(r, out);
                 }
             }
             EntityKey::NextAssemblyUsageOccurrence(id) => {
-                let it = self.model.next_assembly_usage_occurrence_arena.get(id.0);
+                let it = model.next_assembly_usage_occurrence_arena.get(id.0);
                 Self::deps_ref_product_definition_or_reference(
                     &it.relating_product_definition,
                     out,
@@ -25066,22 +24979,22 @@ impl<'a> Writer<'a> {
             EntityKey::NumericExpression(_) => {}
             EntityKey::ObjectRole(_) => {}
             EntityKey::OffsetSurface(id) => {
-                let it = self.model.offset_surface_arena.get(id.0);
+                let it = model.offset_surface_arena.get(id.0);
                 Self::deps_ref_surface(&it.basis_surface, out);
             }
             EntityKey::OneDirectionRepeatFactor(id) => {
-                let it = self.model.one_direction_repeat_factor_arena.get(id.0);
+                let it = model.one_direction_repeat_factor_arena.get(id.0);
                 Self::deps_ref_vector(&it.repeat_factor, out);
             }
             EntityKey::OpenShell(id) => {
-                let it = self.model.open_shell_arena.get(id.0);
+                let it = model.open_shell_arena.get(id.0);
                 for e in &it.cfs_faces {
                     Self::deps_ref_face(e, out);
                 }
             }
             EntityKey::Organization(_) => {}
             EntityKey::OrganizationRelationship(id) => {
-                let it = self.model.organization_relationship_arena.get(id.0);
+                let it = model.organization_relationship_arena.get(id.0);
                 Self::deps_ref_organization(&it.relating_organization, out);
                 Self::deps_ref_organization(&it.related_organization, out);
             }
@@ -25089,36 +25002,33 @@ impl<'a> Writer<'a> {
             EntityKey::OrganizationType(_) => {}
             EntityKey::OrganizationTypeRole(_) => {}
             EntityKey::OrganizationalAddress(id) => {
-                let it = self.model.organizational_address_arena.get(id.0);
+                let it = model.organizational_address_arena.get(id.0);
                 for e in &it.organizations {
                     Self::deps_ref_organization(e, out);
                 }
             }
             EntityKey::OrganizationalProject(id) => {
-                let it = self.model.organizational_project_arena.get(id.0);
+                let it = model.organizational_project_arena.get(id.0);
                 for e in &it.responsible_organizations {
                     Self::deps_ref_organization(e, out);
                 }
             }
             EntityKey::OrganizationalProjectRelationship(id) => {
-                let it = self
-                    .model
-                    .organizational_project_relationship_arena
-                    .get(id.0);
+                let it = model.organizational_project_relationship_arena.get(id.0);
                 Self::deps_ref_organizational_project(&it.relating_organizational_project, out);
                 Self::deps_ref_organizational_project(&it.related_organizational_project, out);
             }
             EntityKey::OrganizationalProjectRole(_) => {}
             EntityKey::OrientedClosedShell(id) => {
-                let it = self.model.oriented_closed_shell_arena.get(id.0);
+                let it = model.oriented_closed_shell_arena.get(id.0);
                 Self::deps_ref_closed_shell(&it.closed_shell_element, out);
             }
             EntityKey::OrientedEdge(id) => {
-                let it = self.model.oriented_edge_arena.get(id.0);
+                let it = model.oriented_edge_arena.get(id.0);
                 Self::deps_ref_edge(&it.edge_element, out);
             }
             EntityKey::OverRidingStyledItem(id) => {
-                let it = self.model.over_riding_styled_item_arena.get(id.0);
+                let it = model.over_riding_styled_item_arena.get(id.0);
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
@@ -25126,7 +25036,7 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_styled_item(&it.over_ridden_style, out);
             }
             EntityKey::ParallelismTolerance(id) => {
-                let it = self.model.parallelism_tolerance_arena.get(id.0);
+                let it = model.parallelism_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
@@ -25137,18 +25047,18 @@ impl<'a> Writer<'a> {
             }
             EntityKey::ParametricRepresentationContext(_) => {}
             EntityKey::Path(id) => {
-                let it = self.model.path_arena.get(id.0);
+                let it = model.path_arena.get(id.0);
                 for e in &it.edge_list {
                     Self::deps_ref_oriented_edge(e, out);
                 }
             }
             EntityKey::Pcurve(id) => {
-                let it = self.model.pcurve_arena.get(id.0);
+                let it = model.pcurve_arena.get(id.0);
                 Self::deps_ref_surface(&it.basis_surface, out);
                 Self::deps_ref_definitional_representation(&it.reference_to_curve, out);
             }
             EntityKey::PerpendicularityTolerance(id) => {
-                let it = self.model.perpendicularity_tolerance_arena.get(id.0);
+                let it = model.perpendicularity_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
@@ -25159,12 +25069,12 @@ impl<'a> Writer<'a> {
             }
             EntityKey::Person(_) => {}
             EntityKey::PersonAndOrganization(id) => {
-                let it = self.model.person_and_organization_arena.get(id.0);
+                let it = model.person_and_organization_arena.get(id.0);
                 Self::deps_ref_person(&it.the_person, out);
                 Self::deps_ref_organization(&it.the_organization, out);
             }
             EntityKey::PersonAndOrganizationAddress(id) => {
-                let it = self.model.person_and_organization_address_arena.get(id.0);
+                let it = model.person_and_organization_address_arena.get(id.0);
                 for e in &it.organizations {
                     Self::deps_ref_organization(e, out);
                 }
@@ -25173,53 +25083,50 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::PersonAndOrganizationAssignment(id) => {
-                let it = self
-                    .model
-                    .person_and_organization_assignment_arena
-                    .get(id.0);
+                let it = model.person_and_organization_assignment_arena.get(id.0);
                 Self::deps_ref_person_and_organization(&it.assigned_person_and_organization, out);
                 Self::deps_ref_person_and_organization_role(&it.role, out);
             }
             EntityKey::PersonAndOrganizationRole(_) => {}
             EntityKey::PersonalAddress(id) => {
-                let it = self.model.personal_address_arena.get(id.0);
+                let it = model.personal_address_arena.get(id.0);
                 for e in &it.people {
                     Self::deps_ref_person(e, out);
                 }
             }
             EntityKey::PlacedDatumTargetFeature(id) => {
-                let it = self.model.placed_datum_target_feature_arena.get(id.0);
+                let it = model.placed_datum_target_feature_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
             }
             EntityKey::Placement(id) => {
-                let it = self.model.placement_arena.get(id.0);
+                let it = model.placement_arena.get(id.0);
                 Self::deps_ref_cartesian_point(&it.location, out);
             }
             EntityKey::PlanarBox(id) => {
-                let it = self.model.planar_box_arena.get(id.0);
+                let it = model.planar_box_arena.get(id.0);
                 Self::deps_ref_axis2_placement(&it.placement, out);
             }
             EntityKey::PlanarExtent(_) => {}
             EntityKey::Plane(id) => {
-                let it = self.model.plane_arena.get(id.0);
+                let it = model.plane_arena.get(id.0);
                 Self::deps_ref_axis2_placement3d(&it.position, out);
             }
             EntityKey::PlaneAngleMeasureWithUnit(id) => {
-                let it = self.model.plane_angle_measure_with_unit_arena.get(id.0);
+                let it = model.plane_angle_measure_with_unit_arena.get(id.0);
                 Self::deps_ref_unit(&it.unit_component, out);
             }
             EntityKey::PlaneAngleUnit(id) => {
-                let it = self.model.plane_angle_unit_arena.get(id.0);
+                let it = model.plane_angle_unit_arena.get(id.0);
                 Self::deps_ref_dimensional_exponents(&it.dimensions, out);
             }
             EntityKey::PlusMinusTolerance(id) => {
-                let it = self.model.plus_minus_tolerance_arena.get(id.0);
+                let it = model.plus_minus_tolerance_arena.get(id.0);
                 Self::deps_ref_tolerance_method_definition(&it.range, out);
                 Self::deps_ref_dimensional_characteristic(&it.toleranced_dimension, out);
             }
             EntityKey::Point(_) => {}
             EntityKey::PointStyle(id) => {
-                let it = self.model.point_style_arena.get(id.0);
+                let it = model.point_style_arena.get(id.0);
                 if let Some(r) = &it.marker {
                     Self::deps_ref_marker_select(r, out);
                 }
@@ -25231,19 +25138,19 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::PolyLoop(id) => {
-                let it = self.model.poly_loop_arena.get(id.0);
+                let it = model.poly_loop_arena.get(id.0);
                 for e in &it.polygon {
                     Self::deps_ref_cartesian_point(e, out);
                 }
             }
             EntityKey::Polyline(id) => {
-                let it = self.model.polyline_arena.get(id.0);
+                let it = model.polyline_arena.get(id.0);
                 for e in &it.points {
                     Self::deps_ref_cartesian_point(e, out);
                 }
             }
             EntityKey::PositionTolerance(id) => {
-                let it = self.model.position_tolerance_arena.get(id.0);
+                let it = model.position_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
@@ -25263,20 +25170,20 @@ impl<'a> Writer<'a> {
             EntityKey::PreDefinedTile(_) => {}
             EntityKey::PrecisionQualifier(_) => {}
             EntityKey::PresentationArea(id) => {
-                let it = self.model.presentation_area_arena.get(id.0);
+                let it = model.presentation_area_arena.get(id.0);
                 for e in &it.items {
                     Self::deps_ref_representation_item(e, out);
                 }
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
             EntityKey::PresentationLayerAssignment(id) => {
-                let it = self.model.presentation_layer_assignment_arena.get(id.0);
+                let it = model.presentation_layer_assignment_arena.get(id.0);
                 for e in &it.assigned_items {
                     Self::deps_ref_layered_item(e, out);
                 }
             }
             EntityKey::PresentationRepresentation(id) => {
-                let it = self.model.presentation_representation_arena.get(id.0);
+                let it = model.presentation_representation_arena.get(id.0);
                 for e in &it.items {
                     Self::deps_ref_representation_item(e, out);
                 }
@@ -25284,25 +25191,25 @@ impl<'a> Writer<'a> {
             }
             EntityKey::PresentationSet(_) => {}
             EntityKey::PresentationSize(id) => {
-                let it = self.model.presentation_size_arena.get(id.0);
+                let it = model.presentation_size_arena.get(id.0);
                 Self::deps_ref_presentation_size_assignment_select(&it.unit, out);
                 Self::deps_ref_planar_box(&it.size, out);
             }
             EntityKey::PresentationStyleAssignment(id) => {
-                let it = self.model.presentation_style_assignment_arena.get(id.0);
+                let it = model.presentation_style_assignment_arena.get(id.0);
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_select(e, out);
                 }
             }
             EntityKey::PresentationStyleByContext(id) => {
-                let it = self.model.presentation_style_by_context_arena.get(id.0);
+                let it = model.presentation_style_by_context_arena.get(id.0);
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_select(e, out);
                 }
                 Self::deps_ref_style_context_select(&it.style_context, out);
             }
             EntityKey::PresentationView(id) => {
-                let it = self.model.presentation_view_arena.get(id.0);
+                let it = model.presentation_view_arena.get(id.0);
                 for e in &it.items {
                     Self::deps_ref_representation_item(e, out);
                 }
@@ -25310,72 +25217,68 @@ impl<'a> Writer<'a> {
             }
             EntityKey::PresentedItem(_) => {}
             EntityKey::PresentedItemRepresentation(id) => {
-                let it = self.model.presented_item_representation_arena.get(id.0);
+                let it = model.presented_item_representation_arena.get(id.0);
                 Self::deps_ref_presentation_representation_select(&it.presentation, out);
                 Self::deps_ref_presented_item(&it.item, out);
             }
             EntityKey::Product(id) => {
-                let it = self.model.product_arena.get(id.0);
+                let it = model.product_arena.get(id.0);
                 for e in &it.frame_of_reference {
                     Self::deps_ref_product_context(e, out);
                 }
             }
             EntityKey::ProductCategory(_) => {}
             EntityKey::ProductCategoryRelationship(id) => {
-                let it = self.model.product_category_relationship_arena.get(id.0);
+                let it = model.product_category_relationship_arena.get(id.0);
                 Self::deps_ref_product_category(&it.category, out);
                 Self::deps_ref_product_category(&it.sub_category, out);
             }
             EntityKey::ProductConcept(id) => {
-                let it = self.model.product_concept_arena.get(id.0);
+                let it = model.product_concept_arena.get(id.0);
                 Self::deps_ref_product_concept_context(&it.market_context, out);
             }
             EntityKey::ProductConceptContext(id) => {
-                let it = self.model.product_concept_context_arena.get(id.0);
+                let it = model.product_concept_context_arena.get(id.0);
                 Self::deps_ref_application_context(&it.frame_of_reference, out);
             }
             EntityKey::ProductConceptFeature(_) => {}
             EntityKey::ProductConceptFeatureCategory(_) => {}
             EntityKey::ProductContext(id) => {
-                let it = self.model.product_context_arena.get(id.0);
+                let it = model.product_context_arena.get(id.0);
                 Self::deps_ref_application_context(&it.frame_of_reference, out);
             }
             EntityKey::ProductDefinition(id) => {
-                let it = self.model.product_definition_arena.get(id.0);
+                let it = model.product_definition_arena.get(id.0);
                 Self::deps_ref_product_definition_formation(&it.formation, out);
                 Self::deps_ref_product_definition_context(&it.frame_of_reference, out);
             }
             EntityKey::ProductDefinitionContext(id) => {
-                let it = self.model.product_definition_context_arena.get(id.0);
+                let it = model.product_definition_context_arena.get(id.0);
                 Self::deps_ref_application_context(&it.frame_of_reference, out);
             }
             EntityKey::ProductDefinitionContextAssociation(id) => {
-                let it = self
-                    .model
-                    .product_definition_context_association_arena
-                    .get(id.0);
+                let it = model.product_definition_context_association_arena.get(id.0);
                 Self::deps_ref_product_definition(&it.definition, out);
                 Self::deps_ref_product_definition_context(&it.frame_of_reference, out);
                 Self::deps_ref_product_definition_context_role(&it.role, out);
             }
             EntityKey::ProductDefinitionContextRole(_) => {}
             EntityKey::ProductDefinitionEffectivity(id) => {
-                let it = self.model.product_definition_effectivity_arena.get(id.0);
+                let it = model.product_definition_effectivity_arena.get(id.0);
                 Self::deps_ref_product_definition_relationship(&it.usage, out);
             }
             EntityKey::ProductDefinitionFormation(id) => {
-                let it = self.model.product_definition_formation_arena.get(id.0);
+                let it = model.product_definition_formation_arena.get(id.0);
                 Self::deps_ref_product(&it.of_product, out);
             }
             EntityKey::ProductDefinitionFormationWithSpecifiedSource(id) => {
-                let it = self
-                    .model
+                let it = model
                     .product_definition_formation_with_specified_source_arena
                     .get(id.0);
                 Self::deps_ref_product(&it.of_product, out);
             }
             EntityKey::ProductDefinitionOccurrence(id) => {
-                let it = self.model.product_definition_occurrence_arena.get(id.0);
+                let it = model.product_definition_occurrence_arena.get(id.0);
                 if let Some(r) = &it.definition {
                     Self::deps_ref_product_definition_or_reference(r, out);
                 }
@@ -25384,7 +25287,7 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::ProductDefinitionRelationship(id) => {
-                let it = self.model.product_definition_relationship_arena.get(id.0);
+                let it = model.product_definition_relationship_arena.get(id.0);
                 Self::deps_ref_product_definition_or_reference(
                     &it.relating_product_definition,
                     out,
@@ -25392,24 +25295,23 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_product_definition_or_reference(&it.related_product_definition, out);
             }
             EntityKey::ProductDefinitionRelationshipRelationship(id) => {
-                let it = self
-                    .model
+                let it = model
                     .product_definition_relationship_relationship_arena
                     .get(id.0);
                 Self::deps_ref_product_definition_relationship(&it.relating, out);
                 Self::deps_ref_product_definition_relationship(&it.related, out);
             }
             EntityKey::ProductDefinitionShape(id) => {
-                let it = self.model.product_definition_shape_arena.get(id.0);
+                let it = model.product_definition_shape_arena.get(id.0);
                 Self::deps_ref_characterized_definition(&it.definition, out);
             }
             EntityKey::ProductDefinitionSubstitute(id) => {
-                let it = self.model.product_definition_substitute_arena.get(id.0);
+                let it = model.product_definition_substitute_arena.get(id.0);
                 Self::deps_ref_product_definition_relationship(&it.context_relationship, out);
                 Self::deps_ref_product_definition(&it.substitute_definition, out);
             }
             EntityKey::ProductDefinitionUsage(id) => {
-                let it = self.model.product_definition_usage_arena.get(id.0);
+                let it = model.product_definition_usage_arena.get(id.0);
                 Self::deps_ref_product_definition_or_reference(
                     &it.relating_product_definition,
                     out,
@@ -25417,8 +25319,7 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_product_definition_or_reference(&it.related_product_definition, out);
             }
             EntityKey::ProductDefinitionWithAssociatedDocuments(id) => {
-                let it = self
-                    .model
+                let it = model
                     .product_definition_with_associated_documents_arena
                     .get(id.0);
                 Self::deps_ref_product_definition_formation(&it.formation, out);
@@ -25428,13 +25329,13 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::ProductRelatedProductCategory(id) => {
-                let it = self.model.product_related_product_category_arena.get(id.0);
+                let it = model.product_related_product_category_arena.get(id.0);
                 for e in &it.products {
                     Self::deps_ref_product(e, out);
                 }
             }
             EntityKey::ProjectedZoneDefinition(id) => {
-                let it = self.model.projected_zone_definition_arena.get(id.0);
+                let it = model.projected_zone_definition_arena.get(id.0);
                 Self::deps_ref_tolerance_zone(&it.zone, out);
                 for e in &it.boundaries {
                     Self::deps_ref_shape_aspect(e, out);
@@ -25443,36 +25344,33 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_length_measure_with_unit(&it.projected_length, out);
             }
             EntityKey::PropertyDefinition(id) => {
-                let it = self.model.property_definition_arena.get(id.0);
+                let it = model.property_definition_arena.get(id.0);
                 Self::deps_ref_characterized_definition(&it.definition, out);
             }
             EntityKey::PropertyDefinitionRelationship(id) => {
-                let it = self.model.property_definition_relationship_arena.get(id.0);
+                let it = model.property_definition_relationship_arena.get(id.0);
                 Self::deps_ref_property_definition(&it.relating_property_definition, out);
                 Self::deps_ref_property_definition(&it.related_property_definition, out);
             }
             EntityKey::PropertyDefinitionRepresentation(id) => {
-                let it = self
-                    .model
-                    .property_definition_representation_arena
-                    .get(id.0);
+                let it = model.property_definition_representation_arena.get(id.0);
                 Self::deps_ref_represented_definition(&it.definition, out);
                 Self::deps_ref_representation(&it.used_representation, out);
             }
             EntityKey::QualifiedRepresentationItem(id) => {
-                let it = self.model.qualified_representation_item_arena.get(id.0);
+                let it = model.qualified_representation_item_arena.get(id.0);
                 for e in &it.qualifiers {
                     Self::deps_ref_value_qualifier(e, out);
                 }
             }
             EntityKey::QuasiUniformCurve(id) => {
-                let it = self.model.quasi_uniform_curve_arena.get(id.0);
+                let it = model.quasi_uniform_curve_arena.get(id.0);
                 for e in &it.control_points_list {
                     Self::deps_ref_cartesian_point(e, out);
                 }
             }
             EntityKey::QuasiUniformSurface(id) => {
-                let it = self.model.quasi_uniform_surface_arena.get(id.0);
+                let it = model.quasi_uniform_surface_arena.get(id.0);
                 for e in &it.control_points_list {
                     for e in e {
                         Self::deps_ref_cartesian_point(e, out);
@@ -25480,21 +25378,21 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::RatioMeasureWithUnit(id) => {
-                let it = self.model.ratio_measure_with_unit_arena.get(id.0);
+                let it = model.ratio_measure_with_unit_arena.get(id.0);
                 Self::deps_ref_unit(&it.unit_component, out);
             }
             EntityKey::RatioUnit(id) => {
-                let it = self.model.ratio_unit_arena.get(id.0);
+                let it = model.ratio_unit_arena.get(id.0);
                 Self::deps_ref_dimensional_exponents(&it.dimensions, out);
             }
             EntityKey::RationalBSplineCurve(id) => {
-                let it = self.model.rational_b_spline_curve_arena.get(id.0);
+                let it = model.rational_b_spline_curve_arena.get(id.0);
                 for e in &it.control_points_list {
                     Self::deps_ref_cartesian_point(e, out);
                 }
             }
             EntityKey::RationalBSplineSurface(id) => {
-                let it = self.model.rational_b_spline_surface_arena.get(id.0);
+                let it = model.rational_b_spline_surface_arena.get(id.0);
                 for e in &it.control_points_list {
                     for e in e {
                         Self::deps_ref_cartesian_point(e, out);
@@ -25504,11 +25402,11 @@ impl<'a> Writer<'a> {
             EntityKey::RealLiteral(_) => {}
             EntityKey::RealRepresentationItem(_) => {}
             EntityKey::RepositionedTessellatedItem(id) => {
-                let it = self.model.repositioned_tessellated_item_arena.get(id.0);
+                let it = model.repositioned_tessellated_item_arena.get(id.0);
                 Self::deps_ref_axis2_placement3d(&it.location, out);
             }
             EntityKey::Representation(id) => {
-                let it = self.model.representation_arena.get(id.0);
+                let it = model.representation_arena.get(id.0);
                 for e in &it.items {
                     Self::deps_ref_representation_item(e, out);
                 }
@@ -25518,22 +25416,21 @@ impl<'a> Writer<'a> {
             EntityKey::RepresentationContextReference(_) => {}
             EntityKey::RepresentationItem(_) => {}
             EntityKey::RepresentationMap(id) => {
-                let it = self.model.representation_map_arena.get(id.0);
+                let it = model.representation_map_arena.get(id.0);
                 Self::deps_ref_representation_item(&it.mapping_origin, out);
                 Self::deps_ref_representation(&it.mapped_representation, out);
             }
             EntityKey::RepresentationReference(id) => {
-                let it = self.model.representation_reference_arena.get(id.0);
+                let it = model.representation_reference_arena.get(id.0);
                 Self::deps_ref_representation_context_reference(&it.context_of_items, out);
             }
             EntityKey::RepresentationRelationship(id) => {
-                let it = self.model.representation_relationship_arena.get(id.0);
+                let it = model.representation_relationship_arena.get(id.0);
                 Self::deps_ref_representation_or_representation_reference(&it.rep_1, out);
                 Self::deps_ref_representation_or_representation_reference(&it.rep_2, out);
             }
             EntityKey::RepresentationRelationshipWithTransformation(id) => {
-                let it = self
-                    .model
+                let it = model
                     .representation_relationship_with_transformation_arena
                     .get(id.0);
                 Self::deps_ref_representation_or_representation_reference(&it.rep_1, out);
@@ -25541,99 +25438,90 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_transformation(&it.transformation_operator, out);
             }
             EntityKey::ResourceProperty(id) => {
-                let it = self.model.resource_property_arena.get(id.0);
+                let it = model.resource_property_arena.get(id.0);
                 Self::deps_ref_characterized_resource_definition(&it.resource, out);
             }
             EntityKey::ResourceRequirementType(_) => {}
             EntityKey::RoleAssociation(id) => {
-                let it = self.model.role_association_arena.get(id.0);
+                let it = model.role_association_arena.get(id.0);
                 Self::deps_ref_object_role(&it.role, out);
                 Self::deps_ref_role_select(&it.item_with_role, out);
             }
             EntityKey::RoundnessTolerance(id) => {
-                let it = self.model.roundness_tolerance_arena.get(id.0);
+                let it = model.roundness_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
             }
             EntityKey::SeamCurve(id) => {
-                let it = self.model.seam_curve_arena.get(id.0);
+                let it = model.seam_curve_arena.get(id.0);
                 Self::deps_ref_curve(&it.curve_3d, out);
                 for e in &it.associated_geometry {
                     Self::deps_ref_pcurve_or_surface(e, out);
                 }
             }
             EntityKey::SecurityClassification(id) => {
-                let it = self.model.security_classification_arena.get(id.0);
+                let it = model.security_classification_arena.get(id.0);
                 Self::deps_ref_security_classification_level(&it.security_level, out);
             }
             EntityKey::SecurityClassificationAssignment(id) => {
-                let it = self
-                    .model
-                    .security_classification_assignment_arena
-                    .get(id.0);
+                let it = model.security_classification_assignment_arena.get(id.0);
                 Self::deps_ref_security_classification(&it.assigned_security_classification, out);
             }
             EntityKey::SecurityClassificationLevel(_) => {}
             EntityKey::ShapeAspect(id) => {
-                let it = self.model.shape_aspect_arena.get(id.0);
+                let it = model.shape_aspect_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
             }
             EntityKey::ShapeAspectAssociativity(id) => {
-                let it = self.model.shape_aspect_associativity_arena.get(id.0);
+                let it = model.shape_aspect_associativity_arena.get(id.0);
                 Self::deps_ref_shape_aspect(&it.relating_shape_aspect, out);
                 Self::deps_ref_shape_aspect(&it.related_shape_aspect, out);
             }
             EntityKey::ShapeAspectDerivingRelationship(id) => {
-                let it = self
-                    .model
-                    .shape_aspect_deriving_relationship_arena
-                    .get(id.0);
+                let it = model.shape_aspect_deriving_relationship_arena.get(id.0);
                 Self::deps_ref_shape_aspect(&it.relating_shape_aspect, out);
                 Self::deps_ref_shape_aspect(&it.related_shape_aspect, out);
             }
             EntityKey::ShapeAspectRelationship(id) => {
-                let it = self.model.shape_aspect_relationship_arena.get(id.0);
+                let it = model.shape_aspect_relationship_arena.get(id.0);
                 Self::deps_ref_shape_aspect(&it.relating_shape_aspect, out);
                 Self::deps_ref_shape_aspect(&it.related_shape_aspect, out);
             }
             EntityKey::ShapeDefinitionRepresentation(id) => {
-                let it = self.model.shape_definition_representation_arena.get(id.0);
+                let it = model.shape_definition_representation_arena.get(id.0);
                 Self::deps_ref_represented_definition(&it.definition, out);
                 Self::deps_ref_representation(&it.used_representation, out);
             }
             EntityKey::ShapeDimensionRepresentation(id) => {
-                let it = self.model.shape_dimension_representation_arena.get(id.0);
+                let it = model.shape_dimension_representation_arena.get(id.0);
                 for e in &it.items {
                     Self::deps_ref_representation_item(e, out);
                 }
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
             EntityKey::ShapeRepresentation(id) => {
-                let it = self.model.shape_representation_arena.get(id.0);
+                let it = model.shape_representation_arena.get(id.0);
                 for e in &it.items {
                     Self::deps_ref_representation_item(e, out);
                 }
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
             EntityKey::ShapeRepresentationRelationship(id) => {
-                let it = self.model.shape_representation_relationship_arena.get(id.0);
+                let it = model.shape_representation_relationship_arena.get(id.0);
                 Self::deps_ref_representation_or_representation_reference(&it.rep_1, out);
                 Self::deps_ref_representation_or_representation_reference(&it.rep_2, out);
             }
             EntityKey::ShapeRepresentationWithParameters(id) => {
-                let it = self
-                    .model
-                    .shape_representation_with_parameters_arena
-                    .get(id.0);
+                let it = model.shape_representation_with_parameters_arena.get(id.0);
                 for e in &it.items {
                     Self::deps_ref_representation_item(e, out);
                 }
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
             EntityKey::ShellBasedSurfaceModel(id) => {
-                let it = self.model.shell_based_surface_model_arena.get(id.0);
+                let it = model.shell_based_surface_model_arena.get(id.0);
                 for e in &it.sbsm_boundary {
                     Self::deps_ref_shell(e, out);
                 }
@@ -25642,23 +25530,23 @@ impl<'a> Writer<'a> {
             EntityKey::SimpleGenericExpression(_) => {}
             EntityKey::SimpleNumericExpression(_) => {}
             EntityKey::SolidAngleUnit(id) => {
-                let it = self.model.solid_angle_unit_arena.get(id.0);
+                let it = model.solid_angle_unit_arena.get(id.0);
                 Self::deps_ref_dimensional_exponents(&it.dimensions, out);
             }
             EntityKey::SolidModel(_) => {}
             EntityKey::SphericalSurface(id) => {
-                let it = self.model.spherical_surface_arena.get(id.0);
+                let it = model.spherical_surface_arena.get(id.0);
                 Self::deps_ref_axis2_placement3d(&it.position, out);
             }
             EntityKey::StartRequest(id) => {
-                let it = self.model.start_request_arena.get(id.0);
+                let it = model.start_request_arena.get(id.0);
                 Self::deps_ref_versioned_action_request(&it.assigned_action_request, out);
                 for e in &it.items {
                     Self::deps_ref_start_request_item(e, out);
                 }
             }
             EntityKey::StartWork(id) => {
-                let it = self.model.start_work_arena.get(id.0);
+                let it = model.start_work_arena.get(id.0);
                 Self::deps_ref_action(&it.assigned_action, out);
                 for e in &it.items {
                     Self::deps_ref_work_item(e, out);
@@ -25667,14 +25555,14 @@ impl<'a> Writer<'a> {
             EntityKey::StateObserved(_) => {}
             EntityKey::StateType(_) => {}
             EntityKey::StraightnessTolerance(id) => {
-                let it = self.model.straightness_tolerance_arena.get(id.0);
+                let it = model.straightness_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
             }
             EntityKey::StyledItem(id) => {
-                let it = self.model.styled_item_arena.get(id.0);
+                let it = model.styled_item_arena.get(id.0);
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
@@ -25682,63 +25570,62 @@ impl<'a> Writer<'a> {
             }
             EntityKey::Surface(_) => {}
             EntityKey::SurfaceCurve(id) => {
-                let it = self.model.surface_curve_arena.get(id.0);
+                let it = model.surface_curve_arena.get(id.0);
                 Self::deps_ref_curve(&it.curve_3d, out);
                 for e in &it.associated_geometry {
                     Self::deps_ref_pcurve_or_surface(e, out);
                 }
             }
             EntityKey::SurfaceOfLinearExtrusion(id) => {
-                let it = self.model.surface_of_linear_extrusion_arena.get(id.0);
+                let it = model.surface_of_linear_extrusion_arena.get(id.0);
                 Self::deps_ref_curve(&it.swept_curve, out);
                 Self::deps_ref_vector(&it.extrusion_axis, out);
             }
             EntityKey::SurfaceOfRevolution(id) => {
-                let it = self.model.surface_of_revolution_arena.get(id.0);
+                let it = model.surface_of_revolution_arena.get(id.0);
                 Self::deps_ref_curve(&it.swept_curve, out);
                 Self::deps_ref_axis1_placement(&it.axis_position, out);
             }
             EntityKey::SurfaceProfileTolerance(id) => {
-                let it = self.model.surface_profile_tolerance_arena.get(id.0);
+                let it = model.surface_profile_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
             }
             EntityKey::SurfaceRenderingProperties(id) => {
-                let it = self.model.surface_rendering_properties_arena.get(id.0);
+                let it = model.surface_rendering_properties_arena.get(id.0);
                 Self::deps_ref_colour(&it.rendered_colour, out);
             }
             EntityKey::SurfaceSideStyle(id) => {
-                let it = self.model.surface_side_style_arena.get(id.0);
+                let it = model.surface_side_style_arena.get(id.0);
                 for e in &it.styles {
                     Self::deps_ref_surface_style_element_select(e, out);
                 }
             }
             EntityKey::SurfaceStyleBoundary(id) => {
-                let it = self.model.surface_style_boundary_arena.get(id.0);
+                let it = model.surface_style_boundary_arena.get(id.0);
                 Self::deps_ref_curve_or_render(&it.style_of_boundary, out);
             }
             EntityKey::SurfaceStyleControlGrid(id) => {
-                let it = self.model.surface_style_control_grid_arena.get(id.0);
+                let it = model.surface_style_control_grid_arena.get(id.0);
                 Self::deps_ref_curve_or_render(&it.style_of_control_grid, out);
             }
             EntityKey::SurfaceStyleFillArea(id) => {
-                let it = self.model.surface_style_fill_area_arena.get(id.0);
+                let it = model.surface_style_fill_area_arena.get(id.0);
                 Self::deps_ref_fill_area_style(&it.fill_area, out);
             }
             EntityKey::SurfaceStyleParameterLine(id) => {
-                let it = self.model.surface_style_parameter_line_arena.get(id.0);
+                let it = model.surface_style_parameter_line_arena.get(id.0);
                 Self::deps_ref_curve_or_render(&it.style_of_parameter_lines, out);
             }
             EntityKey::SurfaceStyleReflectanceAmbient(_) => {}
             EntityKey::SurfaceStyleRendering(id) => {
-                let it = self.model.surface_style_rendering_arena.get(id.0);
+                let it = model.surface_style_rendering_arena.get(id.0);
                 Self::deps_ref_colour(&it.surface_colour, out);
             }
             EntityKey::SurfaceStyleRenderingWithProperties(id) => {
-                let it = self
-                    .model
+                let it = model
                     .surface_style_rendering_with_properties_arena
                     .get(id.0);
                 Self::deps_ref_colour(&it.surface_colour, out);
@@ -25747,43 +25634,43 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::SurfaceStyleSegmentationCurve(id) => {
-                let it = self.model.surface_style_segmentation_curve_arena.get(id.0);
+                let it = model.surface_style_segmentation_curve_arena.get(id.0);
                 Self::deps_ref_curve_or_render(&it.style_of_segmentation_curve, out);
             }
             EntityKey::SurfaceStyleSilhouette(id) => {
-                let it = self.model.surface_style_silhouette_arena.get(id.0);
+                let it = model.surface_style_silhouette_arena.get(id.0);
                 Self::deps_ref_curve_or_render(&it.style_of_silhouette, out);
             }
             EntityKey::SurfaceStyleTransparent(_) => {}
             EntityKey::SurfaceStyleUsage(id) => {
-                let it = self.model.surface_style_usage_arena.get(id.0);
+                let it = model.surface_style_usage_arena.get(id.0);
                 Self::deps_ref_surface_side_style_select(&it.style, out);
             }
             EntityKey::SweptSurface(id) => {
-                let it = self.model.swept_surface_arena.get(id.0);
+                let it = model.swept_surface_arena.get(id.0);
                 Self::deps_ref_curve(&it.swept_curve, out);
             }
             EntityKey::SymbolColour(id) => {
-                let it = self.model.symbol_colour_arena.get(id.0);
+                let it = model.symbol_colour_arena.get(id.0);
                 Self::deps_ref_colour(&it.colour_of_symbol, out);
             }
             EntityKey::SymbolRepresentation(id) => {
-                let it = self.model.symbol_representation_arena.get(id.0);
+                let it = model.symbol_representation_arena.get(id.0);
                 for e in &it.items {
                     Self::deps_ref_representation_item(e, out);
                 }
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
             EntityKey::SymbolStyle(id) => {
-                let it = self.model.symbol_style_arena.get(id.0);
+                let it = model.symbol_style_arena.get(id.0);
                 Self::deps_ref_symbol_style_select(&it.style_of_symbol, out);
             }
             EntityKey::SymbolTarget(id) => {
-                let it = self.model.symbol_target_arena.get(id.0);
+                let it = model.symbol_target_arena.get(id.0);
                 Self::deps_ref_axis2_placement(&it.placement, out);
             }
             EntityKey::SymmetryTolerance(id) => {
-                let it = self.model.symmetry_tolerance_arena.get(id.0);
+                let it = model.symmetry_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
@@ -25793,7 +25680,7 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::TerminatorSymbol(id) => {
-                let it = self.model.terminator_symbol_arena.get(id.0);
+                let it = model.terminator_symbol_arena.get(id.0);
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
@@ -25801,39 +25688,39 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_annotation_curve_occurrence(&it.annotated_curve, out);
             }
             EntityKey::TessellatedAnnotationOccurrence(id) => {
-                let it = self.model.tessellated_annotation_occurrence_arena.get(id.0);
+                let it = model.tessellated_annotation_occurrence_arena.get(id.0);
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
                 Self::deps_ref_styled_item_target(&it.item, out);
             }
             EntityKey::TessellatedCurveSet(id) => {
-                let it = self.model.tessellated_curve_set_arena.get(id.0);
+                let it = model.tessellated_curve_set_arena.get(id.0);
                 Self::deps_ref_coordinates_list(&it.coordinates, out);
             }
             EntityKey::TessellatedFace(id) => {
-                let it = self.model.tessellated_face_arena.get(id.0);
+                let it = model.tessellated_face_arena.get(id.0);
                 Self::deps_ref_coordinates_list(&it.coordinates, out);
                 if let Some(r) = &it.geometric_link {
                     Self::deps_ref_face_or_surface(r, out);
                 }
             }
             EntityKey::TessellatedGeometricSet(id) => {
-                let it = self.model.tessellated_geometric_set_arena.get(id.0);
+                let it = model.tessellated_geometric_set_arena.get(id.0);
                 for e in &it.children {
                     Self::deps_ref_tessellated_item(e, out);
                 }
             }
             EntityKey::TessellatedItem(_) => {}
             EntityKey::TessellatedShapeRepresentation(id) => {
-                let it = self.model.tessellated_shape_representation_arena.get(id.0);
+                let it = model.tessellated_shape_representation_arena.get(id.0);
                 for e in &it.items {
                     Self::deps_ref_representation_item(e, out);
                 }
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
             EntityKey::TessellatedShell(id) => {
-                let it = self.model.tessellated_shell_arena.get(id.0);
+                let it = model.tessellated_shell_arena.get(id.0);
                 for e in &it.items {
                     Self::deps_ref_tessellated_structured_item(e, out);
                 }
@@ -25842,7 +25729,7 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::TessellatedSolid(id) => {
-                let it = self.model.tessellated_solid_arena.get(id.0);
+                let it = model.tessellated_solid_arena.get(id.0);
                 for e in &it.items {
                     Self::deps_ref_tessellated_structured_item(e, out);
                 }
@@ -25852,43 +25739,40 @@ impl<'a> Writer<'a> {
             }
             EntityKey::TessellatedStructuredItem(_) => {}
             EntityKey::TessellatedSurfaceSet(id) => {
-                let it = self.model.tessellated_surface_set_arena.get(id.0);
+                let it = model.tessellated_surface_set_arena.get(id.0);
                 Self::deps_ref_coordinates_list(&it.coordinates, out);
             }
             EntityKey::TextFont(_) => {}
             EntityKey::TextLiteral(id) => {
-                let it = self.model.text_literal_arena.get(id.0);
+                let it = model.text_literal_arena.get(id.0);
                 Self::deps_ref_axis2_placement(&it.placement, out);
                 Self::deps_ref_font_select(&it.font, out);
             }
             EntityKey::TextStyle(id) => {
-                let it = self.model.text_style_arena.get(id.0);
+                let it = model.text_style_arena.get(id.0);
                 Self::deps_ref_character_style_select(&it.character_appearance, out);
             }
             EntityKey::TextStyleForDefinedFont(id) => {
-                let it = self.model.text_style_for_defined_font_arena.get(id.0);
+                let it = model.text_style_for_defined_font_arena.get(id.0);
                 Self::deps_ref_colour(&it.text_colour, out);
             }
             EntityKey::TextStyleWithBoxCharacteristics(id) => {
-                let it = self
-                    .model
-                    .text_style_with_box_characteristics_arena
-                    .get(id.0);
+                let it = model.text_style_with_box_characteristics_arena.get(id.0);
                 Self::deps_ref_character_style_select(&it.character_appearance, out);
             }
             EntityKey::TextureStyleSpecification(_) => {}
             EntityKey::TextureStyleTessellationSpecification(_) => {}
             EntityKey::TimeUnit(id) => {
-                let it = self.model.time_unit_arena.get(id.0);
+                let it = model.time_unit_arena.get(id.0);
                 Self::deps_ref_dimensional_exponents(&it.dimensions, out);
             }
             EntityKey::ToleranceValue(id) => {
-                let it = self.model.tolerance_value_arena.get(id.0);
+                let it = model.tolerance_value_arena.get(id.0);
                 Self::deps_ref_measure_with_unit(&it.lower_bound, out);
                 Self::deps_ref_measure_with_unit(&it.upper_bound, out);
             }
             EntityKey::ToleranceZone(id) => {
-                let it = self.model.tolerance_zone_arena.get(id.0);
+                let it = model.tolerance_zone_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
                 for e in &it.defining_tolerance {
                     Self::deps_ref_tolerance_zone_target(e, out);
@@ -25896,7 +25780,7 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_tolerance_zone_form(&it.form, out);
             }
             EntityKey::ToleranceZoneDefinition(id) => {
-                let it = self.model.tolerance_zone_definition_arena.get(id.0);
+                let it = model.tolerance_zone_definition_arena.get(id.0);
                 Self::deps_ref_tolerance_zone(&it.zone, out);
                 for e in &it.boundaries {
                     Self::deps_ref_shape_aspect(e, out);
@@ -25904,7 +25788,7 @@ impl<'a> Writer<'a> {
             }
             EntityKey::ToleranceZoneForm(_) => {}
             EntityKey::ToleranceZoneWithDatum(id) => {
-                let it = self.model.tolerance_zone_with_datum_arena.get(id.0);
+                let it = model.tolerance_zone_with_datum_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
                 for e in &it.defining_tolerance {
                     Self::deps_ref_tolerance_zone_target(e, out);
@@ -25914,11 +25798,11 @@ impl<'a> Writer<'a> {
             }
             EntityKey::TopologicalRepresentationItem(_) => {}
             EntityKey::ToroidalSurface(id) => {
-                let it = self.model.toroidal_surface_arena.get(id.0);
+                let it = model.toroidal_surface_arena.get(id.0);
                 Self::deps_ref_axis2_placement3d(&it.position, out);
             }
             EntityKey::TotalRunoutTolerance(id) => {
-                let it = self.model.total_runout_tolerance_arena.get(id.0);
+                let it = model.total_runout_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
@@ -25928,7 +25812,7 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::TrimmedCurve(id) => {
-                let it = self.model.trimmed_curve_arena.get(id.0);
+                let it = model.trimmed_curve_arena.get(id.0);
                 Self::deps_ref_curve(&it.basis_curve, out);
                 for e in &it.trim_1 {
                     Self::deps_ref_trimming_select(e, out);
@@ -25938,21 +25822,18 @@ impl<'a> Writer<'a> {
                 }
             }
             EntityKey::TwoDirectionRepeatFactor(id) => {
-                let it = self.model.two_direction_repeat_factor_arena.get(id.0);
+                let it = model.two_direction_repeat_factor_arena.get(id.0);
                 Self::deps_ref_vector(&it.repeat_factor, out);
                 Self::deps_ref_vector(&it.second_repeat_factor, out);
             }
             EntityKey::TypeQualifier(_) => {}
             EntityKey::UncertaintyMeasureWithUnit(id) => {
-                let it = self.model.uncertainty_measure_with_unit_arena.get(id.0);
+                let it = model.uncertainty_measure_with_unit_arena.get(id.0);
                 Self::deps_ref_unit(&it.unit_component, out);
             }
             EntityKey::UncertaintyQualifier(_) => {}
             EntityKey::UnequallyDisposedGeometricTolerance(id) => {
-                let it = self
-                    .model
-                    .unequally_disposed_geometric_tolerance_arena
-                    .get(id.0);
+                let it = model.unequally_disposed_geometric_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
                     Self::deps_ref_length_measure_with_unit(r, out);
                 }
@@ -25960,13 +25841,13 @@ impl<'a> Writer<'a> {
                 Self::deps_ref_length_measure_with_unit(&it.displacement, out);
             }
             EntityKey::UniformCurve(id) => {
-                let it = self.model.uniform_curve_arena.get(id.0);
+                let it = model.uniform_curve_arena.get(id.0);
                 for e in &it.control_points_list {
                     Self::deps_ref_cartesian_point(e, out);
                 }
             }
             EntityKey::UniformSurface(id) => {
-                let it = self.model.uniform_surface_arena.get(id.0);
+                let it = model.uniform_surface_arena.get(id.0);
                 for e in &it.control_points_list {
                     for e in e {
                         Self::deps_ref_cartesian_point(e, out);
@@ -25976,42 +25857,42 @@ impl<'a> Writer<'a> {
             EntityKey::ValueFormatTypeQualifier(_) => {}
             EntityKey::ValueRepresentationItem(_) => {}
             EntityKey::Vector(id) => {
-                let it = self.model.vector_arena.get(id.0);
+                let it = model.vector_arena.get(id.0);
                 Self::deps_ref_direction(&it.orientation, out);
             }
             EntityKey::VersionedActionRequest(_) => {}
             EntityKey::Vertex(_) => {}
             EntityKey::VertexLoop(id) => {
-                let it = self.model.vertex_loop_arena.get(id.0);
+                let it = model.vertex_loop_arena.get(id.0);
                 Self::deps_ref_vertex(&it.loop_vertex, out);
             }
             EntityKey::VertexPoint(id) => {
-                let it = self.model.vertex_point_arena.get(id.0);
+                let it = model.vertex_point_arena.get(id.0);
                 Self::deps_ref_point(&it.vertex_geometry, out);
             }
             EntityKey::VertexShell(id) => {
-                let it = self.model.vertex_shell_arena.get(id.0);
+                let it = model.vertex_shell_arena.get(id.0);
                 Self::deps_ref_vertex_loop(&it.vertex_shell_extent, out);
             }
             EntityKey::ViewVolume(id) => {
-                let it = self.model.view_volume_arena.get(id.0);
+                let it = model.view_volume_arena.get(id.0);
                 Self::deps_ref_cartesian_point(&it.projection_point, out);
                 Self::deps_ref_planar_box(&it.view_window, out);
             }
             EntityKey::VolumeUnit(id) => {
-                let it = self.model.volume_unit_arena.get(id.0);
+                let it = model.volume_unit_arena.get(id.0);
                 for e in &it.elements {
                     Self::deps_ref_derived_unit_element(e, out);
                 }
             }
             EntityKey::WireShell(id) => {
-                let it = self.model.wire_shell_arena.get(id.0);
+                let it = model.wire_shell_arena.get(id.0);
                 for e in &it.wire_shell_extent {
                     Self::deps_ref_loop(e, out);
                 }
             }
             EntityKey::ComplexUnit(id) => {
-                let cu = self.model.complex_unit_arena.get(id.0);
+                let cu = model.complex_unit_arena.get(id.0);
                 for part in &cu.parts {
                     match part {
                         UnitPart::Action { chosen_method, .. } => {
@@ -38697,7 +38578,7 @@ impl<'a> Writer<'a> {
                 on_path.insert(any);
                 stack.push((any, true));
                 let mut deps: Vec<EntityKey> = Vec::new();
-                self.deps_of(any, &mut deps);
+                Self::deps_of(self.model, any, &mut deps);
                 for d in deps.into_iter().rev() {
                     if d == any {
                         continue;
