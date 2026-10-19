@@ -3,7 +3,10 @@
 
 mod common;
 
+use std::collections::HashMap;
+
 use step_io::build::Frame;
+use step_io::parser::{Attribute, RawEntity, parse};
 use step_io::{StepBuilder, read};
 
 fn assert_close3(actual: [f64; 3], expected: [f64; 3]) {
@@ -105,4 +108,77 @@ fn shared_definition_places_multiple_instances() {
     origins.sort_by(|a, b| a[1].partial_cmp(&b[1]).unwrap());
     assert_close3(origins[0], [0.0, -700.0, 0.0]);
     assert_close3(origins[1], [0.0, 700.0, 0.0]);
+}
+
+/// The id an attribute refers to.
+fn id_of(a: &Attribute) -> u64 {
+    match a {
+        Attribute::EntityRef(id) => *id,
+        other => panic!("expected a reference, got {other:?}"),
+    }
+}
+
+#[test]
+fn placements_relate_representations_in_their_own_contexts() {
+    // top > sub > leaf (twice), and top > leaf.
+    let mut b = StepBuilder::new().expect("builder");
+    let top = b.part("top").expect("top");
+    let sub = b.part("sub").expect("sub");
+    let leaf = b.part("leaf").expect("leaf");
+    b.place(sub, leaf, at([10.0, 0.0, 0.0])).expect("place");
+    b.place(sub, leaf, at([0.0, 10.0, 0.0])).expect("place");
+    b.place(top, sub, at([0.0, 0.0, 10.0])).expect("place");
+    b.place(top, leaf, at([20.0, 0.0, 0.0])).expect("place");
+    let text = common::text(&b.finish().expect("finish"));
+    let graph = parse(text.as_bytes()).expect("parse");
+
+    // Representation id -> (its items, its context).
+    let mut reps = HashMap::new();
+    for (&id, e) in &graph.entities {
+        let RawEntity::Simple {
+            name, attributes, ..
+        } = e
+        else {
+            continue;
+        };
+        if name != "SHAPE_REPRESENTATION" {
+            continue;
+        }
+        let Attribute::List(items) = &attributes[1] else {
+            panic!("items: {:?}", attributes[1]);
+        };
+        let items: Vec<u64> = items.iter().map(id_of).collect();
+        reps.insert(id, (items, id_of(&attributes[2])));
+    }
+
+    let mut placements = 0;
+    for e in graph.entities.values() {
+        let RawEntity::Complex { parts, .. } = e else {
+            continue;
+        };
+        let part = |name: &str| parts.iter().find(|p| p.name == name);
+        let (Some(rr), Some(rrwt)) = (
+            part("REPRESENTATION_RELATIONSHIP"),
+            part("REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION"),
+        ) else {
+            continue;
+        };
+        let rep_1 = &reps[&id_of(&rr.attributes[2])];
+        let rep_2 = &reps[&id_of(&rr.attributes[3])];
+        // RRWT WR1: the two representations are in different contexts.
+        assert_ne!(rep_1.1, rep_2.1);
+        // RRWT WR2: the transformation goes from an item of `rep_1` to an
+        // item of `rep_2`.
+        let RawEntity::Simple {
+            name, attributes, ..
+        } = &graph.entities[&id_of(&rrwt.attributes[0])]
+        else {
+            panic!("transformation is not a simple entity");
+        };
+        assert_eq!(name, "ITEM_DEFINED_TRANSFORMATION");
+        assert!(rep_1.0.contains(&id_of(&attributes[2])));
+        assert!(rep_2.0.contains(&id_of(&attributes[3])));
+        placements += 1;
+    }
+    assert_eq!(placements, 4);
 }

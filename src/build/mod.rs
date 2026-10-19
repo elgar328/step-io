@@ -188,8 +188,8 @@ fn now_iso_utc() -> String {
     iso_utc_from_unix(secs)
 }
 
-/// The file's length unit, chosen at [`StepBuilder::new_with`] time (a
-/// unit context is a file-global entity every shape references).
+/// The file's length unit, chosen at [`StepBuilder::new_with`] time (the
+/// units are file-global: every geometric context refers to the same ones).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum LengthUnit {
     #[default]
@@ -509,12 +509,17 @@ struct PendingPlacement {
     to: m::Axis2Placement3dId,
 }
 
-/// Ergonomic writer for the standard AP242 file shape: shared contexts and
-/// units up front, one product chain per [`part`](Self::part), everything
-/// wired up by [`finish`](Self::finish).
+/// Ergonomic writer for the standard AP242 file shape: contexts and units up
+/// front, one product chain per [`part`](Self::part), everything wired up by
+/// [`finish`](Self::finish).
 pub struct StepBuilder {
     author: Ap242Author,
+    /// The geometric context of every part not placed in an assembly, and of
+    /// the presentation; a placed part gets one of its own.
     ctx: m::ComplexUnitId,
+    /// The length uncertainty and the units every geometric context shares.
+    uncertainty: m::UncertaintyMeasureWithUnitId,
+    units: [m::ComplexUnitId; 3],
     product_context: m::ProductContextId,
     pd_context: m::ProductDefinitionContextId,
     parts: Vec<PendingPart>,
@@ -539,7 +544,9 @@ impl StepBuilder {
     /// Set up the shared skeleton: application context + protocol definition
     /// (the AP242 identity values), product contexts, and the geometric
     /// context complex carrying the chosen SI length unit, radian,
-    /// steradian, and the given length uncertainty.
+    /// steradian, and the given length uncertainty. A part placed in an
+    /// assembly gets a context of its own over the same units at
+    /// [`finish`](Self::finish).
     ///
     /// # Errors
     /// Propagates [`AuthorError`] from the strict constructors; the wiring
@@ -603,32 +610,14 @@ impl StepBuilder {
             "distance_accuracy_value".to_owned(),
             Some("confusion accuracy".to_owned()),
         )?;
-        let (no_identifier, context_type) = (a.text(""), a.text("3D"));
-        let ctx = a.add_complex(vec![
-            m::UnitPart::GeometricRepresentationContext {
-                coordinate_space_dimension: 3,
-            },
-            m::UnitPart::GlobalUncertaintyAssignedContext {
-                uncertainty: vec![
-                    m::UncertaintyMeasureWithUnitRef::UncertaintyMeasureWithUnit(uncertainty),
-                ],
-            },
-            m::UnitPart::GlobalUnitAssignedContext {
-                units: vec![
-                    m::UnitRef::Complex(mm),
-                    m::UnitRef::Complex(rad),
-                    m::UnitRef::Complex(sr),
-                ],
-            },
-            m::UnitPart::RepresentationContext {
-                context_identifier: no_identifier,
-                context_type,
-            },
-        ])?;
+        let units = [mm, rad, sr];
+        let ctx = geometric_context(&mut a, uncertainty, units)?;
 
         Ok(Self {
             author: a,
             ctx,
+            uncertainty,
+            units,
             product_context,
             pd_context,
             parts: Vec::new(),
@@ -1617,66 +1606,28 @@ impl StepBuilder {
     /// here is fixed, so an error indicates a bug in the builder itself.
     pub fn finish(mut self) -> Result<m::StepModel, AuthorError> {
         let a = &mut self.author;
-        // Pass 1: one shape representation per part (a part carrying a solid
-        // is emitted as the customary ADVANCED_BREP_SHAPE_REPRESENTATION),
-        // kept by part index for the placement wiring below.
+        // Pass 1: one shape representation per part, kept by part index for
+        // the placement wiring below.
         let mut part_reps: Vec<m::RepresentationOrRepresentationReferenceRef> =
             Vec::with_capacity(self.parts.len());
-        for part in &self.parts {
-            let mut items = vec![m::RepresentationItemRef::Axis2Placement3d(part.origin)];
-            items.extend(part.items.iter().cloned());
-            let has_solid = part.items.iter().any(|i| {
-                matches!(
-                    i,
-                    m::RepresentationItemRef::ManifoldSolidBrep(_)
-                        | m::RepresentationItemRef::BrepWithVoids(_)
-                )
-            });
-            let (rep, rep_or_ref) = if has_solid {
-                let id = a.add_advanced_brep_shape_representation(
-                    String::new(),
-                    items,
-                    m::RepresentationContextRef::Complex(self.ctx),
-                )?;
-                (
-                    m::RepresentationRef::AdvancedBrepShapeRepresentation(id),
-                    m::RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(
-                        id,
-                    ),
-                )
+        // A placement relates representations in different contexts, so a
+        // part placed in an assembly gets a context of its own.
+        let mut placed = vec![false; self.parts.len()];
+        for placement in &self.placements {
+            placed[placement.child] = true;
+        }
+        for (i, part) in self.parts.iter().enumerate() {
+            let ctx = if placed[i] {
+                geometric_context(a, self.uncertainty, self.units)?
             } else {
-                let id = a.add_shape_representation(
-                    String::new(),
-                    items,
-                    m::RepresentationContextRef::Complex(self.ctx),
-                )?;
-                (
-                    m::RepresentationRef::ShapeRepresentation(id),
-                    m::RepresentationOrRepresentationReferenceRef::ShapeRepresentation(id),
-                )
+                self.ctx
             };
-            a.add_shape_definition_representation(
-                m::RepresentedDefinitionRef::ProductDefinitionShape(part.shape),
-                rep,
-            )?;
-            part_reps.push(rep_or_ref);
-
-            // A part with display meshes gets its own tessellated
-            // representation alongside the shape one (multi-SDR per shape).
-            if !part.meshes.is_empty() {
-                let tsr = a.add_tessellated_shape_representation(
-                    String::new(),
-                    part.meshes
-                        .iter()
-                        .map(|&t| m::RepresentationItemRef::TessellatedSolid(t))
-                        .collect(),
-                    m::RepresentationContextRef::Complex(self.ctx),
-                )?;
-                a.add_shape_definition_representation(
-                    m::RepresentedDefinitionRef::ProductDefinitionShape(part.shape),
-                    m::RepresentationRef::TessellatedShapeRepresentation(tsr),
-                )?;
-            }
+            let children = self
+                .placements
+                .iter()
+                .filter(|p| p.parent == i)
+                .map(|p| p.to);
+            part_reps.push(bind_part(a, part, children, ctx)?);
         }
         // Pass 2: assembly placements.
         bind_placements(a, &self.parts, &self.placements, &part_reps)?;
@@ -1724,11 +1675,109 @@ impl StepBuilder {
     }
 }
 
+/// One part's shape representation in `ctx`, linked to the part's
+/// definition, plus its tessellated representation if it carries display
+/// meshes. A part carrying a solid is emitted as the customary
+/// `ADVANCED_BREP_SHAPE_REPRESENTATION`. `children` are the frames the part's
+/// children are placed at.
+fn bind_part(
+    a: &mut Ap242Author,
+    part: &PendingPart,
+    children: impl Iterator<Item = m::Axis2Placement3dId>,
+    ctx: m::ComplexUnitId,
+) -> Result<m::RepresentationOrRepresentationReferenceRef, AuthorError> {
+    // The origin, then where each child is placed, then the shape.
+    let mut items = vec![m::RepresentationItemRef::Axis2Placement3d(part.origin)];
+    items.extend(children.map(m::RepresentationItemRef::Axis2Placement3d));
+    items.extend(part.items.iter().cloned());
+    let has_solid = part.items.iter().any(|i| {
+        matches!(
+            i,
+            m::RepresentationItemRef::ManifoldSolidBrep(_)
+                | m::RepresentationItemRef::BrepWithVoids(_)
+        )
+    });
+    let (rep, rep_or_ref) = if has_solid {
+        let id = a.add_advanced_brep_shape_representation(
+            String::new(),
+            items,
+            m::RepresentationContextRef::Complex(ctx),
+        )?;
+        (
+            m::RepresentationRef::AdvancedBrepShapeRepresentation(id),
+            m::RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(id),
+        )
+    } else {
+        let id = a.add_shape_representation(
+            String::new(),
+            items,
+            m::RepresentationContextRef::Complex(ctx),
+        )?;
+        (
+            m::RepresentationRef::ShapeRepresentation(id),
+            m::RepresentationOrRepresentationReferenceRef::ShapeRepresentation(id),
+        )
+    };
+    a.add_shape_definition_representation(
+        m::RepresentedDefinitionRef::ProductDefinitionShape(part.shape),
+        rep,
+    )?;
+
+    // A part with display meshes gets its own tessellated
+    // representation alongside the shape one (multi-SDR per shape).
+    if !part.meshes.is_empty() {
+        let tsr = a.add_tessellated_shape_representation(
+            String::new(),
+            part.meshes
+                .iter()
+                .map(|&t| m::RepresentationItemRef::TessellatedSolid(t))
+                .collect(),
+            m::RepresentationContextRef::Complex(ctx),
+        )?;
+        a.add_shape_definition_representation(
+            m::RepresentedDefinitionRef::ProductDefinitionShape(part.shape),
+            m::RepresentationRef::TessellatedShapeRepresentation(tsr),
+        )?;
+    }
+    Ok(rep_or_ref)
+}
+
+/// A 3D geometric representation context over the shared length
+/// uncertainty and units (length, plane angle, solid angle).
+fn geometric_context(
+    a: &mut Ap242Author,
+    uncertainty: m::UncertaintyMeasureWithUnitId,
+    [length, angle, solid_angle]: [m::ComplexUnitId; 3],
+) -> Result<m::ComplexUnitId, AuthorError> {
+    let (no_identifier, context_type) = (a.text(""), a.text("3D"));
+    a.add_complex(vec![
+        m::UnitPart::GeometricRepresentationContext {
+            coordinate_space_dimension: 3,
+        },
+        m::UnitPart::GlobalUncertaintyAssignedContext {
+            uncertainty: vec![
+                m::UncertaintyMeasureWithUnitRef::UncertaintyMeasureWithUnit(uncertainty),
+            ],
+        },
+        m::UnitPart::GlobalUnitAssignedContext {
+            units: vec![
+                m::UnitRef::Complex(length),
+                m::UnitRef::Complex(angle),
+                m::UnitRef::Complex(solid_angle),
+            ],
+        },
+        m::UnitPart::RepresentationContext {
+            context_identifier: no_identifier,
+            context_type,
+        },
+    ])
+}
+
 /// Assembly-placement wiring, deferred to `finish`: each occurrence gets its
 /// placement shape (PDS over the NAUO) bound to an item-defined
-/// transformation (item 1 = parent origin/from, item 2 = child placement/to)
-/// through the customary relationship complex (`rep_1` = child, `rep_2` =
-/// parent).
+/// transformation (item 1 = the child's origin, item 2 = where it is placed
+/// in the parent, both items of those parts' representations) through the
+/// customary relationship complex (`rep_1` = child, `rep_2` = parent).
 fn bind_placements(
     a: &mut Ap242Author,
     parts: &[PendingPart],
@@ -1744,7 +1793,7 @@ fn bind_placements(
         let idt = a.add_item_defined_transformation(
             String::new(),
             None,
-            m::RepresentationItemRef::Axis2Placement3d(parts[placement.parent].origin),
+            m::RepresentationItemRef::Axis2Placement3d(parts[placement.child].origin),
             m::RepresentationItemRef::Axis2Placement3d(placement.to),
         )?;
         let no_name = a.text("");

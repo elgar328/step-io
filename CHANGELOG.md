@@ -145,6 +145,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `from` is now always the frame in the component and `to` the frame in the
   assembly. A placement whose order cannot be decided is read component-first
   and reported in `Scene::warnings`.
+- `StepBuilder` writes assembly placements the way the standard requires.
+  Each part placed in an assembly gets a geometric context of its own, the
+  frame a component is placed at is an item of the assembly's
+  representation, and the transformation starts from the component's
+  origin. Placements land where they did before, and a file without
+  placements is written unchanged.
 
 ## [0.2.5] - 2026-10-03
 
