@@ -630,3 +630,30 @@ fn curved_edge_bulge_is_covered_by_the_patch() {
         scene.warnings()
     );
 }
+
+#[test]
+fn bspline_surface_with_a_huge_multiplicity_is_refused() {
+    let src = format!(
+        "{HEADER}{}{FOOTER}",
+        SURFACES.replacen(
+            "(2,2),(2,2),(0.,1.)",
+            "(1000000000000000,2),(2,2),(0.,1.)",
+            1
+        )
+    );
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+
+    let face = find_face(&scene, |s| {
+        matches!(s.kind(), SurfaceKind::BSplineWithKnots(_))
+    });
+    assert!(face.surface().to_nurbs().is_none());
+    assert!(face.to_nurbs().is_none());
+    let warnings = scene.warnings();
+    assert!(
+        warnings
+            .iter()
+            .any(|w| w.contains("inconsistent weight/knot count")),
+        "warnings: {warnings:?}"
+    );
+}

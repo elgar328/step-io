@@ -881,3 +881,154 @@ fn edges_convert_to_bounded_nurbs() {
         scene.warnings()
     );
 }
+
+// One edge over the curve `#9` that `defs` defines, anchored in a solid.
+fn one_edge(defs: &str) -> String {
+    format!(
+        "{HEADER}{defs}\
+#90=CARTESIAN_POINT('',(0.,0.,0.));\n\
+#91=CARTESIAN_POINT('',(1.,0.,0.));\n\
+#92=VERTEX_POINT('',#90);\n\
+#93=VERTEX_POINT('',#91);\n\
+#94=EDGE_CURVE('',#92,#93,#9,.T.);\n\
+#95=ORIENTED_EDGE('',*,*,#94,.T.);\n\
+#96=EDGE_LOOP('',(#95));\n\
+#97=FACE_OUTER_BOUND('',#96,.T.);\n\
+#98=DIRECTION('',(0.,0.,1.));\n\
+#99=DIRECTION('',(1.,0.,0.));\n\
+#100=AXIS2_PLACEMENT_3D('',#90,#98,#99);\n\
+#101=PLANE('',#100);\n\
+#102=ADVANCED_FACE('',(#97),#101,.T.);\n\
+#103=CLOSED_SHELL('',(#102));\n\
+#104=MANIFOLD_SOLID_BREP('',#103);\n{FOOTER}"
+    )
+}
+
+// Neither the edge nor its curve converts, and the scene says why.
+fn refused(defs: &str, why: &str) {
+    let src = one_edge(defs);
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let edge = scene.all_edges().next().expect("the edge");
+    assert!(edge.to_nurbs().is_none());
+    assert!(edge.curve().to_nurbs().is_none());
+    let warnings = scene.warnings();
+    assert!(
+        warnings.iter().any(|w| w.contains(why)),
+        "warnings: {warnings:?}"
+    );
+}
+
+const THREE_POINTS: &str = "\
+#1=CARTESIAN_POINT('',(0.,0.,0.));\n\
+#2=CARTESIAN_POINT('',(1.,1.,0.));\n\
+#3=CARTESIAN_POINT('',(2.,0.,0.));\n";
+
+#[test]
+fn bspline_of_degree_zero_is_refused() {
+    refused(
+        &format!(
+            "{THREE_POINTS}#9=B_SPLINE_CURVE_WITH_KNOTS('',0,(#1,#2,#3),.UNSPECIFIED.,.F.,.F.,(1,1,2),(0.,1.,2.),.UNSPECIFIED.);\n"
+        ),
+        "degree out of range",
+    );
+}
+
+#[test]
+fn bspline_without_control_points_is_refused() {
+    refused(
+        "#9=B_SPLINE_CURVE_WITH_KNOTS('',1,(),.UNSPECIFIED.,.F.,.F.,(1,1),(0.,1.),.UNSPECIFIED.);\n",
+        "too few control points",
+    );
+}
+
+#[test]
+fn bspline_with_a_huge_multiplicity_is_refused() {
+    refused(
+        &format!(
+            "{THREE_POINTS}#9=B_SPLINE_CURVE_WITH_KNOTS('',1,(#1,#2,#3),.UNSPECIFIED.,.F.,.F.,(1000000000000000,1,2),(0.,1.,2.),.UNSPECIFIED.);\n"
+        ),
+        "inconsistent weight/knot count",
+    );
+}
+
+#[test]
+fn bspline_above_degree_25_is_refused() {
+    // Degree 30 with consistent counts: only the degree bound refuses it.
+    let points: Vec<String> = (1..=31)
+        .map(|i| format!("#{}=CARTESIAN_POINT('',({i}.,0.,0.));\n", 200 + i))
+        .collect();
+    let ids: Vec<String> = (1..=31).map(|i| format!("#{}", 200 + i)).collect();
+    refused(
+        &format!(
+            "{}#9=B_SPLINE_CURVE_WITH_KNOTS('',30,({}),.UNSPECIFIED.,.F.,.F.,(31,31),(0.,1.),.UNSPECIFIED.);\n",
+            points.concat(),
+            ids.join(",")
+        ),
+        "degree out of range",
+    );
+}
+
+#[test]
+fn bspline_trimmed_off_its_domain_is_refused() {
+    refused(
+        &format!(
+            "{THREE_POINTS}#8=B_SPLINE_CURVE_WITH_KNOTS('',1,(#1,#2,#3),.UNSPECIFIED.,.F.,.F.,(2,1,2),(0.,1.,2.),.UNSPECIFIED.);\n\
+#9=TRIMMED_CURVE('',#8,(PARAMETER_VALUE(0.5)),(PARAMETER_VALUE(5.)),.T.,.PARAMETER.);\n"
+        ),
+        "no usable trim",
+    );
+}
+
+// A unit circle `#8` trimmed into `#9` by two radian parameters (the file
+// has no angle unit).
+fn trimmed_circle(t1: &str, t2: &str, sense: &str) -> String {
+    format!(
+        "#4=CARTESIAN_POINT('',(0.,0.,0.));\n\
+#5=DIRECTION('',(0.,0.,1.));\n\
+#6=DIRECTION('',(1.,0.,0.));\n\
+#7=AXIS2_PLACEMENT_3D('',#4,#5,#6);\n\
+#8=CIRCLE('',#7,1.0);\n\
+#9=TRIMMED_CURVE('',#8,(PARAMETER_VALUE({t1})),(PARAMETER_VALUE({t2})),{sense},.PARAMETER.);\n"
+    )
+}
+
+fn trimmed_circle_nurbs(t1: &str, t2: &str, sense: &str) -> NurbsCurve {
+    let src = one_edge(&trimmed_circle(t1, t2, sense));
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let curve = scene.all_edges().next().expect("the edge").curve();
+    let arc = curve.to_nurbs().expect("an arc");
+    assert!(
+        scene.warnings().is_empty(),
+        "warnings: {:?}",
+        scene.warnings()
+    );
+    arc
+}
+
+#[test]
+fn conic_trims_beyond_a_turn_wind_within_one() {
+    // 1e17 rad: within one turn of 0, not 1.6e16 turns.
+    let arc = trimmed_circle_nurbs("0.", "1.E17", ".T.");
+    assert!(arc.control_points.len() <= 9);
+    assert!(arc.control_points.iter().flatten().all(|v| v.is_finite()));
+
+    // 3π the way it winds: the half turn π.
+    let arc = trimmed_circle_nurbs("0.", "9.42477796076938", ".T.");
+    assert_eq!(arc.control_points.len(), 5);
+    assert!(approx(&arc.control_points[4], &[-1., 0., 0.]));
+
+    // Just over a full turn (a rounding residue): the whole circle, not a sliver.
+    let arc = trimmed_circle_nurbs("0.", "6.2831853072", ".T.");
+    assert_eq!(arc.control_points.len(), 9);
+    assert!(approx(&arc.control_points[0], &arc.control_points[8]));
+}
+
+#[test]
+fn conic_trims_whose_span_overflows_are_refused() {
+    refused(
+        &trimmed_circle("-1.E308", "1.E308", ".T."),
+        "non-finite conic trim angle",
+    );
+}

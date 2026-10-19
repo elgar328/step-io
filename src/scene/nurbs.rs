@@ -219,15 +219,44 @@ pub(crate) fn ellipse_to_nurbs(cx: Ctx<'_>, e: &m::Ellipse) -> Option<NurbsCurve
     }
 }
 
-/// Expand a `(distinct knots, multiplicities)` pair into a full knot vector.
-fn expand_knots(knots: &[f64], mults: &[i64]) -> Vec<f64> {
-    let mut out = Vec::new();
-    for (k, mult) in knots.iter().zip(mults) {
-        for _ in 0..(*mult).max(0) {
-            out.push(*k);
-        }
+/// The highest B-spline degree converted — OCCT's
+/// `Geom_BSplineCurve::MaxDegree()`. Evaluation cost grows with its square.
+const MAX_DEGREE: usize = 25;
+
+/// Check a B-spline's degree and knot multiplicities against its `n` control
+/// points, then expand `(distinct knots, multiplicities)` into the full knot
+/// vector of `n + degree + 1` knots. The multiplicities are summed before
+/// anything is expanded. `Err` carries the reason for the warning.
+fn expanded_knots(
+    degree: i64,
+    n: usize,
+    knots: &[f64],
+    mults: &[i64],
+) -> Result<(usize, Vec<f64>), &'static str> {
+    let degree = usize::try_from(degree)
+        .ok()
+        .filter(|d| (1..=MAX_DEGREE).contains(d))
+        .ok_or("degree out of range")?;
+    if n < degree + 1 {
+        return Err("too few control points for the degree");
     }
-    out
+    let len = n + degree + 1;
+    let mismatch = "inconsistent weight/knot count";
+    let mut total = 0usize;
+    for mult in mults.iter().take(knots.len()) {
+        total = total
+            .checked_add(usize::try_from(*mult).unwrap_or(0))
+            .filter(|t| *t <= len)
+            .ok_or(mismatch)?;
+    }
+    if total != len {
+        return Err(mismatch);
+    }
+    let mut out = Vec::with_capacity(len);
+    for (k, mult) in knots.iter().zip(mults) {
+        out.extend(std::iter::repeat_n(*k, usize::try_from(*mult).unwrap_or(0)));
+    }
+    Ok((degree, out))
 }
 
 /// Assemble a B-spline curve from its raw pieces — shared by the standalone
@@ -241,18 +270,24 @@ fn nurbs_curve_from(
     mults: &[i64],
     weights: Option<&[f64]>,
 ) -> Option<NurbsCurve> {
-    let degree = usize::try_from(degree).ok()?;
     let control_points: Vec<[f64; 3]> = cp
         .iter()
         .map(|r| point_coords(cx, r))
         .collect::<Option<_>>()?;
     let n = control_points.len();
     let weights = weights.map_or_else(|| vec![1.0; n], <[f64]>::to_vec);
-    let knots = expand_knots(knots, mults);
-    if weights.len() != n || knots.len() != n + degree + 1 {
-        cx.warn("B_SPLINE_CURVE.to_nurbs: inconsistent weight/knot count".to_owned());
-        return None;
-    }
+    let checked = if weights.len() == n {
+        expanded_knots(degree, n, knots, mults)
+    } else {
+        Err("inconsistent weight/knot count")
+    };
+    let (degree, knots) = match checked {
+        Ok(dk) => dk,
+        Err(why) => {
+            cx.warn(format!("B_SPLINE_CURVE.to_nurbs: {why}"));
+            return None;
+        }
+    };
     Some(NurbsCurve {
         degree,
         control_points,
@@ -552,18 +587,42 @@ fn arc_from_trims(
     let master = t.master_representation;
     let theta1 = conic_trim_angle(cx, &t.trim_1, frame, ab, factor, master)?;
     let mut theta2 = conic_trim_angle(cx, &t.trim_2, frame, ab, factor, master)?;
-    if t.sense_agreement {
-        while theta2 <= theta1 {
-            theta2 += TAU;
+    let diff = theta2 - theta1;
+    if !diff.is_finite() {
+        cx.warn("TRIMMED_CURVE.to_nurbs: non-finite conic trim angle".to_owned());
+        return None;
+    }
+    let sense = t.sense_agreement;
+    let ahead = |theta2: f64| {
+        if sense {
+            theta2 > theta1
+        } else {
+            theta2 < theta1
         }
-    } else {
-        while theta2 >= theta1 {
-            theta2 -= TAU;
+    };
+    let mut sweep = None;
+    if diff.abs() <= TAU {
+        for _ in 0..2 {
+            if ahead(theta2) {
+                break;
+            }
+            theta2 += if sense { TAU } else { -TAU };
+        }
+        // Still behind only where a turn is below the angles' precision.
+        if ahead(theta2) {
+            sweep = Some(theta2 - theta1);
         }
     }
+    // More than a turn: wind within one, a remainder within
+    // `Precision::PConfusion` (1e-9) being a full turn — as OCCT does.
+    let sweep = sweep.unwrap_or_else(|| {
+        let sign = if sense { 1.0 } else { -1.0 };
+        let r = (sign * diff).rem_euclid(TAU);
+        sign * if r <= 1e-9 { TAU } else { r }
+    });
     let (center, x, y) = frame;
     let (a, b) = ab;
-    Some(arc_nurbs(center, x, y, a, b, theta1, theta2 - theta1))
+    Some(arc_nurbs(center, x, y, a, b, theta1, sweep))
 }
 
 /// A trimmed line (→ segment), trimmed circle/ellipse (→ arc), or trimmed
@@ -904,6 +963,12 @@ fn bspline_trim_param(
         m::TrimmingPreference::Cartesian => cartesian().or_else(parameter),
         _ => parameter().or_else(cartesian),
     }?;
+    let (a, b) = hc.domain();
+    let (lo, hi) = (a.min(b), a.max(b));
+    let tol = 1e-7 * (hi - lo);
+    if !(lo - tol..=hi + tol).contains(&t) {
+        return None;
+    }
     Some(snap_param(hc, t))
 }
 
@@ -1465,8 +1530,6 @@ fn nurbs_surface_from(
     v: (&[f64], &[i64]),
     weights: Option<&[Vec<f64>]>,
 ) -> Option<NurbsSurface> {
-    let degree_u = usize::try_from(degrees.0).ok()?;
-    let degree_v = usize::try_from(degrees.1).ok()?;
     let control_points: Vec<Vec<[f64; 3]>> = cp
         .iter()
         .map(|row| {
@@ -1482,16 +1545,19 @@ fn nurbs_surface_from(
         return None;
     }
     let weights = weights.map_or_else(|| vec![vec![1.0; n_v]; n_u], <[Vec<f64>]>::to_vec);
-    let knots_u = expand_knots(u.0, u.1);
-    let knots_v = expand_knots(v.0, v.1);
-    if weights.len() != n_u
-        || weights.iter().any(|row| row.len() != n_v)
-        || knots_u.len() != n_u + degree_u + 1
-        || knots_v.len() != n_v + degree_v + 1
-    {
-        cx.warn("B_SPLINE_SURFACE.to_nurbs: inconsistent weight/knot count".to_owned());
-        return None;
-    }
+    let checked = if weights.len() == n_u && weights.iter().all(|row| row.len() == n_v) {
+        expanded_knots(degrees.0, n_u, u.0, u.1)
+            .and_then(|ku| Ok((ku, expanded_knots(degrees.1, n_v, v.0, v.1)?)))
+    } else {
+        Err("inconsistent weight/knot count")
+    };
+    let ((degree_u, knots_u), (degree_v, knots_v)) = match checked {
+        Ok(uv) => uv,
+        Err(why) => {
+            cx.warn(format!("B_SPLINE_SURFACE.to_nurbs: {why}"));
+            return None;
+        }
+    };
     Some(NurbsSurface {
         degree_u,
         degree_v,

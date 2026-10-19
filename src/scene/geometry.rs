@@ -341,7 +341,9 @@ impl<'m> Face<'m> {
     /// cylinder, cone, linear extrusion) is sized to the control points of its
     /// boundary edges' NURBS forms — a guaranteed cover of the boundary — and
     /// is the untrimmed base patch (the edge loops trim it separately).
-    /// `None` if the kind is unsupported or the bounds are degenerate.
+    /// `None` if the kind is unsupported or the bounds are degenerate, or for a
+    /// B-spline whose degree is outside 1–25 or whose knot multiplicities do
+    /// not match its control points.
     pub fn to_nurbs(&self) -> Option<crate::scene::nurbs::NurbsSurface> {
         if let Some(n) = self.surface().to_nurbs() {
             return Some(n);
@@ -468,7 +470,9 @@ impl<'m> Surface<'m> {
     /// form of this surface, if the kind is supported. Only *closed* analytic
     /// surfaces convert as-is — a full sphere or torus. Open surfaces (plane,
     /// cylinder, cone) are unbounded and need a face's bounds, so they return
-    /// `None` here — use [`Face::to_nurbs`] instead, which has the bounds.
+    /// `None` here — use [`Face::to_nurbs`] instead, which has the bounds. A
+    /// B-spline whose degree is outside 1–25 or whose knot multiplicities do
+    /// not match its control points is `None` too.
     pub fn to_nurbs(&self) -> Option<crate::scene::nurbs::NurbsSurface> {
         let cx = self.cx;
         match self.r {
@@ -735,7 +739,9 @@ impl<'m> Edge<'m> {
     /// direction (start → end). Contrast with [`Curve::to_nurbs`], which
     /// converts the *whole* curve — here an unbounded line becomes the finite
     /// segment, a circle the arc between the vertices, and an edge whose
-    /// vertices coincide (a closed edge) the whole closed curve.
+    /// vertices coincide (a closed edge) the whole closed curve. `None` for a
+    /// B-spline whose degree is outside 1–25 or whose knot multiplicities do
+    /// not match its control points.
     pub fn to_nurbs(&self) -> Option<crate::scene::nurbs::NurbsCurve> {
         let cx = self.cx;
         let coords = |v: Option<Vertex<'m>>| Some(v?.point()?.xyz());
@@ -877,7 +883,8 @@ impl<'m> Curve<'m> {
     /// with knots). Returns the *full* analytic curve — trimming applied by an
     /// edge that uses this curve is **not** reflected here. `None` for a curve
     /// that needs bounds it alone lacks — an unbounded line, say; use
-    /// [`Edge::to_nurbs`] there.
+    /// [`Edge::to_nurbs`] there — and for a B-spline whose degree is outside
+    /// 1–25 or whose knot multiplicities do not match its control points.
     pub fn to_nurbs(&self) -> Option<crate::scene::nurbs::NurbsCurve> {
         let cx = self.cx;
         match self.which {

@@ -157,6 +157,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   representation, and the transformation starts from the component's
   origin. Placements land where they did before, and a file without
   placements is written unchanged.
+- `to_nurbs()` no longer panics or runs out of memory on values a file
+  cannot be trusted with. It returns `None`, with a warning in
+  `Scene::warnings`, for a B-spline of degree 0 or above 25, one with fewer
+  control points than its degree needs, one whose knot multiplicities do not
+  add up to its control points, a circle or ellipse trimmed at angles too
+  large to subtract, and a B-spline trimmed outside its parameter range.
+- A circle or ellipse trimmed more than a full turn apart converts to the
+  arc within one turn, as OCCT reads it. It used to wind round as many times
+  as the angles said, and a trim like `1.E17` never finished.
 
 ## [0.2.5] - 2026-10-03
 
