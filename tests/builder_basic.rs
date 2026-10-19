@@ -2,6 +2,8 @@
 //! skeleton (contexts, SI units, product chains, shape anchors) and its
 //! output navigates cleanly through the read-side `Scene`.
 
+mod common;
+
 use step_io::{StepBuilder, read};
 
 #[test]
@@ -9,7 +11,7 @@ fn builder_skeleton_round_trips_and_reads_back() {
     let mut b = StepBuilder::new().expect("builder");
     b.part("wheel").expect("wheel");
     b.part("axle").expect("axle");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -39,7 +41,7 @@ fn builder_skeleton_round_trips_and_reads_back() {
 #[test]
 fn builder_with_no_parts_still_emits_a_valid_file() {
     let b = StepBuilder::new().expect("builder");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -62,7 +64,7 @@ fn metre_units_and_custom_uncertainty_round_trip() {
     })
     .expect("builder");
     b.part("hull").expect("part");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);

@@ -1,6 +1,8 @@
 //! Layer and visibility authoring: `layer()` / `hide()` / `hide_layer()`
 //! read back through the Scene's `layer()` and `is_visible()`.
 
+mod common;
+
 use step_io::build::Rgb;
 use step_io::build::{CurveInput, FaceBoundInput, Frame, StyleTarget, SurfaceInput};
 use step_io::{Orientation, StepBuilder, read};
@@ -61,7 +63,7 @@ fn layers_round_trip() {
     b.layer("BODY", vec![StyleTarget::Solid(solid)])
         .expect("solid layer");
 
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
@@ -87,7 +89,7 @@ fn hide_solid_keeps_color_and_face_visibility() {
         .expect("style");
     b.hide(StyleTarget::Solid(solid)).expect("hide");
 
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
     assert_eq!(model.invisibility_arena.items.len(), 1);
@@ -117,7 +119,7 @@ fn hide_layer_hides_its_members() {
         .expect("layer");
     b.hide_layer(l1);
 
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 

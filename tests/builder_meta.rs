@@ -3,6 +3,8 @@
 //! security classifications — read back through the Scene's metadata
 //! accessors, which are the consumer contract this mirrors.
 
+mod common;
+
 use step_io::build::{ApprovalInput, DateTimeInput, DocumentInput, PartOptions, PersonOrg};
 use step_io::{StepBuilder, read};
 
@@ -62,7 +64,7 @@ fn full_metadata_round_trips_and_reads_back() {
     b.security(wheel, "SC-1", "export control", "confidential")
         .expect("security");
 
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
@@ -143,7 +145,7 @@ fn shared_person_across_parts_and_roles() {
     b.contributor(a_part, "creator", alice).expect("c1");
     b.contributor(b_part, "design_owner", alice).expect("c2");
 
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 

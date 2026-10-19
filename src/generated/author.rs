@@ -61,7 +61,8 @@ impl std::error::Error for AuthorError {}
 
 /// Strict AP242 authoring handle. Owns the model privately: entities enter
 /// only through the generated constructors, so everything inside is AP242 by
-/// construction. [`Ap242Author::finish`] emits the Part 21 text.
+/// construction. [`Ap242Author::finish`] returns the model, for
+/// [`write`](crate::write) to send out as Part 21 text.
 #[derive(Default)]
 pub struct Ap242Author {
     model: StepModel,
@@ -80,16 +81,19 @@ impl Ap242Author {
         self.dedup.intern(&mut self.model.texts, s)
     }
 
-    /// Emit the model as AP242 (edition 2 IS) Part 21 text. The header's
-    /// `FILE_SCHEMA` is stamped AP242 — the authoring layer's schema.
-    pub fn finish(mut self) -> String {
+    /// The authored model, its header's `FILE_SCHEMA` stamped AP242 (edition
+    /// 2 IS) — the authoring layer's schema. Write it out with
+    /// [`write`](crate::write).
+    #[must_use]
+    pub fn finish(mut self) -> StepModel {
         self.model.header.schema = super::schema::ap242e2_schema_id();
-        crate::emit::write(&self.model)
+        self.model
     }
 
     /// [`Ap242Author::finish`] with explicit Part 21 HEADER fields. The
     /// header's `schema` is overwritten with AP242 regardless of input.
-    pub fn finish_with_header(mut self, header: &crate::header::FileHeader) -> String {
+    #[must_use]
+    pub fn finish_with_header(mut self, header: &crate::header::FileHeader) -> StepModel {
         self.model.header = header.clone();
         self.finish()
     }

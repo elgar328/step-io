@@ -1,6 +1,8 @@
 //! Surface colour and transparency authoring through `StepBuilder::style`,
 //! read back through the Scene's presentation accessors on solids and faces.
 
+mod common;
+
 use step_io::build::Rgb;
 use step_io::build::{
     CurveInput, FaceBoundInput, Frame, StyleTarget, SurfaceInput, VoidShellNormals,
@@ -56,7 +58,7 @@ fn solid_color_round_trips() {
         blue: 0.1,
     };
     b.style(StyleTarget::Solid(body), red, None).expect("style");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -89,7 +91,7 @@ fn face_color_and_transparency_round_trip() {
     };
     b.style(StyleTarget::Face(face), grey, Some(0.3))
         .expect("style");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -156,7 +158,7 @@ fn void_solid_color_round_trips() {
     };
     b.style(StyleTarget::VoidSolid(body), red, Some(0.25))
         .expect("style");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -181,7 +183,7 @@ fn void_solid_layer_and_hide_round_trip() {
     b.layer("BODY", vec![StyleTarget::VoidSolid(body)])
         .expect("layer");
     b.hide(StyleTarget::VoidSolid(body)).expect("hide");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);

@@ -2,6 +2,8 @@
 //! cylinder (circles + cylindrical surface, shared/reused edges), read back
 //! through the Scene.
 
+mod common;
+
 use step_io::build::{CurveInput, FaceBoundInput, Frame, SurfaceInput, VoidShellNormals};
 use step_io::generated::model::AdvancedFaceId;
 use step_io::scene::geometry::{CurveKind, SurfaceKind};
@@ -202,7 +204,7 @@ fn cube_round_trips_and_reads_back() {
     }
     b.solid(part, "cube body", faces).expect("solid");
 
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
@@ -291,7 +293,7 @@ fn cylinder_round_trips_and_reads_back() {
     b.solid(part, "pin body", vec![lateral, bottom_cap, top_cap])
         .expect("solid");
 
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
@@ -382,7 +384,7 @@ fn orientations_read_back_as_authored() {
         .expect("face");
     b.solid(part, "plate", vec![face]).expect("solid");
 
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
@@ -471,7 +473,7 @@ fn void_solid_round_trips_and_reads_back() {
     )
     .expect("void solid");
 
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
     assert!(
         text.contains("BREP_WITH_VOIDS"),
         "output should carry a BREP_WITH_VOIDS"
@@ -545,7 +547,7 @@ fn void_shell_away_from_material_emits_t() {
     )
     .expect("void solid");
 
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
     // As-authored: the oriented shell is `.T.`, and no void shell is reversed.
     assert!(
         text.lines()
@@ -588,7 +590,7 @@ fn manifold_and_void_solids_coexist_in_all_solids() {
     )
     .expect("void solid");
 
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 

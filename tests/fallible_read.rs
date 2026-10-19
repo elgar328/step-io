@@ -4,7 +4,9 @@
 //! (off-kind scalar, short arity, non-list vec, dangling/wrong-type ref) — they
 //! are adversarial byte inputs, not valid-CAD fixtures.
 
-use step_io::{DropKind, ParseWarning, Report, read, write};
+mod common;
+
+use step_io::{DropKind, ParseWarning, Report, read};
 
 const HEADER: &str = "ISO-10303-21;\nHEADER;\n\
 FILE_DESCRIPTION(('probe'),'2;1');\n\
@@ -166,7 +168,7 @@ fn id_layout_does_not_change_the_read() {
             })
             .collect();
         drops.sort();
-        seen.push((r.n_in, r.validated, drops, write(&model)));
+        seen.push((r.n_in, r.validated, drops, common::text(&model)));
     }
     let (n_in, validated, drops, _) = &seen[0];
     assert_eq!((*n_in, *validated), (8, 5), "drops: {drops:?}");
@@ -199,7 +201,7 @@ fn file_order_does_not_change_the_read() {
         let src = format!("{HEADER}{}\n{FOOTER}", lines.join("\n"));
         let (model, mut r) = read(src.as_bytes()).expect("source parses");
         r.norm.sort_unstable();
-        (write(&model), format!("{r:?}"))
+        (common::text(&model), format!("{r:?}"))
     };
     let mut reversed = lines;
     reversed.reverse();
@@ -220,7 +222,7 @@ fn synthetic_colour_is_kept_and_numbered_by_its_creator() {
     let read_lines = |lines: &[&str]| {
         let src = format!("{HEADER}{}\n{FOOTER}", lines.join("\n"));
         let (model, r) = read(src.as_bytes()).expect("source parses");
-        (write(&model), r)
+        (common::text(&model), r)
     };
     let (text, r) = read_lines(&renderings);
     assert_eq!((r.n_in, r.n_synth), (2, 2));
@@ -269,10 +271,10 @@ fn complex_entity_references_resolve_in_place() {
     let r = read_body(body);
     assert!(r.dropped.is_empty(), "{:?}", r.dropped);
     let (model, _) = read(format!("{HEADER}{body}{FOOTER}").as_bytes()).expect("source parses");
-    let text = write(&model);
+    let text = common::text(&model);
     let (again, r2) = read(text.as_bytes()).expect("written file parses");
     assert!(r2.dropped.is_empty(), "{:?}", r2.dropped);
-    assert_eq!(write(&again), text);
+    assert_eq!(common::text(&again), text);
     assert!(text.contains("GLOBAL_UNIT_ASSIGNED_CONTEXT((#"), "{text}");
 }
 

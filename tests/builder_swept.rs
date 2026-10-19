@@ -1,6 +1,8 @@
 //! Ellipse edges and swept surfaces (linear extrusion / revolution) — the
 //! last analytic forms the read side exposes that the builder can author.
 
+mod common;
+
 use step_io::build::{CurveInput, FaceBoundInput, Frame, ProfileInput, SurfaceInput};
 use step_io::generated::model as m;
 use step_io::scene::geometry::{CurveKind, SurfaceKind};
@@ -36,7 +38,7 @@ fn ellipse_edge_round_trips() {
         .expect("face");
     b.solid(part, "plate", vec![face]).expect("solid");
 
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
@@ -85,7 +87,7 @@ fn linear_extrusion_surface_round_trips() {
         5.0,
     );
 
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
@@ -116,7 +118,7 @@ fn revolution_surface_round_trips() {
         5.0,
     );
 
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
@@ -160,7 +162,7 @@ fn polyline_edge_round_trips() {
         .expect("face");
     b.solid(part, "bracket", vec![face]).expect("solid");
 
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 

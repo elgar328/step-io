@@ -89,6 +89,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   process peaks at about 130 MB of memory instead of 760 MB (with the
   smaller model described below). It reads the same entities and values as
   before.
+- `write()` takes the output — a `File`, a `&mut Vec<u8>`, … — and writes
+  the text to it 64 KB at a time instead of returning it as a `String`, so
+  the text is never held in memory: writing a 90 MB file of one million
+  entities takes about 30 MB on top of the model instead of 310 MB, in the
+  same time. The output is flushed at the end, so a `File` needs no
+  `BufWriter`, and a failing output is returned as an `std::io::Error`.
+- `StepBuilder::finish()`, `Ap242Author::finish()` and
+  `Ap242Author::finish_with_header()` return the finished `StepModel`
+  instead of its text. Write it with
+  `step_io::write(&b.finish()?, File::create(path)?)?`, or into a
+  `Vec<u8>` to get the text.
 - Each entity, with the blanks and comments before it, reads as UTF-8 when
   its bytes are valid UTF-8 and as ISO 8859-1 otherwise; the whole file used
   to read one way or the other. A UTF-8 file with one broken character now

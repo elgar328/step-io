@@ -107,7 +107,9 @@
 //! analytic surfaces or NURBS), assembly instances with placements, display
 //! meshes, presentation (colour / transparency / layer / visibility), PLM
 //! metadata (contributors, approvals, documents, security), units, and the
-//! Part 21 header — see the [`build`] module docs.
+//! Part 21 header — see the [`build`] module docs. [`StepBuilder::finish`]
+//! returns the finished model, and [`write()`] sends it as Part 21 text to a
+//! file or any other `std::io::Write`.
 //!
 //! ```no_run
 //! # use step_io::Orientation;
@@ -148,7 +150,7 @@
 //!
 //! // Assemblies, display meshes, colours, layers, and PLM metadata are one
 //! // call each.
-//! std::fs::write("wheel.step", b.finish().unwrap()).unwrap();
+//! step_io::write(&b.finish().unwrap(), std::fs::File::create("wheel.step").unwrap()).unwrap();
 //! ```
 
 #[cfg(test)]

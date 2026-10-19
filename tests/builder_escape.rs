@@ -4,6 +4,8 @@
 //! authored low-level onto a builder-produced face, and comes back through
 //! the read side's `layer()`.
 
+mod common;
+
 use step_io::build::{CurveInput, FaceBoundInput, Frame, SurfaceInput};
 use step_io::generated::model as m;
 use step_io::{Orientation, StepBuilder, read};
@@ -46,7 +48,7 @@ fn low_level_layer_on_builder_face_round_trips() {
         )
         .expect("layer assignment");
 
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 

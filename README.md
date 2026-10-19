@@ -63,7 +63,7 @@ let fs: Vec<_> = kernel.faces.iter()
     .collect();
 b.solid(part, "wheel body", fs).unwrap();
 
-std::fs::write("wheel.step", b.finish().unwrap()).unwrap();
+step_io::write(&b.finish().unwrap(), std::fs::File::create("wheel.step").unwrap()).unwrap();
 ```
 
 ## Example app

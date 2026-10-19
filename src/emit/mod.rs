@@ -1,12 +1,14 @@
 //! [`write()`] — the Part 21 envelope, the last step of writing.
 //!
-//! [`write()`] serializes a [`StepModel`] to Part 21 text. The `DATA`
-//! section comes from the generated writer; the `HEADER` section,
-//! `FILE_SCHEMA` included, comes from the model's own [`FileHeader`]
-//! ([`StepModel::header`]). Conformance is the authoring layer's job:
-//! [`crate::Ap242Author`] admits only AP242 entities and stamps the AP242
-//! schema identity on the header, so an authored model writes out as a
-//! valid AP242 file.
+//! [`write()`] serializes a [`StepModel`] to Part 21 text on an
+//! [`io::Write`]. The `DATA` section comes from the generated writer; the
+//! `HEADER` section, `FILE_SCHEMA` included, comes from the model's own
+//! [`FileHeader`] ([`StepModel::header`]). Conformance is the authoring
+//! layer's job: [`crate::Ap242Author`] admits only AP242 entities and stamps
+//! the AP242 schema identity on the header, so an authored model writes out
+//! as a valid AP242 file.
+
+use std::io;
 
 use crate::generated::model::StepModel;
 use crate::generated::write::Writer;
@@ -33,7 +35,7 @@ static UNIVERSAL_APD: ApdInfo = ApdInfo {
     description: "step-io universal union (non-standard, all-AP superset)",
 };
 
-/// Serialize the model to Part 21 text — the model's own header
+/// Write the model as Part 21 text to `out` — the model's own header
 /// ([`StepModel::header`], `FILE_SCHEMA` included) plus every entity,
 /// verbatim.
 ///
@@ -42,9 +44,25 @@ static UNIVERSAL_APD: ApdInfo = ApdInfo {
 /// output is a conforming AP242 file. A model that came from
 /// [`read`](crate::read) re-serializes faithfully under its *source* schema
 /// — step-io does not convert between APs.
-#[must_use]
-pub fn write(model: &StepModel) -> String {
-    wrap_envelope(&Writer::new(model).emit_all(), &model.header)
+///
+/// The text goes to `out` as it is written, in chunks of 64 KiB, and `out`
+/// is flushed at the end, so a [`File`](std::fs::File) needs no
+/// `BufWriter`. To get the text instead, pass a `&mut Vec<u8>`; the output
+/// is ASCII, so it is always UTF-8.
+///
+/// ```no_run
+/// # let model = step_io::StepBuilder::new()?.finish()?;
+/// step_io::write(&model, std::fs::File::create("part.step")?)?;
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// # Errors
+/// The first error writing to `out`. `out` then holds the file cut short.
+pub fn write(model: &StepModel, mut out: impl io::Write) -> io::Result<()> {
+    out.write_all(header_text(&model.header).as_bytes())?;
+    Writer::new(model).emit_all(&mut out)?;
+    out.write_all(b"ENDSEC;\nEND-ISO-10303-21;\n")?;
+    out.flush()
 }
 
 /// Dump the model as step-io's **Universal** union — every entity, verbatim,
@@ -52,13 +70,15 @@ pub fn write(model: &StepModel) -> String {
 /// APD/`application_context` are set to it, keeping the dump internally
 /// consistent). Not a STEP output — the round-trip oracle for the external
 /// verification harness; the write path is [`write()`].
+///
+/// # Errors
+/// The first error writing to `out`, as for [`write()`].
 #[doc(hidden)]
-#[must_use]
-pub fn dump_universal(model: &mut StepModel) -> String {
+pub fn dump_universal(model: &mut StepModel, out: impl io::Write) -> io::Result<()> {
     stamp_apd(model, &UNIVERSAL_APD);
     model.header.schema =
         crate::parser::schema::identify_schema(&[UNIVERSAL_FILE_SCHEMA.to_string()]);
-    write(model)
+    write(model, out)
 }
 
 /// Absolutely set the model's APD entities (status/name/year) and
@@ -97,10 +117,10 @@ fn header_list(items: &[String]) -> String {
     format!("({inner})")
 }
 
-/// Wrap a DATA body in the Part 21 envelope built from `header` —
-/// `FILE_SCHEMA` from [`FileHeader::schema`]'s raw strings (an absent raw
+/// The Part 21 text up to the DATA section's entities, built from `header`
+/// — `FILE_SCHEMA` from [`FileHeader::schema`]'s raw strings (an absent raw
 /// renders as the customary empty `('')`).
-fn wrap_envelope(data_body: &str, header: &FileHeader) -> String {
+fn header_text(header: &FileHeader) -> String {
     let schema = header.schema.raw().map_or_else(
         || "''".to_owned(),
         |r| {
@@ -113,7 +133,7 @@ fn wrap_envelope(data_body: &str, header: &FileHeader) -> String {
     format!(
         "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(({desc}),'2;1');\n\
          FILE_NAME({name},{stamp},{authors},{orgs},{pre},{orig},{auth});\n\
-         FILE_SCHEMA(({schema}));\nENDSEC;\nDATA;\n{data_body}ENDSEC;\nEND-ISO-10303-21;\n",
+         FILE_SCHEMA(({schema}));\nENDSEC;\nDATA;\n",
         desc = header_str(&header.description),
         name = header_str(&header.file_name),
         stamp = header_str(&header.time_stamp),

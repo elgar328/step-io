@@ -1,6 +1,8 @@
 //! Straight edges through `StepBuilder`: what the written `LINE` carries — the
 //! direction and the `VECTOR` magnitude — read back from the file.
 
+mod common;
+
 use step_io::build::CurveInput;
 use step_io::generated::model::{CurveRef, DirectionRef, StepModel, VectorRef};
 use step_io::{StepBuilder, read};
@@ -11,7 +13,7 @@ fn one_edge(from: [f64; 3], to: [f64; 3], curve: CurveInput) -> StepModel {
     let v0 = b.vertex(from).expect("vertex");
     let v1 = b.vertex(to).expect("vertex");
     b.edge(v0, v1, curve).expect("edge");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
     model

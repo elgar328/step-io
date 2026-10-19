@@ -4,8 +4,9 @@
 //! [`new`](StepBuilder::new) lays down the skeleton every exporter needs
 //! (application protocol, product contexts, units —
 //! [`new_with`](StepBuilder::new_with) to choose them);
-//! [`finish`](StepBuilder::finish) assembles everything added so far and
-//! returns the Part 21 text.
+//! [`finish`](StepBuilder::finish) assembles everything added so far into
+//! the finished model, which [`write`](crate::write) sends out as Part 21
+//! text.
 //!
 //! The core is parts and their shape. [`part`](StepBuilder::part) adds one
 //! product with its full definition chain
@@ -64,7 +65,7 @@
 //!     .collect();
 //! b.solid(plate, "plate body", fs).unwrap();
 //!
-//! std::fs::write("plate.step", b.finish().unwrap()).unwrap();
+//! step_io::write(&b.finish().unwrap(), std::fs::File::create("plate.step").unwrap()).unwrap();
 //! ```
 //!
 //! A kernel that already holds an edge's exact direction passes it as
@@ -128,8 +129,8 @@
 //!     date: None,
 //! }).unwrap();
 //!
-//! let text = b.finish().unwrap();
-//! # let _ = text;
+//! let model = b.finish().unwrap();
+//! # let _ = model;
 //! ```
 
 // Shared with the read side (`scene`): the NURBS forms `to_nurbs()` returns are
@@ -510,7 +511,7 @@ struct PendingPlacement {
 
 /// Ergonomic writer for the standard AP242 file shape: shared contexts and
 /// units up front, one product chain per [`part`](Self::part), everything
-/// bound and emitted by [`finish`](Self::finish).
+/// wired up by [`finish`](Self::finish).
 pub struct StepBuilder {
     author: Ap242Author,
     ctx: m::ComplexUnitId,
@@ -1608,12 +1609,13 @@ impl StepBuilder {
 
     /// Materialize each part's shape representation (its origin placement
     /// plus the collected items) with its shape-definition link, add the
-    /// customary product category, and emit the Part 21 text.
+    /// customary product category, and return the finished model — AP242,
+    /// ready for [`write`](crate::write).
     ///
     /// # Errors
     /// Propagates [`AuthorError`] from the strict constructors; the wiring
     /// here is fixed, so an error indicates a bug in the builder itself.
-    pub fn finish(mut self) -> Result<String, AuthorError> {
+    pub fn finish(mut self) -> Result<m::StepModel, AuthorError> {
         let a = &mut self.author;
         // Pass 1: one shape representation per part (a part carrying a solid
         // is emitted as the customary ADVANCED_BREP_SHAPE_REPRESENTATION),

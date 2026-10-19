@@ -2,6 +2,8 @@
 //! land verbatim (with escaping), the timestamp and preprocessor stamp are
 //! automatic by default, and header parsing stays harmless on re-read.
 
+mod common;
+
 use step_io::build::HeaderInput;
 use step_io::{StepBuilder, read};
 
@@ -18,7 +20,7 @@ fn explicit_header_lands_verbatim() {
         ..Default::default()
     });
     b.part("wheel").expect("part");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
 
     let expected_file_name = format!(
         "FILE_NAME('wheel.step','2026-01-01T00:00:00Z',('John'),('ACME'),'step-io {}','KernelX 2.1','');",
@@ -37,7 +39,7 @@ fn explicit_header_lands_verbatim() {
 #[test]
 fn default_header_stamps_time_and_preprocessor() {
     let b = StepBuilder::new().expect("builder");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
 
     // FILE_NAME('','<timestamp>',...) — second field auto-stamped.
     let line = text
@@ -61,7 +63,7 @@ fn header_strings_are_escaped() {
         timestamp: Some(String::new()),
         ..Default::default()
     });
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
     assert!(text.contains("('O''Brien')"), "escaped author: {text}");
 
     // Explicit empty timestamp stays blank (reproducible-output escape hatch).
@@ -88,7 +90,7 @@ fn non_ascii_and_backslashes_round_trip_through_plain_ascii() {
         ..Default::default()
     });
     b.part(part_name).expect("part");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
     assert!(text.is_ascii(), "non-ASCII output:\n{text}");
     assert!(
         text.contains(r"'\X2\BD80D488\X0\ \X2\2460\X0\.step'"),

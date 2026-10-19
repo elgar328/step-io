@@ -1,6 +1,8 @@
 //! Assembly authoring through `StepBuilder::place`: shared definitions with
 //! per-instance placements, read back through the Scene's occurrence chain.
 
+mod common;
+
 use step_io::build::Frame;
 use step_io::{StepBuilder, read};
 
@@ -27,7 +29,7 @@ fn assembly_round_trips_and_reads_back() {
     let asm = b.part("assembly").expect("assembly");
     let wheel = b.part("wheel").expect("wheel");
     b.place(asm, wheel, at([10.0, 20.0, 30.0])).expect("place");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -77,7 +79,7 @@ fn shared_definition_places_multiple_instances() {
     let wheel = b.part("wheel").expect("wheel");
     b.place(asm, wheel, at([0.0, 700.0, 0.0])).expect("left");
     b.place(asm, wheel, at([0.0, -700.0, 0.0])).expect("right");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);

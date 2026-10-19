@@ -2,6 +2,8 @@
 //! entities, references are validated on insertion, and `finish()` emits
 //! Part 21 text that reads back with zero drops.
 
+mod common;
+
 use step_io::generated::model as m;
 use step_io::{Ap242Author, AuthorError, read};
 
@@ -45,7 +47,7 @@ fn authored_model_round_trips_with_zero_drops() {
     )
     .expect("shape representation");
 
-    let text = a.finish();
+    let text = common::text(&a.finish());
     assert!(text.contains("AP242"), "AP242 header stamped");
 
     // The authored file reads back whole: nothing dropped, entities present.
@@ -199,7 +201,7 @@ fn complex_instances_round_trip_with_zero_drops() {
     )
     .expect("shape representation");
 
-    let text = a.finish();
+    let text = common::text(&a.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
     assert_eq!(model.complex_unit_arena.items.len(), 3);
@@ -378,7 +380,7 @@ fn self_referencing_entity_round_trips_with_zero_drops() {
         .expect("self-referencing DSWDF");
     assert_eq!(dswdf.0, 0);
 
-    let text = a.finish();
+    let text = common::text(&a.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
     let items = &model.dimensional_size_with_datum_feature_arena.items;

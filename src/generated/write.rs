@@ -55,9 +55,13 @@ fn step_str(s: &str) -> String {
     crate::parser::string::encode(s)
 }
 
+/// Text gathered in `Writer::out` before it goes to the output.
+const CHUNK: usize = 64 * 1024;
+
 pub struct Writer<'a> {
     model: &'a StepModel,
     next: u64,
+    /// Rendered text not yet sent to the output.
     out: String,
     action_ids: Vec<Option<u64>>,
     action_assignment_ids: Vec<Option<u64>>,
@@ -38651,12 +38655,17 @@ impl<'a> Writer<'a> {
         roots
     }
 
-    pub fn emit_all(self) -> String {
+    /// Write every entity's DATA line to `w`, a chunk at a time.
+    pub fn emit_all(self, w: &mut dyn std::io::Write) -> std::io::Result<()> {
         let roots = self.all_ids();
-        self.dfs_render(roots)
+        self.dfs_render(roots, w)
     }
 
-    fn dfs_render(mut self, roots: Vec<EntityKey>) -> String {
+    fn dfs_render(
+        mut self,
+        roots: Vec<EntityKey>,
+        w: &mut dyn std::io::Write,
+    ) -> std::io::Result<()> {
         let mut order: Vec<EntityKey> = Vec::new();
         let mut stack: Vec<(EntityKey, bool)> = Vec::new();
         let mut on_path: std::collections::HashSet<EntityKey> = std::collections::HashSet::new();
@@ -38703,7 +38712,11 @@ impl<'a> Writer<'a> {
         for any in &order {
             let line = self.render_one(*any);
             self.out.push_str(&line);
+            if self.out.len() >= CHUNK {
+                w.write_all(self.out.as_bytes())?;
+                self.out.clear();
+            }
         }
-        self.out
+        w.write_all(self.out.as_bytes())
     }
 }

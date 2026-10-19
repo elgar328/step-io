@@ -1328,12 +1328,15 @@ fn step_str(s: &str) -> String {
     crate::parser::string::encode(s)
 }
 
+/// Text gathered in `Writer::out` before it goes to the output.
+const CHUNK: usize = 64 * 1024;
+
 "#,
     );
 
     // Writer struct.
     s.push_str(
-        "pub struct Writer<'a> {\n    model: &'a StepModel,\n    next: u64,\n    out: String,\n",
+        "pub struct Writer<'a> {\n    model: &'a StepModel,\n    next: u64,\n    /// Rendered text not yet sent to the output.\n    out: String,\n",
     );
     for se in &ir.simples {
         writeln!(s, "    {}: Vec<Option<u64>>,", ids_field(&se.rust)).unwrap();
@@ -1953,12 +1956,13 @@ fn emit_writer_primitives(s: &mut String, ir: &ModelIr) {
 /// (emit_writer_primitives).
 fn emit_all_iter(s: &mut String, _ir: &ModelIr) {
     s.push_str(
-        r#"    pub fn emit_all(self) -> String {
+        r#"    /// Write every entity's DATA line to `w`, a chunk at a time.
+    pub fn emit_all(self, w: &mut dyn std::io::Write) -> std::io::Result<()> {
         let roots = self.all_ids();
-        self.dfs_render(roots)
+        self.dfs_render(roots, w)
     }
 
-    fn dfs_render(mut self, roots: Vec<EntityKey>) -> String {
+    fn dfs_render(mut self, roots: Vec<EntityKey>, w: &mut dyn std::io::Write) -> std::io::Result<()> {
         let mut order: Vec<EntityKey> = Vec::new();
         let mut stack: Vec<(EntityKey, bool)> = Vec::new();
         let mut on_path: std::collections::HashSet<EntityKey> = std::collections::HashSet::new();
@@ -1997,8 +2001,12 @@ fn emit_all_iter(s: &mut String, _ir: &ModelIr) {
         for any in &order {
             let line = self.render_one(*any);
             self.out.push_str(&line);
+            if self.out.len() >= CHUNK {
+                w.write_all(self.out.as_bytes())?;
+                self.out.clear();
+            }
         }
-        self.out
+        w.write_all(self.out.as_bytes())
     }
 }
 
@@ -2599,7 +2607,8 @@ impl std::error::Error for AuthorError {}
 
 /// Strict AP242 authoring handle. Owns the model privately: entities enter
 /// only through the generated constructors, so everything inside is AP242 by
-/// construction. [`Ap242Author::finish`] emits the Part 21 text.
+/// construction. [`Ap242Author::finish`] returns the model, for
+/// [`write`](crate::write) to send out as Part 21 text.
 #[derive(Default)]
 pub struct Ap242Author {
     model: StepModel,
@@ -2618,16 +2627,19 @@ impl Ap242Author {
         self.dedup.intern(&mut self.model.texts, s)
     }
 
-    /// Emit the model as AP242 (edition 2 IS) Part 21 text. The header's
-    /// `FILE_SCHEMA` is stamped AP242 — the authoring layer's schema.
-    pub fn finish(mut self) -> String {
+    /// The authored model, its header's `FILE_SCHEMA` stamped AP242 (edition
+    /// 2 IS) — the authoring layer's schema. Write it out with
+    /// [`write`](crate::write).
+    #[must_use]
+    pub fn finish(mut self) -> StepModel {
         self.model.header.schema = super::schema::ap242e2_schema_id();
-        crate::emit::write(&self.model)
+        self.model
     }
 
     /// [`Ap242Author::finish`] with explicit Part 21 HEADER fields. The
     /// header's `schema` is overwritten with AP242 regardless of input.
-    pub fn finish_with_header(mut self, header: &crate::header::FileHeader) -> String {
+    #[must_use]
+    pub fn finish_with_header(mut self, header: &crate::header::FileHeader) -> StepModel {
         self.model.header = header.clone();
         self.finish()
     }

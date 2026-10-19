@@ -3,7 +3,7 @@
 //! `STEPIO_UNIVERSAL` marker (header ↔ APD internally consistent), and that the
 //! codegen `dfs_render` body emission stays stable.
 
-use step_io::{dump_universal, read};
+use step_io::read;
 
 const DOC: &str = "ISO-10303-21;\nHEADER;\n\
 FILE_DESCRIPTION((''),'2;1');\n\
@@ -22,9 +22,16 @@ const GOLDEN: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFIL
 #[test]
 fn universal_dump_golden() {
     let (mut model, _report) = read(DOC.as_bytes()).expect("read ok");
-    let out = dump_universal(&mut model);
+    let out = universal(&mut model);
     assert_eq!(
         out, GOLDEN,
         "Universal dump output changed (codegen refactor regression?)"
     );
+}
+
+/// The model as step-io's universal dump, through [`step_io::dump_universal`].
+fn universal(model: &mut step_io::StepModel) -> String {
+    let mut out = Vec::new();
+    step_io::dump_universal(model, &mut out).expect("writing to a Vec does not fail");
+    String::from_utf8(out).expect("Part 21 output is ASCII")
 }

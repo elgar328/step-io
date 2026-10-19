@@ -3,6 +3,8 @@
 //! Mesh/MeshGroup (including the 1-based strip winding encoding), with the
 //! group linked back to the b-rep solid it tessellates.
 
+mod common;
+
 use step_io::build::{
     CurveInput, FaceBoundInput, Frame, MeshInput, MeshNormalsInput, SurfaceInput, VoidShellNormals,
 };
@@ -60,7 +62,7 @@ fn mesh_round_trips_with_solid_back_link() {
     let input = quad_mesh();
     b.mesh(part, "plate mesh", &input, Some(body.into()))
         .expect("mesh");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -131,7 +133,7 @@ fn mesh_links_back_to_void_solid() {
 
     b.mesh(part, "hollow mesh", &quad_mesh(), Some(body.into()))
         .expect("mesh");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -158,7 +160,7 @@ fn standalone_mesh_with_uniform_normals() {
         None,
     )
     .expect("mesh");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);

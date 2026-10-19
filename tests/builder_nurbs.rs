@@ -3,6 +3,8 @@
 //! read side's `to_nurbs()`. Non-rational data lands as plain
 //! `B_SPLINE_*_WITH_KNOTS`; rational data as the multi-part complex.
 
+mod common;
+
 use step_io::build::{CurveInput, FaceBoundInput, Frame, SurfaceInput};
 use step_io::build::{NurbsCurve, NurbsSurface};
 use step_io::scene::geometry::{CurveKind, SurfaceKind};
@@ -130,7 +132,7 @@ fn nurbs_cube(top_patch: NurbsSurface, nurbs_edge: &NurbsCurve) -> String {
         .expect("nurbs face"),
     );
     b.solid(part, "cube body", faces).expect("solid");
-    b.finish().expect("finish")
+    common::text(&b.finish().expect("finish"))
 }
 
 fn nurbs_line() -> NurbsCurve {
@@ -236,7 +238,7 @@ fn rational_nurbs_curve_round_trips_via_complex() {
         )
         .expect("pie face");
     b.solid(part, "pie", vec![face]).expect("solid");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -283,7 +285,7 @@ fn analytic_surface_kinds_round_trip() {
         );
     }
     b.solid(part, "shapes", faces).expect("solid");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish().expect("finish"));
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
