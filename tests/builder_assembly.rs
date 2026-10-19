@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use step_io::build::Frame;
 use step_io::parser::{Attribute, RawEntity, parse};
-use step_io::{StepBuilder, read};
+use step_io::{AuthorError, StepBuilder, read};
 
 fn assert_close3(actual: [f64; 3], expected: [f64; 3]) {
     for (a, e) in actual.iter().zip(expected) {
@@ -181,4 +181,34 @@ fn placements_relate_representations_in_their_own_contexts() {
         placements += 1;
     }
     assert_eq!(placements, 4);
+}
+
+#[test]
+fn placements_that_would_make_an_assembly_contain_itself_are_refused() {
+    let mut b = StepBuilder::new().expect("builder");
+    let top = b.part("top").expect("top");
+    let sub = b.part("sub").expect("sub");
+    let leaf = b.part("leaf").expect("leaf");
+    let cyclic = |r| matches!(r, Err(AuthorError::CyclicAssembly));
+
+    assert!(cyclic(b.place(top, top, at([0.0; 3]))));
+    b.place(top, sub, at([0.0; 3])).expect("top > sub");
+    assert!(cyclic(b.place(sub, top, at([0.0; 3]))));
+    b.place(sub, leaf, at([0.0; 3])).expect("sub > leaf");
+    assert!(cyclic(b.place(leaf, top, at([0.0; 3]))));
+
+    // A part shared under two parents, and the same child placed again.
+    b.place(top, leaf, at([1.0, 0.0, 0.0])).expect("top > leaf");
+    b.place(sub, leaf, at([2.0, 0.0, 0.0]))
+        .expect("sub > leaf again");
+
+    // The refused placements left nothing behind.
+    let text = common::text(&b.finish().expect("finish"));
+    let (model, report) = read(text.as_bytes()).expect("re-read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    assert_eq!(model.next_assembly_usage_occurrence_arena.items.len(), 4);
+    let scene = model.scene();
+    let roots: Vec<_> = scene.root_definitions().collect();
+    assert_eq!(roots.len(), 1);
+    assert_eq!(roots[0].occurrences().count(), 2);
 }

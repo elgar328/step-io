@@ -70,6 +70,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - On read, such a list with more than three values is dropped as a
   nonstandard value (`list has more values than its type allows`).
 - `Error` is `#[non_exhaustive]`, so matching on it needs a wildcard arm.
+- `AuthorError` is `#[non_exhaustive]`, so matching on it needs a wildcard
+  arm.
 - `DropKind` is `#[non_exhaustive]`, so matching on it needs a wildcard arm,
   and so is `DropReason`, whose fields read as before but which can no
   longer be built with a struct literal outside step-io.
@@ -133,6 +135,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dropped now carries that entity's reason in its cascade label, such as
   `via-required reference is missing`, instead of `via-dangling`, which now
   means only a reference to an id the file does not define.
+- `StepBuilder::place` refuses a placement that would make an assembly
+  contain itself, the part placed being the assembly or already containing
+  it, with `AuthorError::CyclicAssembly`. The standard forbids such cycles,
+  and a reader following one may never stop.
 
 ### Fixed
 

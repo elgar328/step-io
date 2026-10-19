@@ -133,6 +133,8 @@
 //! # let _ = model;
 //! ```
 
+use std::collections::HashSet;
+
 // Shared with the read side (`scene`): the NURBS forms `to_nurbs()` returns are
 // exactly what the builder accepts, and colours round-trip as the same type.
 use crate::Orientation;
@@ -496,6 +498,8 @@ struct PendingPart {
     origin: m::Axis2Placement3dId,
     items: Vec<m::RepresentationItemRef>,
     meshes: Vec<m::TessellatedSolidId>,
+    /// The placements of this part's children, by index.
+    placements: Vec<usize>,
 }
 
 /// One [`StepBuilder::place`] call: the eagerly-created usage occurrence
@@ -1340,6 +1344,7 @@ impl StepBuilder {
             origin,
             items: Vec::new(),
             meshes: Vec::new(),
+            placements: Vec::new(),
         });
         Ok(Part(self.parts.len() - 1))
     }
@@ -1570,14 +1575,20 @@ impl StepBuilder {
     /// its shape wiring is bound in [`finish`](Self::finish).
     ///
     /// # Errors
-    /// Propagates [`AuthorError`] from the strict constructors; the wiring
-    /// here is fixed, so an error indicates a bug in the builder itself.
+    /// [`AuthorError::CyclicAssembly`] if `child` is `parent` or already
+    /// contains it, as an assembly may not contain itself; nothing is added
+    /// then. Otherwise propagates [`AuthorError`] from the strict
+    /// constructors; the wiring here is fixed, so such an error indicates a
+    /// bug in the builder itself.
     pub fn place(
         &mut self,
         parent: Part,
         child: Part,
         at: Frame,
     ) -> Result<m::NextAssemblyUsageOccurrenceId, AuthorError> {
+        if self.contains(child.0, parent.0) {
+            return Err(AuthorError::CyclicAssembly);
+        }
         let nauo = self.author.add_next_assembly_usage_occurrence(
             format!("{}", self.placements.len() + 1),
             String::new(),
@@ -1587,6 +1598,7 @@ impl StepBuilder {
             None,
         )?;
         let to = self.placement(&at)?;
+        self.parts[parent.0].placements.push(self.placements.len());
         self.placements.push(PendingPlacement {
             nauo,
             parent: parent.0,
@@ -1594,6 +1606,27 @@ impl StepBuilder {
             to,
         });
         Ok(nauo)
+    }
+
+    /// Whether part `whole` is part `part` or contains it through the
+    /// placements so far.
+    fn contains(&self, whole: usize, part: usize) -> bool {
+        let mut seen = HashSet::new();
+        let mut stack = vec![whole];
+        while let Some(i) = stack.pop() {
+            if i == part {
+                return true;
+            }
+            if seen.insert(i) {
+                stack.extend(
+                    self.parts[i]
+                        .placements
+                        .iter()
+                        .map(|&p| self.placements[p].child),
+                );
+            }
+        }
+        false
     }
 
     /// Materialize each part's shape representation (its origin placement
@@ -1622,11 +1655,7 @@ impl StepBuilder {
             } else {
                 self.ctx
             };
-            let children = self
-                .placements
-                .iter()
-                .filter(|p| p.parent == i)
-                .map(|p| p.to);
+            let children = part.placements.iter().map(|&p| self.placements[p].to);
             part_reps.push(bind_part(a, part, children, ctx)?);
         }
         // Pass 2: assembly placements.

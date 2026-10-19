@@ -2580,6 +2580,7 @@ pub fn emit_author(
 /// model. These fire while an adapter is being developed; a correct adapter
 /// never triggers them.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum AuthorError {
     /// The referenced entity kind is not legal in AP242.
     NotAp242 { entity: &'static str },
@@ -2596,6 +2597,9 @@ pub enum AuthorError {
         min: usize,
         max: Option<usize>,
     },
+    /// A placement would make an assembly contain itself: the part placed
+    /// is the assembly, or already contains it.
+    CyclicAssembly,
 }
 
 impl std::fmt::Display for AuthorError {
@@ -2623,6 +2627,9 @@ impl std::fmt::Display for AuthorError {
                 ),
                 None => write!(f, "{entity}.{attribute}: {got} elements, minimum {min}"),
             },
+            AuthorError::CyclicAssembly => {
+                write!(f, "placement would make an assembly contain itself")
+            }
         }
     }
 }
