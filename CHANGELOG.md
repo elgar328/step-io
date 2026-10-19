@@ -86,7 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `read()` streams the file instead of holding all of it as raw entities
   until the model is built, and takes less than half as long: a 110 MB file
   of one million entities now reads in 0.7 s instead of 1.7 s, and the
-  process peaks at about 130 MB of memory instead of 760 MB (with the
+  process peaks at about 115 MB of memory instead of 760 MB (with the
   smaller model described below). It reads the same entities and values as
   before.
 - `write()` takes the output — a `File`, a `&mut Vec<u8>`, … — and writes

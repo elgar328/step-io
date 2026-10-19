@@ -1,16 +1,17 @@
 //! The reference store: what the reader keeps of each entity's attributes once
 //! the entity is built — the slots resolved after the whole file is read, and
-//! any other slot holding a reference. Values are kept as flat 16-byte tokens
-//! in fixed-size chunks (no large reallocation, no per-value allocation) and
-//! rebuilt into [`Attribute`]s only for the moment they are resolved.
+//! any other slot holding a reference. Values are kept as tokens of one to
+//! three 32-bit words in fixed-size chunks (no large reallocation, no
+//! per-value allocation) and rebuilt into [`Attribute`]s only for the moment
+//! they are resolved.
 
 use crate::parser::{Attribute, RawEntityPart};
 
-/// One token. An entry is a simple entity's `Part` header, or a complex
-/// entity's `Complex` header followed by one `Part` per part; each part's
-/// `slots` slots follow it as a `Slot` token and the slot's value. A value
-/// is one token, a `List` followed by its items, or a `Typed` followed by its
-/// inner value.
+/// One token, as read back. An entry is a simple entity's `Part` header, or
+/// a complex entity's `Complex` header followed by one `Part` per part; each
+/// part's `slots` slots follow it as a `Slot` token and the slot's value. A
+/// value is one token, a `List` followed by its items, or a `Typed` followed
+/// by its inner value.
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum Tok {
     Complex(u32),
@@ -37,10 +38,40 @@ enum Tok {
     Typed(u32, u32),
 }
 
-const _: () = assert!(std::mem::size_of::<Tok>() == 16);
-
 const CHUNK_BITS: usize = 16;
 const CHUNK: usize = 1 << CHUNK_BITS;
+
+// A token's first word holds its kind in the top four bits and a value in
+// the other 28. A value that does not fit is `WIDE` there and follows as two
+// more words, low half first; so do an `Int`'s and a `Real`'s 64 bits. A
+// `Part`'s first word holds `pix`, its next two `attrs` and `slots`; a
+// pooled text's hold `(offset, length)`.
+const KIND_SHIFT: u32 = 28;
+const VALUE: u32 = (1 << KIND_SHIFT) - 1;
+const WIDE: u32 = VALUE;
+
+const K_COMPLEX: u32 = 0;
+const K_PART: u32 = 1;
+const K_SLOT: u32 = 2;
+const K_INT: u32 = 3;
+const K_REAL: u32 = 4;
+const K_REF: u32 = 5;
+const K_SYNTH: u32 = 6;
+const K_UNSET: u32 = 7;
+const K_DERIVED: u32 = 8;
+const K_STR: u32 = 9;
+const K_ENUM: u32 = 10;
+const K_BIN: u32 = 11;
+const K_LIST: u32 = 12;
+const K_TYPED: u32 = 13;
+
+fn lo_hi(v: u64) -> (u32, u32) {
+    (narrow(v & u64::from(u32::MAX)), narrow(v >> 32))
+}
+
+fn narrow(v: u64) -> u32 {
+    u32::try_from(v).unwrap_or(u32::MAX)
+}
 
 fn has_ref(a: &Attribute) -> bool {
     match a {
@@ -58,7 +89,7 @@ fn kept_slot(fields: &[u16], i: usize, a: &Attribute) -> bool {
 
 #[derive(Default)]
 pub(crate) struct RefStore {
-    chunks: Vec<Vec<Tok>>,
+    chunks: Vec<Vec<u32>>,
     len: usize,
     /// A position or count no longer fit in 32 bits.
     overflow: bool,
@@ -67,18 +98,131 @@ pub(crate) struct RefStore {
 }
 
 impl RefStore {
-    fn push(&mut self, t: Tok) {
+    fn word(&mut self, w: u32) {
         if self.len % CHUNK == 0 {
             self.chunks.push(Vec::with_capacity(CHUNK));
         }
         if let Some(c) = self.chunks.last_mut() {
-            c.push(t);
+            c.push(w);
         }
         self.len += 1;
     }
 
-    fn tok(&self, i: usize) -> Tok {
+    /// A token of `kind` holding `v`: one word, or three if `v` is wide.
+    fn push_n(&mut self, kind: u32, v: u64) {
+        match u32::try_from(v) {
+            Ok(v) if v < WIDE => self.word(kind << KIND_SHIFT | v),
+            _ => {
+                self.word(kind << KIND_SHIFT | WIDE);
+                self.push_64(v);
+            }
+        }
+    }
+
+    fn push_64(&mut self, v: u64) {
+        let (lo, hi) = lo_hi(v);
+        self.word(lo);
+        self.word(hi);
+    }
+
+    fn push(&mut self, t: Tok) {
+        match t {
+            Tok::Complex(n) => self.push_n(K_COMPLEX, n.into()),
+            Tok::Part { pix, attrs, slots } => {
+                self.word(K_PART << KIND_SHIFT | u32::from(pix));
+                self.word(attrs);
+                self.word(slots);
+            }
+            Tok::Slot(i) => self.push_n(K_SLOT, i.into()),
+            Tok::Int(v) => {
+                self.word(K_INT << KIND_SHIFT);
+                self.push_64(u64::from_le_bytes(v.to_le_bytes()));
+            }
+            Tok::Real(v) => {
+                self.word(K_REAL << KIND_SHIFT);
+                self.push_64(v.to_bits());
+            }
+            Tok::Ref(id) => self.push_n(K_REF, id),
+            Tok::Synth(k) => self.push_n(K_SYNTH, k.into()),
+            Tok::Unset => self.word(K_UNSET << KIND_SHIFT),
+            Tok::Derived => self.word(K_DERIVED << KIND_SHIFT),
+            Tok::Str(at, n) => self.push_pair(K_STR, at, n),
+            Tok::Enum(at, n) => self.push_pair(K_ENUM, at, n),
+            Tok::Bin(at, n) => self.push_pair(K_BIN, at, n),
+            Tok::List(n) => self.push_n(K_LIST, n.into()),
+            Tok::Typed(at, n) => self.push_pair(K_TYPED, at, n),
+        }
+    }
+
+    fn push_pair(&mut self, kind: u32, a: u32, b: u32) {
+        self.word(kind << KIND_SHIFT);
+        self.word(a);
+        self.word(b);
+    }
+
+    #[inline]
+    fn word_at(&self, i: usize) -> u32 {
         self.chunks[i >> CHUNK_BITS][i & (CHUNK - 1)]
+    }
+
+    #[inline]
+    fn u64_at(&self, i: usize) -> u64 {
+        u64::from(self.word_at(i)) | u64::from(self.word_at(i + 1)) << 32
+    }
+
+    /// The word after the `push_n` token at `at`.
+    #[inline]
+    fn after_n(&self, at: usize) -> usize {
+        if self.word_at(at) & VALUE < WIDE {
+            at + 1
+        } else {
+            at + 3
+        }
+    }
+
+    /// The token at word `at`, and the word after it.
+    #[inline]
+    fn tok(&self, at: usize) -> (Tok, usize) {
+        let head = self.word_at(at);
+        let value = head & VALUE;
+        // A `push_n` token's value, and the word after it.
+        let (n, after) = if value < WIDE {
+            (u64::from(value), at + 1)
+        } else {
+            (self.u64_at(at + 1), at + 3)
+        };
+        match head >> KIND_SHIFT {
+            K_REF => (Tok::Ref(n), after),
+            K_SLOT => (Tok::Slot(narrow(n)), after),
+            K_LIST => (Tok::List(narrow(n)), after),
+            K_COMPLEX => (Tok::Complex(narrow(n)), after),
+            K_SYNTH => (Tok::Synth(narrow(n)), after),
+            K_PART => {
+                let part = Tok::Part {
+                    pix: u16::try_from(value).unwrap_or(u16::MAX),
+                    attrs: self.word_at(at + 1),
+                    slots: self.word_at(at + 2),
+                };
+                (part, at + 3)
+            }
+            K_INT => {
+                let v = i64::from_le_bytes(self.u64_at(at + 1).to_le_bytes());
+                (Tok::Int(v), at + 3)
+            }
+            K_REAL => (Tok::Real(f64::from_bits(self.u64_at(at + 1))), at + 3),
+            K_DERIVED => (Tok::Derived, at + 1),
+            kind @ (K_STR | K_ENUM | K_BIN | K_TYPED) => {
+                let (off, len) = (self.word_at(at + 1), self.word_at(at + 2));
+                let text = match kind {
+                    K_STR => Tok::Str(off, len),
+                    K_ENUM => Tok::Enum(off, len),
+                    K_BIN => Tok::Bin(off, len),
+                    _ => Tok::Typed(off, len),
+                };
+                (text, at + 3)
+            }
+            _ => (Tok::Unset, at + 1),
+        }
     }
 
     /// `n` as a token field, noting when it does not fit.
@@ -233,7 +377,7 @@ impl RefStore {
     fn parts(&self, at: u32) -> (usize, u32) {
         let at = at as usize;
         match self.tok(at) {
-            Tok::Complex(n) => (at + 1, n),
+            (Tok::Complex(n), next) => (next, n),
             _ => (at, 1),
         }
     }
@@ -244,14 +388,22 @@ impl RefStore {
         let mut pending = 1usize;
         while pending > 0 {
             pending -= 1;
-            match self.tok(i) {
+            // Most values are a reference that fits in its first word.
+            let head = self.word_at(i);
+            if head >> KIND_SHIFT == K_REF && head & VALUE < WIDE {
+                f(u64::from(head & VALUE));
+                i += 1;
+                continue;
+            }
+            let (t, next) = self.tok(i);
+            match t {
                 Tok::Ref(id) => f(id),
                 Tok::Synth(k) => f(self.synth_id(k)),
                 Tok::List(n) => pending += n as usize,
                 Tok::Typed(..) => pending += 1,
                 _ => {}
             }
-            i += 1;
+            i = next;
         }
         i
     }
@@ -265,18 +417,17 @@ impl RefStore {
         }
         let (mut head, n) = self.parts(at);
         for _ in 0..n {
-            let Tok::Part { pix, slots, .. } = self.tok(head) else {
+            let (Tok::Part { pix, slots, .. }, mut i) = self.tok(head) else {
                 return false;
             };
-            let mut i = head + 1;
             for _ in 0..slots {
-                let Tok::Slot(idx) = self.tok(i) else {
+                let (Tok::Slot(idx), value) = self.tok(i) else {
                     return false;
                 };
-                if f(pix, idx, i + 1) {
+                if f(pix, idx, value) {
                     return true;
                 }
-                i = self.walk_value(i + 1, |_| {});
+                i = self.walk_value(value, |_| {});
             }
             head = i;
         }
@@ -292,13 +443,13 @@ impl RefStore {
         }
         let (mut i, n) = self.parts(at);
         for _ in 0..n {
-            let Tok::Part { slots, .. } = self.tok(i) else {
+            let (Tok::Part { slots, .. }, next) = self.tok(i) else {
                 return;
             };
-            i += 1;
+            i = next;
             for _ in 0..slots {
                 // Skip the `Slot` token, then the value.
-                i = self.walk_value(i + 1, |id| out.push(id));
+                i = self.walk_value(self.after_n(i), |id| out.push(id));
             }
         }
     }
@@ -320,8 +471,8 @@ impl RefStore {
     }
 
     fn decode(&self, i: &mut usize) -> Attribute {
-        let t = self.tok(*i);
-        *i += 1;
+        let (t, next) = self.tok(*i);
+        *i = next;
         match t {
             Tok::Int(v) => Attribute::Integer(v),
             Tok::Real(v) => Attribute::Real(v),
@@ -344,16 +495,15 @@ impl RefStore {
     /// the index after the part.
     fn restore_part(&self, head: usize, out: &mut Vec<Attribute>) -> usize {
         out.clear();
-        let Tok::Part { attrs, slots, .. } = self.tok(head) else {
+        let (Tok::Part { attrs, slots, .. }, mut i) = self.tok(head) else {
             return head + 1;
         };
         out.resize(attrs as usize, Attribute::Unset);
-        let mut i = head + 1;
         for _ in 0..slots {
-            let Tok::Slot(idx) = self.tok(i) else {
+            let (Tok::Slot(idx), value) = self.tok(i) else {
                 break;
             };
-            i += 1;
+            i = value;
             let a = self.decode(&mut i);
             if let Some(slot) = out.get_mut(idx as usize) {
                 *slot = a;
@@ -473,6 +623,58 @@ mod tests {
             back[1].attributes,
             [Attribute::Unset, Attribute::EntityRef(3)]
         );
+    }
+
+    #[test]
+    fn keeps_wide_values() {
+        let a = attrs(
+            "#268435455,#268435456,#4294967296,#18446744073709551615,\
+             (-9223372036854775808,1.5E300,#1)",
+        );
+        let mut store = RefStore::default();
+        let at = store.push_simple(&a, &[4], None);
+        let mut back = Vec::new();
+        store.restore_simple(at, &mut back);
+        assert_eq!(back, a);
+        let mut refs = Vec::new();
+        store.refs(at, &mut refs);
+        assert_eq!(refs, [268_435_455, 268_435_456, 4_294_967_296, u64::MAX, 1]);
+    }
+
+    #[test]
+    fn values_one_word_up_to_the_wide_mark() {
+        let mut store = RefStore::default();
+        for (n, words) in [(0, 1), (WIDE - 1, 1), (WIDE, 3), (u32::MAX, 3)] {
+            let at = store.len;
+            store.push(Tok::List(n));
+            assert_eq!(store.tok(at), (Tok::List(n), at + words), "{n:#x}");
+        }
+        let at = store.len;
+        store.push(Tok::Ref(u64::MAX));
+        assert_eq!(store.tok(at), (Tok::Ref(u64::MAX), at + 3));
+    }
+
+    #[test]
+    fn tokens_cross_a_chunk_boundary() {
+        // A first entry of `fill` references in one slot, ending `gap` words
+        // before the chunk boundary: Part (3) + Slot + List + the references.
+        // The second entry's Part (3 words) crosses it at a gap of 1 or 2,
+        // its Int (3 words, after Part and Slot) at 5 or 6.
+        for gap in [1, 2, 5, 6] {
+            let fill = CHUNK - gap - 5;
+            let first = attrs(&format!("({})", vec!["#1"; fill].join(",")));
+            let second = attrs("-7,1.5E300,#5,'kept'");
+            let mut store = RefStore::default();
+            store.push_simple(&first, &[], None);
+            assert_eq!(store.len, CHUNK - gap);
+            let at = store.push_simple(&second, &[0, 1, 3], None);
+            let mut back = Vec::new();
+            store.restore_simple(at, &mut back);
+            assert_eq!(back, second, "gap {gap}");
+            let mut refs = Vec::new();
+            store.refs(at, &mut refs);
+            assert_eq!(refs, [5], "gap {gap}");
+        }
     }
 
     #[test]

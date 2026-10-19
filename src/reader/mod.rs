@@ -399,6 +399,7 @@ fn drop_pass(
     }
     let mut ids: Vec<u64> = Vec::new();
     let mut buf: Vec<u64> = Vec::new();
+    let mut first = true;
     loop {
         let mut removed = false;
         // In id order; an entity only ever drops itself, so checking its flag
@@ -429,6 +430,12 @@ fn drop_pass(
                 removed = true;
                 continue;
             }
+            // Whether a slot admits its targets' types does not depend on
+            // what is kept: an entity that passes in the first round always
+            // passes.
+            if !first {
+                continue;
+            }
             if let Some(reason) = nonstd_ref(table, refs, labels, row, &mut buf) {
                 keep[pos] = false;
                 root_of.insert(pos, labels.intern(&reason));
@@ -442,6 +449,7 @@ fn drop_pass(
                 removed = true;
             }
         }
+        first = false;
         if !removed {
             break;
         }
