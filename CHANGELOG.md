@@ -285,6 +285,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   per control point) and a mesh without triangles, with an index past its
   points, or with per-vertex normals that do not number the points, with
   the new `AuthorError::InvalidInput`.
+- The `Ap242Author` constructors take their strings as `&str`, an optional
+  one as `Option<&str>`, and `add_person`'s name lists as `Option<&[&str]>`,
+  instead of `String`s: write `a.add_product("p1", "part", None, …)` rather
+  than `"p1".to_owned()`.
 - The `Ap242Author` constructors check that a complex instance given for a
   reference is of a fitting type: a unit is refused where a curve belongs,
   with `AuthorError::InvalidComplex`. They used to check only that it

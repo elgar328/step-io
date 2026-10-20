@@ -41,11 +41,7 @@ fn low_level_layer_on_builder_face_round_trips() {
     // The builder has no layer API — drop to the strict layer, feeding it
     // the builder-produced face id.
     b.author()
-        .add_presentation_layer_assignment(
-            "L1".to_owned(),
-            String::new(),
-            vec![m::LayeredItemRef::AdvancedFace(face)],
-        )
+        .add_presentation_layer_assignment("L1", "", vec![m::LayeredItemRef::AdvancedFace(face)])
         .expect("layer assignment");
 
     let text = common::text(&b.finish().expect("finish"));

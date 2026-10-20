@@ -12,33 +12,24 @@ fn authored_model_round_trips_with_zero_drops() {
     let mut a = Ap242Author::new();
 
     let origin = a
-        .add_cartesian_point(String::new(), [0.0, 0.0, 0.0].into())
+        .add_cartesian_point("", [0.0, 0.0, 0.0].into())
         .expect("point");
-    let z = a
-        .add_direction(String::new(), [0.0, 0.0, 1.0].into())
-        .expect("dir z");
-    let x = a
-        .add_direction(String::new(), [1.0, 0.0, 0.0].into())
-        .expect("dir x");
+    let z = a.add_direction("", [0.0, 0.0, 1.0].into()).expect("dir z");
+    let x = a.add_direction("", [1.0, 0.0, 0.0].into()).expect("dir x");
     let frame = a
         .add_axis2_placement3d(
-            String::new(),
+            "",
             m::CartesianPointRef::CartesianPoint(origin),
             Some(m::DirectionRef::Direction(z)),
             Some(m::DirectionRef::Direction(x)),
         )
         .expect("frame");
     let plane = a
-        .add_plane(
-            String::new(),
-            m::Axis2Placement3dRef::Axis2Placement3d(frame),
-        )
+        .add_plane("", m::Axis2Placement3dRef::Axis2Placement3d(frame))
         .expect("plane");
-    let ctx = a
-        .add_representation_context("ctx".to_owned(), "3D".to_owned())
-        .expect("context");
+    let ctx = a.add_representation_context("ctx", "3D").expect("context");
     a.add_shape_representation(
-        "anchor".to_owned(),
+        "anchor",
         vec![
             m::RepresentationItemRef::Axis2Placement3d(frame),
             m::RepresentationItemRef::Plane(plane),
@@ -64,24 +55,22 @@ fn illegal_reference_is_rejected_at_insertion() {
     // A trimming select pointing at an APLL point: the entity kind exists in
     // the universal model but is not AP242 — the constructor refuses it.
     let base = a
-        .add_cartesian_point(String::new(), [0.0, 0.0, 0.0].into())
+        .add_cartesian_point("", [0.0, 0.0, 0.0].into())
         .expect("point");
-    let dir = a
-        .add_direction(String::new(), [1.0, 0.0, 0.0].into())
-        .expect("dir");
+    let dir = a.add_direction("", [1.0, 0.0, 0.0].into()).expect("dir");
     let vec_ = a
-        .add_vector(String::new(), m::DirectionRef::Direction(dir), 1.0)
+        .add_vector("", m::DirectionRef::Direction(dir), 1.0)
         .expect("vector");
     let line = a
         .add_line(
-            String::new(),
+            "",
             m::CartesianPointRef::CartesianPoint(base),
             m::VectorRef::Vector(vec_),
         )
         .expect("line");
     let err = a
         .add_trimmed_curve(
-            String::new(),
+            "",
             m::CurveRef::Line(line),
             vec![m::TrimmingSelectRef::ApllPoint(m::ApllPointId(0))],
             vec![m::TrimmingSelectRef::ParameterValue(1.0)],
@@ -102,11 +91,7 @@ fn dangling_reference_is_rejected_at_insertion() {
     let mut a = Ap242Author::new();
     // A vector whose direction id points past the (empty) direction arena.
     let err = a
-        .add_vector(
-            String::new(),
-            m::DirectionRef::Direction(m::DirectionId(7)),
-            1.0,
-        )
+        .add_vector("", m::DirectionRef::Direction(m::DirectionId(7)), 1.0)
         .expect_err("out-of-range id must be rejected");
     assert!(matches!(
         err,
@@ -127,9 +112,7 @@ fn complex_instances_round_trip_with_zero_drops() {
     let cps: Vec<m::CartesianPointRef> = [[0.0, 0.0, 0.0], [1.0, 1.0, 0.0], [2.0, 0.0, 0.0]]
         .iter()
         .map(|c| {
-            m::CartesianPointRef::CartesianPoint(
-                a.add_cartesian_point(String::new(), (*c).into()).unwrap(),
-            )
+            m::CartesianPointRef::CartesianPoint(a.add_cartesian_point("", (*c).into()).unwrap())
         })
         .collect();
     let curve = a
@@ -159,7 +142,7 @@ fn complex_instances_round_trip_with_zero_drops() {
     // A bounded segment of it, so the complex is reachable from the shape.
     let trim = a
         .add_trimmed_curve(
-            String::new(),
+            "",
             m::CurveRef::Complex(curve),
             vec![m::TrimmingSelectRef::ParameterValue(0.0)],
             vec![m::TrimmingSelectRef::ParameterValue(1.0)],
@@ -195,7 +178,7 @@ fn complex_instances_round_trip_with_zero_drops() {
         .expect("unit-assigned context complex");
 
     a.add_shape_representation(
-        "anchor".to_owned(),
+        "anchor",
         vec![m::RepresentationItemRef::TrimmedCurve(trim)],
         m::RepresentationContextRef::Complex(ctx),
     )
@@ -324,35 +307,35 @@ fn self_referencing_entity_round_trips_with_zero_drops() {
     let datum_feature = a.text("datum feature");
 
     // Minimal product chain up to the PRODUCT_DEFINITION_SHAPE.
-    let ac = a.add_application_context("mim".to_owned()).expect("ac");
+    let ac = a.add_application_context("mim").expect("ac");
     let pc = a
         .add_product_context(
-            String::new(),
+            "",
             m::ApplicationContextRef::ApplicationContext(ac),
-            "mechanical".to_owned(),
+            "mechanical",
         )
         .expect("pc");
     let pdc = a
         .add_product_definition_context(
-            "part definition".to_owned(),
+            "part definition",
             m::ApplicationContextRef::ApplicationContext(ac),
-            "design".to_owned(),
+            "design",
         )
         .expect("pdc");
     let product = a
         .add_product(
-            "P1".to_owned(),
-            "part".to_owned(),
+            "P1",
+            "part",
             None,
             vec![m::ProductContextRef::ProductContext(pc)],
         )
         .expect("product");
     let pdf = a
-        .add_product_definition_formation("1".to_owned(), None, m::ProductRef::Product(product))
+        .add_product_definition_formation("1", None, m::ProductRef::Product(product))
         .expect("pdf");
     let pd = a
         .add_product_definition(
-            "design".to_owned(),
+            "design",
             None,
             m::ProductDefinitionFormationRef::ProductDefinitionFormation(pdf),
             m::ProductDefinitionContextRef::ProductDefinitionContext(pdc),
@@ -360,7 +343,7 @@ fn self_referencing_entity_round_trips_with_zero_drops() {
         .expect("pd");
     let pds = a
         .add_product_definition_shape(
-            String::new(),
+            "",
             None,
             m::CharacterizedDefinitionRef::ProductDefinition(pd),
         )
@@ -462,7 +445,7 @@ fn aggregate_cardinality_is_enforced() {
 
     // DIRECTION.direction_ratios is LIST [2:3].
     let err = a
-        .add_direction(String::new(), [1.0].into())
+        .add_direction("", [1.0].into())
         .expect_err("one ratio is below the minimum");
     assert!(matches!(
         err,
@@ -478,12 +461,12 @@ fn aggregate_cardinality_is_enforced() {
         m::Reals3::from_slice(&[1.0, 0.0, 0.0, 0.0]).is_none(),
         "four ratios do not fit the type"
     );
-    a.add_direction(String::new(), [0.0, 0.0, 1.0].into())
+    a.add_direction("", [0.0, 0.0, 1.0].into())
         .expect("three ratios are fine");
 
     // Inner lists are bounded too: a mesh vertex is LIST [3:3] OF REAL.
     let err = a
-        .add_coordinates_list(String::new(), 1, vec![[1.0, 2.0].into()])
+        .add_coordinates_list("", 1, vec![[1.0, 2.0].into()])
         .expect_err("a two-coordinate vertex is below the minimum");
     assert!(matches!(
         err,
@@ -536,7 +519,7 @@ fn complex_instance_of_the_wrong_type_is_rejected() {
     // A unit is no curve.
     let err = a
         .add_trimmed_curve(
-            String::new(),
+            "",
             m::CurveRef::Complex(mm),
             vec![m::TrimmingSelectRef::ParameterValue(0.0)],
             vec![m::TrimmingSelectRef::ParameterValue(1.0)],
@@ -555,11 +538,9 @@ fn complex_instance_of_the_wrong_type_is_rejected() {
 #[test]
 fn cyclic_constructor_enforces_cardinality() {
     let mut a = Ap242Author::new();
-    let status = a
-        .add_approval_status("approved".to_owned())
-        .expect("status");
+    let status = a.add_approval_status("approved").expect("status");
     let approval = a
-        .add_approval(m::ApprovalStatusRef::ApprovalStatus(status), String::new())
+        .add_approval(m::ApprovalStatusRef::ApprovalStatus(status), "")
         .expect("approval");
     // APPLIED_APPROVAL_ASSIGNMENT.items is SET [1:?].
     let err = a
@@ -582,7 +563,7 @@ fn cyclic_constructor_enforces_cardinality() {
 fn non_finite_reals_are_rejected() {
     let mut a = Ap242Author::new();
     let err = a
-        .add_cartesian_point(String::new(), [f64::NAN, 0.0, 0.0].into())
+        .add_cartesian_point("", [f64::NAN, 0.0, 0.0].into())
         .expect_err("a NaN coordinate");
     assert_eq!(
         err,
@@ -593,7 +574,7 @@ fn non_finite_reals_are_rejected() {
     );
     let at = placement(&mut a);
     let err = a
-        .add_circle(String::new(), at.clone(), f64::INFINITY)
+        .add_circle("", at.clone(), f64::INFINITY)
         .expect_err("an infinite radius");
     assert!(matches!(
         err,
@@ -604,10 +585,10 @@ fn non_finite_reals_are_rejected() {
     ));
 
     // A parameter-value trim, inside a reference select.
-    let circle = a.add_circle(String::new(), at, 1.0).expect("circle");
+    let circle = a.add_circle("", at, 1.0).expect("circle");
     let err = a
         .add_trimmed_curve(
-            String::new(),
+            "",
             m::CurveRef::Circle(circle),
             vec![m::TrimmingSelectRef::ParameterValue(f64::NAN)],
             vec![m::TrimmingSelectRef::ParameterValue(1.0)],
@@ -627,15 +608,10 @@ fn non_finite_reals_are_rejected() {
 // An axis placement at the origin, for curves.
 fn placement(a: &mut Ap242Author) -> m::Axis2PlacementRef {
     let origin = a
-        .add_cartesian_point(String::new(), [0.0, 0.0, 0.0].into())
+        .add_cartesian_point("", [0.0, 0.0, 0.0].into())
         .expect("point");
     let frame = a
-        .add_axis2_placement3d(
-            String::new(),
-            m::CartesianPointRef::CartesianPoint(origin),
-            None,
-            None,
-        )
+        .add_axis2_placement3d("", m::CartesianPointRef::CartesianPoint(origin), None, None)
         .expect("frame");
     m::Axis2PlacementRef::Axis2Placement3d(frame)
 }

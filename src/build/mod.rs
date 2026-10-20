@@ -672,22 +672,22 @@ impl StepBuilder {
     pub fn new_with(units: &UnitsInput) -> Result<Self, AuthorError> {
         let mut a = Ap242Author::new();
 
-        let ac = a.add_application_context("managed model based 3d engineering".to_owned())?;
+        let ac = a.add_application_context("managed model based 3d engineering")?;
         a.add_application_protocol_definition(
-            "international standard".to_owned(),
-            "ap242_managed_model_based_3d_engineering_mim_lf".to_owned(),
+            "international standard",
+            "ap242_managed_model_based_3d_engineering_mim_lf",
             2020,
             m::ApplicationContextRef::ApplicationContext(ac),
         )?;
         let product_context = a.add_product_context(
-            String::new(),
+            "",
             m::ApplicationContextRef::ApplicationContext(ac),
-            "mechanical".to_owned(),
+            "mechanical",
         )?;
         let pd_context = a.add_product_definition_context(
-            "part definition".to_owned(),
+            "part definition",
             m::ApplicationContextRef::ApplicationContext(ac),
-            "design".to_owned(),
+            "design",
         )?;
 
         let length_prefix = match units.length {
@@ -725,8 +725,8 @@ impl StepBuilder {
                 value: m::MeasureScalar::Real(units.uncertainty),
             },
             m::UnitRef::Complex(mm),
-            "distance_accuracy_value".to_owned(),
-            Some("confusion accuracy".to_owned()),
+            "distance_accuracy_value",
+            Some("confusion accuracy"),
         )?;
         let units = [mm, rad, sr];
         let ctx = geometric_context(&mut a, uncertainty, units)?;
@@ -783,7 +783,7 @@ impl StepBuilder {
         transparency: Option<f64>,
     ) -> Result<m::StyledItemId, AuthorError> {
         let a = &mut self.author;
-        let rgb = a.add_colour_rgb(String::new(), color.red, color.green, color.blue)?;
+        let rgb = a.add_colour_rgb("", color.red, color.green, color.blue)?;
         // Colour alone rides the customary fill-area chain; with a
         // transparency the rendering form carries both.
         let element = if let Some(t) = transparency {
@@ -797,17 +797,16 @@ impl StepBuilder {
             )?;
             m::SurfaceStyleElementSelectRef::SurfaceStyleRenderingWithProperties(rendering)
         } else {
-            let fill_colour =
-                a.add_fill_area_style_colour(String::new(), m::ColourRef::ColourRgb(rgb))?;
+            let fill_colour = a.add_fill_area_style_colour("", m::ColourRef::ColourRgb(rgb))?;
             let fill_style = a.add_fill_area_style(
-                String::new(),
+                "",
                 vec![m::FillStyleSelectRef::FillAreaStyleColour(fill_colour)],
             )?;
             let fill_area =
                 a.add_surface_style_fill_area(m::FillAreaStyleRef::FillAreaStyle(fill_style))?;
             m::SurfaceStyleElementSelectRef::SurfaceStyleFillArea(fill_area)
         };
-        let side_style = a.add_surface_side_style(String::new(), vec![element])?;
+        let side_style = a.add_surface_side_style("", vec![element])?;
         let usage = a.add_surface_style_usage(
             m::SurfaceSide::Both,
             m::SurfaceSideStyleSelectRef::SurfaceSideStyle(side_style),
@@ -821,7 +820,7 @@ impl StepBuilder {
             StyleTarget::VoidSolid(s) => m::StyledItemTargetRef::BrepWithVoids(s),
         };
         let styled = a.add_styled_item(
-            String::new(),
+            "",
             vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(assignment)],
             item,
         )?;
@@ -849,7 +848,7 @@ impl StepBuilder {
             })
             .collect();
         self.author
-            .add_presentation_layer_assignment(name.to_owned(), String::new(), items)
+            .add_presentation_layer_assignment(name, "", items)
     }
 
     /// Mark `target` invisible by default. Implemented the way STEP requires
@@ -871,7 +870,7 @@ impl StepBuilder {
             StyleTarget::VoidSolid(s) => m::StyledItemTargetRef::BrepWithVoids(s),
         };
         let styled = a.add_styled_item(
-            String::new(),
+            "",
             vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(assignment)],
             item,
         )?;
@@ -892,11 +891,11 @@ impl StepBuilder {
     /// `AXIS2_PLACEMENT_3D` from a [`Frame`].
     fn placement(&mut self, f: &Frame) -> Result<m::Axis2Placement3dId, AuthorError> {
         let a = &mut self.author;
-        let location = a.add_cartesian_point(String::new(), f.origin.into())?;
-        let axis = a.add_direction(String::new(), f.axis.into())?;
-        let ref_direction = a.add_direction(String::new(), f.ref_dir.into())?;
+        let location = a.add_cartesian_point("", f.origin.into())?;
+        let axis = a.add_direction("", f.axis.into())?;
+        let ref_direction = a.add_direction("", f.ref_dir.into())?;
         a.add_axis2_placement3d(
-            String::new(),
+            "",
             m::CartesianPointRef::CartesianPoint(location),
             Some(m::DirectionRef::Direction(axis)),
             Some(m::DirectionRef::Direction(ref_direction)),
@@ -911,7 +910,7 @@ impl StepBuilder {
         row.iter()
             .map(|p| {
                 self.author
-                    .add_cartesian_point(String::new(), (*p).into())
+                    .add_cartesian_point("", (*p).into())
                     .map(m::CartesianPointRef::CartesianPoint)
             })
             .collect()
@@ -922,12 +921,11 @@ impl StepBuilder {
         match profile {
             ProfileInput::Line(point, dir) => {
                 let a = &mut self.author;
-                let pnt = a.add_cartesian_point(String::new(), (*point).into())?;
-                let orientation = a.add_direction(String::new(), (*dir).into())?;
-                let vector =
-                    a.add_vector(String::new(), m::DirectionRef::Direction(orientation), 1.0)?;
+                let pnt = a.add_cartesian_point("", (*point).into())?;
+                let orientation = a.add_direction("", (*dir).into())?;
+                let vector = a.add_vector("", m::DirectionRef::Direction(orientation), 1.0)?;
                 let line = a.add_line(
-                    String::new(),
+                    "",
                     m::CartesianPointRef::CartesianPoint(pnt),
                     m::VectorRef::Vector(vector),
                 )?;
@@ -936,7 +934,7 @@ impl StepBuilder {
             ProfileInput::Circle(frame, radius) => {
                 let position = self.placement(frame)?;
                 let circle = self.author.add_circle(
-                    String::new(),
+                    "",
                     m::Axis2PlacementRef::Axis2Placement3d(position),
                     *radius,
                 )?;
@@ -945,7 +943,7 @@ impl StepBuilder {
             ProfileInput::Ellipse(frame, semi_1, semi_2) => {
                 let position = self.placement(frame)?;
                 let ellipse = self.author.add_ellipse(
-                    String::new(),
+                    "",
                     m::Axis2PlacementRef::Axis2Placement3d(position),
                     *semi_1,
                     *semi_2,
@@ -970,7 +968,7 @@ impl StepBuilder {
         let degree = i64::try_from(c.degree).unwrap_or(i64::MAX);
         if c.weights.iter().all(|w| *w == 1.0) {
             let id = self.author.add_b_spline_curve_with_knots(
-                String::new(),
+                "",
                 degree,
                 cps,
                 m::BSplineCurveForm::Unspecified,
@@ -1038,7 +1036,7 @@ impl StepBuilder {
         let v_degree = i64::try_from(s.degree_v).unwrap_or(i64::MAX);
         if s.weights.iter().flatten().all(|w| *w == 1.0) {
             let id = self.author.add_b_spline_surface_with_knots(
-                String::new(),
+                "",
                 u_degree,
                 v_degree,
                 cps,
@@ -1089,10 +1087,10 @@ impl StepBuilder {
     /// # Errors
     /// See [the builder's errors](Self#errors).
     pub fn vertex(&mut self, p: [f64; 3]) -> Result<Vertex, AuthorError> {
-        let point = self.author.add_cartesian_point(String::new(), p.into())?;
+        let point = self.author.add_cartesian_point("", p.into())?;
         let vp = self
             .author
-            .add_vertex_point(String::new(), m::PointRef::CartesianPoint(point))?;
+            .add_vertex_point("", m::PointRef::CartesianPoint(point))?;
         self.vertices.push((vp, p));
         Ok(Vertex(self.vertices.len() - 1))
     }
@@ -1143,7 +1141,7 @@ impl StepBuilder {
             CurveInput::Circle(frame, radius) => {
                 let position = self.placement(&frame)?;
                 let circle = self.author.add_circle(
-                    String::new(),
+                    "",
                     m::Axis2PlacementRef::Axis2Placement3d(position),
                     radius,
                 )?;
@@ -1163,7 +1161,7 @@ impl StepBuilder {
                 same_sense = open_conic_ahead(&frame, start, end, focal)?;
                 let position = self.placement(&frame)?;
                 let parabola = self.author.add_parabola(
-                    String::new(),
+                    "",
                     m::Axis2PlacementRef::Axis2Placement3d(position),
                     focal,
                 )?;
@@ -1179,7 +1177,7 @@ impl StepBuilder {
                 same_sense = open_conic_ahead(&frame, start, end, 1.0)?;
                 let position = self.placement(&frame)?;
                 let hyperbola = self.author.add_hyperbola(
-                    String::new(),
+                    "",
                     m::Axis2PlacementRef::Axis2Placement3d(position),
                     semi_axis,
                     semi_imag_axis,
@@ -1188,12 +1186,12 @@ impl StepBuilder {
             }
             CurveInput::Polyline(points) => {
                 let refs = self.control_points(&points)?;
-                m::CurveRef::Polyline(self.author.add_polyline(String::new(), refs)?)
+                m::CurveRef::Polyline(self.author.add_polyline("", refs)?)
             }
             CurveInput::Nurbs(curve) => self.nurbs_curve_geometry(&curve)?,
         };
         self.author.add_edge_curve(
-            String::new(),
+            "",
             m::VertexRef::VertexPoint(start_vertex),
             m::VertexRef::VertexPoint(end_vertex),
             geometry,
@@ -1206,16 +1204,15 @@ impl StepBuilder {
         Ok(match surface {
             SurfaceInput::Plane(frame) => {
                 let position = self.placement(&frame)?;
-                let plane = self.author.add_plane(
-                    String::new(),
-                    m::Axis2Placement3dRef::Axis2Placement3d(position),
-                )?;
+                let plane = self
+                    .author
+                    .add_plane("", m::Axis2Placement3dRef::Axis2Placement3d(position))?;
                 m::SurfaceRef::Plane(plane)
             }
             SurfaceInput::Cylinder(frame, radius) => {
                 let position = self.placement(&frame)?;
                 let cyl = self.author.add_cylindrical_surface(
-                    String::new(),
+                    "",
                     m::Axis2Placement3dRef::Axis2Placement3d(position),
                     radius,
                 )?;
@@ -1224,7 +1221,7 @@ impl StepBuilder {
             SurfaceInput::Sphere(frame, radius) => {
                 let position = self.placement(&frame)?;
                 let sphere = self.author.add_spherical_surface(
-                    String::new(),
+                    "",
                     m::Axis2Placement3dRef::Axis2Placement3d(position),
                     radius,
                 )?;
@@ -1233,7 +1230,7 @@ impl StepBuilder {
             SurfaceInput::Torus(frame, major_radius, minor_radius) => {
                 let position = self.placement(&frame)?;
                 let torus = self.author.add_toroidal_surface(
-                    String::new(),
+                    "",
                     m::Axis2Placement3dRef::Axis2Placement3d(position),
                     major_radius,
                     minor_radius,
@@ -1243,7 +1240,7 @@ impl StepBuilder {
             SurfaceInput::Cone(frame, radius, semi_angle) => {
                 let position = self.placement(&frame)?;
                 let cone = self.author.add_conical_surface(
-                    String::new(),
+                    "",
                     m::Axis2Placement3dRef::Axis2Placement3d(position),
                     radius,
                     semi_angle,
@@ -1259,11 +1256,10 @@ impl StepBuilder {
                     [sweep[0] / len, sweep[1] / len, sweep[2] / len]
                 };
                 let a = &mut self.author;
-                let orientation = a.add_direction(String::new(), dir.into())?;
-                let vector =
-                    a.add_vector(String::new(), m::DirectionRef::Direction(orientation), len)?;
+                let orientation = a.add_direction("", dir.into())?;
+                let vector = a.add_vector("", m::DirectionRef::Direction(orientation), len)?;
                 let surf = a.add_surface_of_linear_extrusion(
-                    String::new(),
+                    "",
                     swept_curve,
                     m::VectorRef::Vector(vector),
                 )?;
@@ -1272,15 +1268,15 @@ impl StepBuilder {
             SurfaceInput::Revolution(profile, origin, axis) => {
                 let swept_curve = self.profile_geometry(&profile)?;
                 let a = &mut self.author;
-                let location = a.add_cartesian_point(String::new(), origin.into())?;
-                let axis_dir = a.add_direction(String::new(), axis.into())?;
+                let location = a.add_cartesian_point("", origin.into())?;
+                let axis_dir = a.add_direction("", axis.into())?;
                 let position = a.add_axis1_placement(
-                    String::new(),
+                    "",
                     m::CartesianPointRef::CartesianPoint(location),
                     Some(m::DirectionRef::Direction(axis_dir)),
                 )?;
                 let surf = a.add_surface_of_revolution(
-                    String::new(),
+                    "",
                     swept_curve,
                     m::Axis1PlacementRef::Axis1Placement(position),
                 )?;
@@ -1312,35 +1308,29 @@ impl StepBuilder {
         for bound in bounds {
             let mut edge_list = Vec::with_capacity(bound.edges.len());
             for (edge, along) in bound.edges {
-                let oe = self.author.add_oriented_edge(
-                    String::new(),
-                    m::EdgeRef::EdgeCurve(edge),
-                    along.flag(),
-                )?;
+                let oe =
+                    self.author
+                        .add_oriented_edge("", m::EdgeRef::EdgeCurve(edge), along.flag())?;
                 edge_list.push(m::OrientedEdgeRef::OrientedEdge(oe));
             }
-            let el = self.author.add_edge_loop(String::new(), edge_list)?;
+            let el = self.author.add_edge_loop("", edge_list)?;
             let fb = if bound.outer {
                 m::FaceBoundRef::FaceOuterBound(self.author.add_face_outer_bound(
-                    String::new(),
+                    "",
                     m::LoopRef::EdgeLoop(el),
                     bound.orientation.flag(),
                 )?)
             } else {
                 m::FaceBoundRef::FaceBound(self.author.add_face_bound(
-                    String::new(),
+                    "",
                     m::LoopRef::EdgeLoop(el),
                     bound.orientation.flag(),
                 )?)
             };
             face_bounds.push(fb);
         }
-        self.author.add_advanced_face(
-            String::new(),
-            face_bounds,
-            face_geometry,
-            orientation.flag(),
-        )
+        self.author
+            .add_advanced_face("", face_bounds, face_geometry, orientation.flag())
     }
 
     /// Close the faces into a shell and add the solid to `part`; the solid
@@ -1356,12 +1346,12 @@ impl StepBuilder {
         faces: Vec<m::AdvancedFaceId>,
     ) -> Result<m::ManifoldSolidBrepId, AuthorError> {
         let shell = self.author.add_closed_shell(
-            String::new(),
+            "",
             faces.into_iter().map(m::FaceRef::AdvancedFace).collect(),
         )?;
         let solid = self
             .author
-            .add_manifold_solid_brep(name.to_owned(), m::ClosedShellRef::ClosedShell(shell))?;
+            .add_manifold_solid_brep(name, m::ClosedShellRef::ClosedShell(shell))?;
         self.parts[part.0]
             .items
             .push(m::RepresentationItemRef::ManifoldSolidBrep(solid));
@@ -1418,7 +1408,7 @@ impl StepBuilder {
         normals: VoidShellNormals,
     ) -> Result<m::BrepWithVoidsId, AuthorError> {
         let outer = self.author.add_closed_shell(
-            String::new(),
+            "",
             outer_faces
                 .into_iter()
                 .map(m::FaceRef::AdvancedFace)
@@ -1433,21 +1423,21 @@ impl StepBuilder {
         let mut void_refs = Vec::with_capacity(voids.len());
         for void_faces in voids {
             let shell = self.author.add_closed_shell(
-                String::new(),
+                "",
                 void_faces
                     .into_iter()
                     .map(m::FaceRef::AdvancedFace)
                     .collect(),
             )?;
             let oriented = self.author.add_oriented_closed_shell(
-                String::new(),
+                "",
                 m::ClosedShellRef::ClosedShell(shell),
                 orientation,
             )?;
             void_refs.push(m::OrientedClosedShellRef::OrientedClosedShell(oriented));
         }
         let solid = self.author.add_brep_with_voids(
-            name.to_owned(),
+            name,
             m::ClosedShellRef::ClosedShell(outer),
             void_refs,
         )?;
@@ -1481,24 +1471,24 @@ impl StepBuilder {
         })?;
         let a = &mut self.author;
         let product = a.add_product(
-            opts.id.clone().unwrap_or_else(|| name.to_owned()),
-            name.to_owned(),
-            opts.description.clone(),
+            opts.id.as_deref().unwrap_or(name),
+            name,
+            opts.description.as_deref(),
             vec![m::ProductContextRef::ProductContext(self.product_context)],
         )?;
         let formation = a.add_product_definition_formation(
-            opts.version.clone().unwrap_or_default(),
-            opts.version_description.clone(),
+            opts.version.as_deref().unwrap_or_default(),
+            opts.version_description.as_deref(),
             m::ProductRef::Product(product),
         )?;
         let definition = a.add_product_definition(
-            "design".to_owned(),
-            opts.definition_description.clone(),
+            "design",
+            opts.definition_description.as_deref(),
             m::ProductDefinitionFormationRef::ProductDefinitionFormation(formation),
             m::ProductDefinitionContextRef::ProductDefinitionContext(self.pd_context),
         )?;
         let shape = a.add_product_definition_shape(
-            String::new(),
+            "",
             None,
             m::CharacterizedDefinitionRef::ProductDefinition(definition),
         )?;
@@ -1548,7 +1538,7 @@ impl StepBuilder {
         let a = &mut self.author;
         let npoints = i64::try_from(n).unwrap_or(i64::MAX);
         let coordinates = a.add_coordinates_list(
-            String::new(),
+            "",
             npoints,
             input.points.iter().map(|&p| p.into()).collect(),
         )?;
@@ -1567,7 +1557,7 @@ impl StepBuilder {
             .map(|&[p, q, r]| vec![to_ix(p), to_ix(r), to_ix(q)])
             .collect();
         let face = a.add_complex_triangulated_face(
-            name.to_owned(),
+            name,
             m::CoordinatesListRef::CoordinatesList(coordinates),
             npoints,
             normals,
@@ -1577,7 +1567,7 @@ impl StepBuilder {
             Vec::new(),
         )?;
         let solid = a.add_tessellated_solid(
-            name.to_owned(),
+            name,
             vec![m::TessellatedStructuredItemRef::ComplexTriangulatedFace(
                 face,
             )],
@@ -1601,14 +1591,14 @@ impl StepBuilder {
     ) -> Result<m::PersonAndOrganizationId, AuthorError> {
         let a = &mut self.author;
         let person = a.add_person(
-            p.person_id.clone(),
-            p.last_name.clone(),
-            p.first_name.clone(),
+            &p.person_id,
+            p.last_name.as_deref(),
+            p.first_name.as_deref(),
             None,
             None,
             None,
         )?;
-        let organization = a.add_organization(None, p.organization.clone(), None)?;
+        let organization = a.add_organization(None, &p.organization, None)?;
         a.add_person_and_organization(
             m::PersonRef::Person(person),
             m::OrganizationRef::Organization(organization),
@@ -1627,7 +1617,7 @@ impl StepBuilder {
         who: m::PersonAndOrganizationId,
     ) -> Result<(), AuthorError> {
         let a = &mut self.author;
-        let role = a.add_person_and_organization_role(role.to_owned())?;
+        let role = a.add_person_and_organization_role(role)?;
         a.add_applied_person_and_organization_assignment(
             m::PersonAndOrganizationRef::PersonAndOrganization(who),
             m::PersonAndOrganizationRoleRef::PersonAndOrganizationRole(role),
@@ -1649,11 +1639,9 @@ impl StepBuilder {
         input: &ApprovalInput,
     ) -> Result<m::ApprovalId, AuthorError> {
         let a = &mut self.author;
-        let status = a.add_approval_status(input.status.clone())?;
-        let approval = a.add_approval(
-            m::ApprovalStatusRef::ApprovalStatus(status),
-            input.level.clone(),
-        )?;
+        let status = a.add_approval_status(&input.status)?;
+        let approval =
+            a.add_approval(m::ApprovalStatusRef::ApprovalStatus(status), &input.level)?;
         a.add_applied_approval_assignment(
             m::ApprovalRef::Approval(approval),
             vec![m::ApprovalItemRef::ProductDefinitionFormation(
@@ -1661,7 +1649,7 @@ impl StepBuilder {
             )],
         )?;
         for (who, role) in &input.approvers {
-            let role = a.add_approval_role(role.clone())?;
+            let role = a.add_approval_role(role)?;
             a.add_approval_person_organization(
                 m::PersonOrganizationSelectRef::PersonAndOrganization(*who),
                 m::ApprovalRef::Approval(approval),
@@ -1695,16 +1683,16 @@ impl StepBuilder {
     /// See [the builder's errors](Self#errors).
     pub fn document(&mut self, part: Part, d: &DocumentInput) -> Result<(), AuthorError> {
         let a = &mut self.author;
-        let kind = a.add_document_type(d.kind.clone())?;
+        let kind = a.add_document_type(&d.kind)?;
         let doc = a.add_document(
-            d.id.clone(),
-            d.name.clone(),
-            d.description.clone(),
+            &d.id,
+            &d.name,
+            d.description.as_deref(),
             m::DocumentTypeRef::DocumentType(kind),
         )?;
         a.add_applied_document_reference(
             m::DocumentRef::Document(doc),
-            String::new(),
+            "",
             vec![m::DocumentReferenceItemRef::ProductDefinitionFormation(
                 self.parts[part.0].formation,
             )],
@@ -1724,10 +1712,10 @@ impl StepBuilder {
         level: &str,
     ) -> Result<(), AuthorError> {
         let a = &mut self.author;
-        let level = a.add_security_classification_level(level.to_owned())?;
+        let level = a.add_security_classification_level(level)?;
         let classification = a.add_security_classification(
-            name.to_owned(),
-            purpose.to_owned(),
+            name,
+            purpose,
             m::SecurityClassificationLevelRef::SecurityClassificationLevel(level),
         )?;
         a.add_applied_security_classification_assignment(
@@ -1760,8 +1748,8 @@ impl StepBuilder {
             return Err(AuthorError::CyclicAssembly);
         }
         let nauo = self.author.add_next_assembly_usage_occurrence(
-            format!("{}", self.placements.len() + 1),
-            String::new(),
+            &format!("{}", self.placements.len() + 1),
+            "",
             None,
             m::ProductDefinitionOrReferenceRef::ProductDefinition(self.parts[parent.0].definition),
             m::ProductDefinitionOrReferenceRef::ProductDefinition(self.parts[child.0].definition),
@@ -1831,7 +1819,7 @@ impl StepBuilder {
         bind_placements(a, &self.parts, &self.placements, &part_reps)?;
         if !self.parts.is_empty() {
             a.add_product_related_product_category(
-                "part".to_owned(),
+                "part",
                 None,
                 self.parts
                     .iter()
@@ -1847,7 +1835,7 @@ impl StepBuilder {
         // Styles are anchored in the customary presentation representation.
         if !self.styles.is_empty() {
             a.add_mechanical_design_geometric_presentation_representation(
-                String::new(),
+                "",
                 self.styles
                     .iter()
                     .map(|&s| m::RepresentationItemRef::StyledItem(s))
@@ -1897,7 +1885,7 @@ fn bind_part(
     });
     let (rep, rep_or_ref) = if has_solid {
         let id = a.add_advanced_brep_shape_representation(
-            String::new(),
+            "",
             items,
             m::RepresentationContextRef::Complex(ctx),
         )?;
@@ -1906,11 +1894,8 @@ fn bind_part(
             m::RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(id),
         )
     } else {
-        let id = a.add_shape_representation(
-            String::new(),
-            items,
-            m::RepresentationContextRef::Complex(ctx),
-        )?;
+        let id =
+            a.add_shape_representation("", items, m::RepresentationContextRef::Complex(ctx))?;
         (
             m::RepresentationRef::ShapeRepresentation(id),
             m::RepresentationOrRepresentationReferenceRef::ShapeRepresentation(id),
@@ -1925,7 +1910,7 @@ fn bind_part(
     // representation alongside the shape one (multi-SDR per shape).
     if !part.meshes.is_empty() {
         let tsr = a.add_tessellated_shape_representation(
-            String::new(),
+            "",
             part.meshes
                 .iter()
                 .map(|&t| m::RepresentationItemRef::TessellatedSolid(t))
@@ -1984,12 +1969,12 @@ fn bind_placements(
 ) -> Result<(), AuthorError> {
     for placement in placements {
         let pds = a.add_product_definition_shape(
-            "Placement".to_owned(),
-            Some("Placement of an item".to_owned()),
+            "Placement",
+            Some("Placement of an item"),
             m::CharacterizedDefinitionRef::NextAssemblyUsageOccurrence(placement.nauo),
         )?;
         let idt = a.add_item_defined_transformation(
-            String::new(),
+            "",
             None,
             m::RepresentationItemRef::Axis2Placement3d(parts[placement.child].origin),
             m::RepresentationItemRef::Axis2Placement3d(placement.to),

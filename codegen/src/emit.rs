@@ -18,7 +18,7 @@ fn field_type(ir: &ModelIr, f: &Field) -> String {
     }
 }
 
-/// Whether a field holds strings the authoring layer takes as `String`s: a
+/// Whether a field holds strings the authoring layer takes as `&str`s: a
 /// STRING, or a list of them.
 fn author_takes_strings(k: &Kind) -> bool {
     match k {
@@ -29,23 +29,31 @@ fn author_takes_strings(k: &Kind) -> bool {
 }
 
 /// The type an `Ap242Author` constructor takes for a field: the field's
-/// type, with `String` for each `Text`.
+/// type, with `&str` for a `Text` and `&[&str]` for a list of them.
 fn author_param_type(ir: &ModelIr, f: &Field) -> String {
-    if author_takes_strings(&f.kind) {
-        field_type(ir, f).replace("Text", "String")
+    if !author_takes_strings(&f.kind) {
+        return field_type(ir, f);
+    }
+    let base = if matches!(f.kind, Kind::Str) {
+        "&str"
     } else {
-        field_type(ir, f)
+        "&[&str]"
+    };
+    if f.optional || f.derivable {
+        format!("Option<{base}>")
+    } else {
+        base.to_owned()
     }
 }
 
-/// The statement storing a constructor's `String` argument(s) `ident` as
+/// The statement storing a constructor's string argument(s) `ident` as
 /// model `Text`, or `""` if the field takes no strings.
 fn author_store_strings(ident: &str, f: &Field) -> String {
     if !author_takes_strings(&f.kind) {
         return String::new();
     }
     let one = if matches!(f.kind, Kind::Str) {
-        "self.text(&v)".to_string()
+        "self.text(v)".to_string()
     } else {
         "v.iter().map(|e| self.text(e)).collect()".to_string()
     };
@@ -2849,7 +2857,7 @@ impl Ap242Author {
 
     /// Store a string in the model, once per distinct string, for the
     /// entities built directly as values (complex parts, self-referencing
-    /// entities); the constructors take `String`s and store them themselves.
+    /// entities); the constructors take `&str`s and store them themselves.
     pub fn text(&mut self, s: &str) -> Text {
         self.dedup.intern(&mut self.model.texts, s)
     }

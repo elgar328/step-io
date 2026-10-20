@@ -101,7 +101,7 @@ impl Ap242Author {
 
     /// Store a string in the model, once per distinct string, for the
     /// entities built directly as values (complex parts, self-referencing
-    /// entities); the constructors take `String`s and store them themselves.
+    /// entities); the constructors take `&str`s and store them themselves.
     pub fn text(&mut self, s: &str) -> Text {
         self.dedup.intern(&mut self.model.texts, s)
     }
@@ -126,16 +126,16 @@ impl Ap242Author {
     /// `ACTION` — strict AP242 constructor.
     pub fn add_action(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         chosen_method: ActionMethodRef,
     ) -> Result<ActionId, AuthorError> {
         check_action_method_ref(&self.model, &chosen_method)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ActionId(self.model.action_arena.push(Action {
             name,
             description,
@@ -159,10 +159,10 @@ impl Ap242Author {
     /// `ACTION_DIRECTIVE` — strict AP242 constructor.
     pub fn add_action_directive(
         &mut self,
-        name: String,
-        description: Option<String>,
-        analysis: String,
-        comment: String,
+        name: &str,
+        description: Option<&str>,
+        analysis: &str,
+        comment: &str,
         requests: Vec<VersionedActionRequestRef>,
     ) -> Result<ActionDirectiveId, AuthorError> {
         {
@@ -182,16 +182,16 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         let analysis = {
             let v = analysis;
-            self.text(&v)
+            self.text(v)
         };
         let comment = {
             let v = comment;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ActionDirectiveId(self.model.action_directive_arena.push(
             ActionDirective {
@@ -207,23 +207,23 @@ impl Ap242Author {
     /// `ACTION_METHOD` — strict AP242 constructor.
     pub fn add_action_method(
         &mut self,
-        name: String,
-        description: Option<String>,
-        consequence: String,
-        purpose: String,
+        name: &str,
+        description: Option<&str>,
+        consequence: &str,
+        purpose: &str,
     ) -> Result<ActionMethodId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         let consequence = {
             let v = consequence;
-            self.text(&v)
+            self.text(v)
         };
         let purpose = {
             let v = purpose;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ActionMethodId(self.model.action_method_arena.push(
             ActionMethod {
@@ -238,8 +238,8 @@ impl Ap242Author {
     /// `ACTION_METHOD_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_action_method_relationship(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         relating_method: ActionMethodRef,
         related_method: ActionMethodRef,
     ) -> Result<ActionMethodRelationshipId, AuthorError> {
@@ -247,9 +247,9 @@ impl Ap242Author {
         check_action_method_ref(&self.model, &related_method)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ActionMethodRelationshipId(
             self.model
                 .action_method_relationship_arena
@@ -265,18 +265,18 @@ impl Ap242Author {
     /// `ACTION_PROPERTY` — strict AP242 constructor.
     pub fn add_action_property(
         &mut self,
-        name: String,
-        description: String,
+        name: &str,
+        description: &str,
         definition: CharacterizedActionDefinitionRef,
     ) -> Result<ActionPropertyId, AuthorError> {
         check_characterized_action_definition_ref(&self.model, &definition)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let description = {
             let v = description;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ActionPropertyId(self.model.action_property_arena.push(
             ActionProperty {
@@ -290,8 +290,8 @@ impl Ap242Author {
     /// `ACTION_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_action_relationship(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         relating_action: ActionRef,
         related_action: ActionRef,
     ) -> Result<ActionRelationshipId, AuthorError> {
@@ -299,9 +299,9 @@ impl Ap242Author {
         check_action_ref(&self.model, &related_action)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ActionRelationshipId(
             self.model
                 .action_relationship_arena
@@ -347,8 +347,8 @@ impl Ap242Author {
     /// `ACTION_RESOURCE` — strict AP242 constructor.
     pub fn add_action_resource(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         usage: Vec<SupportedItemRef>,
         kind: ActionResourceTypeRef,
     ) -> Result<ActionResourceId, AuthorError> {
@@ -370,9 +370,9 @@ impl Ap242Author {
         check_action_resource_type_ref(&self.model, &kind)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ActionResourceId(self.model.action_resource_arena.push(
             ActionResource {
                 name,
@@ -386,8 +386,8 @@ impl Ap242Author {
     /// `ACTION_RESOURCE_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_action_resource_relationship(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         relating_resource: ActionResourceRef,
         related_resource: ActionResourceRef,
     ) -> Result<ActionResourceRelationshipId, AuthorError> {
@@ -395,9 +395,9 @@ impl Ap242Author {
         check_action_resource_ref(&self.model, &related_resource)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ActionResourceRelationshipId(
             self.model
                 .action_resource_relationship_arena
@@ -413,8 +413,8 @@ impl Ap242Author {
     /// `ACTION_RESOURCE_REQUIREMENT` — strict AP242 constructor.
     pub fn add_action_resource_requirement(
         &mut self,
-        name: String,
-        description: String,
+        name: &str,
+        description: &str,
         kind: ResourceRequirementTypeRef,
         operations: Vec<CharacterizedActionDefinitionRef>,
     ) -> Result<ActionResourceRequirementId, AuthorError> {
@@ -436,11 +436,11 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let description = {
             let v = description;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ActionResourceRequirementId(
             self.model
@@ -457,11 +457,11 @@ impl Ap242Author {
     /// `ACTION_RESOURCE_TYPE` — strict AP242 constructor.
     pub fn add_action_resource_type(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<ActionResourceTypeId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ActionResourceTypeId(
             self.model
@@ -473,31 +473,31 @@ impl Ap242Author {
     /// `ADDRESS` — strict AP242 constructor.
     pub fn add_address(
         &mut self,
-        internal_location: Option<String>,
-        street_number: Option<String>,
-        street: Option<String>,
-        postal_box: Option<String>,
-        town: Option<String>,
-        region: Option<String>,
-        postal_code: Option<String>,
-        country: Option<String>,
-        facsimile_number: Option<String>,
-        telephone_number: Option<String>,
-        electronic_mail_address: Option<String>,
-        telex_number: Option<String>,
+        internal_location: Option<&str>,
+        street_number: Option<&str>,
+        street: Option<&str>,
+        postal_box: Option<&str>,
+        town: Option<&str>,
+        region: Option<&str>,
+        postal_code: Option<&str>,
+        country: Option<&str>,
+        facsimile_number: Option<&str>,
+        telephone_number: Option<&str>,
+        electronic_mail_address: Option<&str>,
+        telex_number: Option<&str>,
     ) -> Result<AddressId, AuthorError> {
-        let internal_location = internal_location.map(|v| self.text(&v));
-        let street_number = street_number.map(|v| self.text(&v));
-        let street = street.map(|v| self.text(&v));
-        let postal_box = postal_box.map(|v| self.text(&v));
-        let town = town.map(|v| self.text(&v));
-        let region = region.map(|v| self.text(&v));
-        let postal_code = postal_code.map(|v| self.text(&v));
-        let country = country.map(|v| self.text(&v));
-        let facsimile_number = facsimile_number.map(|v| self.text(&v));
-        let telephone_number = telephone_number.map(|v| self.text(&v));
-        let electronic_mail_address = electronic_mail_address.map(|v| self.text(&v));
-        let telex_number = telex_number.map(|v| self.text(&v));
+        let internal_location = internal_location.map(|v| self.text(v));
+        let street_number = street_number.map(|v| self.text(v));
+        let street = street.map(|v| self.text(v));
+        let postal_box = postal_box.map(|v| self.text(v));
+        let town = town.map(|v| self.text(v));
+        let region = region.map(|v| self.text(v));
+        let postal_code = postal_code.map(|v| self.text(v));
+        let country = country.map(|v| self.text(v));
+        let facsimile_number = facsimile_number.map(|v| self.text(v));
+        let telephone_number = telephone_number.map(|v| self.text(v));
+        let electronic_mail_address = electronic_mail_address.map(|v| self.text(v));
+        let telex_number = telex_number.map(|v| self.text(v));
         Ok(AddressId(self.model.address_arena.push(Address {
             internal_location,
             street_number,
@@ -517,7 +517,7 @@ impl Ap242Author {
     /// `ADVANCED_BREP_SHAPE_REPRESENTATION` — strict AP242 constructor.
     pub fn add_advanced_brep_shape_representation(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<AdvancedBrepShapeRepresentationId, AuthorError> {
@@ -539,7 +539,7 @@ impl Ap242Author {
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(AdvancedBrepShapeRepresentationId(
             self.model.advanced_brep_shape_representation_arena.push(
@@ -555,7 +555,7 @@ impl Ap242Author {
     /// `ADVANCED_FACE` — strict AP242 constructor.
     pub fn add_advanced_face(
         &mut self,
-        name: String,
+        name: &str,
         bounds: Vec<FaceBoundRef>,
         face_geometry: SurfaceRef,
         same_sense: bool,
@@ -578,7 +578,7 @@ impl Ap242Author {
         check_surface_ref(&self.model, &face_geometry)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(AdvancedFaceId(self.model.advanced_face_arena.push(
             AdvancedFace {
@@ -593,17 +593,17 @@ impl Ap242Author {
     /// `ALL_AROUND_SHAPE_ASPECT` — strict AP242 constructor.
     pub fn add_all_around_shape_aspect(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
     ) -> Result<AllAroundShapeAspectId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(AllAroundShapeAspectId(
             self.model
                 .all_around_shape_aspect_arena
@@ -619,8 +619,8 @@ impl Ap242Author {
     /// `ANGULAR_LOCATION` — strict AP242 constructor.
     pub fn add_angular_location(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         relating_shape_aspect: ShapeAspectRef,
         related_shape_aspect: ShapeAspectRef,
         angle_selection: AngleRelator,
@@ -629,9 +629,9 @@ impl Ap242Author {
         check_shape_aspect_ref(&self.model, &related_shape_aspect)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(AngularLocationId(self.model.angular_location_arena.push(
             AngularLocation {
                 name,
@@ -647,13 +647,13 @@ impl Ap242Author {
     pub fn add_angular_size(
         &mut self,
         applies_to: ShapeAspectRef,
-        name: String,
+        name: &str,
         angle_selection: AngleRelator,
     ) -> Result<AngularSizeId, AuthorError> {
         check_shape_aspect_ref(&self.model, &applies_to)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(AngularSizeId(self.model.angular_size_arena.push(
             AngularSize {
@@ -667,8 +667,8 @@ impl Ap242Author {
     /// `ANGULARITY_TOLERANCE` — strict AP242 constructor.
     pub fn add_angularity_tolerance(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
         datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -694,9 +694,9 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(AngularityToleranceId(
             self.model
                 .angularity_tolerance_arena
@@ -713,7 +713,7 @@ impl Ap242Author {
     /// `ANNOTATION_CURVE_OCCURRENCE` — strict AP242 constructor.
     pub fn add_annotation_curve_occurrence(
         &mut self,
-        name: String,
+        name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
         item: CurveOrCurveSetRef,
     ) -> Result<AnnotationCurveOccurrenceId, AuthorError> {
@@ -723,7 +723,7 @@ impl Ap242Author {
         check_curve_or_curve_set_ref(&self.model, &item)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(AnnotationCurveOccurrenceId(
             self.model
@@ -735,7 +735,7 @@ impl Ap242Author {
     /// `ANNOTATION_FILL_AREA_OCCURRENCE` — strict AP242 constructor.
     pub fn add_annotation_fill_area_occurrence(
         &mut self,
-        name: String,
+        name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
         item: StyledItemTargetRef,
         fill_style_target: PointRef,
@@ -747,7 +747,7 @@ impl Ap242Author {
         check_point_ref(&self.model, &fill_style_target)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(AnnotationFillAreaOccurrenceId(
             self.model
@@ -764,7 +764,7 @@ impl Ap242Author {
     /// `ANNOTATION_OCCURRENCE` — strict AP242 constructor.
     pub fn add_annotation_occurrence(
         &mut self,
-        name: String,
+        name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
         item: StyledItemTargetRef,
     ) -> Result<AnnotationOccurrenceId, AuthorError> {
@@ -774,7 +774,7 @@ impl Ap242Author {
         check_styled_item_target_ref(&self.model, &item)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(AnnotationOccurrenceId(
             self.model
@@ -786,8 +786,8 @@ impl Ap242Author {
     /// `ANNOTATION_OCCURRENCE_ASSOCIATIVITY` — strict AP242 constructor.
     pub fn add_annotation_occurrence_associativity(
         &mut self,
-        name: String,
-        description: String,
+        name: &str,
+        description: &str,
         relating_annotation_occurrence: AnnotationOccurrenceRef,
         related_annotation_occurrence: AnnotationOccurrenceRef,
     ) -> Result<AnnotationOccurrenceAssociativityId, AuthorError> {
@@ -795,11 +795,11 @@ impl Ap242Author {
         check_annotation_occurrence_ref(&self.model, &related_annotation_occurrence)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let description = {
             let v = description;
-            self.text(&v)
+            self.text(v)
         };
         Ok(AnnotationOccurrenceAssociativityId(
             self.model.annotation_occurrence_associativity_arena.push(
@@ -816,8 +816,8 @@ impl Ap242Author {
     /// `ANNOTATION_OCCURRENCE_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_annotation_occurrence_relationship(
         &mut self,
-        name: String,
-        description: String,
+        name: &str,
+        description: &str,
         relating_annotation_occurrence: AnnotationOccurrenceRef,
         related_annotation_occurrence: AnnotationOccurrenceRef,
     ) -> Result<AnnotationOccurrenceRelationshipId, AuthorError> {
@@ -825,11 +825,11 @@ impl Ap242Author {
         check_annotation_occurrence_ref(&self.model, &related_annotation_occurrence)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let description = {
             let v = description;
-            self.text(&v)
+            self.text(v)
         };
         Ok(AnnotationOccurrenceRelationshipId(
             self.model.annotation_occurrence_relationship_arena.push(
@@ -846,7 +846,7 @@ impl Ap242Author {
     /// `ANNOTATION_PLACEHOLDER_OCCURRENCE` — strict AP242 constructor.
     pub fn add_annotation_placeholder_occurrence(
         &mut self,
-        name: String,
+        name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
         item: StyledItemTargetRef,
         role: AnnotationPlaceholderOccurrenceRole,
@@ -864,7 +864,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(AnnotationPlaceholderOccurrenceId(
             self.model.annotation_placeholder_occurrence_arena.push(
@@ -882,7 +882,7 @@ impl Ap242Author {
     /// `ANNOTATION_PLANE` — strict AP242 constructor.
     pub fn add_annotation_plane(
         &mut self,
-        name: String,
+        name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
         item: PlaneOrPlanarBoxRef,
         elements: Option<Vec<AnnotationPlaneElementRef>>,
@@ -909,7 +909,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(AnnotationPlaneId(self.model.annotation_plane_arena.push(
             AnnotationPlane {
@@ -924,7 +924,7 @@ impl Ap242Author {
     /// `ANNOTATION_SYMBOL` — strict AP242 constructor.
     pub fn add_annotation_symbol(
         &mut self,
-        name: String,
+        name: &str,
         mapping_source: RepresentationMapRef,
         mapping_target: RepresentationItemRef,
     ) -> Result<AnnotationSymbolId, AuthorError> {
@@ -932,7 +932,7 @@ impl Ap242Author {
         check_representation_item_ref(&self.model, &mapping_target)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(AnnotationSymbolId(self.model.annotation_symbol_arena.push(
             AnnotationSymbol {
@@ -946,7 +946,7 @@ impl Ap242Author {
     /// `ANNOTATION_SYMBOL_OCCURRENCE` — strict AP242 constructor.
     pub fn add_annotation_symbol_occurrence(
         &mut self,
-        name: String,
+        name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
         item: AnnotationSymbolOccurrenceItemRef,
     ) -> Result<AnnotationSymbolOccurrenceId, AuthorError> {
@@ -956,7 +956,7 @@ impl Ap242Author {
         check_annotation_symbol_occurrence_item_ref(&self.model, &item)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(AnnotationSymbolOccurrenceId(
             self.model
@@ -968,7 +968,7 @@ impl Ap242Author {
     /// `ANNOTATION_TEXT` — strict AP242 constructor.
     pub fn add_annotation_text(
         &mut self,
-        name: String,
+        name: &str,
         mapping_source: RepresentationMapRef,
         mapping_target: Axis2PlacementRef,
     ) -> Result<AnnotationTextId, AuthorError> {
@@ -976,7 +976,7 @@ impl Ap242Author {
         check_axis2_placement_ref(&self.model, &mapping_target)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(AnnotationTextId(self.model.annotation_text_arena.push(
             AnnotationText {
@@ -990,20 +990,20 @@ impl Ap242Author {
     /// `ANNOTATION_TEXT_CHARACTER` — strict AP242 constructor.
     pub fn add_annotation_text_character(
         &mut self,
-        name: String,
+        name: &str,
         mapping_source: RepresentationMapRef,
         mapping_target: Axis2PlacementRef,
-        alignment: String,
+        alignment: &str,
     ) -> Result<AnnotationTextCharacterId, AuthorError> {
         check_representation_map_ref(&self.model, &mapping_source)?;
         check_axis2_placement_ref(&self.model, &mapping_target)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let alignment = {
             let v = alignment;
-            self.text(&v)
+            self.text(v)
         };
         Ok(AnnotationTextCharacterId(
             self.model
@@ -1020,7 +1020,7 @@ impl Ap242Author {
     /// `ANNOTATION_TEXT_OCCURRENCE` — strict AP242 constructor.
     pub fn add_annotation_text_occurrence(
         &mut self,
-        name: String,
+        name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
         item: AnnotationTextOccurrenceItemRef,
     ) -> Result<AnnotationTextOccurrenceId, AuthorError> {
@@ -1030,7 +1030,7 @@ impl Ap242Author {
         check_annotation_text_occurrence_item_ref(&self.model, &item)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(AnnotationTextOccurrenceId(
             self.model
@@ -1042,11 +1042,11 @@ impl Ap242Author {
     /// `APPLICATION_CONTEXT` — strict AP242 constructor.
     pub fn add_application_context(
         &mut self,
-        application: String,
+        application: &str,
     ) -> Result<ApplicationContextId, AuthorError> {
         let application = {
             let v = application;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ApplicationContextId(
             self.model
@@ -1058,13 +1058,13 @@ impl Ap242Author {
     /// `APPLICATION_CONTEXT_ELEMENT` — strict AP242 constructor.
     pub fn add_application_context_element(
         &mut self,
-        name: String,
+        name: &str,
         frame_of_reference: ApplicationContextRef,
     ) -> Result<ApplicationContextElementId, AuthorError> {
         check_application_context_ref(&self.model, &frame_of_reference)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ApplicationContextElementId(
             self.model
@@ -1079,19 +1079,19 @@ impl Ap242Author {
     /// `APPLICATION_PROTOCOL_DEFINITION` — strict AP242 constructor.
     pub fn add_application_protocol_definition(
         &mut self,
-        status: String,
-        application_interpreted_model_schema_name: String,
+        status: &str,
+        application_interpreted_model_schema_name: &str,
         application_protocol_year: i64,
         application: ApplicationContextRef,
     ) -> Result<ApplicationProtocolDefinitionId, AuthorError> {
         check_application_context_ref(&self.model, &application)?;
         let status = {
             let v = status;
-            self.text(&v)
+            self.text(v)
         };
         let application_interpreted_model_schema_name = {
             let v = application_interpreted_model_schema_name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ApplicationProtocolDefinitionId(
             self.model
@@ -1176,7 +1176,7 @@ impl Ap242Author {
     pub fn add_applied_document_reference(
         &mut self,
         assigned_document: DocumentRef,
-        source: String,
+        source: &str,
         items: Vec<DocumentReferenceItemRef>,
     ) -> Result<AppliedDocumentReferenceId, AuthorError> {
         check_document_ref(&self.model, &assigned_document)?;
@@ -1197,7 +1197,7 @@ impl Ap242Author {
         }
         let source = {
             let v = source;
-            self.text(&v)
+            self.text(v)
         };
         Ok(AppliedDocumentReferenceId(
             self.model
@@ -1213,7 +1213,7 @@ impl Ap242Author {
     /// `APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT` — strict AP242 constructor.
     pub fn add_applied_external_identification_assignment(
         &mut self,
-        assigned_id: String,
+        assigned_id: &str,
         role: IdentificationRoleRef,
         source: ExternalSourceRef,
         items: Vec<ExternalIdentificationItemRef>,
@@ -1237,7 +1237,7 @@ impl Ap242Author {
         }
         let assigned_id = {
             let v = assigned_id;
-            self.text(&v)
+            self.text(v)
         };
         Ok(AppliedExternalIdentificationAssignmentId(
             self.model
@@ -1381,12 +1381,12 @@ impl Ap242Author {
     pub fn add_approval(
         &mut self,
         status: ApprovalStatusRef,
-        level: String,
+        level: &str,
     ) -> Result<ApprovalId, AuthorError> {
         check_approval_status_ref(&self.model, &status)?;
         let level = {
             let v = level;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ApprovalId(
             self.model.approval_arena.push(Approval { status, level }),
@@ -1444,10 +1444,10 @@ impl Ap242Author {
     }
 
     /// `APPROVAL_ROLE` — strict AP242 constructor.
-    pub fn add_approval_role(&mut self, role: String) -> Result<ApprovalRoleId, AuthorError> {
+    pub fn add_approval_role(&mut self, role: &str) -> Result<ApprovalRoleId, AuthorError> {
         let role = {
             let v = role;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ApprovalRoleId(
             self.model.approval_role_arena.push(ApprovalRole { role }),
@@ -1455,10 +1455,10 @@ impl Ap242Author {
     }
 
     /// `APPROVAL_STATUS` — strict AP242 constructor.
-    pub fn add_approval_status(&mut self, name: String) -> Result<ApprovalStatusId, AuthorError> {
+    pub fn add_approval_status(&mut self, name: &str) -> Result<ApprovalStatusId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ApprovalStatusId(
             self.model
@@ -1510,8 +1510,8 @@ impl Ap242Author {
     /// `ASCRIBABLE_STATE` — strict AP242 constructor.
     pub fn add_ascribable_state(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         pertaining_state_type: StateTypeRef,
         ascribed_state_observed: StateObservedRef,
     ) -> Result<AscribableStateId, AuthorError> {
@@ -1519,9 +1519,9 @@ impl Ap242Author {
         check_state_observed_ref(&self.model, &ascribed_state_observed)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(AscribableStateId(self.model.ascribable_state_arena.push(
             AscribableState {
                 name,
@@ -1535,8 +1535,8 @@ impl Ap242Author {
     /// `ASCRIBABLE_STATE_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_ascribable_state_relationship(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         relating_ascribable_state: AscribableStateRef,
         related_ascribable_state: AscribableStateRef,
     ) -> Result<AscribableStateRelationshipId, AuthorError> {
@@ -1544,9 +1544,9 @@ impl Ap242Author {
         check_ascribable_state_ref(&self.model, &related_ascribable_state)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(AscribableStateRelationshipId(
             self.model
                 .ascribable_state_relationship_arena
@@ -1562,25 +1562,25 @@ impl Ap242Author {
     /// `ASSEMBLY_COMPONENT_USAGE` — strict AP242 constructor.
     pub fn add_assembly_component_usage(
         &mut self,
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: &str,
+        name: &str,
+        description: Option<&str>,
         relating_product_definition: ProductDefinitionOrReferenceRef,
         related_product_definition: ProductDefinitionOrReferenceRef,
-        reference_designator: Option<String>,
+        reference_designator: Option<&str>,
     ) -> Result<AssemblyComponentUsageId, AuthorError> {
         check_product_definition_or_reference_ref(&self.model, &relating_product_definition)?;
         check_product_definition_or_reference_ref(&self.model, &related_product_definition)?;
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
-        let reference_designator = reference_designator.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
+        let reference_designator = reference_designator.map(|v| self.text(v));
         Ok(AssemblyComponentUsageId(
             self.model
                 .assembly_component_usage_arena
@@ -1598,7 +1598,7 @@ impl Ap242Author {
     /// `AXIS1_PLACEMENT` — strict AP242 constructor.
     pub fn add_axis1_placement(
         &mut self,
-        name: String,
+        name: &str,
         location: CartesianPointRef,
         axis: Option<DirectionRef>,
     ) -> Result<Axis1PlacementId, AuthorError> {
@@ -1608,7 +1608,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(Axis1PlacementId(self.model.axis1_placement_arena.push(
             Axis1Placement {
@@ -1622,7 +1622,7 @@ impl Ap242Author {
     /// `AXIS2_PLACEMENT_2D` — strict AP242 constructor.
     pub fn add_axis2_placement2d(
         &mut self,
-        name: String,
+        name: &str,
         location: CartesianPointRef,
         ref_direction: Option<DirectionRef>,
     ) -> Result<Axis2Placement2dId, AuthorError> {
@@ -1632,7 +1632,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(Axis2Placement2dId(self.model.axis2_placement2d_arena.push(
             Axis2Placement2d {
@@ -1646,7 +1646,7 @@ impl Ap242Author {
     /// `AXIS2_PLACEMENT_3D` — strict AP242 constructor.
     pub fn add_axis2_placement3d(
         &mut self,
-        name: String,
+        name: &str,
         location: CartesianPointRef,
         axis: Option<DirectionRef>,
         ref_direction: Option<DirectionRef>,
@@ -1660,7 +1660,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(Axis2Placement3dId(self.model.axis2_placement3d_arena.push(
             Axis2Placement3d {
@@ -1675,7 +1675,7 @@ impl Ap242Author {
     /// `B_SPLINE_CURVE` — strict AP242 constructor.
     pub fn add_b_spline_curve(
         &mut self,
-        name: String,
+        name: &str,
         degree: i64,
         control_points_list: Vec<CartesianPointRef>,
         curve_form: BSplineCurveForm,
@@ -1699,7 +1699,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(BSplineCurveId(self.model.b_spline_curve_arena.push(
             BSplineCurve {
@@ -1716,7 +1716,7 @@ impl Ap242Author {
     /// `B_SPLINE_CURVE_WITH_KNOTS` — strict AP242 constructor.
     pub fn add_b_spline_curve_with_knots(
         &mut self,
-        name: String,
+        name: &str,
         degree: i64,
         control_points_list: Vec<CartesianPointRef>,
         curve_form: BSplineCurveForm,
@@ -1773,7 +1773,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(BSplineCurveWithKnotsId(
             self.model
@@ -1795,7 +1795,7 @@ impl Ap242Author {
     /// `B_SPLINE_SURFACE` — strict AP242 constructor.
     pub fn add_b_spline_surface(
         &mut self,
-        name: String,
+        name: &str,
         u_degree: i64,
         v_degree: i64,
         control_points_list: Vec<Vec<CartesianPointRef>>,
@@ -1823,7 +1823,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(BSplineSurfaceId(self.model.b_spline_surface_arena.push(
             BSplineSurface {
@@ -1842,7 +1842,7 @@ impl Ap242Author {
     /// `B_SPLINE_SURFACE_WITH_KNOTS` — strict AP242 constructor.
     pub fn add_b_spline_surface_with_knots(
         &mut self,
-        name: String,
+        name: &str,
         u_degree: i64,
         v_degree: i64,
         control_points_list: Vec<Vec<CartesianPointRef>>,
@@ -1935,7 +1935,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(BSplineSurfaceWithKnotsId(
             self.model
@@ -1961,7 +1961,7 @@ impl Ap242Author {
     /// `BEZIER_CURVE` — strict AP242 constructor.
     pub fn add_bezier_curve(
         &mut self,
-        name: String,
+        name: &str,
         degree: i64,
         control_points_list: Vec<CartesianPointRef>,
         curve_form: BSplineCurveForm,
@@ -1985,7 +1985,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(BezierCurveId(self.model.bezier_curve_arena.push(
             BezierCurve {
@@ -2002,7 +2002,7 @@ impl Ap242Author {
     /// `BEZIER_SURFACE` — strict AP242 constructor.
     pub fn add_bezier_surface(
         &mut self,
-        name: String,
+        name: &str,
         u_degree: i64,
         v_degree: i64,
         control_points_list: Vec<Vec<CartesianPointRef>>,
@@ -2030,7 +2030,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(BezierSurfaceId(self.model.bezier_surface_arena.push(
             BezierSurface {
@@ -2047,10 +2047,10 @@ impl Ap242Author {
     }
 
     /// `BOUNDED_CURVE` — strict AP242 constructor.
-    pub fn add_bounded_curve(&mut self, name: String) -> Result<BoundedCurveId, AuthorError> {
+    pub fn add_bounded_curve(&mut self, name: &str) -> Result<BoundedCurveId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(BoundedCurveId(
             self.model.bounded_curve_arena.push(BoundedCurve { name }),
@@ -2060,7 +2060,7 @@ impl Ap242Author {
     /// `BOUNDED_PCURVE` — strict AP242 constructor.
     pub fn add_bounded_pcurve(
         &mut self,
-        name: String,
+        name: &str,
         basis_surface: SurfaceRef,
         reference_to_curve: DefinitionalRepresentationRef,
     ) -> Result<BoundedPcurveId, AuthorError> {
@@ -2068,7 +2068,7 @@ impl Ap242Author {
         check_definitional_representation_ref(&self.model, &reference_to_curve)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(BoundedPcurveId(self.model.bounded_pcurve_arena.push(
             BoundedPcurve {
@@ -2080,10 +2080,10 @@ impl Ap242Author {
     }
 
     /// `BOUNDED_SURFACE` — strict AP242 constructor.
-    pub fn add_bounded_surface(&mut self, name: String) -> Result<BoundedSurfaceId, AuthorError> {
+    pub fn add_bounded_surface(&mut self, name: &str) -> Result<BoundedSurfaceId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(BoundedSurfaceId(
             self.model
@@ -2095,7 +2095,7 @@ impl Ap242Author {
     /// `BOUNDED_SURFACE_CURVE` — strict AP242 constructor.
     pub fn add_bounded_surface_curve(
         &mut self,
-        name: String,
+        name: &str,
         curve_3d: CurveRef,
         associated_geometry: Vec<PcurveOrSurfaceRef>,
         master_representation: PreferredSurfaceCurveRepresentation,
@@ -2118,7 +2118,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(BoundedSurfaceCurveId(
             self.model
@@ -2135,7 +2135,7 @@ impl Ap242Author {
     /// `BREP_WITH_VOIDS` — strict AP242 constructor.
     pub fn add_brep_with_voids(
         &mut self,
-        name: String,
+        name: &str,
         outer: ClosedShellRef,
         voids: Vec<OrientedClosedShellRef>,
     ) -> Result<BrepWithVoidsId, AuthorError> {
@@ -2157,7 +2157,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(BrepWithVoidsId(
             self.model
@@ -2185,7 +2185,7 @@ impl Ap242Author {
     /// `CAMERA_IMAGE` — strict AP242 constructor.
     pub fn add_camera_image(
         &mut self,
-        name: String,
+        name: &str,
         mapping_source: RepresentationMapRef,
         mapping_target: RepresentationItemRef,
     ) -> Result<CameraImageId, AuthorError> {
@@ -2193,7 +2193,7 @@ impl Ap242Author {
         check_representation_item_ref(&self.model, &mapping_target)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CameraImageId(self.model.camera_image_arena.push(
             CameraImage {
@@ -2207,7 +2207,7 @@ impl Ap242Author {
     /// `CAMERA_IMAGE_3D_WITH_SCALE` — strict AP242 constructor.
     pub fn add_camera_image3d_with_scale(
         &mut self,
-        name: String,
+        name: &str,
         mapping_source: RepresentationMapRef,
         mapping_target: RepresentationItemRef,
     ) -> Result<CameraImage3dWithScaleId, AuthorError> {
@@ -2215,7 +2215,7 @@ impl Ap242Author {
         check_representation_item_ref(&self.model, &mapping_target)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CameraImage3dWithScaleId(
             self.model
@@ -2229,10 +2229,10 @@ impl Ap242Author {
     }
 
     /// `CAMERA_MODEL` — strict AP242 constructor.
-    pub fn add_camera_model(&mut self, name: String) -> Result<CameraModelId, AuthorError> {
+    pub fn add_camera_model(&mut self, name: &str) -> Result<CameraModelId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CameraModelId(
             self.model.camera_model_arena.push(CameraModel { name }),
@@ -2242,7 +2242,7 @@ impl Ap242Author {
     /// `CAMERA_MODEL_D3` — strict AP242 constructor.
     pub fn add_camera_model_d3(
         &mut self,
-        name: String,
+        name: &str,
         view_reference_system: Axis2Placement3dRef,
         perspective_of_volume: ViewVolumeRef,
     ) -> Result<CameraModelD3Id, AuthorError> {
@@ -2250,7 +2250,7 @@ impl Ap242Author {
         check_view_volume_ref(&self.model, &perspective_of_volume)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CameraModelD3Id(self.model.camera_model_d3_arena.push(
             CameraModelD3 {
@@ -2264,7 +2264,7 @@ impl Ap242Author {
     /// `CAMERA_MODEL_D3_MULTI_CLIPPING` — strict AP242 constructor.
     pub fn add_camera_model_d3_multi_clipping(
         &mut self,
-        name: String,
+        name: &str,
         view_reference_system: Axis2Placement3dRef,
         perspective_of_volume: ViewVolumeRef,
         shape_clipping: Vec<CameraModelD3MultiClippingIntersectionSelectRef>,
@@ -2288,7 +2288,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CameraModelD3MultiClippingId(
             self.model
@@ -2305,7 +2305,7 @@ impl Ap242Author {
     /// `CAMERA_MODEL_D3_WITH_HLHSR` — strict AP242 constructor.
     pub fn add_camera_model_d3_with_hlhsr(
         &mut self,
-        name: String,
+        name: &str,
         view_reference_system: Axis2Placement3dRef,
         perspective_of_volume: ViewVolumeRef,
         hidden_line_surface_removal: bool,
@@ -2314,7 +2314,7 @@ impl Ap242Author {
         check_view_volume_ref(&self.model, &perspective_of_volume)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CameraModelD3WithHlhsrId(
             self.model
@@ -2347,7 +2347,7 @@ impl Ap242Author {
     /// `CARTESIAN_POINT` — strict AP242 constructor.
     pub fn add_cartesian_point(
         &mut self,
-        name: String,
+        name: &str,
         coordinates: Reals3,
     ) -> Result<CartesianPointId, AuthorError> {
         {
@@ -2370,7 +2370,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CartesianPointId(
             self.model
@@ -2514,17 +2514,17 @@ impl Ap242Author {
     /// `CENTRE_OF_SYMMETRY` — strict AP242 constructor.
     pub fn add_centre_of_symmetry(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
     ) -> Result<CentreOfSymmetryId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(CentreOfSymmetryId(
             self.model.centre_of_symmetry_arena.push(CentreOfSymmetry {
                 name,
@@ -2538,18 +2538,18 @@ impl Ap242Author {
     /// `CERTIFICATION` — strict AP242 constructor.
     pub fn add_certification(
         &mut self,
-        name: String,
-        purpose: String,
+        name: &str,
+        purpose: &str,
         kind: CertificationTypeRef,
     ) -> Result<CertificationId, AuthorError> {
         check_certification_type_ref(&self.model, &kind)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let purpose = {
             let v = purpose;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CertificationId(self.model.certification_arena.push(
             Certification {
@@ -2563,11 +2563,11 @@ impl Ap242Author {
     /// `CERTIFICATION_TYPE` — strict AP242 constructor.
     pub fn add_certification_type(
         &mut self,
-        description: String,
+        description: &str,
     ) -> Result<CertificationTypeId, AuthorError> {
         let description = {
             let v = description;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CertificationTypeId(
             self.model
@@ -2663,8 +2663,8 @@ impl Ap242Author {
     /// `CHARACTERIZED_ITEM_WITHIN_REPRESENTATION` — strict AP242 constructor.
     pub fn add_characterized_item_within_representation(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         item: RepresentationItemRef,
         rep: RepresentationRef,
     ) -> Result<CharacterizedItemWithinRepresentationId, AuthorError> {
@@ -2672,9 +2672,9 @@ impl Ap242Author {
         check_representation_ref(&self.model, &rep)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(CharacterizedItemWithinRepresentationId(
             self.model
                 .characterized_item_within_representation_arena
@@ -2690,11 +2690,11 @@ impl Ap242Author {
     /// `CHARACTERIZED_OBJECT` — strict AP242 constructor.
     pub fn add_characterized_object(
         &mut self,
-        name: Option<String>,
-        description: Option<String>,
+        name: Option<&str>,
+        description: Option<&str>,
     ) -> Result<CharacterizedObjectId, AuthorError> {
-        let name = name.map(|v| self.text(&v));
-        let description = description.map(|v| self.text(&v));
+        let name = name.map(|v| self.text(v));
+        let description = description.map(|v| self.text(v));
         Ok(CharacterizedObjectId(
             self.model
                 .characterized_object_arena
@@ -2737,7 +2737,7 @@ impl Ap242Author {
     /// `CIRCLE` — strict AP242 constructor.
     pub fn add_circle(
         &mut self,
-        name: String,
+        name: &str,
         position: Axis2PlacementRef,
         radius: f64,
     ) -> Result<CircleId, AuthorError> {
@@ -2750,7 +2750,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CircleId(self.model.circle_arena.push(Circle {
             name,
@@ -2762,8 +2762,8 @@ impl Ap242Author {
     /// `CIRCULAR_RUNOUT_TOLERANCE` — strict AP242 constructor.
     pub fn add_circular_runout_tolerance(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
         datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -2789,9 +2789,9 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(CircularRunoutToleranceId(
             self.model
                 .circular_runout_tolerance_arena
@@ -2808,7 +2808,7 @@ impl Ap242Author {
     /// `CLOSED_SHELL` — strict AP242 constructor.
     pub fn add_closed_shell(
         &mut self,
-        name: String,
+        name: &str,
         cfs_faces: Vec<FaceRef>,
     ) -> Result<ClosedShellId, AuthorError> {
         {
@@ -2828,7 +2828,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ClosedShellId(
             self.model
@@ -2840,8 +2840,8 @@ impl Ap242Author {
     /// `COAXIALITY_TOLERANCE` — strict AP242 constructor.
     pub fn add_coaxiality_tolerance(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
         datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -2867,9 +2867,9 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(CoaxialityToleranceId(
             self.model
                 .coaxiality_tolerance_arena
@@ -2891,7 +2891,7 @@ impl Ap242Author {
     /// `COLOUR_RGB` — strict AP242 constructor.
     pub fn add_colour_rgb(
         &mut self,
-        name: String,
+        name: &str,
         red: f64,
         green: f64,
         blue: f64,
@@ -2916,7 +2916,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ColourRgbId(self.model.colour_rgb_arena.push(ColourRgb {
             name,
@@ -2929,11 +2929,11 @@ impl Ap242Author {
     /// `COLOUR_SPECIFICATION` — strict AP242 constructor.
     pub fn add_colour_specification(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<ColourSpecificationId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ColourSpecificationId(
             self.model
@@ -2945,21 +2945,21 @@ impl Ap242Author {
     /// `COMMON_DATUM` — strict AP242 constructor.
     pub fn add_common_datum(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
-        identification: String,
+        identification: &str,
     ) -> Result<CommonDatumId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         let identification = {
             let v = identification;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CommonDatumId(self.model.common_datum_arena.push(
             CommonDatum {
@@ -2975,7 +2975,7 @@ impl Ap242Author {
     /// `COMPLEX_TRIANGULATED_FACE` — strict AP242 constructor.
     pub fn add_complex_triangulated_face(
         &mut self,
-        name: String,
+        name: &str,
         coordinates: CoordinatesListRef,
         pnmax: i64,
         normals: Vec<Reals3>,
@@ -3012,7 +3012,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ComplexTriangulatedFaceId(
             self.model
@@ -3033,7 +3033,7 @@ impl Ap242Author {
     /// `COMPLEX_TRIANGULATED_SURFACE_SET` — strict AP242 constructor.
     pub fn add_complex_triangulated_surface_set(
         &mut self,
-        name: String,
+        name: &str,
         coordinates: CoordinatesListRef,
         pnmax: i64,
         normals: Vec<Reals3>,
@@ -3066,7 +3066,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ComplexTriangulatedSurfaceSetId(
             self.model
@@ -3086,7 +3086,7 @@ impl Ap242Author {
     /// `COMPOSITE_CURVE` — strict AP242 constructor.
     pub fn add_composite_curve(
         &mut self,
-        name: String,
+        name: &str,
         segments: Vec<CompositeCurveSegmentRef>,
         self_intersect: Logical,
     ) -> Result<CompositeCurveId, AuthorError> {
@@ -3107,7 +3107,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CompositeCurveId(self.model.composite_curve_arena.push(
             CompositeCurve {
@@ -3140,17 +3140,17 @@ impl Ap242Author {
     /// `COMPOSITE_GROUP_SHAPE_ASPECT` — strict AP242 constructor.
     pub fn add_composite_group_shape_aspect(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
     ) -> Result<CompositeGroupShapeAspectId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(CompositeGroupShapeAspectId(
             self.model
                 .composite_group_shape_aspect_arena
@@ -3166,17 +3166,17 @@ impl Ap242Author {
     /// `COMPOSITE_SHAPE_ASPECT` — strict AP242 constructor.
     pub fn add_composite_shape_aspect(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
     ) -> Result<CompositeShapeAspectId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(CompositeShapeAspectId(
             self.model
                 .composite_shape_aspect_arena
@@ -3192,7 +3192,7 @@ impl Ap242Author {
     /// `COMPOSITE_TEXT` — strict AP242 constructor.
     pub fn add_composite_text(
         &mut self,
-        name: String,
+        name: &str,
         collected_text: Vec<TextOrCharacterRef>,
     ) -> Result<CompositeTextId, AuthorError> {
         {
@@ -3212,7 +3212,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CompositeTextId(self.model.composite_text_arena.push(
             CompositeText {
@@ -3225,13 +3225,13 @@ impl Ap242Author {
     /// `COMPOUND_REPRESENTATION_ITEM` — strict AP242 constructor.
     pub fn add_compound_representation_item(
         &mut self,
-        name: String,
+        name: &str,
         item_element: CompoundItemDefinitionRef,
     ) -> Result<CompoundRepresentationItemId, AuthorError> {
         check_compound_item_definition_ref(&self.model, &item_element)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CompoundRepresentationItemId(
             self.model
@@ -3243,8 +3243,8 @@ impl Ap242Author {
     /// `CONCENTRICITY_TOLERANCE` — strict AP242 constructor.
     pub fn add_concentricity_tolerance(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
         datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -3270,9 +3270,9 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ConcentricityToleranceId(
             self.model
                 .concentricity_tolerance_arena
@@ -3307,7 +3307,7 @@ impl Ap242Author {
     /// `CONFIGURATION_EFFECTIVITY` — strict AP242 constructor.
     pub fn add_configuration_effectivity(
         &mut self,
-        id: String,
+        id: &str,
         usage: ProductDefinitionRelationshipRef,
         configuration: ConfigurationDesignRef,
     ) -> Result<ConfigurationEffectivityId, AuthorError> {
@@ -3315,7 +3315,7 @@ impl Ap242Author {
         check_configuration_design_ref(&self.model, &configuration)?;
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ConfigurationEffectivityId(
             self.model
@@ -3331,23 +3331,23 @@ impl Ap242Author {
     /// `CONFIGURATION_ITEM` — strict AP242 constructor.
     pub fn add_configuration_item(
         &mut self,
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: &str,
+        name: &str,
+        description: Option<&str>,
         item_concept: ProductConceptRef,
-        purpose: Option<String>,
+        purpose: Option<&str>,
     ) -> Result<ConfigurationItemId, AuthorError> {
         check_product_concept_ref(&self.model, &item_concept)?;
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
-        let purpose = purpose.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
+        let purpose = purpose.map(|v| self.text(v));
         Ok(ConfigurationItemId(
             self.model.configuration_item_arena.push(ConfigurationItem {
                 id,
@@ -3362,13 +3362,13 @@ impl Ap242Author {
     /// `CONIC` — strict AP242 constructor.
     pub fn add_conic(
         &mut self,
-        name: String,
+        name: &str,
         position: Axis2PlacementRef,
     ) -> Result<ConicId, AuthorError> {
         check_axis2_placement_ref(&self.model, &position)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ConicId(
             self.model.conic_arena.push(Conic { name, position }),
@@ -3378,7 +3378,7 @@ impl Ap242Author {
     /// `CONICAL_SURFACE` — strict AP242 constructor.
     pub fn add_conical_surface(
         &mut self,
-        name: String,
+        name: &str,
         position: Axis2Placement3dRef,
         radius: f64,
         semi_angle: f64,
@@ -3398,7 +3398,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ConicalSurfaceId(self.model.conical_surface_arena.push(
             ConicalSurface {
@@ -3413,7 +3413,7 @@ impl Ap242Author {
     /// `CONNECTED_FACE_SET` — strict AP242 constructor.
     pub fn add_connected_face_set(
         &mut self,
-        name: String,
+        name: &str,
         cfs_faces: Option<Vec<FaceRef>>,
     ) -> Result<ConnectedFaceSetId, AuthorError> {
         if let Some(x) = &cfs_faces {
@@ -3434,7 +3434,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ConnectedFaceSetId(
             self.model
@@ -3446,7 +3446,7 @@ impl Ap242Author {
     /// `CONSTRUCTIVE_GEOMETRY_REPRESENTATION` — strict AP242 constructor.
     pub fn add_constructive_geometry_representation(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<ConstructiveGeometryRepresentationId, AuthorError> {
@@ -3468,7 +3468,7 @@ impl Ap242Author {
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ConstructiveGeometryRepresentationId(
             self.model.constructive_geometry_representation_arena.push(
@@ -3484,8 +3484,8 @@ impl Ap242Author {
     /// `CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_constructive_geometry_representation_relationship(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         rep_1: ConstructiveGeometryRepresentationOrShapeRepresentationRef,
         rep_2: RepresentationOrRepresentationReferenceRef,
     ) -> Result<ConstructiveGeometryRepresentationRelationshipId, AuthorError> {
@@ -3496,9 +3496,9 @@ impl Ap242Author {
         check_representation_or_representation_reference_ref(&self.model, &rep_2)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ConstructiveGeometryRepresentationRelationshipId(
             self.model
                 .constructive_geometry_representation_relationship_arena
@@ -3514,7 +3514,7 @@ impl Ap242Author {
     /// `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` — strict AP242 constructor.
     pub fn add_context_dependent_over_riding_styled_item(
         &mut self,
-        name: String,
+        name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
         item: StyledItemTargetRef,
         over_ridden_style: StyledItemRef,
@@ -3542,7 +3542,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ContextDependentOverRidingStyledItemId(
             self.model
@@ -3579,12 +3579,12 @@ impl Ap242Author {
     pub fn add_context_dependent_unit(
         &mut self,
         dimensions: DimensionalExponentsRef,
-        name: String,
+        name: &str,
     ) -> Result<ContextDependentUnitId, AuthorError> {
         check_dimensional_exponents_ref(&self.model, &dimensions)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ContextDependentUnitId(
             self.model
@@ -3596,17 +3596,17 @@ impl Ap242Author {
     /// `CONTINUOUS_SHAPE_ASPECT` — strict AP242 constructor.
     pub fn add_continuous_shape_aspect(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
     ) -> Result<ContinuousShapeAspectId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ContinuousShapeAspectId(
             self.model
                 .continuous_shape_aspect_arena
@@ -3622,18 +3622,18 @@ impl Ap242Author {
     /// `CONTRACT` — strict AP242 constructor.
     pub fn add_contract(
         &mut self,
-        name: String,
-        purpose: String,
+        name: &str,
+        purpose: &str,
         kind: ContractTypeRef,
     ) -> Result<ContractId, AuthorError> {
         check_contract_type_ref(&self.model, &kind)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let purpose = {
             let v = purpose;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ContractId(self.model.contract_arena.push(Contract {
             name,
@@ -3643,13 +3643,10 @@ impl Ap242Author {
     }
 
     /// `CONTRACT_TYPE` — strict AP242 constructor.
-    pub fn add_contract_type(
-        &mut self,
-        description: String,
-    ) -> Result<ContractTypeId, AuthorError> {
+    pub fn add_contract_type(&mut self, description: &str) -> Result<ContractTypeId, AuthorError> {
         let description = {
             let v = description;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ContractTypeId(
             self.model
@@ -3662,14 +3659,14 @@ impl Ap242Author {
     pub fn add_conversion_based_unit(
         &mut self,
         dimensions: DimensionalExponentsRef,
-        name: String,
+        name: &str,
         conversion_factor: MeasureWithUnitRef,
     ) -> Result<ConversionBasedUnitId, AuthorError> {
         check_dimensional_exponents_ref(&self.model, &dimensions)?;
         check_measure_with_unit_ref(&self.model, &conversion_factor)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ConversionBasedUnitId(
             self.model
@@ -3703,7 +3700,7 @@ impl Ap242Author {
     /// `COORDINATES_LIST` — strict AP242 constructor.
     pub fn add_coordinates_list(
         &mut self,
-        name: String,
+        name: &str,
         npoints: i64,
         position_coords: Vec<Reals3>,
     ) -> Result<CoordinatesListId, AuthorError> {
@@ -3743,7 +3740,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CoordinatesListId(self.model.coordinates_list_arena.push(
             CoordinatesList {
@@ -3755,10 +3752,10 @@ impl Ap242Author {
     }
 
     /// `CURVE` — strict AP242 constructor.
-    pub fn add_curve(&mut self, name: String) -> Result<CurveId, AuthorError> {
+    pub fn add_curve(&mut self, name: &str) -> Result<CurveId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CurveId(self.model.curve_arena.push(Curve { name })))
     }
@@ -3766,7 +3763,7 @@ impl Ap242Author {
     /// `CURVE_STYLE` — strict AP242 constructor.
     pub fn add_curve_style(
         &mut self,
-        name: String,
+        name: &str,
         curve_font: Option<CurveFontOrScaledCurveFontSelectRef>,
         curve_width: Option<SizeSelectRef>,
         curve_colour: Option<ColourRef>,
@@ -3782,7 +3779,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CurveStyleId(self.model.curve_style_arena.push(
             CurveStyle {
@@ -3797,7 +3794,7 @@ impl Ap242Author {
     /// `CURVE_STYLE_FONT` — strict AP242 constructor.
     pub fn add_curve_style_font(
         &mut self,
-        name: String,
+        name: &str,
         pattern_list: Vec<CurveStyleFontPatternRef>,
     ) -> Result<CurveStyleFontId, AuthorError> {
         {
@@ -3817,7 +3814,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CurveStyleFontId(
             self.model
@@ -3829,7 +3826,7 @@ impl Ap242Author {
     /// `CURVE_STYLE_FONT_AND_SCALING` — strict AP242 constructor.
     pub fn add_curve_style_font_and_scaling(
         &mut self,
-        name: String,
+        name: &str,
         curve_font: CurveStyleFontSelectRef,
         curve_font_scaling: f64,
     ) -> Result<CurveStyleFontAndScalingId, AuthorError> {
@@ -3842,7 +3839,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CurveStyleFontAndScalingId(
             self.model
@@ -3903,7 +3900,7 @@ impl Ap242Author {
     /// `CYLINDRICAL_SURFACE` — strict AP242 constructor.
     pub fn add_cylindrical_surface(
         &mut self,
-        name: String,
+        name: &str,
         position: Axis2Placement3dRef,
         radius: f64,
     ) -> Result<CylindricalSurfaceId, AuthorError> {
@@ -3916,7 +3913,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(CylindricalSurfaceId(
             self.model
@@ -3932,8 +3929,8 @@ impl Ap242Author {
     /// `CYLINDRICITY_TOLERANCE` — strict AP242 constructor.
     pub fn add_cylindricity_tolerance(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
     ) -> Result<CylindricityToleranceId, AuthorError> {
@@ -3943,9 +3940,9 @@ impl Ap242Author {
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(CylindricityToleranceId(
             self.model
                 .cylindricity_tolerance_arena
@@ -3998,10 +3995,10 @@ impl Ap242Author {
     }
 
     /// `DATE_ROLE` — strict AP242 constructor.
-    pub fn add_date_role(&mut self, name: String) -> Result<DateRoleId, AuthorError> {
+    pub fn add_date_role(&mut self, name: &str) -> Result<DateRoleId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DateRoleId(
             self.model.date_role_arena.push(DateRole { name }),
@@ -4009,10 +4006,10 @@ impl Ap242Author {
     }
 
     /// `DATE_TIME_ROLE` — strict AP242 constructor.
-    pub fn add_date_time_role(&mut self, name: String) -> Result<DateTimeRoleId, AuthorError> {
+    pub fn add_date_time_role(&mut self, name: &str) -> Result<DateTimeRoleId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DateTimeRoleId(
             self.model.date_time_role_arena.push(DateTimeRole { name }),
@@ -4022,21 +4019,21 @@ impl Ap242Author {
     /// `DATUM` — strict AP242 constructor.
     pub fn add_datum(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
-        identification: String,
+        identification: &str,
     ) -> Result<DatumId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         let identification = {
             let v = identification;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DatumId(self.model.datum_arena.push(Datum {
             name,
@@ -4050,17 +4047,17 @@ impl Ap242Author {
     /// `DATUM_FEATURE` — strict AP242 constructor.
     pub fn add_datum_feature(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
     ) -> Result<DatumFeatureId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(DatumFeatureId(self.model.datum_feature_arena.push(
             DatumFeature {
                 name,
@@ -4089,8 +4086,8 @@ impl Ap242Author {
     /// `DATUM_REFERENCE_COMPARTMENT` — strict AP242 constructor.
     pub fn add_datum_reference_compartment(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
         base: DatumOrCommonDatumRef,
@@ -4116,9 +4113,9 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(DatumReferenceCompartmentId(
             self.model
                 .datum_reference_compartment_arena
@@ -4136,8 +4133,8 @@ impl Ap242Author {
     /// `DATUM_REFERENCE_ELEMENT` — strict AP242 constructor.
     pub fn add_datum_reference_element(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
         base: DatumOrCommonDatumRef,
@@ -4163,9 +4160,9 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(DatumReferenceElementId(
             self.model
                 .datum_reference_element_arena
@@ -4200,8 +4197,8 @@ impl Ap242Author {
     /// `DATUM_SYSTEM` — strict AP242 constructor.
     pub fn add_datum_system(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
         constituents: Vec<DatumReferenceCompartmentRef>,
@@ -4224,9 +4221,9 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(DatumSystemId(self.model.datum_system_arena.push(
             DatumSystem {
                 name,
@@ -4241,21 +4238,21 @@ impl Ap242Author {
     /// `DATUM_TARGET` — strict AP242 constructor.
     pub fn add_datum_target(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
-        target_id: String,
+        target_id: &str,
     ) -> Result<DatumTargetId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         let target_id = {
             let v = target_id;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DatumTargetId(self.model.datum_target_arena.push(
             DatumTarget {
@@ -4271,12 +4268,12 @@ impl Ap242Author {
     /// `DEFAULT_MODEL_GEOMETRIC_VIEW` — strict AP242 constructor.
     pub fn add_default_model_geometric_view(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         item: RepresentationItemRef,
         rep: RepresentationRef,
-        name_1: String,
-        description_1: Option<String>,
+        name_1: &str,
+        description_1: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
     ) -> Result<DefaultModelGeometricViewId, AuthorError> {
         check_representation_item_ref(&self.model, &item)?;
@@ -4284,14 +4281,14 @@ impl Ap242Author {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         let name_1 = {
             let v = name_1;
-            self.text(&v)
+            self.text(v)
         };
-        let description_1 = description_1.map(|v| self.text(&v));
+        let description_1 = description_1.map(|v| self.text(v));
         Ok(DefaultModelGeometricViewId(
             self.model
                 .default_model_geometric_view_arena
@@ -4310,7 +4307,7 @@ impl Ap242Author {
     /// `DEFINED_CHARACTER_GLYPH` — strict AP242 constructor.
     pub fn add_defined_character_glyph(
         &mut self,
-        name: String,
+        name: &str,
         definition: DefinedGlyphSelectRef,
         placement: Axis2PlacementRef,
     ) -> Result<DefinedCharacterGlyphId, AuthorError> {
@@ -4318,7 +4315,7 @@ impl Ap242Author {
         check_axis2_placement_ref(&self.model, &placement)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DefinedCharacterGlyphId(
             self.model
@@ -4334,7 +4331,7 @@ impl Ap242Author {
     /// `DEFINED_SYMBOL` — strict AP242 constructor.
     pub fn add_defined_symbol(
         &mut self,
-        name: String,
+        name: &str,
         definition: DefinedSymbolSelectRef,
         target: SymbolTargetRef,
     ) -> Result<DefinedSymbolId, AuthorError> {
@@ -4342,7 +4339,7 @@ impl Ap242Author {
         check_symbol_target_ref(&self.model, &target)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DefinedSymbolId(self.model.defined_symbol_arena.push(
             DefinedSymbol {
@@ -4356,7 +4353,7 @@ impl Ap242Author {
     /// `DEFINITIONAL_REPRESENTATION` — strict AP242 constructor.
     pub fn add_definitional_representation(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<DefinitionalRepresentationId, AuthorError> {
@@ -4378,7 +4375,7 @@ impl Ap242Author {
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DefinitionalRepresentationId(
             self.model
@@ -4394,8 +4391,8 @@ impl Ap242Author {
     /// `DEFINITIONAL_REPRESENTATION_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_definitional_representation_relationship(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         rep_1: RepresentationOrRepresentationReferenceRef,
         rep_2: RepresentationOrRepresentationReferenceRef,
     ) -> Result<DefinitionalRepresentationRelationshipId, AuthorError> {
@@ -4403,9 +4400,9 @@ impl Ap242Author {
         check_representation_or_representation_reference_ref(&self.model, &rep_2)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(DefinitionalRepresentationRelationshipId(
             self.model
                 .definitional_representation_relationship_arena
@@ -4421,8 +4418,8 @@ impl Ap242Author {
     /// `DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT` — strict AP242 constructor.
     pub fn add_definitional_representation_relationship_with_same_context(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         rep_1: RepresentationOrRepresentationReferenceRef,
         rep_2: RepresentationOrRepresentationReferenceRef,
     ) -> Result<DefinitionalRepresentationRelationshipWithSameContextId, AuthorError> {
@@ -4430,9 +4427,9 @@ impl Ap242Author {
         check_representation_or_representation_reference_ref(&self.model, &rep_2)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(DefinitionalRepresentationRelationshipWithSameContextId(
             self.model
                 .definitional_representation_relationship_with_same_context_arena
@@ -4448,7 +4445,7 @@ impl Ap242Author {
     /// `DEGENERATE_TOROIDAL_SURFACE` — strict AP242 constructor.
     pub fn add_degenerate_toroidal_surface(
         &mut self,
-        name: String,
+        name: &str,
         position: Axis2Placement3dRef,
         major_radius: f64,
         minor_radius: f64,
@@ -4469,7 +4466,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DegenerateToroidalSurfaceId(
             self.model
@@ -4487,17 +4484,17 @@ impl Ap242Author {
     /// `DERIVED_SHAPE_ASPECT` — strict AP242 constructor.
     pub fn add_derived_shape_aspect(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
     ) -> Result<DerivedShapeAspectId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(DerivedShapeAspectId(
             self.model
                 .derived_shape_aspect_arena
@@ -4558,13 +4555,13 @@ impl Ap242Author {
     /// `DESCRIPTION_ATTRIBUTE` — strict AP242 constructor.
     pub fn add_description_attribute(
         &mut self,
-        attribute_value: String,
+        attribute_value: &str,
         described_item: DescriptionAttributeSelectRef,
     ) -> Result<DescriptionAttributeId, AuthorError> {
         check_description_attribute_select_ref(&self.model, &described_item)?;
         let attribute_value = {
             let v = attribute_value;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DescriptionAttributeId(
             self.model
@@ -4579,16 +4576,16 @@ impl Ap242Author {
     /// `DESCRIPTIVE_REPRESENTATION_ITEM` — strict AP242 constructor.
     pub fn add_descriptive_representation_item(
         &mut self,
-        name: String,
-        description: String,
+        name: &str,
+        description: &str,
     ) -> Result<DescriptiveRepresentationItemId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let description = {
             let v = description;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DescriptiveRepresentationItemId(
             self.model
@@ -4600,18 +4597,18 @@ impl Ap242Author {
     /// `DESIGN_CONTEXT` — strict AP242 constructor.
     pub fn add_design_context(
         &mut self,
-        name: String,
+        name: &str,
         frame_of_reference: ApplicationContextRef,
-        life_cycle_stage: String,
+        life_cycle_stage: &str,
     ) -> Result<DesignContextId, AuthorError> {
         check_application_context_ref(&self.model, &frame_of_reference)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let life_cycle_stage = {
             let v = life_cycle_stage;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DesignContextId(self.model.design_context_arena.push(
             DesignContext {
@@ -4711,8 +4708,8 @@ impl Ap242Author {
     /// `DIMENSIONAL_LOCATION` — strict AP242 constructor.
     pub fn add_dimensional_location(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         relating_shape_aspect: ShapeAspectRef,
         related_shape_aspect: ShapeAspectRef,
     ) -> Result<DimensionalLocationId, AuthorError> {
@@ -4720,9 +4717,9 @@ impl Ap242Author {
         check_shape_aspect_ref(&self.model, &related_shape_aspect)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(DimensionalLocationId(
             self.model
                 .dimensional_location_arena
@@ -4738,8 +4735,8 @@ impl Ap242Author {
     /// `DIMENSIONAL_LOCATION_WITH_PATH` — strict AP242 constructor.
     pub fn add_dimensional_location_with_path(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         relating_shape_aspect: ShapeAspectRef,
         related_shape_aspect: ShapeAspectRef,
         path: ShapeAspectRef,
@@ -4749,9 +4746,9 @@ impl Ap242Author {
         check_shape_aspect_ref(&self.model, &path)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(DimensionalLocationWithPathId(
             self.model
                 .dimensional_location_with_path_arena
@@ -4769,12 +4766,12 @@ impl Ap242Author {
     pub fn add_dimensional_size(
         &mut self,
         applies_to: ShapeAspectRef,
-        name: String,
+        name: &str,
     ) -> Result<DimensionalSizeId, AuthorError> {
         check_shape_aspect_ref(&self.model, &applies_to)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DimensionalSizeId(
             self.model
@@ -4786,23 +4783,23 @@ impl Ap242Author {
     /// `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` — strict AP242 constructor.
     pub fn add_dimensional_size_with_datum_feature(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
         applies_to: ShapeAspectRef,
-        name_1: String,
+        name_1: &str,
     ) -> Result<DimensionalSizeWithDatumFeatureId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
         check_shape_aspect_ref(&self.model, &applies_to)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         let name_1 = {
             let v = name_1;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DimensionalSizeWithDatumFeatureId(
             self.model.dimensional_size_with_datum_feature_arena.push(
@@ -4822,14 +4819,14 @@ impl Ap242Author {
     pub fn add_dimensional_size_with_path(
         &mut self,
         applies_to: ShapeAspectRef,
-        name: String,
+        name: &str,
         path: ShapeAspectRef,
     ) -> Result<DimensionalSizeWithPathId, AuthorError> {
         check_shape_aspect_ref(&self.model, &applies_to)?;
         check_shape_aspect_ref(&self.model, &path)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DimensionalSizeWithPathId(
             self.model
@@ -4845,8 +4842,8 @@ impl Ap242Author {
     /// `DIRECTED_DIMENSIONAL_LOCATION` — strict AP242 constructor.
     pub fn add_directed_dimensional_location(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         relating_shape_aspect: ShapeAspectRef,
         related_shape_aspect: ShapeAspectRef,
     ) -> Result<DirectedDimensionalLocationId, AuthorError> {
@@ -4854,9 +4851,9 @@ impl Ap242Author {
         check_shape_aspect_ref(&self.model, &related_shape_aspect)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(DirectedDimensionalLocationId(
             self.model
                 .directed_dimensional_location_arena
@@ -4872,7 +4869,7 @@ impl Ap242Author {
     /// `DIRECTION` — strict AP242 constructor.
     pub fn add_direction(
         &mut self,
-        name: String,
+        name: &str,
         direction_ratios: Reals3,
     ) -> Result<DirectionId, AuthorError> {
         {
@@ -4895,7 +4892,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DirectionId(self.model.direction_arena.push(Direction {
             name,
@@ -4906,21 +4903,21 @@ impl Ap242Author {
     /// `DOCUMENT` — strict AP242 constructor.
     pub fn add_document(
         &mut self,
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: &str,
+        name: &str,
+        description: Option<&str>,
         kind: DocumentTypeRef,
     ) -> Result<DocumentId, AuthorError> {
         check_document_type_ref(&self.model, &kind)?;
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(DocumentId(self.model.document_arena.push(Document {
             id,
             name,
@@ -4932,28 +4929,28 @@ impl Ap242Author {
     /// `DOCUMENT_FILE` — strict AP242 constructor.
     pub fn add_document_file(
         &mut self,
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: &str,
+        name: &str,
+        description: Option<&str>,
         kind: DocumentTypeRef,
-        name_1: String,
-        description_1: Option<String>,
+        name_1: &str,
+        description_1: Option<&str>,
     ) -> Result<DocumentFileId, AuthorError> {
         check_document_type_ref(&self.model, &kind)?;
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         let name_1 = {
             let v = name_1;
-            self.text(&v)
+            self.text(v)
         };
-        let description_1 = description_1.map(|v| self.text(&v));
+        let description_1 = description_1.map(|v| self.text(v));
         Ok(DocumentFileId(self.model.document_file_arena.push(
             DocumentFile {
                 id,
@@ -4969,8 +4966,8 @@ impl Ap242Author {
     /// `DOCUMENT_PRODUCT_ASSOCIATION` — strict AP242 constructor.
     pub fn add_document_product_association(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         relating_document: DocumentRef,
         related_product: ProductOrFormationOrDefinitionRef,
     ) -> Result<DocumentProductAssociationId, AuthorError> {
@@ -4978,9 +4975,9 @@ impl Ap242Author {
         check_product_or_formation_or_definition_ref(&self.model, &related_product)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(DocumentProductAssociationId(
             self.model
                 .document_product_association_arena
@@ -4996,8 +4993,8 @@ impl Ap242Author {
     /// `DOCUMENT_PRODUCT_EQUIVALENCE` — strict AP242 constructor.
     pub fn add_document_product_equivalence(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         relating_document: DocumentRef,
         related_product: ProductOrFormationOrDefinitionRef,
     ) -> Result<DocumentProductEquivalenceId, AuthorError> {
@@ -5005,9 +5002,9 @@ impl Ap242Author {
         check_product_or_formation_or_definition_ref(&self.model, &related_product)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(DocumentProductEquivalenceId(
             self.model
                 .document_product_equivalence_arena
@@ -5024,12 +5021,12 @@ impl Ap242Author {
     pub fn add_document_reference(
         &mut self,
         assigned_document: DocumentRef,
-        source: String,
+        source: &str,
     ) -> Result<DocumentReferenceId, AuthorError> {
         check_document_ref(&self.model, &assigned_document)?;
         let source = {
             let v = source;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DocumentReferenceId(
             self.model.document_reference_arena.push(DocumentReference {
@@ -5042,13 +5039,13 @@ impl Ap242Author {
     /// `DOCUMENT_REPRESENTATION_TYPE` — strict AP242 constructor.
     pub fn add_document_representation_type(
         &mut self,
-        name: String,
+        name: &str,
         represented_document: DocumentRef,
     ) -> Result<DocumentRepresentationTypeId, AuthorError> {
         check_document_ref(&self.model, &represented_document)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DocumentRepresentationTypeId(
             self.model
@@ -5063,11 +5060,11 @@ impl Ap242Author {
     /// `DOCUMENT_TYPE` — strict AP242 constructor.
     pub fn add_document_type(
         &mut self,
-        product_data_type: String,
+        product_data_type: &str,
     ) -> Result<DocumentTypeId, AuthorError> {
         let product_data_type = {
             let v = product_data_type;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DocumentTypeId(
             self.model
@@ -5079,7 +5076,7 @@ impl Ap242Author {
     /// `DRAUGHTING_ANNOTATION_OCCURRENCE` — strict AP242 constructor.
     pub fn add_draughting_annotation_occurrence(
         &mut self,
-        name: String,
+        name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
         item: StyledItemTargetRef,
     ) -> Result<DraughtingAnnotationOccurrenceId, AuthorError> {
@@ -5089,7 +5086,7 @@ impl Ap242Author {
         check_styled_item_target_ref(&self.model, &item)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DraughtingAnnotationOccurrenceId(
             self.model
@@ -5101,7 +5098,7 @@ impl Ap242Author {
     /// `DRAUGHTING_CALLOUT` — strict AP242 constructor.
     pub fn add_draughting_callout(
         &mut self,
-        name: String,
+        name: &str,
         contents: Vec<DraughtingCalloutElementRef>,
     ) -> Result<DraughtingCalloutId, AuthorError> {
         {
@@ -5121,7 +5118,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DraughtingCalloutId(
             self.model
@@ -5133,8 +5130,8 @@ impl Ap242Author {
     /// `DRAUGHTING_CALLOUT_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_draughting_callout_relationship(
         &mut self,
-        name: String,
-        description: String,
+        name: &str,
+        description: &str,
         relating_draughting_callout: DraughtingCalloutRef,
         related_draughting_callout: DraughtingCalloutRef,
     ) -> Result<DraughtingCalloutRelationshipId, AuthorError> {
@@ -5142,11 +5139,11 @@ impl Ap242Author {
         check_draughting_callout_ref(&self.model, &related_draughting_callout)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let description = {
             let v = description;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DraughtingCalloutRelationshipId(
             self.model
@@ -5163,7 +5160,7 @@ impl Ap242Author {
     /// `DRAUGHTING_MODEL` — strict AP242 constructor.
     pub fn add_draughting_model(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<DraughtingModelId, AuthorError> {
@@ -5185,7 +5182,7 @@ impl Ap242Author {
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DraughtingModelId(self.model.draughting_model_arena.push(
             DraughtingModel {
@@ -5199,8 +5196,8 @@ impl Ap242Author {
     /// `DRAUGHTING_MODEL_ITEM_ASSOCIATION` — strict AP242 constructor.
     pub fn add_draughting_model_item_association(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         definition: DraughtingModelItemDefinitionRef,
         used_representation: AnnotationRepresentationSelectRef,
         identified_item: DraughtingModelItemAssociationSelectRef,
@@ -5210,9 +5207,9 @@ impl Ap242Author {
         check_draughting_model_item_association_select_ref(&self.model, &identified_item)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(DraughtingModelItemAssociationId(
             self.model.draughting_model_item_association_arena.push(
                 DraughtingModelItemAssociation {
@@ -5229,8 +5226,8 @@ impl Ap242Author {
     /// `DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER` — strict AP242 constructor.
     pub fn add_draughting_model_item_association_with_placeholder(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         definition: DraughtingModelItemDefinitionRef,
         used_representation: AnnotationRepresentationSelectRef,
         identified_item: DraughtingModelItemAssociationSelectRef,
@@ -5242,9 +5239,9 @@ impl Ap242Author {
         check_annotation_placeholder_occurrence_ref(&self.model, &annotation_placeholder)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(DraughtingModelItemAssociationWithPlaceholderId(
             self.model
                 .draughting_model_item_association_with_placeholder_arena
@@ -5262,11 +5259,11 @@ impl Ap242Author {
     /// `DRAUGHTING_PRE_DEFINED_COLOUR` — strict AP242 constructor.
     pub fn add_draughting_pre_defined_colour(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<DraughtingPreDefinedColourId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DraughtingPreDefinedColourId(
             self.model
@@ -5278,11 +5275,11 @@ impl Ap242Author {
     /// `DRAUGHTING_PRE_DEFINED_CURVE_FONT` — strict AP242 constructor.
     pub fn add_draughting_pre_defined_curve_font(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<DraughtingPreDefinedCurveFontId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DraughtingPreDefinedCurveFontId(
             self.model
@@ -5294,11 +5291,11 @@ impl Ap242Author {
     /// `DRAUGHTING_PRE_DEFINED_TEXT_FONT` — strict AP242 constructor.
     pub fn add_draughting_pre_defined_text_font(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<DraughtingPreDefinedTextFontId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(DraughtingPreDefinedTextFontId(
             self.model
@@ -5310,7 +5307,7 @@ impl Ap242Author {
     /// `EDGE` — strict AP242 constructor.
     pub fn add_edge(
         &mut self,
-        name: String,
+        name: &str,
         edge_start: Option<VertexRef>,
         edge_end: Option<VertexRef>,
     ) -> Result<EdgeId, AuthorError> {
@@ -5322,7 +5319,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(EdgeId(self.model.edge_arena.push(Edge {
             name,
@@ -5334,7 +5331,7 @@ impl Ap242Author {
     /// `EDGE_CURVE` — strict AP242 constructor.
     pub fn add_edge_curve(
         &mut self,
-        name: String,
+        name: &str,
         edge_start: VertexRef,
         edge_end: VertexRef,
         edge_geometry: CurveRef,
@@ -5345,7 +5342,7 @@ impl Ap242Author {
         check_curve_ref(&self.model, &edge_geometry)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(EdgeCurveId(self.model.edge_curve_arena.push(EdgeCurve {
             name,
@@ -5359,7 +5356,7 @@ impl Ap242Author {
     /// `EDGE_LOOP` — strict AP242 constructor.
     pub fn add_edge_loop(
         &mut self,
-        name: String,
+        name: &str,
         edge_list: Vec<OrientedEdgeRef>,
     ) -> Result<EdgeLoopId, AuthorError> {
         {
@@ -5379,7 +5376,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(EdgeLoopId(
             self.model
@@ -5389,10 +5386,10 @@ impl Ap242Author {
     }
 
     /// `EFFECTIVITY` — strict AP242 constructor.
-    pub fn add_effectivity(&mut self, id: String) -> Result<EffectivityId, AuthorError> {
+    pub fn add_effectivity(&mut self, id: &str) -> Result<EffectivityId, AuthorError> {
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         Ok(EffectivityId(
             self.model.effectivity_arena.push(Effectivity { id }),
@@ -5402,13 +5399,13 @@ impl Ap242Author {
     /// `ELEMENTARY_SURFACE` — strict AP242 constructor.
     pub fn add_elementary_surface(
         &mut self,
-        name: String,
+        name: &str,
         position: Axis2Placement3dRef,
     ) -> Result<ElementarySurfaceId, AuthorError> {
         check_axis2_placement3d_ref(&self.model, &position)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ElementarySurfaceId(
             self.model
@@ -5420,7 +5417,7 @@ impl Ap242Author {
     /// `ELLIPSE` — strict AP242 constructor.
     pub fn add_ellipse(
         &mut self,
-        name: String,
+        name: &str,
         position: Axis2PlacementRef,
         semi_axis_1: f64,
         semi_axis_2: f64,
@@ -5440,7 +5437,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(EllipseId(self.model.ellipse_arena.push(Ellipse {
             name,
@@ -5460,7 +5457,7 @@ impl Ap242Author {
     /// `EXTERNAL_IDENTIFICATION_ASSIGNMENT` — strict AP242 constructor.
     pub fn add_external_identification_assignment(
         &mut self,
-        assigned_id: String,
+        assigned_id: &str,
         role: IdentificationRoleRef,
         source: ExternalSourceRef,
     ) -> Result<ExternalIdentificationAssignmentId, AuthorError> {
@@ -5468,7 +5465,7 @@ impl Ap242Author {
         check_external_source_ref(&self.model, &source)?;
         let assigned_id = {
             let v = assigned_id;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ExternalIdentificationAssignmentId(
             self.model.external_identification_assignment_arena.push(
@@ -5526,12 +5523,12 @@ impl Ap242Author {
         &mut self,
         item_id: StringSelectValue,
         source: ExternalSourceRef,
-        name: String,
+        name: &str,
     ) -> Result<ExternallyDefinedHatchStyleId, AuthorError> {
         check_external_source_ref(&self.model, &source)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ExternallyDefinedHatchStyleId(
             self.model
@@ -5619,12 +5616,12 @@ impl Ap242Author {
         &mut self,
         item_id: StringSelectValue,
         source: ExternalSourceRef,
-        name: String,
+        name: &str,
     ) -> Result<ExternallyDefinedTileStyleId, AuthorError> {
         check_external_source_ref(&self.model, &source)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ExternallyDefinedTileStyleId(
             self.model
@@ -5640,7 +5637,7 @@ impl Ap242Author {
     /// `FACE` — strict AP242 constructor.
     pub fn add_face(
         &mut self,
-        name: String,
+        name: &str,
         bounds: Vec<FaceBoundRef>,
     ) -> Result<FaceId, AuthorError> {
         {
@@ -5660,7 +5657,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(FaceId(self.model.face_arena.push(Face { name, bounds })))
     }
@@ -5668,14 +5665,14 @@ impl Ap242Author {
     /// `FACE_BOUND` — strict AP242 constructor.
     pub fn add_face_bound(
         &mut self,
-        name: String,
+        name: &str,
         bound: LoopRef,
         orientation: bool,
     ) -> Result<FaceBoundId, AuthorError> {
         check_loop_ref(&self.model, &bound)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(FaceBoundId(self.model.face_bound_arena.push(FaceBound {
             name,
@@ -5687,14 +5684,14 @@ impl Ap242Author {
     /// `FACE_OUTER_BOUND` — strict AP242 constructor.
     pub fn add_face_outer_bound(
         &mut self,
-        name: String,
+        name: &str,
         bound: LoopRef,
         orientation: bool,
     ) -> Result<FaceOuterBoundId, AuthorError> {
         check_loop_ref(&self.model, &bound)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(FaceOuterBoundId(self.model.face_outer_bound_arena.push(
             FaceOuterBound {
@@ -5708,7 +5705,7 @@ impl Ap242Author {
     /// `FACE_SURFACE` — strict AP242 constructor.
     pub fn add_face_surface(
         &mut self,
-        name: String,
+        name: &str,
         bounds: Vec<FaceBoundRef>,
         face_geometry: SurfaceRef,
         same_sense: bool,
@@ -5731,7 +5728,7 @@ impl Ap242Author {
         check_surface_ref(&self.model, &face_geometry)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(FaceSurfaceId(self.model.face_surface_arena.push(
             FaceSurface {
@@ -5746,8 +5743,8 @@ impl Ap242Author {
     /// `FEATURE_FOR_DATUM_TARGET_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_feature_for_datum_target_relationship(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         relating_shape_aspect: ShapeAspectRef,
         related_shape_aspect: ShapeAspectRef,
     ) -> Result<FeatureForDatumTargetRelationshipId, AuthorError> {
@@ -5755,9 +5752,9 @@ impl Ap242Author {
         check_shape_aspect_ref(&self.model, &related_shape_aspect)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(FeatureForDatumTargetRelationshipId(
             self.model.feature_for_datum_target_relationship_arena.push(
                 FeatureForDatumTargetRelationship {
@@ -5773,7 +5770,7 @@ impl Ap242Author {
     /// `FILL_AREA_STYLE` — strict AP242 constructor.
     pub fn add_fill_area_style(
         &mut self,
-        name: String,
+        name: &str,
         fill_styles: Vec<FillStyleSelectRef>,
     ) -> Result<FillAreaStyleId, AuthorError> {
         {
@@ -5793,7 +5790,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(FillAreaStyleId(
             self.model
@@ -5805,13 +5802,13 @@ impl Ap242Author {
     /// `FILL_AREA_STYLE_COLOUR` — strict AP242 constructor.
     pub fn add_fill_area_style_colour(
         &mut self,
-        name: String,
+        name: &str,
         fill_colour: ColourRef,
     ) -> Result<FillAreaStyleColourId, AuthorError> {
         check_colour_ref(&self.model, &fill_colour)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(FillAreaStyleColourId(
             self.model
@@ -5823,7 +5820,7 @@ impl Ap242Author {
     /// `FILL_AREA_STYLE_HATCHING` — strict AP242 constructor.
     pub fn add_fill_area_style_hatching(
         &mut self,
-        name: String,
+        name: &str,
         hatch_line_appearance: CurveStyleRef,
         start_of_next_hatch_line: OneDirectionRepeatFactorRef,
         point_of_reference_hatch_line: CartesianPointRef,
@@ -5842,7 +5839,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(FillAreaStyleHatchingId(
             self.model
@@ -5861,7 +5858,7 @@ impl Ap242Author {
     /// `FILL_AREA_STYLE_TILE_COLOURED_REGION` — strict AP242 constructor.
     pub fn add_fill_area_style_tile_coloured_region(
         &mut self,
-        name: String,
+        name: &str,
         closed_curve: CurveOrAnnotationCurveOccurrenceRef,
         region_colour: ColourRef,
     ) -> Result<FillAreaStyleTileColouredRegionId, AuthorError> {
@@ -5869,7 +5866,7 @@ impl Ap242Author {
         check_colour_ref(&self.model, &region_colour)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(FillAreaStyleTileColouredRegionId(
             self.model.fill_area_style_tile_coloured_region_arena.push(
@@ -5885,13 +5882,13 @@ impl Ap242Author {
     /// `FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE` — strict AP242 constructor.
     pub fn add_fill_area_style_tile_curve_with_style(
         &mut self,
-        name: String,
+        name: &str,
         styled_curve: AnnotationCurveOccurrenceRef,
     ) -> Result<FillAreaStyleTileCurveWithStyleId, AuthorError> {
         check_annotation_curve_occurrence_ref(&self.model, &styled_curve)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(FillAreaStyleTileCurveWithStyleId(
             self.model
@@ -5903,13 +5900,13 @@ impl Ap242Author {
     /// `FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE` — strict AP242 constructor.
     pub fn add_fill_area_style_tile_symbol_with_style(
         &mut self,
-        name: String,
+        name: &str,
         symbol: AnnotationSymbolOccurrenceRef,
     ) -> Result<FillAreaStyleTileSymbolWithStyleId, AuthorError> {
         check_annotation_symbol_occurrence_ref(&self.model, &symbol)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(FillAreaStyleTileSymbolWithStyleId(
             self.model
@@ -5921,7 +5918,7 @@ impl Ap242Author {
     /// `FILL_AREA_STYLE_TILES` — strict AP242 constructor.
     pub fn add_fill_area_style_tiles(
         &mut self,
-        name: String,
+        name: &str,
         tiling_pattern: TwoDirectionRepeatFactorRef,
         tiles: Vec<FillAreaStyleTileShapeSelectRef>,
         tiling_scale: f64,
@@ -5950,7 +5947,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(FillAreaStyleTilesId(
             self.model
@@ -5967,8 +5964,8 @@ impl Ap242Author {
     /// `FLATNESS_TOLERANCE` — strict AP242 constructor.
     pub fn add_flatness_tolerance(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
     ) -> Result<FlatnessToleranceId, AuthorError> {
@@ -5978,9 +5975,9 @@ impl Ap242Author {
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(FlatnessToleranceId(
             self.model.flatness_tolerance_arena.push(FlatnessTolerance {
                 name,
@@ -6001,14 +5998,14 @@ impl Ap242Author {
     /// `FUNCTIONALLY_DEFINED_TRANSFORMATION` — strict AP242 constructor.
     pub fn add_functionally_defined_transformation(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
     ) -> Result<FunctionallyDefinedTransformationId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(FunctionallyDefinedTransformationId(
             self.model
                 .functionally_defined_transformation_arena
@@ -6019,8 +6016,8 @@ impl Ap242Author {
     /// `GENERAL_DATUM_REFERENCE` — strict AP242 constructor.
     pub fn add_general_datum_reference(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
         base: DatumOrCommonDatumRef,
@@ -6046,9 +6043,9 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(GeneralDatumReferenceId(
             self.model
                 .general_datum_reference_arena
@@ -6066,19 +6063,19 @@ impl Ap242Author {
     /// `GENERAL_PROPERTY` — strict AP242 constructor.
     pub fn add_general_property(
         &mut self,
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: &str,
+        name: &str,
+        description: Option<&str>,
     ) -> Result<GeneralPropertyId, AuthorError> {
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(GeneralPropertyId(self.model.general_property_arena.push(
             GeneralProperty {
                 id,
@@ -6091,8 +6088,8 @@ impl Ap242Author {
     /// `GENERAL_PROPERTY_ASSOCIATION` — strict AP242 constructor.
     pub fn add_general_property_association(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         base_definition: GeneralPropertyRef,
         derived_definition: DerivedPropertySelectRef,
     ) -> Result<GeneralPropertyAssociationId, AuthorError> {
@@ -6100,9 +6097,9 @@ impl Ap242Author {
         check_derived_property_select_ref(&self.model, &derived_definition)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(GeneralPropertyAssociationId(
             self.model
                 .general_property_association_arena
@@ -6147,7 +6144,7 @@ impl Ap242Author {
     /// `GEOMETRIC_CURVE_SET` — strict AP242 constructor.
     pub fn add_geometric_curve_set(
         &mut self,
-        name: String,
+        name: &str,
         elements: Vec<GeometricSetSelectRef>,
     ) -> Result<GeometricCurveSetId, AuthorError> {
         {
@@ -6167,7 +6164,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(GeometricCurveSetId(
             self.model
@@ -6179,8 +6176,8 @@ impl Ap242Author {
     /// `GEOMETRIC_ITEM_SPECIFIC_USAGE` — strict AP242 constructor.
     pub fn add_geometric_item_specific_usage(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         definition: GeometricItemSpecificUsageSelectRef,
         used_representation: ShapeModelRef,
         identified_item: GeometricModelItemRef,
@@ -6190,9 +6187,9 @@ impl Ap242Author {
         check_geometric_model_item_ref(&self.model, &identified_item)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(GeometricItemSpecificUsageId(
             self.model
                 .geometric_item_specific_usage_arena
@@ -6209,17 +6206,17 @@ impl Ap242Author {
     /// `GEOMETRIC_REPRESENTATION_CONTEXT` — strict AP242 constructor.
     pub fn add_geometric_representation_context(
         &mut self,
-        context_identifier: String,
-        context_type: String,
+        context_identifier: &str,
+        context_type: &str,
         coordinate_space_dimension: i64,
     ) -> Result<GeometricRepresentationContextId, AuthorError> {
         let context_identifier = {
             let v = context_identifier;
-            self.text(&v)
+            self.text(v)
         };
         let context_type = {
             let v = context_type;
-            self.text(&v)
+            self.text(v)
         };
         Ok(GeometricRepresentationContextId(
             self.model.geometric_representation_context_arena.push(
@@ -6235,11 +6232,11 @@ impl Ap242Author {
     /// `GEOMETRIC_REPRESENTATION_ITEM` — strict AP242 constructor.
     pub fn add_geometric_representation_item(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<GeometricRepresentationItemId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(GeometricRepresentationItemId(
             self.model
@@ -6251,7 +6248,7 @@ impl Ap242Author {
     /// `GEOMETRIC_SET` — strict AP242 constructor.
     pub fn add_geometric_set(
         &mut self,
-        name: String,
+        name: &str,
         elements: Vec<GeometricSetSelectRef>,
     ) -> Result<GeometricSetId, AuthorError> {
         {
@@ -6271,7 +6268,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(GeometricSetId(
             self.model
@@ -6283,8 +6280,8 @@ impl Ap242Author {
     /// `GEOMETRIC_TOLERANCE` — strict AP242 constructor.
     pub fn add_geometric_tolerance(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
     ) -> Result<GeometricToleranceId, AuthorError> {
@@ -6294,9 +6291,9 @@ impl Ap242Author {
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(GeometricToleranceId(
             self.model
                 .geometric_tolerance_arena
@@ -6312,8 +6309,8 @@ impl Ap242Author {
     /// `GEOMETRIC_TOLERANCE_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_geometric_tolerance_relationship(
         &mut self,
-        name: String,
-        description: String,
+        name: &str,
+        description: &str,
         relating_geometric_tolerance: GeometricToleranceRef,
         related_geometric_tolerance: GeometricToleranceRef,
     ) -> Result<GeometricToleranceRelationshipId, AuthorError> {
@@ -6321,11 +6318,11 @@ impl Ap242Author {
         check_geometric_tolerance_ref(&self.model, &related_geometric_tolerance)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let description = {
             let v = description;
-            self.text(&v)
+            self.text(v)
         };
         Ok(GeometricToleranceRelationshipId(
             self.model.geometric_tolerance_relationship_arena.push(
@@ -6342,8 +6339,8 @@ impl Ap242Author {
     /// `GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE` — strict AP242 constructor.
     pub fn add_geometric_tolerance_with_datum_reference(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
         datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -6369,9 +6366,9 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(GeometricToleranceWithDatumReferenceId(
             self.model
                 .geometric_tolerance_with_datum_reference_arena
@@ -6388,8 +6385,8 @@ impl Ap242Author {
     /// `GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT` — strict AP242 constructor.
     pub fn add_geometric_tolerance_with_defined_area_unit(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
         unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef,
@@ -6406,9 +6403,9 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(GeometricToleranceWithDefinedAreaUnitId(
             self.model
                 .geometric_tolerance_with_defined_area_unit_arena
@@ -6427,8 +6424,8 @@ impl Ap242Author {
     /// `GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT` — strict AP242 constructor.
     pub fn add_geometric_tolerance_with_defined_unit(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
         unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef,
@@ -6440,9 +6437,9 @@ impl Ap242Author {
         check_length_or_plane_angle_measure_with_unit_select_ref(&self.model, &unit_size)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(GeometricToleranceWithDefinedUnitId(
             self.model.geometric_tolerance_with_defined_unit_arena.push(
                 GeometricToleranceWithDefinedUnit {
@@ -6459,8 +6456,8 @@ impl Ap242Author {
     /// `GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE` — strict AP242 constructor.
     pub fn add_geometric_tolerance_with_maximum_tolerance(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
         modifiers: Vec<GeometricToleranceModifier>,
@@ -6485,9 +6482,9 @@ impl Ap242Author {
         check_length_measure_with_unit_ref(&self.model, &maximum_upper_tolerance)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(GeometricToleranceWithMaximumToleranceId(
             self.model
                 .geometric_tolerance_with_maximum_tolerance_arena
@@ -6505,8 +6502,8 @@ impl Ap242Author {
     /// `GEOMETRIC_TOLERANCE_WITH_MODIFIERS` — strict AP242 constructor.
     pub fn add_geometric_tolerance_with_modifiers(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
         modifiers: Vec<GeometricToleranceModifier>,
@@ -6529,9 +6526,9 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(GeometricToleranceWithModifiersId(
             self.model.geometric_tolerance_with_modifiers_arena.push(
                 GeometricToleranceWithModifiers {
@@ -6548,7 +6545,7 @@ impl Ap242Author {
     /// `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION` — strict AP242 constructor.
     pub fn add_geometrically_bounded_surface_shape_representation(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<GeometricallyBoundedSurfaceShapeRepresentationId, AuthorError> {
@@ -6570,7 +6567,7 @@ impl Ap242Author {
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(GeometricallyBoundedSurfaceShapeRepresentationId(
             self.model
@@ -6586,7 +6583,7 @@ impl Ap242Author {
     /// `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION` — strict AP242 constructor.
     pub fn add_geometrically_bounded_wireframe_shape_representation(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<GeometricallyBoundedWireframeShapeRepresentationId, AuthorError> {
@@ -6608,7 +6605,7 @@ impl Ap242Author {
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(GeometricallyBoundedWireframeShapeRepresentationId(
             self.model
@@ -6624,8 +6621,8 @@ impl Ap242Author {
     /// `GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT` — strict AP242 constructor.
     pub fn add_global_uncertainty_assigned_context(
         &mut self,
-        context_identifier: String,
-        context_type: String,
+        context_identifier: &str,
+        context_type: &str,
         uncertainty: Vec<UncertaintyMeasureWithUnitRef>,
     ) -> Result<GlobalUncertaintyAssignedContextId, AuthorError> {
         {
@@ -6645,11 +6642,11 @@ impl Ap242Author {
         }
         let context_identifier = {
             let v = context_identifier;
-            self.text(&v)
+            self.text(v)
         };
         let context_type = {
             let v = context_type;
-            self.text(&v)
+            self.text(v)
         };
         Ok(GlobalUncertaintyAssignedContextId(
             self.model.global_uncertainty_assigned_context_arena.push(
@@ -6665,8 +6662,8 @@ impl Ap242Author {
     /// `GLOBAL_UNIT_ASSIGNED_CONTEXT` — strict AP242 constructor.
     pub fn add_global_unit_assigned_context(
         &mut self,
-        context_identifier: String,
-        context_type: String,
+        context_identifier: &str,
+        context_type: &str,
         units: Vec<UnitRef>,
     ) -> Result<GlobalUnitAssignedContextId, AuthorError> {
         {
@@ -6686,11 +6683,11 @@ impl Ap242Author {
         }
         let context_identifier = {
             let v = context_identifier;
-            self.text(&v)
+            self.text(v)
         };
         let context_type = {
             let v = context_type;
-            self.text(&v)
+            self.text(v)
         };
         Ok(GlobalUnitAssignedContextId(
             self.model
@@ -6706,14 +6703,14 @@ impl Ap242Author {
     /// `GROUP` — strict AP242 constructor.
     pub fn add_group(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
     ) -> Result<GroupId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(GroupId(
             self.model.group_arena.push(Group { name, description }),
         ))
@@ -6735,7 +6732,7 @@ impl Ap242Author {
     /// `HYPERBOLA` — strict AP242 constructor.
     pub fn add_hyperbola(
         &mut self,
-        name: String,
+        name: &str,
         position: Axis2PlacementRef,
         semi_axis: f64,
         semi_imag_axis: f64,
@@ -6755,7 +6752,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(HyperbolaId(self.model.hyperbola_arena.push(Hyperbola {
             name,
@@ -6768,13 +6765,13 @@ impl Ap242Author {
     /// `ID_ATTRIBUTE` — strict AP242 constructor.
     pub fn add_id_attribute(
         &mut self,
-        attribute_value: String,
+        attribute_value: &str,
         identified_item: IdAttributeSelectRef,
     ) -> Result<IdAttributeId, AuthorError> {
         check_id_attribute_select_ref(&self.model, &identified_item)?;
         let attribute_value = {
             let v = attribute_value;
-            self.text(&v)
+            self.text(v)
         };
         Ok(IdAttributeId(self.model.id_attribute_arena.push(
             IdAttribute {
@@ -6787,13 +6784,13 @@ impl Ap242Author {
     /// `IDENTIFICATION_ASSIGNMENT` — strict AP242 constructor.
     pub fn add_identification_assignment(
         &mut self,
-        assigned_id: String,
+        assigned_id: &str,
         role: IdentificationRoleRef,
     ) -> Result<IdentificationAssignmentId, AuthorError> {
         check_identification_role_ref(&self.model, &role)?;
         let assigned_id = {
             let v = assigned_id;
-            self.text(&v)
+            self.text(v)
         };
         Ok(IdentificationAssignmentId(
             self.model
@@ -6805,14 +6802,14 @@ impl Ap242Author {
     /// `IDENTIFICATION_ROLE` — strict AP242 constructor.
     pub fn add_identification_role(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
     ) -> Result<IdentificationRoleId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(IdentificationRoleId(
             self.model
                 .identification_role_arena
@@ -6830,12 +6827,12 @@ impl Ap242Author {
     /// `INTEGER_REPRESENTATION_ITEM` — strict AP242 constructor.
     pub fn add_integer_representation_item(
         &mut self,
-        name: String,
+        name: &str,
         the_value: i64,
     ) -> Result<IntegerRepresentationItemId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(IntegerRepresentationItemId(
             self.model
@@ -6847,7 +6844,7 @@ impl Ap242Author {
     /// `INTERSECTION_CURVE` — strict AP242 constructor.
     pub fn add_intersection_curve(
         &mut self,
-        name: String,
+        name: &str,
         curve_3d: CurveRef,
         associated_geometry: Vec<PcurveOrSurfaceRef>,
         master_representation: PreferredSurfaceCurveRepresentation,
@@ -6870,7 +6867,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(IntersectionCurveId(
             self.model.intersection_curve_arena.push(IntersectionCurve {
@@ -6912,8 +6909,8 @@ impl Ap242Author {
     /// `ITEM_DEFINED_TRANSFORMATION` — strict AP242 constructor.
     pub fn add_item_defined_transformation(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         transform_item_1: RepresentationItemRef,
         transform_item_2: RepresentationItemRef,
     ) -> Result<ItemDefinedTransformationId, AuthorError> {
@@ -6921,9 +6918,9 @@ impl Ap242Author {
         check_representation_item_ref(&self.model, &transform_item_2)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ItemDefinedTransformationId(
             self.model
                 .item_defined_transformation_arena
@@ -6939,8 +6936,8 @@ impl Ap242Author {
     /// `ITEM_IDENTIFIED_REPRESENTATION_USAGE` — strict AP242 constructor.
     pub fn add_item_identified_representation_usage(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         definition: ItemIdentifiedRepresentationUsageDefinitionRef,
         used_representation: RepresentationRef,
         identified_item: ItemIdentifiedRepresentationUsageSelectRef,
@@ -6950,9 +6947,9 @@ impl Ap242Author {
         check_item_identified_representation_usage_select_ref(&self.model, &identified_item)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ItemIdentifiedRepresentationUsageId(
             self.model.item_identified_representation_usage_arena.push(
                 ItemIdentifiedRepresentationUsage {
@@ -6969,7 +6966,7 @@ impl Ap242Author {
     /// `LEADER_CURVE` — strict AP242 constructor.
     pub fn add_leader_curve(
         &mut self,
-        name: String,
+        name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
         item: CurveOrCurveSetRef,
     ) -> Result<LeaderCurveId, AuthorError> {
@@ -6979,7 +6976,7 @@ impl Ap242Author {
         check_curve_or_curve_set_ref(&self.model, &item)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(LeaderCurveId(
             self.model
@@ -6991,7 +6988,7 @@ impl Ap242Author {
     /// `LEADER_DIRECTED_CALLOUT` — strict AP242 constructor.
     pub fn add_leader_directed_callout(
         &mut self,
-        name: String,
+        name: &str,
         contents: Vec<DraughtingCalloutElementRef>,
     ) -> Result<LeaderDirectedCalloutId, AuthorError> {
         {
@@ -7011,7 +7008,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(LeaderDirectedCalloutId(
             self.model
@@ -7023,7 +7020,7 @@ impl Ap242Author {
     /// `LEADER_TERMINATOR` — strict AP242 constructor.
     pub fn add_leader_terminator(
         &mut self,
-        name: String,
+        name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
         item: AnnotationSymbolOccurrenceItemRef,
         annotated_curve: AnnotationCurveOccurrenceRef,
@@ -7035,7 +7032,7 @@ impl Ap242Author {
         check_annotation_curve_occurrence_ref(&self.model, &annotated_curve)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(LeaderTerminatorId(self.model.leader_terminator_arena.push(
             LeaderTerminator {
@@ -7086,26 +7083,26 @@ impl Ap242Author {
     /// `LIMITS_AND_FITS` — strict AP242 constructor.
     pub fn add_limits_and_fits(
         &mut self,
-        form_variance: String,
-        zone_variance: String,
-        grade: String,
-        source: String,
+        form_variance: &str,
+        zone_variance: &str,
+        grade: &str,
+        source: &str,
     ) -> Result<LimitsAndFitsId, AuthorError> {
         let form_variance = {
             let v = form_variance;
-            self.text(&v)
+            self.text(v)
         };
         let zone_variance = {
             let v = zone_variance;
-            self.text(&v)
+            self.text(v)
         };
         let grade = {
             let v = grade;
-            self.text(&v)
+            self.text(v)
         };
         let source = {
             let v = source;
-            self.text(&v)
+            self.text(v)
         };
         Ok(LimitsAndFitsId(self.model.limits_and_fits_arena.push(
             LimitsAndFits {
@@ -7120,7 +7117,7 @@ impl Ap242Author {
     /// `LINE` — strict AP242 constructor.
     pub fn add_line(
         &mut self,
-        name: String,
+        name: &str,
         pnt: CartesianPointRef,
         dir: VectorRef,
     ) -> Result<LineId, AuthorError> {
@@ -7128,7 +7125,7 @@ impl Ap242Author {
         check_vector_ref(&self.model, &dir)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(LineId(self.model.line_arena.push(Line { name, pnt, dir })))
     }
@@ -7136,8 +7133,8 @@ impl Ap242Author {
     /// `LINE_PROFILE_TOLERANCE` — strict AP242 constructor.
     pub fn add_line_profile_tolerance(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
     ) -> Result<LineProfileToleranceId, AuthorError> {
@@ -7147,9 +7144,9 @@ impl Ap242Author {
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(LineProfileToleranceId(
             self.model
                 .line_profile_tolerance_arena
@@ -7203,10 +7200,10 @@ impl Ap242Author {
     }
 
     /// `LOOP` — strict AP242 constructor.
-    pub fn add_loop(&mut self, name: String) -> Result<LoopId, AuthorError> {
+    pub fn add_loop(&mut self, name: &str) -> Result<LoopId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(LoopId(self.model.loop_arena.push(Loop { name })))
     }
@@ -7214,13 +7211,13 @@ impl Ap242Author {
     /// `MAKE_FROM_USAGE_OPTION` — strict AP242 constructor.
     pub fn add_make_from_usage_option(
         &mut self,
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: &str,
+        name: &str,
+        description: Option<&str>,
         relating_product_definition: ProductDefinitionOrReferenceRef,
         related_product_definition: ProductDefinitionOrReferenceRef,
         ranking: i64,
-        ranking_rationale: String,
+        ranking_rationale: &str,
         quantity: MeasureWithUnitRef,
     ) -> Result<MakeFromUsageOptionId, AuthorError> {
         check_product_definition_or_reference_ref(&self.model, &relating_product_definition)?;
@@ -7228,16 +7225,16 @@ impl Ap242Author {
         check_measure_with_unit_ref(&self.model, &quantity)?;
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         let ranking_rationale = {
             let v = ranking_rationale;
-            self.text(&v)
+            self.text(v)
         };
         Ok(MakeFromUsageOptionId(
             self.model
@@ -7258,13 +7255,13 @@ impl Ap242Author {
     /// `MANIFOLD_SOLID_BREP` — strict AP242 constructor.
     pub fn add_manifold_solid_brep(
         &mut self,
-        name: String,
+        name: &str,
         outer: ClosedShellRef,
     ) -> Result<ManifoldSolidBrepId, AuthorError> {
         check_closed_shell_ref(&self.model, &outer)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ManifoldSolidBrepId(
             self.model
@@ -7276,7 +7273,7 @@ impl Ap242Author {
     /// `MANIFOLD_SURFACE_SHAPE_REPRESENTATION` — strict AP242 constructor.
     pub fn add_manifold_surface_shape_representation(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<ManifoldSurfaceShapeRepresentationId, AuthorError> {
@@ -7298,7 +7295,7 @@ impl Ap242Author {
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ManifoldSurfaceShapeRepresentationId(
             self.model.manifold_surface_shape_representation_arena.push(
@@ -7314,7 +7311,7 @@ impl Ap242Author {
     /// `MAPPED_ITEM` — strict AP242 constructor.
     pub fn add_mapped_item(
         &mut self,
-        name: String,
+        name: &str,
         mapping_source: RepresentationMapRef,
         mapping_target: RepresentationItemRef,
     ) -> Result<MappedItemId, AuthorError> {
@@ -7322,7 +7319,7 @@ impl Ap242Author {
         check_representation_item_ref(&self.model, &mapping_target)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(MappedItemId(self.model.mapped_item_arena.push(
             MappedItem {
@@ -7372,8 +7369,8 @@ impl Ap242Author {
     /// `MEASURE_QUALIFICATION` — strict AP242 constructor.
     pub fn add_measure_qualification(
         &mut self,
-        name: String,
-        description: String,
+        name: &str,
+        description: &str,
         qualified_measure: MeasureWithUnitRef,
         qualifiers: Vec<ValueQualifierRef>,
     ) -> Result<MeasureQualificationId, AuthorError> {
@@ -7395,11 +7392,11 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let description = {
             let v = description;
-            self.text(&v)
+            self.text(v)
         };
         Ok(MeasureQualificationId(
             self.model
@@ -7416,7 +7413,7 @@ impl Ap242Author {
     /// `MEASURE_REPRESENTATION_ITEM` — strict AP242 constructor.
     pub fn add_measure_representation_item(
         &mut self,
-        name: String,
+        name: &str,
         value_component: MeasureValue,
         unit_component: UnitRef,
     ) -> Result<MeasureRepresentationItemId, AuthorError> {
@@ -7431,7 +7428,7 @@ impl Ap242Author {
         check_unit_ref(&self.model, &unit_component)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(MeasureRepresentationItemId(
             self.model
@@ -7470,18 +7467,18 @@ impl Ap242Author {
     /// `MECHANICAL_CONTEXT` — strict AP242 constructor.
     pub fn add_mechanical_context(
         &mut self,
-        name: String,
+        name: &str,
         frame_of_reference: ApplicationContextRef,
-        discipline_type: String,
+        discipline_type: &str,
     ) -> Result<MechanicalContextId, AuthorError> {
         check_application_context_ref(&self.model, &frame_of_reference)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let discipline_type = {
             let v = discipline_type;
-            self.text(&v)
+            self.text(v)
         };
         Ok(MechanicalContextId(
             self.model.mechanical_context_arena.push(MechanicalContext {
@@ -7495,8 +7492,8 @@ impl Ap242Author {
     /// `MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_mechanical_design_and_draughting_relationship(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         rep_1: MechanicalDesignAndDraughtingRelationshipSelectRef,
         rep_2: MechanicalDesignAndDraughtingRelationshipSelectRef,
     ) -> Result<MechanicalDesignAndDraughtingRelationshipId, AuthorError> {
@@ -7504,9 +7501,9 @@ impl Ap242Author {
         check_mechanical_design_and_draughting_relationship_select_ref(&self.model, &rep_2)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(MechanicalDesignAndDraughtingRelationshipId(
             self.model
                 .mechanical_design_and_draughting_relationship_arena
@@ -7522,7 +7519,7 @@ impl Ap242Author {
     /// `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION` — strict AP242 constructor.
     pub fn add_mechanical_design_geometric_presentation_representation(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<MechanicalDesignGeometricPresentationRepresentationId, AuthorError> {
@@ -7544,7 +7541,7 @@ impl Ap242Author {
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(MechanicalDesignGeometricPresentationRepresentationId(
             self.model
@@ -7560,7 +7557,7 @@ impl Ap242Author {
     /// `MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING` — strict AP242 constructor.
     pub fn add_mechanical_design_presentation_representation_with_draughting(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<MechanicalDesignPresentationRepresentationWithDraughtingId, AuthorError> {
@@ -7582,7 +7579,7 @@ impl Ap242Author {
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(MechanicalDesignPresentationRepresentationWithDraughtingId(
             self.model
@@ -7598,7 +7595,7 @@ impl Ap242Author {
     /// `MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION` — strict AP242 constructor.
     pub fn add_mechanical_design_shaded_presentation_representation(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<MechanicalDesignShadedPresentationRepresentationId, AuthorError> {
@@ -7620,7 +7617,7 @@ impl Ap242Author {
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(MechanicalDesignShadedPresentationRepresentationId(
             self.model
@@ -7636,8 +7633,8 @@ impl Ap242Author {
     /// `MODEL_GEOMETRIC_VIEW` — strict AP242 constructor.
     pub fn add_model_geometric_view(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         item: RepresentationItemRef,
         rep: RepresentationRef,
     ) -> Result<ModelGeometricViewId, AuthorError> {
@@ -7645,9 +7642,9 @@ impl Ap242Author {
         check_representation_ref(&self.model, &rep)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ModelGeometricViewId(
             self.model
                 .model_geometric_view_arena
@@ -7663,8 +7660,8 @@ impl Ap242Author {
     /// `MODIFIED_GEOMETRIC_TOLERANCE` — strict AP242 constructor.
     pub fn add_modified_geometric_tolerance(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
         modifier: LimitCondition,
@@ -7675,9 +7672,9 @@ impl Ap242Author {
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ModifiedGeometricToleranceId(
             self.model
                 .modified_geometric_tolerance_arena
@@ -7694,13 +7691,13 @@ impl Ap242Author {
     /// `NAME_ATTRIBUTE` — strict AP242 constructor.
     pub fn add_name_attribute(
         &mut self,
-        attribute_value: String,
+        attribute_value: &str,
         named_item: NameAttributeSelectRef,
     ) -> Result<NameAttributeId, AuthorError> {
         check_name_attribute_select_ref(&self.model, &named_item)?;
         let attribute_value = {
             let v = attribute_value;
-            self.text(&v)
+            self.text(v)
         };
         Ok(NameAttributeId(self.model.name_attribute_arena.push(
             NameAttribute {
@@ -7726,25 +7723,25 @@ impl Ap242Author {
     /// `NEXT_ASSEMBLY_USAGE_OCCURRENCE` — strict AP242 constructor.
     pub fn add_next_assembly_usage_occurrence(
         &mut self,
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: &str,
+        name: &str,
+        description: Option<&str>,
         relating_product_definition: ProductDefinitionOrReferenceRef,
         related_product_definition: ProductDefinitionOrReferenceRef,
-        reference_designator: Option<String>,
+        reference_designator: Option<&str>,
     ) -> Result<NextAssemblyUsageOccurrenceId, AuthorError> {
         check_product_definition_or_reference_ref(&self.model, &relating_product_definition)?;
         check_product_definition_or_reference_ref(&self.model, &related_product_definition)?;
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
-        let reference_designator = reference_designator.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
+        let reference_designator = reference_designator.map(|v| self.text(v));
         Ok(NextAssemblyUsageOccurrenceId(
             self.model
                 .next_assembly_usage_occurrence_arena
@@ -7771,14 +7768,14 @@ impl Ap242Author {
     /// `OBJECT_ROLE` — strict AP242 constructor.
     pub fn add_object_role(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
     ) -> Result<ObjectRoleId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ObjectRoleId(
             self.model
                 .object_role_arena
@@ -7789,7 +7786,7 @@ impl Ap242Author {
     /// `OFFSET_SURFACE` — strict AP242 constructor.
     pub fn add_offset_surface(
         &mut self,
-        name: String,
+        name: &str,
         basis_surface: SurfaceRef,
         distance: f64,
         self_intersect: Logical,
@@ -7803,7 +7800,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(OffsetSurfaceId(self.model.offset_surface_arena.push(
             OffsetSurface {
@@ -7818,13 +7815,13 @@ impl Ap242Author {
     /// `ONE_DIRECTION_REPEAT_FACTOR` — strict AP242 constructor.
     pub fn add_one_direction_repeat_factor(
         &mut self,
-        name: String,
+        name: &str,
         repeat_factor: VectorRef,
     ) -> Result<OneDirectionRepeatFactorId, AuthorError> {
         check_vector_ref(&self.model, &repeat_factor)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(OneDirectionRepeatFactorId(
             self.model
@@ -7839,7 +7836,7 @@ impl Ap242Author {
     /// `OPEN_SHELL` — strict AP242 constructor.
     pub fn add_open_shell(
         &mut self,
-        name: String,
+        name: &str,
         cfs_faces: Vec<FaceRef>,
     ) -> Result<OpenShellId, AuthorError> {
         {
@@ -7859,7 +7856,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(OpenShellId(
             self.model
@@ -7871,16 +7868,16 @@ impl Ap242Author {
     /// `ORGANIZATION` — strict AP242 constructor.
     pub fn add_organization(
         &mut self,
-        id: Option<String>,
-        name: String,
-        description: Option<String>,
+        id: Option<&str>,
+        name: &str,
+        description: Option<&str>,
     ) -> Result<OrganizationId, AuthorError> {
-        let id = id.map(|v| self.text(&v));
+        let id = id.map(|v| self.text(v));
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(OrganizationId(self.model.organization_arena.push(
             Organization {
                 id,
@@ -7893,8 +7890,8 @@ impl Ap242Author {
     /// `ORGANIZATION_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_organization_relationship(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         relating_organization: OrganizationRef,
         related_organization: OrganizationRef,
     ) -> Result<OrganizationRelationshipId, AuthorError> {
@@ -7902,9 +7899,9 @@ impl Ap242Author {
         check_organization_ref(&self.model, &related_organization)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(OrganizationRelationshipId(
             self.model
                 .organization_relationship_arena
@@ -7918,13 +7915,10 @@ impl Ap242Author {
     }
 
     /// `ORGANIZATION_ROLE` — strict AP242 constructor.
-    pub fn add_organization_role(
-        &mut self,
-        name: String,
-    ) -> Result<OrganizationRoleId, AuthorError> {
+    pub fn add_organization_role(&mut self, name: &str) -> Result<OrganizationRoleId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(OrganizationRoleId(
             self.model
@@ -7936,19 +7930,19 @@ impl Ap242Author {
     /// `ORGANIZATION_TYPE` — strict AP242 constructor.
     pub fn add_organization_type(
         &mut self,
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: &str,
+        name: &str,
+        description: Option<&str>,
     ) -> Result<OrganizationTypeId, AuthorError> {
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(OrganizationTypeId(self.model.organization_type_arena.push(
             OrganizationType {
                 id,
@@ -7961,19 +7955,19 @@ impl Ap242Author {
     /// `ORGANIZATION_TYPE_ROLE` — strict AP242 constructor.
     pub fn add_organization_type_role(
         &mut self,
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: &str,
+        name: &str,
+        description: Option<&str>,
     ) -> Result<OrganizationTypeRoleId, AuthorError> {
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(OrganizationTypeRoleId(
             self.model
                 .organization_type_role_arena
@@ -7988,20 +7982,20 @@ impl Ap242Author {
     /// `ORGANIZATIONAL_ADDRESS` — strict AP242 constructor.
     pub fn add_organizational_address(
         &mut self,
-        internal_location: Option<String>,
-        street_number: Option<String>,
-        street: Option<String>,
-        postal_box: Option<String>,
-        town: Option<String>,
-        region: Option<String>,
-        postal_code: Option<String>,
-        country: Option<String>,
-        facsimile_number: Option<String>,
-        telephone_number: Option<String>,
-        electronic_mail_address: Option<String>,
-        telex_number: Option<String>,
+        internal_location: Option<&str>,
+        street_number: Option<&str>,
+        street: Option<&str>,
+        postal_box: Option<&str>,
+        town: Option<&str>,
+        region: Option<&str>,
+        postal_code: Option<&str>,
+        country: Option<&str>,
+        facsimile_number: Option<&str>,
+        telephone_number: Option<&str>,
+        electronic_mail_address: Option<&str>,
+        telex_number: Option<&str>,
         organizations: Vec<OrganizationRef>,
-        description: Option<String>,
+        description: Option<&str>,
     ) -> Result<OrganizationalAddressId, AuthorError> {
         {
             let x = &organizations;
@@ -8018,19 +8012,19 @@ impl Ap242Author {
         for e0 in &organizations {
             check_organization_ref(&self.model, e0)?;
         }
-        let internal_location = internal_location.map(|v| self.text(&v));
-        let street_number = street_number.map(|v| self.text(&v));
-        let street = street.map(|v| self.text(&v));
-        let postal_box = postal_box.map(|v| self.text(&v));
-        let town = town.map(|v| self.text(&v));
-        let region = region.map(|v| self.text(&v));
-        let postal_code = postal_code.map(|v| self.text(&v));
-        let country = country.map(|v| self.text(&v));
-        let facsimile_number = facsimile_number.map(|v| self.text(&v));
-        let telephone_number = telephone_number.map(|v| self.text(&v));
-        let electronic_mail_address = electronic_mail_address.map(|v| self.text(&v));
-        let telex_number = telex_number.map(|v| self.text(&v));
-        let description = description.map(|v| self.text(&v));
+        let internal_location = internal_location.map(|v| self.text(v));
+        let street_number = street_number.map(|v| self.text(v));
+        let street = street.map(|v| self.text(v));
+        let postal_box = postal_box.map(|v| self.text(v));
+        let town = town.map(|v| self.text(v));
+        let region = region.map(|v| self.text(v));
+        let postal_code = postal_code.map(|v| self.text(v));
+        let country = country.map(|v| self.text(v));
+        let facsimile_number = facsimile_number.map(|v| self.text(v));
+        let telephone_number = telephone_number.map(|v| self.text(v));
+        let electronic_mail_address = electronic_mail_address.map(|v| self.text(v));
+        let telex_number = telex_number.map(|v| self.text(v));
+        let description = description.map(|v| self.text(v));
         Ok(OrganizationalAddressId(
             self.model
                 .organizational_address_arena
@@ -8056,8 +8050,8 @@ impl Ap242Author {
     /// `ORGANIZATIONAL_PROJECT` — strict AP242 constructor.
     pub fn add_organizational_project(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         responsible_organizations: Vec<OrganizationRef>,
     ) -> Result<OrganizationalProjectId, AuthorError> {
         {
@@ -8077,9 +8071,9 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(OrganizationalProjectId(
             self.model
                 .organizational_project_arena
@@ -8094,8 +8088,8 @@ impl Ap242Author {
     /// `ORGANIZATIONAL_PROJECT_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_organizational_project_relationship(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         relating_organizational_project: OrganizationalProjectRef,
         related_organizational_project: OrganizationalProjectRef,
     ) -> Result<OrganizationalProjectRelationshipId, AuthorError> {
@@ -8103,9 +8097,9 @@ impl Ap242Author {
         check_organizational_project_ref(&self.model, &related_organizational_project)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(OrganizationalProjectRelationshipId(
             self.model.organizational_project_relationship_arena.push(
                 OrganizationalProjectRelationship {
@@ -8121,14 +8115,14 @@ impl Ap242Author {
     /// `ORGANIZATIONAL_PROJECT_ROLE` — strict AP242 constructor.
     pub fn add_organizational_project_role(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
     ) -> Result<OrganizationalProjectRoleId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(OrganizationalProjectRoleId(
             self.model
                 .organizational_project_role_arena
@@ -8139,14 +8133,14 @@ impl Ap242Author {
     /// `ORIENTED_CLOSED_SHELL` — strict AP242 constructor.
     pub fn add_oriented_closed_shell(
         &mut self,
-        name: String,
+        name: &str,
         closed_shell_element: ClosedShellRef,
         orientation: bool,
     ) -> Result<OrientedClosedShellId, AuthorError> {
         check_closed_shell_ref(&self.model, &closed_shell_element)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(OrientedClosedShellId(
             self.model
@@ -8162,14 +8156,14 @@ impl Ap242Author {
     /// `ORIENTED_EDGE` — strict AP242 constructor.
     pub fn add_oriented_edge(
         &mut self,
-        name: String,
+        name: &str,
         edge_element: EdgeRef,
         orientation: bool,
     ) -> Result<OrientedEdgeId, AuthorError> {
         check_edge_ref(&self.model, &edge_element)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(OrientedEdgeId(self.model.oriented_edge_arena.push(
             OrientedEdge {
@@ -8183,7 +8177,7 @@ impl Ap242Author {
     /// `OVER_RIDING_STYLED_ITEM` — strict AP242 constructor.
     pub fn add_over_riding_styled_item(
         &mut self,
-        name: String,
+        name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
         item: StyledItemTargetRef,
         over_ridden_style: StyledItemRef,
@@ -8195,7 +8189,7 @@ impl Ap242Author {
         check_styled_item_ref(&self.model, &over_ridden_style)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(OverRidingStyledItemId(
             self.model
@@ -8212,7 +8206,7 @@ impl Ap242Author {
     /// `PARABOLA` — strict AP242 constructor.
     pub fn add_parabola(
         &mut self,
-        name: String,
+        name: &str,
         position: Axis2PlacementRef,
         focal_dist: f64,
     ) -> Result<ParabolaId, AuthorError> {
@@ -8225,7 +8219,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ParabolaId(self.model.parabola_arena.push(Parabola {
             name,
@@ -8237,8 +8231,8 @@ impl Ap242Author {
     /// `PARALLELISM_TOLERANCE` — strict AP242 constructor.
     pub fn add_parallelism_tolerance(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
         datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -8264,9 +8258,9 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ParallelismToleranceId(
             self.model
                 .parallelism_tolerance_arena
@@ -8283,16 +8277,16 @@ impl Ap242Author {
     /// `PARAMETRIC_REPRESENTATION_CONTEXT` — strict AP242 constructor.
     pub fn add_parametric_representation_context(
         &mut self,
-        context_identifier: String,
-        context_type: String,
+        context_identifier: &str,
+        context_type: &str,
     ) -> Result<ParametricRepresentationContextId, AuthorError> {
         let context_identifier = {
             let v = context_identifier;
-            self.text(&v)
+            self.text(v)
         };
         let context_type = {
             let v = context_type;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ParametricRepresentationContextId(
             self.model.parametric_representation_context_arena.push(
@@ -8307,7 +8301,7 @@ impl Ap242Author {
     /// `PATH` — strict AP242 constructor.
     pub fn add_path(
         &mut self,
-        name: String,
+        name: &str,
         edge_list: Vec<OrientedEdgeRef>,
     ) -> Result<PathId, AuthorError> {
         {
@@ -8327,7 +8321,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PathId(self.model.path_arena.push(Path { name, edge_list })))
     }
@@ -8335,7 +8329,7 @@ impl Ap242Author {
     /// `PCURVE` — strict AP242 constructor.
     pub fn add_pcurve(
         &mut self,
-        name: String,
+        name: &str,
         basis_surface: SurfaceRef,
         reference_to_curve: DefinitionalRepresentationRef,
     ) -> Result<PcurveId, AuthorError> {
@@ -8343,7 +8337,7 @@ impl Ap242Author {
         check_definitional_representation_ref(&self.model, &reference_to_curve)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PcurveId(self.model.pcurve_arena.push(Pcurve {
             name,
@@ -8355,8 +8349,8 @@ impl Ap242Author {
     /// `PERPENDICULARITY_TOLERANCE` — strict AP242 constructor.
     pub fn add_perpendicularity_tolerance(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
         datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -8382,9 +8376,9 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(PerpendicularityToleranceId(
             self.model
                 .perpendicularity_tolerance_arena
@@ -8401,12 +8395,12 @@ impl Ap242Author {
     /// `PERSON` — strict AP242 constructor.
     pub fn add_person(
         &mut self,
-        id: String,
-        last_name: Option<String>,
-        first_name: Option<String>,
-        middle_names: Option<Vec<String>>,
-        prefix_titles: Option<Vec<String>>,
-        suffix_titles: Option<Vec<String>>,
+        id: &str,
+        last_name: Option<&str>,
+        first_name: Option<&str>,
+        middle_names: Option<&[&str]>,
+        prefix_titles: Option<&[&str]>,
+        suffix_titles: Option<&[&str]>,
     ) -> Result<PersonId, AuthorError> {
         if let Some(x) = &middle_names {
             if x.len() < 1 {
@@ -8443,10 +8437,10 @@ impl Ap242Author {
         }
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
-        let last_name = last_name.map(|v| self.text(&v));
-        let first_name = first_name.map(|v| self.text(&v));
+        let last_name = last_name.map(|v| self.text(v));
+        let first_name = first_name.map(|v| self.text(v));
         let middle_names = middle_names.map(|v| v.iter().map(|e| self.text(e)).collect());
         let prefix_titles = prefix_titles.map(|v| v.iter().map(|e| self.text(e)).collect());
         let suffix_titles = suffix_titles.map(|v| v.iter().map(|e| self.text(e)).collect());
@@ -8481,22 +8475,22 @@ impl Ap242Author {
     /// `PERSON_AND_ORGANIZATION_ADDRESS` — strict AP242 constructor.
     pub fn add_person_and_organization_address(
         &mut self,
-        internal_location: Option<String>,
-        street_number: Option<String>,
-        street: Option<String>,
-        postal_box: Option<String>,
-        town: Option<String>,
-        region: Option<String>,
-        postal_code: Option<String>,
-        country: Option<String>,
-        facsimile_number: Option<String>,
-        telephone_number: Option<String>,
-        electronic_mail_address: Option<String>,
-        telex_number: Option<String>,
+        internal_location: Option<&str>,
+        street_number: Option<&str>,
+        street: Option<&str>,
+        postal_box: Option<&str>,
+        town: Option<&str>,
+        region: Option<&str>,
+        postal_code: Option<&str>,
+        country: Option<&str>,
+        facsimile_number: Option<&str>,
+        telephone_number: Option<&str>,
+        electronic_mail_address: Option<&str>,
+        telex_number: Option<&str>,
         organizations: Vec<OrganizationRef>,
-        description: Option<String>,
+        description: Option<&str>,
         people: Vec<PersonRef>,
-        description_1: Option<String>,
+        description_1: Option<&str>,
     ) -> Result<PersonAndOrganizationAddressId, AuthorError> {
         {
             let x = &organizations;
@@ -8528,20 +8522,20 @@ impl Ap242Author {
         for e0 in &people {
             check_person_ref(&self.model, e0)?;
         }
-        let internal_location = internal_location.map(|v| self.text(&v));
-        let street_number = street_number.map(|v| self.text(&v));
-        let street = street.map(|v| self.text(&v));
-        let postal_box = postal_box.map(|v| self.text(&v));
-        let town = town.map(|v| self.text(&v));
-        let region = region.map(|v| self.text(&v));
-        let postal_code = postal_code.map(|v| self.text(&v));
-        let country = country.map(|v| self.text(&v));
-        let facsimile_number = facsimile_number.map(|v| self.text(&v));
-        let telephone_number = telephone_number.map(|v| self.text(&v));
-        let electronic_mail_address = electronic_mail_address.map(|v| self.text(&v));
-        let telex_number = telex_number.map(|v| self.text(&v));
-        let description = description.map(|v| self.text(&v));
-        let description_1 = description_1.map(|v| self.text(&v));
+        let internal_location = internal_location.map(|v| self.text(v));
+        let street_number = street_number.map(|v| self.text(v));
+        let street = street.map(|v| self.text(v));
+        let postal_box = postal_box.map(|v| self.text(v));
+        let town = town.map(|v| self.text(v));
+        let region = region.map(|v| self.text(v));
+        let postal_code = postal_code.map(|v| self.text(v));
+        let country = country.map(|v| self.text(v));
+        let facsimile_number = facsimile_number.map(|v| self.text(v));
+        let telephone_number = telephone_number.map(|v| self.text(v));
+        let electronic_mail_address = electronic_mail_address.map(|v| self.text(v));
+        let telex_number = telex_number.map(|v| self.text(v));
+        let description = description.map(|v| self.text(v));
+        let description_1 = description_1.map(|v| self.text(v));
         Ok(PersonAndOrganizationAddressId(
             self.model
                 .person_and_organization_address_arena
@@ -8587,11 +8581,11 @@ impl Ap242Author {
     /// `PERSON_AND_ORGANIZATION_ROLE` — strict AP242 constructor.
     pub fn add_person_and_organization_role(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<PersonAndOrganizationRoleId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PersonAndOrganizationRoleId(
             self.model
@@ -8603,20 +8597,20 @@ impl Ap242Author {
     /// `PERSONAL_ADDRESS` — strict AP242 constructor.
     pub fn add_personal_address(
         &mut self,
-        internal_location: Option<String>,
-        street_number: Option<String>,
-        street: Option<String>,
-        postal_box: Option<String>,
-        town: Option<String>,
-        region: Option<String>,
-        postal_code: Option<String>,
-        country: Option<String>,
-        facsimile_number: Option<String>,
-        telephone_number: Option<String>,
-        electronic_mail_address: Option<String>,
-        telex_number: Option<String>,
+        internal_location: Option<&str>,
+        street_number: Option<&str>,
+        street: Option<&str>,
+        postal_box: Option<&str>,
+        town: Option<&str>,
+        region: Option<&str>,
+        postal_code: Option<&str>,
+        country: Option<&str>,
+        facsimile_number: Option<&str>,
+        telephone_number: Option<&str>,
+        electronic_mail_address: Option<&str>,
+        telex_number: Option<&str>,
         people: Vec<PersonRef>,
-        description: Option<String>,
+        description: Option<&str>,
     ) -> Result<PersonalAddressId, AuthorError> {
         {
             let x = &people;
@@ -8633,19 +8627,19 @@ impl Ap242Author {
         for e0 in &people {
             check_person_ref(&self.model, e0)?;
         }
-        let internal_location = internal_location.map(|v| self.text(&v));
-        let street_number = street_number.map(|v| self.text(&v));
-        let street = street.map(|v| self.text(&v));
-        let postal_box = postal_box.map(|v| self.text(&v));
-        let town = town.map(|v| self.text(&v));
-        let region = region.map(|v| self.text(&v));
-        let postal_code = postal_code.map(|v| self.text(&v));
-        let country = country.map(|v| self.text(&v));
-        let facsimile_number = facsimile_number.map(|v| self.text(&v));
-        let telephone_number = telephone_number.map(|v| self.text(&v));
-        let electronic_mail_address = electronic_mail_address.map(|v| self.text(&v));
-        let telex_number = telex_number.map(|v| self.text(&v));
-        let description = description.map(|v| self.text(&v));
+        let internal_location = internal_location.map(|v| self.text(v));
+        let street_number = street_number.map(|v| self.text(v));
+        let street = street.map(|v| self.text(v));
+        let postal_box = postal_box.map(|v| self.text(v));
+        let town = town.map(|v| self.text(v));
+        let region = region.map(|v| self.text(v));
+        let postal_code = postal_code.map(|v| self.text(v));
+        let country = country.map(|v| self.text(v));
+        let facsimile_number = facsimile_number.map(|v| self.text(v));
+        let telephone_number = telephone_number.map(|v| self.text(v));
+        let electronic_mail_address = electronic_mail_address.map(|v| self.text(v));
+        let telex_number = telex_number.map(|v| self.text(v));
+        let description = description.map(|v| self.text(v));
         Ok(PersonalAddressId(self.model.personal_address_arena.push(
             PersonalAddress {
                 internal_location,
@@ -8669,21 +8663,21 @@ impl Ap242Author {
     /// `PLACED_DATUM_TARGET_FEATURE` — strict AP242 constructor.
     pub fn add_placed_datum_target_feature(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
-        target_id: String,
+        target_id: &str,
     ) -> Result<PlacedDatumTargetFeatureId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         let target_id = {
             let v = target_id;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PlacedDatumTargetFeatureId(
             self.model
@@ -8701,13 +8695,13 @@ impl Ap242Author {
     /// `PLACEMENT` — strict AP242 constructor.
     pub fn add_placement(
         &mut self,
-        name: String,
+        name: &str,
         location: CartesianPointRef,
     ) -> Result<PlacementId, AuthorError> {
         check_cartesian_point_ref(&self.model, &location)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PlacementId(
             self.model
@@ -8719,7 +8713,7 @@ impl Ap242Author {
     /// `PLANAR_BOX` — strict AP242 constructor.
     pub fn add_planar_box(
         &mut self,
-        name: String,
+        name: &str,
         size_in_x: f64,
         size_in_y: f64,
         placement: Axis2PlacementRef,
@@ -8739,7 +8733,7 @@ impl Ap242Author {
         check_axis2_placement_ref(&self.model, &placement)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PlanarBoxId(self.model.planar_box_arena.push(PlanarBox {
             name,
@@ -8752,7 +8746,7 @@ impl Ap242Author {
     /// `PLANAR_EXTENT` — strict AP242 constructor.
     pub fn add_planar_extent(
         &mut self,
-        name: String,
+        name: &str,
         size_in_x: f64,
         size_in_y: f64,
     ) -> Result<PlanarExtentId, AuthorError> {
@@ -8770,7 +8764,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PlanarExtentId(self.model.planar_extent_arena.push(
             PlanarExtent {
@@ -8784,13 +8778,13 @@ impl Ap242Author {
     /// `PLANE` — strict AP242 constructor.
     pub fn add_plane(
         &mut self,
-        name: String,
+        name: &str,
         position: Axis2Placement3dRef,
     ) -> Result<PlaneId, AuthorError> {
         check_axis2_placement3d_ref(&self.model, &position)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PlaneId(
             self.model.plane_arena.push(Plane { name, position }),
@@ -8854,10 +8848,10 @@ impl Ap242Author {
     }
 
     /// `POINT` — strict AP242 constructor.
-    pub fn add_point(&mut self, name: String) -> Result<PointId, AuthorError> {
+    pub fn add_point(&mut self, name: &str) -> Result<PointId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PointId(self.model.point_arena.push(Point { name })))
     }
@@ -8865,7 +8859,7 @@ impl Ap242Author {
     /// `POINT_STYLE` — strict AP242 constructor.
     pub fn add_point_style(
         &mut self,
-        name: String,
+        name: &str,
         marker: Option<MarkerSelectRef>,
         marker_size: Option<SizeSelectRef>,
         marker_colour: Option<ColourRef>,
@@ -8881,7 +8875,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PointStyleId(self.model.point_style_arena.push(
             PointStyle {
@@ -8896,7 +8890,7 @@ impl Ap242Author {
     /// `POLY_LOOP` — strict AP242 constructor.
     pub fn add_poly_loop(
         &mut self,
-        name: String,
+        name: &str,
         polygon: Vec<CartesianPointRef>,
     ) -> Result<PolyLoopId, AuthorError> {
         {
@@ -8916,7 +8910,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PolyLoopId(
             self.model.poly_loop_arena.push(PolyLoop { name, polygon }),
@@ -8926,7 +8920,7 @@ impl Ap242Author {
     /// `POLYLINE` — strict AP242 constructor.
     pub fn add_polyline(
         &mut self,
-        name: String,
+        name: &str,
         points: Vec<CartesianPointRef>,
     ) -> Result<PolylineId, AuthorError> {
         {
@@ -8946,7 +8940,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PolylineId(
             self.model.polyline_arena.push(Polyline { name, points }),
@@ -8956,8 +8950,8 @@ impl Ap242Author {
     /// `POSITION_TOLERANCE` — strict AP242 constructor.
     pub fn add_position_tolerance(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
     ) -> Result<PositionToleranceId, AuthorError> {
@@ -8967,9 +8961,9 @@ impl Ap242Author {
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(PositionToleranceId(
             self.model.position_tolerance_arena.push(PositionTolerance {
                 name,
@@ -8983,11 +8977,11 @@ impl Ap242Author {
     /// `PRE_DEFINED_CHARACTER_GLYPH` — strict AP242 constructor.
     pub fn add_pre_defined_character_glyph(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<PreDefinedCharacterGlyphId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PreDefinedCharacterGlyphId(
             self.model
@@ -8999,11 +8993,11 @@ impl Ap242Author {
     /// `PRE_DEFINED_COLOUR` — strict AP242 constructor.
     pub fn add_pre_defined_colour(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<PreDefinedColourId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PreDefinedColourId(
             self.model
@@ -9015,11 +9009,11 @@ impl Ap242Author {
     /// `PRE_DEFINED_CURVE_FONT` — strict AP242 constructor.
     pub fn add_pre_defined_curve_font(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<PreDefinedCurveFontId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PreDefinedCurveFontId(
             self.model
@@ -9029,10 +9023,10 @@ impl Ap242Author {
     }
 
     /// `PRE_DEFINED_ITEM` — strict AP242 constructor.
-    pub fn add_pre_defined_item(&mut self, name: String) -> Result<PreDefinedItemId, AuthorError> {
+    pub fn add_pre_defined_item(&mut self, name: &str) -> Result<PreDefinedItemId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PreDefinedItemId(
             self.model
@@ -9044,11 +9038,11 @@ impl Ap242Author {
     /// `PRE_DEFINED_MARKER` — strict AP242 constructor.
     pub fn add_pre_defined_marker(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<PreDefinedMarkerId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PreDefinedMarkerId(
             self.model
@@ -9060,11 +9054,11 @@ impl Ap242Author {
     /// `PRE_DEFINED_POINT_MARKER_SYMBOL` — strict AP242 constructor.
     pub fn add_pre_defined_point_marker_symbol(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<PreDefinedPointMarkerSymbolId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PreDefinedPointMarkerSymbolId(
             self.model
@@ -9076,11 +9070,11 @@ impl Ap242Author {
     /// `PRE_DEFINED_SURFACE_SIDE_STYLE` — strict AP242 constructor.
     pub fn add_pre_defined_surface_side_style(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<PreDefinedSurfaceSideStyleId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PreDefinedSurfaceSideStyleId(
             self.model
@@ -9092,11 +9086,11 @@ impl Ap242Author {
     /// `PRE_DEFINED_SYMBOL` — strict AP242 constructor.
     pub fn add_pre_defined_symbol(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<PreDefinedSymbolId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PreDefinedSymbolId(
             self.model
@@ -9108,11 +9102,11 @@ impl Ap242Author {
     /// `PRE_DEFINED_TERMINATOR_SYMBOL` — strict AP242 constructor.
     pub fn add_pre_defined_terminator_symbol(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<PreDefinedTerminatorSymbolId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PreDefinedTerminatorSymbolId(
             self.model
@@ -9124,11 +9118,11 @@ impl Ap242Author {
     /// `PRE_DEFINED_TEXT_FONT` — strict AP242 constructor.
     pub fn add_pre_defined_text_font(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<PreDefinedTextFontId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PreDefinedTextFontId(
             self.model
@@ -9138,10 +9132,10 @@ impl Ap242Author {
     }
 
     /// `PRE_DEFINED_TILE` — strict AP242 constructor.
-    pub fn add_pre_defined_tile(&mut self, name: String) -> Result<PreDefinedTileId, AuthorError> {
+    pub fn add_pre_defined_tile(&mut self, name: &str) -> Result<PreDefinedTileId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PreDefinedTileId(
             self.model
@@ -9165,7 +9159,7 @@ impl Ap242Author {
     /// `PRESENTATION_AREA` — strict AP242 constructor.
     pub fn add_presentation_area(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<PresentationAreaId, AuthorError> {
@@ -9187,7 +9181,7 @@ impl Ap242Author {
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PresentationAreaId(self.model.presentation_area_arena.push(
             PresentationArea {
@@ -9201,8 +9195,8 @@ impl Ap242Author {
     /// `PRESENTATION_LAYER_ASSIGNMENT` — strict AP242 constructor.
     pub fn add_presentation_layer_assignment(
         &mut self,
-        name: String,
-        description: String,
+        name: &str,
+        description: &str,
         assigned_items: Vec<LayeredItemRef>,
     ) -> Result<PresentationLayerAssignmentId, AuthorError> {
         {
@@ -9222,11 +9216,11 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let description = {
             let v = description;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PresentationLayerAssignmentId(
             self.model
@@ -9242,7 +9236,7 @@ impl Ap242Author {
     /// `PRESENTATION_REPRESENTATION` — strict AP242 constructor.
     pub fn add_presentation_representation(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<PresentationRepresentationId, AuthorError> {
@@ -9264,7 +9258,7 @@ impl Ap242Author {
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PresentationRepresentationId(
             self.model
@@ -9361,7 +9355,7 @@ impl Ap242Author {
     /// `PRESENTATION_VIEW` — strict AP242 constructor.
     pub fn add_presentation_view(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<PresentationViewId, AuthorError> {
@@ -9383,7 +9377,7 @@ impl Ap242Author {
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PresentationViewId(self.model.presentation_view_arena.push(
             PresentationView {
@@ -9419,9 +9413,9 @@ impl Ap242Author {
     /// `PRODUCT` — strict AP242 constructor.
     pub fn add_product(
         &mut self,
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: &str,
+        name: &str,
+        description: Option<&str>,
         frame_of_reference: Vec<ProductContextRef>,
     ) -> Result<ProductId, AuthorError> {
         {
@@ -9441,13 +9435,13 @@ impl Ap242Author {
         }
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ProductId(self.model.product_arena.push(Product {
             id,
             name,
@@ -9459,14 +9453,14 @@ impl Ap242Author {
     /// `PRODUCT_CATEGORY` — strict AP242 constructor.
     pub fn add_product_category(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
     ) -> Result<ProductCategoryId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ProductCategoryId(
             self.model
                 .product_category_arena
@@ -9477,8 +9471,8 @@ impl Ap242Author {
     /// `PRODUCT_CATEGORY_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_product_category_relationship(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         category: ProductCategoryRef,
         sub_category: ProductCategoryRef,
     ) -> Result<ProductCategoryRelationshipId, AuthorError> {
@@ -9486,9 +9480,9 @@ impl Ap242Author {
         check_product_category_ref(&self.model, &sub_category)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ProductCategoryRelationshipId(
             self.model
                 .product_category_relationship_arena
@@ -9504,21 +9498,21 @@ impl Ap242Author {
     /// `PRODUCT_CONCEPT` — strict AP242 constructor.
     pub fn add_product_concept(
         &mut self,
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: &str,
+        name: &str,
+        description: Option<&str>,
         market_context: ProductConceptContextRef,
     ) -> Result<ProductConceptId, AuthorError> {
         check_product_concept_context_ref(&self.model, &market_context)?;
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ProductConceptId(self.model.product_concept_arena.push(
             ProductConcept {
                 id,
@@ -9532,18 +9526,18 @@ impl Ap242Author {
     /// `PRODUCT_CONCEPT_CONTEXT` — strict AP242 constructor.
     pub fn add_product_concept_context(
         &mut self,
-        name: String,
+        name: &str,
         frame_of_reference: ApplicationContextRef,
-        market_segment_type: String,
+        market_segment_type: &str,
     ) -> Result<ProductConceptContextId, AuthorError> {
         check_application_context_ref(&self.model, &frame_of_reference)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let market_segment_type = {
             let v = market_segment_type;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ProductConceptContextId(
             self.model
@@ -9559,19 +9553,19 @@ impl Ap242Author {
     /// `PRODUCT_CONCEPT_FEATURE` — strict AP242 constructor.
     pub fn add_product_concept_feature(
         &mut self,
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: &str,
+        name: &str,
+        description: Option<&str>,
     ) -> Result<ProductConceptFeatureId, AuthorError> {
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ProductConceptFeatureId(
             self.model
                 .product_concept_feature_arena
@@ -9586,14 +9580,14 @@ impl Ap242Author {
     /// `PRODUCT_CONCEPT_FEATURE_CATEGORY` — strict AP242 constructor.
     pub fn add_product_concept_feature_category(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
     ) -> Result<ProductConceptFeatureCategoryId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ProductConceptFeatureCategoryId(
             self.model
                 .product_concept_feature_category_arena
@@ -9604,18 +9598,18 @@ impl Ap242Author {
     /// `PRODUCT_CONTEXT` — strict AP242 constructor.
     pub fn add_product_context(
         &mut self,
-        name: String,
+        name: &str,
         frame_of_reference: ApplicationContextRef,
-        discipline_type: String,
+        discipline_type: &str,
     ) -> Result<ProductContextId, AuthorError> {
         check_application_context_ref(&self.model, &frame_of_reference)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let discipline_type = {
             let v = discipline_type;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ProductContextId(self.model.product_context_arena.push(
             ProductContext {
@@ -9629,8 +9623,8 @@ impl Ap242Author {
     /// `PRODUCT_DEFINITION` — strict AP242 constructor.
     pub fn add_product_definition(
         &mut self,
-        id: String,
-        description: Option<String>,
+        id: &str,
+        description: Option<&str>,
         formation: ProductDefinitionFormationRef,
         frame_of_reference: ProductDefinitionContextRef,
     ) -> Result<ProductDefinitionId, AuthorError> {
@@ -9638,9 +9632,9 @@ impl Ap242Author {
         check_product_definition_context_ref(&self.model, &frame_of_reference)?;
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ProductDefinitionId(
             self.model.product_definition_arena.push(ProductDefinition {
                 id,
@@ -9654,18 +9648,18 @@ impl Ap242Author {
     /// `PRODUCT_DEFINITION_CONTEXT` — strict AP242 constructor.
     pub fn add_product_definition_context(
         &mut self,
-        name: String,
+        name: &str,
         frame_of_reference: ApplicationContextRef,
-        life_cycle_stage: String,
+        life_cycle_stage: &str,
     ) -> Result<ProductDefinitionContextId, AuthorError> {
         check_application_context_ref(&self.model, &frame_of_reference)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let life_cycle_stage = {
             let v = life_cycle_stage;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ProductDefinitionContextId(
             self.model
@@ -9702,14 +9696,14 @@ impl Ap242Author {
     /// `PRODUCT_DEFINITION_CONTEXT_ROLE` — strict AP242 constructor.
     pub fn add_product_definition_context_role(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
     ) -> Result<ProductDefinitionContextRoleId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ProductDefinitionContextRoleId(
             self.model
                 .product_definition_context_role_arena
@@ -9720,13 +9714,13 @@ impl Ap242Author {
     /// `PRODUCT_DEFINITION_EFFECTIVITY` — strict AP242 constructor.
     pub fn add_product_definition_effectivity(
         &mut self,
-        id: String,
+        id: &str,
         usage: ProductDefinitionRelationshipRef,
     ) -> Result<ProductDefinitionEffectivityId, AuthorError> {
         check_product_definition_relationship_ref(&self.model, &usage)?;
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ProductDefinitionEffectivityId(
             self.model
@@ -9738,16 +9732,16 @@ impl Ap242Author {
     /// `PRODUCT_DEFINITION_FORMATION` — strict AP242 constructor.
     pub fn add_product_definition_formation(
         &mut self,
-        id: String,
-        description: Option<String>,
+        id: &str,
+        description: Option<&str>,
         of_product: ProductRef,
     ) -> Result<ProductDefinitionFormationId, AuthorError> {
         check_product_ref(&self.model, &of_product)?;
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ProductDefinitionFormationId(
             self.model
                 .product_definition_formation_arena
@@ -9762,17 +9756,17 @@ impl Ap242Author {
     /// `PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE` — strict AP242 constructor.
     pub fn add_product_definition_formation_with_specified_source(
         &mut self,
-        id: String,
-        description: Option<String>,
+        id: &str,
+        description: Option<&str>,
         of_product: ProductRef,
         make_or_buy: Source,
     ) -> Result<ProductDefinitionFormationWithSpecifiedSourceId, AuthorError> {
         check_product_ref(&self.model, &of_product)?;
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ProductDefinitionFormationWithSpecifiedSourceId(
             self.model
                 .product_definition_formation_with_specified_source_arena
@@ -9788,9 +9782,9 @@ impl Ap242Author {
     /// `PRODUCT_DEFINITION_OCCURRENCE` — strict AP242 constructor.
     pub fn add_product_definition_occurrence(
         &mut self,
-        id: String,
-        name: Option<String>,
-        description: Option<String>,
+        id: &str,
+        name: Option<&str>,
+        description: Option<&str>,
         definition: Option<ProductDefinitionOrReferenceRef>,
         quantity: Option<MeasureWithUnitRef>,
     ) -> Result<ProductDefinitionOccurrenceId, AuthorError> {
@@ -9802,10 +9796,10 @@ impl Ap242Author {
         }
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
-        let name = name.map(|v| self.text(&v));
-        let description = description.map(|v| self.text(&v));
+        let name = name.map(|v| self.text(v));
+        let description = description.map(|v| self.text(v));
         Ok(ProductDefinitionOccurrenceId(
             self.model
                 .product_definition_occurrence_arena
@@ -9822,9 +9816,9 @@ impl Ap242Author {
     /// `PRODUCT_DEFINITION_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_product_definition_relationship(
         &mut self,
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: &str,
+        name: &str,
+        description: Option<&str>,
         relating_product_definition: ProductDefinitionOrReferenceRef,
         related_product_definition: ProductDefinitionOrReferenceRef,
     ) -> Result<ProductDefinitionRelationshipId, AuthorError> {
@@ -9832,13 +9826,13 @@ impl Ap242Author {
         check_product_definition_or_reference_ref(&self.model, &related_product_definition)?;
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ProductDefinitionRelationshipId(
             self.model
                 .product_definition_relationship_arena
@@ -9855,9 +9849,9 @@ impl Ap242Author {
     /// `PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_product_definition_relationship_relationship(
         &mut self,
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: &str,
+        name: &str,
+        description: Option<&str>,
         relating: ProductDefinitionRelationshipRef,
         related: ProductDefinitionRelationshipRef,
     ) -> Result<ProductDefinitionRelationshipRelationshipId, AuthorError> {
@@ -9865,13 +9859,13 @@ impl Ap242Author {
         check_product_definition_relationship_ref(&self.model, &related)?;
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ProductDefinitionRelationshipRelationshipId(
             self.model
                 .product_definition_relationship_relationship_arena
@@ -9888,16 +9882,16 @@ impl Ap242Author {
     /// `PRODUCT_DEFINITION_SHAPE` — strict AP242 constructor.
     pub fn add_product_definition_shape(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         definition: CharacterizedDefinitionRef,
     ) -> Result<ProductDefinitionShapeId, AuthorError> {
         check_characterized_definition_ref(&self.model, &definition)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ProductDefinitionShapeId(
             self.model
                 .product_definition_shape_arena
@@ -9912,13 +9906,13 @@ impl Ap242Author {
     /// `PRODUCT_DEFINITION_SUBSTITUTE` — strict AP242 constructor.
     pub fn add_product_definition_substitute(
         &mut self,
-        description: Option<String>,
+        description: Option<&str>,
         context_relationship: ProductDefinitionRelationshipRef,
         substitute_definition: ProductDefinitionRef,
     ) -> Result<ProductDefinitionSubstituteId, AuthorError> {
         check_product_definition_relationship_ref(&self.model, &context_relationship)?;
         check_product_definition_ref(&self.model, &substitute_definition)?;
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ProductDefinitionSubstituteId(
             self.model
                 .product_definition_substitute_arena
@@ -9933,9 +9927,9 @@ impl Ap242Author {
     /// `PRODUCT_DEFINITION_USAGE` — strict AP242 constructor.
     pub fn add_product_definition_usage(
         &mut self,
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: &str,
+        name: &str,
+        description: Option<&str>,
         relating_product_definition: ProductDefinitionOrReferenceRef,
         related_product_definition: ProductDefinitionOrReferenceRef,
     ) -> Result<ProductDefinitionUsageId, AuthorError> {
@@ -9943,13 +9937,13 @@ impl Ap242Author {
         check_product_definition_or_reference_ref(&self.model, &related_product_definition)?;
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ProductDefinitionUsageId(
             self.model
                 .product_definition_usage_arena
@@ -9966,8 +9960,8 @@ impl Ap242Author {
     /// `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS` — strict AP242 constructor.
     pub fn add_product_definition_with_associated_documents(
         &mut self,
-        id: String,
-        description: Option<String>,
+        id: &str,
+        description: Option<&str>,
         formation: ProductDefinitionFormationRef,
         frame_of_reference: ProductDefinitionContextRef,
         documentation_ids: Vec<DocumentRef>,
@@ -9991,9 +9985,9 @@ impl Ap242Author {
         }
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ProductDefinitionWithAssociatedDocumentsId(
             self.model
                 .product_definition_with_associated_documents_arena
@@ -10010,8 +10004,8 @@ impl Ap242Author {
     /// `PRODUCT_RELATED_PRODUCT_CATEGORY` — strict AP242 constructor.
     pub fn add_product_related_product_category(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         products: Vec<ProductRef>,
     ) -> Result<ProductRelatedProductCategoryId, AuthorError> {
         {
@@ -10031,9 +10025,9 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ProductRelatedProductCategoryId(
             self.model
                 .product_related_product_category_arena
@@ -10074,16 +10068,16 @@ impl Ap242Author {
     /// `PROPERTY_DEFINITION` — strict AP242 constructor.
     pub fn add_property_definition(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         definition: CharacterizedDefinitionRef,
     ) -> Result<PropertyDefinitionId, AuthorError> {
         check_characterized_definition_ref(&self.model, &definition)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(PropertyDefinitionId(
             self.model
                 .property_definition_arena
@@ -10098,8 +10092,8 @@ impl Ap242Author {
     /// `PROPERTY_DEFINITION_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_property_definition_relationship(
         &mut self,
-        name: String,
-        description: String,
+        name: &str,
+        description: &str,
         relating_property_definition: PropertyDefinitionRef,
         related_property_definition: PropertyDefinitionRef,
     ) -> Result<PropertyDefinitionRelationshipId, AuthorError> {
@@ -10107,11 +10101,11 @@ impl Ap242Author {
         check_property_definition_ref(&self.model, &related_property_definition)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let description = {
             let v = description;
-            self.text(&v)
+            self.text(v)
         };
         Ok(PropertyDefinitionRelationshipId(
             self.model.property_definition_relationship_arena.push(
@@ -10146,7 +10140,7 @@ impl Ap242Author {
     /// `QUALIFIED_REPRESENTATION_ITEM` — strict AP242 constructor.
     pub fn add_qualified_representation_item(
         &mut self,
-        name: String,
+        name: &str,
         qualifiers: Vec<ValueQualifierRef>,
     ) -> Result<QualifiedRepresentationItemId, AuthorError> {
         {
@@ -10166,7 +10160,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(QualifiedRepresentationItemId(
             self.model
@@ -10178,7 +10172,7 @@ impl Ap242Author {
     /// `QUASI_UNIFORM_CURVE` — strict AP242 constructor.
     pub fn add_quasi_uniform_curve(
         &mut self,
-        name: String,
+        name: &str,
         degree: i64,
         control_points_list: Vec<CartesianPointRef>,
         curve_form: BSplineCurveForm,
@@ -10202,7 +10196,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(QuasiUniformCurveId(
             self.model
@@ -10221,7 +10215,7 @@ impl Ap242Author {
     /// `QUASI_UNIFORM_SURFACE` — strict AP242 constructor.
     pub fn add_quasi_uniform_surface(
         &mut self,
-        name: String,
+        name: &str,
         u_degree: i64,
         v_degree: i64,
         control_points_list: Vec<Vec<CartesianPointRef>>,
@@ -10249,7 +10243,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(QuasiUniformSurfaceId(
             self.model
@@ -10306,7 +10300,7 @@ impl Ap242Author {
     /// `RATIONAL_B_SPLINE_CURVE` — strict AP242 constructor.
     pub fn add_rational_b_spline_curve(
         &mut self,
-        name: String,
+        name: &str,
         degree: i64,
         control_points_list: Vec<CartesianPointRef>,
         curve_form: BSplineCurveForm,
@@ -10349,7 +10343,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(RationalBSplineCurveId(
             self.model
@@ -10369,7 +10363,7 @@ impl Ap242Author {
     /// `RATIONAL_B_SPLINE_SURFACE` — strict AP242 constructor.
     pub fn add_rational_b_spline_surface(
         &mut self,
-        name: String,
+        name: &str,
         u_degree: i64,
         v_degree: i64,
         control_points_list: Vec<Vec<CartesianPointRef>>,
@@ -10418,7 +10412,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(RationalBSplineSurfaceId(
             self.model
@@ -10455,7 +10449,7 @@ impl Ap242Author {
     /// `REAL_REPRESENTATION_ITEM` — strict AP242 constructor.
     pub fn add_real_representation_item(
         &mut self,
-        name: String,
+        name: &str,
         the_value: f64,
     ) -> Result<RealRepresentationItemId, AuthorError> {
         if !the_value.is_finite() {
@@ -10466,7 +10460,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(RealRepresentationItemId(
             self.model
@@ -10478,13 +10472,13 @@ impl Ap242Author {
     /// `REPOSITIONED_TESSELLATED_ITEM` — strict AP242 constructor.
     pub fn add_repositioned_tessellated_item(
         &mut self,
-        name: String,
+        name: &str,
         location: Axis2Placement3dRef,
     ) -> Result<RepositionedTessellatedItemId, AuthorError> {
         check_axis2_placement3d_ref(&self.model, &location)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(RepositionedTessellatedItemId(
             self.model
@@ -10496,7 +10490,7 @@ impl Ap242Author {
     /// `REPRESENTATION` — strict AP242 constructor.
     pub fn add_representation(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<RepresentationId, AuthorError> {
@@ -10518,7 +10512,7 @@ impl Ap242Author {
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(RepresentationId(self.model.representation_arena.push(
             Representation {
@@ -10532,16 +10526,16 @@ impl Ap242Author {
     /// `REPRESENTATION_CONTEXT` — strict AP242 constructor.
     pub fn add_representation_context(
         &mut self,
-        context_identifier: String,
-        context_type: String,
+        context_identifier: &str,
+        context_type: &str,
     ) -> Result<RepresentationContextId, AuthorError> {
         let context_identifier = {
             let v = context_identifier;
-            self.text(&v)
+            self.text(v)
         };
         let context_type = {
             let v = context_type;
-            self.text(&v)
+            self.text(v)
         };
         Ok(RepresentationContextId(
             self.model
@@ -10556,11 +10550,11 @@ impl Ap242Author {
     /// `REPRESENTATION_CONTEXT_REFERENCE` — strict AP242 constructor.
     pub fn add_representation_context_reference(
         &mut self,
-        context_identifier: String,
+        context_identifier: &str,
     ) -> Result<RepresentationContextReferenceId, AuthorError> {
         let context_identifier = {
             let v = context_identifier;
-            self.text(&v)
+            self.text(v)
         };
         Ok(RepresentationContextReferenceId(
             self.model
@@ -10572,11 +10566,11 @@ impl Ap242Author {
     /// `REPRESENTATION_ITEM` — strict AP242 constructor.
     pub fn add_representation_item(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<RepresentationItemId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(RepresentationItemId(
             self.model
@@ -10604,13 +10598,13 @@ impl Ap242Author {
     /// `REPRESENTATION_REFERENCE` — strict AP242 constructor.
     pub fn add_representation_reference(
         &mut self,
-        id: String,
+        id: &str,
         context_of_items: RepresentationContextReferenceRef,
     ) -> Result<RepresentationReferenceId, AuthorError> {
         check_representation_context_reference_ref(&self.model, &context_of_items)?;
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         Ok(RepresentationReferenceId(
             self.model
@@ -10625,8 +10619,8 @@ impl Ap242Author {
     /// `REPRESENTATION_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_representation_relationship(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         rep_1: RepresentationOrRepresentationReferenceRef,
         rep_2: RepresentationOrRepresentationReferenceRef,
     ) -> Result<RepresentationRelationshipId, AuthorError> {
@@ -10634,9 +10628,9 @@ impl Ap242Author {
         check_representation_or_representation_reference_ref(&self.model, &rep_2)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(RepresentationRelationshipId(
             self.model
                 .representation_relationship_arena
@@ -10652,8 +10646,8 @@ impl Ap242Author {
     /// `REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION` — strict AP242 constructor.
     pub fn add_representation_relationship_with_transformation(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         rep_1: RepresentationOrRepresentationReferenceRef,
         rep_2: RepresentationOrRepresentationReferenceRef,
         transformation_operator: TransformationRef,
@@ -10663,9 +10657,9 @@ impl Ap242Author {
         check_transformation_ref(&self.model, &transformation_operator)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(RepresentationRelationshipWithTransformationId(
             self.model
                 .representation_relationship_with_transformation_arena
@@ -10682,18 +10676,18 @@ impl Ap242Author {
     /// `RESOURCE_PROPERTY` — strict AP242 constructor.
     pub fn add_resource_property(
         &mut self,
-        name: String,
-        description: String,
+        name: &str,
+        description: &str,
         resource: CharacterizedResourceDefinitionRef,
     ) -> Result<ResourcePropertyId, AuthorError> {
         check_characterized_resource_definition_ref(&self.model, &resource)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let description = {
             let v = description;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ResourcePropertyId(self.model.resource_property_arena.push(
             ResourceProperty {
@@ -10707,16 +10701,16 @@ impl Ap242Author {
     /// `RESOURCE_REQUIREMENT_TYPE` — strict AP242 constructor.
     pub fn add_resource_requirement_type(
         &mut self,
-        name: String,
-        description: String,
+        name: &str,
+        description: &str,
     ) -> Result<ResourceRequirementTypeId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let description = {
             let v = description;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ResourceRequirementTypeId(
             self.model
@@ -10744,8 +10738,8 @@ impl Ap242Author {
     /// `ROUNDNESS_TOLERANCE` — strict AP242 constructor.
     pub fn add_roundness_tolerance(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
     ) -> Result<RoundnessToleranceId, AuthorError> {
@@ -10755,9 +10749,9 @@ impl Ap242Author {
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(RoundnessToleranceId(
             self.model
                 .roundness_tolerance_arena
@@ -10773,7 +10767,7 @@ impl Ap242Author {
     /// `SEAM_CURVE` — strict AP242 constructor.
     pub fn add_seam_curve(
         &mut self,
-        name: String,
+        name: &str,
         curve_3d: CurveRef,
         associated_geometry: Vec<PcurveOrSurfaceRef>,
         master_representation: PreferredSurfaceCurveRepresentation,
@@ -10796,7 +10790,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(SeamCurveId(self.model.seam_curve_arena.push(SeamCurve {
             name,
@@ -10809,18 +10803,18 @@ impl Ap242Author {
     /// `SECURITY_CLASSIFICATION` — strict AP242 constructor.
     pub fn add_security_classification(
         &mut self,
-        name: String,
-        purpose: String,
+        name: &str,
+        purpose: &str,
         security_level: SecurityClassificationLevelRef,
     ) -> Result<SecurityClassificationId, AuthorError> {
         check_security_classification_level_ref(&self.model, &security_level)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let purpose = {
             let v = purpose;
-            self.text(&v)
+            self.text(v)
         };
         Ok(SecurityClassificationId(
             self.model
@@ -10851,11 +10845,11 @@ impl Ap242Author {
     /// `SECURITY_CLASSIFICATION_LEVEL` — strict AP242 constructor.
     pub fn add_security_classification_level(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<SecurityClassificationLevelId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(SecurityClassificationLevelId(
             self.model
@@ -10867,17 +10861,17 @@ impl Ap242Author {
     /// `SHAPE_ASPECT` — strict AP242 constructor.
     pub fn add_shape_aspect(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Option<Logical>,
     ) -> Result<ShapeAspectId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ShapeAspectId(self.model.shape_aspect_arena.push(
             ShapeAspect {
                 name,
@@ -10891,8 +10885,8 @@ impl Ap242Author {
     /// `SHAPE_ASPECT_ASSOCIATIVITY` — strict AP242 constructor.
     pub fn add_shape_aspect_associativity(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         relating_shape_aspect: ShapeAspectRef,
         related_shape_aspect: ShapeAspectRef,
     ) -> Result<ShapeAspectAssociativityId, AuthorError> {
@@ -10900,9 +10894,9 @@ impl Ap242Author {
         check_shape_aspect_ref(&self.model, &related_shape_aspect)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ShapeAspectAssociativityId(
             self.model
                 .shape_aspect_associativity_arena
@@ -10918,8 +10912,8 @@ impl Ap242Author {
     /// `SHAPE_ASPECT_DERIVING_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_shape_aspect_deriving_relationship(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         relating_shape_aspect: ShapeAspectRef,
         related_shape_aspect: ShapeAspectRef,
     ) -> Result<ShapeAspectDerivingRelationshipId, AuthorError> {
@@ -10927,9 +10921,9 @@ impl Ap242Author {
         check_shape_aspect_ref(&self.model, &related_shape_aspect)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ShapeAspectDerivingRelationshipId(
             self.model.shape_aspect_deriving_relationship_arena.push(
                 ShapeAspectDerivingRelationship {
@@ -10945,8 +10939,8 @@ impl Ap242Author {
     /// `SHAPE_ASPECT_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_shape_aspect_relationship(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         relating_shape_aspect: ShapeAspectRef,
         related_shape_aspect: ShapeAspectRef,
     ) -> Result<ShapeAspectRelationshipId, AuthorError> {
@@ -10954,9 +10948,9 @@ impl Ap242Author {
         check_shape_aspect_ref(&self.model, &related_shape_aspect)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ShapeAspectRelationshipId(
             self.model
                 .shape_aspect_relationship_arena
@@ -10990,7 +10984,7 @@ impl Ap242Author {
     /// `SHAPE_DIMENSION_REPRESENTATION` — strict AP242 constructor.
     pub fn add_shape_dimension_representation(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<ShapeDimensionRepresentationId, AuthorError> {
@@ -11012,7 +11006,7 @@ impl Ap242Author {
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ShapeDimensionRepresentationId(
             self.model
@@ -11028,7 +11022,7 @@ impl Ap242Author {
     /// `SHAPE_REPRESENTATION` — strict AP242 constructor.
     pub fn add_shape_representation(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<ShapeRepresentationId, AuthorError> {
@@ -11050,7 +11044,7 @@ impl Ap242Author {
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ShapeRepresentationId(
             self.model
@@ -11066,8 +11060,8 @@ impl Ap242Author {
     /// `SHAPE_REPRESENTATION_RELATIONSHIP` — strict AP242 constructor.
     pub fn add_shape_representation_relationship(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         rep_1: RepresentationOrRepresentationReferenceRef,
         rep_2: RepresentationOrRepresentationReferenceRef,
     ) -> Result<ShapeRepresentationRelationshipId, AuthorError> {
@@ -11075,9 +11069,9 @@ impl Ap242Author {
         check_representation_or_representation_reference_ref(&self.model, &rep_2)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ShapeRepresentationRelationshipId(
             self.model.shape_representation_relationship_arena.push(
                 ShapeRepresentationRelationship {
@@ -11093,7 +11087,7 @@ impl Ap242Author {
     /// `SHAPE_REPRESENTATION_WITH_PARAMETERS` — strict AP242 constructor.
     pub fn add_shape_representation_with_parameters(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<ShapeRepresentationWithParametersId, AuthorError> {
@@ -11115,7 +11109,7 @@ impl Ap242Author {
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ShapeRepresentationWithParametersId(
             self.model.shape_representation_with_parameters_arena.push(
@@ -11131,7 +11125,7 @@ impl Ap242Author {
     /// `SHELL_BASED_SURFACE_MODEL` — strict AP242 constructor.
     pub fn add_shell_based_surface_model(
         &mut self,
-        name: String,
+        name: &str,
         sbsm_boundary: Vec<ShellRef>,
     ) -> Result<ShellBasedSurfaceModelId, AuthorError> {
         {
@@ -11151,7 +11145,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ShellBasedSurfaceModelId(
             self.model
@@ -11210,10 +11204,10 @@ impl Ap242Author {
     }
 
     /// `SOLID_MODEL` — strict AP242 constructor.
-    pub fn add_solid_model(&mut self, name: String) -> Result<SolidModelId, AuthorError> {
+    pub fn add_solid_model(&mut self, name: &str) -> Result<SolidModelId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(SolidModelId(
             self.model.solid_model_arena.push(SolidModel { name }),
@@ -11223,7 +11217,7 @@ impl Ap242Author {
     /// `SPHERICAL_SURFACE` — strict AP242 constructor.
     pub fn add_spherical_surface(
         &mut self,
-        name: String,
+        name: &str,
         position: Axis2Placement3dRef,
         radius: f64,
     ) -> Result<SphericalSurfaceId, AuthorError> {
@@ -11236,7 +11230,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(SphericalSurfaceId(self.model.spherical_surface_arena.push(
             SphericalSurface {
@@ -11308,14 +11302,14 @@ impl Ap242Author {
     /// `STATE_OBSERVED` — strict AP242 constructor.
     pub fn add_state_observed(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
     ) -> Result<StateObservedId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(StateObservedId(
             self.model
                 .state_observed_arena
@@ -11326,14 +11320,14 @@ impl Ap242Author {
     /// `STATE_TYPE` — strict AP242 constructor.
     pub fn add_state_type(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
     ) -> Result<StateTypeId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(StateTypeId(
             self.model
                 .state_type_arena
@@ -11344,8 +11338,8 @@ impl Ap242Author {
     /// `STRAIGHTNESS_TOLERANCE` — strict AP242 constructor.
     pub fn add_straightness_tolerance(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
     ) -> Result<StraightnessToleranceId, AuthorError> {
@@ -11355,9 +11349,9 @@ impl Ap242Author {
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(StraightnessToleranceId(
             self.model
                 .straightness_tolerance_arena
@@ -11373,7 +11367,7 @@ impl Ap242Author {
     /// `STYLED_ITEM` — strict AP242 constructor.
     pub fn add_styled_item(
         &mut self,
-        name: String,
+        name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
         item: StyledItemTargetRef,
     ) -> Result<StyledItemId, AuthorError> {
@@ -11383,7 +11377,7 @@ impl Ap242Author {
         check_styled_item_target_ref(&self.model, &item)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(StyledItemId(
             self.model
@@ -11393,10 +11387,10 @@ impl Ap242Author {
     }
 
     /// `SURFACE` — strict AP242 constructor.
-    pub fn add_surface(&mut self, name: String) -> Result<SurfaceId, AuthorError> {
+    pub fn add_surface(&mut self, name: &str) -> Result<SurfaceId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(SurfaceId(self.model.surface_arena.push(Surface { name })))
     }
@@ -11404,7 +11398,7 @@ impl Ap242Author {
     /// `SURFACE_CURVE` — strict AP242 constructor.
     pub fn add_surface_curve(
         &mut self,
-        name: String,
+        name: &str,
         curve_3d: CurveRef,
         associated_geometry: Vec<PcurveOrSurfaceRef>,
         master_representation: PreferredSurfaceCurveRepresentation,
@@ -11427,7 +11421,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(SurfaceCurveId(self.model.surface_curve_arena.push(
             SurfaceCurve {
@@ -11442,7 +11436,7 @@ impl Ap242Author {
     /// `SURFACE_OF_LINEAR_EXTRUSION` — strict AP242 constructor.
     pub fn add_surface_of_linear_extrusion(
         &mut self,
-        name: String,
+        name: &str,
         swept_curve: CurveRef,
         extrusion_axis: VectorRef,
     ) -> Result<SurfaceOfLinearExtrusionId, AuthorError> {
@@ -11450,7 +11444,7 @@ impl Ap242Author {
         check_vector_ref(&self.model, &extrusion_axis)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(SurfaceOfLinearExtrusionId(
             self.model
@@ -11466,7 +11460,7 @@ impl Ap242Author {
     /// `SURFACE_OF_REVOLUTION` — strict AP242 constructor.
     pub fn add_surface_of_revolution(
         &mut self,
-        name: String,
+        name: &str,
         swept_curve: CurveRef,
         axis_position: Axis1PlacementRef,
     ) -> Result<SurfaceOfRevolutionId, AuthorError> {
@@ -11474,7 +11468,7 @@ impl Ap242Author {
         check_axis1_placement_ref(&self.model, &axis_position)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(SurfaceOfRevolutionId(
             self.model
@@ -11490,8 +11484,8 @@ impl Ap242Author {
     /// `SURFACE_PROFILE_TOLERANCE` — strict AP242 constructor.
     pub fn add_surface_profile_tolerance(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
     ) -> Result<SurfaceProfileToleranceId, AuthorError> {
@@ -11501,9 +11495,9 @@ impl Ap242Author {
         check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(SurfaceProfileToleranceId(
             self.model
                 .surface_profile_tolerance_arena
@@ -11532,7 +11526,7 @@ impl Ap242Author {
     /// `SURFACE_SIDE_STYLE` — strict AP242 constructor.
     pub fn add_surface_side_style(
         &mut self,
-        name: String,
+        name: &str,
         styles: Vec<SurfaceStyleElementSelectRef>,
     ) -> Result<SurfaceSideStyleId, AuthorError> {
         {
@@ -11552,7 +11546,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(SurfaceSideStyleId(
             self.model
@@ -11767,13 +11761,13 @@ impl Ap242Author {
     /// `SWEPT_SURFACE` — strict AP242 constructor.
     pub fn add_swept_surface(
         &mut self,
-        name: String,
+        name: &str,
         swept_curve: CurveRef,
     ) -> Result<SweptSurfaceId, AuthorError> {
         check_curve_ref(&self.model, &swept_curve)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(SweptSurfaceId(
             self.model
@@ -11798,7 +11792,7 @@ impl Ap242Author {
     /// `SYMBOL_REPRESENTATION` — strict AP242 constructor.
     pub fn add_symbol_representation(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<SymbolRepresentationId, AuthorError> {
@@ -11820,7 +11814,7 @@ impl Ap242Author {
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(SymbolRepresentationId(
             self.model
@@ -11836,13 +11830,13 @@ impl Ap242Author {
     /// `SYMBOL_STYLE` — strict AP242 constructor.
     pub fn add_symbol_style(
         &mut self,
-        name: String,
+        name: &str,
         style_of_symbol: SymbolStyleSelectRef,
     ) -> Result<SymbolStyleId, AuthorError> {
         check_symbol_style_select_ref(&self.model, &style_of_symbol)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(SymbolStyleId(self.model.symbol_style_arena.push(
             SymbolStyle {
@@ -11855,7 +11849,7 @@ impl Ap242Author {
     /// `SYMBOL_TARGET` — strict AP242 constructor.
     pub fn add_symbol_target(
         &mut self,
-        name: String,
+        name: &str,
         placement: Axis2PlacementRef,
         x_scale: f64,
         y_scale: f64,
@@ -11875,7 +11869,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(SymbolTargetId(self.model.symbol_target_arena.push(
             SymbolTarget {
@@ -11890,8 +11884,8 @@ impl Ap242Author {
     /// `SYMMETRY_TOLERANCE` — strict AP242 constructor.
     pub fn add_symmetry_tolerance(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
         datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -11917,9 +11911,9 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(SymmetryToleranceId(
             self.model.symmetry_tolerance_arena.push(SymmetryTolerance {
                 name,
@@ -11934,7 +11928,7 @@ impl Ap242Author {
     /// `TERMINATOR_SYMBOL` — strict AP242 constructor.
     pub fn add_terminator_symbol(
         &mut self,
-        name: String,
+        name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
         item: AnnotationSymbolOccurrenceItemRef,
         annotated_curve: AnnotationCurveOccurrenceRef,
@@ -11946,7 +11940,7 @@ impl Ap242Author {
         check_annotation_curve_occurrence_ref(&self.model, &annotated_curve)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(TerminatorSymbolId(self.model.terminator_symbol_arena.push(
             TerminatorSymbol {
@@ -11961,7 +11955,7 @@ impl Ap242Author {
     /// `TESSELLATED_ANNOTATION_OCCURRENCE` — strict AP242 constructor.
     pub fn add_tessellated_annotation_occurrence(
         &mut self,
-        name: String,
+        name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
         item: StyledItemTargetRef,
     ) -> Result<TessellatedAnnotationOccurrenceId, AuthorError> {
@@ -11971,7 +11965,7 @@ impl Ap242Author {
         check_styled_item_target_ref(&self.model, &item)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(TessellatedAnnotationOccurrenceId(
             self.model
@@ -11983,7 +11977,7 @@ impl Ap242Author {
     /// `TESSELLATED_CURVE_SET` — strict AP242 constructor.
     pub fn add_tessellated_curve_set(
         &mut self,
-        name: String,
+        name: &str,
         coordinates: CoordinatesListRef,
         line_strips: Vec<Vec<i64>>,
     ) -> Result<TessellatedCurveSetId, AuthorError> {
@@ -12002,7 +11996,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(TessellatedCurveSetId(
             self.model
@@ -12018,7 +12012,7 @@ impl Ap242Author {
     /// `TESSELLATED_FACE` — strict AP242 constructor.
     pub fn add_tessellated_face(
         &mut self,
-        name: String,
+        name: &str,
         coordinates: CoordinatesListRef,
         pnmax: i64,
         normals: Vec<Reals3>,
@@ -12052,7 +12046,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(TessellatedFaceId(self.model.tessellated_face_arena.push(
             TessellatedFace {
@@ -12068,7 +12062,7 @@ impl Ap242Author {
     /// `TESSELLATED_GEOMETRIC_SET` — strict AP242 constructor.
     pub fn add_tessellated_geometric_set(
         &mut self,
-        name: String,
+        name: &str,
         children: Vec<TessellatedItemRef>,
     ) -> Result<TessellatedGeometricSetId, AuthorError> {
         {
@@ -12088,7 +12082,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(TessellatedGeometricSetId(
             self.model
@@ -12098,10 +12092,10 @@ impl Ap242Author {
     }
 
     /// `TESSELLATED_ITEM` — strict AP242 constructor.
-    pub fn add_tessellated_item(&mut self, name: String) -> Result<TessellatedItemId, AuthorError> {
+    pub fn add_tessellated_item(&mut self, name: &str) -> Result<TessellatedItemId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(TessellatedItemId(
             self.model
@@ -12113,7 +12107,7 @@ impl Ap242Author {
     /// `TESSELLATED_SHAPE_REPRESENTATION` — strict AP242 constructor.
     pub fn add_tessellated_shape_representation(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<TessellatedShapeRepresentationId, AuthorError> {
@@ -12135,7 +12129,7 @@ impl Ap242Author {
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(TessellatedShapeRepresentationId(
             self.model.tessellated_shape_representation_arena.push(
@@ -12151,7 +12145,7 @@ impl Ap242Author {
     /// `TESSELLATED_SHELL` — strict AP242 constructor.
     pub fn add_tessellated_shell(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<TessellatedStructuredItemRef>,
         topological_link: Option<ConnectedFaceSetRef>,
     ) -> Result<TessellatedShellId, AuthorError> {
@@ -12175,7 +12169,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(TessellatedShellId(self.model.tessellated_shell_arena.push(
             TessellatedShell {
@@ -12189,7 +12183,7 @@ impl Ap242Author {
     /// `TESSELLATED_SOLID` — strict AP242 constructor.
     pub fn add_tessellated_solid(
         &mut self,
-        name: String,
+        name: &str,
         items: Vec<TessellatedStructuredItemRef>,
         geometric_link: Option<ManifoldSolidBrepRef>,
     ) -> Result<TessellatedSolidId, AuthorError> {
@@ -12213,7 +12207,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(TessellatedSolidId(self.model.tessellated_solid_arena.push(
             TessellatedSolid {
@@ -12227,11 +12221,11 @@ impl Ap242Author {
     /// `TESSELLATED_STRUCTURED_ITEM` — strict AP242 constructor.
     pub fn add_tessellated_structured_item(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<TessellatedStructuredItemId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(TessellatedStructuredItemId(
             self.model
@@ -12243,7 +12237,7 @@ impl Ap242Author {
     /// `TESSELLATED_SURFACE_SET` — strict AP242 constructor.
     pub fn add_tessellated_surface_set(
         &mut self,
-        name: String,
+        name: &str,
         coordinates: CoordinatesListRef,
         pnmax: i64,
         normals: Vec<Reals3>,
@@ -12273,7 +12267,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(TessellatedSurfaceSetId(
             self.model
@@ -12290,21 +12284,21 @@ impl Ap242Author {
     /// `TEXT_FONT` — strict AP242 constructor.
     pub fn add_text_font(
         &mut self,
-        id: String,
-        name: String,
-        description: String,
+        id: &str,
+        name: &str,
+        description: &str,
     ) -> Result<TextFontId, AuthorError> {
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let description = {
             let v = description;
-            self.text(&v)
+            self.text(v)
         };
         Ok(TextFontId(self.model.text_font_arena.push(TextFont {
             id,
@@ -12316,10 +12310,10 @@ impl Ap242Author {
     /// `TEXT_LITERAL` — strict AP242 constructor.
     pub fn add_text_literal(
         &mut self,
-        name: String,
-        literal: String,
+        name: &str,
+        literal: &str,
         placement: Axis2PlacementRef,
-        alignment: String,
+        alignment: &str,
         path: TextPath,
         font: FontSelectRef,
     ) -> Result<TextLiteralId, AuthorError> {
@@ -12327,15 +12321,15 @@ impl Ap242Author {
         check_font_select_ref(&self.model, &font)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         let literal = {
             let v = literal;
-            self.text(&v)
+            self.text(v)
         };
         let alignment = {
             let v = alignment;
-            self.text(&v)
+            self.text(v)
         };
         Ok(TextLiteralId(self.model.text_literal_arena.push(
             TextLiteral {
@@ -12352,13 +12346,13 @@ impl Ap242Author {
     /// `TEXT_STYLE` — strict AP242 constructor.
     pub fn add_text_style(
         &mut self,
-        name: String,
+        name: &str,
         character_appearance: CharacterStyleSelectRef,
     ) -> Result<TextStyleId, AuthorError> {
         check_character_style_select_ref(&self.model, &character_appearance)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(TextStyleId(self.model.text_style_arena.push(TextStyle {
             name,
@@ -12382,7 +12376,7 @@ impl Ap242Author {
     /// `TEXT_STYLE_WITH_BOX_CHARACTERISTICS` — strict AP242 constructor.
     pub fn add_text_style_with_box_characteristics(
         &mut self,
-        name: String,
+        name: &str,
         character_appearance: CharacterStyleSelectRef,
         characteristics: Vec<MeasureValue>,
     ) -> Result<TextStyleWithBoxCharacteristicsId, AuthorError> {
@@ -12411,7 +12405,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(TextStyleWithBoxCharacteristicsId(
             self.model.text_style_with_box_characteristics_arena.push(
@@ -12476,8 +12470,8 @@ impl Ap242Author {
     /// `TOLERANCE_ZONE` — strict AP242 constructor.
     pub fn add_tolerance_zone(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
         defining_tolerance: Vec<ToleranceZoneTargetRef>,
@@ -12502,9 +12496,9 @@ impl Ap242Author {
         check_tolerance_zone_form_ref(&self.model, &form)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ToleranceZoneId(self.model.tolerance_zone_arena.push(
             ToleranceZone {
                 name,
@@ -12537,11 +12531,11 @@ impl Ap242Author {
     /// `TOLERANCE_ZONE_FORM` — strict AP242 constructor.
     pub fn add_tolerance_zone_form(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<ToleranceZoneFormId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ToleranceZoneFormId(
             self.model
@@ -12553,8 +12547,8 @@ impl Ap242Author {
     /// `TOLERANCE_ZONE_WITH_DATUM` — strict AP242 constructor.
     pub fn add_tolerance_zone_with_datum(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
         defining_tolerance: Vec<ToleranceZoneTargetRef>,
@@ -12581,9 +12575,9 @@ impl Ap242Author {
         check_datum_system_ref(&self.model, &datum_reference)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(ToleranceZoneWithDatumId(
             self.model
                 .tolerance_zone_with_datum_arena
@@ -12602,11 +12596,11 @@ impl Ap242Author {
     /// `TOPOLOGICAL_REPRESENTATION_ITEM` — strict AP242 constructor.
     pub fn add_topological_representation_item(
         &mut self,
-        name: String,
+        name: &str,
     ) -> Result<TopologicalRepresentationItemId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(TopologicalRepresentationItemId(
             self.model
@@ -12618,7 +12612,7 @@ impl Ap242Author {
     /// `TOROIDAL_SURFACE` — strict AP242 constructor.
     pub fn add_toroidal_surface(
         &mut self,
-        name: String,
+        name: &str,
         position: Axis2Placement3dRef,
         major_radius: f64,
         minor_radius: f64,
@@ -12638,7 +12632,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ToroidalSurfaceId(self.model.toroidal_surface_arena.push(
             ToroidalSurface {
@@ -12653,8 +12647,8 @@ impl Ap242Author {
     /// `TOTAL_RUNOUT_TOLERANCE` — strict AP242 constructor.
     pub fn add_total_runout_tolerance(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
         datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -12680,9 +12674,9 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(TotalRunoutToleranceId(
             self.model
                 .total_runout_tolerance_arena
@@ -12699,7 +12693,7 @@ impl Ap242Author {
     /// `TRIMMED_CURVE` — strict AP242 constructor.
     pub fn add_trimmed_curve(
         &mut self,
-        name: String,
+        name: &str,
         basis_curve: CurveRef,
         trim_1: Vec<TrimmingSelectRef>,
         trim_2: Vec<TrimmingSelectRef>,
@@ -12739,7 +12733,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(TrimmedCurveId(self.model.trimmed_curve_arena.push(
             TrimmedCurve {
@@ -12756,7 +12750,7 @@ impl Ap242Author {
     /// `TWO_DIRECTION_REPEAT_FACTOR` — strict AP242 constructor.
     pub fn add_two_direction_repeat_factor(
         &mut self,
-        name: String,
+        name: &str,
         repeat_factor: VectorRef,
         second_repeat_factor: VectorRef,
     ) -> Result<TwoDirectionRepeatFactorId, AuthorError> {
@@ -12764,7 +12758,7 @@ impl Ap242Author {
         check_vector_ref(&self.model, &second_repeat_factor)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(TwoDirectionRepeatFactorId(
             self.model
@@ -12778,10 +12772,10 @@ impl Ap242Author {
     }
 
     /// `TYPE_QUALIFIER` — strict AP242 constructor.
-    pub fn add_type_qualifier(&mut self, name: String) -> Result<TypeQualifierId, AuthorError> {
+    pub fn add_type_qualifier(&mut self, name: &str) -> Result<TypeQualifierId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(TypeQualifierId(
             self.model.type_qualifier_arena.push(TypeQualifier { name }),
@@ -12793,8 +12787,8 @@ impl Ap242Author {
         &mut self,
         value_component: MeasureValue,
         unit_component: UnitRef,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
     ) -> Result<UncertaintyMeasureWithUnitId, AuthorError> {
         if let MeasureScalar::Real(v) = &value_component.value {
             if !v.is_finite() {
@@ -12807,9 +12801,9 @@ impl Ap242Author {
         check_unit_ref(&self.model, &unit_component)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(UncertaintyMeasureWithUnitId(
             self.model
                 .uncertainty_measure_with_unit_arena
@@ -12825,16 +12819,16 @@ impl Ap242Author {
     /// `UNCERTAINTY_QUALIFIER` — strict AP242 constructor.
     pub fn add_uncertainty_qualifier(
         &mut self,
-        measure_name: String,
-        description: String,
+        measure_name: &str,
+        description: &str,
     ) -> Result<UncertaintyQualifierId, AuthorError> {
         let measure_name = {
             let v = measure_name;
-            self.text(&v)
+            self.text(v)
         };
         let description = {
             let v = description;
-            self.text(&v)
+            self.text(v)
         };
         Ok(UncertaintyQualifierId(
             self.model
@@ -12849,8 +12843,8 @@ impl Ap242Author {
     /// `UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE` — strict AP242 constructor.
     pub fn add_unequally_disposed_geometric_tolerance(
         &mut self,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
         displacement: LengthMeasureWithUnitRef,
@@ -12862,9 +12856,9 @@ impl Ap242Author {
         check_length_measure_with_unit_ref(&self.model, &displacement)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(UnequallyDisposedGeometricToleranceId(
             self.model
                 .unequally_disposed_geometric_tolerance_arena
@@ -12881,7 +12875,7 @@ impl Ap242Author {
     /// `UNIFORM_CURVE` — strict AP242 constructor.
     pub fn add_uniform_curve(
         &mut self,
-        name: String,
+        name: &str,
         degree: i64,
         control_points_list: Vec<CartesianPointRef>,
         curve_form: BSplineCurveForm,
@@ -12905,7 +12899,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(UniformCurveId(self.model.uniform_curve_arena.push(
             UniformCurve {
@@ -12922,7 +12916,7 @@ impl Ap242Author {
     /// `UNIFORM_SURFACE` — strict AP242 constructor.
     pub fn add_uniform_surface(
         &mut self,
-        name: String,
+        name: &str,
         u_degree: i64,
         v_degree: i64,
         control_points_list: Vec<Vec<CartesianPointRef>>,
@@ -12950,7 +12944,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(UniformSurfaceId(self.model.uniform_surface_arena.push(
             UniformSurface {
@@ -12969,11 +12963,11 @@ impl Ap242Author {
     /// `VALUE_FORMAT_TYPE_QUALIFIER` — strict AP242 constructor.
     pub fn add_value_format_type_qualifier(
         &mut self,
-        format_type: String,
+        format_type: &str,
     ) -> Result<ValueFormatTypeQualifierId, AuthorError> {
         let format_type = {
             let v = format_type;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ValueFormatTypeQualifierId(
             self.model
@@ -12985,7 +12979,7 @@ impl Ap242Author {
     /// `VALUE_REPRESENTATION_ITEM` — strict AP242 constructor.
     pub fn add_value_representation_item(
         &mut self,
-        name: String,
+        name: &str,
         value_component: MeasureValue,
     ) -> Result<ValueRepresentationItemId, AuthorError> {
         if let MeasureScalar::Real(v) = &value_component.value {
@@ -12998,7 +12992,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(ValueRepresentationItemId(
             self.model
@@ -13013,7 +13007,7 @@ impl Ap242Author {
     /// `VECTOR` — strict AP242 constructor.
     pub fn add_vector(
         &mut self,
-        name: String,
+        name: &str,
         orientation: DirectionRef,
         magnitude: f64,
     ) -> Result<VectorId, AuthorError> {
@@ -13026,7 +13020,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(VectorId(self.model.vector_arena.push(Vector {
             name,
@@ -13038,21 +13032,21 @@ impl Ap242Author {
     /// `VERSIONED_ACTION_REQUEST` — strict AP242 constructor.
     pub fn add_versioned_action_request(
         &mut self,
-        id: String,
-        version: Option<String>,
-        purpose: String,
-        description: Option<String>,
+        id: &str,
+        version: Option<&str>,
+        purpose: &str,
+        description: Option<&str>,
     ) -> Result<VersionedActionRequestId, AuthorError> {
         let id = {
             let v = id;
-            self.text(&v)
+            self.text(v)
         };
-        let version = version.map(|v| self.text(&v));
+        let version = version.map(|v| self.text(v));
         let purpose = {
             let v = purpose;
-            self.text(&v)
+            self.text(v)
         };
-        let description = description.map(|v| self.text(&v));
+        let description = description.map(|v| self.text(v));
         Ok(VersionedActionRequestId(
             self.model
                 .versioned_action_request_arena
@@ -13066,10 +13060,10 @@ impl Ap242Author {
     }
 
     /// `VERTEX` — strict AP242 constructor.
-    pub fn add_vertex(&mut self, name: String) -> Result<VertexId, AuthorError> {
+    pub fn add_vertex(&mut self, name: &str) -> Result<VertexId, AuthorError> {
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(VertexId(self.model.vertex_arena.push(Vertex { name })))
     }
@@ -13077,13 +13071,13 @@ impl Ap242Author {
     /// `VERTEX_LOOP` — strict AP242 constructor.
     pub fn add_vertex_loop(
         &mut self,
-        name: String,
+        name: &str,
         loop_vertex: VertexRef,
     ) -> Result<VertexLoopId, AuthorError> {
         check_vertex_ref(&self.model, &loop_vertex)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(VertexLoopId(
             self.model
@@ -13095,13 +13089,13 @@ impl Ap242Author {
     /// `VERTEX_POINT` — strict AP242 constructor.
     pub fn add_vertex_point(
         &mut self,
-        name: String,
+        name: &str,
         vertex_geometry: PointRef,
     ) -> Result<VertexPointId, AuthorError> {
         check_point_ref(&self.model, &vertex_geometry)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(VertexPointId(self.model.vertex_point_arena.push(
             VertexPoint {
@@ -13114,13 +13108,13 @@ impl Ap242Author {
     /// `VERTEX_SHELL` — strict AP242 constructor.
     pub fn add_vertex_shell(
         &mut self,
-        name: String,
+        name: &str,
         vertex_shell_extent: VertexLoopRef,
     ) -> Result<VertexShellId, AuthorError> {
         check_vertex_loop_ref(&self.model, &vertex_shell_extent)?;
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(VertexShellId(self.model.vertex_shell_arena.push(
             VertexShell {
@@ -13206,7 +13200,7 @@ impl Ap242Author {
     /// `WIRE_SHELL` — strict AP242 constructor.
     pub fn add_wire_shell(
         &mut self,
-        name: String,
+        name: &str,
         wire_shell_extent: Vec<LoopRef>,
     ) -> Result<WireShellId, AuthorError> {
         {
@@ -13226,7 +13220,7 @@ impl Ap242Author {
         }
         let name = {
             let v = name;
-            self.text(&v)
+            self.text(v)
         };
         Ok(WireShellId(self.model.wire_shell_arena.push(WireShell {
             name,
