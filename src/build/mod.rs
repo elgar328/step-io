@@ -281,6 +281,14 @@ pub enum CurveInput {
     /// Ellipse in the frame's XY plane: first and second semi-axis; with
     /// equal end vertices a full ellipse, otherwise an arc.
     Ellipse(Frame, f64, f64),
+    /// Parabola in the frame's XY plane with the given focal distance (apex at
+    /// the origin, opening along X, or along −X for a negative distance): the
+    /// span between the two vertices, which must differ.
+    Parabola(Frame, f64),
+    /// The branch along X of a hyperbola in the frame's XY plane: semi-axis
+    /// and semi-imaginary axis. The span between the two vertices, which must
+    /// differ.
+    Hyperbola(Frame, f64, f64),
     /// Piecewise-linear curve through the given points (customarily the
     /// first/last coincide with the edge's vertices).
     Polyline(Vec<[f64; 3]>),
@@ -392,6 +400,49 @@ fn check_weights(n: usize, weights: &[f64]) -> Result<(), AuthorError> {
         return bad("B-spline weight not positive");
     }
     Ok(())
+}
+
+/// Whether an edge from `start` to `end` on a parabola or hyperbola in `frame`
+/// runs with the curve's parameter, which grows with `y / scale` (`scale` the
+/// focal distance of a parabola, 1 for a hyperbola). Both curves are open, so
+/// equal end points cannot make an edge.
+// Exact comparison intended: only end points at the very same parameter make
+// an edge without a span.
+#[allow(clippy::float_cmp)]
+fn open_conic_ahead(
+    frame: &Frame,
+    start: [f64; 3],
+    end: [f64; 3],
+    scale: f64,
+) -> Result<bool, AuthorError> {
+    let dot = |a: [f64; 3], b: [f64; 3]| a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    let (axis, ref_dir) = (frame.axis, frame.ref_dir);
+    let along = dot(ref_dir, axis) / dot(axis, axis);
+    let x_dir = [
+        ref_dir[0] - along * axis[0],
+        ref_dir[1] - along * axis[1],
+        ref_dir[2] - along * axis[2],
+    ];
+    let y_dir = [
+        axis[1] * x_dir[2] - axis[2] * x_dir[1],
+        axis[2] * x_dir[0] - axis[0] * x_dir[2],
+        axis[0] * x_dir[1] - axis[1] * x_dir[0],
+    ];
+    let offset = |p: [f64; 3]| {
+        let rel = [
+            p[0] - frame.origin[0],
+            p[1] - frame.origin[1],
+            p[2] - frame.origin[2],
+        ];
+        dot(rel, y_dir) / scale
+    };
+    let (from, to) = (offset(start), offset(end));
+    if from == to {
+        return Err(AuthorError::InvalidInput {
+            reason: "parabola or hyperbola edge without a span",
+        });
+    }
+    Ok(from < to)
 }
 
 /// Optional overrides for [`StepBuilder::part_with`] — every field defaults
@@ -1055,8 +1106,11 @@ impl StepBuilder {
     /// B-spline degree below 1, no more control points than the degree, a knot
     /// count other than control points + degree + 1, decreasing knots, a knot
     /// repeated more than the degree allows (degree + 1 at an end), or weights
-    /// that are not one positive value per control point.
-    /// See also [the builder's errors](Self#errors).
+    /// that are not one positive value per control point; for a
+    /// [`CurveInput::Parabola`] with a zero focal distance or a
+    /// [`CurveInput::Hyperbola`] with a semi-axis not positive; and for either
+    /// when the two vertices sit at the same parameter, so the edge has no
+    /// span. See also [the builder's errors](Self#errors).
     pub fn edge(
         &mut self,
         from: Vertex,
@@ -1065,6 +1119,7 @@ impl StepBuilder {
     ) -> Result<m::EdgeCurveId, AuthorError> {
         let (start_vertex, start) = self.vertices[from.0];
         let (end_vertex, end) = self.vertices[to.0];
+        let mut same_sense = true;
         let geometry = match curve {
             CurveInput::Line => {
                 let delta = [end[0] - start[0], end[1] - start[1], end[2] - start[2]];
@@ -1094,6 +1149,40 @@ impl StepBuilder {
             CurveInput::Ellipse(frame, semi_1, semi_2) => {
                 self.profile_geometry(&ProfileInput::Ellipse(frame, semi_1, semi_2))?
             }
+            CurveInput::Parabola(frame, focal) => {
+                if focal == 0.0 {
+                    return Err(AuthorError::InvalidInput {
+                        reason: "parabola with a zero focal distance",
+                    });
+                }
+                // The edge runs with the curve when its parameter
+                // y / (2·focal) grows from start to end.
+                same_sense = open_conic_ahead(&frame, start, end, focal)?;
+                let position = self.placement(&frame)?;
+                let parabola = self.author.add_parabola(
+                    String::new(),
+                    m::Axis2PlacementRef::Axis2Placement3d(position),
+                    focal,
+                )?;
+                m::CurveRef::Parabola(parabola)
+            }
+            CurveInput::Hyperbola(frame, semi_axis, semi_imag_axis) => {
+                if !(semi_axis > 0.0 && semi_imag_axis > 0.0) {
+                    return Err(AuthorError::InvalidInput {
+                        reason: "hyperbola semi-axes not positive",
+                    });
+                }
+                // Its parameter asinh(y / semi_imag_axis) grows with y.
+                same_sense = open_conic_ahead(&frame, start, end, 1.0)?;
+                let position = self.placement(&frame)?;
+                let hyperbola = self.author.add_hyperbola(
+                    String::new(),
+                    m::Axis2PlacementRef::Axis2Placement3d(position),
+                    semi_axis,
+                    semi_imag_axis,
+                )?;
+                m::CurveRef::Hyperbola(hyperbola)
+            }
             CurveInput::Polyline(points) => {
                 let refs = self.control_points(&points)?;
                 m::CurveRef::Polyline(self.author.add_polyline(String::new(), refs)?)
@@ -1105,7 +1194,7 @@ impl StepBuilder {
             m::VertexRef::VertexPoint(start_vertex),
             m::VertexRef::VertexPoint(end_vertex),
             geometry,
-            true,
+            same_sense,
         )
     }
 

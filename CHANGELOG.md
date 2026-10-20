@@ -33,6 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   trim given as a point is followed rather than its parameter: writers
   disagree on a parabola's parameter, Open CASCADE writing `2F·u` where the
   standard has `u`.
+- `CurveInput::Parabola` and `CurveInput::Hyperbola` let `StepBuilder::edge`
+  write an edge along a parabola or a hyperbola branch. Its `same_sense` says
+  whether the edge runs with the curve's parameter, found from the vertices;
+  a zero focal distance, a semi-axis not positive, or vertices at the same
+  parameter are refused with `AuthorError::InvalidInput`.
 
 ### Changed
 

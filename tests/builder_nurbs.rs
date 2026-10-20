@@ -376,3 +376,87 @@ fn nurbs_that_break_the_standard_are_rejected() {
         assert!(matches!(err, step_io::AuthorError::InvalidInput { .. }));
     }
 }
+
+#[test]
+fn parabola_and_hyperbola_edges_round_trip() {
+    // F = 2 and semi-axes 3, 1.5, in the frame at (1,2,3).
+    let at = frame([1.0, 2.0, 3.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]);
+    let parabola_at = |u: f64| [1.0 + 2.0 * u * u, 2.0 + 4.0 * u, 3.0];
+    let hyperbola_at = |u: f64| [1.0 + 3.0 * u.cosh(), 2.0 + 1.5 * u.sinh(), 3.0];
+
+    let mut b = StepBuilder::new().expect("builder");
+    let part = b.part("conics").expect("part");
+    let ends = [
+        (parabola_at(-1.0), parabola_at(2.0)),
+        (parabola_at(2.0), parabola_at(-1.0)),
+        (hyperbola_at(-0.5), hyperbola_at(1.5)),
+    ];
+    let mut edges = Vec::new();
+    for (i, (from, to)) in ends.into_iter().enumerate() {
+        let (v0, v1) = (b.vertex(from).expect("v0"), b.vertex(to).expect("v1"));
+        let curve = if i < 2 {
+            CurveInput::Parabola(at, 2.0)
+        } else {
+            CurveInput::Hyperbola(at, 3.0, 1.5)
+        };
+        edges.push(b.edge(v0, v1, curve).expect("edge"));
+    }
+    // Something to anchor the edges: a face over the plane they lie in.
+    let face = b
+        .face(
+            SurfaceInput::Plane(at),
+            Orientation::Forward,
+            vec![FaceBoundInput::outer(
+                edges.iter().map(|&e| (e, Orientation::Forward)).collect(),
+            )],
+        )
+        .expect("face");
+    b.solid(part, "conics", vec![face]).expect("solid");
+    let mut out = Vec::new();
+    step_io::write(&b.finish().expect("finish"), &mut out).expect("write");
+
+    let (model, report) = read(&out[..]).expect("read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    let scene = model.scene();
+    let read_back: Vec<_> = scene.all_edges().collect();
+    assert_eq!(read_back.len(), 3);
+    // The second parabola edge runs against the parameter.
+    let senses: Vec<bool> = read_back
+        .iter()
+        .map(step_io::scene::Edge::same_sense)
+        .collect();
+    assert_eq!(senses, [true, false, true]);
+    for (edge, (from, to)) in read_back.iter().zip(ends) {
+        let n = edge.to_nurbs().expect("converts");
+        let (first, last) = (n.control_points[0], *n.control_points.last().unwrap());
+        assert!(close(first, from) && close(last, to), "{first:?} {last:?}");
+        assert!(matches!(
+            edge.curve().kind(),
+            CurveKind::Parabola(_) | CurveKind::Hyperbola(_)
+        ));
+    }
+}
+
+#[test]
+fn degenerate_parabolas_and_hyperbolas_are_rejected() {
+    let at = frame([0.0; 3], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]);
+    let mut b = StepBuilder::new().expect("builder");
+    let v0 = b.vertex([1.0, 2.0, 0.0]).expect("v0");
+    let v1 = b.vertex([1.0, -2.0, 0.0]).expect("v1");
+    // A zero focal distance, a zero semi-axis, and an edge without a span.
+    for (curve, to) in [
+        (CurveInput::Parabola(at, 0.0), v1),
+        (CurveInput::Hyperbola(at, 0.0, 1.0), v1),
+        (CurveInput::Parabola(at, 1.0), v0),
+    ] {
+        let err = b.edge(v0, to, curve).expect_err("degenerate");
+        assert!(
+            matches!(err, step_io::AuthorError::InvalidInput { .. }),
+            "{err}"
+        );
+    }
+}
+
+fn close(a: [f64; 3], b: [f64; 3]) -> bool {
+    a.iter().zip(b).all(|(x, y)| (x - y).abs() < 1e-9)
+}
