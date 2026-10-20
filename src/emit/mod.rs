@@ -118,18 +118,20 @@ fn header_list(items: &[String]) -> String {
 }
 
 /// The Part 21 text up to the DATA section's entities, built from `header`
-/// — `FILE_SCHEMA` from [`FileHeader::schema`]'s raw strings (an absent raw
+/// — `FILE_SCHEMA` from [`FileHeader::schema`]'s raw strings (an empty raw
 /// renders as the customary empty `('')`).
 fn header_text(header: &FileHeader) -> String {
-    let schema = header.schema.raw().map_or_else(
-        || "''".to_owned(),
-        |r| {
-            r.iter()
-                .map(|s| header_str(s))
-                .collect::<Vec<_>>()
-                .join(",")
-        },
-    );
+    let schema = if header.schema.raw.is_empty() {
+        "''".to_owned()
+    } else {
+        header
+            .schema
+            .raw
+            .iter()
+            .map(|s| header_str(s))
+            .collect::<Vec<_>>()
+            .join(",")
+    };
     format!(
         "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(({desc}),'2;1');\n\
          FILE_NAME({name},{stamp},{authors},{orgs},{pre},{orig},{auth});\n\

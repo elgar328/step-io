@@ -204,8 +204,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reads the rest of its text correctly instead of reading all of it as
   ISO 8859-1.
 - The `parser` module keeps what reading a raw file needs: `parse`, `Graph`
-  and its entity types, the `Span` that errors carry,
-  `MAX_NESTING_DEPTH` and `NonEmptyStringList`. `Error`, `LexError`,
+  and its entity types, the `Span` that errors carry, and
+  `MAX_NESTING_DEPTH`. `Error`, `LexError`,
   `LexErrorKind`, `ParseWarning`, `SchemaId`, `ApFamily` and `Stage` are at
   the crate root only. `parse_bytes` (use `parse`), `Parser`, `Lexer`,
   `tokenize`, `Token`, `Span::slice` and the `entity`, `lexer`, `p21` and
@@ -245,6 +245,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `InvalidBinary`; both used to be `UnexpectedCharacter`.
 - The `step_io::Result` alias is removed; write
   `Result<T, step_io::Error>`.
+- A file whose `FILE_SCHEMA` names no schema reads as `ApFamily::Other`; it
+  used to read as AP214, the default `ApFamily` had. `ApFamily` has no
+  default now, and `ApFamily`, `Stage` and `SchemaId` are
+  `#[non_exhaustive]`.
+- `SchemaId::raw` is the `Vec<String>` of `FILE_SCHEMA` names, empty when the
+  file gives none; `NonEmptyStringList`, the `raw()` method and
+  `SchemaId::synthetic()` are removed.
+- `SchemaId` prints only what the file pins, `AP214` or `AP214 (CD)` rather
+  than `AP214 ed? (?)`, and an unrecognised schema prints its names rather
+  than `unrecognized schema`.
 - Section markers (`HEADER`, `DATA`, `ENDSEC`, …) ignore ASCII case only, so
   `ENDſEC` no longer reads as `ENDSEC`.
 - The `Graph` that `parse()` returns takes about 40% less

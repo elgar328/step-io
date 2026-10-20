@@ -17,7 +17,6 @@ pub(crate) mod string;
 pub use entity::{Attribute, Graph, RawEntity, RawEntityPart};
 pub use lexer::Span;
 pub use p21::{MAX_NESTING_DEPTH, parse};
-pub use schema::NonEmptyStringList;
 
 // Public at the crate root; here for the crate's own paths.
 pub(crate) use entity::{Error, ParseWarning};

@@ -1,76 +1,10 @@
-/// A Part 21 `LIST[1:?] OF STRING` — guaranteed to hold at least one element.
-///
-/// STEP's `FILE_DESCRIPTION.description`, `FILE_NAME.author`, and
-/// `FILE_NAME.organization` fields are typed `LIST[1:?] OF STRING`; an empty
-/// list is a spec violation. Encoding that constraint at the type level
-/// prevents construction of spec-violating `FileHeader` values: any attempt
-/// to build a `NonEmptyStringList` from an empty `Vec<String>` returns
-/// `None` rather than an invalid value.
-///
-/// STEP convention for "no meaningful content" is a single-element list
-/// holding `""`, which is what [`NonEmptyStringList::default`] produces.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct NonEmptyStringList(Vec<String>);
-
-impl NonEmptyStringList {
-    /// A single-element list (used for the spec-compliant "no content" form
-    /// `('')` via `Default`).
-    fn single(s: String) -> Self {
-        Self(vec![s])
-    }
-
-    /// Lift a `Vec<String>` to `NonEmptyStringList`; returns `None` for an
-    /// empty input.
-    #[must_use]
-    pub fn try_from_vec(v: Vec<String>) -> Option<Self> {
-        if v.is_empty() { None } else { Some(Self(v)) }
-    }
-
-    #[must_use]
-    pub fn as_slice(&self) -> &[String] {
-        &self.0
-    }
-
-    /// Inherent iterator (idiomatic companion to `IntoIterator for &Self`).
-    pub fn iter(&self) -> std::slice::Iter<'_, String> {
-        self.0.iter()
-    }
-
-    #[must_use]
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-
-    #[must_use]
-    pub fn is_empty(&self) -> bool {
-        // Invariant: never empty. Provided for `clippy::len_without_is_empty`.
-        false
-    }
-}
-
-impl Default for NonEmptyStringList {
-    /// Single empty-string element (`[""]`) — the STEP convention for
-    /// "no meaningful content" while remaining spec-compliant.
-    fn default() -> Self {
-        Self::single(String::new())
-    }
-}
-
-impl<'a> IntoIterator for &'a NonEmptyStringList {
-    type Item = &'a String;
-    type IntoIter = std::slice::Iter<'a, String>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.iter()
-    }
-}
-
 /// AP family recognised from `FILE_SCHEMA`. `Other` = step-io did not
-/// recognise the schema name (the raw text is still preserved in [`SchemaId`]).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+/// recognise the schema name, or the file names none (the names are still
+/// kept in [`SchemaId::raw`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ApFamily {
     Ap203,
-    #[default]
     Ap214,
     Ap242,
     Other,
@@ -82,6 +16,7 @@ pub enum ApFamily {
 /// through `Cd` → `Dis` → `Is`. Use `stage == Is` (not the presence of an
 /// edition) to test whether the file declares a published standard.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[non_exhaustive]
 pub enum Stage {
     /// International Standard (published).
     Is,
@@ -104,63 +39,73 @@ pub enum Stage {
 /// [`ApFamily::Other`] and an unrecognised version to `edition: None`, so
 /// future editions are still recognised by family.
 ///
-/// - `raw: Some(_)` — preserved verbatim from a source file (read path);
-///   byte-exact round-trip relies on this.
-/// - `raw: None` — a synthetic model (kernel-built); the writer supplies a
-///   canonical `FILE_SCHEMA` for the chosen target.
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+/// The default is the identity of a file that names no schema: `Other`, no
+/// edition, `Unknown` stage, no names.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct SchemaId {
     pub family: ApFamily,
     /// AP edition (1, 2, 3, …); `None` when the token does not pin it
     /// (e.g. AP214 CD/DIS, or an unrecognised AP242 module version).
     pub edition: Option<u8>,
     pub stage: Stage,
-    pub raw: Option<NonEmptyStringList>,
+    /// The `FILE_SCHEMA` names as the file gives them, written back as they
+    /// are; empty when the file gives none.
+    pub raw: Vec<String>,
+}
+
+impl Default for SchemaId {
+    fn default() -> Self {
+        Self {
+            family: ApFamily::Other,
+            edition: None,
+            stage: Stage::Unknown,
+            raw: Vec::new(),
+        }
+    }
 }
 
 impl SchemaId {
-    /// A synthetic identity with no preserved raw text (kernel-built model).
-    #[must_use]
-    pub fn synthetic(family: ApFamily, edition: Option<u8>, stage: Stage) -> Self {
-        Self {
-            family,
-            edition,
-            stage,
-            raw: None,
-        }
-    }
-
     /// Whether step-io recognised the AP family.
     #[must_use]
     pub fn is_recognized(&self) -> bool {
         self.family != ApFamily::Other
     }
-
-    /// Preserved raw `FILE_SCHEMA` text, if any (`None` for synthetic).
-    #[must_use]
-    pub fn raw(&self) -> Option<&NonEmptyStringList> {
-        self.raw.as_ref()
-    }
 }
 
+/// `AP242 ed2 (IS)`, leaving out what the file does not pin (`AP214 (CD)`,
+/// `AP214`). An unrecognised schema prints its names, or `unrecognized
+/// schema` when the file gives none.
 impl std::fmt::Display for SchemaId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let fam = match self.family {
             ApFamily::Ap203 => "AP203",
             ApFamily::Ap214 => "AP214",
             ApFamily::Ap242 => "AP242",
-            ApFamily::Other => return write!(f, "unrecognized schema"),
+            ApFamily::Other => {
+                let names: Vec<&str> = self
+                    .raw
+                    .iter()
+                    .map(|s| s.trim())
+                    .filter(|s| !s.is_empty())
+                    .collect();
+                if names.is_empty() {
+                    return f.write_str("unrecognized schema");
+                }
+                return f.write_str(&names.join(", "));
+            }
         };
+        f.write_str(fam)?;
+        if let Some(e) = self.edition {
+            write!(f, " ed{e}")?;
+        }
         let stage = match self.stage {
             Stage::Is => "IS",
             Stage::Dis => "DIS",
             Stage::Cd => "CD",
-            Stage::Unknown => "?",
+            Stage::Unknown => return Ok(()),
         };
-        match self.edition {
-            Some(e) => write!(f, "{fam} ed{e} ({stage})"),
-            None => write!(f, "{fam} ed? ({stage})"),
-        }
+        write!(f, " ({stage})")
     }
 }
 
@@ -171,16 +116,12 @@ impl std::fmt::Display for SchemaId {
 /// fall back to family recognition. The raw text is always preserved.
 #[must_use]
 pub(crate) fn identify_schema(file_schema: &[String]) -> SchemaId {
-    let Some(raw) = NonEmptyStringList::try_from_vec(file_schema.to_vec()) else {
-        // Spec violation: FILE_SCHEMA is LIST[1:?]. Lenient recovery.
-        return SchemaId::default();
-    };
     let (family, edition, stage) = classify(file_schema);
     SchemaId {
         family,
         edition,
         stage,
-        raw: Some(raw),
+        raw: file_schema.to_vec(),
     }
 }
 
@@ -420,7 +361,7 @@ mod tests {
             "SHAPE_APPEARANCE_LAYER_MIM".into(),
         ]);
         assert_eq!(s.family, ApFamily::Ap203);
-        assert_eq!(s.raw().map(NonEmptyStringList::len), Some(2));
+        assert_eq!(s.raw.len(), 2);
     }
 
     // --- fallback / edge ---
@@ -429,25 +370,20 @@ mod tests {
         let s = id("SOMETHING_ELSE");
         assert_eq!(s.family, ApFamily::Other);
         assert!(!s.is_recognized());
-        assert_eq!(
-            s.raw().map(|r| r.as_slice()[0].as_str()),
-            Some("SOMETHING_ELSE")
-        );
+        assert_eq!(s.raw, ["SOMETHING_ELSE"]);
     }
 
     #[test]
-    fn empty_list_falls_back_to_default() {
-        // Spec violation (empty FILE_SCHEMA) → lenient default.
+    fn empty_list_names_no_schema() {
+        // Spec violation (empty FILE_SCHEMA) → no schema, not AP214.
         assert_eq!(identify_schema(&[]), SchemaId::default());
+        assert_eq!(SchemaId::default().family, ApFamily::Other);
     }
 
     #[test]
     fn raw_is_always_preserved_on_read() {
         let s = id("AUTOMOTIVE_DESIGN { 1 0 10303 214 3 1 1 }");
-        assert_eq!(
-            s.raw().map(|r| r.as_slice()[0].as_str()),
-            Some("AUTOMOTIVE_DESIGN { 1 0 10303 214 3 1 1 }")
-        );
+        assert_eq!(s.raw, ["AUTOMOTIVE_DESIGN { 1 0 10303 214 3 1 1 }"]);
     }
 
     #[test]
@@ -457,7 +393,17 @@ mod tests {
                 .to_string(),
             "AP242 ed2 (IS)"
         );
-        assert_eq!(id("AUTOMOTIVE_DESIGN").to_string(), "AP214 ed? (?)");
-        assert_eq!(id("SOMETHING_ELSE").to_string(), "unrecognized schema");
+        assert_eq!(id("AUTOMOTIVE_DESIGN").to_string(), "AP214");
+        assert_eq!(
+            id("AUTOMOTIVE_DESIGN_CC2 { 1 2 10303 214 -1 1 5 4 }").to_string(),
+            "AP214 (CD)"
+        );
+        assert_eq!(id("SOMETHING_ELSE").to_string(), "SOMETHING_ELSE");
+        assert_eq!(
+            identify_schema(&["A".into(), "B".into()]).to_string(),
+            "A, B"
+        );
+        assert_eq!(id("").to_string(), "unrecognized schema");
+        assert_eq!(identify_schema(&[]).to_string(), "unrecognized schema");
     }
 }
