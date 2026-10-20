@@ -343,23 +343,18 @@ impl<'m> MeshGroup<'m> {
     }
 
     /// The mesh faces bundled in this group.
-    pub fn meshes(&self) -> Vec<Mesh<'m>> {
+    pub fn meshes(&self) -> impl Iterator<Item = Mesh<'m>> + 'm {
         let cx = self.cx;
-        self.items()
-            .iter()
-            .filter_map(|it| {
-                let which = match it {
-                    m::TessellatedStructuredItemRef::ComplexTriangulatedFace(id) => {
-                        MeshImpl::ComplexFace(*id)
-                    }
-                    m::TessellatedStructuredItemRef::TessellatedFace(id) => {
-                        MeshImpl::PlainFace(*id)
-                    }
-                    _ => return None,
-                };
-                Some(Mesh { cx, which })
-            })
-            .collect()
+        self.items().iter().filter_map(move |it| {
+            let which = match it {
+                m::TessellatedStructuredItemRef::ComplexTriangulatedFace(id) => {
+                    MeshImpl::ComplexFace(*id)
+                }
+                m::TessellatedStructuredItemRef::TessellatedFace(id) => MeshImpl::PlainFace(*id),
+                _ => return None,
+            };
+            Some(Mesh { cx, which })
+        })
     }
 
     /// The precise b-rep solid this group tessellates, where the file links

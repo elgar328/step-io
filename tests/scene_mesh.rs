@@ -129,14 +129,14 @@ fn mesh_groups_bundle_faces_and_reach_the_solid() {
 
     // A tessellated solid: faces plus a direct geometric link to the b-rep.
     let a = groups.iter().find(|g| g.name() == "group A").expect("A");
-    let meshes = a.meshes();
+    let meshes: Vec<_> = a.meshes().collect();
     assert_eq!(meshes.len(), 1);
     assert_eq!(meshes[0].name(), "quad");
     assert_eq!(a.solid().expect("linked solid").name(), "the part");
 
     // A shell without a topological link: no solid.
     let b = groups.iter().find(|g| g.name() == "group B").expect("B");
-    assert_eq!(b.meshes()[0].name(), "fan");
+    assert_eq!(b.meshes().next().expect("a mesh").name(), "fan");
     assert!(b.solid().is_none());
 
     // A shell linked to a closed shell: reached back through its owner.

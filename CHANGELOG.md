@@ -52,6 +52,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   per cavity, instead of a `Vec` of face lists. It used to drop the
   orientation, so a cavity's faces could not be told to point into the
   hole. Use `shell.faces()` for the faces.
+- `Scene::dimensions()`, `tolerances()`, `datums()` and `features()` are
+  renamed `all_dimensions()`, `all_tolerances()`, `all_datums()` and
+  `all_features()`, as every other model-wide list is named `all_*`. The
+  same names on a `ProductDef` stay as they are.
+- Every move from a handle to any number of other handles returns an
+  iterator. These used to return a `Vec`: `MeshGroup::meshes`,
+  `Product::{contributors, approvals, documents, security_classifications,
+  versions}`, `ProductDef::{contributors, approvals, documents,
+  security_classifications}`, `assigned_targets` on `Contributor`,
+  `Approval`, `Document` and `SecurityClassification`, `Approval::approvers`,
+  `MappedInstance::{solids, mapped_children}`, `Tolerance::datums`,
+  `Dimension::features` and `Feature::geometry`. The order is the same; add
+  `.collect::<Vec<_>>()` where a list is needed.
 - `StepBuilder::face` takes an `Orientation` instead of the `same_sense`
   boolean, and `FaceBoundInput` holds an `Orientation` in each edge pair and
   in its `orientation` field instead of a boolean. The file written is

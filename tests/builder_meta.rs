@@ -77,7 +77,7 @@ fn full_metadata_round_trips_and_reads_back() {
     assert_eq!(product.id(), "W-100");
     assert_eq!(product.name(), "wheel");
     assert_eq!(product.description(), Some("front wheel"));
-    let versions = product.versions();
+    let versions: Vec<_> = product.versions().collect();
     assert_eq!(versions.len(), 1);
     assert_eq!(versions[0].id(), "B");
     assert_eq!(versions[0].description(), Some("second revision"));
@@ -87,7 +87,7 @@ fn full_metadata_round_trips_and_reads_back() {
     assert_eq!(defs[0].description(), Some("design view"));
 
     // Contributor.
-    let contributors = product.contributors();
+    let contributors: Vec<_> = product.contributors().collect();
     assert_eq!(contributors.len(), 1);
     assert_eq!(contributors[0].role(), "creator");
     assert_eq!(contributors[0].person().first_name(), Some("John"));
@@ -95,11 +95,11 @@ fn full_metadata_round_trips_and_reads_back() {
     assert_eq!(contributors[0].organization(), "ACME");
 
     // Approval with approver and date.
-    let approvals = product.approvals();
+    let approvals: Vec<_> = product.approvals().collect();
     assert_eq!(approvals.len(), 1);
     assert_eq!(approvals[0].status(), "approved");
     assert_eq!(approvals[0].level(), "final");
-    let approvers = approvals[0].approvers();
+    let approvers: Vec<_> = approvals[0].approvers().collect();
     assert_eq!(approvers.len(), 1);
     assert_eq!(approvers[0].role(), "approver");
     assert_eq!(
@@ -114,7 +114,7 @@ fn full_metadata_round_trips_and_reads_back() {
     );
 
     // Document.
-    let documents = product.documents();
+    let documents: Vec<_> = product.documents().collect();
     assert_eq!(documents.len(), 1);
     assert_eq!(documents[0].id(), "DOC-1");
     assert_eq!(documents[0].name(), "spec sheet");
@@ -122,7 +122,7 @@ fn full_metadata_round_trips_and_reads_back() {
     assert_eq!(documents[0].kind(), "drawing");
 
     // Security classification.
-    let security = product.security_classifications();
+    let security: Vec<_> = product.security_classifications().collect();
     assert_eq!(security.len(), 1);
     assert_eq!(security[0].name(), "SC-1");
     assert_eq!(security[0].purpose(), "export control");
@@ -163,7 +163,6 @@ fn shared_person_across_parts_and_roles() {
         .all_products()
         .flat_map(|p| {
             p.contributors()
-                .iter()
                 .map(|c| c.role().to_owned())
                 .collect::<Vec<_>>()
         })

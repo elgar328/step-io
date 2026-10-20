@@ -83,13 +83,13 @@
 //! }
 //!
 //! // PMI: dimensions, tolerances, and the annotated features.
-//! for dim in scene.dimensions() {
+//! for dim in scene.all_dimensions() {
 //!     let (_kind, _value) = (dim.kind(), dim.value());
 //! }
-//! for tol in scene.tolerances() {
+//! for tol in scene.all_tolerances() {
 //!     let (_kind, _datums) = (tol.kind(), tol.datums());
 //! }
-//! for feat in scene.features() {
+//! for feat in scene.all_features() {
 //!     let _geometry = feat.geometry(); // the faces/edges it annotates
 //! }
 //!

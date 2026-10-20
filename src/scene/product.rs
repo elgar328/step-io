@@ -159,30 +159,32 @@ impl<'m> Product<'m> {
 
     /// The people/organizations associated with this product across all its
     /// versions and definitions, each with the role they play.
-    pub fn contributors(&self) -> Vec<Contributor<'m>> {
-        contributors_of(self.cx, &self.metadata_targets())
+    pub fn contributors(&self) -> impl Iterator<Item = Contributor<'m>> + 'm {
+        contributors_of(self.cx, &self.metadata_targets()).into_iter()
     }
 
     /// The approvals anywhere in this product's tree (product, any formation, or
     /// any definition).
-    pub fn approvals(&self) -> Vec<Approval<'m>> {
-        approvals_of(self.cx, &self.metadata_targets())
+    pub fn approvals(&self) -> impl Iterator<Item = Approval<'m>> + 'm {
+        approvals_of(self.cx, &self.metadata_targets()).into_iter()
     }
 
     /// The documents referenced anywhere in this product's tree.
-    pub fn documents(&self) -> Vec<Document<'m>> {
-        documents_of(self.cx, &self.metadata_targets())
+    pub fn documents(&self) -> impl Iterator<Item = Document<'m>> + 'm {
+        documents_of(self.cx, &self.metadata_targets()).into_iter()
     }
 
     /// The security classifications assigned anywhere in this product's tree.
-    pub fn security_classifications(&self) -> Vec<SecurityClassification<'m>> {
-        security_classifications_of(self.cx, &self.metadata_targets())
+    pub fn security_classifications(
+        &self,
+    ) -> impl Iterator<Item = SecurityClassification<'m>> + 'm {
+        security_classifications_of(self.cx, &self.metadata_targets()).into_iter()
     }
 
     /// This product's versions — its `PRODUCT_DEFINITION_FORMATION`s (reverse:
     /// their `of_product` is this product). Usually one; a file may carry several
     /// revisions. Navigate `version.definitions()` to group definitions by version.
-    pub fn versions(&self) -> Vec<Version<'m>> {
+    pub fn versions(&self) -> impl Iterator<Item = Version<'m>> + 'm {
         let cx = self.cx;
         let rg = cx.ref_graph();
         let mut out: Vec<Version<'m>> = Vec::new();
@@ -196,7 +198,7 @@ impl<'m> Product<'m> {
             };
             out.push(Version { cx, which });
         }
-        out
+        out.into_iter()
     }
 }
 
@@ -450,7 +452,7 @@ impl<'m> ProductDef<'m> {
     }
 
     /// The shape features of this part (`SHAPE_ASPECT`s whose `of_shape`
-    /// resolves to this definition). The model-wide [`Scene::features`] filtered
+    /// resolves to this definition). The model-wide [`Scene::all_features`] filtered
     /// to this part.
     pub fn features(&self) -> impl Iterator<Item = pmi::Feature<'m>> + 'm {
         pmi::features_of(self.cx, self.key()).into_iter()
@@ -522,14 +524,14 @@ impl<'m> ProductDef<'m> {
 
     /// The people/organizations assigned to this part's definition, product, or
     /// formation, each with the role they play.
-    pub fn contributors(&self) -> Vec<Contributor<'m>> {
-        contributors_of(self.cx, &self.metadata_targets())
+    pub fn contributors(&self) -> impl Iterator<Item = Contributor<'m>> + 'm {
+        contributors_of(self.cx, &self.metadata_targets()).into_iter()
     }
 
     /// The approvals on this part — the `APPROVAL`s assigned to its definition,
     /// product, or formation (each with a status, level, and approvers).
-    pub fn approvals(&self) -> Vec<Approval<'m>> {
-        approvals_of(self.cx, &self.metadata_targets())
+    pub fn approvals(&self) -> impl Iterator<Item = Approval<'m>> + 'm {
+        approvals_of(self.cx, &self.metadata_targets()).into_iter()
     }
 
     /// The documents referenced by this part — drawings, specs, standards
@@ -537,7 +539,7 @@ impl<'m> ProductDef<'m> {
     /// definition, its product, or its formation), plus, for a
     /// `..._WITH_ASSOCIATED_DOCUMENTS` definition, the documents it carries
     /// directly in `documentation_ids`.
-    pub fn documents(&self) -> Vec<Document<'m>> {
+    pub fn documents(&self) -> impl Iterator<Item = Document<'m>> + 'm {
         let mut out = documents_of(self.cx, &self.metadata_targets());
         if let PdImpl::WithDocs(i) = self.which {
             let raw = self
@@ -562,13 +564,15 @@ impl<'m> ProductDef<'m> {
                 }
             }
         }
-        out
+        out.into_iter()
     }
 
     /// The security classifications assigned to this part — its confidentiality
     /// level and why (assigned to its definition, product, or formation).
-    pub fn security_classifications(&self) -> Vec<SecurityClassification<'m>> {
-        security_classifications_of(self.cx, &self.metadata_targets())
+    pub fn security_classifications(
+        &self,
+    ) -> impl Iterator<Item = SecurityClassification<'m>> + 'm {
+        security_classifications_of(self.cx, &self.metadata_targets()).into_iter()
     }
 }
 
@@ -837,7 +841,7 @@ impl<'m> Contributor<'m> {
 
     /// The exact product-structure entities this assignment attaches to (its
     /// `items`) — versions and definitions stay distinct even at the same level.
-    pub fn assigned_targets(&self) -> Vec<Target<'m>> {
+    pub fn assigned_targets(&self) -> impl Iterator<Item = Target<'m>> + 'm {
         let cx = self.cx;
         let keys: Vec<m::EntityKey> = match self.which {
             ContributorImpl::CcDesign(i) => cx
@@ -857,7 +861,7 @@ impl<'m> Contributor<'m> {
                 .map(m::PersonAndOrganizationItemRef::entity_key)
                 .collect(),
         };
-        targets_from_keys(cx, keys.into_iter())
+        targets_from_keys(cx, keys.into_iter()).into_iter()
     }
 
     /// The assignment's person-and-organization and role ids (both refs are
@@ -1236,37 +1240,31 @@ impl<'m> MappedInstance<'m> {
 
     /// The b-rep solids of the source representation — the geometry this
     /// instance stamps. A non-shape source (a presentation view) has none.
-    pub fn solids(&self) -> Vec<Solid<'m>> {
+    pub fn solids(&self) -> impl Iterator<Item = Solid<'m>> + 'm {
         let cx = self.cx;
-        let Some(map) = self.map() else {
-            return Vec::new();
-        };
-        rep_items(cx, &map.mapped_representation)
+        self.map()
+            .and_then(|map| rep_items(cx, &map.mapped_representation))
             .into_iter()
             .flatten()
-            .filter_map(|it| match it {
+            .filter_map(move |it| match it {
                 m::RepresentationItemRef::ManifoldSolidBrep(id) => Some(Solid::from_id(cx, *id)),
                 m::RepresentationItemRef::BrepWithVoids(id) => Some(Solid::from_void_id(cx, *id)),
                 _ => None,
             })
-            .collect()
     }
 
     /// Nested mapped items inside the source representation — one level of an
     /// assembly chain; walk them to traverse the instance tree.
-    pub fn mapped_children(&self) -> Vec<MappedInstance<'m>> {
+    pub fn mapped_children(&self) -> impl Iterator<Item = MappedInstance<'m>> + 'm {
         let cx = self.cx;
-        let Some(map) = self.map() else {
-            return Vec::new();
-        };
-        rep_items(cx, &map.mapped_representation)
+        self.map()
+            .and_then(|map| rep_items(cx, &map.mapped_representation))
             .into_iter()
             .flatten()
-            .filter_map(|it| match it {
+            .filter_map(move |it| match it {
                 m::RepresentationItemRef::MappedItem(id) => Some(MappedInstance { cx, id: *id }),
                 _ => None,
             })
-            .collect()
     }
 }
 
@@ -1547,7 +1545,7 @@ impl<'m> Approval<'m> {
 
     /// The exact product-structure entities this approval is assigned to (across
     /// every assignment that carries it).
-    pub fn assigned_targets(&self) -> Vec<Target<'m>> {
+    pub fn assigned_targets(&self) -> impl Iterator<Item = Target<'m>> + 'm {
         let cx = self.cx;
         let mut keys: Vec<m::EntityKey> = Vec::new();
         for r in cx.ref_graph().referrers(self.key()) {
@@ -1571,7 +1569,7 @@ impl<'m> Approval<'m> {
                 _ => {}
             }
         }
-        targets_from_keys(cx, keys.into_iter())
+        targets_from_keys(cx, keys.into_iter()).into_iter()
     }
 
     /// The approval status name (`approved`, `not_yet_approved`, …).
@@ -1589,7 +1587,7 @@ impl<'m> Approval<'m> {
 
     /// Who authorised this approval, with their role (reverse: an
     /// `APPROVAL_PERSON_ORGANIZATION` whose `authorized_approval` is this approval).
-    pub fn approvers(&self) -> Vec<Approver<'m>> {
+    pub fn approvers(&self) -> impl Iterator<Item = Approver<'m>> + 'm {
         let cx = self.cx;
         let mut out: Vec<Approver<'m>> = Vec::new();
         for r in cx.ref_graph().referrers(self.key()) {
@@ -1597,7 +1595,7 @@ impl<'m> Approval<'m> {
                 out.push(Approver { cx, id: *id });
             }
         }
-        out
+        out.into_iter()
     }
 
     /// When this approval was made (reverse: an `APPROVAL_DATE_TIME` whose
@@ -1777,7 +1775,7 @@ impl<'m> Document<'m> {
 
     /// The exact product-structure entities this document is referenced from
     /// (across every `APPLIED_DOCUMENT_REFERENCE` that carries it).
-    pub fn assigned_targets(&self) -> Vec<Target<'m>> {
+    pub fn assigned_targets(&self) -> impl Iterator<Item = Target<'m>> + 'm {
         let cx = self.cx;
         let mut keys: Vec<m::EntityKey> = Vec::new();
         for r in cx.ref_graph().referrers(self.key()) {
@@ -1792,7 +1790,7 @@ impl<'m> Document<'m> {
                 );
             }
         }
-        targets_from_keys(cx, keys.into_iter())
+        targets_from_keys(cx, keys.into_iter()).into_iter()
     }
 
     /// The four shared fields (id, name, description, kind), resolved once so the
@@ -1884,7 +1882,7 @@ impl<'m> SecurityClassification<'m> {
 
     /// The exact product-structure entities this classification is assigned to
     /// (across every assignment that carries it).
-    pub fn assigned_targets(&self) -> Vec<Target<'m>> {
+    pub fn assigned_targets(&self) -> impl Iterator<Item = Target<'m>> + 'm {
         let cx = self.cx;
         let mut keys: Vec<m::EntityKey> = Vec::new();
         for r in cx.ref_graph().referrers(self.key()) {
@@ -1908,7 +1906,7 @@ impl<'m> SecurityClassification<'m> {
                 _ => {}
             }
         }
-        targets_from_keys(cx, keys.into_iter())
+        targets_from_keys(cx, keys.into_iter()).into_iter()
     }
 
     /// The classification name / identifier.

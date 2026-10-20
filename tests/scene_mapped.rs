@@ -63,14 +63,17 @@ fn mapped_instances_expose_transform_solids_and_children() {
     let t = outer.transform().expect("transform");
     assert!(t.from.origin.iter().all(|v| v.abs() < 1e-12));
     assert!((t.to.origin[0] - 10.0).abs() < 1e-12);
-    let solids = outer.solids();
+    let solids: Vec<_> = outer.solids().collect();
     assert_eq!(solids.len(), 1);
     assert_eq!(solids[0].name(), "part A");
-    let children = outer.mapped_children();
+    let children: Vec<_> = outer.mapped_children().collect();
     assert_eq!(children.len(), 1);
     assert_eq!(children[0].name(), "inner");
-    assert_eq!(children[0].solids().len(), 1);
-    assert_eq!(children[0].solids()[0].name(), "part B");
+    assert_eq!(children[0].solids().count(), 1);
+    assert_eq!(
+        children[0].solids().next().expect("a solid").name(),
+        "part B"
+    );
 
     // matrix(): outer is a pure translation — identity rotation, t = (10,0,0).
     let m = t.matrix().expect("matrix");

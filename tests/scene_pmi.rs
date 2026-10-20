@@ -5,7 +5,7 @@
 
 use step_io::read;
 use step_io::scene::{CurveKind, SurfaceKind};
-use step_io::scene::{DimensionKind, Feature, FeatureGeometry, FeatureKind, ToleranceKind};
+use step_io::scene::{DimensionKind, FeatureGeometry, FeatureKind, ToleranceKind};
 
 // A shape aspect linked to a real planar ADVANCED_FACE via
 // GEOMETRIC_ITEM_SPECIFIC_USAGE. A dimension targets the aspect (to obtain the
@@ -47,12 +47,12 @@ fn feature_resolves_to_its_face() {
     let scene = model.scene();
 
     // Reach the feature via the dimension that targets it, then walk to geometry.
-    let dim = scene.dimensions().next().expect("a dimension");
-    let feat = dim.features();
+    let dim = scene.all_dimensions().next().expect("a dimension");
+    let feat: Vec<_> = dim.features().collect();
     assert_eq!(feat.len(), 1, "size targets one feature");
     assert_eq!(feat[0].name(), "hole");
 
-    let geo = feat[0].geometry();
+    let geo: Vec<_> = feat[0].geometry().collect();
     assert_eq!(geo.len(), 1, "feature designates one item");
     match &geo[0] {
         FeatureGeometry::Face(f) => {
@@ -92,8 +92,13 @@ fn feature_resolves_face_surfaces_and_solids_with_voids() {
     let (model, _rep) = read(src.as_bytes()).expect("read");
     let scene = model.scene();
 
-    let feat = scene.dimensions().next().expect("a dimension").features();
-    let kinds: Vec<_> = feat[0].geometry().iter().map(discriminant).collect();
+    let feat: Vec<_> = scene
+        .all_dimensions()
+        .next()
+        .expect("a dimension")
+        .features()
+        .collect();
+    let kinds: Vec<_> = feat[0].geometry().map(|g| discriminant(&g)).collect();
     assert_eq!(kinds, ["Face", "Solid"]);
 }
 
@@ -130,9 +135,9 @@ const GEO_CURVE: &str = "\
 #41=DIMENSIONAL_SIZE(#40,'D1');\n\
 #42=GEOMETRIC_ITEM_SPECIFIC_USAGE('','',#40,#26,#24);\n";
 
-// Two shape aspects (hole/slot) plus a DATUM. scene.features() lists the two
+// Two shape aspects (hole/slot) plus a DATUM. scene.all_features() lists the two
 // shape aspects but NOT the datum (which is a datum callout, reached via
-// scene.datums()); the hole is linked to a real face via GISU.
+// scene.all_datums()); the hole is linked to a real face via GISU.
 const FEATURES: &str = "\
 #1=APPLICATION_CONTEXT('test');\n\
 #2=PRODUCT_CONTEXT('',#1,'mechanical');\n\
@@ -171,22 +176,22 @@ fn scene_enumerates_features_excluding_datums() {
     let scene = model.scene();
 
     // features() lists the two shape aspects; the DATUM is excluded (narrow).
-    let mut names: Vec<_> = scene.features().map(|f| f.name().to_owned()).collect();
+    let mut names: Vec<_> = scene.all_features().map(|f| f.name().to_owned()).collect();
     names.sort();
     assert_eq!(names, vec!["hole".to_owned(), "slot".to_owned()]);
 
     // The datum is not a feature but IS a datum.
-    assert_eq!(scene.datums().count(), 1);
-    assert_eq!(scene.datums().next().expect("a datum").letter(), "A");
+    assert_eq!(scene.all_datums().count(), 1);
+    assert_eq!(scene.all_datums().next().expect("a datum").letter(), "A");
 
     // A scene-enumerated feature walks straight to its geometry, and kind()
     // names its backing entity without matching on EntityKey.
     let hole = scene
-        .features()
+        .all_features()
         .find(|f| f.name() == "hole")
         .expect("the hole feature");
     assert_eq!(hole.kind(), FeatureKind::ShapeAspect);
-    match &hole.geometry()[0] {
+    match &hole.geometry().next().expect("a geometry item") {
         FeatureGeometry::Face(f) => {
             assert!(matches!(f.surface().kind(), SurfaceKind::Plane(_)));
         }
@@ -240,7 +245,7 @@ fn datum_reaches_its_datum_feature_geometry() {
     let (model, _rep) = read(src.as_bytes()).expect("read");
     let scene = model.scene();
 
-    let datum = scene.datums().next().expect("a datum");
+    let datum = scene.all_datums().next().expect("a datum");
     assert_eq!(datum.letter(), "A");
 
     // Cross DATUM -> SHAPE_ASPECT_RELATIONSHIP -> DATUM_FEATURE.
@@ -248,7 +253,7 @@ fn datum_reaches_its_datum_feature_geometry() {
     assert_eq!(df.kind(), FeatureKind::DatumFeature);
 
     // ...and on to the face the datum feature is established on.
-    match &df.geometry()[0] {
+    match &df.geometry().next().expect("a geometry item") {
         FeatureGeometry::Face(f) => {
             assert!(matches!(f.surface().kind(), SurfaceKind::Plane(_)));
         }
@@ -326,11 +331,11 @@ fn feature_resolves_to_its_curve() {
     let (model, _rep) = read(src.as_bytes()).expect("read");
     let scene = model.scene();
 
-    let dim = scene.dimensions().next().expect("a dimension");
-    let feat = dim.features();
+    let dim = scene.all_dimensions().next().expect("a dimension");
+    let feat: Vec<_> = dim.features().collect();
     assert_eq!(feat[0].name(), "rim");
 
-    let geo = feat[0].geometry();
+    let geo: Vec<_> = feat[0].geometry().collect();
     assert_eq!(geo.len(), 1, "feature designates one item");
     match &geo[0] {
         FeatureGeometry::Curve(c) => {
@@ -380,18 +385,18 @@ fn reads_datums_and_tolerance_reference_frame() {
     let (model, _rep) = read(src.as_bytes()).expect("read");
     let scene = model.scene();
 
-    // scene.datums(): both DATUMs, by letter.
-    let mut letters: Vec<_> = scene.datums().map(|d| d.letter().to_owned()).collect();
+    // scene.all_datums(): both DATUMs, by letter.
+    let mut letters: Vec<_> = scene.all_datums().map(|d| d.letter().to_owned()).collect();
     letters.sort();
     assert_eq!(letters, vec!["A".to_owned(), "B".to_owned()]);
 
     // Complex position tolerance → DATUM_SYSTEM → compartment → datum A.
-    let tols: Vec<_> = scene.tolerances().collect();
+    let tols: Vec<_> = scene.all_tolerances().collect();
     let pos = tols
         .iter()
         .find(|t| t.kind() == ToleranceKind::Position)
         .expect("a position tolerance");
-    let pos_datums = pos.datums();
+    let pos_datums: Vec<_> = pos.datums().collect();
     assert_eq!(pos_datums.len(), 1, "position references one datum");
     assert_eq!(pos_datums[0].letter(), "A");
 
@@ -400,7 +405,7 @@ fn reads_datums_and_tolerance_reference_frame() {
         .iter()
         .find(|t| t.kind() == ToleranceKind::Perpendicularity)
         .expect("a perpendicularity tolerance");
-    let perp_datums = perp.datums();
+    let perp_datums: Vec<_> = perp.datums().collect();
     assert_eq!(
         perp_datums.len(),
         1,
@@ -448,12 +453,12 @@ fn links_dimensions_and_tolerances_to_features() {
 
     // A size dimension targets one feature; a location spans two (relating,
     // related order).
-    let dims: Vec<_> = scene.dimensions().collect();
+    let dims: Vec<_> = scene.all_dimensions().collect();
     let size = dims
         .iter()
         .find(|d| d.kind() == DimensionKind::Size)
         .expect("a size");
-    let size_features = size.features();
+    let size_features: Vec<_> = size.features().collect();
     assert_eq!(size_features.len(), 1);
     assert_eq!(size_features[0].name(), "hole");
 
@@ -461,11 +466,11 @@ fn links_dimensions_and_tolerances_to_features() {
         .iter()
         .find(|d| d.kind() == DimensionKind::Location)
         .expect("a location");
-    let loc_features: Vec<_> = loc.features().iter().map(Feature::name).collect();
+    let loc_features: Vec<_> = loc.features().map(|f| f.name()).collect();
     assert_eq!(loc_features, vec!["hole", "slot"]);
 
     // A dedicated tolerance and a complex tolerance each resolve their target.
-    let tols: Vec<_> = scene.tolerances().collect();
+    let tols: Vec<_> = scene.all_tolerances().collect();
     let flat = tols
         .iter()
         .find(|t| t.kind() == ToleranceKind::Flatness)
@@ -507,7 +512,7 @@ fn reads_dimension_value() {
     let (model, _rep) = read(src.as_bytes()).expect("read");
     let scene = model.scene();
 
-    let dims: Vec<_> = scene.dimensions().collect();
+    let dims: Vec<_> = scene.all_dimensions().collect();
     assert_eq!(dims.len(), 1, "one dimension");
     let d = dims[0];
     assert_eq!(d.kind(), DimensionKind::Size);
@@ -549,7 +554,7 @@ fn reads_geometric_tolerances() {
     let (model, _rep) = read(src.as_bytes()).expect("read");
     let scene = model.scene();
 
-    let tols: Vec<_> = scene.tolerances().collect();
+    let tols: Vec<_> = scene.all_tolerances().collect();
     assert_eq!(tols.len(), 3, "three tolerances");
 
     // Standalone leaf tolerance in a dedicated arena.
@@ -640,7 +645,11 @@ fn withdocs_part_reports_its_pmi() {
         .all_product_definitions()
         .next()
         .expect("a product definition");
-    assert_eq!(part.documents().len(), 1, "part is the documented subtype");
+    assert_eq!(
+        part.documents().count(),
+        1,
+        "part is the documented subtype"
+    );
 
     // Before the fix these were all empty for the subtype (PMI keyed on the plain
     // ProductDefinitionId only); they now resolve like a plain PRODUCT_DEFINITION.

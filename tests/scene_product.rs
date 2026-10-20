@@ -8,7 +8,7 @@
 use step_io::read;
 use step_io::scene::ProductDef;
 use step_io::scene::Scene;
-use step_io::scene::{Contributor, Scope, Target};
+use step_io::scene::{Scope, Target};
 
 const HEADER: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\n\
 FILE_NAME('','',(''),(''),'','','');\n\
@@ -376,7 +376,7 @@ fn reads_version_and_contributors() {
         .expect("a definition");
     assert_eq!(def.version(), Some("RevB"));
 
-    let contributors = def.contributors();
+    let contributors: Vec<_> = def.contributors().collect();
     assert_eq!(contributors.len(), 1, "one contributor");
     let c = contributors[0];
     assert_eq!(c.role(), "creator");
@@ -419,18 +419,14 @@ fn reads_product_level_metadata() {
     let scene = model.scene();
 
     let product = scene.all_products().next().expect("a product");
-    let mut roles: Vec<&str> = product
-        .contributors()
-        .iter()
-        .map(Contributor::role)
-        .collect();
+    let mut roles: Vec<&str> = product.contributors().map(|c| c.role()).collect();
     roles.sort_unstable();
     // Reaches all three levels (product/formation/definition), not just the
     // product key — a product-key-only scope would return "creator" alone.
     assert_eq!(roles, ["checker", "creator", "design_owner"]);
 
     // Each contributor is labelled with the tree level it was assigned at.
-    for c in &product.contributors() {
+    for c in product.contributors() {
         let expected = match c.role() {
             "creator" => Scope::Product,
             "design_owner" => Scope::Version,
@@ -446,12 +442,12 @@ fn reads_product_level_metadata() {
         .all_product_definitions()
         .next()
         .expect("a definition");
-    assert_eq!(def.contributors().len(), 3);
+    assert_eq!(def.contributors().count(), 3);
 
     // The symmetric accessors exist and are empty when nothing is assigned.
-    assert!(product.approvals().is_empty());
-    assert!(product.documents().is_empty());
-    assert!(product.security_classifications().is_empty());
+    assert!(product.approvals().next().is_none());
+    assert!(product.documents().next().is_none());
+    assert!(product.security_classifications().next().is_none());
 
     assert!(
         scene.warnings().is_empty(),
@@ -479,7 +475,7 @@ fn reads_product_versions() {
     let scene = model.scene();
 
     let product = scene.all_products().next().expect("a product");
-    let versions = product.versions();
+    let versions: Vec<_> = product.versions().collect();
     assert_eq!(versions.len(), 2, "two versions");
 
     let mut labels: Vec<(&str, Option<&str>)> =
@@ -544,7 +540,7 @@ fn reads_assigned_targets() {
             .into_iter()
             .find(|c| c.role() == role)
             .expect("role");
-        let mut d: Vec<String> = c.assigned_targets().iter().map(describe_target).collect();
+        let mut d: Vec<String> = c.assigned_targets().map(|t| describe_target(&t)).collect();
         d.sort();
         d
     };
@@ -600,7 +596,7 @@ fn reads_approvals() {
         .all_product_definitions()
         .next()
         .expect("a definition");
-    let approvals = def.approvals();
+    let approvals: Vec<_> = def.approvals().collect();
     assert_eq!(approvals.len(), 1, "one approval");
     let a = approvals[0];
     assert_eq!(a.status(), "approved");
@@ -609,7 +605,7 @@ fn reads_approvals() {
     // own "final") and `assigned_scope()` are distinct concepts.
     assert_eq!(a.assigned_scope(), Scope::Version);
 
-    let approvers = a.approvers();
+    let approvers: Vec<_> = a.approvers().collect();
     assert_eq!(approvers.len(), 1, "one approver");
     let who = approvers[0];
     assert_eq!(who.role(), "approver");
@@ -633,7 +629,7 @@ fn reads_security_classification() {
         .all_product_definitions()
         .next()
         .expect("a definition");
-    let classes = def.security_classifications();
+    let classes: Vec<_> = def.security_classifications().collect();
     assert_eq!(classes.len(), 1, "one classification");
     let sc = classes[0];
     assert_eq!(sc.name(), "SC-1");
@@ -657,7 +653,7 @@ fn reads_documents() {
         .all_product_definitions()
         .next()
         .expect("a definition");
-    let docs = def.documents();
+    let docs: Vec<_> = def.documents().collect();
     assert_eq!(docs.len(), 1, "one document");
     let doc = docs[0];
     assert_eq!(doc.id(), "DOC-1");
@@ -684,7 +680,7 @@ fn reads_approval_date() {
         .all_product_definitions()
         .next()
         .expect("a definition");
-    let a = def.approvals()[0];
+    let a = def.approvals().next().expect("an approval");
     assert_eq!(
         a.date(),
         Some(ApprovalDate {

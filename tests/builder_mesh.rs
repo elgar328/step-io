@@ -83,7 +83,7 @@ fn mesh_round_trips_with_solid_back_link() {
     let scene = model.scene();
     let groups: Vec<_> = scene.all_mesh_groups().collect();
     assert_eq!(groups.len(), 1);
-    let meshes = groups[0].meshes();
+    let meshes: Vec<_> = groups[0].meshes().collect();
     assert_eq!(meshes.len(), 1);
 
     // Exact symmetry: points and 0-based triangles come back as fed, which
@@ -176,7 +176,7 @@ fn standalone_mesh_with_uniform_normals() {
     let groups: Vec<_> = scene.all_mesh_groups().collect();
     assert_eq!(groups.len(), 1);
     assert!(groups[0].solid().is_none(), "no b-rep link");
-    let meshes = groups[0].meshes();
+    let meshes: Vec<_> = groups[0].meshes().collect();
     assert_eq!(meshes[0].triangles(), vec![[0, 1, 2]]);
     assert!(matches!(
         meshes[0].normals(),

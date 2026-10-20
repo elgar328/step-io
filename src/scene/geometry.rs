@@ -23,6 +23,10 @@ use crate::generated::model as m;
 /// of a type in the whole model (the storage is flat — one arena per type — so a
 /// model-level query is always "find all of this type"); navigating *from* a
 /// handle (e.g. `solid.faces()`) is unprefixed and scoped to that element.
+/// `Scene::root_definitions` is unprefixed too: it filters the definitions
+/// rather than listing a type. A move from a handle to any number of other
+/// handles returns an iterator, to at most one an `Option`; computed data (a
+/// mesh's points, the warnings so far) comes as a `Vec`.
 impl Scene<'_> {
     /// Every b-rep solid in the model — `MANIFOLD_SOLID_BREP` and
     /// `BREP_WITH_VOIDS` (solids with internal cavities).
