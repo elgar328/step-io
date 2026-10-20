@@ -118,8 +118,8 @@ fn box_faces(b: &mut StepBuilder, min: [f64; 3], size: f64, inward: bool) -> Vec
 #[test]
 #[allow(clippy::too_many_lines)]
 fn cube_round_trips_and_reads_back() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("cube").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("cube");
 
     // 8 corners of the unit cube: index = x + 2y + 4z.
     let mut v = Vec::new();
@@ -204,7 +204,7 @@ fn cube_round_trips_and_reads_back() {
     }
     b.solid(part, "cube body", faces).expect("solid");
 
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
@@ -237,8 +237,8 @@ fn cube_round_trips_and_reads_back() {
 
 #[test]
 fn cylinder_round_trips_and_reads_back() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("pin").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("pin");
 
     let (radius, height) = (2.0, 5.0);
     let z_dir = [0.0, 0.0, 1.0];
@@ -295,7 +295,7 @@ fn cylinder_round_trips_and_reads_back() {
     b.solid(part, "pin body", vec![lateral, bottom_cap, top_cap])
         .expect("solid");
 
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
@@ -342,8 +342,8 @@ fn cylinder_round_trips_and_reads_back() {
 fn orientations_read_back_as_authored() {
     use Orientation::{Forward, Reversed};
 
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("plate").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("plate");
     // A square plate with a square hole. Some edges are drawn against their
     // loop's direction, so the loop runs along them reversed.
     let outer = [
@@ -386,7 +386,7 @@ fn orientations_read_back_as_authored() {
         .expect("face");
     b.solid(part, "plate", vec![face]).expect("solid");
 
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
@@ -423,8 +423,8 @@ fn orientations_read_back_as_authored() {
 
 #[test]
 fn empty_bounds_and_faces_are_rejected() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("plate").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("plate");
 
     let err = b
         .face(
@@ -457,8 +457,8 @@ fn empty_bounds_and_faces_are_rejected() {
 
 #[test]
 fn void_solid_round_trips_and_reads_back() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("hollow block").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("hollow block");
 
     // Outer 10-unit box with a 4-unit cubic cavity centred inside it. The
     // cavity is built as an ordinary outward box (normals toward the
@@ -475,7 +475,7 @@ fn void_solid_round_trips_and_reads_back() {
     )
     .expect("void solid");
 
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
     assert!(
         text.contains("BREP_WITH_VOIDS"),
         "output should carry a BREP_WITH_VOIDS"
@@ -541,8 +541,8 @@ fn void_solid_round_trips_and_reads_back() {
 
 #[test]
 fn void_shell_away_from_material_emits_t() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("hollow block").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("hollow block");
 
     // The cavity is authored the way a kernel hands one back: a reversed shell
     // whose normals point into the void (away from the material), so it is
@@ -558,7 +558,7 @@ fn void_shell_away_from_material_emits_t() {
     )
     .expect("void solid");
 
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
     // As-authored: the oriented shell is `.T.`, and no void shell is reversed.
     assert!(
         text.lines()
@@ -586,12 +586,12 @@ fn void_shell_away_from_material_emits_t() {
 
 #[test]
 fn manifold_and_void_solids_coexist_in_all_solids() {
-    let mut b = StepBuilder::new().expect("builder");
-    let solid_part = b.part("solid block").expect("part");
+    let mut b = StepBuilder::new();
+    let solid_part = b.part("solid block");
     let plain = box_faces(&mut b, [0.0, 0.0, 0.0], 5.0, false);
     b.solid(solid_part, "plain body", plain).expect("solid");
 
-    let void_part = b.part("hollow block").expect("part");
+    let void_part = b.part("hollow block");
     let outer = box_faces(&mut b, [0.0, 0.0, 0.0], 10.0, false);
     let cavity = box_faces(&mut b, [3.0, 3.0, 3.0], 4.0, false);
     b.solid_with_voids(
@@ -603,7 +603,7 @@ fn manifold_and_void_solids_coexist_in_all_solids() {
     )
     .expect("void solid");
 
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
@@ -628,7 +628,7 @@ fn manifold_and_void_solids_coexist_in_all_solids() {
 
 #[test]
 fn non_finite_coordinates_are_rejected() {
-    let mut b = StepBuilder::new().expect("builder");
+    let mut b = StepBuilder::new();
     let err = b
         .vertex([f64::NAN, f64::INFINITY, 1.0])
         .expect_err("Part 21 cannot write NaN");
@@ -645,11 +645,11 @@ fn non_finite_coordinates_are_rejected() {
 /// closed shell under a `SHELL_BASED_SURFACE_MODEL` in a manifold surface
 /// representation — or the same faces in an open shell.
 fn surface_model_text(open: bool) -> String {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("skin").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("skin");
     let faces = box_faces(&mut b, [0.0, 0.0, 0.0], 2.0, false);
     b.solid(part, "sheet body", faces).expect("solid");
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
     let line = text
         .lines()
         .find(|l| l.contains(" = MANIFOLD_SOLID_BREP("))

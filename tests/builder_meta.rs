@@ -11,28 +11,24 @@ use step_io::{EntityKey, StepBuilder, read};
 #[test]
 #[allow(clippy::too_many_lines)]
 fn full_metadata_round_trips_and_reads_back() {
-    let mut b = StepBuilder::new().expect("builder");
-    let wheel = b
-        .part_with(
-            "wheel",
-            &PartOptions {
-                id: Some("W-100".to_owned()),
-                description: Some("front wheel".to_owned()),
-                version: Some("B".to_owned()),
-                version_description: Some("second revision".to_owned()),
-                definition_description: Some("design view".to_owned()),
-            },
-        )
-        .expect("part");
+    let mut b = StepBuilder::new();
+    let wheel = b.part_with(
+        "wheel",
+        &PartOptions {
+            id: Some("W-100".to_owned()),
+            description: Some("front wheel".to_owned()),
+            version: Some("B".to_owned()),
+            version_description: Some("second revision".to_owned()),
+            definition_description: Some("design view".to_owned()),
+        },
+    );
 
-    let john = b
-        .person_and_org(&PersonOrg {
-            person_id: "p1".to_owned(),
-            first_name: Some("John".to_owned()),
-            last_name: Some("Doe".to_owned()),
-            organization: "ACME".to_owned(),
-        })
-        .expect("person");
+    let john = b.person_and_org(&PersonOrg {
+        person_id: "p1".to_owned(),
+        first_name: Some("John".to_owned()),
+        last_name: Some("Doe".to_owned()),
+        organization: "ACME".to_owned(),
+    });
 
     b.contributor(wheel, "creator", john).expect("contributor");
     b.approve(
@@ -59,12 +55,10 @@ fn full_metadata_round_trips_and_reads_back() {
             description: Some("the spec".to_owned()),
             kind: "drawing".to_owned(),
         },
-    )
-    .expect("document");
-    b.security(wheel, "SC-1", "export control", "confidential")
-        .expect("security");
+    );
+    b.security(wheel, "SC-1", "export control", "confidential");
 
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
@@ -155,21 +149,19 @@ fn full_metadata_round_trips_and_reads_back() {
 
 #[test]
 fn shared_person_across_parts_and_roles() {
-    let mut b = StepBuilder::new().expect("builder");
-    let a_part = b.part("body").expect("body");
-    let b_part = b.part("lid").expect("lid");
-    let alice = b
-        .person_and_org(&PersonOrg {
-            person_id: "p2".to_owned(),
-            first_name: Some("Alice".to_owned()),
-            last_name: None,
-            organization: "ACME".to_owned(),
-        })
-        .expect("person");
+    let mut b = StepBuilder::new();
+    let a_part = b.part("body");
+    let b_part = b.part("lid");
+    let alice = b.person_and_org(&PersonOrg {
+        person_id: "p2".to_owned(),
+        first_name: Some("Alice".to_owned()),
+        last_name: None,
+        organization: "ACME".to_owned(),
+    });
     b.contributor(a_part, "creator", alice).expect("c1");
     b.contributor(b_part, "design_owner", alice).expect("c2");
 
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 

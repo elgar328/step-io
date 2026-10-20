@@ -12,8 +12,8 @@ use step_io::{Orientation, StepBuilder, read};
 
 #[test]
 fn low_level_layer_on_builder_face_round_trips() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("plate").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("plate");
 
     let v0 = b.vertex([0.0, 0.0, 0.0]).expect("v0");
     let v1 = b.vertex([1.0, 0.0, 0.0]).expect("v1");
@@ -44,7 +44,7 @@ fn low_level_layer_on_builder_face_round_trips() {
         .add_presentation_layer_assignment("L1", "", vec![m::LayeredItemRef::AdvancedFace(face)])
         .expect("layer assignment");
 
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 

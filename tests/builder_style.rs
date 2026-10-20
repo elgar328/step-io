@@ -48,8 +48,8 @@ fn plate(
 
 #[test]
 fn solid_color_round_trips() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("plate").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("plate");
     let (_face, body) = plate(&mut b, part);
 
     let red = Rgb {
@@ -58,7 +58,7 @@ fn solid_color_round_trips() {
         blue: 0.1,
     };
     b.style(StyleTarget::Solid(body), red, None).expect("style");
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -79,8 +79,8 @@ fn solid_color_round_trips() {
 
 #[test]
 fn face_color_and_transparency_round_trip() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("plate").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("plate");
     let (face, _body) = plate(&mut b, part);
 
     let grey = Rgb {
@@ -90,7 +90,7 @@ fn face_color_and_transparency_round_trip() {
     };
     b.style(StyleTarget::Face(face), grey, Some(0.3))
         .expect("style");
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -143,8 +143,8 @@ fn void_body(b: &mut StepBuilder, part: step_io::build::Part) -> step_io::model:
 
 #[test]
 fn void_solid_color_round_trips() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("hollow").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("hollow");
     let body = void_body(&mut b, part);
 
     let red = Rgb {
@@ -154,7 +154,7 @@ fn void_solid_color_round_trips() {
     };
     b.style(StyleTarget::VoidSolid(body), red, Some(0.25))
         .expect("style");
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -172,14 +172,14 @@ fn void_solid_color_round_trips() {
 
 #[test]
 fn void_solid_layer_and_hide_round_trip() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("hollow").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("hollow");
     let body = void_body(&mut b, part);
 
     b.layer("BODY", vec![StyleTarget::VoidSolid(body)])
         .expect("layer");
     b.hide(StyleTarget::VoidSolid(body)).expect("hide");
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);

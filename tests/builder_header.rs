@@ -9,7 +9,7 @@ use step_io::{StepBuilder, read};
 
 #[test]
 fn explicit_header_lands_verbatim() {
-    let mut b = StepBuilder::new().expect("builder");
+    let mut b = StepBuilder::new();
     b.header(&HeaderInput {
         file_name: Some("wheel.step".to_owned()),
         description: Some("wheel assembly".to_owned()),
@@ -19,8 +19,8 @@ fn explicit_header_lands_verbatim() {
         timestamp: Some("2026-01-01T00:00:00Z".to_owned()),
         ..Default::default()
     });
-    b.part("wheel").expect("part");
-    let text = common::text(&b.finish().expect("finish"));
+    b.part("wheel");
+    let text = common::text(&b.finish());
 
     let expected_file_name = format!(
         "FILE_NAME('wheel.step','2026-01-01T00:00:00Z',('John'),('ACME'),'step-io {}','KernelX 2.1','');",
@@ -38,8 +38,8 @@ fn explicit_header_lands_verbatim() {
 
 #[test]
 fn default_header_stamps_time_and_preprocessor() {
-    let b = StepBuilder::new().expect("builder");
-    let text = common::text(&b.finish().expect("finish"));
+    let b = StepBuilder::new();
+    let text = common::text(&b.finish());
 
     // FILE_NAME('','<timestamp>',...) — second field auto-stamped.
     let line = text
@@ -57,13 +57,13 @@ fn default_header_stamps_time_and_preprocessor() {
 
 #[test]
 fn header_strings_are_escaped() {
-    let mut b = StepBuilder::new().expect("builder");
+    let mut b = StepBuilder::new();
     b.header(&HeaderInput {
         authors: vec!["O'Brien".to_owned()],
         timestamp: Some(String::new()),
         ..Default::default()
     });
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
     assert!(text.contains("('O''Brien')"), "escaped author: {text}");
 
     // Explicit empty timestamp stays blank (reproducible-output escape hatch).
@@ -81,7 +81,7 @@ fn non_ascii_and_backslashes_round_trip_through_plain_ascii() {
     let author = "홍길동";
     let part_name = r"C:\parts\받침대";
 
-    let mut b = StepBuilder::new().expect("builder");
+    let mut b = StepBuilder::new();
     b.header(&HeaderInput {
         file_name: Some(file_name.to_owned()),
         description: Some(description.to_owned()),
@@ -89,8 +89,8 @@ fn non_ascii_and_backslashes_round_trip_through_plain_ascii() {
         timestamp: Some("2026-01-01T00:00:00Z".to_owned()),
         ..Default::default()
     });
-    b.part(part_name).expect("part");
-    let text = common::text(&b.finish().expect("finish"));
+    b.part(part_name);
+    let text = common::text(&b.finish());
     assert!(text.is_ascii(), "non-ASCII output:\n{text}");
     assert!(
         text.contains(r"'\X2\BD80D488\X0\ \X2\2460\X0\.step'"),

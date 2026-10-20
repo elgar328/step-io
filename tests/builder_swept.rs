@@ -21,8 +21,8 @@ fn frame(origin: [f64; 3]) -> Frame {
 
 #[test]
 fn ellipse_edge_round_trips() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("plate").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("plate");
 
     // A planar face bounded by one full-ellipse edge.
     let v = b.vertex([3.0, 0.0, 0.0]).expect("vertex");
@@ -38,7 +38,7 @@ fn ellipse_edge_round_trips() {
         .expect("face");
     b.solid(part, "plate", vec![face]).expect("solid");
 
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
@@ -52,7 +52,7 @@ fn ellipse_edge_round_trips() {
 /// Cylinder-shaped topology (two circle rims + a seam) over the given
 /// lateral surface, so swept surfaces get geometrically consistent bounds.
 fn cylinder_topology(b: &mut StepBuilder, lateral_surface: SurfaceInput, r: f64, h: f64) {
-    let part = b.part("swept").expect("part");
+    let part = b.part("swept");
     let v_bot = b.vertex([r, 0.0, 0.0]).expect("v bot");
     let v_top = b.vertex([r, 0.0, h]).expect("v top");
     let bottom = b
@@ -79,7 +79,7 @@ fn cylinder_topology(b: &mut StepBuilder, lateral_surface: SurfaceInput, r: f64,
 
 #[test]
 fn linear_extrusion_surface_round_trips() {
-    let mut b = StepBuilder::new().expect("builder");
+    let mut b = StepBuilder::new();
     cylinder_topology(
         &mut b,
         SurfaceInput::LinearExtrusion(ProfileInput::Circle(frame([0.0; 3]), 2.0), [0.0, 0.0, 5.0]),
@@ -87,7 +87,7 @@ fn linear_extrusion_surface_round_trips() {
         5.0,
     );
 
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
@@ -106,7 +106,7 @@ fn linear_extrusion_surface_round_trips() {
 
 #[test]
 fn revolution_surface_round_trips() {
-    let mut b = StepBuilder::new().expect("builder");
+    let mut b = StepBuilder::new();
     cylinder_topology(
         &mut b,
         SurfaceInput::Revolution(
@@ -118,7 +118,7 @@ fn revolution_surface_round_trips() {
         5.0,
     );
 
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
@@ -133,8 +133,8 @@ fn revolution_surface_round_trips() {
 
 #[test]
 fn polyline_edge_round_trips() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("bracket").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("bracket");
 
     // Triangle face whose hypotenuse is a 3-point polyline (with a bend).
     let v0 = b.vertex([0.0, 0.0, 0.0]).expect("v0");
@@ -162,7 +162,7 @@ fn polyline_edge_round_trips() {
         .expect("face");
     b.solid(part, "bracket", vec![face]).expect("solid");
 
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
@@ -198,8 +198,8 @@ fn polyline_edge_round_trips() {
 
 #[test]
 fn single_point_polyline_is_rejected() {
-    let mut b = StepBuilder::new().expect("builder");
-    let _ = b.part("p").expect("part");
+    let mut b = StepBuilder::new();
+    let _ = b.part("p");
     let v = b.vertex([0.0, 0.0, 0.0]).expect("v");
     let err = b
         .edge(v, v, CurveInput::Polyline(vec![[0.0, 0.0, 0.0]]))

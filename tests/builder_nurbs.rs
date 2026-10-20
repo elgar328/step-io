@@ -37,8 +37,8 @@ fn bilinear_top(weight: f64) -> NurbsSurface {
 /// The cube from the b-rep test, with the top face over `top_patch` and one
 /// bottom edge as a degree-1 NURBS line. Returns the emitted text.
 fn nurbs_cube(top_patch: NurbsSurface, nurbs_edge: &NurbsCurve) -> String {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("cube").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("cube");
 
     let mut v = Vec::new();
     for z in 0..2 {
@@ -132,7 +132,7 @@ fn nurbs_cube(top_patch: NurbsSurface, nurbs_edge: &NurbsCurve) -> String {
         .expect("nurbs face"),
     );
     b.solid(part, "cube body", faces).expect("solid");
-    common::text(&b.finish().expect("finish"))
+    common::text(&b.finish())
 }
 
 fn nurbs_line() -> NurbsCurve {
@@ -216,8 +216,8 @@ fn rational_nurbs_curve_round_trips_via_complex() {
         knots: vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
     };
 
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("pie").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("pie");
     let center = b.vertex([0.0, 0.0, 0.0]).expect("center");
     let start = b.vertex([1.0, 0.0, 0.0]).expect("start");
     let end = b.vertex([0.0, 1.0, 0.0]).expect("end");
@@ -238,7 +238,7 @@ fn rational_nurbs_curve_round_trips_via_complex() {
         )
         .expect("pie face");
     b.solid(part, "pie", vec![face]).expect("solid");
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -259,8 +259,8 @@ fn rational_nurbs_curve_round_trips_via_complex() {
 
 #[test]
 fn analytic_surface_kinds_round_trip() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("shapes").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("shapes");
     let z = [0.0, 0.0, 1.0];
     let x = [1.0, 0.0, 0.0];
 
@@ -285,7 +285,7 @@ fn analytic_surface_kinds_round_trip() {
         );
     }
     b.solid(part, "shapes", faces).expect("solid");
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -306,7 +306,7 @@ fn analytic_surface_kinds_round_trip() {
 
 #[test]
 fn nurbs_that_break_the_standard_are_rejected() {
-    let mut b = StepBuilder::new().expect("builder");
+    let mut b = StepBuilder::new();
     let v0 = b.vertex([0.0, 0.0, 0.0]).expect("v0");
     let v1 = b.vertex([1.0, 0.0, 0.0]).expect("v1");
     let line = nurbs_line();
@@ -384,8 +384,8 @@ fn parabola_and_hyperbola_edges_round_trip() {
     let parabola_at = |u: f64| [1.0 + 2.0 * u * u, 2.0 + 4.0 * u, 3.0];
     let hyperbola_at = |u: f64| [1.0 + 3.0 * u.cosh(), 2.0 + 1.5 * u.sinh(), 3.0];
 
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("conics").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("conics");
     let ends = [
         (parabola_at(-1.0), parabola_at(2.0)),
         (parabola_at(2.0), parabola_at(-1.0)),
@@ -413,7 +413,7 @@ fn parabola_and_hyperbola_edges_round_trip() {
         .expect("face");
     b.solid(part, "conics", vec![face]).expect("solid");
     let mut out = Vec::new();
-    step_io::write(&b.finish().expect("finish"), &mut out).expect("write");
+    step_io::write(&b.finish(), &mut out).expect("write");
 
     let (model, report) = read(&out[..]).expect("read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -443,8 +443,8 @@ fn a_parabola_with_a_negative_focal_distance_keeps_its_sense() {
     // u = 2 runs with the curve.
     let at = frame([1.0, 2.0, 3.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]);
     let flipped_at = |u: f64| [1.0 - 2.0 * u * u, 2.0 - 4.0 * u, 3.0];
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("flipped").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("flipped");
     let v0 = b.vertex(flipped_at(-1.0)).expect("v0");
     let v1 = b.vertex(flipped_at(2.0)).expect("v1");
     let edge = b
@@ -459,7 +459,7 @@ fn a_parabola_with_a_negative_focal_distance_keeps_its_sense() {
         .expect("face");
     b.solid(part, "flipped", vec![face]).expect("solid");
     let mut out = Vec::new();
-    step_io::write(&b.finish().expect("finish"), &mut out).expect("write");
+    step_io::write(&b.finish(), &mut out).expect("write");
 
     let (model, _report) = read(&out[..]).expect("read");
     let scene = model.scene();
@@ -473,7 +473,7 @@ fn a_parabola_with_a_negative_focal_distance_keeps_its_sense() {
 #[test]
 fn degenerate_parabolas_and_hyperbolas_are_rejected() {
     let at = frame([0.0; 3], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]);
-    let mut b = StepBuilder::new().expect("builder");
+    let mut b = StepBuilder::new();
     let v0 = b.vertex([1.0, 2.0, 0.0]).expect("v0");
     let v1 = b.vertex([1.0, -2.0, 0.0]).expect("v1");
     // A zero focal distance, a zero semi-axis, and an edge without a span.

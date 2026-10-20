@@ -28,11 +28,11 @@ fn at(origin: [f64; 3]) -> Frame {
 
 #[test]
 fn assembly_round_trips_and_reads_back() {
-    let mut b = StepBuilder::new().expect("builder");
-    let asm = b.part("assembly").expect("assembly");
-    let wheel = b.part("wheel").expect("wheel");
+    let mut b = StepBuilder::new();
+    let asm = b.part("assembly");
+    let wheel = b.part("wheel");
     b.place(asm, wheel, at([10.0, 20.0, 30.0])).expect("place");
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -77,12 +77,12 @@ fn assembly_round_trips_and_reads_back() {
 
 #[test]
 fn shared_definition_places_multiple_instances() {
-    let mut b = StepBuilder::new().expect("builder");
-    let asm = b.part("axle").expect("axle");
-    let wheel = b.part("wheel").expect("wheel");
+    let mut b = StepBuilder::new();
+    let asm = b.part("axle");
+    let wheel = b.part("wheel");
     b.place(asm, wheel, at([0.0, 700.0, 0.0])).expect("left");
     b.place(asm, wheel, at([0.0, -700.0, 0.0])).expect("right");
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -125,15 +125,15 @@ fn id_of(a: &Attribute) -> u64 {
 #[test]
 fn placements_relate_representations_in_their_own_contexts() {
     // top > sub > leaf (twice), and top > leaf.
-    let mut b = StepBuilder::new().expect("builder");
-    let top = b.part("top").expect("top");
-    let sub = b.part("sub").expect("sub");
-    let leaf = b.part("leaf").expect("leaf");
+    let mut b = StepBuilder::new();
+    let top = b.part("top");
+    let sub = b.part("sub");
+    let leaf = b.part("leaf");
     b.place(sub, leaf, at([10.0, 0.0, 0.0])).expect("place");
     b.place(sub, leaf, at([0.0, 10.0, 0.0])).expect("place");
     b.place(top, sub, at([0.0, 0.0, 10.0])).expect("place");
     b.place(top, leaf, at([20.0, 0.0, 0.0])).expect("place");
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
     let graph = parse(text.as_bytes()).expect("parse");
 
     // Representation id -> (its items, its context).
@@ -189,10 +189,10 @@ fn placements_relate_representations_in_their_own_contexts() {
 
 #[test]
 fn placements_that_would_make_an_assembly_contain_itself_are_refused() {
-    let mut b = StepBuilder::new().expect("builder");
-    let top = b.part("top").expect("top");
-    let sub = b.part("sub").expect("sub");
-    let leaf = b.part("leaf").expect("leaf");
+    let mut b = StepBuilder::new();
+    let top = b.part("top");
+    let sub = b.part("sub");
+    let leaf = b.part("leaf");
     let cyclic = |r| matches!(r, Err(AuthorError::CyclicAssembly));
 
     assert!(cyclic(b.place(top, top, at([0.0; 3]))));
@@ -207,7 +207,7 @@ fn placements_that_would_make_an_assembly_contain_itself_are_refused() {
         .expect("sub > leaf again");
 
     // The refused placements left nothing behind.
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
     assert_eq!(

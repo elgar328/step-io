@@ -76,11 +76,11 @@ fn universal(model: &mut step_io::StepModel) -> String {
 
 /// A builder model of `n` free vertices — about 100 bytes of text each.
 fn vertices(n: u32) -> step_io::StepModel {
-    let mut b = step_io::StepBuilder::new().expect("builder");
+    let mut b = step_io::StepBuilder::new();
     for i in 0..n {
         b.vertex([f64::from(i), 0.0, 0.0]).expect("vertex");
     }
-    b.finish().expect("finish")
+    b.finish()
 }
 
 /// Records each write the writer makes.

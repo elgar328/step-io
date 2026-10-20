@@ -48,8 +48,8 @@ for solid in model.scene().all_solids() {
 Writing STEP from a CAD application:
 
 ```rust,no_run
-let mut b = step_io::StepBuilder::new().unwrap();
-let part = b.part("wheel").unwrap();
+let mut b = step_io::StepBuilder::new();
+let part = b.part("wheel");
 
 // mirror your kernel's arrays, keeping one handle per element
 let vs: Vec<_> = kernel.points.iter()
@@ -63,7 +63,7 @@ let fs: Vec<_> = kernel.faces.iter()
     .collect();
 b.solid(part, "wheel body", fs).unwrap();
 
-step_io::write(&b.finish().unwrap(), std::fs::File::create("wheel.step").unwrap()).unwrap();
+step_io::write(&b.finish(), std::fs::File::create("wheel.step").unwrap()).unwrap();
 ```
 
 ## Example app

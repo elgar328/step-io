@@ -21,9 +21,9 @@ const SETS: &str = "\
 #9011 = GEOMETRIC_SET('marks',(#9008,#9001));\n";
 
 fn part_with_sets() -> String {
-    let mut b = StepBuilder::new().expect("builder");
-    b.part("frame").expect("part");
-    let text = common::text(&b.finish().expect("finish"));
+    let mut b = StepBuilder::new();
+    b.part("frame");
+    let text = common::text(&b.finish());
     let rep = text
         .lines()
         .find(|l| l.contains(" = SHAPE_REPRESENTATION('',("))

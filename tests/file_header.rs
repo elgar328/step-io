@@ -56,9 +56,9 @@ fn write_round_trips_header() {
 #[test]
 fn builder_output_carries_ap242_schema() {
     // The authoring layer stamps the AP242 ed2 identity on the header.
-    let mut b = StepBuilder::new().expect("builder");
-    b.part("wheel").expect("part");
-    let text = common::text(&b.finish().expect("finish"));
+    let mut b = StepBuilder::new();
+    b.part("wheel");
+    let text = common::text(&b.finish());
     assert!(
         text.contains(
             "FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF { 1 0 10303 442 3 1 4 }'))"

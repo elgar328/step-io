@@ -9,11 +9,11 @@ use step_io::{StepBuilder, read};
 
 /// One edge from `from` to `to` over `curve`, written and read back.
 fn one_edge(from: [f64; 3], to: [f64; 3], curve: CurveInput) -> StepModel {
-    let mut b = StepBuilder::new().expect("builder");
+    let mut b = StepBuilder::new();
     let v0 = b.vertex(from).expect("vertex");
     let v1 = b.vertex(to).expect("vertex");
     b.edge(v0, v1, curve).expect("edge");
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
     model

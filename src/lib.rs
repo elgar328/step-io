@@ -129,12 +129,12 @@
 //! use step_io::StepBuilder;
 //! use step_io::build::PartOptions;
 //!
-//! let mut b = StepBuilder::new().unwrap(); // millimetre; new_with() to choose
+//! let mut b = StepBuilder::new(); // millimetre; new_with() to choose
 //! let wheel = b.part_with("wheel", &PartOptions {
 //!     id: Some("W-100".into()),
 //!     version: Some("B".into()),
 //!     ..Default::default()
-//! }).unwrap();
+//! });
 //!
 //! // Mirror the kernel's own arrays — vertex → edge → face → solid, one
 //! // handle per element.
@@ -151,7 +151,7 @@
 //!
 //! // Assemblies, display meshes, colours, layers, and PLM metadata are one
 //! // call each.
-//! step_io::write(&b.finish().unwrap(), std::fs::File::create("wheel.step").unwrap()).unwrap();
+//! step_io::write(&b.finish(), std::fs::File::create("wheel.step").unwrap()).unwrap();
 //! ```
 
 #[cfg(test)]

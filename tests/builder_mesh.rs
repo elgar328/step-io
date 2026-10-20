@@ -36,8 +36,8 @@ fn quad_mesh() -> MeshInput {
 
 #[test]
 fn mesh_round_trips_with_solid_back_link() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("plate").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("plate");
 
     // A minimal b-rep solid (single planar face) for the mesh to link to.
     let v0 = b.vertex([0.0, 0.0, 0.0]).expect("v0");
@@ -62,7 +62,7 @@ fn mesh_round_trips_with_solid_back_link() {
     let input = quad_mesh();
     b.mesh(part, "plate mesh", &input, Some(body.into()))
         .expect("mesh");
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -104,8 +104,8 @@ fn mesh_round_trips_with_solid_back_link() {
 
 #[test]
 fn mesh_links_back_to_void_solid() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("hollow").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("hollow");
 
     // Minimal void solid: one-face outer shell + one-face void shell.
     let mut tri = |z: f64| {
@@ -140,7 +140,7 @@ fn mesh_links_back_to_void_solid() {
 
     b.mesh(part, "hollow mesh", &quad_mesh(), Some(body.into()))
         .expect("mesh");
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -154,8 +154,8 @@ fn mesh_links_back_to_void_solid() {
 
 #[test]
 fn standalone_mesh_with_uniform_normals() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("panel").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("panel");
     b.mesh(
         part,
         "panel mesh",
@@ -167,7 +167,7 @@ fn standalone_mesh_with_uniform_normals() {
         None,
     )
     .expect("mesh");
-    let text = common::text(&b.finish().expect("finish"));
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -186,8 +186,8 @@ fn standalone_mesh_with_uniform_normals() {
 
 #[test]
 fn meshes_that_break_the_standard_are_rejected() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("plate").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("plate");
     let past_points = MeshInput {
         triangles: vec![[0, 1, 4]],
         ..quad_mesh()

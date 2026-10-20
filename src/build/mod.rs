@@ -46,8 +46,8 @@
 //! # struct KernelFace { origin: [f64; 3], normal: [f64; 3], x_dir: [f64; 3], bound: Vec<usize> }
 //! # struct Kernel { points: Vec<[f64; 3]>, edges: Vec<KernelEdge>, faces: Vec<KernelFace> }
 //! # let kernel = Kernel { points: vec![], edges: vec![], faces: vec![] };
-//! let mut b = step_io::StepBuilder::new().unwrap();
-//! let plate = b.part("plate").unwrap();
+//! let mut b = step_io::StepBuilder::new();
+//! let plate = b.part("plate");
 //!
 //! let vs: Vec<_> = kernel.points.iter()
 //!     .map(|p| b.vertex(*p).unwrap())
@@ -65,7 +65,7 @@
 //!     .collect();
 //! b.solid(plate, "plate body", fs).unwrap();
 //!
-//! step_io::write(&b.finish().unwrap(), std::fs::File::create("plate.step").unwrap()).unwrap();
+//! step_io::write(&b.finish(), std::fs::File::create("plate.step").unwrap()).unwrap();
 //! ```
 //!
 //! A kernel that already holds an edge's exact direction passes it as
@@ -83,7 +83,7 @@
 //! # struct Kernel { mesh_points: Vec<[f64; 3]>, mesh_triangles: Vec<[usize; 3]> }
 //! # let kernel = Kernel { mesh_points: vec![], mesh_triangles: vec![] };
 //! # fn faces(_b: &mut step_io::StepBuilder) -> Vec<step_io::model::AdvancedFaceId> { vec![] }
-//! let mut b = step_io::StepBuilder::new().unwrap();
+//! let mut b = step_io::StepBuilder::new();
 //! b.header(&HeaderInput {
 //!     file_name: Some("car.step".into()),
 //!     organizations: vec!["ACME".into()],
@@ -91,8 +91,8 @@
 //!     ..Default::default() // timestamp auto-stamped
 //! });
 //!
-//! let car = b.part("car").unwrap();
-//! let wheel = b.part("wheel").unwrap();
+//! let car = b.part("car");
+//! let wheel = b.part("wheel");
 //! let wheel_faces = faces(&mut b); // b-rep translated as in the minimal flow
 //! let body = b.solid(wheel, "wheel body", wheel_faces).unwrap();
 //!
@@ -112,7 +112,7 @@
 //! // Presentation: colour/transparency, layers, default visibility.
 //! b.style(StyleTarget::Solid(body), Rgb { red: 0.8, green: 0.2, blue: 0.1 }, None).unwrap();
 //! let hidden = b.layer("REFERENCE", vec![StyleTarget::Solid(body)]).unwrap();
-//! b.hide_layer(hidden);
+//! b.hide_layer(hidden).unwrap();
 //!
 //! // PLM metadata on the part's version.
 //! let john = b.person_and_org(&PersonOrg {
@@ -120,7 +120,7 @@
 //!     first_name: Some("John".into()),
 //!     last_name: Some("Doe".into()),
 //!     organization: "ACME".into(),
-//! }).unwrap();
+//! });
 //! b.contributor(wheel, "creator", john).unwrap();
 //! b.approve(wheel, &ApprovalInput {
 //!     status: "approved".into(),
@@ -129,7 +129,7 @@
 //!     date: None,
 //! }).unwrap();
 //!
-//! let model = b.finish().unwrap();
+//! let model = b.finish();
 //! # let _ = model;
 //! ```
 
@@ -180,6 +180,12 @@ fn iso_utc_from_unix(secs: u64) -> String {
     let month = if mp < 10 { mp + 3 } else { mp - 9 };
     let year = if month <= 2 { year + 1 } else { year };
     format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}Z")
+}
+
+/// The value of a constructor call on input the builder checked or made
+/// itself; an error there is a bug in the builder.
+fn built<T>(r: Result<T, AuthorError>) -> T {
+    r.unwrap_or_else(|e| panic!("step-io builder bug: {e}"))
 }
 
 /// The current time as an ISO 8601 UTC stamp.
@@ -631,7 +637,12 @@ struct PendingPlacement {
 /// - [`Cardinality`](AuthorError::Cardinality) for an empty list where the
 ///   standard needs at least one item, such as a solid without faces.
 ///
-/// Any other error indicates a bug in the builder itself.
+/// Any other error indicates a bug in the builder itself. The methods given
+/// nothing that could break a rule — [`new`](Self::new), [`part`](Self::part),
+/// [`part_with`](Self::part_with), [`person_and_org`](Self::person_and_org),
+/// [`document`](Self::document), [`security`](Self::security) and
+/// [`finish`](Self::finish) — return their value as it is, and panic only on
+/// such a bug.
 pub struct StepBuilder {
     author: Ap242Author,
     /// The geometric context of every part not placed in an assembly, and of
@@ -650,14 +661,18 @@ pub struct StepBuilder {
     header: HeaderInput,
 }
 
+impl Default for StepBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl StepBuilder {
     /// Set up the shared skeleton with the default units (millimetre,
     /// 1e-7 uncertainty) — see [`new_with`](Self::new_with) to choose.
-    ///
-    /// # Errors
-    /// See [the builder's errors](Self#errors).
-    pub fn new() -> Result<Self, AuthorError> {
-        Self::new_with(&UnitsInput::default())
+    #[must_use]
+    pub fn new() -> Self {
+        built(Self::new_with(&UnitsInput::default()))
     }
 
     /// Set up the shared skeleton: application context + protocol definition
@@ -880,12 +895,24 @@ impl StepBuilder {
     }
 
     /// Switch a whole layer (from [`layer`](Self::layer)) invisible by
-    /// default. Infallible at call time — an id out of this builder's range
-    /// is caught by the `INVISIBILITY` validation inside
-    /// [`finish`](Self::finish); one from another builder is not.
-    pub fn hide_layer(&mut self, layer: m::PresentationLayerAssignmentId) {
+    /// default.
+    ///
+    /// # Errors
+    /// [`AuthorError::DanglingRef`] for a layer id out of this builder's
+    /// range; one from another builder that happens to be in range is not
+    /// caught.
+    pub fn hide_layer(
+        &mut self,
+        layer: m::PresentationLayerAssignmentId,
+    ) -> Result<(), AuthorError> {
+        if self.author.model().get(layer).is_none() {
+            return Err(AuthorError::DanglingRef {
+                entity: "PRESENTATION_LAYER_ASSIGNMENT",
+            });
+        }
         self.hidden
             .push(m::InvisibleItemRef::PresentationLayerAssignment(layer));
+        Ok(())
     }
 
     /// `AXIS2_PLACEMENT_3D` from a [`Frame`].
@@ -1451,19 +1478,17 @@ impl StepBuilder {
     /// definition → definition shape) plus its origin placement. Shape items
     /// collected for the part are bound into its shape representation by
     /// [`finish`](Self::finish).
-    ///
-    /// # Errors
-    /// See [the builder's errors](Self#errors).
-    pub fn part(&mut self, name: &str) -> Result<Part, AuthorError> {
+    pub fn part(&mut self, name: &str) -> Part {
         self.part_with(name, &PartOptions::default())
     }
 
     /// [`part`](Self::part) with metadata overrides: part number, version
     /// label, and the description fields.
-    ///
-    /// # Errors
-    /// See [the builder's errors](Self#errors).
-    pub fn part_with(&mut self, name: &str, opts: &PartOptions) -> Result<Part, AuthorError> {
+    pub fn part_with(&mut self, name: &str, opts: &PartOptions) -> Part {
+        built(self.try_part_with(name, opts))
+    }
+
+    fn try_part_with(&mut self, name: &str, opts: &PartOptions) -> Result<Part, AuthorError> {
         let origin = self.placement(&Frame {
             origin: [0.0; 3],
             axis: [0.0, 0.0, 1.0],
@@ -1582,10 +1607,11 @@ impl StepBuilder {
 
     /// A person at an organization — reusable across
     /// [`contributor`](Self::contributor) and approver roles.
-    ///
-    /// # Errors
-    /// See [the builder's errors](Self#errors).
-    pub fn person_and_org(
+    pub fn person_and_org(&mut self, p: &PersonOrg) -> m::PersonAndOrganizationId {
+        built(self.try_person_and_org(p))
+    }
+
+    fn try_person_and_org(
         &mut self,
         p: &PersonOrg,
     ) -> Result<m::PersonAndOrganizationId, AuthorError> {
@@ -1678,10 +1704,11 @@ impl StepBuilder {
     }
 
     /// Attach an external document reference to the part's version.
-    ///
-    /// # Errors
-    /// See [the builder's errors](Self#errors).
-    pub fn document(&mut self, part: Part, d: &DocumentInput) -> Result<(), AuthorError> {
+    pub fn document(&mut self, part: Part, d: &DocumentInput) {
+        built(self.try_document(part, d));
+    }
+
+    fn try_document(&mut self, part: Part, d: &DocumentInput) -> Result<(), AuthorError> {
         let a = &mut self.author;
         let kind = a.add_document_type(&d.kind)?;
         let doc = a.add_document(
@@ -1701,10 +1728,11 @@ impl StepBuilder {
     }
 
     /// Attach a security classification to the part's version.
-    ///
-    /// # Errors
-    /// See [the builder's errors](Self#errors).
-    pub fn security(
+    pub fn security(&mut self, part: Part, name: &str, purpose: &str, level: &str) {
+        built(self.try_security(part, name, purpose, level));
+    }
+
+    fn try_security(
         &mut self,
         part: Part,
         name: &str,
@@ -1791,10 +1819,12 @@ impl StepBuilder {
     /// plus the collected items) with its shape-definition link, add the
     /// customary product category, and return the finished model — AP242,
     /// ready for [`write`](crate::write).
-    ///
-    /// # Errors
-    /// See [the builder's errors](Self#errors).
-    pub fn finish(mut self) -> Result<m::StepModel, AuthorError> {
+    #[must_use]
+    pub fn finish(self) -> m::StepModel {
+        built(self.try_finish())
+    }
+
+    fn try_finish(mut self) -> Result<m::StepModel, AuthorError> {
         let a = &mut self.author;
         // Pass 1: one shape representation per part, kept by part index for
         // the placement wiring below.

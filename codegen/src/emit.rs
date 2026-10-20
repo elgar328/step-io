@@ -2924,6 +2924,11 @@ impl Ap242Author {
         self.dedup.intern(&mut self.model.texts, s)
     }
 
+    /// The model built so far, for the crate's own checks.
+    pub(crate) fn model(&self) -> &StepModel {
+        &self.model
+    }
+
     /// The authored model, its header's `FILE_SCHEMA` stamped AP242 (edition
     /// 2 IS) — the authoring layer's schema. Write it out with
     /// [`write`](crate::write).

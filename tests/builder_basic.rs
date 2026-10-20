@@ -8,10 +8,10 @@ use step_io::{StepBuilder, read};
 
 #[test]
 fn builder_skeleton_round_trips_and_reads_back() {
-    let mut b = StepBuilder::new().expect("builder");
-    b.part("wheel").expect("wheel");
-    b.part("axle").expect("axle");
-    let text = common::text(&b.finish().expect("finish"));
+    let mut b = StepBuilder::new();
+    b.part("wheel");
+    b.part("axle");
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -55,8 +55,8 @@ fn builder_skeleton_round_trips_and_reads_back() {
 
 #[test]
 fn builder_with_no_parts_still_emits_a_valid_file() {
-    let b = StepBuilder::new().expect("builder");
-    let text = common::text(&b.finish().expect("finish"));
+    let b = StepBuilder::new();
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -75,8 +75,8 @@ fn metre_units_and_custom_uncertainty_round_trip() {
         uncertainty: 1e-5,
     })
     .expect("builder");
-    b.part("hull").expect("part");
-    let text = common::text(&b.finish().expect("finish"));
+    b.part("hull");
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);

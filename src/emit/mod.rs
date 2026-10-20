@@ -51,7 +51,7 @@ static UNIVERSAL_APD: ApdInfo = ApdInfo {
 /// is ASCII, so it is always UTF-8.
 ///
 /// ```no_run
-/// # let model = step_io::StepBuilder::new()?.finish()?;
+/// # let model = step_io::StepBuilder::new().finish();
 /// step_io::write(&model, std::fs::File::create("part.step")?)?;
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
