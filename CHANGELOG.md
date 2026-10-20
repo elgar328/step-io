@@ -49,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `FeatureGeometry` and `Target` implement `Debug` as well, and
   `FeatureGeometry` is `Clone` and `Copy`.
 - `Version::product()` reaches the product a version belongs to.
+- `SceneWarning` names the entity a warning concerns, the handle whose
+  method ran into it, next to the message.
 
 ### Changed
 
@@ -78,6 +80,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   breaking release. A `match` on one of the enums needs a wildcard arm, and
   the structs are read field by field rather than built or compared as a
   literal.
+- `Scene::warnings()` returns `SceneWarning`s instead of strings. A
+  `SceneWarning` prints as the message the string held, so `{w}` formatting
+  is unchanged; read `.message` for the text. Asking the same handle again no
+  longer repeats a warning.
 - `StepBuilder::face` takes an `Orientation` instead of the `same_sense`
   boolean, and `FaceBoundInput` holds an `Orientation` in each edge pair and
   in its `orientation` field instead of a boolean. The file written is

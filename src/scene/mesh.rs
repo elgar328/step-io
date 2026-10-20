@@ -202,9 +202,10 @@ impl<'m> Mesh<'m> {
     /// triangle with a warning. A plain `TESSELLATED_FACE` stores no
     /// triangles, so its list is empty.
     pub fn triangles(&self) -> Vec<[usize; 3]> {
-        let (_, _, _, _, strips, fans) = self.parts();
-        let n = self.points().len();
-        let cx = self.cx;
+        let this = self.about();
+        let (_, _, _, _, strips, fans) = this.parts();
+        let n = this.points().len();
+        let cx = this.cx;
         let mut out = Vec::new();
         let mut push = |a: i64, b: i64, c: i64| {
             let tri: Option<Vec<usize>> = [a, b, c]
@@ -251,15 +252,16 @@ impl<'m> Mesh<'m> {
     /// The normals, as stored: none, one for the whole mesh, or one per
     /// vertex. Any other count is malformed and reported as a warning.
     pub fn normals(&self) -> MeshNormals {
-        let (_, _, normals, ..) = self.parts();
+        let this = self.about();
+        let (_, _, normals, ..) = this.parts();
         match normals.len() {
             0 => MeshNormals::None,
             1 => MeshNormals::Uniform(row3(&normals[0])),
-            k if k == self.points().len() => {
+            k if k == this.points().len() => {
                 MeshNormals::PerVertex(normals.iter().map(|row| row3(row)).collect())
             }
             _ => {
-                self.cx
+                this.cx
                     .warn("MESH.normals: count is neither 1 nor per-vertex".to_owned());
                 MeshNormals::None
             }
@@ -412,3 +414,5 @@ impl<'m> Mesh<'m> {
         None
     }
 }
+
+about_by_key!(Mesh);

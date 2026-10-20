@@ -411,7 +411,7 @@ fn uniform_family_curves_derive_their_knots() {
     ));
     assert_eq!(converted[0].control_points.len(), 5);
     assert_eq!(scene.warnings().len(), 1, "one bezier violation warning");
-    assert!(scene.warnings()[0].contains("knot family"));
+    assert!(scene.warnings()[0].message.contains("knot family"));
 }
 
 #[test]
@@ -585,7 +585,7 @@ fn trimmed_bspline_with_empty_trims_warns() {
     let trimmed = find(&scene, |c| matches!(c.kind(), CurveKind::Trimmed(_)));
     assert!(trimmed.to_nurbs().is_none());
     assert_eq!(scene.warnings().len(), 1);
-    assert!(scene.warnings()[0].contains("no usable trim"));
+    assert!(scene.warnings()[0].message.contains("no usable trim"));
 }
 
 // Composite curves: a line chain, a mixed arc+line chain (degree elevation),
@@ -661,7 +661,7 @@ fn composite_curves_join_into_one_nurbs() {
     let joined: Vec<&NurbsCurve> = composites.iter().flatten().collect();
     assert_eq!(joined.len(), 3, "the disjoint chain refuses");
     assert_eq!(scene.warnings().len(), 1);
-    assert!(scene.warnings()[0].contains("do not join"));
+    assert!(scene.warnings()[0].message.contains("do not join"));
 
     // Two line chains (one with a reversed .F. segment) meet at (1,0,0) and
     // end at (1,1,0): degree 1, knots over two unit intervals.
@@ -914,7 +914,7 @@ fn refused(defs: &str, why: &str) {
     assert!(edge.curve().to_nurbs().is_none());
     let warnings = scene.warnings();
     assert!(
-        warnings.iter().any(|w| w.contains(why)),
+        warnings.iter().any(|w| w.message.contains(why)),
         "warnings: {warnings:?}"
     );
 }
@@ -1266,7 +1266,7 @@ fn open_conics_alone_or_closed_do_not_convert() {
         scene
             .warnings()
             .iter()
-            .any(|w| w.contains("closed edge on a parabola")),
+            .any(|w| w.message.contains("closed edge on a parabola")),
         "{:?}",
         scene.warnings()
     );

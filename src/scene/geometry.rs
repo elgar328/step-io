@@ -163,13 +163,15 @@ impl<'m> Solid<'m> {
 
     /// The colour styled onto this solid, if any.
     pub fn color(&self) -> Option<crate::scene::presentation::Rgb> {
-        crate::scene::presentation::colour_of(self.cx, self.key())
+        let this = self.about();
+        crate::scene::presentation::colour_of(this.cx, this.key())
     }
 
     /// The transparency styled onto this solid (`0.0` opaque … `1.0` fully
     /// transparent), if any.
     pub fn transparency(&self) -> Option<f64> {
-        crate::scene::presentation::transparency_of(self.cx, self.key())
+        let this = self.about();
+        crate::scene::presentation::transparency_of(this.cx, this.key())
     }
 
     /// The name of the presentation layer this solid belongs to, if any.
@@ -188,8 +190,9 @@ impl<'m> Solid<'m> {
     /// (wrappers compose). `None` for a shell this layer cannot resolve (a
     /// complex instance, reported in [`Scene::warnings`]).
     pub fn outer(&self) -> Option<(Shell<'m>, Orientation)> {
-        let cx = self.cx;
-        let (id, orientation) = resolve_closed_shell(cx, self.name_and_outer().1)?;
+        let this = self.about();
+        let cx = this.cx;
+        let (id, orientation) = resolve_closed_shell(cx, this.name_and_outer().1)?;
         Some((Shell { cx, id }, orientation))
     }
 
@@ -197,7 +200,8 @@ impl<'m> Solid<'m> {
     /// face points the way its own [`orientation`](Face::orientation) and the
     /// shell's orientation in [`outer`](Self::outer) give together.
     pub fn faces(&self) -> impl Iterator<Item = Face<'m>> + 'm {
-        self.outer()
+        let this = self.about();
+        this.outer()
             .into_iter()
             .flat_map(|(shell, _)| shell.faces())
     }
@@ -210,8 +214,9 @@ impl<'m> Solid<'m> {
     /// its own [`orientation`](Face::orientation) and the shell's orientation
     /// give together. Empty for a plain `MANIFOLD_SOLID_BREP`.
     pub fn voids(&self) -> impl Iterator<Item = (Shell<'m>, Orientation)> + 'm {
-        let cx = self.cx;
-        let voids: &'m [m::OrientedClosedShellRef] = match self.which {
+        let this = self.about();
+        let cx = this.cx;
+        let voids: &'m [m::OrientedClosedShellRef] = match this.which {
             SolidImpl::WithVoids(id) => &cx.model.brep_with_voids_arena.get(id.0).voids,
             SolidImpl::Manifold(_) => &[],
         };
@@ -403,12 +408,13 @@ impl<'m> Face<'m> {
     /// B-spline whose degree is outside 1–25 or whose knot multiplicities do
     /// not match its control points.
     pub fn to_nurbs(&self) -> Option<crate::scene::nurbs::NurbsSurface> {
-        if let Some(n) = self.surface().to_nurbs() {
+        let this = self.about();
+        if let Some(n) = this.surface().to_nurbs() {
             return Some(n);
         }
-        let cx = self.cx;
-        let pts = self.boundary_points();
-        match self.surface().kind() {
+        let cx = this.cx;
+        let pts = this.boundary_points();
+        match this.surface().kind() {
             SurfaceKind::Plane(p) => crate::scene::nurbs::plane_patch(cx, p, &pts),
             SurfaceKind::Cylindrical(c) => {
                 crate::scene::nurbs::cylinder_cone_patch(cx, &c.position, c.radius, 0.0, &pts)
@@ -451,13 +457,15 @@ impl<'m> Face<'m> {
 
     /// The colour styled onto this face, if any.
     pub fn color(&self) -> Option<crate::scene::presentation::Rgb> {
-        crate::scene::presentation::colour_of(self.cx, self.key())
+        let this = self.about();
+        crate::scene::presentation::colour_of(this.cx, this.key())
     }
 
     /// The transparency styled onto this face (`0.0` opaque … `1.0` fully
     /// transparent), if any.
     pub fn transparency(&self) -> Option<f64> {
-        crate::scene::presentation::transparency_of(self.cx, self.key())
+        let this = self.about();
+        crate::scene::presentation::transparency_of(this.cx, this.key())
     }
 
     /// The name of the presentation layer this face belongs to, if any.
@@ -533,8 +541,9 @@ impl<'m> Surface<'m> {
     /// B-spline whose degree is outside 1–25 or whose knot multiplicities do
     /// not match its control points is `None` too.
     pub fn to_nurbs(&self) -> Option<crate::scene::nurbs::NurbsSurface> {
-        let cx = self.cx;
-        match self.r {
+        let this = self.about();
+        let cx = this.cx;
+        match this.r {
             m::SurfaceRef::SphericalSurface(i) => {
                 crate::scene::nurbs::sphere_to_nurbs(cx, cx.model.spherical_surface_arena.get(i.0))
             }
@@ -803,13 +812,14 @@ impl<'m> Edge<'m> {
     /// parabola or hyperbola, and for a B-spline whose degree is outside 1–25
     /// or whose knot multiplicities do not match its control points.
     pub fn to_nurbs(&self) -> Option<crate::scene::nurbs::NurbsCurve> {
-        let cx = self.cx;
+        let this = self.about();
+        let cx = this.cx;
         let coords = |v: Option<Vertex<'m>>| Some(v?.point()?.xyz());
-        let (Some(p0), Some(p1)) = (coords(self.start()), coords(self.end())) else {
+        let (Some(p0), Some(p1)) = (coords(this.start()), coords(this.end())) else {
             cx.warn("EDGE_CURVE.to_nurbs: unresolved edge vertex".to_owned());
             return None;
         };
-        let raw = self.raw();
+        let raw = this.raw();
         crate::scene::nurbs::edge_to_nurbs(cx, &raw.edge_geometry, p0, p1, raw.same_sense)
     }
 }
@@ -927,19 +937,22 @@ curve_impl! {
 impl<'m> Curve<'m> {
     /// The colour of this curve's line style (`CURVE_STYLE.curve_colour`), if any.
     pub fn color(&self) -> Option<crate::scene::presentation::Rgb> {
-        crate::scene::presentation::curve_colour_of(self.cx, self.key())
+        let this = self.about();
+        crate::scene::presentation::curve_colour_of(this.cx, this.key())
     }
 
     /// The line width of this curve's style (`CURVE_STYLE.curve_width`, a raw
     /// measure value), if any.
     pub fn width(&self) -> Option<f64> {
-        crate::scene::presentation::curve_width_of(self.cx, self.key())
+        let this = self.about();
+        crate::scene::presentation::curve_width_of(this.cx, this.key())
     }
 
     /// The line-font name of this curve's style (`CURVE_STYLE.curve_font`, a line
     /// pattern like `continuous` / `dashed`), if any.
     pub fn line_font(&self) -> Option<&'m str> {
-        crate::scene::presentation::curve_font_of(self.cx, self.key())
+        let this = self.about();
+        crate::scene::presentation::curve_font_of(this.cx, this.key())
     }
 
     /// The rational-B-spline ([`NurbsCurve`](crate::scene::NurbsCurve))
@@ -953,8 +966,9 @@ impl<'m> Curve<'m> {
     /// trim given as a point is followed rather than its parameter, which
     /// writers disagree on for a parabola.
     pub fn to_nurbs(&self) -> Option<crate::scene::nurbs::NurbsCurve> {
-        let cx = self.cx;
-        match self.which {
+        let this = self.about();
+        let cx = this.cx;
+        match this.which {
             CurveImpl::Circle(i) => {
                 crate::scene::nurbs::circle_to_nurbs(cx, cx.model.circle_arena.get(i.0))
             }
@@ -1273,3 +1287,5 @@ fn resolve_oriented_edge<'m>(
         m::OrientedEdgeRef::Complex(_) => None,
     }
 }
+
+about_by_key!(Curve, Edge, Face, Solid, Surface);

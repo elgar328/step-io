@@ -342,10 +342,16 @@ fn warns_when_placement_reps_match_no_shape_definition() {
     let warnings = scene.warnings();
     assert_eq!(warnings.len(), 1, "warnings: {warnings:?}");
     assert!(
-        warnings[0].starts_with("NAUO placement:"),
+        warnings[0].message.starts_with("NAUO placement:"),
         "{}",
         warnings[0]
     );
+    // The warning names the occurrence, prints as its message, and asking the
+    // same occurrence again does not repeat it.
+    assert_eq!(warnings[0].entity, Some(occ.key()));
+    assert_eq!(warnings[0].to_string(), warnings[0].message);
+    let _ = occ.transform();
+    assert_eq!(scene.warnings(), warnings);
 }
 
 // A part version (formation id "RevB") with a person/organization assignment

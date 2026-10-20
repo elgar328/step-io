@@ -140,9 +140,10 @@ impl<'m> Dimension<'m> {
     /// [`Scene::warnings`]; a dimension with no value representation simply
     /// yields `None`.
     pub fn value(&self) -> Option<f64> {
-        let cx = self.cx;
+        let this = self.about();
+        let cx = this.cx;
         let rg = cx.ref_graph();
-        for r in rg.referrers(self.key()) {
+        for r in rg.referrers(this.key()) {
             let m::EntityKey::DimensionalCharacteristicRepresentation(dcr_id) = r else {
                 continue;
             };
@@ -247,9 +248,10 @@ macro_rules! leaf_tolerances {
         impl<'m> Tolerance<'m> {
             /// The GD&T characteristic this tolerance specifies.
             pub fn kind(&self) -> ToleranceKind {
-                match self.which {
+                let this = self.about();
+                match this.which {
                     $( TolImpl::$ent(_) => ToleranceKind::$kind, )+
-                    TolImpl::Complex(cuid) => self.complex_kind(cuid),
+                    TolImpl::Complex(cuid) => this.complex_kind(cuid),
                 }
             }
 
@@ -349,10 +351,11 @@ impl<'m> Tolerance<'m> {
     /// a complex measure instance the walk cannot resolve (reported via
     /// [`Scene::warnings`]).
     pub fn magnitude(&self) -> Option<f64> {
-        let (_, mag) = self
+        let this = self.about();
+        let (_, mag) = this
             .dedicated_fields()
-            .or_else(|| self.complex_geometric_tolerance())?;
-        mag.and_then(|r| length_measure_f64(self.cx, r))
+            .or_else(|| this.complex_geometric_tolerance())?;
+        mag.and_then(|r| length_measure_f64(this.cx, r))
     }
 
     /// The `GEOMETRIC_TOLERANCE` supertype facet of a complex tolerance, as
@@ -532,13 +535,14 @@ impl<'m> Tolerance<'m> {
     /// reference the walk cannot resolve (a complex facet) is reported via
     /// [`Scene::warnings`].
     pub fn datums(&self) -> impl Iterator<Item = Datum<'m>> + 'm {
+        let this = self.about();
         // `precedence` is authored per DATUM_REFERENCE but a DATUM_SYSTEM orders
         // its compartments positionally; collect a sort key from whichever form
         // applies, then order by it so the frame reads primary-first regardless
         // of file order.
         let mut keyed: Vec<(i64, Datum<'m>)> = Vec::new();
-        for r in self.datum_system() {
-            self.collect_system_ref(r, &mut keyed);
+        for r in this.datum_system() {
+            this.collect_system_ref(r, &mut keyed);
         }
         keyed.sort_by_key(|(k, _)| *k);
         keyed.into_iter().map(|(_, d)| d)
@@ -851,8 +855,9 @@ impl<'m> Dimension<'m> {
     /// (`DIMENSIONAL_LOCATION` / `ANGULAR_LOCATION`) yields the two it spans, in
     /// `[relating, related]` order.
     pub fn features(&self) -> impl Iterator<Item = Feature<'m>> + 'm {
-        let model = self.cx.model;
-        let refs: Vec<&m::ShapeAspectRef> = match self.which {
+        let this = self.about();
+        let model = this.cx.model;
+        let refs: Vec<&m::ShapeAspectRef> = match this.which {
             DimImpl::Size(i) => vec![&model.dimensional_size_arena.get(i.0).applies_to],
             DimImpl::AngularSize(i) => vec![&model.angular_size_arena.get(i.0).applies_to],
             DimImpl::Location(i) => {
@@ -864,7 +869,6 @@ impl<'m> Dimension<'m> {
                 vec![&e.relating_shape_aspect, &e.related_shape_aspect]
             }
         };
-        let this = *self;
         refs.into_iter()
             .filter_map(move |r| this.feature_from_sa_ref(r))
     }
@@ -887,13 +891,14 @@ impl<'m> Tolerance<'m> {
     /// target is a complex instance the walk cannot resolve (reported via
     /// [`Scene::warnings`]).
     pub fn feature(&self) -> Option<Feature<'m>> {
-        let target = self.tolerance_target()?;
+        let this = self.about();
+        let target = this.tolerance_target()?;
         if matches!(target, m::GeometricToleranceTargetRef::Complex(_)) {
-            self.cx
+            this.cx
                 .warn("tolerance target is a complex instance".to_owned());
             return None;
         }
-        feature_impl_from_tolerance_target(target).map(|which| Feature { cx: self.cx, which })
+        feature_impl_from_tolerance_target(target).map(|which| Feature { cx: this.cx, which })
     }
 
     /// The tolerance's `toleranced_shape_aspect`: from the dedicated arena for a
@@ -1086,3 +1091,5 @@ pub(crate) fn tolerances_of(cx: Ctx<'_>, part: m::EntityKey) -> Vec<Tolerance<'_
     all.retain(|t| t.part_def_id() == Some(part));
     all
 }
+
+about_by_key!(Dimension, Tolerance);

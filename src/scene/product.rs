@@ -171,7 +171,8 @@ impl<'m> Product<'m> {
 
     /// The documents referenced anywhere in this product's tree.
     pub fn documents(&self) -> impl Iterator<Item = Document<'m>> + 'm {
-        documents_of(self.cx, &self.metadata_targets()).into_iter()
+        let this = self.about();
+        documents_of(this.cx, &this.metadata_targets()).into_iter()
     }
 
     /// The security classifications assigned anywhere in this product's tree.
@@ -482,7 +483,8 @@ impl<'m> ProductDef<'m> {
 
     /// The dimensions of this part (those whose targeted feature is on it).
     pub fn dimensions(&self) -> impl Iterator<Item = pmi::Dimension<'m>> + 'm {
-        pmi::dimensions_of(self.cx, self.key()).into_iter()
+        let this = self.about();
+        pmi::dimensions_of(this.cx, this.key()).into_iter()
     }
 
     /// The geometric tolerances of this part (those whose target — a feature or
@@ -554,14 +556,15 @@ impl<'m> ProductDef<'m> {
     /// `..._WITH_ASSOCIATED_DOCUMENTS` definition, the documents it carries
     /// directly in `documentation_ids`.
     pub fn documents(&self) -> impl Iterator<Item = Document<'m>> + 'm {
-        let mut out = documents_of(self.cx, &self.metadata_targets());
-        if let PdImpl::WithDocs(i) = self.which {
-            let raw = self
+        let this = self.about();
+        let mut out = documents_of(this.cx, &this.metadata_targets());
+        if let PdImpl::WithDocs(i) = this.which {
+            let raw = this
                 .cx
                 .model
                 .product_definition_with_associated_documents_arena
                 .get(i.0);
-            let scope = scope_of(self.key());
+            let scope = scope_of(this.key());
             for dref in &raw.documentation_ids {
                 let which = match dref {
                     m::DocumentRef::Document(i) => DocImpl::Document(*i),
@@ -569,7 +572,7 @@ impl<'m> ProductDef<'m> {
                     m::DocumentRef::Complex(_) => continue,
                 };
                 let doc = Document {
-                    cx: self.cx,
+                    cx: this.cx,
                     which,
                     scope,
                 };
@@ -1124,9 +1127,10 @@ impl<'m> Occurrence<'m> {
     /// relationship matching neither order is read component-first and
     /// reported via [`Scene::warnings`](crate::scene::Scene).
     pub fn transform(&self) -> Option<Transform> {
-        let cx = self.cx;
+        let this = self.about();
+        let cx = this.cx;
         let rg = cx.ref_graph();
-        let me = self.id;
+        let me = this.id;
         for r in rg.referrers(m::EntityKey::NextAssemblyUsageOccurrence(me)) {
             let m::EntityKey::ProductDefinitionShape(pds_id) = r else {
                 continue;
@@ -1149,7 +1153,7 @@ impl<'m> Occurrence<'m> {
                     continue;
                 }
                 if let Some((idt, reps)) = idt_of_cdsr(cx, &cdsr.representation_relation) {
-                    let (from, to) = if self.assembly_rep_first(reps) {
+                    let (from, to) = if this.assembly_rep_first(reps) {
                         (&idt.transform_item_2, &idt.transform_item_1)
                     } else {
                         (&idt.transform_item_1, &idt.transform_item_2)
@@ -1256,18 +1260,20 @@ impl<'m> MappedInstance<'m> {
     /// (a camera origin, a 2D drawing target) is reported via
     /// [`Scene::warnings`](crate::scene::Scene) and yields `None`.
     pub fn transform(&self) -> Option<Transform> {
-        let cx = self.cx;
-        let map = self.map()?;
+        let this = self.about();
+        let cx = this.cx;
+        let map = this.map()?;
         let from = resolve_placement(cx, &map.mapping_origin)?;
-        let to = resolve_placement(cx, &self.raw().mapping_target)?;
+        let to = resolve_placement(cx, &this.raw().mapping_target)?;
         Some(Transform { from, to })
     }
 
     /// The b-rep solids of the source representation — the geometry this
     /// instance stamps. A non-shape source (a presentation view) has none.
     pub fn solids(&self) -> impl Iterator<Item = Solid<'m>> + 'm {
-        let cx = self.cx;
-        self.map()
+        let this = self.about();
+        let cx = this.cx;
+        this.map()
             .and_then(|map| rep_items(cx, &map.mapped_representation))
             .into_iter()
             .flatten()
@@ -1281,8 +1287,9 @@ impl<'m> MappedInstance<'m> {
     /// Nested mapped items inside the source representation — one level of an
     /// assembly chain; walk them to traverse the instance tree.
     pub fn mapped_children(&self) -> impl Iterator<Item = MappedInstance<'m>> + 'm {
-        let cx = self.cx;
-        self.map()
+        let this = self.about();
+        let cx = this.cx;
+        this.map()
             .and_then(|map| rep_items(cx, &map.mapped_representation))
             .into_iter()
             .flatten()
@@ -1631,8 +1638,9 @@ impl<'m> Approval<'m> {
     /// surfaced through [`Scene::warnings`](crate::scene::Scene::warnings) so the
     /// "no date" and "unreadable date" cases stay distinguishable.
     pub fn date(&self) -> Option<ApprovalDate> {
-        let cx = self.cx;
-        for r in cx.ref_graph().referrers(self.key()) {
+        let this = self.about();
+        let cx = this.cx;
+        for r in cx.ref_graph().referrers(this.key()) {
             if let m::EntityKey::ApprovalDateTime(id) = r {
                 let dt = &cx.model.approval_date_time_arena.get(id.0).date_time;
                 return resolve_datetime(cx, dt);
@@ -1965,3 +1973,5 @@ impl<'m> SecurityClassification<'m> {
         )
     }
 }
+
+about_by_key!(Approval, MappedInstance, Occurrence, Product, ProductDef);

@@ -108,6 +108,24 @@
 //! }
 //! ```
 
+// `handle.about()`: the handle with its context naming the handle as the
+// subject of any warning recorded from here on. Each module invokes it for its
+// own handles (their fields are private to it).
+macro_rules! about_by_key {
+    ($($handle:ident),+ $(,)?) => {
+        $(
+            impl $handle<'_> {
+                fn about(&self) -> Self {
+                    Self {
+                        cx: self.cx.about(self.key()),
+                        ..*self
+                    }
+                }
+            }
+        )+
+    };
+}
+
 pub(crate) mod geometry;
 pub(crate) mod mesh;
 pub(crate) mod nurbs;
@@ -116,8 +134,10 @@ pub(crate) mod presentation;
 pub(crate) mod product;
 pub(crate) mod units;
 
+use std::collections::HashSet;
 use std::sync::{Mutex, OnceLock};
 
+use crate::EntityKey;
 use crate::RefGraph;
 use crate::StepModel;
 
@@ -180,14 +200,45 @@ debug_by_key!(
     Vertex,
 );
 
+/// Something a handle could not resolve into the shape it exposes — a
+/// complex instance where a plain entity was expected, a value out of range —
+/// recorded in [`Scene::warnings`] rather than silently skipped. It prints as
+/// its message.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
+pub struct SceneWarning {
+    /// The entity whose handle ran into it: the handle a method was called on,
+    /// or a handle that method went on to consult (a dimension's features
+    /// walked for a part's dimensions, say).
+    pub entity: Option<EntityKey>,
+    /// What went wrong, starting with the entity type it concerns where that
+    /// is not the handle's own (`TRIMMED_CURVE.to_nurbs: …`).
+    pub message: String,
+}
+
+impl std::fmt::Display for SceneWarning {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.message)
+    }
+}
+
+/// The warnings recorded so far, in order, each once.
+#[derive(Default)]
+struct WarningLog {
+    list: Vec<SceneWarning>,
+    seen: HashSet<SceneWarning>,
+}
+
 /// A `Copy` reference bundle handed to every handle: the model, the lazy reverse
-/// index, and the scene's warning log. All borrows share one lifetime (the scene
-/// borrow), so handles stay single-lifetime.
+/// index, the scene's warning log, and the entity a warning recorded now is
+/// about. All borrows share one lifetime (the scene borrow), so handles stay
+/// single-lifetime.
 #[derive(Clone, Copy)]
 pub(crate) struct Ctx<'a> {
     pub(crate) model: &'a StepModel,
     pub(crate) rg: &'a OnceLock<RefGraph>,
-    pub(crate) warnings: &'a Mutex<Vec<String>>,
+    warnings: &'a Mutex<WarningLog>,
+    subject: Option<EntityKey>,
 }
 
 impl<'a> Ctx<'a> {
@@ -196,13 +247,30 @@ impl<'a> Ctx<'a> {
         self.rg.get_or_init(|| self.model.ref_graph())
     }
 
+    /// This context with `key` as the subject of the warnings recorded
+    /// through it. Every public handle method that can warn starts here.
+    pub(crate) fn about(self, key: EntityKey) -> Self {
+        Self {
+            subject: Some(key),
+            ..self
+        }
+    }
+
     /// Record a navigation anomaly (something a handle could not resolve into
-    /// the shape it exposes) so it is surfaced rather than silently dropped.
+    /// the shape it exposes) so it is surfaced rather than silently dropped. A
+    /// warning already recorded for the same subject is not repeated.
     pub(crate) fn warn(&self, msg: String) {
-        self.warnings
+        let warning = SceneWarning {
+            entity: self.subject,
+            message: msg,
+        };
+        let mut log = self
+            .warnings
             .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
-            .push(msg);
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        if log.seen.insert(warning.clone()) {
+            log.list.push(warning);
+        }
     }
 }
 
@@ -211,7 +279,7 @@ impl<'a> Ctx<'a> {
 pub struct Scene<'m> {
     model: &'m StepModel,
     rg: OnceLock<RefGraph>,
-    warnings: Mutex<Vec<String>>,
+    warnings: Mutex<WarningLog>,
 }
 
 impl StepModel {
@@ -223,7 +291,7 @@ impl StepModel {
         Scene {
             model: self,
             rg: OnceLock::new(),
-            warnings: Mutex::new(Vec::new()),
+            warnings: Mutex::new(WarningLog::default()),
         }
     }
 }
@@ -235,6 +303,7 @@ impl<'m> Scene<'m> {
             model: self.model,
             rg: &self.rg,
             warnings: &self.warnings,
+            subject: None,
         }
     }
 
@@ -244,14 +313,17 @@ impl<'m> Scene<'m> {
         self.model
     }
 
-    /// Navigation anomalies recorded so far — cases a handle could not resolve
-    /// into the shape it exposes (e.g. an occurrence transform whose item is not
-    /// an `AXIS2_PLACEMENT_3D`). Surfaced here rather than silently dropped.
+    /// Navigation anomalies recorded so far, in the order they arose — cases a
+    /// handle could not resolve into the shape it exposes (e.g. an occurrence
+    /// transform whose item is not an `AXIS2_PLACEMENT_3D`), each with the
+    /// entity it concerns. Surfaced here rather than silently dropped; asking
+    /// the same handle again does not repeat a warning.
     #[must_use]
-    pub fn warnings(&self) -> Vec<String> {
+    pub fn warnings(&self) -> Vec<SceneWarning> {
         self.warnings
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .list
             .clone()
     }
 }

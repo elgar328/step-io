@@ -155,5 +155,5 @@ fn mapped_instance_with_2d_target_warns() {
     let inst = scene.all_mapped_instances().next().expect("instance");
     assert!(inst.transform().is_none());
     assert_eq!(scene.warnings().len(), 1);
-    assert!(scene.warnings()[0].contains("AXIS2_PLACEMENT_3D"));
+    assert!(scene.warnings()[0].message.contains("AXIS2_PLACEMENT_3D"));
 }

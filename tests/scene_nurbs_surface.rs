@@ -653,7 +653,7 @@ fn bspline_surface_with_a_huge_multiplicity_is_refused() {
     assert!(
         warnings
             .iter()
-            .any(|w| w.contains("inconsistent weight/knot count")),
+            .any(|w| w.message.contains("inconsistent weight/knot count")),
         "warnings: {warnings:?}"
     );
 }
