@@ -923,13 +923,13 @@ impl<'m> Tolerance<'m> {
 /// `GEOMETRIC_ITEM_SPECIFIC_USAGE`). The common cases resolve to a typed handle;
 /// anything else is surfaced as `Other` carrying its key rather than dropped.
 pub enum FeatureGeometry<'m> {
-    /// An `ADVANCED_FACE`.
+    /// An `ADVANCED_FACE` or `FACE_SURFACE`.
     Face(Face<'m>),
     /// An `EDGE_CURVE`.
     Edge(Edge<'m>),
     /// A `CARTESIAN_POINT`.
     Point(Point<'m>),
-    /// A `MANIFOLD_SOLID_BREP`.
+    /// A `MANIFOLD_SOLID_BREP` or `BREP_WITH_VOIDS`.
     Solid(Solid<'m>),
     /// A curve (`TRIMMED_CURVE`, `COMPOSITE_CURVE`, `CIRCLE`, …); dispatch its
     /// exact kind via [`Curve::kind`](crate::scene::geometry::Curve::kind).
@@ -943,7 +943,7 @@ impl<'m> Feature<'m> {
     /// / solids linked to it by `GEOMETRIC_ITEM_SPECIFIC_USAGE` (GISU).
     ///
     /// A feature may designate several items (one per GISU). Items outside the
-    /// typed set (curves, tessellated faces, …) come back as
+    /// typed set (tessellated faces, geometric sets, …) come back as
     /// [`FeatureGeometry::Other`] with their key. Only GISUs whose `definition`
     /// points directly at this feature are followed; indirect links through a
     /// shape-aspect relationship are not yet resolved.
@@ -964,6 +964,9 @@ impl<'m> Feature<'m> {
                 m::GeometricModelItemRef::AdvancedFace(id) => {
                     FeatureGeometry::Face(Face::from_advanced_face(cx, *id))
                 }
+                m::GeometricModelItemRef::FaceSurface(id) => {
+                    FeatureGeometry::Face(Face::from_face_surface(cx, *id))
+                }
                 m::GeometricModelItemRef::EdgeCurve(id) => {
                     FeatureGeometry::Edge(Edge::from_id(cx, *id))
                 }
@@ -972,6 +975,9 @@ impl<'m> Feature<'m> {
                 }
                 m::GeometricModelItemRef::ManifoldSolidBrep(id) => {
                     FeatureGeometry::Solid(Solid::from_id(cx, *id))
+                }
+                m::GeometricModelItemRef::BrepWithVoids(id) => {
+                    FeatureGeometry::Solid(Solid::from_void_id(cx, *id))
                 }
                 other => match Curve::from_model_item(cx, other) {
                     Some(c) => FeatureGeometry::Curve(c),

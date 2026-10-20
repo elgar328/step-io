@@ -243,6 +243,13 @@ impl<'m> Face<'m> {
         }
     }
 
+    pub(crate) fn from_face_surface(cx: Ctx<'m>, id: m::FaceSurfaceId) -> Self {
+        Face {
+            cx,
+            which: FaceImpl::Surface(id),
+        }
+    }
+
     fn from_ref(cx: Ctx<'m>, r: &m::FaceRef) -> Option<Self> {
         match r {
             m::FaceRef::AdvancedFace(i) => Some(Face {

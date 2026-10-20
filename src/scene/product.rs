@@ -62,10 +62,7 @@ impl Scene<'_> {
                     return false;
                 };
                 let nauo = cx.model.next_assembly_usage_occurrence_arena.get(nid.0);
-                matches!(
-                    &nauo.related_product_definition,
-                    m::ProductDefinitionOrReferenceRef::ProductDefinition(d) if m::EntityKey::ProductDefinition(*d) == def.key()
-                )
+                pdor_is(&nauo.related_product_definition, def.key())
             })
         })
     }

@@ -71,6 +71,32 @@ fn feature_resolves_to_its_face() {
     );
 }
 
+#[test]
+fn feature_resolves_face_surfaces_and_solids_with_voids() {
+    // The same feature, its face a FACE_SURFACE, plus a second GISU naming a
+    // BREP_WITH_VOIDS.
+    let geo = GEO
+        .replace("#35=ADVANCED_FACE(", "#35=FACE_SURFACE(")
+        .replace(
+            "SHAPE_REPRESENTATION('',(#35)",
+            "SHAPE_REPRESENTATION('',(#35,#45)",
+        );
+    let src = format!(
+        "{HEADER}{geo}\
+#43=CLOSED_SHELL('',(#35));\n\
+#44=ORIENTED_CLOSED_SHELL('',*,#43,.F.);\n\
+#45=BREP_WITH_VOIDS('',#43,(#44));\n\
+#46=GEOMETRIC_ITEM_SPECIFIC_USAGE('','',#40,#37,#45);\n\
+{FOOTER}"
+    );
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+
+    let feat = scene.dimensions().next().expect("a dimension").features();
+    let kinds: Vec<_> = feat[0].geometry().iter().map(discriminant).collect();
+    assert_eq!(kinds, ["Face", "Solid"]);
+}
+
 // A label for the FeatureGeometry variant, for test failure messages.
 fn discriminant(g: &FeatureGeometry) -> &'static str {
     match g {

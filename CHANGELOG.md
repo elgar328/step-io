@@ -166,6 +166,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A circle or ellipse trimmed more than a full turn apart converts to the
   arc within one turn, as OCCT reads it. It used to wind round as many times
   as the angles said, and a trim like `1.E17` never finished.
+- `Scene::root_definitions()` no longer lists a
+  `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS` that an assembly uses as a
+  component; it only checked plain `PRODUCT_DEFINITION` components, so such a
+  part showed both under its assembly and as a root of its own.
+- `Feature::geometry()` returns a `FACE_SURFACE` as a `Face` and a
+  `BREP_WITH_VOIDS` as a `Solid`, and `Mesh::face()` reaches a linked
+  `FACE_SURFACE`. They used to give `Other` and `None`.
 
 ## [0.2.5] - 2026-10-03
 

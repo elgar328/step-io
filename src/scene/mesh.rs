@@ -288,6 +288,7 @@ impl<'m> Mesh<'m> {
         }?;
         match link {
             m::FaceOrSurfaceRef::AdvancedFace(id) => Some(Face::from_advanced_face(self.cx, *id)),
+            m::FaceOrSurfaceRef::FaceSurface(id) => Some(Face::from_face_surface(self.cx, *id)),
             _ => None,
         }
     }

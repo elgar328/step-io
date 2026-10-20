@@ -101,6 +101,23 @@ fn meshes_expose_points_triangles_and_normals() {
 }
 
 #[test]
+fn mesh_reaches_a_linked_face_surface() {
+    let src = format!(
+        "{HEADER}{}{FOOTER}",
+        MESHES.replace("#37=ADVANCED_FACE(", "#37=FACE_SURFACE(")
+    );
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+
+    let linked = scene
+        .all_meshes()
+        .find(|m| m.name() == "linked")
+        .expect("linked");
+    let face = linked.face().expect("linked b-rep face");
+    assert_eq!(face.name(), "brep face");
+}
+
+#[test]
 fn mesh_groups_bundle_faces_and_reach_the_solid() {
     let src = format!("{HEADER}{MESHES}{FOOTER}");
     let (model, _rep) = read(src.as_bytes()).expect("read");

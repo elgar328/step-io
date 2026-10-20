@@ -185,6 +185,26 @@ fn surfaces_product_definition_with_associated_documents_subtype() {
 }
 
 #[test]
+fn documented_part_used_in_an_assembly_is_not_a_root() {
+    // The documented part is placed in a plain assembly: only the assembly is
+    // a root.
+    let src = format!(
+        "{HEADER}{WITH_DOCS_PART}\
+#10=PRODUCT('asm','Assembly','',(#2));\n\
+#11=PRODUCT_DEFINITION_FORMATION('1','',#10);\n\
+#12=PRODUCT_DEFINITION('design','',#11,#3);\n\
+#30=NEXT_ASSEMBLY_USAGE_OCCURRENCE('1','Part','',#12,#22,$);\n\
+{FOOTER}"
+    );
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+
+    let roots: Vec<_> = scene.root_definitions().collect();
+    assert_eq!(roots.len(), 1);
+    assert_eq!(roots[0].product().unwrap().name(), "Assembly");
+}
+
+#[test]
 fn reads_occurrence_placement_transform() {
     let src = format!("{HEADER}{ASSEMBLY}{FOOTER}");
     let (model, _rep) = read(src.as_bytes()).expect("read");
