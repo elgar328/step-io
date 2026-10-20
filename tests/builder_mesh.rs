@@ -176,3 +176,32 @@ fn standalone_mesh_with_uniform_normals() {
         MeshNormals::Uniform([0.0, 0.0, 1.0])
     ));
 }
+
+#[test]
+fn meshes_that_break_the_standard_are_rejected() {
+    let mut b = StepBuilder::new().expect("builder");
+    let part = b.part("plate").expect("part");
+    let past_points = MeshInput {
+        triangles: vec![[0, 1, 4]],
+        ..quad_mesh()
+    };
+    let no_triangles = MeshInput {
+        triangles: vec![],
+        ..quad_mesh()
+    };
+    let short_normals = MeshInput {
+        normals: MeshNormalsInput::PerVertex(vec![[0.0, 0.0, 1.0]; 3]),
+        ..quad_mesh()
+    };
+    for (what, mesh) in [
+        ("an index past the points", past_points),
+        ("no triangles", no_triangles),
+        ("too few normals", short_normals),
+    ] {
+        let err = b.mesh(part, "m", &mesh, None).expect_err(what);
+        assert!(
+            matches!(err, step_io::AuthorError::InvalidInput { .. }),
+            "{what}: {err}"
+        );
+    }
+}

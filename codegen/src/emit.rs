@@ -2508,6 +2508,59 @@ fn author_card_check_outer(
     }
 }
 
+/// Whether a field kind holds a real (an `f64` somewhere inside).
+fn has_real(k: &Kind) -> bool {
+    match k {
+        Kind::Real | Kind::Reals3 { .. } | Kind::MeasureSelect(_) => true,
+        Kind::Vec(inner) => has_real(inner),
+        _ => false,
+    }
+}
+
+/// Code rejecting a non-finite real anywhere in the field at `expr`: Part 21
+/// has no spelling for NaN or an infinity, so such a value would make the
+/// file unreadable.
+fn author_finite_check(
+    entity_upper: &str,
+    attribute: &str,
+    k: &Kind,
+    expr: &str,
+    optional: bool,
+    expr_is_ref: bool,
+    depth: usize,
+) -> String {
+    if !has_real(k) {
+        return String::new();
+    }
+    let amp = if expr_is_ref { "" } else { "&" };
+    let err = format!(
+        "return Err(AuthorError::NonFiniteReal {{ entity: {entity_upper:?}, attribute: {attribute:?} }});"
+    );
+    if optional {
+        let inner = author_finite_check(entity_upper, attribute, k, "x", false, true, depth);
+        return format!("        if let Some(x) = {amp}{expr} {{\n{inner}        }}\n");
+    }
+    match k {
+        Kind::Real => format!("        if !{expr}.is_finite() {{ {err} }}\n"),
+        Kind::Reals3 { .. } => {
+            format!("        if {expr}.iter().any(|v| !v.is_finite()) {{ {err} }}\n")
+        }
+        Kind::MeasureSelect(_) => format!(
+            "        if let MeasureScalar::Real(v) = &{expr}.value {{ if !v.is_finite() {{ {err} }} }}\n"
+        ),
+        Kind::Vec(inner) if matches!(**inner, Kind::Real) => {
+            format!("        if {expr}.iter().any(|v| !v.is_finite()) {{ {err} }}\n")
+        }
+        Kind::Vec(inner) => {
+            let var = format!("f{depth}");
+            let body =
+                author_finite_check(entity_upper, attribute, inner, &var, false, true, depth + 1);
+            format!("        for {var} in {amp}{expr} {{\n{body}        }}\n")
+        }
+        _ => String::new(),
+    }
+}
+
 fn author_check_expr(
     ir: &ModelIr,
     k: &Kind,
@@ -2600,6 +2653,14 @@ pub enum AuthorError {
     /// A placement would make an assembly contain itself: the part placed
     /// is the assembly, or already contains it.
     CyclicAssembly,
+    /// A real is NaN or infinite, which Part 21 cannot write.
+    NonFiniteReal {
+        entity: &'static str,
+        attribute: &'static str,
+    },
+    /// Builder input breaks a rule of the standard: a B-spline whose knots do
+    /// not fit its degree and control points, a mesh index past its points.
+    InvalidInput { reason: &'static str },
 }
 
 impl std::fmt::Display for AuthorError {
@@ -2630,6 +2691,10 @@ impl std::fmt::Display for AuthorError {
             AuthorError::CyclicAssembly => {
                 write!(f, "placement would make an assembly contain itself")
             }
+            AuthorError::NonFiniteReal { entity, attribute } => {
+                write!(f, "{entity}.{attribute}: not a finite number")
+            }
+            AuthorError::InvalidInput { reason } => write!(f, "invalid input: {reason}"),
         }
     }
 }
@@ -2637,9 +2702,15 @@ impl std::fmt::Display for AuthorError {
 impl std::error::Error for AuthorError {}
 
 /// Strict AP242 authoring handle. Owns the model privately: entities enter
-/// only through the generated constructors, so everything inside is AP242 by
-/// construction. [`Ap242Author::finish`] returns the model, for
-/// [`write`](crate::write) to send out as Part 21 text.
+/// only through the generated constructors, which check every value against
+/// the schema's types, the size of each aggregate attribute, every reference
+/// for an entity of a fitting type that exists in this model, every complex
+/// instance against the schema's rules for combining types, and every real
+/// for being finite. They do not check `WHERE` rules, nor the size of a list
+/// nested in an aggregate (such as a row of B-spline control points) beyond
+/// coordinate triples, and an id from another author that is in range here is
+/// taken as one of this model's. [`Ap242Author::finish`] returns
+/// the model, for [`write`](crate::write) to send out as Part 21 text.
 #[derive(Default)]
 pub struct Ap242Author {
     model: StepModel,
@@ -2705,6 +2776,15 @@ impl Ap242Author {
                 continue;
             }
             s.push_str(&author_card_check(&se.name, &f.name, ident, f, false));
+            s.push_str(&author_finite_check(
+                &se.name,
+                &f.name,
+                &f.kind,
+                ident,
+                f.optional || f.derivable,
+                false,
+                0,
+            ));
             let check = author_check_expr(
                 ir,
                 &f.kind,
@@ -2786,6 +2866,16 @@ impl Ap242Author {
                 continue;
             }
             let expr = format!("model.{}.items[id as usize].{ident}", arena_field(&se.rust));
+            cyclic_checks.push_str(&author_card_check(&se.name, &f.name, &expr, f, false));
+            cyclic_checks.push_str(&author_finite_check(
+                &se.name,
+                &f.name,
+                &f.kind,
+                &expr,
+                f.optional || f.derivable,
+                false,
+                0,
+            ));
             let check = author_check_expr(
                 ir,
                 &f.kind,
@@ -3060,6 +3150,15 @@ pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
                 continue;
             }
             let card = author_card_check(&p.name, &f.name, &ident, f, true);
+            let finite = author_finite_check(
+                &p.name,
+                &f.name,
+                &f.kind,
+                &ident,
+                f.optional || f.derivable,
+                true,
+                0,
+            );
             let check = author_check_expr(
                 ir,
                 &f.kind,
@@ -3069,9 +3168,10 @@ pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
                 "model",
                 0,
             );
-            if !card.is_empty() || !check.is_empty() {
+            if !card.is_empty() || !finite.is_empty() || !check.is_empty() {
                 binds.push(ident);
                 body.push_str(&card);
+                body.push_str(&finite);
                 body.push_str(&check);
             }
         }
@@ -3101,7 +3201,7 @@ fn emit_author_ref_checks(
         .iter()
         .map(|se| (se.rust.as_str(), se.name.as_str()))
         .collect();
-    for re in ir.ref_enums.values() {
+    for (target, re) in &ir.ref_enums {
         let r = &re.rust;
         writeln!(
             s,
@@ -3138,14 +3238,28 @@ fn emit_author_ref_checks(
         for (variant, _enum_rust, _wire) in &re.enum_arms {
             writeln!(s, "        {r}::{variant}(_) => {{}}").unwrap();
         }
-        for (variant, kind, _wire) in &re.scalar_arms {
-            let _ = kind;
-            writeln!(s, "        {r}::{variant}(_) => {{}}").unwrap();
+        for (variant, kind, wire) in &re.scalar_arms {
+            if matches!(kind, Kind::Real) {
+                writeln!(
+                    s,
+                    "        {r}::{variant}(v) => {{ if !v.is_finite() {{ return Err(AuthorError::NonFiniteReal {{ entity: {wire:?}, attribute: \"value\" }}); }} }}"
+                )
+                .unwrap();
+            } else {
+                writeln!(s, "        {r}::{variant}(_) => {{}}").unwrap();
+            }
         }
         if re.has_complex {
+            let fits = re
+                .complex_parts
+                .iter()
+                .map(|p| format!("{p:?}"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            let target = target.to_uppercase();
             writeln!(
                 s,
-                "        {r}::Complex(i) => {{ if i.0 as usize >= model.complex_unit_arena.items.len() {{ return Err(AuthorError::DanglingRef {{ entity: \"COMPLEX\" }}); }} }}"
+                "        {r}::Complex(i) => {{ let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {{ return Err(AuthorError::DanglingRef {{ entity: \"COMPLEX\" }}); }}; if !c.parts.iter().any(|p| [{fits}].contains(&part_name(p))) {{ return Err(AuthorError::InvalidComplex {{ reason: \"not a {target}\" }}); }} }}"
             )
             .unwrap();
         }

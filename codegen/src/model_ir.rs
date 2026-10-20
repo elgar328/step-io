@@ -70,6 +70,9 @@ pub struct RefEnum {
     pub scalar_arms: Vec<(String, Kind, String)>,
     /// True when the target can resolve to a complex part-bag instance.
     pub has_complex: bool,
+    /// The complex parts (UPPER names) that make a complex instance one of
+    /// the target's types: a complex fits the reference when it has one.
+    pub complex_parts: Vec<String>,
 }
 
 /// A generated Rust enum from an EXPRESS ENUM.
@@ -404,6 +407,7 @@ impl ModelIr {
             let leaves = subtypes_in_closure(schema, res, closure, &children, target);
             let mut simple_arms: Vec<(String, String)> = Vec::new();
             let mut has_complex = false;
+            let mut fitting_parts: Vec<String> = Vec::new();
             for leaf in &leaves {
                 // dual-appearance: a leaf can be BOTH a simple arm (standalone
                 // `#1=FOO(..)`) and resolve to a complex (`#2=(.. FOO(..) ..)`),
@@ -413,6 +417,7 @@ impl ModelIr {
                 }
                 if complex_parts.contains(leaf) {
                     has_complex = true;
+                    fitting_parts.push(leaf.to_uppercase());
                 }
             }
             simple_arms.sort();
@@ -435,6 +440,7 @@ impl ModelIr {
                         .collect(),
                     scalar_arms: scalar_arms(res, target),
                     has_complex,
+                    complex_parts: fitting_parts,
                 },
             );
         }

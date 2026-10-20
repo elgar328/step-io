@@ -139,6 +139,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   contain itself, the part placed being the assembly or already containing
   it, with `AuthorError::CyclicAssembly`. The standard forbids such cycles,
   and a reader following one may never stop.
+- `StepBuilder` refuses a NURBS curve or surface that breaks the standard's
+  B-spline rules (degree at least 1, more control points than the degree,
+  knot count, knots that never decrease, knot repeats, one positive weight
+  per control point) and a mesh without triangles, with an index past its
+  points, or with per-vertex normals that do not number the points, with
+  the new `AuthorError::InvalidInput`.
+- The `Ap242Author` constructors check that a complex instance given for a
+  reference is of a fitting type: a unit is refused where a curve belongs,
+  with `AuthorError::InvalidComplex`. They used to check only that it
+  existed.
 
 ### Fixed
 
@@ -173,6 +183,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Feature::geometry()` returns a `FACE_SURFACE` as a `Face` and a
   `BREP_WITH_VOIDS` as a `Solid`, and `Mesh::face()` reaches a linked
   `FACE_SURFACE`. They used to give `Other` and `None`.
+- `StepBuilder` and `Ap242Author` refuse a NaN or infinite real with the new
+  `AuthorError::NonFiniteReal`. They used to write it as `NaN` or `inf`,
+  which Part 21 has no spelling for, so the file could not be read back.
+- The `Ap242Author` `add_*_cyclic` constructors check aggregate sizes, as
+  the other constructors do; an empty `SET [1:?]` used to pass.
 
 ## [0.2.5] - 2026-10-03
 

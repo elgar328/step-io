@@ -348,6 +348,52 @@ fn compress_knots(expanded: &[f64]) -> (Vec<f64>, Vec<i64>) {
     (knots, multiplicities)
 }
 
+/// Check a B-spline's degree and expanded knot vector against its `n`
+/// control points by the standard's `constraints_param_b_spline`: degree at
+/// least 1, more control points than the degree, `n + degree + 1` knots that
+/// never decrease, and no knot repeated more than `degree` times inside or
+/// `degree + 1` times at an end.
+fn check_bspline(degree: usize, n: usize, knots: &[f64]) -> Result<(), AuthorError> {
+    let bad = |reason| Err(AuthorError::InvalidInput { reason });
+    if degree < 1 {
+        return bad("B-spline degree below 1");
+    }
+    if n <= degree {
+        return bad("B-spline with no more control points than its degree");
+    }
+    if knots.len() != n + degree + 1 {
+        return bad("B-spline knot count is not control points + degree + 1");
+    }
+    if knots.windows(2).any(|w| w[1] < w[0]) {
+        return bad("B-spline knots decrease");
+    }
+    let (_, multiplicities) = compress_knots(knots);
+    let last = multiplicities.len() - 1;
+    for (i, &mult) in multiplicities.iter().enumerate() {
+        let max = if i == 0 || i == last {
+            degree + 1
+        } else {
+            degree
+        };
+        if usize::try_from(mult).map_or(true, |mult| mult > max) {
+            return bad("B-spline knot repeated more often than its degree allows");
+        }
+    }
+    Ok(())
+}
+
+/// Check B-spline weights: one per control point, each positive.
+fn check_weights(n: usize, weights: &[f64]) -> Result<(), AuthorError> {
+    let bad = |reason| Err(AuthorError::InvalidInput { reason });
+    if weights.len() != n {
+        return bad("B-spline weights do not match its control points");
+    }
+    if weights.iter().any(|w| w.is_nan() || *w <= 0.0) {
+        return bad("B-spline weight not positive");
+    }
+    Ok(())
+}
+
 /// Optional overrides for [`StepBuilder::part_with`] — every field defaults
 /// to the plain [`part`](StepBuilder::part) behaviour.
 #[derive(Debug, Clone, Default)]
@@ -516,6 +562,22 @@ struct PendingPlacement {
 /// Ergonomic writer for the standard AP242 file shape: contexts and units up
 /// front, one product chain per [`part`](Self::part), everything wired up by
 /// [`finish`](Self::finish).
+///
+/// # Errors
+///
+/// A method that fails returns an [`AuthorError`]:
+/// - [`NonFiniteReal`](AuthorError::NonFiniteReal) for a NaN or infinite
+///   coordinate, length or other real, which Part 21 cannot write;
+/// - [`InvalidInput`](AuthorError::InvalidInput) for a NURBS curve or surface,
+///   or a mesh, that breaks the standard's rules (see [`edge`](Self::edge),
+///   [`face`](Self::face) and [`mesh`](Self::mesh));
+/// - [`DanglingRef`](AuthorError::DanglingRef) for an id out of this
+///   builder's range. An id from another builder that happens to be in range
+///   is not caught, and stands for whatever this builder holds there;
+/// - [`Cardinality`](AuthorError::Cardinality) for an empty list where the
+///   standard needs at least one item, such as a solid without faces.
+///
+/// Any other error indicates a bug in the builder itself.
 pub struct StepBuilder {
     author: Ap242Author,
     /// The geometric context of every part not placed in an assembly, and of
@@ -539,8 +601,7 @@ impl StepBuilder {
     /// 1e-7 uncertainty) — see [`new_with`](Self::new_with) to choose.
     ///
     /// # Errors
-    /// Propagates [`AuthorError`] from the strict constructors; the wiring
-    /// here is fixed, so an error indicates a bug in the builder itself.
+    /// See [the builder's errors](Self#errors).
     pub fn new() -> Result<Self, AuthorError> {
         Self::new_with(&UnitsInput::default())
     }
@@ -553,8 +614,7 @@ impl StepBuilder {
     /// [`finish`](Self::finish).
     ///
     /// # Errors
-    /// Propagates [`AuthorError`] from the strict constructors; the wiring
-    /// here is fixed, so an error indicates a bug in the builder itself.
+    /// See [the builder's errors](Self#errors).
     pub fn new_with(units: &UnitsInput) -> Result<Self, AuthorError> {
         let mut a = Ap242Author::new();
 
@@ -661,9 +721,7 @@ impl StepBuilder {
     /// again adds another style record; readers use the first they find.
     ///
     /// # Errors
-    /// An id that did not come from this builder (another builder's, or out
-    /// of range) fails validation with [`AuthorError`]; beyond that the
-    /// wiring is fixed, so an error indicates a bug in the builder itself.
+    /// See [the builder's errors](Self#errors).
     pub fn style(
         &mut self,
         target: StyleTarget,
@@ -722,9 +780,7 @@ impl StepBuilder {
     /// off by default.
     ///
     /// # Errors
-    /// An id that did not come from this builder (another builder's, or out
-    /// of range) fails validation with [`AuthorError`]; beyond that the
-    /// wiring is fixed, so an error indicates a bug in the builder itself.
+    /// See [the builder's errors](Self#errors).
     pub fn layer(
         &mut self,
         name: &str,
@@ -748,9 +804,7 @@ impl StepBuilder {
     /// and registers that — colour styles on the same target are unaffected.
     ///
     /// # Errors
-    /// An id that did not come from this builder (another builder's, or out
-    /// of range) fails validation with [`AuthorError`]; beyond that the
-    /// wiring is fixed, so an error indicates a bug in the builder itself.
+    /// See [the builder's errors](Self#errors).
     pub fn hide(&mut self, target: StyleTarget) -> Result<(), AuthorError> {
         let a = &mut self.author;
         let assignment =
@@ -773,8 +827,9 @@ impl StepBuilder {
     }
 
     /// Switch a whole layer (from [`layer`](Self::layer)) invisible by
-    /// default. Infallible at call time — a foreign or stale id is caught by
-    /// the `INVISIBILITY` validation inside [`finish`](Self::finish).
+    /// default. Infallible at call time — an id out of this builder's range
+    /// is caught by the `INVISIBILITY` validation inside
+    /// [`finish`](Self::finish); one from another builder is not.
     pub fn hide_layer(&mut self, layer: m::PresentationLayerAssignmentId) {
         self.hidden
             .push(m::InvisibleItemRef::PresentationLayerAssignment(layer));
@@ -854,6 +909,8 @@ impl StepBuilder {
     // non-rational form; anything else keeps its value in weights_data.
     #[allow(clippy::float_cmp)]
     fn nurbs_curve_geometry(&mut self, c: &NurbsCurve) -> Result<m::CurveRef, AuthorError> {
+        check_bspline(c.degree, c.control_points.len(), &c.knots)?;
+        check_weights(c.control_points.len(), &c.weights)?;
         let cps = self.control_points(&c.control_points)?;
         let (knots, knot_multiplicities) = compress_knots(&c.knots);
         let degree = i64::try_from(c.degree).unwrap_or(i64::MAX);
@@ -900,6 +957,23 @@ impl StepBuilder {
     /// NURBS surface geometry; see [`Self::nurbs_curve_geometry`].
     #[allow(clippy::float_cmp)] // exact 1.0 check, as in nurbs_curve_geometry
     fn nurbs_surface_geometry(&mut self, s: &NurbsSurface) -> Result<m::SurfaceRef, AuthorError> {
+        let n_u = s.control_points.len();
+        let n_v = s.control_points.first().map_or(0, Vec::len);
+        if n_v == 0 || s.control_points.iter().any(|row| row.len() != n_v) {
+            return Err(AuthorError::InvalidInput {
+                reason: "B-spline surface control points are not a full grid",
+            });
+        }
+        check_bspline(s.degree_u, n_u, &s.knots_u)?;
+        check_bspline(s.degree_v, n_v, &s.knots_v)?;
+        if s.weights.len() != n_u {
+            return Err(AuthorError::InvalidInput {
+                reason: "B-spline weights do not match its control points",
+            });
+        }
+        for row in &s.weights {
+            check_weights(n_v, row)?;
+        }
         let mut cps = Vec::with_capacity(s.control_points.len());
         for row in &s.control_points {
             cps.push(self.control_points(row)?);
@@ -959,8 +1033,7 @@ impl StepBuilder {
     /// Add a topological vertex at `p`.
     ///
     /// # Errors
-    /// Propagates [`AuthorError`] from the strict constructors; the wiring
-    /// here is fixed, so an error indicates a bug in the builder itself.
+    /// See [the builder's errors](Self#errors).
     pub fn vertex(&mut self, p: [f64; 3]) -> Result<Vertex, AuthorError> {
         let point = self.author.add_cartesian_point(String::new(), p.into())?;
         let vp = self
@@ -978,8 +1051,12 @@ impl StepBuilder {
     /// circle with `from == to` is a closed full-circle edge.
     ///
     /// # Errors
-    /// Propagates [`AuthorError`] from the strict constructors; the wiring
-    /// here is fixed, so an error indicates a bug in the builder itself.
+    /// [`AuthorError::InvalidInput`] for a [`CurveInput::Nurbs`] with a
+    /// B-spline degree below 1, no more control points than the degree, a knot
+    /// count other than control points + degree + 1, decreasing knots, a knot
+    /// repeated more than the degree allows (degree + 1 at an end), or weights
+    /// that are not one positive value per control point.
+    /// See also [the builder's errors](Self#errors).
     pub fn edge(
         &mut self,
         from: Vertex,
@@ -1126,9 +1203,12 @@ impl StepBuilder {
     /// ([`Forward`](Orientation::Forward)) or against it.
     ///
     /// # Errors
-    /// An id that did not come from this builder (another builder's, or out
-    /// of range) fails validation with [`AuthorError`]; beyond that the
-    /// wiring is fixed, so an error indicates a bug in the builder itself.
+    /// [`AuthorError::InvalidInput`] for a NURBS surface or profile with a
+    /// B-spline degree below 1, no more control points than the degree, a knot
+    /// count other than control points + degree + 1, decreasing knots, a knot
+    /// repeated more than the degree allows (degree + 1 at an end), or weights
+    /// that are not one positive value per control point, or a surface whose control points are not a full grid.
+    /// See also [the builder's errors](Self#errors).
     pub fn face(
         &mut self,
         surface: SurfaceInput,
@@ -1176,9 +1256,7 @@ impl StepBuilder {
     /// (as an `ADVANCED_BREP_SHAPE_REPRESENTATION`).
     ///
     /// # Errors
-    /// An id that did not come from this builder (another builder's, or out
-    /// of range) fails validation with [`AuthorError`]; beyond that the
-    /// wiring is fixed, so an error indicates a bug in the builder itself.
+    /// See [the builder's errors](Self#errors).
     pub fn solid(
         &mut self,
         part: Part,
@@ -1235,11 +1313,10 @@ impl StepBuilder {
     /// conventions will reject it).
     ///
     /// # Errors
-    /// Empty `voids`, or empty face lists, fail validation with
-    /// [`AuthorError`] (the strict `CLOSED_SHELL` / `BREP_WITH_VOIDS`
-    /// cardinality checks). An id that did not come from this builder fails the
-    /// same way; beyond that the wiring is fixed, so an error indicates a bug
-    /// in the builder itself.
+    /// Empty `voids`, or empty face lists, fail with
+    /// [`AuthorError::Cardinality`] (the strict `CLOSED_SHELL` /
+    /// `BREP_WITH_VOIDS` cardinality checks). See also
+    /// [the builder's errors](Self#errors).
     pub fn solid_with_voids(
         &mut self,
         part: Part,
@@ -1294,8 +1371,7 @@ impl StepBuilder {
     /// [`finish`](Self::finish).
     ///
     /// # Errors
-    /// Propagates [`AuthorError`] from the strict constructors; the wiring
-    /// here is fixed, so an error indicates a bug in the builder itself.
+    /// See [the builder's errors](Self#errors).
     pub fn part(&mut self, name: &str) -> Result<Part, AuthorError> {
         self.part_with(name, &PartOptions::default())
     }
@@ -1304,8 +1380,7 @@ impl StepBuilder {
     /// label, and the description fields.
     ///
     /// # Errors
-    /// Propagates [`AuthorError`] from the strict constructors; the wiring
-    /// here is fixed, so an error indicates a bug in the builder itself.
+    /// See [the builder's errors](Self#errors).
     pub fn part_with(&mut self, name: &str, opts: &PartOptions) -> Result<Part, AuthorError> {
         let origin = self.placement(&Frame {
             origin: [0.0; 3],
@@ -1356,9 +1431,10 @@ impl StepBuilder {
     /// `TESSELLATED_SHAPE_REPRESENTATION` on [`finish`](Self::finish).
     ///
     /// # Errors
-    /// An id that did not come from this builder (another builder's, or out
-    /// of range) fails validation with [`AuthorError`]; beyond that the
-    /// wiring is fixed, so an error indicates a bug in the builder itself.
+    /// [`AuthorError::InvalidInput`] for a mesh without triangles, with a
+    /// triangle index not below the number of points, or with per-vertex
+    /// normals that do not number the points.
+    /// See also [the builder's errors](Self#errors).
     pub fn mesh(
         &mut self,
         part: Part,
@@ -1366,8 +1442,19 @@ impl StepBuilder {
         input: &MeshInput,
         of_solid: Option<SolidRef>,
     ) -> Result<m::TessellatedSolidId, AuthorError> {
+        let n = input.points.len();
+        let bad = |reason| Err(AuthorError::InvalidInput { reason });
+        if input.triangles.is_empty() {
+            return bad("mesh without triangles");
+        }
+        if input.triangles.iter().flatten().any(|&i| i >= n) {
+            return bad("mesh triangle index past its points");
+        }
+        if matches!(&input.normals, MeshNormalsInput::PerVertex(rows) if rows.len() != n) {
+            return bad("mesh per-vertex normals do not match its points");
+        }
         let a = &mut self.author;
-        let npoints = i64::try_from(input.points.len()).unwrap_or(i64::MAX);
+        let npoints = i64::try_from(n).unwrap_or(i64::MAX);
         let coordinates = a.add_coordinates_list(
             String::new(),
             npoints,
@@ -1415,8 +1502,7 @@ impl StepBuilder {
     /// [`contributor`](Self::contributor) and approver roles.
     ///
     /// # Errors
-    /// Propagates [`AuthorError`] from the strict constructors; the wiring
-    /// here is fixed, so an error indicates a bug in the builder itself.
+    /// See [the builder's errors](Self#errors).
     pub fn person_and_org(
         &mut self,
         p: &PersonOrg,
@@ -1441,9 +1527,7 @@ impl StepBuilder {
     /// role (customary roles: `"creator"`, `"design_owner"`, `"checker"`).
     ///
     /// # Errors
-    /// An id that did not come from this builder (another builder's, or out
-    /// of range) fails validation with [`AuthorError`]; beyond that the
-    /// wiring is fixed, so an error indicates a bug in the builder itself.
+    /// See [the builder's errors](Self#errors).
     pub fn contributor(
         &mut self,
         part: Part,
@@ -1466,9 +1550,7 @@ impl StepBuilder {
     /// any approvers with their roles, and an optional approval date.
     ///
     /// # Errors
-    /// An id that did not come from this builder (another builder's, or out
-    /// of range) fails validation with [`AuthorError`]; beyond that the
-    /// wiring is fixed, so an error indicates a bug in the builder itself.
+    /// See [the builder's errors](Self#errors).
     pub fn approve(
         &mut self,
         part: Part,
@@ -1518,8 +1600,7 @@ impl StepBuilder {
     /// Attach an external document reference to the part's version.
     ///
     /// # Errors
-    /// Propagates [`AuthorError`] from the strict constructors; the wiring
-    /// here is fixed, so an error indicates a bug in the builder itself.
+    /// See [the builder's errors](Self#errors).
     pub fn document(&mut self, part: Part, d: &DocumentInput) -> Result<(), AuthorError> {
         let a = &mut self.author;
         let kind = a.add_document_type(d.kind.clone())?;
@@ -1542,8 +1623,7 @@ impl StepBuilder {
     /// Attach a security classification to the part's version.
     ///
     /// # Errors
-    /// Propagates [`AuthorError`] from the strict constructors; the wiring
-    /// here is fixed, so an error indicates a bug in the builder itself.
+    /// See [the builder's errors](Self#errors).
     pub fn security(
         &mut self,
         part: Part,
@@ -1577,9 +1657,7 @@ impl StepBuilder {
     /// # Errors
     /// [`AuthorError::CyclicAssembly`] if `child` is `parent` or already
     /// contains it, as an assembly may not contain itself; nothing is added
-    /// then. Otherwise propagates [`AuthorError`] from the strict
-    /// constructors; the wiring here is fixed, so such an error indicates a
-    /// bug in the builder itself.
+    /// then. Otherwise see [the builder's errors](Self#errors).
     pub fn place(
         &mut self,
         parent: Part,
@@ -1635,8 +1713,7 @@ impl StepBuilder {
     /// ready for [`write`](crate::write).
     ///
     /// # Errors
-    /// Propagates [`AuthorError`] from the strict constructors; the wiring
-    /// here is fixed, so an error indicates a bug in the builder itself.
+    /// See [the builder's errors](Self#errors).
     pub fn finish(mut self) -> Result<m::StepModel, AuthorError> {
         let a = &mut self.author;
         // Pass 1: one shape representation per part, kept by part index for

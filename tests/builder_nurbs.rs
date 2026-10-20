@@ -303,3 +303,76 @@ fn analytic_surface_kinds_round_trip() {
         .collect();
     assert_eq!(kinds, [true, true, true]);
 }
+
+#[test]
+fn nurbs_that_break_the_standard_are_rejected() {
+    let mut b = StepBuilder::new().expect("builder");
+    let v0 = b.vertex([0.0, 0.0, 0.0]).expect("v0");
+    let v1 = b.vertex([1.0, 0.0, 0.0]).expect("v1");
+    let line = nurbs_line();
+    let broken = [
+        (
+            "degree below 1",
+            NurbsCurve {
+                degree: 0,
+                knots: vec![0.0, 1.0, 2.0],
+                ..line.clone()
+            },
+        ),
+        (
+            "knot count",
+            NurbsCurve {
+                knots: vec![0.0, 0.0, 1.0],
+                ..line.clone()
+            },
+        ),
+        (
+            "knots decrease",
+            NurbsCurve {
+                knots: vec![0.0, 1.0, 0.0, 1.0],
+                ..line.clone()
+            },
+        ),
+        (
+            "repeated more often",
+            NurbsCurve {
+                knots: vec![0.0, 0.0, 0.0, 1.0],
+                ..line.clone()
+            },
+        ),
+        (
+            "weight not positive",
+            NurbsCurve {
+                weights: vec![1.0, 0.0],
+                ..line.clone()
+            },
+        ),
+        (
+            "weights do not match",
+            NurbsCurve {
+                weights: vec![1.0],
+                ..line.clone()
+            },
+        ),
+    ];
+    for (why, curve) in broken {
+        let err = b
+            .edge(v0, v1, CurveInput::Nurbs(curve.clone()))
+            .expect_err("a B-spline that breaks the standard");
+        assert!(
+            matches!(err, step_io::AuthorError::InvalidInput { reason } if reason.contains(why)),
+            "{curve:?}: {err}"
+        );
+    }
+
+    let mut ragged = bilinear_top(1.0);
+    ragged.control_points[1].pop();
+    let mut decreasing = bilinear_top(1.0);
+    decreasing.knots_v = vec![0.0, 1.0, 0.0, 1.0];
+    for surface in [ragged, decreasing] {
+        let err = b
+            .face(SurfaceInput::Nurbs(surface), Orientation::Forward, vec![])
+            .expect_err("a B-spline surface that breaks the standard");
+        assert!(matches!(err, step_io::AuthorError::InvalidInput { .. }));
+    }
+}

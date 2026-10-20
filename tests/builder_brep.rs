@@ -612,3 +612,18 @@ fn manifold_and_void_solids_coexist_in_all_solids() {
         1
     );
 }
+
+#[test]
+fn non_finite_coordinates_are_rejected() {
+    let mut b = StepBuilder::new().expect("builder");
+    let err = b
+        .vertex([f64::NAN, f64::INFINITY, 1.0])
+        .expect_err("Part 21 cannot write NaN");
+    assert!(matches!(
+        err,
+        step_io::AuthorError::NonFiniteReal {
+            entity: "CARTESIAN_POINT",
+            ..
+        }
+    ));
+}

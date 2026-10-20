@@ -519,3 +519,123 @@ fn aggregate_cardinality_is_enforced() {
         }
     ));
 }
+
+#[test]
+fn complex_instance_of_the_wrong_type_is_rejected() {
+    let mut a = Ap242Author::new();
+    let mm = a
+        .add_complex(vec![
+            m::UnitPart::LengthUnit,
+            m::UnitPart::NamedUnit { dimensions: None },
+            m::UnitPart::SiUnit {
+                prefix: Some(m::SiPrefix::Milli),
+                name: m::SiUnitName::Metre,
+            },
+        ])
+        .expect("si length unit complex");
+    // A unit is no curve.
+    let err = a
+        .add_trimmed_curve(
+            String::new(),
+            m::CurveRef::Complex(mm),
+            vec![m::TrimmingSelectRef::ParameterValue(0.0)],
+            vec![m::TrimmingSelectRef::ParameterValue(1.0)],
+            true,
+            m::TrimmingPreference::Parameter,
+        )
+        .expect_err("a unit complex as a curve");
+    assert_eq!(
+        err,
+        AuthorError::InvalidComplex {
+            reason: "not a CURVE"
+        }
+    );
+}
+
+#[test]
+fn cyclic_constructor_enforces_cardinality() {
+    let mut a = Ap242Author::new();
+    let status = a
+        .add_approval_status("approved".to_owned())
+        .expect("status");
+    let approval = a
+        .add_approval(m::ApprovalStatusRef::ApprovalStatus(status), String::new())
+        .expect("approval");
+    // APPLIED_APPROVAL_ASSIGNMENT.items is SET [1:?].
+    let err = a
+        .add_applied_approval_assignment_cyclic(|_| m::AppliedApprovalAssignment {
+            assigned_approval: m::ApprovalRef::Approval(approval),
+            items: Vec::new(),
+        })
+        .expect_err("empty items set is below the minimum");
+    assert!(matches!(
+        err,
+        AuthorError::Cardinality {
+            entity: "APPLIED_APPROVAL_ASSIGNMENT",
+            attribute: "items",
+            ..
+        }
+    ));
+}
+
+#[test]
+fn non_finite_reals_are_rejected() {
+    let mut a = Ap242Author::new();
+    let err = a
+        .add_cartesian_point(String::new(), [f64::NAN, 0.0, 0.0].into())
+        .expect_err("a NaN coordinate");
+    assert_eq!(
+        err,
+        AuthorError::NonFiniteReal {
+            entity: "CARTESIAN_POINT",
+            attribute: "coordinates"
+        }
+    );
+    let at = placement(&mut a);
+    let err = a
+        .add_circle(String::new(), at.clone(), f64::INFINITY)
+        .expect_err("an infinite radius");
+    assert!(matches!(
+        err,
+        AuthorError::NonFiniteReal {
+            entity: "CIRCLE",
+            ..
+        }
+    ));
+
+    // A parameter-value trim, inside a reference select.
+    let circle = a.add_circle(String::new(), at, 1.0).expect("circle");
+    let err = a
+        .add_trimmed_curve(
+            String::new(),
+            m::CurveRef::Circle(circle),
+            vec![m::TrimmingSelectRef::ParameterValue(f64::NAN)],
+            vec![m::TrimmingSelectRef::ParameterValue(1.0)],
+            true,
+            m::TrimmingPreference::Parameter,
+        )
+        .expect_err("a NaN trim");
+    assert_eq!(
+        err,
+        AuthorError::NonFiniteReal {
+            entity: "PARAMETER_VALUE",
+            attribute: "value"
+        }
+    );
+}
+
+// An axis placement at the origin, for curves.
+fn placement(a: &mut Ap242Author) -> m::Axis2PlacementRef {
+    let origin = a
+        .add_cartesian_point(String::new(), [0.0, 0.0, 0.0].into())
+        .expect("point");
+    let frame = a
+        .add_axis2_placement3d(
+            String::new(),
+            m::CartesianPointRef::CartesianPoint(origin),
+            None,
+            None,
+        )
+        .expect("frame");
+    m::Axis2PlacementRef::Axis2Placement3d(frame)
+}
