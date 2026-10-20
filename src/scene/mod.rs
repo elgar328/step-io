@@ -142,7 +142,8 @@ use crate::RefGraph;
 use crate::StepModel;
 
 pub use geometry::{
-    Bound, Curve, CurveKind, Edge, Face, Point, Shell, Solid, Surface, SurfaceKind, Vertex,
+    Bound, Curve, CurveKind, Edge, Face, Point, Shell, Solid, Surface, SurfaceKind, SurfaceModel,
+    Vertex,
 };
 pub use mesh::{Mesh, MeshGroup, MeshNormals};
 pub use nurbs::{NurbsCurve, NurbsSurface};
@@ -195,6 +196,7 @@ debug_by_key!(
     Shell,
     Solid,
     Surface,
+    SurfaceModel,
     Tolerance,
     Version,
     Vertex,

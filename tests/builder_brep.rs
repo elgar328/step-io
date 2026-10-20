@@ -640,3 +640,106 @@ fn non_finite_coordinates_are_rejected() {
         }
     ));
 }
+
+/// A part's box written as a solid, then re-labelled as a surface model: its
+/// closed shell under a `SHELL_BASED_SURFACE_MODEL` in a manifold surface
+/// representation — or the same faces in an open shell.
+fn surface_model_text(open: bool) -> String {
+    let mut b = StepBuilder::new().expect("builder");
+    let part = b.part("skin").expect("part");
+    let faces = box_faces(&mut b, [0.0, 0.0, 0.0], 2.0, false);
+    b.solid(part, "sheet body", faces).expect("solid");
+    let text = common::text(&b.finish().expect("finish"));
+    let line = text
+        .lines()
+        .find(|l| l.contains(" = MANIFOLD_SOLID_BREP("))
+        .expect("the solid")
+        .to_owned();
+    let (head, shell) = line.rsplit_once(',').expect("outer shell ref");
+    let model = format!(
+        "{},({}));",
+        head.replace("MANIFOLD_SOLID_BREP", "SHELL_BASED_SURFACE_MODEL"),
+        shell.trim_end_matches(");")
+    );
+    let text = text.replace(&line, &model).replace(
+        "ADVANCED_BREP_SHAPE_REPRESENTATION(",
+        "MANIFOLD_SURFACE_SHAPE_REPRESENTATION(",
+    );
+    if open {
+        text.replace(" = CLOSED_SHELL(", " = OPEN_SHELL(")
+    } else {
+        text
+    }
+}
+
+#[test]
+fn a_surface_model_lists_its_shells_and_reaches_its_part() {
+    for open in [false, true] {
+        let text = surface_model_text(open);
+        let (model, report) = read(text.as_bytes()).expect("re-read");
+        assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+        let scene = model.scene();
+        assert_eq!(scene.all_solids().count(), 0);
+
+        let models: Vec<_> = scene.all_surface_models().collect();
+        assert_eq!(models.len(), 1);
+        let sm = models[0];
+        assert_eq!(sm.name(), "sheet body");
+        let shells: Vec<_> = sm.shells().collect();
+        assert_eq!(shells.len(), 1);
+        let (shell, shell_use) = shells[0];
+        assert_eq!(shell_use, Orientation::Forward);
+        assert_eq!(shell.is_closed(), !open);
+        assert_eq!(sm.faces().count(), 6);
+
+        // Back from a face to its shell and surface model; no solid.
+        let face = sm.faces().next().expect("a face");
+        assert_eq!(face.shell().expect("its shell").key(), shell.key());
+        assert_eq!(
+            shell.surface_model().expect("its surface model").key(),
+            sm.key()
+        );
+        assert!(shell.solid().is_none());
+        assert!(face.solid().is_none());
+
+        // The part reaches it through its manifold surface representation.
+        let def = scene.all_product_definitions().next().expect("the part");
+        let reached: Vec<_> = def.surface_models().map(|s| s.key()).collect();
+        assert_eq!(reached, [sm.key()]);
+        assert_eq!(def.solids().count(), 0);
+        assert!(sm.color().is_none() && shell.color().is_none());
+        assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+    }
+}
+
+/// A closed shell used reversed by a surface model, through an
+/// `ORIENTED_CLOSED_SHELL(.F.)`.
+#[test]
+fn a_surface_model_reports_a_reversed_shell() {
+    let text = surface_model_text(false);
+    let shell_line = text
+        .lines()
+        .find(|l| l.contains(" = CLOSED_SHELL("))
+        .expect("the shell")
+        .to_owned();
+    let shell_id = shell_line.split(' ').next().expect("its id").to_owned();
+    let wrapped = text.replacen(&format!("({shell_id}))"), "(#999999))", 1);
+    let wrapped = wrapped.replace(
+        &shell_line,
+        &format!("{shell_line}\n#999999 = ORIENTED_CLOSED_SHELL('',*,{shell_id},.F.);"),
+    );
+    let (model, report) = read(wrapped.as_bytes()).expect("re-read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    let scene = model.scene();
+    let sm = scene
+        .all_surface_models()
+        .next()
+        .expect("the surface model");
+    let (shell, shell_use) = sm.shells().next().expect("its shell");
+    assert_eq!(shell_use, Orientation::Reversed);
+    assert!(shell.is_closed());
+    assert_eq!(
+        shell.surface_model().expect("through the wrapper").key(),
+        sm.key()
+    );
+}

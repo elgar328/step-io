@@ -49,6 +49,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `FeatureGeometry` and `Target` implement `Debug` as well, and
   `FeatureGeometry` is `Clone` and `Copy`.
 - `Version::product()` reaches the product a version belongs to.
+- `SurfaceModel` is a surface body, a `SHELL_BASED_SURFACE_MODEL`: its
+  `shells()`, each with the `Orientation` the model uses it in, its `faces()`,
+  and colour, transparency, layer and visibility. `Scene::all_surface_models()`
+  lists them, and `ProductDef::surface_models()` and
+  `MappedInstance::surface_models()` reach them from a part, through manifold
+  surface representations and the representations bridged to them;
+  `ProductDef::solids()` and `MappedInstance::solids()` follow the same
+  representations.
+- `Shell` covers open shells as well (`is_closed()`), reaches back to its
+  `solid()` or `surface_model()`, and has colour, transparency, layer and
+  visibility; `Face::shell()` gives the shell listing a face.
 - `Bound::vertex()` gives the vertex of a `VERTEX_LOOP` boundary, such as a
   cone's apex, which has no edges.
 - `Curve::curve_3d()` reaches the 3D curve of a `SURFACE_CURVE`,

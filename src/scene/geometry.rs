@@ -1,7 +1,7 @@
 //! Read-only b-rep geometry navigation handles over a [`Scene`].
 //!
-//! The walk is `Solid → Face → Surface` and `Face → Bound → Edge → Curve /
-//! Vertex → Point`. Surfaces and curves report their analytic kind
+//! The walk is `Solid` or `SurfaceModel → Shell → Face → Surface` and `Face →
+//! Bound → Edge → Curve / Vertex → Point`. Surfaces and curves report their analytic kind
 //! (`Plane`, `Cylindrical`, …); a shape outside the handled set comes back
 //! as `SurfaceKind::Other` / `CurveKind::Other` carrying the raw STEP
 //! keyword, never hidden.
@@ -43,6 +43,15 @@ impl Scene<'_> {
             .indices()
             .map(move |i| Solid::from_void_id(cx, m::BrepWithVoidsId(i)));
         manifold.chain(with_voids)
+    }
+
+    /// Every surface model in the model (`SHELL_BASED_SURFACE_MODEL`).
+    pub fn all_surface_models(&self) -> impl Iterator<Item = SurfaceModel<'_>> + '_ {
+        let cx = self.ctx();
+        cx.model
+            .shell_based_surface_model_arena
+            .indices()
+            .map(move |i| SurfaceModel::from_id(cx, m::ShellBasedSurfaceModelId(i)))
     }
 
     /// Every face in the model (`ADVANCED_FACE` and `FACE_SURFACE`).
@@ -193,7 +202,7 @@ impl<'m> Solid<'m> {
         let this = self.about();
         let cx = this.cx;
         let (id, orientation) = resolve_closed_shell(cx, this.name_and_outer().1)?;
-        Some((Shell { cx, id }, orientation))
+        Some((Shell::closed(cx, id), orientation))
     }
 
     /// Faces of the solid's outer shell — [`outer`](Self::outer)'s faces. A
@@ -227,7 +236,7 @@ impl<'m> Solid<'m> {
             };
             let (id, orientation) =
                 resolve_oriented_closed_shell(cx, cx.model.oriented_closed_shell_arena.get(o.0))?;
-            Some((Shell { cx, id }, orientation))
+            Some((Shell::closed(cx, id), orientation))
         })
     }
 }
@@ -236,38 +245,225 @@ impl<'m> Solid<'m> {
 // Shell
 // ---------------------------------------------------------------------------
 
-/// A closed shell (`CLOSED_SHELL`) bounding a [`Solid`] — its outer boundary
-/// or a cavity. How the solid uses the shell (forward or reversed) comes with
-/// it from [`Solid::outer`] and [`Solid::voids`], as an edge's direction in a
-/// loop comes with it from [`Bound::oriented_edges`].
+/// A shell: a closed shell (`CLOSED_SHELL`) bounding a [`Solid`] — its outer
+/// boundary or a cavity — or a closed or open shell (`OPEN_SHELL`) of a
+/// [`SurfaceModel`]. How the solid or surface model uses the shell (forward or
+/// reversed) comes with it from [`Solid::outer`], [`Solid::voids`] and
+/// [`SurfaceModel::shells`], as an edge's direction in a loop comes with it
+/// from [`Bound::oriented_edges`].
 #[derive(Clone, Copy)]
 pub struct Shell<'m> {
     cx: Ctx<'m>,
-    id: m::ClosedShellId,
+    which: ShellImpl,
+}
+
+#[derive(Clone, Copy)]
+enum ShellImpl {
+    Closed(m::ClosedShellId),
+    Open(m::OpenShellId),
 }
 
 impl<'m> Shell<'m> {
+    fn closed(cx: Ctx<'m>, id: m::ClosedShellId) -> Self {
+        Shell {
+            cx,
+            which: ShellImpl::Closed(id),
+        }
+    }
+
     /// This shell's global identity (a `Copy` key for maps / deduplication;
-    /// the `CLOSED_SHELL`, however it is wrapped).
+    /// the `CLOSED_SHELL` or `OPEN_SHELL`, however it is wrapped).
     pub fn key(&self) -> m::EntityKey {
-        m::EntityKey::ClosedShell(self.id)
+        match self.which {
+            ShellImpl::Closed(i) => m::EntityKey::ClosedShell(i),
+            ShellImpl::Open(i) => m::EntityKey::OpenShell(i),
+        }
+    }
+
+    /// `true` for a `CLOSED_SHELL`, `false` for an `OPEN_SHELL`.
+    pub fn is_closed(&self) -> bool {
+        matches!(self.which, ShellImpl::Closed(_))
+    }
+
+    /// (`name`, `cfs_faces`) — the two shells share this layout.
+    fn parts(&self) -> (&'m str, &'m [m::FaceRef]) {
+        let model = self.cx.model;
+        match self.which {
+            ShellImpl::Closed(i) => {
+                let s = model.closed_shell_arena.get(i.0);
+                (model.text(s.name), &s.cfs_faces)
+            }
+            ShellImpl::Open(i) => {
+                let s = model.open_shell_arena.get(i.0);
+                (model.text(s.name), &s.cfs_faces)
+            }
+        }
     }
 
     pub fn name(&self) -> &'m str {
-        let model = self.cx.model;
-        model.text(model.closed_shell_arena.get(self.id.0).name)
+        self.parts().0
     }
 
     /// The faces of this shell, as stored (each with its own
     /// [`orientation`](Face::orientation)).
     pub fn faces(&self) -> impl Iterator<Item = Face<'m>> + use<'m> {
         let cx = self.cx;
-        cx.model
-            .closed_shell_arena
-            .get(self.id.0)
-            .cfs_faces
+        self.parts()
+            .1
             .iter()
             .filter_map(move |fr| Face::from_ref(cx, fr))
+    }
+
+    /// The solid this closed shell bounds, as its outer shell or a cavity —
+    /// directly or through `ORIENTED_CLOSED_SHELL` wrappers. `None` for an
+    /// open shell or a shell of a surface model.
+    pub fn solid(&self) -> Option<Solid<'m>> {
+        let ShellImpl::Closed(id) = self.which else {
+            return None;
+        };
+        Solid::of_closed_shell(self.cx, id)
+    }
+
+    /// The surface model this shell belongs to — directly or, for a closed
+    /// shell, through `ORIENTED_CLOSED_SHELL` wrappers. `None` for a shell of a
+    /// solid.
+    pub fn surface_model(&self) -> Option<SurfaceModel<'m>> {
+        let cx = self.cx;
+        let rg = cx.ref_graph();
+        let pick = |r: m::EntityKey| match r {
+            m::EntityKey::ShellBasedSurfaceModel(id) => Some(SurfaceModel { cx, id }),
+            _ => None,
+        };
+        match self.which {
+            ShellImpl::Closed(id) => closed_shell_user(rg, id, pick),
+            ShellImpl::Open(_) => rg.referrers(self.key()).iter().find_map(|&r| pick(r)),
+        }
+    }
+
+    /// The colour styled onto this shell, if any.
+    pub fn color(&self) -> Option<crate::scene::presentation::Rgb> {
+        let this = self.about();
+        crate::scene::presentation::colour_of(this.cx, this.key())
+    }
+
+    /// The transparency styled onto this shell (`0.0` opaque … `1.0` fully
+    /// transparent), if any.
+    pub fn transparency(&self) -> Option<f64> {
+        let this = self.about();
+        crate::scene::presentation::transparency_of(this.cx, this.key())
+    }
+
+    /// The name of the presentation layer this shell belongs to, if any.
+    pub fn layer(&self) -> Option<&'m str> {
+        crate::scene::presentation::layer_of(self.cx, self.key())
+    }
+
+    /// Whether this shell is visible — `false` if an `INVISIBILITY` hides it
+    /// (via its styled item or its layer). Defaults to visible.
+    pub fn is_visible(&self) -> bool {
+        crate::scene::presentation::is_visible(self.cx, self.key())
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Surface model
+// ---------------------------------------------------------------------------
+
+/// A surface body (`SHELL_BASED_SURFACE_MODEL`): faces in open or closed shells
+/// that bound no solid — a sheet, or a closed skin kept as surfaces.
+#[derive(Clone, Copy)]
+pub struct SurfaceModel<'m> {
+    cx: Ctx<'m>,
+    id: m::ShellBasedSurfaceModelId,
+}
+
+impl<'m> SurfaceModel<'m> {
+    /// Construct a surface model handle from its id — used by other scene
+    /// modules (e.g. `product`) to bridge into geometry.
+    pub(crate) fn from_id(cx: Ctx<'m>, id: m::ShellBasedSurfaceModelId) -> Self {
+        SurfaceModel { cx, id }
+    }
+
+    /// This surface model's global identity (a `Copy` key for maps /
+    /// deduplication).
+    pub fn key(&self) -> m::EntityKey {
+        m::EntityKey::ShellBasedSurfaceModel(self.id)
+    }
+
+    pub fn name(&self) -> &'m str {
+        let model = self.cx.model;
+        model.text(model.shell_based_surface_model_arena.get(self.id.0).name)
+    }
+
+    /// The shells of this surface model, each with the way the model uses it:
+    /// `Reversed` for a closed shell reached through an `ORIENTED_CLOSED_SHELL`
+    /// with `.F.`. A vertex or wire shell, which has no faces, is reported in
+    /// [`Scene::warnings`] and skipped.
+    pub fn shells(&self) -> impl Iterator<Item = (Shell<'m>, Orientation)> + 'm {
+        let this = self.about();
+        let cx = this.cx;
+        cx.model
+            .shell_based_surface_model_arena
+            .get(this.id.0)
+            .sbsm_boundary
+            .iter()
+            .filter_map(move |b| match b {
+                m::ShellRef::ClosedShell(i) => Some((Shell::closed(cx, *i), Orientation::Forward)),
+                m::ShellRef::OpenShell(i) => Some((
+                    Shell {
+                        cx,
+                        which: ShellImpl::Open(*i),
+                    },
+                    Orientation::Forward,
+                )),
+                m::ShellRef::OrientedClosedShell(i) => {
+                    let oc = cx.model.oriented_closed_shell_arena.get(i.0);
+                    let (id, orientation) = resolve_oriented_closed_shell(cx, oc)?;
+                    Some((Shell::closed(cx, id), orientation))
+                }
+                m::ShellRef::VertexShell(_) | m::ShellRef::WireShell(_) => {
+                    cx.warn(
+                        "SHELL_BASED_SURFACE_MODEL: a vertex or wire shell is not read".to_owned(),
+                    );
+                    None
+                }
+                m::ShellRef::Complex(_) => {
+                    cx.warn("SHELL_BASED_SURFACE_MODEL: shell is a complex instance".to_owned());
+                    None
+                }
+            })
+    }
+
+    /// The faces of all this surface model's shells. A face points the way its
+    /// own [`orientation`](Face::orientation) and its shell's orientation in
+    /// [`shells`](Self::shells) give together.
+    pub fn faces(&self) -> impl Iterator<Item = Face<'m>> + 'm {
+        self.shells().flat_map(|(shell, _)| shell.faces())
+    }
+
+    /// The colour styled onto this surface model, if any.
+    pub fn color(&self) -> Option<crate::scene::presentation::Rgb> {
+        let this = self.about();
+        crate::scene::presentation::colour_of(this.cx, this.key())
+    }
+
+    /// The transparency styled onto this surface model (`0.0` opaque … `1.0`
+    /// fully transparent), if any.
+    pub fn transparency(&self) -> Option<f64> {
+        let this = self.about();
+        crate::scene::presentation::transparency_of(this.cx, this.key())
+    }
+
+    /// The name of the presentation layer this surface model belongs to, if
+    /// any.
+    pub fn layer(&self) -> Option<&'m str> {
+        crate::scene::presentation::layer_of(self.cx, self.key())
+    }
+
+    /// Whether this surface model is visible — `false` if an `INVISIBILITY`
+    /// hides it (via its styled item or its layer). Defaults to visible.
+    pub fn is_visible(&self) -> bool {
+        crate::scene::presentation::is_visible(self.cx, self.key())
     }
 }
 
@@ -497,6 +693,23 @@ impl<'m> Face<'m> {
             }
         }
         None
+    }
+
+    /// The shell listing this face — a `CLOSED_SHELL` of a solid or surface
+    /// model, or an `OPEN_SHELL` of a surface model.
+    pub fn shell(&self) -> Option<Shell<'m>> {
+        let cx = self.cx;
+        cx.ref_graph()
+            .referrers(self.key())
+            .iter()
+            .find_map(|r| match r {
+                m::EntityKey::ClosedShell(i) => Some(Shell::closed(cx, *i)),
+                m::EntityKey::OpenShell(i) => Some(Shell {
+                    cx,
+                    which: ShellImpl::Open(*i),
+                }),
+                _ => None,
+            })
     }
 }
 
@@ -1234,16 +1447,30 @@ impl<'m> Point<'m> {
 /// The solid whose outer shell or void is the closed shell `cs` — directly
 /// or through `ORIENTED_CLOSED_SHELL` wrappers.
 fn closed_shell_to_solid(rg: &RefGraph, cs: m::ClosedShellId) -> Option<SolidImpl> {
+    closed_shell_user(rg, cs, |r| match r {
+        m::EntityKey::ManifoldSolidBrep(msb) => Some(SolidImpl::Manifold(msb)),
+        m::EntityKey::BrepWithVoids(bwv) => Some(SolidImpl::WithVoids(bwv)),
+        _ => None,
+    })
+}
+
+/// The first referrer `pick` accepts of the closed shell `cs` — directly or
+/// through `ORIENTED_CLOSED_SHELL` wrappers.
+fn closed_shell_user<T>(
+    rg: &RefGraph,
+    cs: m::ClosedShellId,
+    pick: impl Fn(m::EntityKey) -> Option<T>,
+) -> Option<T> {
     let mut level = vec![m::EntityKey::ClosedShell(cs)];
     for _ in 0..=SHELL_WRAP_DEPTH {
         let mut wrappers = Vec::new();
         for &key in &level {
             for &r in rg.referrers(key) {
-                match r {
-                    m::EntityKey::ManifoldSolidBrep(msb) => return Some(SolidImpl::Manifold(msb)),
-                    m::EntityKey::BrepWithVoids(bwv) => return Some(SolidImpl::WithVoids(bwv)),
-                    m::EntityKey::OrientedClosedShell(_) => wrappers.push(r),
-                    _ => {}
+                if let Some(found) = pick(r) {
+                    return Some(found);
+                }
+                if matches!(r, m::EntityKey::OrientedClosedShell(_)) {
+                    wrappers.push(r);
                 }
             }
         }
@@ -1328,4 +1555,13 @@ fn resolve_oriented_edge<'m>(
     }
 }
 
-about_by_key!(Bound, Curve, Edge, Face, Solid, Surface);
+about_by_key!(
+    Bound,
+    Curve,
+    Edge,
+    Face,
+    Shell,
+    Solid,
+    Surface,
+    SurfaceModel
+);

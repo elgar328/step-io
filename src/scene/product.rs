@@ -14,7 +14,7 @@
 use std::collections::HashSet;
 
 use crate::generated::model as m;
-use crate::scene::geometry::Solid;
+use crate::scene::geometry::{Solid, SurfaceModel};
 use crate::scene::pmi;
 use crate::scene::{Ctx, Scene};
 
@@ -461,17 +461,38 @@ impl<'m> ProductDef<'m> {
     /// equivalence bridge is followed to collect those solids too.
     pub fn solids(&self) -> impl Iterator<Item = Solid<'m>> + 'm {
         let cx = self.cx;
-        let mut out: Vec<Solid<'m>> = Vec::new();
+        let mut seen: HashSet<m::EntityKey> = HashSet::new();
+        self.shape_items()
+            .into_iter()
+            .filter_map(move |it| item_solid(cx, it))
+            .filter(move |s| seen.insert(s.key()))
+    }
+
+    /// The surface models (`SHELL_BASED_SURFACE_MODEL`) of this part, found as
+    /// [`solids`](Self::solids) are: in its shape representations and those
+    /// they are bridged to.
+    pub fn surface_models(&self) -> impl Iterator<Item = SurfaceModel<'m>> + 'm {
+        let cx = self.cx;
+        let mut seen: HashSet<m::EntityKey> = HashSet::new();
+        self.shape_items()
+            .into_iter()
+            .filter_map(move |it| item_surface_model(cx, it))
+            .filter(move |s| seen.insert(s.key()))
+    }
+
+    /// The items of every shape representation of this part, and of those
+    /// bridged to them, in order. An item shared by two representations comes
+    /// twice.
+    fn shape_items(&self) -> Vec<&'m m::RepresentationItemRef> {
+        let cx = self.cx;
+        let mut out = Vec::new();
         // Shared across every representation reached: guards relationship cycles
         // and keeps a shape-equivalence bridge from re-collecting a rep.
         let mut visited: HashSet<m::EntityKey> = HashSet::new();
         for rep in def_shape_reps(cx, self.key()) {
-            collect_solids_from_repr(cx, rep, &mut out, &mut visited);
+            collect_shape_items(cx, rep, &mut out, &mut visited);
         }
-        // A brep shared by two representations could be collected twice.
-        let mut seen: HashSet<m::EntityKey> = HashSet::new();
-        out.retain(|s| seen.insert(s.key()));
-        out.into_iter()
+        out
     }
 
     /// The shape features of this part (`SHAPE_ASPECT`s whose `of_shape`
@@ -1277,11 +1298,18 @@ impl<'m> MappedInstance<'m> {
             .and_then(|map| rep_items(cx, &map.mapped_representation))
             .into_iter()
             .flatten()
-            .filter_map(move |it| match it {
-                m::RepresentationItemRef::ManifoldSolidBrep(id) => Some(Solid::from_id(cx, *id)),
-                m::RepresentationItemRef::BrepWithVoids(id) => Some(Solid::from_void_id(cx, *id)),
-                _ => None,
-            })
+            .filter_map(move |it| item_solid(cx, it))
+    }
+
+    /// The surface models of the source representation.
+    pub fn surface_models(&self) -> impl Iterator<Item = SurfaceModel<'m>> + 'm {
+        let this = self.about();
+        let cx = this.cx;
+        this.map()
+            .and_then(|map| rep_items(cx, &map.mapped_representation))
+            .into_iter()
+            .flatten()
+            .filter_map(move |it| item_surface_model(cx, it))
     }
 
     /// Nested mapped items inside the source representation — one level of an
@@ -1300,27 +1328,10 @@ impl<'m> MappedInstance<'m> {
     }
 }
 
-/// The `items` of a shape-carrying representation (the kinds mapped items
-/// point at in practice); other representation kinds carry no b-rep items.
+/// The `items` of a shape representation (see [`shape_rep_items`]) — what a
+/// mapped item stamps; other representation kinds carry no shape items.
 fn rep_items<'m>(cx: Ctx<'m>, r: &m::RepresentationRef) -> Option<&'m [m::RepresentationItemRef]> {
-    match r {
-        m::RepresentationRef::ShapeRepresentation(id) => {
-            Some(&cx.model.shape_representation_arena.get(id.0).items)
-        }
-        m::RepresentationRef::AdvancedBrepShapeRepresentation(id) => Some(
-            &cx.model
-                .advanced_brep_shape_representation_arena
-                .get(id.0)
-                .items,
-        ),
-        m::RepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(id) => Some(
-            &cx.model
-                .geometrically_bounded_wireframe_shape_representation_arena
-                .get(id.0)
-                .items,
-        ),
-        _ => None,
-    }
+    shape_rep_items(cx, r).map(|(_, items)| items)
 }
 
 // ---------------------------------------------------------------------------
@@ -1483,45 +1494,72 @@ fn def_shape_reps(cx: Ctx<'_>, def: m::EntityKey) -> Vec<&m::RepresentationRef> 
     out
 }
 
-/// Push every `MANIFOLD_SOLID_BREP` reachable from a representation's `items`,
-/// following plain `SHAPE_REPRESENTATION_RELATIONSHIP` (shape equivalence) to
-/// bridged representations. The common assembly export puts a component's
-/// placement in one `SHAPE_REPRESENTATION` and its geometry in a separate
-/// `ADVANCED_BREP_SHAPE_REPRESENTATION`, linked by such a relationship. The
-/// `WITH_TRANSFORMATION` variant is a complex instance (not in this arena), so
-/// occurrence placement is never followed here. `visited` guards cycles.
-fn collect_solids_from_repr<'m>(
+/// The key and `items` of a shape representation this layer reads geometry
+/// from: a plain, advanced b-rep, manifold surface, or geometrically bounded
+/// surface or wireframe `SHAPE_REPRESENTATION`.
+fn shape_rep_items<'m>(
     cx: Ctx<'m>,
     r: &m::RepresentationRef,
-    out: &mut Vec<Solid<'m>>,
-    visited: &mut HashSet<m::EntityKey>,
-) {
-    let (key, items): (m::EntityKey, &[m::RepresentationItemRef]) = match r {
+) -> Option<(m::EntityKey, &'m [m::RepresentationItemRef])> {
+    let model = cx.model;
+    Some(match r {
         m::RepresentationRef::ShapeRepresentation(i) => (
             m::EntityKey::ShapeRepresentation(*i),
-            &cx.model.shape_representation_arena.get(i.0).items,
+            &model.shape_representation_arena.get(i.0).items,
         ),
         m::RepresentationRef::AdvancedBrepShapeRepresentation(i) => (
             m::EntityKey::AdvancedBrepShapeRepresentation(*i),
-            &cx.model
+            &model
                 .advanced_brep_shape_representation_arena
                 .get(i.0)
                 .items,
         ),
-        _ => return,
+        m::RepresentationRef::ManifoldSurfaceShapeRepresentation(i) => (
+            m::EntityKey::ManifoldSurfaceShapeRepresentation(*i),
+            &model
+                .manifold_surface_shape_representation_arena
+                .get(i.0)
+                .items,
+        ),
+        m::RepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => (
+            m::EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(*i),
+            &model
+                .geometrically_bounded_surface_shape_representation_arena
+                .get(i.0)
+                .items,
+        ),
+        m::RepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => (
+            m::EntityKey::GeometricallyBoundedWireframeShapeRepresentation(*i),
+            &model
+                .geometrically_bounded_wireframe_shape_representation_arena
+                .get(i.0)
+                .items,
+        ),
+        _ => return None,
+    })
+}
+
+/// Push every item of a shape representation, following plain
+/// `SHAPE_REPRESENTATION_RELATIONSHIP` (shape equivalence) to bridged
+/// representations. The common assembly export puts a component's placement in
+/// one `SHAPE_REPRESENTATION` and its geometry in a separate representation
+/// (an `ADVANCED_BREP_SHAPE_REPRESENTATION`, a manifold surface one, …), linked
+/// by such a relationship. The `WITH_TRANSFORMATION` variant is a complex
+/// instance (not in this arena), so occurrence placement is never followed
+/// here. `visited` guards cycles.
+fn collect_shape_items<'m>(
+    cx: Ctx<'m>,
+    r: &m::RepresentationRef,
+    out: &mut Vec<&'m m::RepresentationItemRef>,
+    visited: &mut HashSet<m::EntityKey>,
+) {
+    let Some((key, items)) = shape_rep_items(cx, r) else {
+        return;
     };
     if !visited.insert(key) {
         return;
     }
-    for it in items {
-        match it {
-            m::RepresentationItemRef::ManifoldSolidBrep(sid) => out.push(Solid::from_id(cx, *sid)),
-            m::RepresentationItemRef::BrepWithVoids(sid) => {
-                out.push(Solid::from_void_id(cx, *sid));
-            }
-            _ => {}
-        }
-    }
+    out.extend(items);
     // Hop across plain shape-equivalence relationships to the other endpoint.
     let rg = cx.ref_graph();
     for referrer in rg.referrers(key) {
@@ -1541,8 +1579,27 @@ fn collect_solids_from_repr<'m>(
             continue;
         };
         if let Ok(other_ref) = m::RepresentationRef::from_any(other) {
-            collect_solids_from_repr(cx, &other_ref, out, visited);
+            collect_shape_items(cx, &other_ref, out, visited);
         }
+    }
+}
+
+/// A representation item as a solid, if it is one.
+fn item_solid<'m>(cx: Ctx<'m>, it: &m::RepresentationItemRef) -> Option<Solid<'m>> {
+    match it {
+        m::RepresentationItemRef::ManifoldSolidBrep(id) => Some(Solid::from_id(cx, *id)),
+        m::RepresentationItemRef::BrepWithVoids(id) => Some(Solid::from_void_id(cx, *id)),
+        _ => None,
+    }
+}
+
+/// A representation item as a surface model, if it is one.
+fn item_surface_model<'m>(cx: Ctx<'m>, it: &m::RepresentationItemRef) -> Option<SurfaceModel<'m>> {
+    match it {
+        m::RepresentationItemRef::ShellBasedSurfaceModel(id) => {
+            Some(SurfaceModel::from_id(cx, *id))
+        }
+        _ => None,
     }
 }
 
