@@ -27,6 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   parabola wherever a plane cuts a cone parallel to a side.
 - `CurveKind::Parabola` and `CurveKind::Hyperbola` give the two curves with
   their parameters (focal distance; semi-axes).
+- `to_nurbs()` converts parabolas and hyperbolas exactly: the span of an
+  edge, a trimmed curve or a composite curve's segment becomes a quadratic
+  B-spline for a parabola and rational quadratic pieces for a hyperbola. A
+  trim given as a point is followed rather than its parameter: writers
+  disagree on a parabola's parameter, Open CASCADE writing `2F·u` where the
+  standard has `u`.
 
 ### Changed
 

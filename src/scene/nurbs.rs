@@ -625,9 +625,10 @@ fn arc_from_trims(
     Some(arc_nurbs(center, x, y, a, b, theta1, sweep))
 }
 
-/// A trimmed line (→ segment), trimmed circle/ellipse (→ arc), or trimmed
-/// B-spline-family basis (→ the exact knot-inserted subcurve). Other basis
-/// curves are not yet supported (→ `None`).
+/// A trimmed line (→ segment), trimmed circle/ellipse (→ arc), trimmed
+/// parabola/hyperbola (→ the exact span), or trimmed B-spline-family basis
+/// (→ the exact knot-inserted subcurve). Other basis curves are not yet
+/// supported (→ `None`).
 pub(crate) fn trimmed_to_nurbs(cx: Ctx<'_>, t: &m::TrimmedCurve) -> Option<NurbsCurve> {
     match &t.basis_curve {
         m::CurveRef::Line(id) => {
@@ -652,6 +653,20 @@ pub(crate) fn trimmed_to_nurbs(cx: Ctx<'_>, t: &m::TrimmedCurve) -> Option<Nurbs
             let e = cx.model.ellipse_arena.get(id.0);
             let (center, x, y, _) = placement_frame_3d(cx, &e.position)?;
             arc_from_trims(cx, t, (center, x, y), (e.semi_axis_1, e.semi_axis_2))
+        }
+        r @ (m::CurveRef::Parabola(_) | m::CurveRef::Hyperbola(_)) => {
+            let (conic, frame) = OpenConic::of(cx, r)?;
+            let (Some(u0), Some(u1)) = (
+                open_conic_trim_param(cx, &t.trim_1, conic, frame),
+                open_conic_trim_param(cx, &t.trim_2, conic, frame),
+            ) else {
+                cx.warn(format!(
+                    "TRIMMED_CURVE.to_nurbs: no usable trim on a {}",
+                    conic.keyword()
+                ));
+                return None;
+            };
+            open_conic_segment(cx, conic, frame, u0, u1, "TRIMMED_CURVE")
         }
         _ => {
             let basis = trimmed_basis_nurbs(cx, &t.basis_curve)?;
@@ -1134,6 +1149,13 @@ pub(crate) fn edge_to_nurbs(
             cx.warn("EDGE_CURVE.to_nurbs: closed edge on a line".to_owned());
             return None;
         }
+        if let Some((conic, _)) = OpenConic::of(cx, r) {
+            cx.warn(format!(
+                "EDGE_CURVE.to_nurbs: closed edge on a {}",
+                conic.keyword()
+            ));
+            return None;
+        }
         return resolved_curve_to_nurbs(cx, r);
     }
     match r {
@@ -1164,6 +1186,11 @@ pub(crate) fn edge_to_nurbs(
                 p1,
                 same_sense,
             ))
+        }
+        r @ (m::CurveRef::Parabola(_) | m::CurveRef::Hyperbola(_)) => {
+            let (conic, frame) = OpenConic::of(cx, r)?;
+            let (u0, u1) = (conic.param(frame, p0), conic.param(frame, p1));
+            open_conic_segment(cx, conic, frame, u0, u1, "EDGE_CURVE")
         }
         other => {
             let whole = resolved_curve_to_nurbs(cx, other)?;
@@ -1204,6 +1231,177 @@ fn conic_edge_arc(
         }
     }
     arc_nurbs(center, x, y, ab.0, ab.1, theta1, theta2 - theta1)
+}
+
+// --- open conics: parabola, hyperbola ---
+
+/// A parabola or a hyperbola, the two conics without a closed form: a span
+/// between two parameters converts exactly. Parameters are as ISO 10303-42
+/// defines them — parabola `C + F(u² x + 2u y)`, hyperbola
+/// `C + R1 cosh(u) x + R2 sinh(u) y` (the branch along `x`).
+#[derive(Clone, Copy)]
+enum OpenConic {
+    Parabola { focal: f64 },
+    Hyperbola { semi_axis: f64, semi_imag_axis: f64 },
+}
+
+impl OpenConic {
+    /// The conic a curve reference names, with its frame; `None` for any other
+    /// curve or a placement without a 3D frame.
+    fn of(cx: Ctx<'_>, r: &m::CurveRef) -> Option<(Self, Frame)> {
+        match r {
+            m::CurveRef::Parabola(id) => {
+                let p = cx.model.parabola_arena.get(id.0);
+                let conic = OpenConic::Parabola {
+                    focal: p.focal_dist,
+                };
+                Some((conic, placement_frame_3d(cx, &p.position)?))
+            }
+            m::CurveRef::Hyperbola(id) => {
+                let h = cx.model.hyperbola_arena.get(id.0);
+                let conic = OpenConic::Hyperbola {
+                    semi_axis: h.semi_axis,
+                    semi_imag_axis: h.semi_imag_axis,
+                };
+                Some((conic, placement_frame_3d(cx, &h.position)?))
+            }
+            _ => None,
+        }
+    }
+
+    fn keyword(self) -> &'static str {
+        match self {
+            OpenConic::Parabola { .. } => "parabola",
+            OpenConic::Hyperbola { .. } => "hyperbola",
+        }
+    }
+
+    /// The parameter of the curve point level with `p` along the frame's `y`.
+    fn param(self, frame: Frame, p: [f64; 3]) -> f64 {
+        let (center, _, y, _) = frame;
+        let ly = dot(sub(p, center), y);
+        match self {
+            OpenConic::Parabola { focal } => ly / (2.0 * focal),
+            OpenConic::Hyperbola { semi_imag_axis, .. } => (ly / semi_imag_axis).asinh(),
+        }
+    }
+
+    /// The span from parameter `u0` to `u1`, exactly: a quadratic Bézier for a
+    /// parabola, rational quadratic pieces for a hyperbola. `None` when a value
+    /// is not finite (a zero focal distance, or a hyperbola parameter past
+    /// where `cosh` overflows).
+    // Piece counts convert to/from f64 for the knot vector; they are small.
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        clippy::cast_precision_loss
+    )]
+    fn segment(self, frame: Frame, u0: f64, u1: f64) -> Option<NurbsCurve> {
+        let (center, x, y, _) = frame;
+        let at = |lx: f64, ly: f64| add(center, add(scale(x, lx), scale(y, ly)));
+        let curve = match self {
+            OpenConic::Parabola { focal } => NurbsCurve {
+                degree: 2,
+                control_points: vec![
+                    at(focal * u0 * u0, focal * 2.0 * u0),
+                    at(focal * u0 * u1, focal * (u0 + u1)),
+                    at(focal * u1 * u1, focal * 2.0 * u1),
+                ],
+                weights: vec![1.0; 3],
+                knots: vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
+            },
+            OpenConic::Hyperbola {
+                semi_axis,
+                semi_imag_axis,
+            } => {
+                // cosh overflows past |u| ≈ 710; beyond that nothing is finite.
+                if !(u0.abs() < 710.0 && u1.abs() < 710.0) {
+                    return None;
+                }
+                let pieces = ((u1 - u0).abs().ceil() as usize).max(1);
+                let du = (u1 - u0) / pieces as f64;
+                let w = (du / 2.0).cosh();
+                let on = |c: f64, s: f64| at(semi_axis * c, semi_imag_axis * s);
+                let mut control_points = vec![on(u0.cosh(), u0.sinh())];
+                let mut weights = vec![1.0];
+                for k in 0..pieces {
+                    let mid = u0 + du * (k as f64 + 0.5);
+                    control_points.push(on(mid.cosh() / w, mid.sinh() / w));
+                    weights.push(w);
+                    let end = u0 + du * (k as f64 + 1.0);
+                    control_points.push(on(end.cosh(), end.sinh()));
+                    weights.push(1.0);
+                }
+                let mut knots = vec![0.0; 3];
+                for i in 1..pieces {
+                    knots.extend([i as f64; 2]);
+                }
+                knots.extend([pieces as f64; 3]);
+                NurbsCurve {
+                    degree: 2,
+                    control_points,
+                    weights,
+                    knots,
+                }
+            }
+        };
+        curve
+            .control_points
+            .iter()
+            .flatten()
+            .chain(&curve.weights)
+            .all(|v| v.is_finite())
+            .then_some(curve)
+    }
+}
+
+/// The parameter one trim of an open conic names: a `CARTESIAN_POINT` when the
+/// trim has one, else its `PARAMETER_VALUE`. The point is taken whatever
+/// `master_representation` prefers: writers disagree on the parabola's
+/// parameter (Open CASCADE writes `2F·u`), while the point is unambiguous.
+fn open_conic_trim_param(
+    cx: Ctx<'_>,
+    trim: &[m::TrimmingSelectRef],
+    conic: OpenConic,
+    frame: Frame,
+) -> Option<f64> {
+    let point = trim.iter().find_map(|s| match s {
+        m::TrimmingSelectRef::CartesianPoint(id) => {
+            let c = &cx.model.cartesian_point_arena.get(id.0).coordinates;
+            Some([
+                c.first().copied().unwrap_or(0.0),
+                c.get(1).copied().unwrap_or(0.0),
+                c.get(2).copied().unwrap_or(0.0),
+            ])
+        }
+        _ => None,
+    });
+    if let Some(p) = point {
+        return Some(conic.param(frame, p));
+    }
+    trim.iter().find_map(|s| match s {
+        m::TrimmingSelectRef::ParameterValue(v) => Some(*v),
+        _ => None,
+    })
+}
+
+/// [`OpenConic::segment`], with a warning in place of a `None`.
+fn open_conic_segment(
+    cx: Ctx<'_>,
+    conic: OpenConic,
+    frame: Frame,
+    u0: f64,
+    u1: f64,
+    what: &str,
+) -> Option<NurbsCurve> {
+    let curve = conic.segment(frame, u0, u1);
+    if curve.is_none() {
+        cx.warn(format!(
+            "{what}.to_nurbs: {} span not finite",
+            conic.keyword()
+        ));
+    }
+    curve
 }
 
 // --- composite curves (segment chains joined into one NURBS) ---

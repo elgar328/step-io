@@ -745,10 +745,11 @@ impl<'m> Edge<'m> {
     /// edge: its geometry bounded between the two vertex points, in the edge's
     /// direction (start → end). Contrast with [`Curve::to_nurbs`], which
     /// converts the *whole* curve — here an unbounded line becomes the finite
-    /// segment, a circle the arc between the vertices, and an edge whose
-    /// vertices coincide (a closed edge) the whole closed curve. `None` for a
-    /// B-spline whose degree is outside 1–25 or whose knot multiplicities do
-    /// not match its control points.
+    /// segment, a circle the arc between the vertices, a parabola or hyperbola
+    /// the exact span between them, and an edge whose vertices coincide (a
+    /// closed edge) the whole closed curve. `None` for a closed edge on a line,
+    /// parabola or hyperbola, and for a B-spline whose degree is outside 1–25
+    /// or whose knot multiplicities do not match its control points.
     pub fn to_nurbs(&self) -> Option<crate::scene::nurbs::NurbsCurve> {
         let cx = self.cx;
         let coords = |v: Option<Vertex<'m>>| Some(v?.point()?.xyz());
@@ -892,9 +893,12 @@ impl<'m> Curve<'m> {
     /// form of this curve, if the kind is supported (circle, ellipse, B-spline
     /// with knots). Returns the *full* analytic curve — trimming applied by an
     /// edge that uses this curve is **not** reflected here. `None` for a curve
-    /// that needs bounds it alone lacks — an unbounded line, say; use
-    /// [`Edge::to_nurbs`] there — and for a B-spline whose degree is outside
-    /// 1–25 or whose knot multiplicities do not match its control points.
+    /// that needs bounds it alone lacks — an unbounded line, parabola or
+    /// hyperbola; use [`Edge::to_nurbs`] there, or trim it — and for a B-spline
+    /// whose degree is outside 1–25 or whose knot multiplicities do not match
+    /// its control points. A trimmed parabola or hyperbola converts exactly; a
+    /// trim given as a point is followed rather than its parameter, which
+    /// writers disagree on for a parabola.
     pub fn to_nurbs(&self) -> Option<crate::scene::nurbs::NurbsCurve> {
         let cx = self.cx;
         match self.which {
@@ -913,7 +917,8 @@ impl<'m> Curve<'m> {
                 cx,
                 &cx.model.complex_unit_arena.get(i.0).parts,
             ),
-            // A trimmed line/circle/ellipse → a bounded segment/arc.
+            // A trimmed line/circle/ellipse/parabola/hyperbola → a bounded
+            // segment/arc/span.
             CurveImpl::TrimmedCurve(i) => {
                 crate::scene::nurbs::trimmed_to_nurbs(cx, cx.model.trimmed_curve_arena.get(i.0))
             }
