@@ -271,6 +271,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   which Part 21 has no spelling for, so the file could not be read back.
 - The `Ap242Author` `add_*_cyclic` constructors check aggregate sizes, as
   the other constructors do; an empty `SET [1:?]` used to pass.
+- `Face::to_nurbs()` reads a cone's half-angle in the file's plane-angle unit.
+  It used to take it as radians, so a cone in a file that measures angles in
+  degrees came out with the wrong radius.
 - `MeshGroup::solid()` finds the solid of a tessellated shell linked to a
   closed shell that the solid reaches through an `ORIENTED_CLOSED_SHELL`, a
   cavity included, as `Face::solid()` does. It used to find only an outer

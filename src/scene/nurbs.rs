@@ -581,9 +581,7 @@ fn arc_from_trims(
 ) -> Option<NurbsCurve> {
     use std::f64::consts::TAU;
     // ParameterValue trims are angles in the model's plane-angle unit.
-    let factor = crate::scene::units::units_of(cx.model)
-        .angle
-        .map_or(1.0, |u| u.to_si);
+    let factor = cx.angle_to_radians();
     let master = t.master_representation;
     let theta1 = conic_trim_angle(cx, &t.trim_1, frame, ab, factor, master)?;
     let mut theta2 = conic_trim_angle(cx, &t.trim_2, frame, ab, factor, master)?;
@@ -1876,8 +1874,9 @@ pub(crate) fn plane_patch(
 
 /// A cylinder or cone bounded by a face into a finite ruled patch: the full
 /// circle (rational quadratic, u) swept linearly (v) between two axial levels,
-/// taken from the axial span of the face's edge vertices. `semi_angle` is `0.0`
-/// for a cylinder; for a cone the radius grows `radius + v·tan(semi_angle)`.
+/// taken from the axial span of the face's edge vertices. `semi_angle`, in the
+/// model's plane-angle unit, is `0.0` for a cylinder; for a cone the radius
+/// grows `radius + v·tan(semi_angle)`.
 ///
 /// Exact within the axial span (both surfaces are ruled). The full circle
 /// over-covers a partial face — the edge loops trim it. `None` if the axial
@@ -1903,8 +1902,10 @@ pub(crate) fn cylinder_cone_patch(
         cx.warn("CYLINDRICAL/CONICAL face.to_nurbs: degenerate axial extent".to_owned());
         return None;
     }
-    let r_lo = radius + v_lo * semi_angle.tan();
-    let r_hi = radius + v_hi * semi_angle.tan();
+    // The semi-angle is in the model's plane-angle unit.
+    let slope = (semi_angle * cx.angle_to_radians()).tan();
+    let r_lo = radius + v_lo * slope;
+    let r_hi = radius + v_hi * slope;
     let w_u = circle_weights();
     let control_points = CIRCLE_U
         .iter()

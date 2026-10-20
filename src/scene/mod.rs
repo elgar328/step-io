@@ -230,13 +230,14 @@ struct WarningLog {
 }
 
 /// A `Copy` reference bundle handed to every handle: the model, the lazy reverse
-/// index, the scene's warning log, and the entity a warning recorded now is
+/// index and units, the scene's warning log, and the entity a warning recorded now is
 /// about. All borrows share one lifetime (the scene borrow), so handles stay
 /// single-lifetime.
 #[derive(Clone, Copy)]
 pub(crate) struct Ctx<'a> {
     pub(crate) model: &'a StepModel,
     pub(crate) rg: &'a OnceLock<RefGraph>,
+    units: &'a OnceLock<Units>,
     warnings: &'a Mutex<WarningLog>,
     subject: Option<EntityKey>,
 }
@@ -245,6 +246,17 @@ impl<'a> Ctx<'a> {
     /// The reverse-reference index, built on first use.
     pub(crate) fn ref_graph(&self) -> &'a RefGraph {
         self.rg.get_or_init(|| self.model.ref_graph())
+    }
+
+    /// The model's units, resolved on first use.
+    pub(crate) fn units(&self) -> &'a Units {
+        self.units.get_or_init(|| units::units_of(self.model))
+    }
+
+    /// The factor taking a plane angle in the model's unit to radians (1 when
+    /// the model names no angle unit).
+    pub(crate) fn angle_to_radians(&self) -> f64 {
+        self.units().angle.as_ref().map_or(1.0, |u| u.to_si)
     }
 
     /// This context with `key` as the subject of the warnings recorded
@@ -279,6 +291,7 @@ impl<'a> Ctx<'a> {
 pub struct Scene<'m> {
     model: &'m StepModel,
     rg: OnceLock<RefGraph>,
+    units: OnceLock<Units>,
     warnings: Mutex<WarningLog>,
 }
 
@@ -291,6 +304,7 @@ impl StepModel {
         Scene {
             model: self,
             rg: OnceLock::new(),
+            units: OnceLock::new(),
             warnings: Mutex::new(WarningLog::default()),
         }
     }
@@ -302,6 +316,7 @@ impl<'m> Scene<'m> {
         Ctx {
             model: self.model,
             rg: &self.rg,
+            units: &self.units,
             warnings: &self.warnings,
             subject: None,
         }

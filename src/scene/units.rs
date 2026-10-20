@@ -45,7 +45,7 @@ impl Scene<'_> {
     /// `None` fields rather than an error.
     #[must_use]
     pub fn units(&self) -> Units {
-        units_of(self.model())
+        self.ctx().units().clone()
     }
 }
 

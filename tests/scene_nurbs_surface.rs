@@ -364,6 +364,36 @@ fn cone_face_radius_grows_with_height() {
     );
 }
 
+// A plane-angle unit of degrees, for the cone below.
+const DEGREE_UNITS: &str = "\
+#40=( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+#41=PLANE_ANGLE_MEASURE_WITH_UNIT(PLANE_ANGLE_MEASURE(0.017453292519943295),#40);\n\
+#42=DIMENSIONAL_EXPONENTS(0.,0.,0.,0.,0.,0.,0.);\n\
+#43=( CONVERSION_BASED_UNIT('DEGREE',#41) NAMED_UNIT(#42) PLANE_ANGLE_UNIT() );\n\
+#44=( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+#45=( GEOMETRIC_REPRESENTATION_CONTEXT(3) GLOBAL_UNIT_ASSIGNED_CONTEXT((#44,#43)) REPRESENTATION_CONTEXT('','') );\n\
+#46=SHAPE_REPRESENTATION('',(#19),#45);\n";
+
+/// The cone's half-angle is in the file's plane-angle unit: written as `45.`
+/// under a degree unit, it is the same 45° cone.
+#[test]
+fn cone_half_angle_follows_the_angle_unit() {
+    let in_degrees = CONE_FACE.replace("0.7853981633974483", "45.");
+    let src = format!("{HEADER}{in_degrees}{DEGREE_UNITS}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+
+    let face = find_face(&scene, |s| matches!(s.kind(), SurfaceKind::Conical(_)));
+    let n = face.to_nurbs().expect("cone face → nurbs");
+    assert!(approx(&n.control_points[0][0], &[1., 0., 0.]));
+    assert!(approx(&n.control_points[0][1], &[2., 0., 1.]));
+    assert!(
+        scene.warnings().is_empty(),
+        "warnings: {:?}",
+        scene.warnings()
+    );
+}
+
 // A circle (radius 1 in the xy plane) extruded along z. The vector's magnitude
 // is deliberately 5.0 — a parameter scale, not an extrusion length — while the
 // face's vertices sit at z=0 and z=2, so the patch must span [0, 2].
