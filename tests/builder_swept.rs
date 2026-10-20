@@ -182,7 +182,7 @@ fn polyline_edge_round_trips() {
                         let m::CartesianPointRef::CartesianPoint(id) = r else {
                             panic!("unexpected point ref");
                         };
-                        let c = &model.cartesian_point_arena.get(id.0).coordinates;
+                        let c = &model[*id].coordinates;
                         [c[0], c[1], c[2]]
                     })
                     .collect(),

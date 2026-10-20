@@ -129,6 +129,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `scene::product::ProductDef`). `build` no longer re-exports `NurbsCurve`,
   `NurbsSurface` and `Rgb`; use `scene::`. `StepBuilder`, `StepModel` and
   `EntityKey` stay at the crate root as well as in their modules.
+- The model is read only from outside the crate. Its per-type entity lists
+  (the `…_arena` fields) and `Arena` are no longer public; read the model
+  with `model.all::<T>()`, which lists the entities of type `T` with their
+  ids (was `model.t_arena.items`), and `model.get(id)` or `model[id]` (was
+  `model.t_arena.get(id.0)`), through the new `Entity` and `EntityId`
+  traits. New entities enter only through the `Ap242Author` constructors,
+  which check them; pushing to an arena skipped the checks, and a model
+  changed that way could make `write` panic or write a non-conforming file.
+- The generated enums' `parse` and `token` and the reference enums'
+  `from_any` are no longer public. `resolve` and `entity_key` stay.
 - `Span::start` and `Span::end` are `u64`, so offsets past 4 GB stay exact on
   32-bit targets.
 - `Error::DuplicateEntityId` gives the `line` of the repeat and the

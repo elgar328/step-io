@@ -1,7 +1,7 @@
-//! Forward Ref resolver spike: holding a reference (a `LINE`'s `pnt` /
-//! `dir`), `resolve(&model)` returns the concrete target object — the forward
-//! dual of `RefGraph`'s backward `referrers`. Uses a list-free chain that reads
-//! cleanly.
+//! The low-level model reads: `model.all::<T>()`, `model.get(id)` and
+//! `model[id]`, and the forward `Ref` resolver — holding a reference (a
+//! `LINE`'s `pnt` / `dir`), `resolve(&model)` returns the concrete target
+//! object, the forward dual of `RefGraph`'s backward `referrers`.
 
 use step_io::model::{CartesianPointRefView, VectorRefView};
 use step_io::read;
@@ -23,7 +23,7 @@ fn resolves_forward_references_to_concrete_targets() {
     let src = format!("{HEADER}{BODY}{FOOTER}");
     let (model, _rep) = read(src.as_bytes()).expect("read");
 
-    let line = model.line_arena.get(0);
+    let line = &model[step_io::model::LineId(0)];
 
     // LINE.pnt is a CartesianPointRef → its concrete CARTESIAN_POINT.
     match line.pnt.resolve(&model) {
@@ -33,4 +33,22 @@ fn resolves_forward_references_to_concrete_targets() {
 
     // LINE.dir is a VectorRef → its concrete VECTOR.
     assert!(matches!(line.dir.resolve(&model), VectorRefView::Vector(_)));
+}
+
+#[test]
+fn reads_entities_by_type_and_by_id() {
+    let src = format!("{HEADER}{BODY}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+
+    // `all` pairs each entity with the id that names it.
+    let lines: Vec<_> = model.all::<step_io::model::Line>().collect();
+    assert_eq!(lines.len(), 1);
+    for (id, line) in lines {
+        let (by_index, by_get) = (&model[id], model.get(id).expect("in range"));
+        assert!(std::ptr::eq(by_index, line));
+        assert!(std::ptr::eq(by_get, line));
+    }
+    assert!(model.all::<step_io::model::Circle>().next().is_none());
+    // An id out of range is `None` for `get` (and a panic for indexing).
+    assert!(model.get(step_io::model::LineId(1)).is_none());
 }

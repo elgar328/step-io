@@ -193,7 +193,7 @@ fn rational_nurbs_surface_round_trips_via_complex() {
 
     // Baseline complexes: 3 unit complexes + 1 context complex + 1 rational
     // surface complex.
-    assert_eq!(model.complex_unit_arena.items.len(), 5);
+    assert_eq!(model.all::<step_io::model::ComplexUnit>().len(), 5);
 
     let scene = model.scene();
     let solids: Vec<_> = scene.all_solids().collect();

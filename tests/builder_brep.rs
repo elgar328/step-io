@@ -210,10 +210,12 @@ fn cube_round_trips_and_reads_back() {
 
     // Promotion: the solid-bearing part writes an ABSR, not a plain SR.
     assert_eq!(
-        model.advanced_brep_shape_representation_arena.items.len(),
+        model
+            .all::<step_io::model::AdvancedBrepShapeRepresentation>()
+            .len(),
         1
     );
-    assert_eq!(model.shape_representation_arena.items.len(), 0);
+    assert_eq!(model.all::<step_io::model::ShapeRepresentation>().len(), 0);
 
     let scene = model.scene();
     let solids: Vec<_> = scene.all_solids().collect();
@@ -490,10 +492,12 @@ fn void_solid_round_trips_and_reads_back() {
 
     // Promotion: a void solid still writes an ABSR, not a plain SR.
     assert_eq!(
-        model.advanced_brep_shape_representation_arena.items.len(),
+        model
+            .all::<step_io::model::AdvancedBrepShapeRepresentation>()
+            .len(),
         1
     );
-    assert_eq!(model.shape_representation_arena.items.len(), 0);
+    assert_eq!(model.all::<step_io::model::ShapeRepresentation>().len(), 0);
 
     let scene = model.scene();
     let solids: Vec<_> = scene.all_solids().collect();

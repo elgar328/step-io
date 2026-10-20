@@ -99,6 +99,80 @@ fn idents(fields: &[Field]) -> Vec<(String, &Field)> {
 // model.rs
 // ===========================================================================
 
+/// The model's read access: the `Entity` / `EntityId` traits, `StepModel::all`,
+/// `get` and indexing, and the `entity!` macro implementing them per type.
+const ENTITY_ACCESS: &str = r#"
+/// An entity type of the model: a generated entity struct, or [`ComplexUnit`]
+/// for a complex instance. [`StepModel::all`] lists the entities of a type.
+/// The trait is sealed: only the model's own types implement it.
+pub trait Entity: sealed::SealedEntity {
+    /// The id type of this entity type.
+    type Id: EntityId<Entity = Self>;
+}
+
+/// The id of one entity type: [`StepModel::get`] or `model[id]` reads the
+/// entity it names. The trait is sealed: only the model's own ids implement
+/// it.
+pub trait EntityId: sealed::SealedId {
+    /// The entity type this id names.
+    type Entity: Entity<Id = Self>;
+}
+
+// The storage access behind the public traits. The `Token` argument, which
+// only this crate can make, keeps the methods out of reach through a
+// public trait bound.
+mod sealed {
+    pub struct Token(pub(crate) ());
+    pub trait SealedEntity: Sized + 'static {
+        fn items(model: &super::StepModel, _: Token) -> &[Self];
+    }
+    pub trait SealedId: Copy {
+        fn slot(self, _: Token) -> usize;
+        fn at(index: u32, _: Token) -> Self;
+    }
+}
+use sealed::Token;
+
+impl StepModel {
+    /// Every entity of type `T`, with its id, in the model's order:
+    /// `model.all::<Circle>()`.
+    #[allow(clippy::cast_possible_truncation)] // a model holds at most u32::MAX of a type
+    pub fn all<T: Entity>(&self) -> impl ExactSizeIterator<Item = (T::Id, &T)> + '_ {
+        <T as sealed::SealedEntity>::items(self, Token(()))
+            .iter()
+            .enumerate()
+            .map(|(i, e)| (<T::Id as sealed::SealedId>::at(i as u32, Token(())), e))
+    }
+    /// The entity `id` names, or `None` for an id out of this model's range.
+    pub fn get<I: EntityId>(&self, id: I) -> Option<&I::Entity> {
+        <I::Entity as sealed::SealedEntity>::items(self, Token(())).get(sealed::SealedId::slot(id, Token(())))
+    }
+}
+
+/// `model[id]`: the entity `id` names. Panics for an id out of this model's
+/// range; [`StepModel::get`] returns `None` instead.
+impl<I: EntityId> std::ops::Index<I> for StepModel {
+    type Output = I::Entity;
+    fn index(&self, id: I) -> &I::Entity {
+        &<I::Entity as sealed::SealedEntity>::items(self, Token(()))[sealed::SealedId::slot(id, Token(()))]
+    }
+}
+
+macro_rules! entity {
+    ($entity:ident, $id:ident, $arena:ident) => {
+        impl Entity for $entity { type Id = $id; }
+        impl sealed::SealedEntity for $entity {
+            fn items(model: &StepModel, _: Token) -> &[Self] { &model.$arena.items }
+        }
+        impl EntityId for $id { type Entity = $entity; }
+        impl sealed::SealedId for $id {
+            fn slot(self, _: Token) -> usize { self.0 as usize }
+            fn at(index: u32, _: Token) -> Self { $id(index) }
+        }
+    };
+}
+"#;
+
 pub fn emit_model(ir: &ModelIr) -> String {
     let mut s = String::from(HEADER);
     s.push_str("//! The schema-faithful model — [`StepModel`], one arena per entity type.\n//! Public as `step_io::model`, whose docs describe it.\n\n");
@@ -106,15 +180,15 @@ pub fn emit_model(ir: &ModelIr) -> String {
     // Arena + helpers.
     s.push_str(
         r#"#[derive(Debug)]
-pub struct Arena<T> { pub items: Vec<T> }
+pub(crate) struct Arena<T> { pub(crate) items: Vec<T> }
 impl<T> Default for Arena<T> { fn default() -> Self { Arena { items: Vec::new() } } }
 impl<T> Arena<T> {
     /// Append an item and return its index. An arena holds at most
     /// `u32::MAX` items (the reader rejects larger files).
-    pub fn push(&mut self, v: T) -> u32 { let i = self.items.len() as u32; self.items.push(v); i }
-    pub fn get(&self, i: u32) -> &T { &self.items[i as usize] }
+    pub(crate) fn push(&mut self, v: T) -> u32 { let i = self.items.len() as u32; self.items.push(v); i }
+    pub(crate) fn get(&self, i: u32) -> &T { &self.items[i as usize] }
     /// The indices of the items, in order.
-    pub fn indices(&self) -> std::ops::Range<u32> { 0..self.items.len() as u32 }
+    pub(crate) fn indices(&self) -> std::ops::Range<u32> { 0..self.items.len() as u32 }
     /// Keep the items at the distinct indices `order`, in that order, and drop
     /// the rest. Permutes in place, without a second copy of the items.
     pub(crate) fn retain_order(&mut self, order: &[u32]) {
@@ -148,10 +222,10 @@ impl<T> Arena<T> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Logical { True, False, Unknown }
 impl Logical {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s { "T" => Self::True, "F" => Self::False, "U" | "UNKNOWN" => Self::Unknown, _ => return None })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self { Self::True => ".T.", Self::False => ".F.", Self::Unknown => ".U." }
     }
 }
@@ -310,14 +384,18 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
         writeln!(s, "impl {} {{", e.rust).unwrap();
         writeln!(
             s,
-            "    pub fn parse(s: &str) -> Option<Self> {{ Some(match s {{"
+            "    pub(crate) fn parse(s: &str) -> Option<Self> {{ Some(match s {{"
         )
         .unwrap();
         for (tok, v) in &e.members {
             writeln!(s, "        \"{tok}\" => Self::{v},").unwrap();
         }
         writeln!(s, "        _ => return None }}) }}").unwrap();
-        writeln!(s, "    pub fn token(self) -> &'static str {{ match self {{").unwrap();
+        writeln!(
+            s,
+            "    pub(crate) fn token(self) -> &'static str {{ match self {{"
+        )
+        .unwrap();
         for (tok, v) in &e.members {
             writeln!(s, "        Self::{v} => \".{tok}.\",").unwrap();
         }
@@ -439,13 +517,38 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
     writeln!(s, "    pub(crate) header: crate::header::FileHeader,").unwrap();
     writeln!(s, "    pub(crate) texts: Texts,").unwrap();
     for se in &ir.simples {
-        writeln!(s, "    pub {}: Arena<{}>,", arena_field(&se.rust), se.rust).unwrap();
+        writeln!(
+            s,
+            "    pub(crate) {}: Arena<{}>,",
+            arena_field(&se.rust),
+            se.rust
+        )
+        .unwrap();
     }
     if ir.has_part_bag {
-        writeln!(s, "    pub complex_unit_arena: Arena<ComplexUnit>,").unwrap();
+        writeln!(s, "    pub(crate) complex_unit_arena: Arena<ComplexUnit>,").unwrap();
     }
     writeln!(s, "}}").unwrap();
     s.push_str("impl StepModel {\n    /// The string `t` stands for (`\"\"` for a `Text` of another model).\n    pub fn text(&self, t: Text) -> &str { self.texts.get(t) }\n    /// Store `s` as a new `Text`.\n    pub(crate) fn add_text(&mut self, s: &str) -> Text { self.texts.push(s) }\n}\n");
+
+    // Read access by entity type and by id.
+    s.push_str(ENTITY_ACCESS);
+    for se in &ir.simples {
+        writeln!(
+            s,
+            "entity!({0}, {0}Id, {1});",
+            se.rust,
+            arena_field(&se.rust)
+        )
+        .unwrap();
+    }
+    if ir.has_part_bag {
+        writeln!(
+            s,
+            "entity!(ComplexUnit, ComplexUnitId, complex_unit_arena);"
+        )
+        .unwrap();
+    }
 
     s
 }
@@ -619,7 +722,7 @@ fn emit_ref_enum(s: &mut String, re: &RefEnum) {
     writeln!(s, "impl {} {{", re.rust).unwrap();
     writeln!(
         s,
-        "    pub fn from_any(a: EntityKey) -> Result<Self, String> {{ match a {{"
+        "    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {{ match a {{"
     )
     .unwrap();
     for (variant, target) in &re.simple_arms {

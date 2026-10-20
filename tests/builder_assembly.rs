@@ -88,12 +88,16 @@ fn shared_definition_places_multiple_instances() {
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
     // One shared definition, two placed occurrences.
-    assert_eq!(model.product_arena.items.len(), 2);
-    assert_eq!(model.next_assembly_usage_occurrence_arena.items.len(), 2);
+    assert_eq!(model.all::<step_io::model::Product>().len(), 2);
     assert_eq!(
         model
-            .context_dependent_shape_representation_arena
-            .items
+            .all::<step_io::model::NextAssemblyUsageOccurrence>()
+            .len(),
+        2
+    );
+    assert_eq!(
+        model
+            .all::<step_io::model::ContextDependentShapeRepresentation>()
             .len(),
         2
     );
@@ -206,7 +210,12 @@ fn placements_that_would_make_an_assembly_contain_itself_are_refused() {
     let text = common::text(&b.finish().expect("finish"));
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
-    assert_eq!(model.next_assembly_usage_occurrence_arena.items.len(), 4);
+    assert_eq!(
+        model
+            .all::<step_io::model::NextAssemblyUsageOccurrence>()
+            .len(),
+        4
+    );
     let scene = model.scene();
     let roots: Vec<_> = scene.root_definitions().collect();
     assert_eq!(roots.len(), 1);

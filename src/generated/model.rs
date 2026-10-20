@@ -5,8 +5,8 @@
 //! Public as `step_io::model`, whose docs describe it.
 
 #[derive(Debug)]
-pub struct Arena<T> {
-    pub items: Vec<T>,
+pub(crate) struct Arena<T> {
+    pub(crate) items: Vec<T>,
 }
 impl<T> Default for Arena<T> {
     fn default() -> Self {
@@ -16,16 +16,16 @@ impl<T> Default for Arena<T> {
 impl<T> Arena<T> {
     /// Append an item and return its index. An arena holds at most
     /// `u32::MAX` items (the reader rejects larger files).
-    pub fn push(&mut self, v: T) -> u32 {
+    pub(crate) fn push(&mut self, v: T) -> u32 {
         let i = self.items.len() as u32;
         self.items.push(v);
         i
     }
-    pub fn get(&self, i: u32) -> &T {
+    pub(crate) fn get(&self, i: u32) -> &T {
         &self.items[i as usize]
     }
     /// The indices of the items, in order.
-    pub fn indices(&self) -> std::ops::Range<u32> {
+    pub(crate) fn indices(&self) -> std::ops::Range<u32> {
         0..self.items.len() as u32
     }
     /// Keep the items at the distinct indices `order`, in that order, and drop
@@ -69,7 +69,7 @@ pub enum Logical {
     Unknown,
 }
 impl Logical {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "T" => Self::True,
             "F" => Self::False,
@@ -77,7 +77,7 @@ impl Logical {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::True => ".T.",
             Self::False => ".F.",
@@ -301,7 +301,7 @@ pub enum AheadOrBehind {
     Behind,
 }
 impl AheadOrBehind {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "AHEAD" => Self::Ahead,
             "EXACT" => Self::Exact,
@@ -309,7 +309,7 @@ impl AheadOrBehind {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Ahead => ".AHEAD.",
             Self::Exact => ".EXACT.",
@@ -325,7 +325,7 @@ pub enum AngleRelator {
     Small,
 }
 impl AngleRelator {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "EQUAL" => Self::Equal,
             "LARGE" => Self::Large,
@@ -333,7 +333,7 @@ impl AngleRelator {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Equal => ".EQUAL.",
             Self::Large => ".LARGE.",
@@ -348,14 +348,14 @@ pub enum AnnotationPlaceholderOccurrenceRole {
     GpsData,
 }
 impl AnnotationPlaceholderOccurrenceRole {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "ANNOTATION_TEXT" => Self::AnnotationText,
             "GPS_DATA" => Self::GpsData,
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::AnnotationText => ".ANNOTATION_TEXT.",
             Self::GpsData => ".GPS_DATA.",
@@ -369,14 +369,14 @@ pub enum ApproximationMethod {
     ChordalLength,
 }
 impl ApproximationMethod {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "CHORDAL_DEVIATION" => Self::ChordalDeviation,
             "CHORDAL_LENGTH" => Self::ChordalLength,
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::ChordalDeviation => ".CHORDAL_DEVIATION.",
             Self::ChordalLength => ".CHORDAL_LENGTH.",
@@ -393,7 +393,7 @@ pub enum AreaUnitType {
     Square,
 }
 impl AreaUnitType {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "CIRCULAR" => Self::Circular,
             "CYLINDRICAL" => Self::Cylindrical,
@@ -403,7 +403,7 @@ impl AreaUnitType {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Circular => ".CIRCULAR.",
             Self::Cylindrical => ".CYLINDRICAL.",
@@ -424,7 +424,7 @@ pub enum BSplineCurveForm {
     Unspecified,
 }
 impl BSplineCurveForm {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "POLYLINE_FORM" => Self::PolylineForm,
             "CIRCULAR_ARC" => Self::CircularArc,
@@ -435,7 +435,7 @@ impl BSplineCurveForm {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::PolylineForm => ".POLYLINE_FORM.",
             Self::CircularArc => ".CIRCULAR_ARC.",
@@ -462,7 +462,7 @@ pub enum BSplineSurfaceForm {
     Unspecified,
 }
 impl BSplineSurfaceForm {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "PLANE_SURF" => Self::PlaneSurf,
             "CYLINDRICAL_SURF" => Self::CylindricalSurf,
@@ -478,7 +478,7 @@ impl BSplineSurfaceForm {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::PlaneSurf => ".PLANE_SURF.",
             Self::CylindricalSurf => ".CYLINDRICAL_SURF.",
@@ -501,14 +501,14 @@ pub enum CentralOrParallel {
     Parallel,
 }
 impl CentralOrParallel {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "CENTRAL" => Self::Central,
             "PARALLEL" => Self::Parallel,
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Central => ".CENTRAL.",
             Self::Parallel => ".PARALLEL.",
@@ -524,7 +524,7 @@ pub enum DatumReferenceModifierType {
     Spherical,
 }
 impl DatumReferenceModifierType {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "CIRCULAR_OR_CYLINDRICAL" => Self::CircularOrCylindrical,
             "DISTANCE" => Self::Distance,
@@ -533,7 +533,7 @@ impl DatumReferenceModifierType {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::CircularOrCylindrical => ".CIRCULAR_OR_CYLINDRICAL.",
             Self::Distance => ".DISTANCE.",
@@ -554,7 +554,7 @@ pub enum DesApllPointSymbol {
     Triangle,
 }
 impl DesApllPointSymbol {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "CIRCLE" => Self::Circle,
             "DOT" => Self::Dot,
@@ -566,7 +566,7 @@ impl DesApllPointSymbol {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Circle => ".CIRCLE.",
             Self::Dot => ".DOT.",
@@ -617,7 +617,7 @@ pub enum GeometricToleranceModifier {
     ValleyDepth,
 }
 impl GeometricToleranceModifier {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "ANY_CROSS_SECTION" => Self::AnyCrossSection,
             "ASSOCIATED_LEAST_SQUARE_FEATURE" => Self::AssociatedLeastSquareFeature,
@@ -668,7 +668,7 @@ impl GeometricToleranceModifier {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::AnyCrossSection => ".ANY_CROSS_SECTION.",
             Self::AssociatedLeastSquareFeature => ".ASSOCIATED_LEAST_SQUARE_FEATURE.",
@@ -730,7 +730,7 @@ pub enum KnotType {
     Unspecified,
 }
 impl KnotType {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "UNIFORM_KNOTS" => Self::UniformKnots,
             "QUASI_UNIFORM_KNOTS" => Self::QuasiUniformKnots,
@@ -739,7 +739,7 @@ impl KnotType {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::UniformKnots => ".UNIFORM_KNOTS.",
             Self::QuasiUniformKnots => ".QUASI_UNIFORM_KNOTS.",
@@ -756,7 +756,7 @@ pub enum LimitCondition {
     RegardlessOfFeatureSize,
 }
 impl LimitCondition {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "MAXIMUM_MATERIAL_CONDITION" => Self::MaximumMaterialCondition,
             "LEAST_MATERIAL_CONDITION" => Self::LeastMaterialCondition,
@@ -764,7 +764,7 @@ impl LimitCondition {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::MaximumMaterialCondition => ".MAXIMUM_MATERIAL_CONDITION.",
             Self::LeastMaterialCondition => ".LEAST_MATERIAL_CONDITION.",
@@ -784,7 +784,7 @@ pub enum MarkerType {
     Triangle,
 }
 impl MarkerType {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "DOT" => Self::Dot,
             "X" => Self::X,
@@ -796,7 +796,7 @@ impl MarkerType {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Dot => ".DOT.",
             Self::X => ".X.",
@@ -814,13 +814,13 @@ pub enum NullStyle {
     Null,
 }
 impl NullStyle {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "NULL" => Self::Null,
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Null => ".NULL.",
         }
@@ -834,7 +834,7 @@ pub enum PreferredSurfaceCurveRepresentation {
     PcurveS2,
 }
 impl PreferredSurfaceCurveRepresentation {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "CURVE_3D" => Self::Curve3d,
             "PCURVE_S1" => Self::PcurveS1,
@@ -842,7 +842,7 @@ impl PreferredSurfaceCurveRepresentation {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Curve3d => ".CURVE_3D.",
             Self::PcurveS1 => ".PCURVE_S1.",
@@ -857,14 +857,14 @@ pub enum ProductOrPresentationSpace {
     PresentationAreaSpace,
 }
 impl ProductOrPresentationSpace {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "PRODUCT_SHAPE_SPACE" => Self::ProductShapeSpace,
             "PRESENTATION_AREA_SPACE" => Self::PresentationAreaSpace,
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::ProductShapeSpace => ".PRODUCT_SHAPE_SPACE.",
             Self::PresentationAreaSpace => ".PRESENTATION_AREA_SPACE.",
@@ -878,14 +878,14 @@ pub enum ShadingCurveMethod {
     LinearColour,
 }
 impl ShadingCurveMethod {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "CONSTANT_COLOUR" => Self::ConstantColour,
             "LINEAR_COLOUR" => Self::LinearColour,
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::ConstantColour => ".CONSTANT_COLOUR.",
             Self::LinearColour => ".LINEAR_COLOUR.",
@@ -901,7 +901,7 @@ pub enum ShadingSurfaceMethod {
     NormalShading,
 }
 impl ShadingSurfaceMethod {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "CONSTANT_SHADING" => Self::ConstantShading,
             "COLOUR_SHADING" => Self::ColourShading,
@@ -910,7 +910,7 @@ impl ShadingSurfaceMethod {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::ConstantShading => ".CONSTANT_SHADING.",
             Self::ColourShading => ".COLOUR_SHADING.",
@@ -940,7 +940,7 @@ pub enum SiPrefix {
     Atto,
 }
 impl SiPrefix {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "EXA" => Self::Exa,
             "PETA" => Self::Peta,
@@ -961,7 +961,7 @@ impl SiPrefix {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Exa => ".EXA.",
             Self::Peta => ".PETA.",
@@ -1015,7 +1015,7 @@ pub enum SiUnitName {
     Sievert,
 }
 impl SiUnitName {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "METRE" => Self::Metre,
             "GRAM" => Self::Gram,
@@ -1048,7 +1048,7 @@ impl SiUnitName {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Metre => ".METRE.",
             Self::Gram => ".GRAM.",
@@ -1108,7 +1108,7 @@ pub enum SimpleDatumReferenceModifier {
     Translation,
 }
 impl SimpleDatumReferenceModifier {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "ANY_CROSS_SECTION" => Self::AnyCrossSection,
             "ANY_LONGITUDINAL_SECTION" => Self::AnyLongitudinalSection,
@@ -1135,7 +1135,7 @@ impl SimpleDatumReferenceModifier {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::AnyCrossSection => ".ANY_CROSS_SECTION.",
             Self::AnyLongitudinalSection => ".ANY_LONGITUDINAL_SECTION.",
@@ -1170,7 +1170,7 @@ pub enum Source {
     NotKnown,
 }
 impl Source {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "MADE" => Self::Made,
             "BOUGHT" => Self::Bought,
@@ -1178,7 +1178,7 @@ impl Source {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Made => ".MADE.",
             Self::Bought => ".BOUGHT.",
@@ -1194,7 +1194,7 @@ pub enum SurfaceSide {
     Both,
 }
 impl SurfaceSide {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "POSITIVE" => Self::Positive,
             "NEGATIVE" => Self::Negative,
@@ -1202,7 +1202,7 @@ impl SurfaceSide {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Positive => ".POSITIVE.",
             Self::Negative => ".NEGATIVE.",
@@ -1219,7 +1219,7 @@ pub enum TextPath {
     Down,
 }
 impl TextPath {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "LEFT" => Self::Left,
             "RIGHT" => Self::Right,
@@ -1228,7 +1228,7 @@ impl TextPath {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Left => ".LEFT.",
             Self::Right => ".RIGHT.",
@@ -1246,7 +1246,7 @@ pub enum TransitionCode {
     ContSameGradientSameCurvature,
 }
 impl TransitionCode {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "DISCONTINUOUS" => Self::Discontinuous,
             "CONTINUOUS" => Self::Continuous,
@@ -1255,7 +1255,7 @@ impl TransitionCode {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Discontinuous => ".DISCONTINUOUS.",
             Self::Continuous => ".CONTINUOUS.",
@@ -1272,7 +1272,7 @@ pub enum TrimmingPreference {
     Unspecified,
 }
 impl TrimmingPreference {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "CARTESIAN" => Self::Cartesian,
             "PARAMETER" => Self::Parameter,
@@ -1280,7 +1280,7 @@ impl TrimmingPreference {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Cartesian => ".CARTESIAN.",
             Self::Parameter => ".PARAMETER.",
@@ -3329,7 +3329,7 @@ pub enum ActionMethodRef {
     Complex(ComplexUnitId),
 }
 impl ActionMethodRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionMethod(i) => Ok(Self::ActionMethod(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -3344,7 +3344,7 @@ pub enum ActionRef {
     Complex(ComplexUnitId),
 }
 impl ActionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Action(i) => Ok(Self::Action(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -3359,7 +3359,7 @@ pub enum ActionResourceRef {
     Complex(ComplexUnitId),
 }
 impl ActionResourceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionResource(i) => Ok(Self::ActionResource(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -3373,7 +3373,7 @@ pub enum ActionResourceTypeRef {
     ActionResourceType(ActionResourceTypeId),
 }
 impl ActionResourceTypeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionResourceType(i) => Ok(Self::ActionResourceType(i)),
             other => Err(format!(
@@ -3390,7 +3390,7 @@ pub enum AnnotationCurveOccurrenceRef {
     Complex(ComplexUnitId),
 }
 impl AnnotationCurveOccurrenceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
             EntityKey::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
@@ -3420,7 +3420,7 @@ pub enum AnnotationOccurrenceRef {
     Complex(ComplexUnitId),
 }
 impl AnnotationOccurrenceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
             EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
@@ -3459,7 +3459,7 @@ pub enum AnnotationPlaceholderLeaderLineRef {
     AuxiliaryLeaderLine(AuxiliaryLeaderLineId),
 }
 impl AnnotationPlaceholderLeaderLineRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationPlaceholderLeaderLine(i) => {
                 Ok(Self::AnnotationPlaceholderLeaderLine(i))
@@ -3483,7 +3483,7 @@ pub enum AnnotationPlaceholderOccurrenceRef {
     Complex(ComplexUnitId),
 }
 impl AnnotationPlaceholderOccurrenceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationPlaceholderOccurrence(i) => {
                 Ok(Self::AnnotationPlaceholderOccurrence(i))
@@ -3522,7 +3522,7 @@ pub enum AnnotationPlaneElementRef {
     Complex(ComplexUnitId),
 }
 impl AnnotationPlaneElementRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
             EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
@@ -3569,7 +3569,7 @@ pub enum AnnotationRepresentationSelectRef {
     Complex(ComplexUnitId),
 }
 impl AnnotationRepresentationSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DraughtingModel(i) => Ok(Self::DraughtingModel(i)),
             EntityKey::PresentationArea(i) => Ok(Self::PresentationArea(i)),
@@ -3590,7 +3590,7 @@ pub enum AnnotationSymbolOccurrenceItemRef {
     Complex(ComplexUnitId),
 }
 impl AnnotationSymbolOccurrenceItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
             EntityKey::DefinedSymbol(i) => Ok(Self::DefinedSymbol(i)),
@@ -3610,7 +3610,7 @@ pub enum AnnotationSymbolOccurrenceRef {
     Complex(ComplexUnitId),
 }
 impl AnnotationSymbolOccurrenceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
             EntityKey::LeaderTerminator(i) => Ok(Self::LeaderTerminator(i)),
@@ -3633,7 +3633,7 @@ pub enum AnnotationTextOccurrenceItemRef {
     Complex(ComplexUnitId),
 }
 impl AnnotationTextOccurrenceItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationText(i) => Ok(Self::AnnotationText(i)),
             EntityKey::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
@@ -3653,7 +3653,7 @@ pub enum AnnotationToModelLeaderLineRef {
     AnnotationToModelLeaderLine(AnnotationToModelLeaderLineId),
 }
 impl AnnotationToModelLeaderLineRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationToModelLeaderLine(i) => Ok(Self::AnnotationToModelLeaderLine(i)),
             other => Err(format!(
@@ -3668,7 +3668,7 @@ pub enum ApplicationContextRef {
     ApplicationContext(ApplicationContextId),
 }
 impl ApplicationContextRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApplicationContext(i) => Ok(Self::ApplicationContext(i)),
             other => Err(format!(
@@ -3935,7 +3935,7 @@ pub enum ApprovalItemRef {
     Complex(ComplexUnitId),
 }
 impl ApprovalItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Action(i) => Ok(Self::Action(i)),
             EntityKey::ActionDirective(i) => Ok(Self::ActionDirective(i)),
@@ -4266,7 +4266,7 @@ pub enum ApprovalRef {
     Approval(ApprovalId),
 }
 impl ApprovalRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Approval(i) => Ok(Self::Approval(i)),
             other => Err(format!("expected ApprovalRef target, got {other:?}")),
@@ -4279,7 +4279,7 @@ pub enum ApprovalRoleRef {
     ApprovalRole(ApprovalRoleId),
 }
 impl ApprovalRoleRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApprovalRole(i) => Ok(Self::ApprovalRole(i)),
             other => Err(format!("expected ApprovalRoleRef target, got {other:?}")),
@@ -4292,7 +4292,7 @@ pub enum ApprovalStatusRef {
     ApprovalStatus(ApprovalStatusId),
 }
 impl ApprovalStatusRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApprovalStatus(i) => Ok(Self::ApprovalStatus(i)),
             other => Err(format!("expected ApprovalStatusRef target, got {other:?}")),
@@ -4319,7 +4319,7 @@ pub enum ApprovedItemRef {
     Complex(ComplexUnitId),
 }
 impl ApprovedItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Certification(i) => Ok(Self::Certification(i)),
             EntityKey::Change(i) => Ok(Self::Change(i)),
@@ -4350,7 +4350,7 @@ pub enum AscribableStateRef {
     AscribableState(AscribableStateId),
 }
 impl AscribableStateRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AscribableState(i) => Ok(Self::AscribableState(i)),
             other => Err(format!("expected AscribableStateRef target, got {other:?}")),
@@ -4363,7 +4363,7 @@ pub enum Axis1PlacementRef {
     Axis1Placement(Axis1PlacementId),
 }
 impl Axis1PlacementRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Axis1Placement(i) => Ok(Self::Axis1Placement(i)),
             other => Err(format!("expected Axis1PlacementRef target, got {other:?}")),
@@ -4376,7 +4376,7 @@ pub enum Axis2Placement3dRef {
     Axis2Placement3d(Axis2Placement3dId),
 }
 impl Axis2Placement3dRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Axis2Placement3d(i) => Ok(Self::Axis2Placement3d(i)),
             other => Err(format!(
@@ -4392,7 +4392,7 @@ pub enum Axis2PlacementRef {
     Axis2Placement3d(Axis2Placement3dId),
 }
 impl Axis2PlacementRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Axis2Placement2d(i) => Ok(Self::Axis2Placement2d(i)),
             EntityKey::Axis2Placement3d(i) => Ok(Self::Axis2Placement3d(i)),
@@ -4406,7 +4406,7 @@ pub enum CameraModelD3MultiClippingIntersectionSelectRef {
     Plane(PlaneId),
 }
 impl CameraModelD3MultiClippingIntersectionSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Plane(i) => Ok(Self::Plane(i)),
             other => Err(format!(
@@ -4423,7 +4423,7 @@ pub enum CartesianPointRef {
     CartesianPoint(CartesianPointId),
 }
 impl CartesianPointRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApllPoint(i) => Ok(Self::ApllPoint(i)),
             EntityKey::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
@@ -4442,7 +4442,7 @@ pub enum CcClassifiedItemRef {
     Complex(ComplexUnitId),
 }
 impl CcClassifiedItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AssemblyComponentUsage(i) => Ok(Self::AssemblyComponentUsage(i)),
             EntityKey::NextAssemblyUsageOccurrence(i) => Ok(Self::NextAssemblyUsageOccurrence(i)),
@@ -4475,7 +4475,7 @@ pub enum CcPersonOrganizationItemRef {
     Complex(ComplexUnitId),
 }
 impl CcPersonOrganizationItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Change(i) => Ok(Self::Change(i)),
             EntityKey::ChangeRequest(i) => Ok(Self::ChangeRequest(i)),
@@ -4506,7 +4506,7 @@ pub enum CertificationTypeRef {
     CertificationType(CertificationTypeId),
 }
 impl CertificationTypeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CertificationType(i) => Ok(Self::CertificationType(i)),
             other => Err(format!(
@@ -4523,7 +4523,7 @@ pub enum ChangeRequestItemRef {
     Complex(ComplexUnitId),
 }
 impl ChangeRequestItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             EntityKey::ProductDefinitionFormationWithSpecifiedSource(i) => {
@@ -4545,7 +4545,7 @@ pub enum CharacterStyleSelectRef {
     Complex(ComplexUnitId),
 }
 impl CharacterStyleSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CharacterGlyphStyleOutline(i) => Ok(Self::CharacterGlyphStyleOutline(i)),
             EntityKey::CharacterGlyphStyleStroke(i) => Ok(Self::CharacterGlyphStyleStroke(i)),
@@ -4567,7 +4567,7 @@ pub enum CharacterizedActionDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl CharacterizedActionDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Action(i) => Ok(Self::Action(i)),
             EntityKey::ActionMethod(i) => Ok(Self::ActionMethod(i)),
@@ -4659,7 +4659,7 @@ pub enum CharacterizedDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl CharacterizedDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
@@ -4782,7 +4782,7 @@ pub enum CharacterizedResourceDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl CharacterizedResourceDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionResource(i) => Ok(Self::ActionResource(i)),
             EntityKey::ActionResourceRelationship(i) => Ok(Self::ActionResourceRelationship(i)),
@@ -4802,7 +4802,7 @@ pub enum ClosedShellRef {
     Complex(ComplexUnitId),
 }
 impl ClosedShellRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ClosedShell(i) => Ok(Self::ClosedShell(i)),
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
@@ -4822,7 +4822,7 @@ pub enum ColourRef {
     Complex(ComplexUnitId),
 }
 impl ColourRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Colour(i) => Ok(Self::Colour(i)),
             EntityKey::ColourRgb(i) => Ok(Self::ColourRgb(i)),
@@ -4841,7 +4841,7 @@ pub enum CompositeCurveSegmentRef {
     Complex(ComplexUnitId),
 }
 impl CompositeCurveSegmentRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CompositeCurveSegment(i) => Ok(Self::CompositeCurveSegment(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -5007,7 +5007,7 @@ pub enum CompoundItemDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl CompoundItemDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
@@ -5201,7 +5201,7 @@ pub enum ConfigurationDesignItemRef {
     Complex(ComplexUnitId),
 }
 impl ConfigurationDesignItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
             EntityKey::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
@@ -5225,7 +5225,7 @@ pub enum ConfigurationDesignRef {
     ConfigurationDesign(ConfigurationDesignId),
 }
 impl ConfigurationDesignRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ConfigurationDesign(i) => Ok(Self::ConfigurationDesign(i)),
             other => Err(format!(
@@ -5241,7 +5241,7 @@ pub enum ConfigurationItemRef {
     Complex(ComplexUnitId),
 }
 impl ConfigurationItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ConfigurationItem(i) => Ok(Self::ConfigurationItem(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -5261,7 +5261,7 @@ pub enum ConnectedFaceSetRef {
     Complex(ComplexUnitId),
 }
 impl ConnectedFaceSetRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ClosedShell(i) => Ok(Self::ClosedShell(i)),
             EntityKey::ConnectedFaceSet(i) => Ok(Self::ConnectedFaceSet(i)),
@@ -5293,7 +5293,7 @@ pub enum ConstructiveGeometryRepresentationOrShapeRepresentationRef {
     Complex(ComplexUnitId),
 }
 impl ConstructiveGeometryRepresentationOrShapeRepresentationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedBrepShapeRepresentation(i) => {
                 Ok(Self::AdvancedBrepShapeRepresentation(i))
@@ -5331,7 +5331,7 @@ pub enum ContractTypeRef {
     ContractType(ContractTypeId),
 }
 impl ContractTypeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ContractType(i) => Ok(Self::ContractType(i)),
             other => Err(format!("expected ContractTypeRef target, got {other:?}")),
@@ -5344,7 +5344,7 @@ pub enum CoordinatedUniversalTimeOffsetRef {
     CoordinatedUniversalTimeOffset(CoordinatedUniversalTimeOffsetId),
 }
 impl CoordinatedUniversalTimeOffsetRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CoordinatedUniversalTimeOffset(i) => {
                 Ok(Self::CoordinatedUniversalTimeOffset(i))
@@ -5361,7 +5361,7 @@ pub enum CoordinatesListRef {
     CoordinatesList(CoordinatesListId),
 }
 impl CoordinatesListRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CoordinatesList(i) => Ok(Self::CoordinatesList(i)),
             other => Err(format!("expected CoordinatesListRef target, got {other:?}")),
@@ -5379,7 +5379,7 @@ pub enum CurveFontOrScaledCurveFontSelectRef {
     Complex(ComplexUnitId),
 }
 impl CurveFontOrScaledCurveFontSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CurveStyleFont(i) => Ok(Self::CurveStyleFont(i)),
             EntityKey::CurveStyleFontAndScaling(i) => Ok(Self::CurveStyleFontAndScaling(i)),
@@ -5425,7 +5425,7 @@ pub enum CurveOrAnnotationCurveOccurrenceRef {
     Complex(ComplexUnitId),
 }
 impl CurveOrAnnotationCurveOccurrenceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
             EntityKey::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
@@ -5487,7 +5487,7 @@ pub enum CurveOrCurveSetRef {
     Complex(ComplexUnitId),
 }
 impl CurveOrCurveSetRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
             EntityKey::BSplineCurveWithKnots(i) => Ok(Self::BSplineCurveWithKnots(i)),
@@ -5525,7 +5525,7 @@ pub enum CurveOrRenderRef {
     Complex(ComplexUnitId),
 }
 impl CurveOrRenderRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CurveStyle(i) => Ok(Self::CurveStyle(i)),
             EntityKey::CurveStyleRendering(i) => Ok(Self::CurveStyleRendering(i)),
@@ -5562,7 +5562,7 @@ pub enum CurveRef {
     Complex(ComplexUnitId),
 }
 impl CurveRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
             EntityKey::BSplineCurveWithKnots(i) => Ok(Self::BSplineCurveWithKnots(i)),
@@ -5598,7 +5598,7 @@ pub enum CurveStyleFontPatternRef {
     Complex(ComplexUnitId),
 }
 impl CurveStyleFontPatternRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CurveStyleFontPattern(i) => Ok(Self::CurveStyleFontPattern(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -5618,7 +5618,7 @@ pub enum CurveStyleFontSelectRef {
     Complex(ComplexUnitId),
 }
 impl CurveStyleFontSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CurveStyleFont(i) => Ok(Self::CurveStyleFont(i)),
             EntityKey::DraughtingPreDefinedCurveFont(i) => {
@@ -5640,7 +5640,7 @@ pub enum CurveStyleRef {
     Complex(ComplexUnitId),
 }
 impl CurveStyleRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CurveStyle(i) => Ok(Self::CurveStyle(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -5735,7 +5735,7 @@ pub enum DateAndTimeItemRef {
     Complex(ComplexUnitId),
 }
 impl DateAndTimeItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Action(i) => Ok(Self::Action(i)),
             EntityKey::ActionDirective(i) => Ok(Self::ActionDirective(i)),
@@ -5852,7 +5852,7 @@ pub enum DateAndTimeRef {
     Complex(ComplexUnitId),
 }
 impl DateAndTimeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DateAndTime(i) => Ok(Self::DateAndTime(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -5868,7 +5868,7 @@ pub enum DateRef {
     Complex(ComplexUnitId),
 }
 impl DateRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CalendarDate(i) => Ok(Self::CalendarDate(i)),
             EntityKey::Date(i) => Ok(Self::Date(i)),
@@ -5893,7 +5893,7 @@ pub enum DateTimeItemRef {
     Complex(ComplexUnitId),
 }
 impl DateTimeItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApprovalPersonOrganization(i) => Ok(Self::ApprovalPersonOrganization(i)),
             EntityKey::Certification(i) => Ok(Self::Certification(i)),
@@ -5918,7 +5918,7 @@ pub enum DateTimeRoleRef {
     DateTimeRole(DateTimeRoleId),
 }
 impl DateTimeRoleRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DateTimeRole(i) => Ok(Self::DateTimeRole(i)),
             other => Err(format!("expected DateTimeRoleRef target, got {other:?}")),
@@ -5935,7 +5935,7 @@ pub enum DateTimeSelectRef {
     Complex(ComplexUnitId),
 }
 impl DateTimeSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CalendarDate(i) => Ok(Self::CalendarDate(i)),
             EntityKey::Date(i) => Ok(Self::Date(i)),
@@ -5956,7 +5956,7 @@ pub enum DatumOrCommonDatumRef {
     Complex(ComplexUnitId),
 }
 impl DatumOrCommonDatumRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CommonDatum(i) => Ok(Self::CommonDatum(i)),
             EntityKey::Datum(i) => Ok(Self::Datum(i)),
@@ -5976,7 +5976,7 @@ pub enum DatumRef {
     Complex(ComplexUnitId),
 }
 impl DatumRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CommonDatum(i) => Ok(Self::CommonDatum(i)),
             EntityKey::Datum(i) => Ok(Self::Datum(i)),
@@ -5991,7 +5991,7 @@ pub enum DatumReferenceCompartmentRef {
     DatumReferenceCompartment(DatumReferenceCompartmentId),
 }
 impl DatumReferenceCompartmentRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DatumReferenceCompartment(i) => Ok(Self::DatumReferenceCompartment(i)),
             other => Err(format!(
@@ -6006,7 +6006,7 @@ pub enum DatumReferenceElementRef {
     DatumReferenceElement(DatumReferenceElementId),
 }
 impl DatumReferenceElementRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DatumReferenceElement(i) => Ok(Self::DatumReferenceElement(i)),
             other => Err(format!(
@@ -6022,7 +6022,7 @@ pub enum DatumReferenceModifierRef {
     SimpleDatumReferenceModifier(SimpleDatumReferenceModifier),
 }
 impl DatumReferenceModifierRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DatumReferenceModifierWithValue(i) => {
                 Ok(Self::DatumReferenceModifierWithValue(i))
@@ -6041,7 +6041,7 @@ pub enum DatumSystemOrReferenceRef {
     Complex(ComplexUnitId),
 }
 impl DatumSystemOrReferenceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DatumReference(i) => Ok(Self::DatumReference(i)),
             EntityKey::DatumSystem(i) => Ok(Self::DatumSystem(i)),
@@ -6059,7 +6059,7 @@ pub enum DatumSystemRef {
     Complex(ComplexUnitId),
 }
 impl DatumSystemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DatumSystem(i) => Ok(Self::DatumSystem(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -6075,7 +6075,7 @@ pub enum DefinedGlyphSelectRef {
     Complex(ComplexUnitId),
 }
 impl DefinedGlyphSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ExternallyDefinedCharacterGlyph(i) => {
                 Ok(Self::ExternallyDefinedCharacterGlyph(i))
@@ -6098,7 +6098,7 @@ pub enum DefinedSymbolSelectRef {
     Complex(ComplexUnitId),
 }
 impl DefinedSymbolSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ExternallyDefinedSymbol(i) => Ok(Self::ExternallyDefinedSymbol(i)),
             EntityKey::PreDefinedPointMarkerSymbol(i) => Ok(Self::PreDefinedPointMarkerSymbol(i)),
@@ -6118,7 +6118,7 @@ pub enum DefinitionalRepresentationRef {
     Complex(ComplexUnitId),
 }
 impl DefinitionalRepresentationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DefinitionalRepresentation(i) => Ok(Self::DefinitionalRepresentation(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -6169,7 +6169,7 @@ pub enum DerivedPropertySelectRef {
     Complex(ComplexUnitId),
 }
 impl DerivedPropertySelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionProperty(i) => Ok(Self::ActionProperty(i)),
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
@@ -6233,7 +6233,7 @@ pub enum DerivedUnitElementRef {
     DerivedUnitElement(DerivedUnitElementId),
 }
 impl DerivedUnitElementRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DerivedUnitElement(i) => Ok(Self::DerivedUnitElement(i)),
             other => Err(format!(
@@ -6249,7 +6249,7 @@ pub enum DesApllPointSelectRef {
     ApllPointWithSurface(ApllPointWithSurfaceId),
 }
 impl DesApllPointSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApllPoint(i) => Ok(Self::ApllPoint(i)),
             EntityKey::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
@@ -6312,7 +6312,7 @@ pub enum DescriptionAttributeSelectRef {
     Complex(ComplexUnitId),
 }
 impl DescriptionAttributeSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionRequestSolution(i) => Ok(Self::ActionRequestSolution(i)),
             EntityKey::AdvancedBrepShapeRepresentation(i) => {
@@ -6398,7 +6398,7 @@ pub enum DimensionalCharacteristicRef {
     Complex(ComplexUnitId),
 }
 impl DimensionalCharacteristicRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
             EntityKey::AngularSize(i) => Ok(Self::AngularSize(i)),
@@ -6423,7 +6423,7 @@ pub enum DimensionalExponentsRef {
     DimensionalExponents(DimensionalExponentsId),
 }
 impl DimensionalExponentsRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DimensionalExponents(i) => Ok(Self::DimensionalExponents(i)),
             other => Err(format!(
@@ -6439,7 +6439,7 @@ pub enum DirectionRef {
     Complex(ComplexUnitId),
 }
 impl DirectionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Direction(i) => Ok(Self::Direction(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -6455,7 +6455,7 @@ pub enum DocumentRef {
     Complex(ComplexUnitId),
 }
 impl DocumentRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Document(i) => Ok(Self::Document(i)),
             EntityKey::DocumentFile(i) => Ok(Self::DocumentFile(i)),
@@ -6755,7 +6755,7 @@ pub enum DocumentReferenceItemRef {
     Complex(ComplexUnitId),
 }
 impl DocumentReferenceItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionDirective(i) => Ok(Self::ActionDirective(i)),
             EntityKey::ActionMethod(i) => Ok(Self::ActionMethod(i)),
@@ -7129,7 +7129,7 @@ pub enum DocumentTypeRef {
     DocumentType(DocumentTypeId),
 }
 impl DocumentTypeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DocumentType(i) => Ok(Self::DocumentType(i)),
             other => Err(format!("expected DocumentTypeRef target, got {other:?}")),
@@ -7152,7 +7152,7 @@ pub enum DraughtingCalloutElementRef {
     Complex(ComplexUnitId),
 }
 impl DraughtingCalloutElementRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
             EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
@@ -7185,7 +7185,7 @@ pub enum DraughtingCalloutRef {
     Complex(ComplexUnitId),
 }
 impl DraughtingCalloutRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DraughtingCallout(i) => Ok(Self::DraughtingCallout(i)),
             EntityKey::LeaderDirectedCallout(i) => Ok(Self::LeaderDirectedCallout(i)),
@@ -7217,7 +7217,7 @@ pub enum DraughtingModelItemAssociationSelectRef {
     Complex(ComplexUnitId),
 }
 impl DraughtingModelItemAssociationSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
             EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
@@ -7316,7 +7316,7 @@ pub enum DraughtingModelItemDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl DraughtingModelItemDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
@@ -7415,7 +7415,7 @@ pub enum EdgeRef {
     Complex(ComplexUnitId),
 }
 impl EdgeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Edge(i) => Ok(Self::Edge(i)),
             EntityKey::EdgeCurve(i) => Ok(Self::EdgeCurve(i)),
@@ -7673,7 +7673,7 @@ pub enum ExternalIdentificationItemRef {
     Complex(ComplexUnitId),
 }
 impl ExternalIdentificationItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionDirective(i) => Ok(Self::ActionDirective(i)),
             EntityKey::ActionMethod(i) => Ok(Self::ActionMethod(i)),
@@ -7979,7 +7979,7 @@ pub enum ExternalSourceRef {
     Complex(ComplexUnitId),
 }
 impl ExternalSourceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ExternalSource(i) => Ok(Self::ExternalSource(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -7995,7 +7995,7 @@ pub enum FaceBoundRef {
     Complex(ComplexUnitId),
 }
 impl FaceBoundRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::FaceBound(i) => Ok(Self::FaceBound(i)),
             EntityKey::FaceOuterBound(i) => Ok(Self::FaceOuterBound(i)),
@@ -8032,7 +8032,7 @@ pub enum FaceOrSurfaceRef {
     Complex(ComplexUnitId),
 }
 impl FaceOrSurfaceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
@@ -8070,7 +8070,7 @@ pub enum FaceRef {
     Complex(ComplexUnitId),
 }
 impl FaceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::Face(i) => Ok(Self::Face(i)),
@@ -8088,7 +8088,7 @@ pub enum FaceSurfaceRef {
     Complex(ComplexUnitId),
 }
 impl FaceSurfaceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::FaceSurface(i) => Ok(Self::FaceSurface(i)),
@@ -8104,7 +8104,7 @@ pub enum FillAreaStyleRef {
     Complex(ComplexUnitId),
 }
 impl FillAreaStyleRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::FillAreaStyle(i) => Ok(Self::FillAreaStyle(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -8123,7 +8123,7 @@ pub enum FillAreaStyleTileShapeSelectRef {
     Complex(ComplexUnitId),
 }
 impl FillAreaStyleTileShapeSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ExternallyDefinedTile(i) => Ok(Self::ExternallyDefinedTile(i)),
             EntityKey::FillAreaStyleTileColouredRegion(i) => {
@@ -8156,7 +8156,7 @@ pub enum FillStyleSelectRef {
     Complex(ComplexUnitId),
 }
 impl FillStyleSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ExternallyDefinedHatchStyle(i) => Ok(Self::ExternallyDefinedHatchStyle(i)),
             EntityKey::ExternallyDefinedTileStyle(i) => Ok(Self::ExternallyDefinedTileStyle(i)),
@@ -8182,7 +8182,7 @@ pub enum FontSelectRef {
     Complex(ComplexUnitId),
 }
 impl FontSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DraughtingPreDefinedTextFont(i) => Ok(Self::DraughtingPreDefinedTextFont(i)),
             EntityKey::ExternallyDefinedTextFont(i) => Ok(Self::ExternallyDefinedTextFont(i)),
@@ -8200,7 +8200,7 @@ pub enum GeneralPropertyRef {
     Complex(ComplexUnitId),
 }
 impl GeneralPropertyRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::GeneralProperty(i) => Ok(Self::GeneralProperty(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -8242,7 +8242,7 @@ pub enum GeometricItemSpecificUsageSelectRef {
     Complex(ComplexUnitId),
 }
 impl GeometricItemSpecificUsageSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
@@ -8400,7 +8400,7 @@ pub enum GeometricModelItemRef {
     Complex(ComplexUnitId),
 }
 impl GeometricModelItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::AnnotationPlaceholderLeaderLine(i) => {
@@ -8591,7 +8591,7 @@ pub enum GeometricSetSelectRef {
     Complex(ComplexUnitId),
 }
 impl GeometricSetSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationText(i) => Ok(Self::AnnotationText(i)),
             EntityKey::ApllPoint(i) => Ok(Self::ApllPoint(i)),
@@ -8680,7 +8680,7 @@ pub enum GeometricToleranceRef {
     Complex(ComplexUnitId),
 }
 impl GeometricToleranceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AngularityTolerance(i) => Ok(Self::AngularityTolerance(i)),
             EntityKey::CircularRunoutTolerance(i) => Ok(Self::CircularRunoutTolerance(i)),
@@ -8758,7 +8758,7 @@ pub enum GeometricToleranceTargetRef {
     Complex(ComplexUnitId),
 }
 impl GeometricToleranceTargetRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
@@ -8805,7 +8805,7 @@ pub enum GroupRef {
     Complex(ComplexUnitId),
 }
 impl GroupRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Group(i) => Ok(Self::Group(i)),
             EntityKey::ProductConceptFeatureCategory(i) => {
@@ -9127,7 +9127,7 @@ pub enum GroupableItemRef {
     Complex(ComplexUnitId),
 }
 impl GroupableItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionMethod(i) => Ok(Self::ActionMethod(i)),
             EntityKey::Address(i) => Ok(Self::Address(i)),
@@ -9639,7 +9639,7 @@ pub enum IdAttributeSelectRef {
     Complex(ComplexUnitId),
 }
 impl IdAttributeSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Action(i) => Ok(Self::Action(i)),
             EntityKey::Address(i) => Ok(Self::Address(i)),
@@ -9808,7 +9808,7 @@ pub enum IdentificationRoleRef {
     IdentificationRole(IdentificationRoleId),
 }
 impl IdentificationRoleRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::IdentificationRole(i) => Ok(Self::IdentificationRole(i)),
             other => Err(format!(
@@ -9872,7 +9872,7 @@ pub enum InvisibleItemRef {
     Complex(ComplexUnitId),
 }
 impl InvisibleItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedBrepShapeRepresentation(i) => {
                 Ok(Self::AdvancedBrepShapeRepresentation(i))
@@ -9955,7 +9955,7 @@ pub enum ItemDefinedTransformationRef {
     Complex(ComplexUnitId),
 }
 impl ItemDefinedTransformationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ItemDefinedTransformation(i) => Ok(Self::ItemDefinedTransformation(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -10045,7 +10045,7 @@ pub enum ItemIdentifiedRepresentationUsageDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl ItemIdentifiedRepresentationUsageDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
@@ -10312,7 +10312,7 @@ pub enum ItemIdentifiedRepresentationUsageSelectRef {
     Complex(ComplexUnitId),
 }
 impl ItemIdentifiedRepresentationUsageSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
@@ -10652,7 +10652,7 @@ pub enum LayeredItemRef {
     Complex(ComplexUnitId),
 }
 impl LayeredItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
@@ -10843,7 +10843,7 @@ pub enum LengthMeasureWithUnitRef {
     Complex(ComplexUnitId),
 }
 impl LengthMeasureWithUnitRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::LengthMeasureWithUnit(i) => Ok(Self::LengthMeasureWithUnit(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -10861,7 +10861,7 @@ pub enum LengthOrPlaneAngleMeasureWithUnitSelectRef {
     Complex(ComplexUnitId),
 }
 impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::LengthMeasureWithUnit(i) => Ok(Self::LengthMeasureWithUnit(i)),
             EntityKey::PlaneAngleMeasureWithUnit(i) => Ok(Self::PlaneAngleMeasureWithUnit(i)),
@@ -10878,7 +10878,7 @@ pub enum LocalTimeRef {
     LocalTime(LocalTimeId),
 }
 impl LocalTimeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::LocalTime(i) => Ok(Self::LocalTime(i)),
             other => Err(format!("expected LocalTimeRef target, got {other:?}")),
@@ -10895,7 +10895,7 @@ pub enum LoopRef {
     Complex(ComplexUnitId),
 }
 impl LoopRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::EdgeLoop(i) => Ok(Self::EdgeLoop(i)),
             EntityKey::Loop(i) => Ok(Self::Loop(i)),
@@ -10914,7 +10914,7 @@ pub enum ManifoldSolidBrepRef {
     Complex(ComplexUnitId),
 }
 impl ManifoldSolidBrepRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::BrepWithVoids(i) => Ok(Self::BrepWithVoids(i)),
             EntityKey::ManifoldSolidBrep(i) => Ok(Self::ManifoldSolidBrep(i)),
@@ -10934,7 +10934,7 @@ pub enum MarkerSelectRef {
     Complex(ComplexUnitId),
 }
 impl MarkerSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PreDefinedMarker(i) => Ok(Self::PreDefinedMarker(i)),
             EntityKey::PreDefinedPointMarkerSymbol(i) => Ok(Self::PreDefinedPointMarkerSymbol(i)),
@@ -10956,7 +10956,7 @@ pub enum MeasureWithUnitRef {
     Complex(ComplexUnitId),
 }
 impl MeasureWithUnitRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::LengthMeasureWithUnit(i) => Ok(Self::LengthMeasureWithUnit(i)),
             EntityKey::MassMeasureWithUnit(i) => Ok(Self::MassMeasureWithUnit(i)),
@@ -10998,7 +10998,7 @@ pub enum MechanicalDesignAndDraughtingRelationshipSelectRef {
     Complex(ComplexUnitId),
 }
 impl MechanicalDesignAndDraughtingRelationshipSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedBrepShapeRepresentation(i) => {
                 Ok(Self::AdvancedBrepShapeRepresentation(i))
@@ -11062,7 +11062,7 @@ pub enum NameAttributeSelectRef {
     Complex(ComplexUnitId),
 }
 impl NameAttributeSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionRequestSolution(i) => Ok(Self::ActionRequestSolution(i)),
             EntityKey::Address(i) => Ok(Self::Address(i)),
@@ -11114,7 +11114,7 @@ pub enum NamedUnitRef {
     Complex(ComplexUnitId),
 }
 impl NamedUnitRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ContextDependentUnit(i) => Ok(Self::ContextDependentUnit(i)),
             EntityKey::ConversionBasedUnit(i) => Ok(Self::ConversionBasedUnit(i)),
@@ -11137,7 +11137,7 @@ pub enum ObjectRoleRef {
     ObjectRole(ObjectRoleId),
 }
 impl ObjectRoleRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ObjectRole(i) => Ok(Self::ObjectRole(i)),
             other => Err(format!("expected ObjectRoleRef target, got {other:?}")),
@@ -11152,7 +11152,7 @@ pub enum OneDirectionRepeatFactorRef {
     Complex(ComplexUnitId),
 }
 impl OneDirectionRepeatFactorRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::OneDirectionRepeatFactor(i) => Ok(Self::OneDirectionRepeatFactor(i)),
             EntityKey::TwoDirectionRepeatFactor(i) => Ok(Self::TwoDirectionRepeatFactor(i)),
@@ -11169,7 +11169,7 @@ pub enum OrganizationRef {
     Organization(OrganizationId),
 }
 impl OrganizationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Organization(i) => Ok(Self::Organization(i)),
             other => Err(format!("expected OrganizationRef target, got {other:?}")),
@@ -11182,7 +11182,7 @@ pub enum OrganizationalProjectRef {
     OrganizationalProject(OrganizationalProjectId),
 }
 impl OrganizationalProjectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::OrganizationalProject(i) => Ok(Self::OrganizationalProject(i)),
             other => Err(format!(
@@ -11198,7 +11198,7 @@ pub enum OrientedClosedShellRef {
     Complex(ComplexUnitId),
 }
 impl OrientedClosedShellRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -11215,7 +11215,7 @@ pub enum OrientedEdgeRef {
     Complex(ComplexUnitId),
 }
 impl OrientedEdgeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -11250,7 +11250,7 @@ pub enum PcurveOrSurfaceRef {
     Complex(ComplexUnitId),
 }
 impl PcurveOrSurfaceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
             EntityKey::BSplineSurfaceWithKnots(i) => Ok(Self::BSplineSurfaceWithKnots(i)),
@@ -11370,7 +11370,7 @@ pub enum PersonAndOrganizationItemRef {
     Complex(ComplexUnitId),
 }
 impl PersonAndOrganizationItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Action(i) => Ok(Self::Action(i)),
             EntityKey::ActionDirective(i) => Ok(Self::ActionDirective(i)),
@@ -11497,7 +11497,7 @@ pub enum PersonAndOrganizationRef {
     PersonAndOrganization(PersonAndOrganizationId),
 }
 impl PersonAndOrganizationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PersonAndOrganization(i) => Ok(Self::PersonAndOrganization(i)),
             other => Err(format!(
@@ -11512,7 +11512,7 @@ pub enum PersonAndOrganizationRoleRef {
     PersonAndOrganizationRole(PersonAndOrganizationRoleId),
 }
 impl PersonAndOrganizationRoleRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PersonAndOrganizationRole(i) => Ok(Self::PersonAndOrganizationRole(i)),
             other => Err(format!(
@@ -11529,7 +11529,7 @@ pub enum PersonOrganizationSelectRef {
     PersonAndOrganization(PersonAndOrganizationId),
 }
 impl PersonOrganizationSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Organization(i) => Ok(Self::Organization(i)),
             EntityKey::Person(i) => Ok(Self::Person(i)),
@@ -11546,7 +11546,7 @@ pub enum PersonRef {
     Person(PersonId),
 }
 impl PersonRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Person(i) => Ok(Self::Person(i)),
             other => Err(format!("expected PersonRef target, got {other:?}")),
@@ -11560,7 +11560,7 @@ pub enum PlanarBoxRef {
     Complex(ComplexUnitId),
 }
 impl PlanarBoxRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PlanarBox(i) => Ok(Self::PlanarBox(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -11576,7 +11576,7 @@ pub enum PlaneOrPlanarBoxRef {
     Complex(ComplexUnitId),
 }
 impl PlaneOrPlanarBoxRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PlanarBox(i) => Ok(Self::PlanarBox(i)),
             EntityKey::Plane(i) => Ok(Self::Plane(i)),
@@ -11597,7 +11597,7 @@ pub enum PointRef {
     Complex(ComplexUnitId),
 }
 impl PointRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApllPoint(i) => Ok(Self::ApllPoint(i)),
             EntityKey::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
@@ -11615,7 +11615,7 @@ pub enum PresentationAreaRef {
     Complex(ComplexUnitId),
 }
 impl PresentationAreaRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PresentationArea(i) => Ok(Self::PresentationArea(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -11635,7 +11635,7 @@ pub enum PresentationRepresentationSelectRef {
     Complex(ComplexUnitId),
 }
 impl PresentationRepresentationSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PresentationArea(i) => Ok(Self::PresentationArea(i)),
             EntityKey::PresentationRepresentation(i) => Ok(Self::PresentationRepresentation(i)),
@@ -11655,7 +11655,7 @@ pub enum PresentationSetRef {
     Complex(ComplexUnitId),
 }
 impl PresentationSetRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PresentationSet(i) => Ok(Self::PresentationSet(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -11672,7 +11672,7 @@ pub enum PresentationSizeAssignmentSelectRef {
     Complex(ComplexUnitId),
 }
 impl PresentationSizeAssignmentSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AreaInSet(i) => Ok(Self::AreaInSet(i)),
             EntityKey::PresentationArea(i) => Ok(Self::PresentationArea(i)),
@@ -11692,7 +11692,7 @@ pub enum PresentationStyleAssignmentRef {
     Complex(ComplexUnitId),
 }
 impl PresentationStyleAssignmentRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PresentationStyleAssignment(i) => Ok(Self::PresentationStyleAssignment(i)),
             EntityKey::PresentationStyleByContext(i) => Ok(Self::PresentationStyleByContext(i)),
@@ -11721,7 +11721,7 @@ pub enum PresentationStyleSelectRef {
     Complex(ComplexUnitId),
 }
 impl PresentationStyleSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApproximationTolerance(i) => Ok(Self::ApproximationTolerance(i)),
             EntityKey::CurveStyle(i) => Ok(Self::CurveStyle(i)),
@@ -11753,7 +11753,7 @@ pub enum PresentedItemRef {
     Complex(ComplexUnitId),
 }
 impl PresentedItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AppliedPresentedItem(i) => Ok(Self::AppliedPresentedItem(i)),
             EntityKey::PresentedItem(i) => Ok(Self::PresentedItem(i)),
@@ -11783,7 +11783,7 @@ pub enum PresentedItemSelectRef {
     Complex(ComplexUnitId),
 }
 impl PresentedItemSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Action(i) => Ok(Self::Action(i)),
             EntityKey::ActionMethod(i) => Ok(Self::ActionMethod(i)),
@@ -11823,7 +11823,7 @@ pub enum ProductCategoryRef {
     Complex(ComplexUnitId),
 }
 impl ProductCategoryRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductCategory(i) => Ok(Self::ProductCategory(i)),
             EntityKey::ProductRelatedProductCategory(i) => {
@@ -11840,7 +11840,7 @@ pub enum ProductConceptContextRef {
     ProductConceptContext(ProductConceptContextId),
 }
 impl ProductConceptContextRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductConceptContext(i) => Ok(Self::ProductConceptContext(i)),
             other => Err(format!(
@@ -11856,7 +11856,7 @@ pub enum ProductConceptRef {
     Complex(ComplexUnitId),
 }
 impl ProductConceptRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductConcept(i) => Ok(Self::ProductConcept(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -11872,7 +11872,7 @@ pub enum ProductContextRef {
     Complex(ComplexUnitId),
 }
 impl ProductContextRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::MechanicalContext(i) => Ok(Self::MechanicalContext(i)),
             EntityKey::ProductContext(i) => Ok(Self::ProductContext(i)),
@@ -11889,7 +11889,7 @@ pub enum ProductDefinitionContextRef {
     Complex(ComplexUnitId),
 }
 impl ProductDefinitionContextRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DesignContext(i) => Ok(Self::DesignContext(i)),
             EntityKey::ProductDefinitionContext(i) => Ok(Self::ProductDefinitionContext(i)),
@@ -11906,7 +11906,7 @@ pub enum ProductDefinitionContextRoleRef {
     ProductDefinitionContextRole(ProductDefinitionContextRoleId),
 }
 impl ProductDefinitionContextRoleRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinitionContextRole(i) => Ok(Self::ProductDefinitionContextRole(i)),
             other => Err(format!(
@@ -11923,7 +11923,7 @@ pub enum ProductDefinitionFormationRef {
     Complex(ComplexUnitId),
 }
 impl ProductDefinitionFormationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             EntityKey::ProductDefinitionFormationWithSpecifiedSource(i) => {
@@ -11946,7 +11946,7 @@ pub enum ProductDefinitionOrReferenceRef {
     Complex(ComplexUnitId),
 }
 impl ProductDefinitionOrReferenceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::GenericProductDefinitionReference(i) => {
                 Ok(Self::GenericProductDefinitionReference(i))
@@ -11971,7 +11971,7 @@ pub enum ProductDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl ProductDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
             EntityKey::ProductDefinitionWithAssociatedDocuments(i) => {
@@ -11995,7 +11995,7 @@ pub enum ProductDefinitionRelationshipRef {
     Complex(ComplexUnitId),
 }
 impl ProductDefinitionRelationshipRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AssemblyComponentUsage(i) => Ok(Self::AssemblyComponentUsage(i)),
             EntityKey::MakeFromUsageOption(i) => Ok(Self::MakeFromUsageOption(i)),
@@ -12018,7 +12018,7 @@ pub enum ProductDefinitionShapeRef {
     Complex(ComplexUnitId),
 }
 impl ProductDefinitionShapeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -12039,7 +12039,7 @@ pub enum ProductOrFormationOrDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl ProductOrFormationOrDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Product(i) => Ok(Self::Product(i)),
             EntityKey::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
@@ -12064,7 +12064,7 @@ pub enum ProductRef {
     Complex(ComplexUnitId),
 }
 impl ProductRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Product(i) => Ok(Self::Product(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -12080,7 +12080,7 @@ pub enum PropertyDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl PropertyDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
             EntityKey::PropertyDefinition(i) => Ok(Self::PropertyDefinition(i)),
@@ -12099,7 +12099,7 @@ pub enum RenderingPropertiesSelectRef {
     Complex(ComplexUnitId),
 }
 impl RenderingPropertiesSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::SurfaceStyleReflectanceAmbient(i) => {
                 Ok(Self::SurfaceStyleReflectanceAmbient(i))
@@ -12123,7 +12123,7 @@ pub enum RepresentationContextRef {
     Complex(ComplexUnitId),
 }
 impl RepresentationContextRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::GeometricRepresentationContext(i) => {
                 Ok(Self::GeometricRepresentationContext(i))
@@ -12149,7 +12149,7 @@ pub enum RepresentationContextReferenceRef {
     RepresentationContextReference(RepresentationContextReferenceId),
 }
 impl RepresentationContextReferenceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::RepresentationContextReference(i) => {
                 Ok(Self::RepresentationContextReference(i))
@@ -12314,7 +12314,7 @@ pub enum RepresentationItemRef {
     Complex(ComplexUnitId),
 }
 impl RepresentationItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
@@ -12505,7 +12505,7 @@ pub enum RepresentationMapRef {
     Complex(ComplexUnitId),
 }
 impl RepresentationMapRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CameraUsage(i) => Ok(Self::CameraUsage(i)),
             EntityKey::RepresentationMap(i) => Ok(Self::RepresentationMap(i)),
@@ -12553,7 +12553,7 @@ pub enum RepresentationOrRepresentationReferenceRef {
     Complex(ComplexUnitId),
 }
 impl RepresentationOrRepresentationReferenceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedBrepShapeRepresentation(i) => {
                 Ok(Self::AdvancedBrepShapeRepresentation(i))
@@ -12639,7 +12639,7 @@ pub enum RepresentationRef {
     Complex(ComplexUnitId),
 }
 impl RepresentationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedBrepShapeRepresentation(i) => {
                 Ok(Self::AdvancedBrepShapeRepresentation(i))
@@ -12724,7 +12724,7 @@ pub enum RepresentedDefinitionRef {
     Complex(ComplexUnitId),
 }
 impl RepresentedDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
@@ -12779,7 +12779,7 @@ pub enum ResourceRequirementTypeRef {
     ResourceRequirementType(ResourceRequirementTypeId),
 }
 impl ResourceRequirementTypeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ResourceRequirementType(i) => Ok(Self::ResourceRequirementType(i)),
             other => Err(format!(
@@ -12811,7 +12811,7 @@ pub enum RoleSelectRef {
     Complex(ComplexUnitId),
 }
 impl RoleSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionAssignment(i) => Ok(Self::ActionAssignment(i)),
             EntityKey::ActionRequestAssignment(i) => Ok(Self::ActionRequestAssignment(i)),
@@ -12910,7 +12910,7 @@ pub enum SecurityClassificationItemRef {
     Complex(ComplexUnitId),
 }
 impl SecurityClassificationItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Action(i) => Ok(Self::Action(i)),
             EntityKey::ActionDirective(i) => Ok(Self::ActionDirective(i)),
@@ -13012,7 +13012,7 @@ pub enum SecurityClassificationLevelRef {
     SecurityClassificationLevel(SecurityClassificationLevelId),
 }
 impl SecurityClassificationLevelRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::SecurityClassificationLevel(i) => Ok(Self::SecurityClassificationLevel(i)),
             other => Err(format!(
@@ -13027,7 +13027,7 @@ pub enum SecurityClassificationRef {
     SecurityClassification(SecurityClassificationId),
 }
 impl SecurityClassificationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::SecurityClassification(i) => Ok(Self::SecurityClassification(i)),
             other => Err(format!(
@@ -13062,7 +13062,7 @@ pub enum ShapeAspectRef {
     Complex(ComplexUnitId),
 }
 impl ShapeAspectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
             EntityKey::CentreOfSymmetry(i) => Ok(Self::CentreOfSymmetry(i)),
@@ -13098,7 +13098,7 @@ pub enum ShapeDimensionRepresentationRef {
     Complex(ComplexUnitId),
 }
 impl ShapeDimensionRepresentationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -13127,7 +13127,7 @@ pub enum ShapeModelRef {
     Complex(ComplexUnitId),
 }
 impl ShapeModelRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedBrepShapeRepresentation(i) => {
                 Ok(Self::AdvancedBrepShapeRepresentation(i))
@@ -13164,7 +13164,7 @@ pub enum ShapeRepresentationRelationshipRef {
     Complex(ComplexUnitId),
 }
 impl ShapeRepresentationRelationshipRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ShapeRepresentationRelationship(i) => {
                 Ok(Self::ShapeRepresentationRelationship(i))
@@ -13187,7 +13187,7 @@ pub enum ShellRef {
     Complex(ComplexUnitId),
 }
 impl ShellRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ClosedShell(i) => Ok(Self::ClosedShell(i)),
             EntityKey::OpenShell(i) => Ok(Self::OpenShell(i)),
@@ -13214,7 +13214,7 @@ pub enum SizeSelectRef {
     Complex(ComplexUnitId),
 }
 impl SizeSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::LengthMeasureWithUnit(i) => Ok(Self::LengthMeasureWithUnit(i)),
             EntityKey::MassMeasureWithUnit(i) => Ok(Self::MassMeasureWithUnit(i)),
@@ -13236,7 +13236,7 @@ pub enum StartRequestItemRef {
     Complex(ComplexUnitId),
 }
 impl StartRequestItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             EntityKey::ProductDefinitionFormationWithSpecifiedSource(i) => {
@@ -13256,7 +13256,7 @@ pub enum StateObservedRef {
     Complex(ComplexUnitId),
 }
 impl StateObservedRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::StateObserved(i) => Ok(Self::StateObserved(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -13271,7 +13271,7 @@ pub enum StateTypeRef {
     Complex(ComplexUnitId),
 }
 impl StateTypeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::StateType(i) => Ok(Self::StateType(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -13479,7 +13479,7 @@ pub enum StyleContextSelectRef {
     Complex(ComplexUnitId),
 }
 impl StyleContextSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedBrepShapeRepresentation(i) => {
                 Ok(Self::AdvancedBrepShapeRepresentation(i))
@@ -13752,7 +13752,7 @@ pub enum StyledItemRef {
     Complex(ComplexUnitId),
 }
 impl StyledItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
             EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
@@ -13949,7 +13949,7 @@ pub enum StyledItemTargetRef {
     Complex(ComplexUnitId),
 }
 impl StyledItemTargetRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedBrepShapeRepresentation(i) => {
                 Ok(Self::AdvancedBrepShapeRepresentation(i))
@@ -14153,7 +14153,7 @@ pub enum SupportedItemRef {
     Complex(ComplexUnitId),
 }
 impl SupportedItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Action(i) => Ok(Self::Action(i)),
             EntityKey::ActionDirective(i) => Ok(Self::ActionDirective(i)),
@@ -14188,7 +14188,7 @@ pub enum SurfaceRef {
     Complex(ComplexUnitId),
 }
 impl SurfaceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
             EntityKey::BSplineSurfaceWithKnots(i) => Ok(Self::BSplineSurfaceWithKnots(i)),
@@ -14220,7 +14220,7 @@ pub enum SurfaceRenderingPropertiesRef {
     SurfaceRenderingProperties(SurfaceRenderingPropertiesId),
 }
 impl SurfaceRenderingPropertiesRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::SurfaceRenderingProperties(i) => Ok(Self::SurfaceRenderingProperties(i)),
             other => Err(format!(
@@ -14237,7 +14237,7 @@ pub enum SurfaceSideStyleSelectRef {
     Complex(ComplexUnitId),
 }
 impl SurfaceSideStyleSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PreDefinedSurfaceSideStyle(i) => Ok(Self::PreDefinedSurfaceSideStyle(i)),
             EntityKey::SurfaceSideStyle(i) => Ok(Self::SurfaceSideStyle(i)),
@@ -14262,7 +14262,7 @@ pub enum SurfaceStyleElementSelectRef {
     Complex(ComplexUnitId),
 }
 impl SurfaceStyleElementSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::SurfaceStyleBoundary(i) => Ok(Self::SurfaceStyleBoundary(i)),
             EntityKey::SurfaceStyleControlGrid(i) => Ok(Self::SurfaceStyleControlGrid(i)),
@@ -14289,7 +14289,7 @@ pub enum SymbolStyleSelectRef {
     SymbolColour(SymbolColourId),
 }
 impl SymbolStyleSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::SymbolColour(i) => Ok(Self::SymbolColour(i)),
             other => Err(format!(
@@ -14304,7 +14304,7 @@ pub enum SymbolTargetRef {
     SymbolTarget(SymbolTargetId),
 }
 impl SymbolTargetRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::SymbolTarget(i) => Ok(Self::SymbolTarget(i)),
             other => Err(format!("expected SymbolTargetRef target, got {other:?}")),
@@ -14329,7 +14329,7 @@ pub enum TessellatedItemRef {
     Complex(ComplexUnitId),
 }
 impl TessellatedItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ComplexTriangulatedFace(i) => Ok(Self::ComplexTriangulatedFace(i)),
             EntityKey::ComplexTriangulatedSurfaceSet(i) => {
@@ -14359,7 +14359,7 @@ pub enum TessellatedStructuredItemRef {
     Complex(ComplexUnitId),
 }
 impl TessellatedStructuredItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ComplexTriangulatedFace(i) => Ok(Self::ComplexTriangulatedFace(i)),
             EntityKey::TessellatedFace(i) => Ok(Self::TessellatedFace(i)),
@@ -14382,7 +14382,7 @@ pub enum TextOrCharacterRef {
     Complex(ComplexUnitId),
 }
 impl TextOrCharacterRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationText(i) => Ok(Self::AnnotationText(i)),
             EntityKey::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
@@ -14401,7 +14401,7 @@ pub enum ToleranceMethodDefinitionRef {
     ToleranceValue(ToleranceValueId),
 }
 impl ToleranceMethodDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::LimitsAndFits(i) => Ok(Self::LimitsAndFits(i)),
             EntityKey::ToleranceValue(i) => Ok(Self::ToleranceValue(i)),
@@ -14418,7 +14418,7 @@ pub enum ToleranceSelectRef {
     ApproximationToleranceParameter(ApproximationToleranceParameterId),
 }
 impl ToleranceSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApproximationToleranceDeviation(i) => {
                 Ok(Self::ApproximationToleranceDeviation(i))
@@ -14436,7 +14436,7 @@ pub enum ToleranceZoneFormRef {
     ToleranceZoneForm(ToleranceZoneFormId),
 }
 impl ToleranceZoneFormRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ToleranceZoneForm(i) => Ok(Self::ToleranceZoneForm(i)),
             other => Err(format!(
@@ -14453,7 +14453,7 @@ pub enum ToleranceZoneRef {
     Complex(ComplexUnitId),
 }
 impl ToleranceZoneRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
             EntityKey::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
@@ -14502,7 +14502,7 @@ pub enum ToleranceZoneTargetRef {
     Complex(ComplexUnitId),
 }
 impl ToleranceZoneTargetRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
             EntityKey::AngularSize(i) => Ok(Self::AngularSize(i)),
@@ -14569,7 +14569,7 @@ pub enum TransformationRef {
     Complex(ComplexUnitId),
 }
 impl TransformationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::FunctionallyDefinedTransformation(i) => {
                 Ok(Self::FunctionallyDefinedTransformation(i))
@@ -14589,7 +14589,7 @@ pub enum TrimmingSelectRef {
     ParameterValue(f64),
 }
 impl TrimmingSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApllPoint(i) => Ok(Self::ApllPoint(i)),
             EntityKey::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
@@ -14605,7 +14605,7 @@ pub enum TwoDirectionRepeatFactorRef {
     Complex(ComplexUnitId),
 }
 impl TwoDirectionRepeatFactorRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::TwoDirectionRepeatFactor(i) => Ok(Self::TwoDirectionRepeatFactor(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -14621,7 +14621,7 @@ pub enum UncertaintyMeasureWithUnitRef {
     UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
 }
 impl UncertaintyMeasureWithUnitRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::UncertaintyMeasureWithUnit(i) => Ok(Self::UncertaintyMeasureWithUnit(i)),
             other => Err(format!(
@@ -14649,7 +14649,7 @@ pub enum UnitRef {
     Complex(ComplexUnitId),
 }
 impl UnitRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AreaUnit(i) => Ok(Self::AreaUnit(i)),
             EntityKey::ContextDependentUnit(i) => Ok(Self::ContextDependentUnit(i)),
@@ -14678,7 +14678,7 @@ pub enum ValueQualifierRef {
     ValueFormatTypeQualifier(ValueFormatTypeQualifierId),
 }
 impl ValueQualifierRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PrecisionQualifier(i) => Ok(Self::PrecisionQualifier(i)),
             EntityKey::TypeQualifier(i) => Ok(Self::TypeQualifier(i)),
@@ -14695,7 +14695,7 @@ pub enum VectorRef {
     Complex(ComplexUnitId),
 }
 impl VectorRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Vector(i) => Ok(Self::Vector(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -14709,7 +14709,7 @@ pub enum VersionedActionRequestRef {
     VersionedActionRequest(VersionedActionRequestId),
 }
 impl VersionedActionRequestRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::VersionedActionRequest(i) => Ok(Self::VersionedActionRequest(i)),
             other => Err(format!(
@@ -14724,7 +14724,7 @@ pub enum VertexLoopRef {
     VertexLoop(VertexLoopId),
 }
 impl VertexLoopRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::VertexLoop(i) => Ok(Self::VertexLoop(i)),
             other => Err(format!("expected VertexLoopRef target, got {other:?}")),
@@ -14739,7 +14739,7 @@ pub enum VertexRef {
     Complex(ComplexUnitId),
 }
 impl VertexRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Vertex(i) => Ok(Self::Vertex(i)),
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
@@ -14755,7 +14755,7 @@ pub enum ViewVolumeRef {
     Complex(ComplexUnitId),
 }
 impl ViewVolumeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ViewVolume(i) => Ok(Self::ViewVolume(i)),
             EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
@@ -14771,7 +14771,7 @@ pub enum WorkItemRef {
     Complex(ComplexUnitId),
 }
 impl WorkItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             EntityKey::ProductDefinitionFormationWithSpecifiedSource(i) => {
@@ -19238,532 +19238,542 @@ pub struct ComplexUnit {
 pub struct StepModel {
     pub(crate) header: crate::header::FileHeader,
     pub(crate) texts: Texts,
-    pub action_arena: Arena<Action>,
-    pub action_assignment_arena: Arena<ActionAssignment>,
-    pub action_directive_arena: Arena<ActionDirective>,
-    pub action_method_arena: Arena<ActionMethod>,
-    pub action_method_relationship_arena: Arena<ActionMethodRelationship>,
-    pub action_property_arena: Arena<ActionProperty>,
-    pub action_relationship_arena: Arena<ActionRelationship>,
-    pub action_request_assignment_arena: Arena<ActionRequestAssignment>,
-    pub action_request_solution_arena: Arena<ActionRequestSolution>,
-    pub action_resource_arena: Arena<ActionResource>,
-    pub action_resource_relationship_arena: Arena<ActionResourceRelationship>,
-    pub action_resource_requirement_arena: Arena<ActionResourceRequirement>,
-    pub action_resource_type_arena: Arena<ActionResourceType>,
-    pub address_arena: Arena<Address>,
-    pub advanced_brep_shape_representation_arena: Arena<AdvancedBrepShapeRepresentation>,
-    pub advanced_face_arena: Arena<AdvancedFace>,
-    pub all_around_shape_aspect_arena: Arena<AllAroundShapeAspect>,
-    pub angular_location_arena: Arena<AngularLocation>,
-    pub angular_size_arena: Arena<AngularSize>,
-    pub angularity_tolerance_arena: Arena<AngularityTolerance>,
-    pub annotation_curve_occurrence_arena: Arena<AnnotationCurveOccurrence>,
-    pub annotation_fill_area_occurrence_arena: Arena<AnnotationFillAreaOccurrence>,
-    pub annotation_occurrence_arena: Arena<AnnotationOccurrence>,
-    pub annotation_occurrence_associativity_arena: Arena<AnnotationOccurrenceAssociativity>,
-    pub annotation_occurrence_relationship_arena: Arena<AnnotationOccurrenceRelationship>,
-    pub annotation_placeholder_leader_line_arena: Arena<AnnotationPlaceholderLeaderLine>,
-    pub annotation_placeholder_occurrence_arena: Arena<AnnotationPlaceholderOccurrence>,
-    pub annotation_placeholder_occurrence_with_leader_line_arena:
+    pub(crate) action_arena: Arena<Action>,
+    pub(crate) action_assignment_arena: Arena<ActionAssignment>,
+    pub(crate) action_directive_arena: Arena<ActionDirective>,
+    pub(crate) action_method_arena: Arena<ActionMethod>,
+    pub(crate) action_method_relationship_arena: Arena<ActionMethodRelationship>,
+    pub(crate) action_property_arena: Arena<ActionProperty>,
+    pub(crate) action_relationship_arena: Arena<ActionRelationship>,
+    pub(crate) action_request_assignment_arena: Arena<ActionRequestAssignment>,
+    pub(crate) action_request_solution_arena: Arena<ActionRequestSolution>,
+    pub(crate) action_resource_arena: Arena<ActionResource>,
+    pub(crate) action_resource_relationship_arena: Arena<ActionResourceRelationship>,
+    pub(crate) action_resource_requirement_arena: Arena<ActionResourceRequirement>,
+    pub(crate) action_resource_type_arena: Arena<ActionResourceType>,
+    pub(crate) address_arena: Arena<Address>,
+    pub(crate) advanced_brep_shape_representation_arena: Arena<AdvancedBrepShapeRepresentation>,
+    pub(crate) advanced_face_arena: Arena<AdvancedFace>,
+    pub(crate) all_around_shape_aspect_arena: Arena<AllAroundShapeAspect>,
+    pub(crate) angular_location_arena: Arena<AngularLocation>,
+    pub(crate) angular_size_arena: Arena<AngularSize>,
+    pub(crate) angularity_tolerance_arena: Arena<AngularityTolerance>,
+    pub(crate) annotation_curve_occurrence_arena: Arena<AnnotationCurveOccurrence>,
+    pub(crate) annotation_fill_area_occurrence_arena: Arena<AnnotationFillAreaOccurrence>,
+    pub(crate) annotation_occurrence_arena: Arena<AnnotationOccurrence>,
+    pub(crate) annotation_occurrence_associativity_arena: Arena<AnnotationOccurrenceAssociativity>,
+    pub(crate) annotation_occurrence_relationship_arena: Arena<AnnotationOccurrenceRelationship>,
+    pub(crate) annotation_placeholder_leader_line_arena: Arena<AnnotationPlaceholderLeaderLine>,
+    pub(crate) annotation_placeholder_occurrence_arena: Arena<AnnotationPlaceholderOccurrence>,
+    pub(crate) annotation_placeholder_occurrence_with_leader_line_arena:
         Arena<AnnotationPlaceholderOccurrenceWithLeaderLine>,
-    pub annotation_plane_arena: Arena<AnnotationPlane>,
-    pub annotation_symbol_arena: Arena<AnnotationSymbol>,
-    pub annotation_symbol_occurrence_arena: Arena<AnnotationSymbolOccurrence>,
-    pub annotation_text_arena: Arena<AnnotationText>,
-    pub annotation_text_character_arena: Arena<AnnotationTextCharacter>,
-    pub annotation_text_occurrence_arena: Arena<AnnotationTextOccurrence>,
-    pub annotation_to_annotation_leader_line_arena: Arena<AnnotationToAnnotationLeaderLine>,
-    pub annotation_to_model_leader_line_arena: Arena<AnnotationToModelLeaderLine>,
-    pub apll_point_arena: Arena<ApllPoint>,
-    pub apll_point_with_surface_arena: Arena<ApllPointWithSurface>,
-    pub application_context_arena: Arena<ApplicationContext>,
-    pub application_context_element_arena: Arena<ApplicationContextElement>,
-    pub application_protocol_definition_arena: Arena<ApplicationProtocolDefinition>,
-    pub applied_approval_assignment_arena: Arena<AppliedApprovalAssignment>,
-    pub applied_date_and_time_assignment_arena: Arena<AppliedDateAndTimeAssignment>,
-    pub applied_document_reference_arena: Arena<AppliedDocumentReference>,
-    pub applied_external_identification_assignment_arena:
+    pub(crate) annotation_plane_arena: Arena<AnnotationPlane>,
+    pub(crate) annotation_symbol_arena: Arena<AnnotationSymbol>,
+    pub(crate) annotation_symbol_occurrence_arena: Arena<AnnotationSymbolOccurrence>,
+    pub(crate) annotation_text_arena: Arena<AnnotationText>,
+    pub(crate) annotation_text_character_arena: Arena<AnnotationTextCharacter>,
+    pub(crate) annotation_text_occurrence_arena: Arena<AnnotationTextOccurrence>,
+    pub(crate) annotation_to_annotation_leader_line_arena: Arena<AnnotationToAnnotationLeaderLine>,
+    pub(crate) annotation_to_model_leader_line_arena: Arena<AnnotationToModelLeaderLine>,
+    pub(crate) apll_point_arena: Arena<ApllPoint>,
+    pub(crate) apll_point_with_surface_arena: Arena<ApllPointWithSurface>,
+    pub(crate) application_context_arena: Arena<ApplicationContext>,
+    pub(crate) application_context_element_arena: Arena<ApplicationContextElement>,
+    pub(crate) application_protocol_definition_arena: Arena<ApplicationProtocolDefinition>,
+    pub(crate) applied_approval_assignment_arena: Arena<AppliedApprovalAssignment>,
+    pub(crate) applied_date_and_time_assignment_arena: Arena<AppliedDateAndTimeAssignment>,
+    pub(crate) applied_document_reference_arena: Arena<AppliedDocumentReference>,
+    pub(crate) applied_external_identification_assignment_arena:
         Arena<AppliedExternalIdentificationAssignment>,
-    pub applied_group_assignment_arena: Arena<AppliedGroupAssignment>,
-    pub applied_person_and_organization_assignment_arena:
+    pub(crate) applied_group_assignment_arena: Arena<AppliedGroupAssignment>,
+    pub(crate) applied_person_and_organization_assignment_arena:
         Arena<AppliedPersonAndOrganizationAssignment>,
-    pub applied_presented_item_arena: Arena<AppliedPresentedItem>,
-    pub applied_security_classification_assignment_arena:
+    pub(crate) applied_presented_item_arena: Arena<AppliedPresentedItem>,
+    pub(crate) applied_security_classification_assignment_arena:
         Arena<AppliedSecurityClassificationAssignment>,
-    pub approval_arena: Arena<Approval>,
-    pub approval_assignment_arena: Arena<ApprovalAssignment>,
-    pub approval_date_time_arena: Arena<ApprovalDateTime>,
-    pub approval_person_organization_arena: Arena<ApprovalPersonOrganization>,
-    pub approval_role_arena: Arena<ApprovalRole>,
-    pub approval_status_arena: Arena<ApprovalStatus>,
-    pub approximation_tolerance_arena: Arena<ApproximationTolerance>,
-    pub approximation_tolerance_deviation_arena: Arena<ApproximationToleranceDeviation>,
-    pub approximation_tolerance_parameter_arena: Arena<ApproximationToleranceParameter>,
-    pub area_in_set_arena: Arena<AreaInSet>,
-    pub area_unit_arena: Arena<AreaUnit>,
-    pub ascribable_state_arena: Arena<AscribableState>,
-    pub ascribable_state_relationship_arena: Arena<AscribableStateRelationship>,
-    pub assembly_component_usage_arena: Arena<AssemblyComponentUsage>,
-    pub auxiliary_leader_line_arena: Arena<AuxiliaryLeaderLine>,
-    pub axis1_placement_arena: Arena<Axis1Placement>,
-    pub axis2_placement2d_arena: Arena<Axis2Placement2d>,
-    pub axis2_placement3d_arena: Arena<Axis2Placement3d>,
-    pub b_spline_curve_arena: Arena<BSplineCurve>,
-    pub b_spline_curve_with_knots_arena: Arena<BSplineCurveWithKnots>,
-    pub b_spline_surface_arena: Arena<BSplineSurface>,
-    pub b_spline_surface_with_knots_arena: Arena<BSplineSurfaceWithKnots>,
-    pub bezier_curve_arena: Arena<BezierCurve>,
-    pub bezier_surface_arena: Arena<BezierSurface>,
-    pub bounded_curve_arena: Arena<BoundedCurve>,
-    pub bounded_pcurve_arena: Arena<BoundedPcurve>,
-    pub bounded_surface_arena: Arena<BoundedSurface>,
-    pub bounded_surface_curve_arena: Arena<BoundedSurfaceCurve>,
-    pub brep_with_voids_arena: Arena<BrepWithVoids>,
-    pub calendar_date_arena: Arena<CalendarDate>,
-    pub camera_image_arena: Arena<CameraImage>,
-    pub camera_image3d_with_scale_arena: Arena<CameraImage3dWithScale>,
-    pub camera_model_arena: Arena<CameraModel>,
-    pub camera_model_d3_arena: Arena<CameraModelD3>,
-    pub camera_model_d3_multi_clipping_arena: Arena<CameraModelD3MultiClipping>,
-    pub camera_model_d3_with_hlhsr_arena: Arena<CameraModelD3WithHlhsr>,
-    pub camera_usage_arena: Arena<CameraUsage>,
-    pub cartesian_point_arena: Arena<CartesianPoint>,
-    pub cc_design_approval_arena: Arena<CcDesignApproval>,
-    pub cc_design_date_and_time_assignment_arena: Arena<CcDesignDateAndTimeAssignment>,
-    pub cc_design_person_and_organization_assignment_arena:
+    pub(crate) approval_arena: Arena<Approval>,
+    pub(crate) approval_assignment_arena: Arena<ApprovalAssignment>,
+    pub(crate) approval_date_time_arena: Arena<ApprovalDateTime>,
+    pub(crate) approval_person_organization_arena: Arena<ApprovalPersonOrganization>,
+    pub(crate) approval_role_arena: Arena<ApprovalRole>,
+    pub(crate) approval_status_arena: Arena<ApprovalStatus>,
+    pub(crate) approximation_tolerance_arena: Arena<ApproximationTolerance>,
+    pub(crate) approximation_tolerance_deviation_arena: Arena<ApproximationToleranceDeviation>,
+    pub(crate) approximation_tolerance_parameter_arena: Arena<ApproximationToleranceParameter>,
+    pub(crate) area_in_set_arena: Arena<AreaInSet>,
+    pub(crate) area_unit_arena: Arena<AreaUnit>,
+    pub(crate) ascribable_state_arena: Arena<AscribableState>,
+    pub(crate) ascribable_state_relationship_arena: Arena<AscribableStateRelationship>,
+    pub(crate) assembly_component_usage_arena: Arena<AssemblyComponentUsage>,
+    pub(crate) auxiliary_leader_line_arena: Arena<AuxiliaryLeaderLine>,
+    pub(crate) axis1_placement_arena: Arena<Axis1Placement>,
+    pub(crate) axis2_placement2d_arena: Arena<Axis2Placement2d>,
+    pub(crate) axis2_placement3d_arena: Arena<Axis2Placement3d>,
+    pub(crate) b_spline_curve_arena: Arena<BSplineCurve>,
+    pub(crate) b_spline_curve_with_knots_arena: Arena<BSplineCurveWithKnots>,
+    pub(crate) b_spline_surface_arena: Arena<BSplineSurface>,
+    pub(crate) b_spline_surface_with_knots_arena: Arena<BSplineSurfaceWithKnots>,
+    pub(crate) bezier_curve_arena: Arena<BezierCurve>,
+    pub(crate) bezier_surface_arena: Arena<BezierSurface>,
+    pub(crate) bounded_curve_arena: Arena<BoundedCurve>,
+    pub(crate) bounded_pcurve_arena: Arena<BoundedPcurve>,
+    pub(crate) bounded_surface_arena: Arena<BoundedSurface>,
+    pub(crate) bounded_surface_curve_arena: Arena<BoundedSurfaceCurve>,
+    pub(crate) brep_with_voids_arena: Arena<BrepWithVoids>,
+    pub(crate) calendar_date_arena: Arena<CalendarDate>,
+    pub(crate) camera_image_arena: Arena<CameraImage>,
+    pub(crate) camera_image3d_with_scale_arena: Arena<CameraImage3dWithScale>,
+    pub(crate) camera_model_arena: Arena<CameraModel>,
+    pub(crate) camera_model_d3_arena: Arena<CameraModelD3>,
+    pub(crate) camera_model_d3_multi_clipping_arena: Arena<CameraModelD3MultiClipping>,
+    pub(crate) camera_model_d3_with_hlhsr_arena: Arena<CameraModelD3WithHlhsr>,
+    pub(crate) camera_usage_arena: Arena<CameraUsage>,
+    pub(crate) cartesian_point_arena: Arena<CartesianPoint>,
+    pub(crate) cc_design_approval_arena: Arena<CcDesignApproval>,
+    pub(crate) cc_design_date_and_time_assignment_arena: Arena<CcDesignDateAndTimeAssignment>,
+    pub(crate) cc_design_person_and_organization_assignment_arena:
         Arena<CcDesignPersonAndOrganizationAssignment>,
-    pub cc_design_security_classification_arena: Arena<CcDesignSecurityClassification>,
-    pub centre_of_symmetry_arena: Arena<CentreOfSymmetry>,
-    pub certification_arena: Arena<Certification>,
-    pub certification_type_arena: Arena<CertificationType>,
-    pub change_arena: Arena<Change>,
-    pub change_request_arena: Arena<ChangeRequest>,
-    pub character_glyph_style_outline_arena: Arena<CharacterGlyphStyleOutline>,
-    pub character_glyph_style_stroke_arena: Arena<CharacterGlyphStyleStroke>,
-    pub characterized_item_within_representation_arena:
+    pub(crate) cc_design_security_classification_arena: Arena<CcDesignSecurityClassification>,
+    pub(crate) centre_of_symmetry_arena: Arena<CentreOfSymmetry>,
+    pub(crate) certification_arena: Arena<Certification>,
+    pub(crate) certification_type_arena: Arena<CertificationType>,
+    pub(crate) change_arena: Arena<Change>,
+    pub(crate) change_request_arena: Arena<ChangeRequest>,
+    pub(crate) character_glyph_style_outline_arena: Arena<CharacterGlyphStyleOutline>,
+    pub(crate) character_glyph_style_stroke_arena: Arena<CharacterGlyphStyleStroke>,
+    pub(crate) characterized_item_within_representation_arena:
         Arena<CharacterizedItemWithinRepresentation>,
-    pub characterized_object_arena: Arena<CharacterizedObject>,
-    pub characterized_representation_arena: Arena<CharacterizedRepresentation>,
-    pub circle_arena: Arena<Circle>,
-    pub circular_runout_tolerance_arena: Arena<CircularRunoutTolerance>,
-    pub closed_shell_arena: Arena<ClosedShell>,
-    pub coaxiality_tolerance_arena: Arena<CoaxialityTolerance>,
-    pub colour_arena: Arena<Colour>,
-    pub colour_rgb_arena: Arena<ColourRgb>,
-    pub colour_specification_arena: Arena<ColourSpecification>,
-    pub common_datum_arena: Arena<CommonDatum>,
-    pub complex_triangulated_face_arena: Arena<ComplexTriangulatedFace>,
-    pub complex_triangulated_surface_set_arena: Arena<ComplexTriangulatedSurfaceSet>,
-    pub composite_curve_arena: Arena<CompositeCurve>,
-    pub composite_curve_segment_arena: Arena<CompositeCurveSegment>,
-    pub composite_group_shape_aspect_arena: Arena<CompositeGroupShapeAspect>,
-    pub composite_shape_aspect_arena: Arena<CompositeShapeAspect>,
-    pub composite_text_arena: Arena<CompositeText>,
-    pub compound_representation_item_arena: Arena<CompoundRepresentationItem>,
-    pub concentricity_tolerance_arena: Arena<ConcentricityTolerance>,
-    pub configuration_design_arena: Arena<ConfigurationDesign>,
-    pub configuration_effectivity_arena: Arena<ConfigurationEffectivity>,
-    pub configuration_item_arena: Arena<ConfigurationItem>,
-    pub conic_arena: Arena<Conic>,
-    pub conical_surface_arena: Arena<ConicalSurface>,
-    pub connected_face_set_arena: Arena<ConnectedFaceSet>,
-    pub constructive_geometry_representation_arena: Arena<ConstructiveGeometryRepresentation>,
-    pub constructive_geometry_representation_relationship_arena:
+    pub(crate) characterized_object_arena: Arena<CharacterizedObject>,
+    pub(crate) characterized_representation_arena: Arena<CharacterizedRepresentation>,
+    pub(crate) circle_arena: Arena<Circle>,
+    pub(crate) circular_runout_tolerance_arena: Arena<CircularRunoutTolerance>,
+    pub(crate) closed_shell_arena: Arena<ClosedShell>,
+    pub(crate) coaxiality_tolerance_arena: Arena<CoaxialityTolerance>,
+    pub(crate) colour_arena: Arena<Colour>,
+    pub(crate) colour_rgb_arena: Arena<ColourRgb>,
+    pub(crate) colour_specification_arena: Arena<ColourSpecification>,
+    pub(crate) common_datum_arena: Arena<CommonDatum>,
+    pub(crate) complex_triangulated_face_arena: Arena<ComplexTriangulatedFace>,
+    pub(crate) complex_triangulated_surface_set_arena: Arena<ComplexTriangulatedSurfaceSet>,
+    pub(crate) composite_curve_arena: Arena<CompositeCurve>,
+    pub(crate) composite_curve_segment_arena: Arena<CompositeCurveSegment>,
+    pub(crate) composite_group_shape_aspect_arena: Arena<CompositeGroupShapeAspect>,
+    pub(crate) composite_shape_aspect_arena: Arena<CompositeShapeAspect>,
+    pub(crate) composite_text_arena: Arena<CompositeText>,
+    pub(crate) compound_representation_item_arena: Arena<CompoundRepresentationItem>,
+    pub(crate) concentricity_tolerance_arena: Arena<ConcentricityTolerance>,
+    pub(crate) configuration_design_arena: Arena<ConfigurationDesign>,
+    pub(crate) configuration_effectivity_arena: Arena<ConfigurationEffectivity>,
+    pub(crate) configuration_item_arena: Arena<ConfigurationItem>,
+    pub(crate) conic_arena: Arena<Conic>,
+    pub(crate) conical_surface_arena: Arena<ConicalSurface>,
+    pub(crate) connected_face_set_arena: Arena<ConnectedFaceSet>,
+    pub(crate) constructive_geometry_representation_arena:
+        Arena<ConstructiveGeometryRepresentation>,
+    pub(crate) constructive_geometry_representation_relationship_arena:
         Arena<ConstructiveGeometryRepresentationRelationship>,
-    pub context_dependent_over_riding_styled_item_arena:
+    pub(crate) context_dependent_over_riding_styled_item_arena:
         Arena<ContextDependentOverRidingStyledItem>,
-    pub context_dependent_shape_representation_arena: Arena<ContextDependentShapeRepresentation>,
-    pub context_dependent_unit_arena: Arena<ContextDependentUnit>,
-    pub continuous_shape_aspect_arena: Arena<ContinuousShapeAspect>,
-    pub contract_arena: Arena<Contract>,
-    pub contract_type_arena: Arena<ContractType>,
-    pub conversion_based_unit_arena: Arena<ConversionBasedUnit>,
-    pub coordinated_universal_time_offset_arena: Arena<CoordinatedUniversalTimeOffset>,
-    pub coordinates_list_arena: Arena<CoordinatesList>,
-    pub curve_arena: Arena<Curve>,
-    pub curve_style_arena: Arena<CurveStyle>,
-    pub curve_style_font_arena: Arena<CurveStyleFont>,
-    pub curve_style_font_and_scaling_arena: Arena<CurveStyleFontAndScaling>,
-    pub curve_style_font_pattern_arena: Arena<CurveStyleFontPattern>,
-    pub curve_style_rendering_arena: Arena<CurveStyleRendering>,
-    pub cylindrical_surface_arena: Arena<CylindricalSurface>,
-    pub cylindricity_tolerance_arena: Arena<CylindricityTolerance>,
-    pub date_arena: Arena<Date>,
-    pub date_and_time_arena: Arena<DateAndTime>,
-    pub date_and_time_assignment_arena: Arena<DateAndTimeAssignment>,
-    pub date_role_arena: Arena<DateRole>,
-    pub date_time_role_arena: Arena<DateTimeRole>,
-    pub datum_arena: Arena<Datum>,
-    pub datum_feature_arena: Arena<DatumFeature>,
-    pub datum_reference_arena: Arena<DatumReference>,
-    pub datum_reference_compartment_arena: Arena<DatumReferenceCompartment>,
-    pub datum_reference_element_arena: Arena<DatumReferenceElement>,
-    pub datum_reference_modifier_with_value_arena: Arena<DatumReferenceModifierWithValue>,
-    pub datum_system_arena: Arena<DatumSystem>,
-    pub datum_target_arena: Arena<DatumTarget>,
-    pub default_model_geometric_view_arena: Arena<DefaultModelGeometricView>,
-    pub defined_character_glyph_arena: Arena<DefinedCharacterGlyph>,
-    pub defined_symbol_arena: Arena<DefinedSymbol>,
-    pub definitional_representation_arena: Arena<DefinitionalRepresentation>,
-    pub definitional_representation_relationship_arena:
+    pub(crate) context_dependent_shape_representation_arena:
+        Arena<ContextDependentShapeRepresentation>,
+    pub(crate) context_dependent_unit_arena: Arena<ContextDependentUnit>,
+    pub(crate) continuous_shape_aspect_arena: Arena<ContinuousShapeAspect>,
+    pub(crate) contract_arena: Arena<Contract>,
+    pub(crate) contract_type_arena: Arena<ContractType>,
+    pub(crate) conversion_based_unit_arena: Arena<ConversionBasedUnit>,
+    pub(crate) coordinated_universal_time_offset_arena: Arena<CoordinatedUniversalTimeOffset>,
+    pub(crate) coordinates_list_arena: Arena<CoordinatesList>,
+    pub(crate) curve_arena: Arena<Curve>,
+    pub(crate) curve_style_arena: Arena<CurveStyle>,
+    pub(crate) curve_style_font_arena: Arena<CurveStyleFont>,
+    pub(crate) curve_style_font_and_scaling_arena: Arena<CurveStyleFontAndScaling>,
+    pub(crate) curve_style_font_pattern_arena: Arena<CurveStyleFontPattern>,
+    pub(crate) curve_style_rendering_arena: Arena<CurveStyleRendering>,
+    pub(crate) cylindrical_surface_arena: Arena<CylindricalSurface>,
+    pub(crate) cylindricity_tolerance_arena: Arena<CylindricityTolerance>,
+    pub(crate) date_arena: Arena<Date>,
+    pub(crate) date_and_time_arena: Arena<DateAndTime>,
+    pub(crate) date_and_time_assignment_arena: Arena<DateAndTimeAssignment>,
+    pub(crate) date_role_arena: Arena<DateRole>,
+    pub(crate) date_time_role_arena: Arena<DateTimeRole>,
+    pub(crate) datum_arena: Arena<Datum>,
+    pub(crate) datum_feature_arena: Arena<DatumFeature>,
+    pub(crate) datum_reference_arena: Arena<DatumReference>,
+    pub(crate) datum_reference_compartment_arena: Arena<DatumReferenceCompartment>,
+    pub(crate) datum_reference_element_arena: Arena<DatumReferenceElement>,
+    pub(crate) datum_reference_modifier_with_value_arena: Arena<DatumReferenceModifierWithValue>,
+    pub(crate) datum_system_arena: Arena<DatumSystem>,
+    pub(crate) datum_target_arena: Arena<DatumTarget>,
+    pub(crate) default_model_geometric_view_arena: Arena<DefaultModelGeometricView>,
+    pub(crate) defined_character_glyph_arena: Arena<DefinedCharacterGlyph>,
+    pub(crate) defined_symbol_arena: Arena<DefinedSymbol>,
+    pub(crate) definitional_representation_arena: Arena<DefinitionalRepresentation>,
+    pub(crate) definitional_representation_relationship_arena:
         Arena<DefinitionalRepresentationRelationship>,
-    pub definitional_representation_relationship_with_same_context_arena:
+    pub(crate) definitional_representation_relationship_with_same_context_arena:
         Arena<DefinitionalRepresentationRelationshipWithSameContext>,
-    pub degenerate_toroidal_surface_arena: Arena<DegenerateToroidalSurface>,
-    pub derived_shape_aspect_arena: Arena<DerivedShapeAspect>,
-    pub derived_unit_arena: Arena<DerivedUnit>,
-    pub derived_unit_element_arena: Arena<DerivedUnitElement>,
-    pub description_attribute_arena: Arena<DescriptionAttribute>,
-    pub descriptive_representation_item_arena: Arena<DescriptiveRepresentationItem>,
-    pub design_context_arena: Arena<DesignContext>,
-    pub dimensional_characteristic_representation_arena:
+    pub(crate) degenerate_toroidal_surface_arena: Arena<DegenerateToroidalSurface>,
+    pub(crate) derived_shape_aspect_arena: Arena<DerivedShapeAspect>,
+    pub(crate) derived_unit_arena: Arena<DerivedUnit>,
+    pub(crate) derived_unit_element_arena: Arena<DerivedUnitElement>,
+    pub(crate) description_attribute_arena: Arena<DescriptionAttribute>,
+    pub(crate) descriptive_representation_item_arena: Arena<DescriptiveRepresentationItem>,
+    pub(crate) design_context_arena: Arena<DesignContext>,
+    pub(crate) dimensional_characteristic_representation_arena:
         Arena<DimensionalCharacteristicRepresentation>,
-    pub dimensional_exponents_arena: Arena<DimensionalExponents>,
-    pub dimensional_location_arena: Arena<DimensionalLocation>,
-    pub dimensional_location_with_path_arena: Arena<DimensionalLocationWithPath>,
-    pub dimensional_size_arena: Arena<DimensionalSize>,
-    pub dimensional_size_with_datum_feature_arena: Arena<DimensionalSizeWithDatumFeature>,
-    pub dimensional_size_with_path_arena: Arena<DimensionalSizeWithPath>,
-    pub directed_dimensional_location_arena: Arena<DirectedDimensionalLocation>,
-    pub direction_arena: Arena<Direction>,
-    pub document_arena: Arena<Document>,
-    pub document_file_arena: Arena<DocumentFile>,
-    pub document_product_association_arena: Arena<DocumentProductAssociation>,
-    pub document_product_equivalence_arena: Arena<DocumentProductEquivalence>,
-    pub document_reference_arena: Arena<DocumentReference>,
-    pub document_representation_type_arena: Arena<DocumentRepresentationType>,
-    pub document_type_arena: Arena<DocumentType>,
-    pub draughting_annotation_occurrence_arena: Arena<DraughtingAnnotationOccurrence>,
-    pub draughting_callout_arena: Arena<DraughtingCallout>,
-    pub draughting_callout_relationship_arena: Arena<DraughtingCalloutRelationship>,
-    pub draughting_model_arena: Arena<DraughtingModel>,
-    pub draughting_model_item_association_arena: Arena<DraughtingModelItemAssociation>,
-    pub draughting_model_item_association_with_placeholder_arena:
+    pub(crate) dimensional_exponents_arena: Arena<DimensionalExponents>,
+    pub(crate) dimensional_location_arena: Arena<DimensionalLocation>,
+    pub(crate) dimensional_location_with_path_arena: Arena<DimensionalLocationWithPath>,
+    pub(crate) dimensional_size_arena: Arena<DimensionalSize>,
+    pub(crate) dimensional_size_with_datum_feature_arena: Arena<DimensionalSizeWithDatumFeature>,
+    pub(crate) dimensional_size_with_path_arena: Arena<DimensionalSizeWithPath>,
+    pub(crate) directed_dimensional_location_arena: Arena<DirectedDimensionalLocation>,
+    pub(crate) direction_arena: Arena<Direction>,
+    pub(crate) document_arena: Arena<Document>,
+    pub(crate) document_file_arena: Arena<DocumentFile>,
+    pub(crate) document_product_association_arena: Arena<DocumentProductAssociation>,
+    pub(crate) document_product_equivalence_arena: Arena<DocumentProductEquivalence>,
+    pub(crate) document_reference_arena: Arena<DocumentReference>,
+    pub(crate) document_representation_type_arena: Arena<DocumentRepresentationType>,
+    pub(crate) document_type_arena: Arena<DocumentType>,
+    pub(crate) draughting_annotation_occurrence_arena: Arena<DraughtingAnnotationOccurrence>,
+    pub(crate) draughting_callout_arena: Arena<DraughtingCallout>,
+    pub(crate) draughting_callout_relationship_arena: Arena<DraughtingCalloutRelationship>,
+    pub(crate) draughting_model_arena: Arena<DraughtingModel>,
+    pub(crate) draughting_model_item_association_arena: Arena<DraughtingModelItemAssociation>,
+    pub(crate) draughting_model_item_association_with_placeholder_arena:
         Arena<DraughtingModelItemAssociationWithPlaceholder>,
-    pub draughting_pre_defined_colour_arena: Arena<DraughtingPreDefinedColour>,
-    pub draughting_pre_defined_curve_font_arena: Arena<DraughtingPreDefinedCurveFont>,
-    pub draughting_pre_defined_text_font_arena: Arena<DraughtingPreDefinedTextFont>,
-    pub edge_arena: Arena<Edge>,
-    pub edge_curve_arena: Arena<EdgeCurve>,
-    pub edge_loop_arena: Arena<EdgeLoop>,
-    pub effectivity_arena: Arena<Effectivity>,
-    pub elementary_surface_arena: Arena<ElementarySurface>,
-    pub ellipse_arena: Arena<Ellipse>,
-    pub expression_arena: Arena<Expression>,
-    pub external_identification_assignment_arena: Arena<ExternalIdentificationAssignment>,
-    pub external_source_arena: Arena<ExternalSource>,
-    pub externally_defined_character_glyph_arena: Arena<ExternallyDefinedCharacterGlyph>,
-    pub externally_defined_curve_font_arena: Arena<ExternallyDefinedCurveFont>,
-    pub externally_defined_hatch_style_arena: Arena<ExternallyDefinedHatchStyle>,
-    pub externally_defined_item_arena: Arena<ExternallyDefinedItem>,
-    pub externally_defined_style_arena: Arena<ExternallyDefinedStyle>,
-    pub externally_defined_symbol_arena: Arena<ExternallyDefinedSymbol>,
-    pub externally_defined_text_font_arena: Arena<ExternallyDefinedTextFont>,
-    pub externally_defined_tile_arena: Arena<ExternallyDefinedTile>,
-    pub externally_defined_tile_style_arena: Arena<ExternallyDefinedTileStyle>,
-    pub face_arena: Arena<Face>,
-    pub face_bound_arena: Arena<FaceBound>,
-    pub face_outer_bound_arena: Arena<FaceOuterBound>,
-    pub face_surface_arena: Arena<FaceSurface>,
-    pub feature_for_datum_target_relationship_arena: Arena<FeatureForDatumTargetRelationship>,
-    pub fill_area_style_arena: Arena<FillAreaStyle>,
-    pub fill_area_style_colour_arena: Arena<FillAreaStyleColour>,
-    pub fill_area_style_hatching_arena: Arena<FillAreaStyleHatching>,
-    pub fill_area_style_tile_coloured_region_arena: Arena<FillAreaStyleTileColouredRegion>,
-    pub fill_area_style_tile_curve_with_style_arena: Arena<FillAreaStyleTileCurveWithStyle>,
-    pub fill_area_style_tile_symbol_with_style_arena: Arena<FillAreaStyleTileSymbolWithStyle>,
-    pub fill_area_style_tiles_arena: Arena<FillAreaStyleTiles>,
-    pub flatness_tolerance_arena: Arena<FlatnessTolerance>,
-    pub founded_item_arena: Arena<FoundedItem>,
-    pub functionally_defined_transformation_arena: Arena<FunctionallyDefinedTransformation>,
-    pub general_datum_reference_arena: Arena<GeneralDatumReference>,
-    pub general_property_arena: Arena<GeneralProperty>,
-    pub general_property_association_arena: Arena<GeneralPropertyAssociation>,
-    pub generic_expression_arena: Arena<GenericExpression>,
-    pub generic_literal_arena: Arena<GenericLiteral>,
-    pub generic_product_definition_reference_arena: Arena<GenericProductDefinitionReference>,
-    pub geometric_curve_set_arena: Arena<GeometricCurveSet>,
-    pub geometric_item_specific_usage_arena: Arena<GeometricItemSpecificUsage>,
-    pub geometric_representation_context_arena: Arena<GeometricRepresentationContext>,
-    pub geometric_representation_item_arena: Arena<GeometricRepresentationItem>,
-    pub geometric_set_arena: Arena<GeometricSet>,
-    pub geometric_tolerance_arena: Arena<GeometricTolerance>,
-    pub geometric_tolerance_relationship_arena: Arena<GeometricToleranceRelationship>,
-    pub geometric_tolerance_with_datum_reference_arena: Arena<GeometricToleranceWithDatumReference>,
-    pub geometric_tolerance_with_defined_area_unit_arena:
+    pub(crate) draughting_pre_defined_colour_arena: Arena<DraughtingPreDefinedColour>,
+    pub(crate) draughting_pre_defined_curve_font_arena: Arena<DraughtingPreDefinedCurveFont>,
+    pub(crate) draughting_pre_defined_text_font_arena: Arena<DraughtingPreDefinedTextFont>,
+    pub(crate) edge_arena: Arena<Edge>,
+    pub(crate) edge_curve_arena: Arena<EdgeCurve>,
+    pub(crate) edge_loop_arena: Arena<EdgeLoop>,
+    pub(crate) effectivity_arena: Arena<Effectivity>,
+    pub(crate) elementary_surface_arena: Arena<ElementarySurface>,
+    pub(crate) ellipse_arena: Arena<Ellipse>,
+    pub(crate) expression_arena: Arena<Expression>,
+    pub(crate) external_identification_assignment_arena: Arena<ExternalIdentificationAssignment>,
+    pub(crate) external_source_arena: Arena<ExternalSource>,
+    pub(crate) externally_defined_character_glyph_arena: Arena<ExternallyDefinedCharacterGlyph>,
+    pub(crate) externally_defined_curve_font_arena: Arena<ExternallyDefinedCurveFont>,
+    pub(crate) externally_defined_hatch_style_arena: Arena<ExternallyDefinedHatchStyle>,
+    pub(crate) externally_defined_item_arena: Arena<ExternallyDefinedItem>,
+    pub(crate) externally_defined_style_arena: Arena<ExternallyDefinedStyle>,
+    pub(crate) externally_defined_symbol_arena: Arena<ExternallyDefinedSymbol>,
+    pub(crate) externally_defined_text_font_arena: Arena<ExternallyDefinedTextFont>,
+    pub(crate) externally_defined_tile_arena: Arena<ExternallyDefinedTile>,
+    pub(crate) externally_defined_tile_style_arena: Arena<ExternallyDefinedTileStyle>,
+    pub(crate) face_arena: Arena<Face>,
+    pub(crate) face_bound_arena: Arena<FaceBound>,
+    pub(crate) face_outer_bound_arena: Arena<FaceOuterBound>,
+    pub(crate) face_surface_arena: Arena<FaceSurface>,
+    pub(crate) feature_for_datum_target_relationship_arena:
+        Arena<FeatureForDatumTargetRelationship>,
+    pub(crate) fill_area_style_arena: Arena<FillAreaStyle>,
+    pub(crate) fill_area_style_colour_arena: Arena<FillAreaStyleColour>,
+    pub(crate) fill_area_style_hatching_arena: Arena<FillAreaStyleHatching>,
+    pub(crate) fill_area_style_tile_coloured_region_arena: Arena<FillAreaStyleTileColouredRegion>,
+    pub(crate) fill_area_style_tile_curve_with_style_arena: Arena<FillAreaStyleTileCurveWithStyle>,
+    pub(crate) fill_area_style_tile_symbol_with_style_arena:
+        Arena<FillAreaStyleTileSymbolWithStyle>,
+    pub(crate) fill_area_style_tiles_arena: Arena<FillAreaStyleTiles>,
+    pub(crate) flatness_tolerance_arena: Arena<FlatnessTolerance>,
+    pub(crate) founded_item_arena: Arena<FoundedItem>,
+    pub(crate) functionally_defined_transformation_arena: Arena<FunctionallyDefinedTransformation>,
+    pub(crate) general_datum_reference_arena: Arena<GeneralDatumReference>,
+    pub(crate) general_property_arena: Arena<GeneralProperty>,
+    pub(crate) general_property_association_arena: Arena<GeneralPropertyAssociation>,
+    pub(crate) generic_expression_arena: Arena<GenericExpression>,
+    pub(crate) generic_literal_arena: Arena<GenericLiteral>,
+    pub(crate) generic_product_definition_reference_arena: Arena<GenericProductDefinitionReference>,
+    pub(crate) geometric_curve_set_arena: Arena<GeometricCurveSet>,
+    pub(crate) geometric_item_specific_usage_arena: Arena<GeometricItemSpecificUsage>,
+    pub(crate) geometric_representation_context_arena: Arena<GeometricRepresentationContext>,
+    pub(crate) geometric_representation_item_arena: Arena<GeometricRepresentationItem>,
+    pub(crate) geometric_set_arena: Arena<GeometricSet>,
+    pub(crate) geometric_tolerance_arena: Arena<GeometricTolerance>,
+    pub(crate) geometric_tolerance_relationship_arena: Arena<GeometricToleranceRelationship>,
+    pub(crate) geometric_tolerance_with_datum_reference_arena:
+        Arena<GeometricToleranceWithDatumReference>,
+    pub(crate) geometric_tolerance_with_defined_area_unit_arena:
         Arena<GeometricToleranceWithDefinedAreaUnit>,
-    pub geometric_tolerance_with_defined_unit_arena: Arena<GeometricToleranceWithDefinedUnit>,
-    pub geometric_tolerance_with_maximum_tolerance_arena:
+    pub(crate) geometric_tolerance_with_defined_unit_arena:
+        Arena<GeometricToleranceWithDefinedUnit>,
+    pub(crate) geometric_tolerance_with_maximum_tolerance_arena:
         Arena<GeometricToleranceWithMaximumTolerance>,
-    pub geometric_tolerance_with_modifiers_arena: Arena<GeometricToleranceWithModifiers>,
-    pub geometrically_bounded_surface_shape_representation_arena:
+    pub(crate) geometric_tolerance_with_modifiers_arena: Arena<GeometricToleranceWithModifiers>,
+    pub(crate) geometrically_bounded_surface_shape_representation_arena:
         Arena<GeometricallyBoundedSurfaceShapeRepresentation>,
-    pub geometrically_bounded_wireframe_shape_representation_arena:
+    pub(crate) geometrically_bounded_wireframe_shape_representation_arena:
         Arena<GeometricallyBoundedWireframeShapeRepresentation>,
-    pub global_uncertainty_assigned_context_arena: Arena<GlobalUncertaintyAssignedContext>,
-    pub global_unit_assigned_context_arena: Arena<GlobalUnitAssignedContext>,
-    pub group_arena: Arena<Group>,
-    pub group_assignment_arena: Arena<GroupAssignment>,
-    pub hyperbola_arena: Arena<Hyperbola>,
-    pub id_attribute_arena: Arena<IdAttribute>,
-    pub identification_assignment_arena: Arena<IdentificationAssignment>,
-    pub identification_role_arena: Arena<IdentificationRole>,
-    pub int_literal_arena: Arena<IntLiteral>,
-    pub integer_representation_item_arena: Arena<IntegerRepresentationItem>,
-    pub intersection_curve_arena: Arena<IntersectionCurve>,
-    pub invisibility_arena: Arena<Invisibility>,
-    pub item_defined_transformation_arena: Arena<ItemDefinedTransformation>,
-    pub item_identified_representation_usage_arena: Arena<ItemIdentifiedRepresentationUsage>,
-    pub leader_curve_arena: Arena<LeaderCurve>,
-    pub leader_directed_callout_arena: Arena<LeaderDirectedCallout>,
-    pub leader_terminator_arena: Arena<LeaderTerminator>,
-    pub length_measure_with_unit_arena: Arena<LengthMeasureWithUnit>,
-    pub length_unit_arena: Arena<LengthUnit>,
-    pub limits_and_fits_arena: Arena<LimitsAndFits>,
-    pub line_arena: Arena<Line>,
-    pub line_profile_tolerance_arena: Arena<LineProfileTolerance>,
-    pub literal_number_arena: Arena<LiteralNumber>,
-    pub local_time_arena: Arena<LocalTime>,
-    pub loop_arena: Arena<Loop>,
-    pub make_from_usage_option_arena: Arena<MakeFromUsageOption>,
-    pub manifold_solid_brep_arena: Arena<ManifoldSolidBrep>,
-    pub manifold_surface_shape_representation_arena: Arena<ManifoldSurfaceShapeRepresentation>,
-    pub mapped_item_arena: Arena<MappedItem>,
-    pub mass_measure_with_unit_arena: Arena<MassMeasureWithUnit>,
-    pub mass_unit_arena: Arena<MassUnit>,
-    pub measure_qualification_arena: Arena<MeasureQualification>,
-    pub measure_representation_item_arena: Arena<MeasureRepresentationItem>,
-    pub measure_with_unit_arena: Arena<MeasureWithUnit>,
-    pub mechanical_context_arena: Arena<MechanicalContext>,
-    pub mechanical_design_and_draughting_relationship_arena:
+    pub(crate) global_uncertainty_assigned_context_arena: Arena<GlobalUncertaintyAssignedContext>,
+    pub(crate) global_unit_assigned_context_arena: Arena<GlobalUnitAssignedContext>,
+    pub(crate) group_arena: Arena<Group>,
+    pub(crate) group_assignment_arena: Arena<GroupAssignment>,
+    pub(crate) hyperbola_arena: Arena<Hyperbola>,
+    pub(crate) id_attribute_arena: Arena<IdAttribute>,
+    pub(crate) identification_assignment_arena: Arena<IdentificationAssignment>,
+    pub(crate) identification_role_arena: Arena<IdentificationRole>,
+    pub(crate) int_literal_arena: Arena<IntLiteral>,
+    pub(crate) integer_representation_item_arena: Arena<IntegerRepresentationItem>,
+    pub(crate) intersection_curve_arena: Arena<IntersectionCurve>,
+    pub(crate) invisibility_arena: Arena<Invisibility>,
+    pub(crate) item_defined_transformation_arena: Arena<ItemDefinedTransformation>,
+    pub(crate) item_identified_representation_usage_arena: Arena<ItemIdentifiedRepresentationUsage>,
+    pub(crate) leader_curve_arena: Arena<LeaderCurve>,
+    pub(crate) leader_directed_callout_arena: Arena<LeaderDirectedCallout>,
+    pub(crate) leader_terminator_arena: Arena<LeaderTerminator>,
+    pub(crate) length_measure_with_unit_arena: Arena<LengthMeasureWithUnit>,
+    pub(crate) length_unit_arena: Arena<LengthUnit>,
+    pub(crate) limits_and_fits_arena: Arena<LimitsAndFits>,
+    pub(crate) line_arena: Arena<Line>,
+    pub(crate) line_profile_tolerance_arena: Arena<LineProfileTolerance>,
+    pub(crate) literal_number_arena: Arena<LiteralNumber>,
+    pub(crate) local_time_arena: Arena<LocalTime>,
+    pub(crate) loop_arena: Arena<Loop>,
+    pub(crate) make_from_usage_option_arena: Arena<MakeFromUsageOption>,
+    pub(crate) manifold_solid_brep_arena: Arena<ManifoldSolidBrep>,
+    pub(crate) manifold_surface_shape_representation_arena:
+        Arena<ManifoldSurfaceShapeRepresentation>,
+    pub(crate) mapped_item_arena: Arena<MappedItem>,
+    pub(crate) mass_measure_with_unit_arena: Arena<MassMeasureWithUnit>,
+    pub(crate) mass_unit_arena: Arena<MassUnit>,
+    pub(crate) measure_qualification_arena: Arena<MeasureQualification>,
+    pub(crate) measure_representation_item_arena: Arena<MeasureRepresentationItem>,
+    pub(crate) measure_with_unit_arena: Arena<MeasureWithUnit>,
+    pub(crate) mechanical_context_arena: Arena<MechanicalContext>,
+    pub(crate) mechanical_design_and_draughting_relationship_arena:
         Arena<MechanicalDesignAndDraughtingRelationship>,
-    pub mechanical_design_geometric_presentation_representation_arena:
+    pub(crate) mechanical_design_geometric_presentation_representation_arena:
         Arena<MechanicalDesignGeometricPresentationRepresentation>,
-    pub mechanical_design_presentation_representation_with_draughting_arena:
+    pub(crate) mechanical_design_presentation_representation_with_draughting_arena:
         Arena<MechanicalDesignPresentationRepresentationWithDraughting>,
-    pub mechanical_design_shaded_presentation_representation_arena:
+    pub(crate) mechanical_design_shaded_presentation_representation_arena:
         Arena<MechanicalDesignShadedPresentationRepresentation>,
-    pub model_geometric_view_arena: Arena<ModelGeometricView>,
-    pub modified_geometric_tolerance_arena: Arena<ModifiedGeometricTolerance>,
-    pub name_attribute_arena: Arena<NameAttribute>,
-    pub named_unit_arena: Arena<NamedUnit>,
-    pub next_assembly_usage_occurrence_arena: Arena<NextAssemblyUsageOccurrence>,
-    pub numeric_expression_arena: Arena<NumericExpression>,
-    pub object_role_arena: Arena<ObjectRole>,
-    pub offset_surface_arena: Arena<OffsetSurface>,
-    pub one_direction_repeat_factor_arena: Arena<OneDirectionRepeatFactor>,
-    pub open_shell_arena: Arena<OpenShell>,
-    pub organization_arena: Arena<Organization>,
-    pub organization_relationship_arena: Arena<OrganizationRelationship>,
-    pub organization_role_arena: Arena<OrganizationRole>,
-    pub organization_type_arena: Arena<OrganizationType>,
-    pub organization_type_role_arena: Arena<OrganizationTypeRole>,
-    pub organizational_address_arena: Arena<OrganizationalAddress>,
-    pub organizational_project_arena: Arena<OrganizationalProject>,
-    pub organizational_project_relationship_arena: Arena<OrganizationalProjectRelationship>,
-    pub organizational_project_role_arena: Arena<OrganizationalProjectRole>,
-    pub oriented_closed_shell_arena: Arena<OrientedClosedShell>,
-    pub oriented_edge_arena: Arena<OrientedEdge>,
-    pub over_riding_styled_item_arena: Arena<OverRidingStyledItem>,
-    pub parallelism_tolerance_arena: Arena<ParallelismTolerance>,
-    pub parametric_representation_context_arena: Arena<ParametricRepresentationContext>,
-    pub path_arena: Arena<Path>,
-    pub pcurve_arena: Arena<Pcurve>,
-    pub perpendicularity_tolerance_arena: Arena<PerpendicularityTolerance>,
-    pub person_arena: Arena<Person>,
-    pub person_and_organization_arena: Arena<PersonAndOrganization>,
-    pub person_and_organization_address_arena: Arena<PersonAndOrganizationAddress>,
-    pub person_and_organization_assignment_arena: Arena<PersonAndOrganizationAssignment>,
-    pub person_and_organization_role_arena: Arena<PersonAndOrganizationRole>,
-    pub personal_address_arena: Arena<PersonalAddress>,
-    pub placed_datum_target_feature_arena: Arena<PlacedDatumTargetFeature>,
-    pub placement_arena: Arena<Placement>,
-    pub planar_box_arena: Arena<PlanarBox>,
-    pub planar_extent_arena: Arena<PlanarExtent>,
-    pub plane_arena: Arena<Plane>,
-    pub plane_angle_measure_with_unit_arena: Arena<PlaneAngleMeasureWithUnit>,
-    pub plane_angle_unit_arena: Arena<PlaneAngleUnit>,
-    pub plus_minus_tolerance_arena: Arena<PlusMinusTolerance>,
-    pub point_arena: Arena<Point>,
-    pub point_style_arena: Arena<PointStyle>,
-    pub poly_loop_arena: Arena<PolyLoop>,
-    pub polyline_arena: Arena<Polyline>,
-    pub position_tolerance_arena: Arena<PositionTolerance>,
-    pub pre_defined_character_glyph_arena: Arena<PreDefinedCharacterGlyph>,
-    pub pre_defined_colour_arena: Arena<PreDefinedColour>,
-    pub pre_defined_curve_font_arena: Arena<PreDefinedCurveFont>,
-    pub pre_defined_item_arena: Arena<PreDefinedItem>,
-    pub pre_defined_marker_arena: Arena<PreDefinedMarker>,
-    pub pre_defined_point_marker_symbol_arena: Arena<PreDefinedPointMarkerSymbol>,
-    pub pre_defined_presentation_style_arena: Arena<PreDefinedPresentationStyle>,
-    pub pre_defined_surface_side_style_arena: Arena<PreDefinedSurfaceSideStyle>,
-    pub pre_defined_symbol_arena: Arena<PreDefinedSymbol>,
-    pub pre_defined_terminator_symbol_arena: Arena<PreDefinedTerminatorSymbol>,
-    pub pre_defined_text_font_arena: Arena<PreDefinedTextFont>,
-    pub pre_defined_tile_arena: Arena<PreDefinedTile>,
-    pub precision_qualifier_arena: Arena<PrecisionQualifier>,
-    pub presentation_area_arena: Arena<PresentationArea>,
-    pub presentation_layer_assignment_arena: Arena<PresentationLayerAssignment>,
-    pub presentation_representation_arena: Arena<PresentationRepresentation>,
-    pub presentation_set_arena: Arena<PresentationSet>,
-    pub presentation_size_arena: Arena<PresentationSize>,
-    pub presentation_style_assignment_arena: Arena<PresentationStyleAssignment>,
-    pub presentation_style_by_context_arena: Arena<PresentationStyleByContext>,
-    pub presentation_view_arena: Arena<PresentationView>,
-    pub presented_item_arena: Arena<PresentedItem>,
-    pub presented_item_representation_arena: Arena<PresentedItemRepresentation>,
-    pub product_arena: Arena<Product>,
-    pub product_category_arena: Arena<ProductCategory>,
-    pub product_category_relationship_arena: Arena<ProductCategoryRelationship>,
-    pub product_concept_arena: Arena<ProductConcept>,
-    pub product_concept_context_arena: Arena<ProductConceptContext>,
-    pub product_concept_feature_arena: Arena<ProductConceptFeature>,
-    pub product_concept_feature_category_arena: Arena<ProductConceptFeatureCategory>,
-    pub product_context_arena: Arena<ProductContext>,
-    pub product_definition_arena: Arena<ProductDefinition>,
-    pub product_definition_context_arena: Arena<ProductDefinitionContext>,
-    pub product_definition_context_association_arena: Arena<ProductDefinitionContextAssociation>,
-    pub product_definition_context_role_arena: Arena<ProductDefinitionContextRole>,
-    pub product_definition_effectivity_arena: Arena<ProductDefinitionEffectivity>,
-    pub product_definition_formation_arena: Arena<ProductDefinitionFormation>,
-    pub product_definition_formation_with_specified_source_arena:
+    pub(crate) model_geometric_view_arena: Arena<ModelGeometricView>,
+    pub(crate) modified_geometric_tolerance_arena: Arena<ModifiedGeometricTolerance>,
+    pub(crate) name_attribute_arena: Arena<NameAttribute>,
+    pub(crate) named_unit_arena: Arena<NamedUnit>,
+    pub(crate) next_assembly_usage_occurrence_arena: Arena<NextAssemblyUsageOccurrence>,
+    pub(crate) numeric_expression_arena: Arena<NumericExpression>,
+    pub(crate) object_role_arena: Arena<ObjectRole>,
+    pub(crate) offset_surface_arena: Arena<OffsetSurface>,
+    pub(crate) one_direction_repeat_factor_arena: Arena<OneDirectionRepeatFactor>,
+    pub(crate) open_shell_arena: Arena<OpenShell>,
+    pub(crate) organization_arena: Arena<Organization>,
+    pub(crate) organization_relationship_arena: Arena<OrganizationRelationship>,
+    pub(crate) organization_role_arena: Arena<OrganizationRole>,
+    pub(crate) organization_type_arena: Arena<OrganizationType>,
+    pub(crate) organization_type_role_arena: Arena<OrganizationTypeRole>,
+    pub(crate) organizational_address_arena: Arena<OrganizationalAddress>,
+    pub(crate) organizational_project_arena: Arena<OrganizationalProject>,
+    pub(crate) organizational_project_relationship_arena: Arena<OrganizationalProjectRelationship>,
+    pub(crate) organizational_project_role_arena: Arena<OrganizationalProjectRole>,
+    pub(crate) oriented_closed_shell_arena: Arena<OrientedClosedShell>,
+    pub(crate) oriented_edge_arena: Arena<OrientedEdge>,
+    pub(crate) over_riding_styled_item_arena: Arena<OverRidingStyledItem>,
+    pub(crate) parallelism_tolerance_arena: Arena<ParallelismTolerance>,
+    pub(crate) parametric_representation_context_arena: Arena<ParametricRepresentationContext>,
+    pub(crate) path_arena: Arena<Path>,
+    pub(crate) pcurve_arena: Arena<Pcurve>,
+    pub(crate) perpendicularity_tolerance_arena: Arena<PerpendicularityTolerance>,
+    pub(crate) person_arena: Arena<Person>,
+    pub(crate) person_and_organization_arena: Arena<PersonAndOrganization>,
+    pub(crate) person_and_organization_address_arena: Arena<PersonAndOrganizationAddress>,
+    pub(crate) person_and_organization_assignment_arena: Arena<PersonAndOrganizationAssignment>,
+    pub(crate) person_and_organization_role_arena: Arena<PersonAndOrganizationRole>,
+    pub(crate) personal_address_arena: Arena<PersonalAddress>,
+    pub(crate) placed_datum_target_feature_arena: Arena<PlacedDatumTargetFeature>,
+    pub(crate) placement_arena: Arena<Placement>,
+    pub(crate) planar_box_arena: Arena<PlanarBox>,
+    pub(crate) planar_extent_arena: Arena<PlanarExtent>,
+    pub(crate) plane_arena: Arena<Plane>,
+    pub(crate) plane_angle_measure_with_unit_arena: Arena<PlaneAngleMeasureWithUnit>,
+    pub(crate) plane_angle_unit_arena: Arena<PlaneAngleUnit>,
+    pub(crate) plus_minus_tolerance_arena: Arena<PlusMinusTolerance>,
+    pub(crate) point_arena: Arena<Point>,
+    pub(crate) point_style_arena: Arena<PointStyle>,
+    pub(crate) poly_loop_arena: Arena<PolyLoop>,
+    pub(crate) polyline_arena: Arena<Polyline>,
+    pub(crate) position_tolerance_arena: Arena<PositionTolerance>,
+    pub(crate) pre_defined_character_glyph_arena: Arena<PreDefinedCharacterGlyph>,
+    pub(crate) pre_defined_colour_arena: Arena<PreDefinedColour>,
+    pub(crate) pre_defined_curve_font_arena: Arena<PreDefinedCurveFont>,
+    pub(crate) pre_defined_item_arena: Arena<PreDefinedItem>,
+    pub(crate) pre_defined_marker_arena: Arena<PreDefinedMarker>,
+    pub(crate) pre_defined_point_marker_symbol_arena: Arena<PreDefinedPointMarkerSymbol>,
+    pub(crate) pre_defined_presentation_style_arena: Arena<PreDefinedPresentationStyle>,
+    pub(crate) pre_defined_surface_side_style_arena: Arena<PreDefinedSurfaceSideStyle>,
+    pub(crate) pre_defined_symbol_arena: Arena<PreDefinedSymbol>,
+    pub(crate) pre_defined_terminator_symbol_arena: Arena<PreDefinedTerminatorSymbol>,
+    pub(crate) pre_defined_text_font_arena: Arena<PreDefinedTextFont>,
+    pub(crate) pre_defined_tile_arena: Arena<PreDefinedTile>,
+    pub(crate) precision_qualifier_arena: Arena<PrecisionQualifier>,
+    pub(crate) presentation_area_arena: Arena<PresentationArea>,
+    pub(crate) presentation_layer_assignment_arena: Arena<PresentationLayerAssignment>,
+    pub(crate) presentation_representation_arena: Arena<PresentationRepresentation>,
+    pub(crate) presentation_set_arena: Arena<PresentationSet>,
+    pub(crate) presentation_size_arena: Arena<PresentationSize>,
+    pub(crate) presentation_style_assignment_arena: Arena<PresentationStyleAssignment>,
+    pub(crate) presentation_style_by_context_arena: Arena<PresentationStyleByContext>,
+    pub(crate) presentation_view_arena: Arena<PresentationView>,
+    pub(crate) presented_item_arena: Arena<PresentedItem>,
+    pub(crate) presented_item_representation_arena: Arena<PresentedItemRepresentation>,
+    pub(crate) product_arena: Arena<Product>,
+    pub(crate) product_category_arena: Arena<ProductCategory>,
+    pub(crate) product_category_relationship_arena: Arena<ProductCategoryRelationship>,
+    pub(crate) product_concept_arena: Arena<ProductConcept>,
+    pub(crate) product_concept_context_arena: Arena<ProductConceptContext>,
+    pub(crate) product_concept_feature_arena: Arena<ProductConceptFeature>,
+    pub(crate) product_concept_feature_category_arena: Arena<ProductConceptFeatureCategory>,
+    pub(crate) product_context_arena: Arena<ProductContext>,
+    pub(crate) product_definition_arena: Arena<ProductDefinition>,
+    pub(crate) product_definition_context_arena: Arena<ProductDefinitionContext>,
+    pub(crate) product_definition_context_association_arena:
+        Arena<ProductDefinitionContextAssociation>,
+    pub(crate) product_definition_context_role_arena: Arena<ProductDefinitionContextRole>,
+    pub(crate) product_definition_effectivity_arena: Arena<ProductDefinitionEffectivity>,
+    pub(crate) product_definition_formation_arena: Arena<ProductDefinitionFormation>,
+    pub(crate) product_definition_formation_with_specified_source_arena:
         Arena<ProductDefinitionFormationWithSpecifiedSource>,
-    pub product_definition_occurrence_arena: Arena<ProductDefinitionOccurrence>,
-    pub product_definition_relationship_arena: Arena<ProductDefinitionRelationship>,
-    pub product_definition_relationship_relationship_arena:
+    pub(crate) product_definition_occurrence_arena: Arena<ProductDefinitionOccurrence>,
+    pub(crate) product_definition_relationship_arena: Arena<ProductDefinitionRelationship>,
+    pub(crate) product_definition_relationship_relationship_arena:
         Arena<ProductDefinitionRelationshipRelationship>,
-    pub product_definition_shape_arena: Arena<ProductDefinitionShape>,
-    pub product_definition_substitute_arena: Arena<ProductDefinitionSubstitute>,
-    pub product_definition_usage_arena: Arena<ProductDefinitionUsage>,
-    pub product_definition_with_associated_documents_arena:
+    pub(crate) product_definition_shape_arena: Arena<ProductDefinitionShape>,
+    pub(crate) product_definition_substitute_arena: Arena<ProductDefinitionSubstitute>,
+    pub(crate) product_definition_usage_arena: Arena<ProductDefinitionUsage>,
+    pub(crate) product_definition_with_associated_documents_arena:
         Arena<ProductDefinitionWithAssociatedDocuments>,
-    pub product_related_product_category_arena: Arena<ProductRelatedProductCategory>,
-    pub projected_zone_definition_arena: Arena<ProjectedZoneDefinition>,
-    pub property_definition_arena: Arena<PropertyDefinition>,
-    pub property_definition_relationship_arena: Arena<PropertyDefinitionRelationship>,
-    pub property_definition_representation_arena: Arena<PropertyDefinitionRepresentation>,
-    pub qualified_representation_item_arena: Arena<QualifiedRepresentationItem>,
-    pub quasi_uniform_curve_arena: Arena<QuasiUniformCurve>,
-    pub quasi_uniform_surface_arena: Arena<QuasiUniformSurface>,
-    pub ratio_measure_with_unit_arena: Arena<RatioMeasureWithUnit>,
-    pub ratio_unit_arena: Arena<RatioUnit>,
-    pub rational_b_spline_curve_arena: Arena<RationalBSplineCurve>,
-    pub rational_b_spline_surface_arena: Arena<RationalBSplineSurface>,
-    pub real_literal_arena: Arena<RealLiteral>,
-    pub real_representation_item_arena: Arena<RealRepresentationItem>,
-    pub repositioned_tessellated_item_arena: Arena<RepositionedTessellatedItem>,
-    pub representation_arena: Arena<Representation>,
-    pub representation_context_arena: Arena<RepresentationContext>,
-    pub representation_context_reference_arena: Arena<RepresentationContextReference>,
-    pub representation_item_arena: Arena<RepresentationItem>,
-    pub representation_map_arena: Arena<RepresentationMap>,
-    pub representation_reference_arena: Arena<RepresentationReference>,
-    pub representation_relationship_arena: Arena<RepresentationRelationship>,
-    pub representation_relationship_with_transformation_arena:
+    pub(crate) product_related_product_category_arena: Arena<ProductRelatedProductCategory>,
+    pub(crate) projected_zone_definition_arena: Arena<ProjectedZoneDefinition>,
+    pub(crate) property_definition_arena: Arena<PropertyDefinition>,
+    pub(crate) property_definition_relationship_arena: Arena<PropertyDefinitionRelationship>,
+    pub(crate) property_definition_representation_arena: Arena<PropertyDefinitionRepresentation>,
+    pub(crate) qualified_representation_item_arena: Arena<QualifiedRepresentationItem>,
+    pub(crate) quasi_uniform_curve_arena: Arena<QuasiUniformCurve>,
+    pub(crate) quasi_uniform_surface_arena: Arena<QuasiUniformSurface>,
+    pub(crate) ratio_measure_with_unit_arena: Arena<RatioMeasureWithUnit>,
+    pub(crate) ratio_unit_arena: Arena<RatioUnit>,
+    pub(crate) rational_b_spline_curve_arena: Arena<RationalBSplineCurve>,
+    pub(crate) rational_b_spline_surface_arena: Arena<RationalBSplineSurface>,
+    pub(crate) real_literal_arena: Arena<RealLiteral>,
+    pub(crate) real_representation_item_arena: Arena<RealRepresentationItem>,
+    pub(crate) repositioned_tessellated_item_arena: Arena<RepositionedTessellatedItem>,
+    pub(crate) representation_arena: Arena<Representation>,
+    pub(crate) representation_context_arena: Arena<RepresentationContext>,
+    pub(crate) representation_context_reference_arena: Arena<RepresentationContextReference>,
+    pub(crate) representation_item_arena: Arena<RepresentationItem>,
+    pub(crate) representation_map_arena: Arena<RepresentationMap>,
+    pub(crate) representation_reference_arena: Arena<RepresentationReference>,
+    pub(crate) representation_relationship_arena: Arena<RepresentationRelationship>,
+    pub(crate) representation_relationship_with_transformation_arena:
         Arena<RepresentationRelationshipWithTransformation>,
-    pub resource_property_arena: Arena<ResourceProperty>,
-    pub resource_requirement_type_arena: Arena<ResourceRequirementType>,
-    pub role_association_arena: Arena<RoleAssociation>,
-    pub roundness_tolerance_arena: Arena<RoundnessTolerance>,
-    pub seam_curve_arena: Arena<SeamCurve>,
-    pub security_classification_arena: Arena<SecurityClassification>,
-    pub security_classification_assignment_arena: Arena<SecurityClassificationAssignment>,
-    pub security_classification_level_arena: Arena<SecurityClassificationLevel>,
-    pub shape_aspect_arena: Arena<ShapeAspect>,
-    pub shape_aspect_associativity_arena: Arena<ShapeAspectAssociativity>,
-    pub shape_aspect_deriving_relationship_arena: Arena<ShapeAspectDerivingRelationship>,
-    pub shape_aspect_relationship_arena: Arena<ShapeAspectRelationship>,
-    pub shape_definition_representation_arena: Arena<ShapeDefinitionRepresentation>,
-    pub shape_dimension_representation_arena: Arena<ShapeDimensionRepresentation>,
-    pub shape_representation_arena: Arena<ShapeRepresentation>,
-    pub shape_representation_relationship_arena: Arena<ShapeRepresentationRelationship>,
-    pub shape_representation_with_parameters_arena: Arena<ShapeRepresentationWithParameters>,
-    pub shell_based_surface_model_arena: Arena<ShellBasedSurfaceModel>,
-    pub si_unit_arena: Arena<SiUnit>,
-    pub simple_generic_expression_arena: Arena<SimpleGenericExpression>,
-    pub simple_numeric_expression_arena: Arena<SimpleNumericExpression>,
-    pub solid_angle_unit_arena: Arena<SolidAngleUnit>,
-    pub solid_model_arena: Arena<SolidModel>,
-    pub spherical_surface_arena: Arena<SphericalSurface>,
-    pub start_request_arena: Arena<StartRequest>,
-    pub start_work_arena: Arena<StartWork>,
-    pub state_observed_arena: Arena<StateObserved>,
-    pub state_type_arena: Arena<StateType>,
-    pub straightness_tolerance_arena: Arena<StraightnessTolerance>,
-    pub styled_item_arena: Arena<StyledItem>,
-    pub surface_arena: Arena<Surface>,
-    pub surface_curve_arena: Arena<SurfaceCurve>,
-    pub surface_of_linear_extrusion_arena: Arena<SurfaceOfLinearExtrusion>,
-    pub surface_of_revolution_arena: Arena<SurfaceOfRevolution>,
-    pub surface_profile_tolerance_arena: Arena<SurfaceProfileTolerance>,
-    pub surface_rendering_properties_arena: Arena<SurfaceRenderingProperties>,
-    pub surface_side_style_arena: Arena<SurfaceSideStyle>,
-    pub surface_style_boundary_arena: Arena<SurfaceStyleBoundary>,
-    pub surface_style_control_grid_arena: Arena<SurfaceStyleControlGrid>,
-    pub surface_style_fill_area_arena: Arena<SurfaceStyleFillArea>,
-    pub surface_style_parameter_line_arena: Arena<SurfaceStyleParameterLine>,
-    pub surface_style_reflectance_ambient_arena: Arena<SurfaceStyleReflectanceAmbient>,
-    pub surface_style_rendering_arena: Arena<SurfaceStyleRendering>,
-    pub surface_style_rendering_with_properties_arena: Arena<SurfaceStyleRenderingWithProperties>,
-    pub surface_style_segmentation_curve_arena: Arena<SurfaceStyleSegmentationCurve>,
-    pub surface_style_silhouette_arena: Arena<SurfaceStyleSilhouette>,
-    pub surface_style_transparent_arena: Arena<SurfaceStyleTransparent>,
-    pub surface_style_usage_arena: Arena<SurfaceStyleUsage>,
-    pub swept_surface_arena: Arena<SweptSurface>,
-    pub symbol_colour_arena: Arena<SymbolColour>,
-    pub symbol_representation_arena: Arena<SymbolRepresentation>,
-    pub symbol_style_arena: Arena<SymbolStyle>,
-    pub symbol_target_arena: Arena<SymbolTarget>,
-    pub symmetry_tolerance_arena: Arena<SymmetryTolerance>,
-    pub terminator_symbol_arena: Arena<TerminatorSymbol>,
-    pub tessellated_annotation_occurrence_arena: Arena<TessellatedAnnotationOccurrence>,
-    pub tessellated_curve_set_arena: Arena<TessellatedCurveSet>,
-    pub tessellated_face_arena: Arena<TessellatedFace>,
-    pub tessellated_geometric_set_arena: Arena<TessellatedGeometricSet>,
-    pub tessellated_item_arena: Arena<TessellatedItem>,
-    pub tessellated_shape_representation_arena: Arena<TessellatedShapeRepresentation>,
-    pub tessellated_shell_arena: Arena<TessellatedShell>,
-    pub tessellated_solid_arena: Arena<TessellatedSolid>,
-    pub tessellated_structured_item_arena: Arena<TessellatedStructuredItem>,
-    pub tessellated_surface_set_arena: Arena<TessellatedSurfaceSet>,
-    pub text_font_arena: Arena<TextFont>,
-    pub text_literal_arena: Arena<TextLiteral>,
-    pub text_style_arena: Arena<TextStyle>,
-    pub text_style_for_defined_font_arena: Arena<TextStyleForDefinedFont>,
-    pub text_style_with_box_characteristics_arena: Arena<TextStyleWithBoxCharacteristics>,
-    pub texture_style_specification_arena: Arena<TextureStyleSpecification>,
-    pub texture_style_tessellation_specification_arena:
+    pub(crate) resource_property_arena: Arena<ResourceProperty>,
+    pub(crate) resource_requirement_type_arena: Arena<ResourceRequirementType>,
+    pub(crate) role_association_arena: Arena<RoleAssociation>,
+    pub(crate) roundness_tolerance_arena: Arena<RoundnessTolerance>,
+    pub(crate) seam_curve_arena: Arena<SeamCurve>,
+    pub(crate) security_classification_arena: Arena<SecurityClassification>,
+    pub(crate) security_classification_assignment_arena: Arena<SecurityClassificationAssignment>,
+    pub(crate) security_classification_level_arena: Arena<SecurityClassificationLevel>,
+    pub(crate) shape_aspect_arena: Arena<ShapeAspect>,
+    pub(crate) shape_aspect_associativity_arena: Arena<ShapeAspectAssociativity>,
+    pub(crate) shape_aspect_deriving_relationship_arena: Arena<ShapeAspectDerivingRelationship>,
+    pub(crate) shape_aspect_relationship_arena: Arena<ShapeAspectRelationship>,
+    pub(crate) shape_definition_representation_arena: Arena<ShapeDefinitionRepresentation>,
+    pub(crate) shape_dimension_representation_arena: Arena<ShapeDimensionRepresentation>,
+    pub(crate) shape_representation_arena: Arena<ShapeRepresentation>,
+    pub(crate) shape_representation_relationship_arena: Arena<ShapeRepresentationRelationship>,
+    pub(crate) shape_representation_with_parameters_arena: Arena<ShapeRepresentationWithParameters>,
+    pub(crate) shell_based_surface_model_arena: Arena<ShellBasedSurfaceModel>,
+    pub(crate) si_unit_arena: Arena<SiUnit>,
+    pub(crate) simple_generic_expression_arena: Arena<SimpleGenericExpression>,
+    pub(crate) simple_numeric_expression_arena: Arena<SimpleNumericExpression>,
+    pub(crate) solid_angle_unit_arena: Arena<SolidAngleUnit>,
+    pub(crate) solid_model_arena: Arena<SolidModel>,
+    pub(crate) spherical_surface_arena: Arena<SphericalSurface>,
+    pub(crate) start_request_arena: Arena<StartRequest>,
+    pub(crate) start_work_arena: Arena<StartWork>,
+    pub(crate) state_observed_arena: Arena<StateObserved>,
+    pub(crate) state_type_arena: Arena<StateType>,
+    pub(crate) straightness_tolerance_arena: Arena<StraightnessTolerance>,
+    pub(crate) styled_item_arena: Arena<StyledItem>,
+    pub(crate) surface_arena: Arena<Surface>,
+    pub(crate) surface_curve_arena: Arena<SurfaceCurve>,
+    pub(crate) surface_of_linear_extrusion_arena: Arena<SurfaceOfLinearExtrusion>,
+    pub(crate) surface_of_revolution_arena: Arena<SurfaceOfRevolution>,
+    pub(crate) surface_profile_tolerance_arena: Arena<SurfaceProfileTolerance>,
+    pub(crate) surface_rendering_properties_arena: Arena<SurfaceRenderingProperties>,
+    pub(crate) surface_side_style_arena: Arena<SurfaceSideStyle>,
+    pub(crate) surface_style_boundary_arena: Arena<SurfaceStyleBoundary>,
+    pub(crate) surface_style_control_grid_arena: Arena<SurfaceStyleControlGrid>,
+    pub(crate) surface_style_fill_area_arena: Arena<SurfaceStyleFillArea>,
+    pub(crate) surface_style_parameter_line_arena: Arena<SurfaceStyleParameterLine>,
+    pub(crate) surface_style_reflectance_ambient_arena: Arena<SurfaceStyleReflectanceAmbient>,
+    pub(crate) surface_style_rendering_arena: Arena<SurfaceStyleRendering>,
+    pub(crate) surface_style_rendering_with_properties_arena:
+        Arena<SurfaceStyleRenderingWithProperties>,
+    pub(crate) surface_style_segmentation_curve_arena: Arena<SurfaceStyleSegmentationCurve>,
+    pub(crate) surface_style_silhouette_arena: Arena<SurfaceStyleSilhouette>,
+    pub(crate) surface_style_transparent_arena: Arena<SurfaceStyleTransparent>,
+    pub(crate) surface_style_usage_arena: Arena<SurfaceStyleUsage>,
+    pub(crate) swept_surface_arena: Arena<SweptSurface>,
+    pub(crate) symbol_colour_arena: Arena<SymbolColour>,
+    pub(crate) symbol_representation_arena: Arena<SymbolRepresentation>,
+    pub(crate) symbol_style_arena: Arena<SymbolStyle>,
+    pub(crate) symbol_target_arena: Arena<SymbolTarget>,
+    pub(crate) symmetry_tolerance_arena: Arena<SymmetryTolerance>,
+    pub(crate) terminator_symbol_arena: Arena<TerminatorSymbol>,
+    pub(crate) tessellated_annotation_occurrence_arena: Arena<TessellatedAnnotationOccurrence>,
+    pub(crate) tessellated_curve_set_arena: Arena<TessellatedCurveSet>,
+    pub(crate) tessellated_face_arena: Arena<TessellatedFace>,
+    pub(crate) tessellated_geometric_set_arena: Arena<TessellatedGeometricSet>,
+    pub(crate) tessellated_item_arena: Arena<TessellatedItem>,
+    pub(crate) tessellated_shape_representation_arena: Arena<TessellatedShapeRepresentation>,
+    pub(crate) tessellated_shell_arena: Arena<TessellatedShell>,
+    pub(crate) tessellated_solid_arena: Arena<TessellatedSolid>,
+    pub(crate) tessellated_structured_item_arena: Arena<TessellatedStructuredItem>,
+    pub(crate) tessellated_surface_set_arena: Arena<TessellatedSurfaceSet>,
+    pub(crate) text_font_arena: Arena<TextFont>,
+    pub(crate) text_literal_arena: Arena<TextLiteral>,
+    pub(crate) text_style_arena: Arena<TextStyle>,
+    pub(crate) text_style_for_defined_font_arena: Arena<TextStyleForDefinedFont>,
+    pub(crate) text_style_with_box_characteristics_arena: Arena<TextStyleWithBoxCharacteristics>,
+    pub(crate) texture_style_specification_arena: Arena<TextureStyleSpecification>,
+    pub(crate) texture_style_tessellation_specification_arena:
         Arena<TextureStyleTessellationSpecification>,
-    pub time_unit_arena: Arena<TimeUnit>,
-    pub tolerance_value_arena: Arena<ToleranceValue>,
-    pub tolerance_zone_arena: Arena<ToleranceZone>,
-    pub tolerance_zone_definition_arena: Arena<ToleranceZoneDefinition>,
-    pub tolerance_zone_form_arena: Arena<ToleranceZoneForm>,
-    pub tolerance_zone_with_datum_arena: Arena<ToleranceZoneWithDatum>,
-    pub topological_representation_item_arena: Arena<TopologicalRepresentationItem>,
-    pub toroidal_surface_arena: Arena<ToroidalSurface>,
-    pub total_runout_tolerance_arena: Arena<TotalRunoutTolerance>,
-    pub trimmed_curve_arena: Arena<TrimmedCurve>,
-    pub two_direction_repeat_factor_arena: Arena<TwoDirectionRepeatFactor>,
-    pub type_qualifier_arena: Arena<TypeQualifier>,
-    pub uncertainty_measure_with_unit_arena: Arena<UncertaintyMeasureWithUnit>,
-    pub uncertainty_qualifier_arena: Arena<UncertaintyQualifier>,
-    pub unequally_disposed_geometric_tolerance_arena: Arena<UnequallyDisposedGeometricTolerance>,
-    pub uniform_curve_arena: Arena<UniformCurve>,
-    pub uniform_surface_arena: Arena<UniformSurface>,
-    pub value_format_type_qualifier_arena: Arena<ValueFormatTypeQualifier>,
-    pub value_representation_item_arena: Arena<ValueRepresentationItem>,
-    pub vector_arena: Arena<Vector>,
-    pub versioned_action_request_arena: Arena<VersionedActionRequest>,
-    pub vertex_arena: Arena<Vertex>,
-    pub vertex_loop_arena: Arena<VertexLoop>,
-    pub vertex_point_arena: Arena<VertexPoint>,
-    pub vertex_shell_arena: Arena<VertexShell>,
-    pub view_volume_arena: Arena<ViewVolume>,
-    pub volume_unit_arena: Arena<VolumeUnit>,
-    pub wire_shell_arena: Arena<WireShell>,
-    pub complex_unit_arena: Arena<ComplexUnit>,
+    pub(crate) time_unit_arena: Arena<TimeUnit>,
+    pub(crate) tolerance_value_arena: Arena<ToleranceValue>,
+    pub(crate) tolerance_zone_arena: Arena<ToleranceZone>,
+    pub(crate) tolerance_zone_definition_arena: Arena<ToleranceZoneDefinition>,
+    pub(crate) tolerance_zone_form_arena: Arena<ToleranceZoneForm>,
+    pub(crate) tolerance_zone_with_datum_arena: Arena<ToleranceZoneWithDatum>,
+    pub(crate) topological_representation_item_arena: Arena<TopologicalRepresentationItem>,
+    pub(crate) toroidal_surface_arena: Arena<ToroidalSurface>,
+    pub(crate) total_runout_tolerance_arena: Arena<TotalRunoutTolerance>,
+    pub(crate) trimmed_curve_arena: Arena<TrimmedCurve>,
+    pub(crate) two_direction_repeat_factor_arena: Arena<TwoDirectionRepeatFactor>,
+    pub(crate) type_qualifier_arena: Arena<TypeQualifier>,
+    pub(crate) uncertainty_measure_with_unit_arena: Arena<UncertaintyMeasureWithUnit>,
+    pub(crate) uncertainty_qualifier_arena: Arena<UncertaintyQualifier>,
+    pub(crate) unequally_disposed_geometric_tolerance_arena:
+        Arena<UnequallyDisposedGeometricTolerance>,
+    pub(crate) uniform_curve_arena: Arena<UniformCurve>,
+    pub(crate) uniform_surface_arena: Arena<UniformSurface>,
+    pub(crate) value_format_type_qualifier_arena: Arena<ValueFormatTypeQualifier>,
+    pub(crate) value_representation_item_arena: Arena<ValueRepresentationItem>,
+    pub(crate) vector_arena: Arena<Vector>,
+    pub(crate) versioned_action_request_arena: Arena<VersionedActionRequest>,
+    pub(crate) vertex_arena: Arena<Vertex>,
+    pub(crate) vertex_loop_arena: Arena<VertexLoop>,
+    pub(crate) vertex_point_arena: Arena<VertexPoint>,
+    pub(crate) vertex_shell_arena: Arena<VertexShell>,
+    pub(crate) view_volume_arena: Arena<ViewVolume>,
+    pub(crate) volume_unit_arena: Arena<VolumeUnit>,
+    pub(crate) wire_shell_arena: Arena<WireShell>,
+    pub(crate) complex_unit_arena: Arena<ComplexUnit>,
 }
 impl StepModel {
     /// The string `t` stands for (`""` for a `Text` of another model).
@@ -19775,3 +19785,1906 @@ impl StepModel {
         self.texts.push(s)
     }
 }
+
+/// An entity type of the model: a generated entity struct, or [`ComplexUnit`]
+/// for a complex instance. [`StepModel::all`] lists the entities of a type.
+/// The trait is sealed: only the model's own types implement it.
+pub trait Entity: sealed::SealedEntity {
+    /// The id type of this entity type.
+    type Id: EntityId<Entity = Self>;
+}
+
+/// The id of one entity type: [`StepModel::get`] or `model[id]` reads the
+/// entity it names. The trait is sealed: only the model's own ids implement
+/// it.
+pub trait EntityId: sealed::SealedId {
+    /// The entity type this id names.
+    type Entity: Entity<Id = Self>;
+}
+
+// The storage access behind the public traits. The `Token` argument, which
+// only this crate can make, keeps the methods out of reach through a
+// public trait bound.
+mod sealed {
+    pub struct Token(pub(crate) ());
+    pub trait SealedEntity: Sized + 'static {
+        fn items(model: &super::StepModel, _: Token) -> &[Self];
+    }
+    pub trait SealedId: Copy {
+        fn slot(self, _: Token) -> usize;
+        fn at(index: u32, _: Token) -> Self;
+    }
+}
+use sealed::Token;
+
+impl StepModel {
+    /// Every entity of type `T`, with its id, in the model's order:
+    /// `model.all::<Circle>()`.
+    #[allow(clippy::cast_possible_truncation)] // a model holds at most u32::MAX of a type
+    pub fn all<T: Entity>(&self) -> impl ExactSizeIterator<Item = (T::Id, &T)> + '_ {
+        <T as sealed::SealedEntity>::items(self, Token(()))
+            .iter()
+            .enumerate()
+            .map(|(i, e)| (<T::Id as sealed::SealedId>::at(i as u32, Token(())), e))
+    }
+    /// The entity `id` names, or `None` for an id out of this model's range.
+    pub fn get<I: EntityId>(&self, id: I) -> Option<&I::Entity> {
+        <I::Entity as sealed::SealedEntity>::items(self, Token(()))
+            .get(sealed::SealedId::slot(id, Token(())))
+    }
+}
+
+/// `model[id]`: the entity `id` names. Panics for an id out of this model's
+/// range; [`StepModel::get`] returns `None` instead.
+impl<I: EntityId> std::ops::Index<I> for StepModel {
+    type Output = I::Entity;
+    fn index(&self, id: I) -> &I::Entity {
+        &<I::Entity as sealed::SealedEntity>::items(self, Token(()))
+            [sealed::SealedId::slot(id, Token(()))]
+    }
+}
+
+macro_rules! entity {
+    ($entity:ident, $id:ident, $arena:ident) => {
+        impl Entity for $entity {
+            type Id = $id;
+        }
+        impl sealed::SealedEntity for $entity {
+            fn items(model: &StepModel, _: Token) -> &[Self] {
+                &model.$arena.items
+            }
+        }
+        impl EntityId for $id {
+            type Entity = $entity;
+        }
+        impl sealed::SealedId for $id {
+            fn slot(self, _: Token) -> usize {
+                self.0 as usize
+            }
+            fn at(index: u32, _: Token) -> Self {
+                $id(index)
+            }
+        }
+    };
+}
+entity!(Action, ActionId, action_arena);
+entity!(
+    ActionAssignment,
+    ActionAssignmentId,
+    action_assignment_arena
+);
+entity!(ActionDirective, ActionDirectiveId, action_directive_arena);
+entity!(ActionMethod, ActionMethodId, action_method_arena);
+entity!(
+    ActionMethodRelationship,
+    ActionMethodRelationshipId,
+    action_method_relationship_arena
+);
+entity!(ActionProperty, ActionPropertyId, action_property_arena);
+entity!(
+    ActionRelationship,
+    ActionRelationshipId,
+    action_relationship_arena
+);
+entity!(
+    ActionRequestAssignment,
+    ActionRequestAssignmentId,
+    action_request_assignment_arena
+);
+entity!(
+    ActionRequestSolution,
+    ActionRequestSolutionId,
+    action_request_solution_arena
+);
+entity!(ActionResource, ActionResourceId, action_resource_arena);
+entity!(
+    ActionResourceRelationship,
+    ActionResourceRelationshipId,
+    action_resource_relationship_arena
+);
+entity!(
+    ActionResourceRequirement,
+    ActionResourceRequirementId,
+    action_resource_requirement_arena
+);
+entity!(
+    ActionResourceType,
+    ActionResourceTypeId,
+    action_resource_type_arena
+);
+entity!(Address, AddressId, address_arena);
+entity!(
+    AdvancedBrepShapeRepresentation,
+    AdvancedBrepShapeRepresentationId,
+    advanced_brep_shape_representation_arena
+);
+entity!(AdvancedFace, AdvancedFaceId, advanced_face_arena);
+entity!(
+    AllAroundShapeAspect,
+    AllAroundShapeAspectId,
+    all_around_shape_aspect_arena
+);
+entity!(AngularLocation, AngularLocationId, angular_location_arena);
+entity!(AngularSize, AngularSizeId, angular_size_arena);
+entity!(
+    AngularityTolerance,
+    AngularityToleranceId,
+    angularity_tolerance_arena
+);
+entity!(
+    AnnotationCurveOccurrence,
+    AnnotationCurveOccurrenceId,
+    annotation_curve_occurrence_arena
+);
+entity!(
+    AnnotationFillAreaOccurrence,
+    AnnotationFillAreaOccurrenceId,
+    annotation_fill_area_occurrence_arena
+);
+entity!(
+    AnnotationOccurrence,
+    AnnotationOccurrenceId,
+    annotation_occurrence_arena
+);
+entity!(
+    AnnotationOccurrenceAssociativity,
+    AnnotationOccurrenceAssociativityId,
+    annotation_occurrence_associativity_arena
+);
+entity!(
+    AnnotationOccurrenceRelationship,
+    AnnotationOccurrenceRelationshipId,
+    annotation_occurrence_relationship_arena
+);
+entity!(
+    AnnotationPlaceholderLeaderLine,
+    AnnotationPlaceholderLeaderLineId,
+    annotation_placeholder_leader_line_arena
+);
+entity!(
+    AnnotationPlaceholderOccurrence,
+    AnnotationPlaceholderOccurrenceId,
+    annotation_placeholder_occurrence_arena
+);
+entity!(
+    AnnotationPlaceholderOccurrenceWithLeaderLine,
+    AnnotationPlaceholderOccurrenceWithLeaderLineId,
+    annotation_placeholder_occurrence_with_leader_line_arena
+);
+entity!(AnnotationPlane, AnnotationPlaneId, annotation_plane_arena);
+entity!(
+    AnnotationSymbol,
+    AnnotationSymbolId,
+    annotation_symbol_arena
+);
+entity!(
+    AnnotationSymbolOccurrence,
+    AnnotationSymbolOccurrenceId,
+    annotation_symbol_occurrence_arena
+);
+entity!(AnnotationText, AnnotationTextId, annotation_text_arena);
+entity!(
+    AnnotationTextCharacter,
+    AnnotationTextCharacterId,
+    annotation_text_character_arena
+);
+entity!(
+    AnnotationTextOccurrence,
+    AnnotationTextOccurrenceId,
+    annotation_text_occurrence_arena
+);
+entity!(
+    AnnotationToAnnotationLeaderLine,
+    AnnotationToAnnotationLeaderLineId,
+    annotation_to_annotation_leader_line_arena
+);
+entity!(
+    AnnotationToModelLeaderLine,
+    AnnotationToModelLeaderLineId,
+    annotation_to_model_leader_line_arena
+);
+entity!(ApllPoint, ApllPointId, apll_point_arena);
+entity!(
+    ApllPointWithSurface,
+    ApllPointWithSurfaceId,
+    apll_point_with_surface_arena
+);
+entity!(
+    ApplicationContext,
+    ApplicationContextId,
+    application_context_arena
+);
+entity!(
+    ApplicationContextElement,
+    ApplicationContextElementId,
+    application_context_element_arena
+);
+entity!(
+    ApplicationProtocolDefinition,
+    ApplicationProtocolDefinitionId,
+    application_protocol_definition_arena
+);
+entity!(
+    AppliedApprovalAssignment,
+    AppliedApprovalAssignmentId,
+    applied_approval_assignment_arena
+);
+entity!(
+    AppliedDateAndTimeAssignment,
+    AppliedDateAndTimeAssignmentId,
+    applied_date_and_time_assignment_arena
+);
+entity!(
+    AppliedDocumentReference,
+    AppliedDocumentReferenceId,
+    applied_document_reference_arena
+);
+entity!(
+    AppliedExternalIdentificationAssignment,
+    AppliedExternalIdentificationAssignmentId,
+    applied_external_identification_assignment_arena
+);
+entity!(
+    AppliedGroupAssignment,
+    AppliedGroupAssignmentId,
+    applied_group_assignment_arena
+);
+entity!(
+    AppliedPersonAndOrganizationAssignment,
+    AppliedPersonAndOrganizationAssignmentId,
+    applied_person_and_organization_assignment_arena
+);
+entity!(
+    AppliedPresentedItem,
+    AppliedPresentedItemId,
+    applied_presented_item_arena
+);
+entity!(
+    AppliedSecurityClassificationAssignment,
+    AppliedSecurityClassificationAssignmentId,
+    applied_security_classification_assignment_arena
+);
+entity!(Approval, ApprovalId, approval_arena);
+entity!(
+    ApprovalAssignment,
+    ApprovalAssignmentId,
+    approval_assignment_arena
+);
+entity!(
+    ApprovalDateTime,
+    ApprovalDateTimeId,
+    approval_date_time_arena
+);
+entity!(
+    ApprovalPersonOrganization,
+    ApprovalPersonOrganizationId,
+    approval_person_organization_arena
+);
+entity!(ApprovalRole, ApprovalRoleId, approval_role_arena);
+entity!(ApprovalStatus, ApprovalStatusId, approval_status_arena);
+entity!(
+    ApproximationTolerance,
+    ApproximationToleranceId,
+    approximation_tolerance_arena
+);
+entity!(
+    ApproximationToleranceDeviation,
+    ApproximationToleranceDeviationId,
+    approximation_tolerance_deviation_arena
+);
+entity!(
+    ApproximationToleranceParameter,
+    ApproximationToleranceParameterId,
+    approximation_tolerance_parameter_arena
+);
+entity!(AreaInSet, AreaInSetId, area_in_set_arena);
+entity!(AreaUnit, AreaUnitId, area_unit_arena);
+entity!(AscribableState, AscribableStateId, ascribable_state_arena);
+entity!(
+    AscribableStateRelationship,
+    AscribableStateRelationshipId,
+    ascribable_state_relationship_arena
+);
+entity!(
+    AssemblyComponentUsage,
+    AssemblyComponentUsageId,
+    assembly_component_usage_arena
+);
+entity!(
+    AuxiliaryLeaderLine,
+    AuxiliaryLeaderLineId,
+    auxiliary_leader_line_arena
+);
+entity!(Axis1Placement, Axis1PlacementId, axis1_placement_arena);
+entity!(
+    Axis2Placement2d,
+    Axis2Placement2dId,
+    axis2_placement2d_arena
+);
+entity!(
+    Axis2Placement3d,
+    Axis2Placement3dId,
+    axis2_placement3d_arena
+);
+entity!(BSplineCurve, BSplineCurveId, b_spline_curve_arena);
+entity!(
+    BSplineCurveWithKnots,
+    BSplineCurveWithKnotsId,
+    b_spline_curve_with_knots_arena
+);
+entity!(BSplineSurface, BSplineSurfaceId, b_spline_surface_arena);
+entity!(
+    BSplineSurfaceWithKnots,
+    BSplineSurfaceWithKnotsId,
+    b_spline_surface_with_knots_arena
+);
+entity!(BezierCurve, BezierCurveId, bezier_curve_arena);
+entity!(BezierSurface, BezierSurfaceId, bezier_surface_arena);
+entity!(BoundedCurve, BoundedCurveId, bounded_curve_arena);
+entity!(BoundedPcurve, BoundedPcurveId, bounded_pcurve_arena);
+entity!(BoundedSurface, BoundedSurfaceId, bounded_surface_arena);
+entity!(
+    BoundedSurfaceCurve,
+    BoundedSurfaceCurveId,
+    bounded_surface_curve_arena
+);
+entity!(BrepWithVoids, BrepWithVoidsId, brep_with_voids_arena);
+entity!(CalendarDate, CalendarDateId, calendar_date_arena);
+entity!(CameraImage, CameraImageId, camera_image_arena);
+entity!(
+    CameraImage3dWithScale,
+    CameraImage3dWithScaleId,
+    camera_image3d_with_scale_arena
+);
+entity!(CameraModel, CameraModelId, camera_model_arena);
+entity!(CameraModelD3, CameraModelD3Id, camera_model_d3_arena);
+entity!(
+    CameraModelD3MultiClipping,
+    CameraModelD3MultiClippingId,
+    camera_model_d3_multi_clipping_arena
+);
+entity!(
+    CameraModelD3WithHlhsr,
+    CameraModelD3WithHlhsrId,
+    camera_model_d3_with_hlhsr_arena
+);
+entity!(CameraUsage, CameraUsageId, camera_usage_arena);
+entity!(CartesianPoint, CartesianPointId, cartesian_point_arena);
+entity!(
+    CcDesignApproval,
+    CcDesignApprovalId,
+    cc_design_approval_arena
+);
+entity!(
+    CcDesignDateAndTimeAssignment,
+    CcDesignDateAndTimeAssignmentId,
+    cc_design_date_and_time_assignment_arena
+);
+entity!(
+    CcDesignPersonAndOrganizationAssignment,
+    CcDesignPersonAndOrganizationAssignmentId,
+    cc_design_person_and_organization_assignment_arena
+);
+entity!(
+    CcDesignSecurityClassification,
+    CcDesignSecurityClassificationId,
+    cc_design_security_classification_arena
+);
+entity!(
+    CentreOfSymmetry,
+    CentreOfSymmetryId,
+    centre_of_symmetry_arena
+);
+entity!(Certification, CertificationId, certification_arena);
+entity!(
+    CertificationType,
+    CertificationTypeId,
+    certification_type_arena
+);
+entity!(Change, ChangeId, change_arena);
+entity!(ChangeRequest, ChangeRequestId, change_request_arena);
+entity!(
+    CharacterGlyphStyleOutline,
+    CharacterGlyphStyleOutlineId,
+    character_glyph_style_outline_arena
+);
+entity!(
+    CharacterGlyphStyleStroke,
+    CharacterGlyphStyleStrokeId,
+    character_glyph_style_stroke_arena
+);
+entity!(
+    CharacterizedItemWithinRepresentation,
+    CharacterizedItemWithinRepresentationId,
+    characterized_item_within_representation_arena
+);
+entity!(
+    CharacterizedObject,
+    CharacterizedObjectId,
+    characterized_object_arena
+);
+entity!(
+    CharacterizedRepresentation,
+    CharacterizedRepresentationId,
+    characterized_representation_arena
+);
+entity!(Circle, CircleId, circle_arena);
+entity!(
+    CircularRunoutTolerance,
+    CircularRunoutToleranceId,
+    circular_runout_tolerance_arena
+);
+entity!(ClosedShell, ClosedShellId, closed_shell_arena);
+entity!(
+    CoaxialityTolerance,
+    CoaxialityToleranceId,
+    coaxiality_tolerance_arena
+);
+entity!(Colour, ColourId, colour_arena);
+entity!(ColourRgb, ColourRgbId, colour_rgb_arena);
+entity!(
+    ColourSpecification,
+    ColourSpecificationId,
+    colour_specification_arena
+);
+entity!(CommonDatum, CommonDatumId, common_datum_arena);
+entity!(
+    ComplexTriangulatedFace,
+    ComplexTriangulatedFaceId,
+    complex_triangulated_face_arena
+);
+entity!(
+    ComplexTriangulatedSurfaceSet,
+    ComplexTriangulatedSurfaceSetId,
+    complex_triangulated_surface_set_arena
+);
+entity!(CompositeCurve, CompositeCurveId, composite_curve_arena);
+entity!(
+    CompositeCurveSegment,
+    CompositeCurveSegmentId,
+    composite_curve_segment_arena
+);
+entity!(
+    CompositeGroupShapeAspect,
+    CompositeGroupShapeAspectId,
+    composite_group_shape_aspect_arena
+);
+entity!(
+    CompositeShapeAspect,
+    CompositeShapeAspectId,
+    composite_shape_aspect_arena
+);
+entity!(CompositeText, CompositeTextId, composite_text_arena);
+entity!(
+    CompoundRepresentationItem,
+    CompoundRepresentationItemId,
+    compound_representation_item_arena
+);
+entity!(
+    ConcentricityTolerance,
+    ConcentricityToleranceId,
+    concentricity_tolerance_arena
+);
+entity!(
+    ConfigurationDesign,
+    ConfigurationDesignId,
+    configuration_design_arena
+);
+entity!(
+    ConfigurationEffectivity,
+    ConfigurationEffectivityId,
+    configuration_effectivity_arena
+);
+entity!(
+    ConfigurationItem,
+    ConfigurationItemId,
+    configuration_item_arena
+);
+entity!(Conic, ConicId, conic_arena);
+entity!(ConicalSurface, ConicalSurfaceId, conical_surface_arena);
+entity!(
+    ConnectedFaceSet,
+    ConnectedFaceSetId,
+    connected_face_set_arena
+);
+entity!(
+    ConstructiveGeometryRepresentation,
+    ConstructiveGeometryRepresentationId,
+    constructive_geometry_representation_arena
+);
+entity!(
+    ConstructiveGeometryRepresentationRelationship,
+    ConstructiveGeometryRepresentationRelationshipId,
+    constructive_geometry_representation_relationship_arena
+);
+entity!(
+    ContextDependentOverRidingStyledItem,
+    ContextDependentOverRidingStyledItemId,
+    context_dependent_over_riding_styled_item_arena
+);
+entity!(
+    ContextDependentShapeRepresentation,
+    ContextDependentShapeRepresentationId,
+    context_dependent_shape_representation_arena
+);
+entity!(
+    ContextDependentUnit,
+    ContextDependentUnitId,
+    context_dependent_unit_arena
+);
+entity!(
+    ContinuousShapeAspect,
+    ContinuousShapeAspectId,
+    continuous_shape_aspect_arena
+);
+entity!(Contract, ContractId, contract_arena);
+entity!(ContractType, ContractTypeId, contract_type_arena);
+entity!(
+    ConversionBasedUnit,
+    ConversionBasedUnitId,
+    conversion_based_unit_arena
+);
+entity!(
+    CoordinatedUniversalTimeOffset,
+    CoordinatedUniversalTimeOffsetId,
+    coordinated_universal_time_offset_arena
+);
+entity!(CoordinatesList, CoordinatesListId, coordinates_list_arena);
+entity!(Curve, CurveId, curve_arena);
+entity!(CurveStyle, CurveStyleId, curve_style_arena);
+entity!(CurveStyleFont, CurveStyleFontId, curve_style_font_arena);
+entity!(
+    CurveStyleFontAndScaling,
+    CurveStyleFontAndScalingId,
+    curve_style_font_and_scaling_arena
+);
+entity!(
+    CurveStyleFontPattern,
+    CurveStyleFontPatternId,
+    curve_style_font_pattern_arena
+);
+entity!(
+    CurveStyleRendering,
+    CurveStyleRenderingId,
+    curve_style_rendering_arena
+);
+entity!(
+    CylindricalSurface,
+    CylindricalSurfaceId,
+    cylindrical_surface_arena
+);
+entity!(
+    CylindricityTolerance,
+    CylindricityToleranceId,
+    cylindricity_tolerance_arena
+);
+entity!(Date, DateId, date_arena);
+entity!(DateAndTime, DateAndTimeId, date_and_time_arena);
+entity!(
+    DateAndTimeAssignment,
+    DateAndTimeAssignmentId,
+    date_and_time_assignment_arena
+);
+entity!(DateRole, DateRoleId, date_role_arena);
+entity!(DateTimeRole, DateTimeRoleId, date_time_role_arena);
+entity!(Datum, DatumId, datum_arena);
+entity!(DatumFeature, DatumFeatureId, datum_feature_arena);
+entity!(DatumReference, DatumReferenceId, datum_reference_arena);
+entity!(
+    DatumReferenceCompartment,
+    DatumReferenceCompartmentId,
+    datum_reference_compartment_arena
+);
+entity!(
+    DatumReferenceElement,
+    DatumReferenceElementId,
+    datum_reference_element_arena
+);
+entity!(
+    DatumReferenceModifierWithValue,
+    DatumReferenceModifierWithValueId,
+    datum_reference_modifier_with_value_arena
+);
+entity!(DatumSystem, DatumSystemId, datum_system_arena);
+entity!(DatumTarget, DatumTargetId, datum_target_arena);
+entity!(
+    DefaultModelGeometricView,
+    DefaultModelGeometricViewId,
+    default_model_geometric_view_arena
+);
+entity!(
+    DefinedCharacterGlyph,
+    DefinedCharacterGlyphId,
+    defined_character_glyph_arena
+);
+entity!(DefinedSymbol, DefinedSymbolId, defined_symbol_arena);
+entity!(
+    DefinitionalRepresentation,
+    DefinitionalRepresentationId,
+    definitional_representation_arena
+);
+entity!(
+    DefinitionalRepresentationRelationship,
+    DefinitionalRepresentationRelationshipId,
+    definitional_representation_relationship_arena
+);
+entity!(
+    DefinitionalRepresentationRelationshipWithSameContext,
+    DefinitionalRepresentationRelationshipWithSameContextId,
+    definitional_representation_relationship_with_same_context_arena
+);
+entity!(
+    DegenerateToroidalSurface,
+    DegenerateToroidalSurfaceId,
+    degenerate_toroidal_surface_arena
+);
+entity!(
+    DerivedShapeAspect,
+    DerivedShapeAspectId,
+    derived_shape_aspect_arena
+);
+entity!(DerivedUnit, DerivedUnitId, derived_unit_arena);
+entity!(
+    DerivedUnitElement,
+    DerivedUnitElementId,
+    derived_unit_element_arena
+);
+entity!(
+    DescriptionAttribute,
+    DescriptionAttributeId,
+    description_attribute_arena
+);
+entity!(
+    DescriptiveRepresentationItem,
+    DescriptiveRepresentationItemId,
+    descriptive_representation_item_arena
+);
+entity!(DesignContext, DesignContextId, design_context_arena);
+entity!(
+    DimensionalCharacteristicRepresentation,
+    DimensionalCharacteristicRepresentationId,
+    dimensional_characteristic_representation_arena
+);
+entity!(
+    DimensionalExponents,
+    DimensionalExponentsId,
+    dimensional_exponents_arena
+);
+entity!(
+    DimensionalLocation,
+    DimensionalLocationId,
+    dimensional_location_arena
+);
+entity!(
+    DimensionalLocationWithPath,
+    DimensionalLocationWithPathId,
+    dimensional_location_with_path_arena
+);
+entity!(DimensionalSize, DimensionalSizeId, dimensional_size_arena);
+entity!(
+    DimensionalSizeWithDatumFeature,
+    DimensionalSizeWithDatumFeatureId,
+    dimensional_size_with_datum_feature_arena
+);
+entity!(
+    DimensionalSizeWithPath,
+    DimensionalSizeWithPathId,
+    dimensional_size_with_path_arena
+);
+entity!(
+    DirectedDimensionalLocation,
+    DirectedDimensionalLocationId,
+    directed_dimensional_location_arena
+);
+entity!(Direction, DirectionId, direction_arena);
+entity!(Document, DocumentId, document_arena);
+entity!(DocumentFile, DocumentFileId, document_file_arena);
+entity!(
+    DocumentProductAssociation,
+    DocumentProductAssociationId,
+    document_product_association_arena
+);
+entity!(
+    DocumentProductEquivalence,
+    DocumentProductEquivalenceId,
+    document_product_equivalence_arena
+);
+entity!(
+    DocumentReference,
+    DocumentReferenceId,
+    document_reference_arena
+);
+entity!(
+    DocumentRepresentationType,
+    DocumentRepresentationTypeId,
+    document_representation_type_arena
+);
+entity!(DocumentType, DocumentTypeId, document_type_arena);
+entity!(
+    DraughtingAnnotationOccurrence,
+    DraughtingAnnotationOccurrenceId,
+    draughting_annotation_occurrence_arena
+);
+entity!(
+    DraughtingCallout,
+    DraughtingCalloutId,
+    draughting_callout_arena
+);
+entity!(
+    DraughtingCalloutRelationship,
+    DraughtingCalloutRelationshipId,
+    draughting_callout_relationship_arena
+);
+entity!(DraughtingModel, DraughtingModelId, draughting_model_arena);
+entity!(
+    DraughtingModelItemAssociation,
+    DraughtingModelItemAssociationId,
+    draughting_model_item_association_arena
+);
+entity!(
+    DraughtingModelItemAssociationWithPlaceholder,
+    DraughtingModelItemAssociationWithPlaceholderId,
+    draughting_model_item_association_with_placeholder_arena
+);
+entity!(
+    DraughtingPreDefinedColour,
+    DraughtingPreDefinedColourId,
+    draughting_pre_defined_colour_arena
+);
+entity!(
+    DraughtingPreDefinedCurveFont,
+    DraughtingPreDefinedCurveFontId,
+    draughting_pre_defined_curve_font_arena
+);
+entity!(
+    DraughtingPreDefinedTextFont,
+    DraughtingPreDefinedTextFontId,
+    draughting_pre_defined_text_font_arena
+);
+entity!(Edge, EdgeId, edge_arena);
+entity!(EdgeCurve, EdgeCurveId, edge_curve_arena);
+entity!(EdgeLoop, EdgeLoopId, edge_loop_arena);
+entity!(Effectivity, EffectivityId, effectivity_arena);
+entity!(
+    ElementarySurface,
+    ElementarySurfaceId,
+    elementary_surface_arena
+);
+entity!(Ellipse, EllipseId, ellipse_arena);
+entity!(Expression, ExpressionId, expression_arena);
+entity!(
+    ExternalIdentificationAssignment,
+    ExternalIdentificationAssignmentId,
+    external_identification_assignment_arena
+);
+entity!(ExternalSource, ExternalSourceId, external_source_arena);
+entity!(
+    ExternallyDefinedCharacterGlyph,
+    ExternallyDefinedCharacterGlyphId,
+    externally_defined_character_glyph_arena
+);
+entity!(
+    ExternallyDefinedCurveFont,
+    ExternallyDefinedCurveFontId,
+    externally_defined_curve_font_arena
+);
+entity!(
+    ExternallyDefinedHatchStyle,
+    ExternallyDefinedHatchStyleId,
+    externally_defined_hatch_style_arena
+);
+entity!(
+    ExternallyDefinedItem,
+    ExternallyDefinedItemId,
+    externally_defined_item_arena
+);
+entity!(
+    ExternallyDefinedStyle,
+    ExternallyDefinedStyleId,
+    externally_defined_style_arena
+);
+entity!(
+    ExternallyDefinedSymbol,
+    ExternallyDefinedSymbolId,
+    externally_defined_symbol_arena
+);
+entity!(
+    ExternallyDefinedTextFont,
+    ExternallyDefinedTextFontId,
+    externally_defined_text_font_arena
+);
+entity!(
+    ExternallyDefinedTile,
+    ExternallyDefinedTileId,
+    externally_defined_tile_arena
+);
+entity!(
+    ExternallyDefinedTileStyle,
+    ExternallyDefinedTileStyleId,
+    externally_defined_tile_style_arena
+);
+entity!(Face, FaceId, face_arena);
+entity!(FaceBound, FaceBoundId, face_bound_arena);
+entity!(FaceOuterBound, FaceOuterBoundId, face_outer_bound_arena);
+entity!(FaceSurface, FaceSurfaceId, face_surface_arena);
+entity!(
+    FeatureForDatumTargetRelationship,
+    FeatureForDatumTargetRelationshipId,
+    feature_for_datum_target_relationship_arena
+);
+entity!(FillAreaStyle, FillAreaStyleId, fill_area_style_arena);
+entity!(
+    FillAreaStyleColour,
+    FillAreaStyleColourId,
+    fill_area_style_colour_arena
+);
+entity!(
+    FillAreaStyleHatching,
+    FillAreaStyleHatchingId,
+    fill_area_style_hatching_arena
+);
+entity!(
+    FillAreaStyleTileColouredRegion,
+    FillAreaStyleTileColouredRegionId,
+    fill_area_style_tile_coloured_region_arena
+);
+entity!(
+    FillAreaStyleTileCurveWithStyle,
+    FillAreaStyleTileCurveWithStyleId,
+    fill_area_style_tile_curve_with_style_arena
+);
+entity!(
+    FillAreaStyleTileSymbolWithStyle,
+    FillAreaStyleTileSymbolWithStyleId,
+    fill_area_style_tile_symbol_with_style_arena
+);
+entity!(
+    FillAreaStyleTiles,
+    FillAreaStyleTilesId,
+    fill_area_style_tiles_arena
+);
+entity!(
+    FlatnessTolerance,
+    FlatnessToleranceId,
+    flatness_tolerance_arena
+);
+entity!(FoundedItem, FoundedItemId, founded_item_arena);
+entity!(
+    FunctionallyDefinedTransformation,
+    FunctionallyDefinedTransformationId,
+    functionally_defined_transformation_arena
+);
+entity!(
+    GeneralDatumReference,
+    GeneralDatumReferenceId,
+    general_datum_reference_arena
+);
+entity!(GeneralProperty, GeneralPropertyId, general_property_arena);
+entity!(
+    GeneralPropertyAssociation,
+    GeneralPropertyAssociationId,
+    general_property_association_arena
+);
+entity!(
+    GenericExpression,
+    GenericExpressionId,
+    generic_expression_arena
+);
+entity!(GenericLiteral, GenericLiteralId, generic_literal_arena);
+entity!(
+    GenericProductDefinitionReference,
+    GenericProductDefinitionReferenceId,
+    generic_product_definition_reference_arena
+);
+entity!(
+    GeometricCurveSet,
+    GeometricCurveSetId,
+    geometric_curve_set_arena
+);
+entity!(
+    GeometricItemSpecificUsage,
+    GeometricItemSpecificUsageId,
+    geometric_item_specific_usage_arena
+);
+entity!(
+    GeometricRepresentationContext,
+    GeometricRepresentationContextId,
+    geometric_representation_context_arena
+);
+entity!(
+    GeometricRepresentationItem,
+    GeometricRepresentationItemId,
+    geometric_representation_item_arena
+);
+entity!(GeometricSet, GeometricSetId, geometric_set_arena);
+entity!(
+    GeometricTolerance,
+    GeometricToleranceId,
+    geometric_tolerance_arena
+);
+entity!(
+    GeometricToleranceRelationship,
+    GeometricToleranceRelationshipId,
+    geometric_tolerance_relationship_arena
+);
+entity!(
+    GeometricToleranceWithDatumReference,
+    GeometricToleranceWithDatumReferenceId,
+    geometric_tolerance_with_datum_reference_arena
+);
+entity!(
+    GeometricToleranceWithDefinedAreaUnit,
+    GeometricToleranceWithDefinedAreaUnitId,
+    geometric_tolerance_with_defined_area_unit_arena
+);
+entity!(
+    GeometricToleranceWithDefinedUnit,
+    GeometricToleranceWithDefinedUnitId,
+    geometric_tolerance_with_defined_unit_arena
+);
+entity!(
+    GeometricToleranceWithMaximumTolerance,
+    GeometricToleranceWithMaximumToleranceId,
+    geometric_tolerance_with_maximum_tolerance_arena
+);
+entity!(
+    GeometricToleranceWithModifiers,
+    GeometricToleranceWithModifiersId,
+    geometric_tolerance_with_modifiers_arena
+);
+entity!(
+    GeometricallyBoundedSurfaceShapeRepresentation,
+    GeometricallyBoundedSurfaceShapeRepresentationId,
+    geometrically_bounded_surface_shape_representation_arena
+);
+entity!(
+    GeometricallyBoundedWireframeShapeRepresentation,
+    GeometricallyBoundedWireframeShapeRepresentationId,
+    geometrically_bounded_wireframe_shape_representation_arena
+);
+entity!(
+    GlobalUncertaintyAssignedContext,
+    GlobalUncertaintyAssignedContextId,
+    global_uncertainty_assigned_context_arena
+);
+entity!(
+    GlobalUnitAssignedContext,
+    GlobalUnitAssignedContextId,
+    global_unit_assigned_context_arena
+);
+entity!(Group, GroupId, group_arena);
+entity!(GroupAssignment, GroupAssignmentId, group_assignment_arena);
+entity!(Hyperbola, HyperbolaId, hyperbola_arena);
+entity!(IdAttribute, IdAttributeId, id_attribute_arena);
+entity!(
+    IdentificationAssignment,
+    IdentificationAssignmentId,
+    identification_assignment_arena
+);
+entity!(
+    IdentificationRole,
+    IdentificationRoleId,
+    identification_role_arena
+);
+entity!(IntLiteral, IntLiteralId, int_literal_arena);
+entity!(
+    IntegerRepresentationItem,
+    IntegerRepresentationItemId,
+    integer_representation_item_arena
+);
+entity!(
+    IntersectionCurve,
+    IntersectionCurveId,
+    intersection_curve_arena
+);
+entity!(Invisibility, InvisibilityId, invisibility_arena);
+entity!(
+    ItemDefinedTransformation,
+    ItemDefinedTransformationId,
+    item_defined_transformation_arena
+);
+entity!(
+    ItemIdentifiedRepresentationUsage,
+    ItemIdentifiedRepresentationUsageId,
+    item_identified_representation_usage_arena
+);
+entity!(LeaderCurve, LeaderCurveId, leader_curve_arena);
+entity!(
+    LeaderDirectedCallout,
+    LeaderDirectedCalloutId,
+    leader_directed_callout_arena
+);
+entity!(
+    LeaderTerminator,
+    LeaderTerminatorId,
+    leader_terminator_arena
+);
+entity!(
+    LengthMeasureWithUnit,
+    LengthMeasureWithUnitId,
+    length_measure_with_unit_arena
+);
+entity!(LengthUnit, LengthUnitId, length_unit_arena);
+entity!(LimitsAndFits, LimitsAndFitsId, limits_and_fits_arena);
+entity!(Line, LineId, line_arena);
+entity!(
+    LineProfileTolerance,
+    LineProfileToleranceId,
+    line_profile_tolerance_arena
+);
+entity!(LiteralNumber, LiteralNumberId, literal_number_arena);
+entity!(LocalTime, LocalTimeId, local_time_arena);
+entity!(Loop, LoopId, loop_arena);
+entity!(
+    MakeFromUsageOption,
+    MakeFromUsageOptionId,
+    make_from_usage_option_arena
+);
+entity!(
+    ManifoldSolidBrep,
+    ManifoldSolidBrepId,
+    manifold_solid_brep_arena
+);
+entity!(
+    ManifoldSurfaceShapeRepresentation,
+    ManifoldSurfaceShapeRepresentationId,
+    manifold_surface_shape_representation_arena
+);
+entity!(MappedItem, MappedItemId, mapped_item_arena);
+entity!(
+    MassMeasureWithUnit,
+    MassMeasureWithUnitId,
+    mass_measure_with_unit_arena
+);
+entity!(MassUnit, MassUnitId, mass_unit_arena);
+entity!(
+    MeasureQualification,
+    MeasureQualificationId,
+    measure_qualification_arena
+);
+entity!(
+    MeasureRepresentationItem,
+    MeasureRepresentationItemId,
+    measure_representation_item_arena
+);
+entity!(MeasureWithUnit, MeasureWithUnitId, measure_with_unit_arena);
+entity!(
+    MechanicalContext,
+    MechanicalContextId,
+    mechanical_context_arena
+);
+entity!(
+    MechanicalDesignAndDraughtingRelationship,
+    MechanicalDesignAndDraughtingRelationshipId,
+    mechanical_design_and_draughting_relationship_arena
+);
+entity!(
+    MechanicalDesignGeometricPresentationRepresentation,
+    MechanicalDesignGeometricPresentationRepresentationId,
+    mechanical_design_geometric_presentation_representation_arena
+);
+entity!(
+    MechanicalDesignPresentationRepresentationWithDraughting,
+    MechanicalDesignPresentationRepresentationWithDraughtingId,
+    mechanical_design_presentation_representation_with_draughting_arena
+);
+entity!(
+    MechanicalDesignShadedPresentationRepresentation,
+    MechanicalDesignShadedPresentationRepresentationId,
+    mechanical_design_shaded_presentation_representation_arena
+);
+entity!(
+    ModelGeometricView,
+    ModelGeometricViewId,
+    model_geometric_view_arena
+);
+entity!(
+    ModifiedGeometricTolerance,
+    ModifiedGeometricToleranceId,
+    modified_geometric_tolerance_arena
+);
+entity!(NameAttribute, NameAttributeId, name_attribute_arena);
+entity!(NamedUnit, NamedUnitId, named_unit_arena);
+entity!(
+    NextAssemblyUsageOccurrence,
+    NextAssemblyUsageOccurrenceId,
+    next_assembly_usage_occurrence_arena
+);
+entity!(
+    NumericExpression,
+    NumericExpressionId,
+    numeric_expression_arena
+);
+entity!(ObjectRole, ObjectRoleId, object_role_arena);
+entity!(OffsetSurface, OffsetSurfaceId, offset_surface_arena);
+entity!(
+    OneDirectionRepeatFactor,
+    OneDirectionRepeatFactorId,
+    one_direction_repeat_factor_arena
+);
+entity!(OpenShell, OpenShellId, open_shell_arena);
+entity!(Organization, OrganizationId, organization_arena);
+entity!(
+    OrganizationRelationship,
+    OrganizationRelationshipId,
+    organization_relationship_arena
+);
+entity!(
+    OrganizationRole,
+    OrganizationRoleId,
+    organization_role_arena
+);
+entity!(
+    OrganizationType,
+    OrganizationTypeId,
+    organization_type_arena
+);
+entity!(
+    OrganizationTypeRole,
+    OrganizationTypeRoleId,
+    organization_type_role_arena
+);
+entity!(
+    OrganizationalAddress,
+    OrganizationalAddressId,
+    organizational_address_arena
+);
+entity!(
+    OrganizationalProject,
+    OrganizationalProjectId,
+    organizational_project_arena
+);
+entity!(
+    OrganizationalProjectRelationship,
+    OrganizationalProjectRelationshipId,
+    organizational_project_relationship_arena
+);
+entity!(
+    OrganizationalProjectRole,
+    OrganizationalProjectRoleId,
+    organizational_project_role_arena
+);
+entity!(
+    OrientedClosedShell,
+    OrientedClosedShellId,
+    oriented_closed_shell_arena
+);
+entity!(OrientedEdge, OrientedEdgeId, oriented_edge_arena);
+entity!(
+    OverRidingStyledItem,
+    OverRidingStyledItemId,
+    over_riding_styled_item_arena
+);
+entity!(
+    ParallelismTolerance,
+    ParallelismToleranceId,
+    parallelism_tolerance_arena
+);
+entity!(
+    ParametricRepresentationContext,
+    ParametricRepresentationContextId,
+    parametric_representation_context_arena
+);
+entity!(Path, PathId, path_arena);
+entity!(Pcurve, PcurveId, pcurve_arena);
+entity!(
+    PerpendicularityTolerance,
+    PerpendicularityToleranceId,
+    perpendicularity_tolerance_arena
+);
+entity!(Person, PersonId, person_arena);
+entity!(
+    PersonAndOrganization,
+    PersonAndOrganizationId,
+    person_and_organization_arena
+);
+entity!(
+    PersonAndOrganizationAddress,
+    PersonAndOrganizationAddressId,
+    person_and_organization_address_arena
+);
+entity!(
+    PersonAndOrganizationAssignment,
+    PersonAndOrganizationAssignmentId,
+    person_and_organization_assignment_arena
+);
+entity!(
+    PersonAndOrganizationRole,
+    PersonAndOrganizationRoleId,
+    person_and_organization_role_arena
+);
+entity!(PersonalAddress, PersonalAddressId, personal_address_arena);
+entity!(
+    PlacedDatumTargetFeature,
+    PlacedDatumTargetFeatureId,
+    placed_datum_target_feature_arena
+);
+entity!(Placement, PlacementId, placement_arena);
+entity!(PlanarBox, PlanarBoxId, planar_box_arena);
+entity!(PlanarExtent, PlanarExtentId, planar_extent_arena);
+entity!(Plane, PlaneId, plane_arena);
+entity!(
+    PlaneAngleMeasureWithUnit,
+    PlaneAngleMeasureWithUnitId,
+    plane_angle_measure_with_unit_arena
+);
+entity!(PlaneAngleUnit, PlaneAngleUnitId, plane_angle_unit_arena);
+entity!(
+    PlusMinusTolerance,
+    PlusMinusToleranceId,
+    plus_minus_tolerance_arena
+);
+entity!(Point, PointId, point_arena);
+entity!(PointStyle, PointStyleId, point_style_arena);
+entity!(PolyLoop, PolyLoopId, poly_loop_arena);
+entity!(Polyline, PolylineId, polyline_arena);
+entity!(
+    PositionTolerance,
+    PositionToleranceId,
+    position_tolerance_arena
+);
+entity!(
+    PreDefinedCharacterGlyph,
+    PreDefinedCharacterGlyphId,
+    pre_defined_character_glyph_arena
+);
+entity!(
+    PreDefinedColour,
+    PreDefinedColourId,
+    pre_defined_colour_arena
+);
+entity!(
+    PreDefinedCurveFont,
+    PreDefinedCurveFontId,
+    pre_defined_curve_font_arena
+);
+entity!(PreDefinedItem, PreDefinedItemId, pre_defined_item_arena);
+entity!(
+    PreDefinedMarker,
+    PreDefinedMarkerId,
+    pre_defined_marker_arena
+);
+entity!(
+    PreDefinedPointMarkerSymbol,
+    PreDefinedPointMarkerSymbolId,
+    pre_defined_point_marker_symbol_arena
+);
+entity!(
+    PreDefinedPresentationStyle,
+    PreDefinedPresentationStyleId,
+    pre_defined_presentation_style_arena
+);
+entity!(
+    PreDefinedSurfaceSideStyle,
+    PreDefinedSurfaceSideStyleId,
+    pre_defined_surface_side_style_arena
+);
+entity!(
+    PreDefinedSymbol,
+    PreDefinedSymbolId,
+    pre_defined_symbol_arena
+);
+entity!(
+    PreDefinedTerminatorSymbol,
+    PreDefinedTerminatorSymbolId,
+    pre_defined_terminator_symbol_arena
+);
+entity!(
+    PreDefinedTextFont,
+    PreDefinedTextFontId,
+    pre_defined_text_font_arena
+);
+entity!(PreDefinedTile, PreDefinedTileId, pre_defined_tile_arena);
+entity!(
+    PrecisionQualifier,
+    PrecisionQualifierId,
+    precision_qualifier_arena
+);
+entity!(
+    PresentationArea,
+    PresentationAreaId,
+    presentation_area_arena
+);
+entity!(
+    PresentationLayerAssignment,
+    PresentationLayerAssignmentId,
+    presentation_layer_assignment_arena
+);
+entity!(
+    PresentationRepresentation,
+    PresentationRepresentationId,
+    presentation_representation_arena
+);
+entity!(PresentationSet, PresentationSetId, presentation_set_arena);
+entity!(
+    PresentationSize,
+    PresentationSizeId,
+    presentation_size_arena
+);
+entity!(
+    PresentationStyleAssignment,
+    PresentationStyleAssignmentId,
+    presentation_style_assignment_arena
+);
+entity!(
+    PresentationStyleByContext,
+    PresentationStyleByContextId,
+    presentation_style_by_context_arena
+);
+entity!(
+    PresentationView,
+    PresentationViewId,
+    presentation_view_arena
+);
+entity!(PresentedItem, PresentedItemId, presented_item_arena);
+entity!(
+    PresentedItemRepresentation,
+    PresentedItemRepresentationId,
+    presented_item_representation_arena
+);
+entity!(Product, ProductId, product_arena);
+entity!(ProductCategory, ProductCategoryId, product_category_arena);
+entity!(
+    ProductCategoryRelationship,
+    ProductCategoryRelationshipId,
+    product_category_relationship_arena
+);
+entity!(ProductConcept, ProductConceptId, product_concept_arena);
+entity!(
+    ProductConceptContext,
+    ProductConceptContextId,
+    product_concept_context_arena
+);
+entity!(
+    ProductConceptFeature,
+    ProductConceptFeatureId,
+    product_concept_feature_arena
+);
+entity!(
+    ProductConceptFeatureCategory,
+    ProductConceptFeatureCategoryId,
+    product_concept_feature_category_arena
+);
+entity!(ProductContext, ProductContextId, product_context_arena);
+entity!(
+    ProductDefinition,
+    ProductDefinitionId,
+    product_definition_arena
+);
+entity!(
+    ProductDefinitionContext,
+    ProductDefinitionContextId,
+    product_definition_context_arena
+);
+entity!(
+    ProductDefinitionContextAssociation,
+    ProductDefinitionContextAssociationId,
+    product_definition_context_association_arena
+);
+entity!(
+    ProductDefinitionContextRole,
+    ProductDefinitionContextRoleId,
+    product_definition_context_role_arena
+);
+entity!(
+    ProductDefinitionEffectivity,
+    ProductDefinitionEffectivityId,
+    product_definition_effectivity_arena
+);
+entity!(
+    ProductDefinitionFormation,
+    ProductDefinitionFormationId,
+    product_definition_formation_arena
+);
+entity!(
+    ProductDefinitionFormationWithSpecifiedSource,
+    ProductDefinitionFormationWithSpecifiedSourceId,
+    product_definition_formation_with_specified_source_arena
+);
+entity!(
+    ProductDefinitionOccurrence,
+    ProductDefinitionOccurrenceId,
+    product_definition_occurrence_arena
+);
+entity!(
+    ProductDefinitionRelationship,
+    ProductDefinitionRelationshipId,
+    product_definition_relationship_arena
+);
+entity!(
+    ProductDefinitionRelationshipRelationship,
+    ProductDefinitionRelationshipRelationshipId,
+    product_definition_relationship_relationship_arena
+);
+entity!(
+    ProductDefinitionShape,
+    ProductDefinitionShapeId,
+    product_definition_shape_arena
+);
+entity!(
+    ProductDefinitionSubstitute,
+    ProductDefinitionSubstituteId,
+    product_definition_substitute_arena
+);
+entity!(
+    ProductDefinitionUsage,
+    ProductDefinitionUsageId,
+    product_definition_usage_arena
+);
+entity!(
+    ProductDefinitionWithAssociatedDocuments,
+    ProductDefinitionWithAssociatedDocumentsId,
+    product_definition_with_associated_documents_arena
+);
+entity!(
+    ProductRelatedProductCategory,
+    ProductRelatedProductCategoryId,
+    product_related_product_category_arena
+);
+entity!(
+    ProjectedZoneDefinition,
+    ProjectedZoneDefinitionId,
+    projected_zone_definition_arena
+);
+entity!(
+    PropertyDefinition,
+    PropertyDefinitionId,
+    property_definition_arena
+);
+entity!(
+    PropertyDefinitionRelationship,
+    PropertyDefinitionRelationshipId,
+    property_definition_relationship_arena
+);
+entity!(
+    PropertyDefinitionRepresentation,
+    PropertyDefinitionRepresentationId,
+    property_definition_representation_arena
+);
+entity!(
+    QualifiedRepresentationItem,
+    QualifiedRepresentationItemId,
+    qualified_representation_item_arena
+);
+entity!(
+    QuasiUniformCurve,
+    QuasiUniformCurveId,
+    quasi_uniform_curve_arena
+);
+entity!(
+    QuasiUniformSurface,
+    QuasiUniformSurfaceId,
+    quasi_uniform_surface_arena
+);
+entity!(
+    RatioMeasureWithUnit,
+    RatioMeasureWithUnitId,
+    ratio_measure_with_unit_arena
+);
+entity!(RatioUnit, RatioUnitId, ratio_unit_arena);
+entity!(
+    RationalBSplineCurve,
+    RationalBSplineCurveId,
+    rational_b_spline_curve_arena
+);
+entity!(
+    RationalBSplineSurface,
+    RationalBSplineSurfaceId,
+    rational_b_spline_surface_arena
+);
+entity!(RealLiteral, RealLiteralId, real_literal_arena);
+entity!(
+    RealRepresentationItem,
+    RealRepresentationItemId,
+    real_representation_item_arena
+);
+entity!(
+    RepositionedTessellatedItem,
+    RepositionedTessellatedItemId,
+    repositioned_tessellated_item_arena
+);
+entity!(Representation, RepresentationId, representation_arena);
+entity!(
+    RepresentationContext,
+    RepresentationContextId,
+    representation_context_arena
+);
+entity!(
+    RepresentationContextReference,
+    RepresentationContextReferenceId,
+    representation_context_reference_arena
+);
+entity!(
+    RepresentationItem,
+    RepresentationItemId,
+    representation_item_arena
+);
+entity!(
+    RepresentationMap,
+    RepresentationMapId,
+    representation_map_arena
+);
+entity!(
+    RepresentationReference,
+    RepresentationReferenceId,
+    representation_reference_arena
+);
+entity!(
+    RepresentationRelationship,
+    RepresentationRelationshipId,
+    representation_relationship_arena
+);
+entity!(
+    RepresentationRelationshipWithTransformation,
+    RepresentationRelationshipWithTransformationId,
+    representation_relationship_with_transformation_arena
+);
+entity!(
+    ResourceProperty,
+    ResourcePropertyId,
+    resource_property_arena
+);
+entity!(
+    ResourceRequirementType,
+    ResourceRequirementTypeId,
+    resource_requirement_type_arena
+);
+entity!(RoleAssociation, RoleAssociationId, role_association_arena);
+entity!(
+    RoundnessTolerance,
+    RoundnessToleranceId,
+    roundness_tolerance_arena
+);
+entity!(SeamCurve, SeamCurveId, seam_curve_arena);
+entity!(
+    SecurityClassification,
+    SecurityClassificationId,
+    security_classification_arena
+);
+entity!(
+    SecurityClassificationAssignment,
+    SecurityClassificationAssignmentId,
+    security_classification_assignment_arena
+);
+entity!(
+    SecurityClassificationLevel,
+    SecurityClassificationLevelId,
+    security_classification_level_arena
+);
+entity!(ShapeAspect, ShapeAspectId, shape_aspect_arena);
+entity!(
+    ShapeAspectAssociativity,
+    ShapeAspectAssociativityId,
+    shape_aspect_associativity_arena
+);
+entity!(
+    ShapeAspectDerivingRelationship,
+    ShapeAspectDerivingRelationshipId,
+    shape_aspect_deriving_relationship_arena
+);
+entity!(
+    ShapeAspectRelationship,
+    ShapeAspectRelationshipId,
+    shape_aspect_relationship_arena
+);
+entity!(
+    ShapeDefinitionRepresentation,
+    ShapeDefinitionRepresentationId,
+    shape_definition_representation_arena
+);
+entity!(
+    ShapeDimensionRepresentation,
+    ShapeDimensionRepresentationId,
+    shape_dimension_representation_arena
+);
+entity!(
+    ShapeRepresentation,
+    ShapeRepresentationId,
+    shape_representation_arena
+);
+entity!(
+    ShapeRepresentationRelationship,
+    ShapeRepresentationRelationshipId,
+    shape_representation_relationship_arena
+);
+entity!(
+    ShapeRepresentationWithParameters,
+    ShapeRepresentationWithParametersId,
+    shape_representation_with_parameters_arena
+);
+entity!(
+    ShellBasedSurfaceModel,
+    ShellBasedSurfaceModelId,
+    shell_based_surface_model_arena
+);
+entity!(SiUnit, SiUnitId, si_unit_arena);
+entity!(
+    SimpleGenericExpression,
+    SimpleGenericExpressionId,
+    simple_generic_expression_arena
+);
+entity!(
+    SimpleNumericExpression,
+    SimpleNumericExpressionId,
+    simple_numeric_expression_arena
+);
+entity!(SolidAngleUnit, SolidAngleUnitId, solid_angle_unit_arena);
+entity!(SolidModel, SolidModelId, solid_model_arena);
+entity!(
+    SphericalSurface,
+    SphericalSurfaceId,
+    spherical_surface_arena
+);
+entity!(StartRequest, StartRequestId, start_request_arena);
+entity!(StartWork, StartWorkId, start_work_arena);
+entity!(StateObserved, StateObservedId, state_observed_arena);
+entity!(StateType, StateTypeId, state_type_arena);
+entity!(
+    StraightnessTolerance,
+    StraightnessToleranceId,
+    straightness_tolerance_arena
+);
+entity!(StyledItem, StyledItemId, styled_item_arena);
+entity!(Surface, SurfaceId, surface_arena);
+entity!(SurfaceCurve, SurfaceCurveId, surface_curve_arena);
+entity!(
+    SurfaceOfLinearExtrusion,
+    SurfaceOfLinearExtrusionId,
+    surface_of_linear_extrusion_arena
+);
+entity!(
+    SurfaceOfRevolution,
+    SurfaceOfRevolutionId,
+    surface_of_revolution_arena
+);
+entity!(
+    SurfaceProfileTolerance,
+    SurfaceProfileToleranceId,
+    surface_profile_tolerance_arena
+);
+entity!(
+    SurfaceRenderingProperties,
+    SurfaceRenderingPropertiesId,
+    surface_rendering_properties_arena
+);
+entity!(
+    SurfaceSideStyle,
+    SurfaceSideStyleId,
+    surface_side_style_arena
+);
+entity!(
+    SurfaceStyleBoundary,
+    SurfaceStyleBoundaryId,
+    surface_style_boundary_arena
+);
+entity!(
+    SurfaceStyleControlGrid,
+    SurfaceStyleControlGridId,
+    surface_style_control_grid_arena
+);
+entity!(
+    SurfaceStyleFillArea,
+    SurfaceStyleFillAreaId,
+    surface_style_fill_area_arena
+);
+entity!(
+    SurfaceStyleParameterLine,
+    SurfaceStyleParameterLineId,
+    surface_style_parameter_line_arena
+);
+entity!(
+    SurfaceStyleReflectanceAmbient,
+    SurfaceStyleReflectanceAmbientId,
+    surface_style_reflectance_ambient_arena
+);
+entity!(
+    SurfaceStyleRendering,
+    SurfaceStyleRenderingId,
+    surface_style_rendering_arena
+);
+entity!(
+    SurfaceStyleRenderingWithProperties,
+    SurfaceStyleRenderingWithPropertiesId,
+    surface_style_rendering_with_properties_arena
+);
+entity!(
+    SurfaceStyleSegmentationCurve,
+    SurfaceStyleSegmentationCurveId,
+    surface_style_segmentation_curve_arena
+);
+entity!(
+    SurfaceStyleSilhouette,
+    SurfaceStyleSilhouetteId,
+    surface_style_silhouette_arena
+);
+entity!(
+    SurfaceStyleTransparent,
+    SurfaceStyleTransparentId,
+    surface_style_transparent_arena
+);
+entity!(
+    SurfaceStyleUsage,
+    SurfaceStyleUsageId,
+    surface_style_usage_arena
+);
+entity!(SweptSurface, SweptSurfaceId, swept_surface_arena);
+entity!(SymbolColour, SymbolColourId, symbol_colour_arena);
+entity!(
+    SymbolRepresentation,
+    SymbolRepresentationId,
+    symbol_representation_arena
+);
+entity!(SymbolStyle, SymbolStyleId, symbol_style_arena);
+entity!(SymbolTarget, SymbolTargetId, symbol_target_arena);
+entity!(
+    SymmetryTolerance,
+    SymmetryToleranceId,
+    symmetry_tolerance_arena
+);
+entity!(
+    TerminatorSymbol,
+    TerminatorSymbolId,
+    terminator_symbol_arena
+);
+entity!(
+    TessellatedAnnotationOccurrence,
+    TessellatedAnnotationOccurrenceId,
+    tessellated_annotation_occurrence_arena
+);
+entity!(
+    TessellatedCurveSet,
+    TessellatedCurveSetId,
+    tessellated_curve_set_arena
+);
+entity!(TessellatedFace, TessellatedFaceId, tessellated_face_arena);
+entity!(
+    TessellatedGeometricSet,
+    TessellatedGeometricSetId,
+    tessellated_geometric_set_arena
+);
+entity!(TessellatedItem, TessellatedItemId, tessellated_item_arena);
+entity!(
+    TessellatedShapeRepresentation,
+    TessellatedShapeRepresentationId,
+    tessellated_shape_representation_arena
+);
+entity!(
+    TessellatedShell,
+    TessellatedShellId,
+    tessellated_shell_arena
+);
+entity!(
+    TessellatedSolid,
+    TessellatedSolidId,
+    tessellated_solid_arena
+);
+entity!(
+    TessellatedStructuredItem,
+    TessellatedStructuredItemId,
+    tessellated_structured_item_arena
+);
+entity!(
+    TessellatedSurfaceSet,
+    TessellatedSurfaceSetId,
+    tessellated_surface_set_arena
+);
+entity!(TextFont, TextFontId, text_font_arena);
+entity!(TextLiteral, TextLiteralId, text_literal_arena);
+entity!(TextStyle, TextStyleId, text_style_arena);
+entity!(
+    TextStyleForDefinedFont,
+    TextStyleForDefinedFontId,
+    text_style_for_defined_font_arena
+);
+entity!(
+    TextStyleWithBoxCharacteristics,
+    TextStyleWithBoxCharacteristicsId,
+    text_style_with_box_characteristics_arena
+);
+entity!(
+    TextureStyleSpecification,
+    TextureStyleSpecificationId,
+    texture_style_specification_arena
+);
+entity!(
+    TextureStyleTessellationSpecification,
+    TextureStyleTessellationSpecificationId,
+    texture_style_tessellation_specification_arena
+);
+entity!(TimeUnit, TimeUnitId, time_unit_arena);
+entity!(ToleranceValue, ToleranceValueId, tolerance_value_arena);
+entity!(ToleranceZone, ToleranceZoneId, tolerance_zone_arena);
+entity!(
+    ToleranceZoneDefinition,
+    ToleranceZoneDefinitionId,
+    tolerance_zone_definition_arena
+);
+entity!(
+    ToleranceZoneForm,
+    ToleranceZoneFormId,
+    tolerance_zone_form_arena
+);
+entity!(
+    ToleranceZoneWithDatum,
+    ToleranceZoneWithDatumId,
+    tolerance_zone_with_datum_arena
+);
+entity!(
+    TopologicalRepresentationItem,
+    TopologicalRepresentationItemId,
+    topological_representation_item_arena
+);
+entity!(ToroidalSurface, ToroidalSurfaceId, toroidal_surface_arena);
+entity!(
+    TotalRunoutTolerance,
+    TotalRunoutToleranceId,
+    total_runout_tolerance_arena
+);
+entity!(TrimmedCurve, TrimmedCurveId, trimmed_curve_arena);
+entity!(
+    TwoDirectionRepeatFactor,
+    TwoDirectionRepeatFactorId,
+    two_direction_repeat_factor_arena
+);
+entity!(TypeQualifier, TypeQualifierId, type_qualifier_arena);
+entity!(
+    UncertaintyMeasureWithUnit,
+    UncertaintyMeasureWithUnitId,
+    uncertainty_measure_with_unit_arena
+);
+entity!(
+    UncertaintyQualifier,
+    UncertaintyQualifierId,
+    uncertainty_qualifier_arena
+);
+entity!(
+    UnequallyDisposedGeometricTolerance,
+    UnequallyDisposedGeometricToleranceId,
+    unequally_disposed_geometric_tolerance_arena
+);
+entity!(UniformCurve, UniformCurveId, uniform_curve_arena);
+entity!(UniformSurface, UniformSurfaceId, uniform_surface_arena);
+entity!(
+    ValueFormatTypeQualifier,
+    ValueFormatTypeQualifierId,
+    value_format_type_qualifier_arena
+);
+entity!(
+    ValueRepresentationItem,
+    ValueRepresentationItemId,
+    value_representation_item_arena
+);
+entity!(Vector, VectorId, vector_arena);
+entity!(
+    VersionedActionRequest,
+    VersionedActionRequestId,
+    versioned_action_request_arena
+);
+entity!(Vertex, VertexId, vertex_arena);
+entity!(VertexLoop, VertexLoopId, vertex_loop_arena);
+entity!(VertexPoint, VertexPointId, vertex_point_arena);
+entity!(VertexShell, VertexShellId, vertex_shell_arena);
+entity!(ViewVolume, ViewVolumeId, view_volume_arena);
+entity!(VolumeUnit, VolumeUnitId, volume_unit_arena);
+entity!(WireShell, WireShellId, wire_shell_arena);
+entity!(ComplexUnit, ComplexUnitId, complex_unit_arena);

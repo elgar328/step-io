@@ -150,11 +150,10 @@ fn shared_person_across_parts_and_roles() {
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
     // One shared person entity, two role assignments.
-    assert_eq!(model.person_arena.items.len(), 1);
+    assert_eq!(model.all::<step_io::model::Person>().len(), 1);
     assert_eq!(
         model
-            .applied_person_and_organization_assignment_arena
-            .items
+            .all::<step_io::model::AppliedPersonAndOrganizationAssignment>()
             .len(),
         2
     );

@@ -1,6 +1,6 @@
 //! [`Scene`] — the convenience navigation layer over the raw [`StepModel`].
 //!
-//! The generated model is faithful but tedious to walk by hand (arenas and
+//! The generated model is faithful but tedious to walk by hand (ids and
 //! reference enums); [`model.scene()`](StepModel::scene) wraps it in
 //! lightweight `Copy` handles where forward *and* backward moves are plain
 //! `handle.method()` calls. The backward index ([`RefGraph`]) is built

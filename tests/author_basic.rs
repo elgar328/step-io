@@ -53,9 +53,9 @@ fn authored_model_round_trips_with_zero_drops() {
     // The authored file reads back whole: nothing dropped, entities present.
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
-    assert_eq!(model.plane_arena.items.len(), 1);
-    assert_eq!(model.shape_representation_arena.items.len(), 1);
-    assert_eq!(model.cartesian_point_arena.items.len(), 1);
+    assert_eq!(model.all::<step_io::model::Plane>().len(), 1);
+    assert_eq!(model.all::<step_io::model::ShapeRepresentation>().len(), 1);
+    assert_eq!(model.all::<step_io::model::CartesianPoint>().len(), 1);
 }
 
 #[test]
@@ -204,8 +204,8 @@ fn complex_instances_round_trip_with_zero_drops() {
     let text = common::text(&a.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
-    assert_eq!(model.complex_unit_arena.items.len(), 3);
-    assert_eq!(model.trimmed_curve_arena.items.len(), 1);
+    assert_eq!(model.all::<step_io::model::ComplexUnit>().len(), 3);
+    assert_eq!(model.all::<step_io::model::TrimmedCurve>().len(), 1);
 }
 
 #[test]
@@ -383,10 +383,10 @@ fn self_referencing_entity_round_trips_with_zero_drops() {
     let text = common::text(&a.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
-    let items = &model.dimensional_size_with_datum_feature_arena.items;
+    let items: Vec<_> = model.all::<m::DimensionalSizeWithDatumFeature>().collect();
     assert_eq!(items.len(), 1);
     assert_eq!(
-        items[0].applies_to,
+        items[0].1.applies_to,
         m::ShapeAspectRef::DimensionalSizeWithDatumFeature(m::DimensionalSizeWithDatumFeatureId(0)),
         "applies_to must reference the entity itself after the round trip"
     );

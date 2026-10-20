@@ -43,8 +43,9 @@
 //! wild — non-standard content is healed or dropped rather than failing the
 //! import, and the report is the record of what happened on the way in.
 //!
-//! The model is raw and complete: one public arena per entity type,
-//! schema-faithful. Everything the reader kept is directly accessible.
+//! The model is raw and complete, schema-faithful: everything the reader
+//! kept is there to read, `model.all::<T>()` listing the entities of a type
+//! and `model[id]` reading one (see [`model`]).
 //! The Part 21 header is read too, as [`StepModel::header`] — file name,
 //! timestamp, authors, the originating CAD system, and the identified
 //! schema.
@@ -177,11 +178,25 @@ pub mod model {
     //!
     //! This is the low-level layer under [`scene`](crate::scene) and
     //! [`StepBuilder`](crate::StepBuilder), for the entities their handles do not
-    //! cover. A reference field is an `…Ref` enum naming the entity types it may
-    //! point at: [`resolve`](CurveRef::resolve) follows one to the entity it
-    //! names, and [`entity_key`](CurveRef::entity_key) gives its key for
-    //! [`RefGraph::referrers`](crate::RefGraph::referrers). New entities enter
-    //! only through the [`Ap242Author`](crate::Ap242Author) constructors.
+    //! cover. [`StepModel::all`] lists the entities of one type with their ids,
+    //! and [`StepModel::get`] or `model[id]` reads the entity an id names. A
+    //! reference field is an `…Ref` enum naming the entity types it may point
+    //! at: [`resolve`](CurveRef::resolve) follows one to the entity it names,
+    //! and [`entity_key`](CurveRef::entity_key) gives its key for
+    //! [`RefGraph::referrers`](crate::RefGraph::referrers). The model is read
+    //! only; new entities enter only through the
+    //! [`Ap242Author`](crate::Ap242Author) constructors.
+    //!
+    //! ```no_run
+    //! use step_io::model::{Axis2PlacementRef, CartesianPointRef, Circle};
+    //!
+    //! let (model, _report) = step_io::read(std::fs::File::open("part.step").unwrap()).unwrap();
+    //! for (_id, circle) in model.all::<Circle>() {
+    //!     let Axis2PlacementRef::Axis2Placement3d(frame) = circle.position else { continue };
+    //!     let CartesianPointRef::CartesianPoint(origin) = model[frame].location else { continue };
+    //!     let _centre = &model[origin].coordinates;
+    //! }
+    //! ```
 
     pub use crate::generated::model::*;
     pub use crate::generated::resolve::*;

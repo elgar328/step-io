@@ -92,7 +92,7 @@ fn hide_solid_keeps_color_and_face_visibility() {
     let text = common::text(&b.finish().expect("finish"));
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
-    assert_eq!(model.invisibility_arena.items.len(), 1);
+    assert_eq!(model.all::<step_io::model::Invisibility>().len(), 1);
 
     let scene = model.scene();
     let solids: Vec<_> = scene.all_solids().collect();

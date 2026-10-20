@@ -26,16 +26,23 @@ fn bits(v: [f64; 3]) -> [u64; 3] {
 
 /// The written line's direction ratios and `VECTOR` magnitude.
 fn line_of(model: &StepModel) -> ([f64; 3], f64) {
-    assert_eq!(model.line_arena.items.len(), 1, "one edge, one LINE");
-    let line = &model.line_arena.items[0];
+    assert_eq!(
+        model.all::<step_io::model::Line>().len(),
+        1,
+        "one edge, one LINE"
+    );
+    let (_, line) = model
+        .all::<step_io::model::Line>()
+        .next()
+        .expect("the LINE");
     let VectorRef::Vector(v) = &line.dir else {
         panic!("a plain VECTOR")
     };
-    let vector = model.vector_arena.get(v.0);
+    let vector = &model[*v];
     let DirectionRef::Direction(d) = &vector.orientation else {
         panic!("a plain DIRECTION")
     };
-    let r = &model.direction_arena.get(d.0).direction_ratios;
+    let r = &model[*d].direction_ratios;
     ([r[0], r[1], r[2]], vector.magnitude)
 }
 
@@ -65,7 +72,11 @@ fn a_derived_line_has_unit_magnitude_and_the_vertices_bound_it() {
     assert_eq!(edges.len(), 1);
     let segment = edges[0].to_nurbs().expect("a line edge is a segment");
     assert_eq!(segment.control_points, vec![from, to]);
-    let CurveRef::Line(_) = model.edge_curve_arena.items[0].edge_geometry else {
+    let (_, edge) = model
+        .all::<step_io::model::EdgeCurve>()
+        .next()
+        .expect("the edge");
+    let CurveRef::Line(_) = edge.edge_geometry else {
         panic!("the edge's geometry is the LINE")
     };
 }

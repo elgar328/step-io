@@ -64,8 +64,7 @@ fn solid_color_round_trips() {
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
     assert_eq!(
         model
-            .mechanical_design_geometric_presentation_representation_arena
-            .items
+            .all::<step_io::model::MechanicalDesignGeometricPresentationRepresentation>()
             .len(),
         1,
         "styles anchored in one MDGPR"

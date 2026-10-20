@@ -66,9 +66,16 @@ fn mesh_round_trips_with_solid_back_link() {
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
-    assert_eq!(model.tessellated_shape_representation_arena.items.len(), 1);
     assert_eq!(
-        model.shape_definition_representation_arena.items.len(),
+        model
+            .all::<step_io::model::TessellatedShapeRepresentation>()
+            .len(),
+        1
+    );
+    assert_eq!(
+        model
+            .all::<step_io::model::ShapeDefinitionRepresentation>()
+            .len(),
         2,
         "shape SDR + mesh SDR"
     );
