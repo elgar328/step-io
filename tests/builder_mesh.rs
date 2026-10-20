@@ -8,7 +8,7 @@ mod common;
 use step_io::build::{
     CurveInput, FaceBoundInput, Frame, MeshInput, MeshNormalsInput, SurfaceInput, VoidShellNormals,
 };
-use step_io::scene::mesh::MeshNormals;
+use step_io::scene::MeshNormals;
 use step_io::{Orientation, StepBuilder, read};
 
 fn frame(origin: [f64; 3], axis: [f64; 3], ref_dir: [f64; 3]) -> Frame {

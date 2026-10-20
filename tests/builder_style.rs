@@ -3,10 +3,10 @@
 
 mod common;
 
-use step_io::build::Rgb;
 use step_io::build::{
     CurveInput, FaceBoundInput, Frame, StyleTarget, SurfaceInput, VoidShellNormals,
 };
+use step_io::scene::Rgb;
 use step_io::{Orientation, StepBuilder, read};
 
 fn frame(origin: [f64; 3], axis: [f64; 3], ref_dir: [f64; 3]) -> Frame {
@@ -22,8 +22,8 @@ fn plate(
     b: &mut StepBuilder,
     part: step_io::build::Part,
 ) -> (
-    step_io::generated::model::AdvancedFaceId,
-    step_io::generated::model::ManifoldSolidBrepId,
+    step_io::model::AdvancedFaceId,
+    step_io::model::ManifoldSolidBrepId,
 ) {
     let v0 = b.vertex([0.0, 0.0, 0.0]).expect("v0");
     let v1 = b.vertex([1.0, 0.0, 0.0]).expect("v1");
@@ -111,10 +111,7 @@ fn face_color_and_transparency_round_trip() {
 /// Minimal solid-with-voids: a one-face outer shell and a one-face void shell
 /// (read does not enforce topological closure, so this is enough to exercise
 /// the `BREP_WITH_VOIDS` style path).
-fn void_body(
-    b: &mut StepBuilder,
-    part: step_io::build::Part,
-) -> step_io::generated::model::BrepWithVoidsId {
+fn void_body(b: &mut StepBuilder, part: step_io::build::Part) -> step_io::model::BrepWithVoidsId {
     let mut tri = |z: f64| {
         let v0 = b.vertex([0.0, 0.0, z]).expect("v0");
         let v1 = b.vertex([1.0, 0.0, z]).expect("v1");

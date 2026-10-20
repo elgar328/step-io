@@ -2,12 +2,7 @@
 // Schema-faithful model + generic 2-pass read + topo write.
 
 //! The schema-faithful model — [`StepModel`], one arena per entity type.
-//!
-//! It is laid out compactly: an entity refers to another by its 32-bit index
-//! in that entity's arena (the `…Id` types, [`EntityKey`]); every string is a
-//! [`Text`] into the model's text table, read with [`StepModel::text`]; and a
-//! list of at most three reals — a point's coordinates, a direction, a mesh
-//! vertex — is a [`Reals3`] held inline.
+//! Public as `step_io::model`, whose docs describe it.
 
 #[derive(Debug)]
 pub struct Arena<T> {

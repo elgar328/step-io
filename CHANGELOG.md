@@ -113,11 +113,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reads the rest of its text correctly instead of reading all of it as
   ISO 8859-1.
 - The `parser` module keeps what reading a raw file needs: `parse`, `Graph`
-  and its entity types, `Error`, `LexError`, `LexErrorKind`, the `Span` and
-  `TokenKind` that errors carry, `MAX_NESTING_DEPTH` and the schema types.
-  `parse_bytes` (use `parse`), `Parser`, `Lexer`, `tokenize`, `Token`,
-  `Span::slice` and the `entity`, `lexer`, `p21` and `schema` submodules are
-  no longer public, and `TokenKind` no longer implements `logos::Logos`.
+  and its entity types, the `Span` and `TokenKind` that errors carry,
+  `MAX_NESTING_DEPTH` and `NonEmptyStringList`. `Error`, `LexError`,
+  `LexErrorKind`, `ParseWarning`, `SchemaId`, `ApFamily` and `Stage` are at
+  the crate root only. `parse_bytes` (use `parse`), `Parser`, `Lexer`,
+  `tokenize`, `Token`, `Span::slice` and the `entity`, `lexer`, `p21` and
+  `schema` submodules are no longer public, and `TokenKind` no longer
+  implements `logos::Logos`.
+- Each public item has one path. The generated model is `step_io::model`
+  (was `step_io::generated::model`, and `generated::resolve` for the
+  `…RefView` types). The `reader`, `emit`, `header`, `refgraph` and
+  `generated` modules are private: what they held is at the crate root.
+  `scene`'s submodules are private and all their types are at `scene::`, such as
+  `scene::Face` (was `scene::geometry::Face`) and `scene::ProductDef` (was
+  `scene::product::ProductDef`). `build` no longer re-exports `NurbsCurve`,
+  `NurbsSurface` and `Rgb`; use `scene::`. `StepBuilder`, `StepModel` and
+  `EntityKey` stay at the crate root as well as in their modules.
 - `Span::start` and `Span::end` are `u64`, so offsets past 4 GB stay exact on
   32-bit targets.
 - `Error::DuplicateEntityId` gives the `line` of the repeat and the

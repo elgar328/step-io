@@ -3,8 +3,8 @@
 
 mod common;
 
-use step_io::build::Rgb;
 use step_io::build::{CurveInput, FaceBoundInput, Frame, StyleTarget, SurfaceInput};
+use step_io::scene::Rgb;
 use step_io::{Orientation, StepBuilder, read};
 
 fn frame(origin: [f64; 3], axis: [f64; 3], ref_dir: [f64; 3]) -> Frame {
@@ -20,8 +20,8 @@ fn three_face_plate(
     b: &mut StepBuilder,
     part: step_io::build::Part,
 ) -> (
-    Vec<step_io::generated::model::AdvancedFaceId>,
-    step_io::generated::model::ManifoldSolidBrepId,
+    Vec<step_io::model::AdvancedFaceId>,
+    step_io::model::ManifoldSolidBrepId,
 ) {
     let mut faces = Vec::new();
     for i in 0..3 {

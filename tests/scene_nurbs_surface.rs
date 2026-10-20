@@ -3,8 +3,8 @@
 //! Surfaces are reached through anchored faces (`all_faces().surface()`).
 
 use step_io::read;
-use step_io::scene::geometry::{Surface, SurfaceKind};
 use step_io::scene::{NurbsSurface, Scene};
+use step_io::scene::{Surface, SurfaceKind};
 
 const HEADER: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\n\
 FILE_NAME('','',(''),(''),'','','');\n\
@@ -188,7 +188,7 @@ fn open_surface_returns_none() {
 fn find_face<'m>(
     scene: &'m Scene<'m>,
     pred: impl Fn(&Surface<'m>) -> bool,
-) -> step_io::scene::geometry::Face<'m> {
+) -> step_io::scene::Face<'m> {
     scene
         .all_faces()
         .find(|f| pred(&f.surface()))

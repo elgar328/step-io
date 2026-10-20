@@ -12,10 +12,29 @@
 //! [`all_products`](Scene::all_products), …) enumerate one type across the
 //! whole file; each handle then navigates its own neighbourhood
 //! (`solid.faces()`, `face.surface()`, `occurrence.definition()`, …).
-//! Coverage spans b-rep geometry ([`geometry`]), the product/assembly tree
-//! and PLM metadata ([`product`]), display meshes ([`mesh`]), PMI ([`pmi`]),
-//! presentation ([`presentation`]), units ([`units`]), and the NURBS views
-//! ([`nurbs`]).
+//! Coverage spans:
+//!
+//! - **b-rep geometry** — `Solid → Face → Surface` and `Face → Bound → Edge →
+//!   Curve / Vertex → Point`. Surfaces and curves report their analytic kind
+//!   ([`SurfaceKind`], [`CurveKind`]); a shape outside the handled set is
+//!   `Other`, carrying its STEP keyword.
+//! - **NURBS views** — `to_nurbs()` on a [`Curve`], [`Edge`], [`Surface`] or
+//!   [`Face`] derives a [`NurbsCurve`] / [`NurbsSurface`] on demand, from the
+//!   entity as stored; it is never written back.
+//! - **products and assemblies** — a [`Product`] carries its versions,
+//!   definitions and PLM metadata (contributors, approvals, documents); a
+//!   [`ProductDef`] descends the assembly through its
+//!   [`occurrences`](ProductDef::occurrences) and reaches its geometry through
+//!   [`solids`](ProductDef::solids).
+//! - **display meshes** — a [`Mesh`] (points, triangles, normals) and the
+//!   [`MeshGroup`] holding it, linked back to the b-rep where the file says.
+//!   They are meshes for display, not for analysis.
+//! - **PMI** — the [`Dimension`]s, [`Tolerance`]s and [`Datum`]s of a shape,
+//!   and the [`Feature`] each applies to.
+//! - **presentation** — `.color()` (an [`Rgb`]), `.transparency()`,
+//!   `.layer()` and `.is_visible()` on the geometry handles.
+//! - **units** — [`Scene::units`]: the length and angle [`Unit`]s, each with
+//!   a [`to_si`](Unit::to_si) factor to metres or radians.
 //!
 //! Kinds outside the handled set come back as `*Kind::Other`; what a handle
 //! cannot resolve into the shape it exposes lands in [`Scene::warnings`],
@@ -88,19 +107,22 @@
 //! }
 //! ```
 
-pub mod geometry;
-pub mod mesh;
-pub mod nurbs;
-pub mod pmi;
-pub mod presentation;
-pub mod product;
-pub mod units;
+pub(crate) mod geometry;
+pub(crate) mod mesh;
+pub(crate) mod nurbs;
+pub(crate) mod pmi;
+pub(crate) mod presentation;
+pub(crate) mod product;
+pub(crate) mod units;
 
 use std::sync::{Mutex, OnceLock};
 
 use crate::RefGraph;
 use crate::StepModel;
 
+pub use geometry::{
+    Bound, Curve, CurveKind, Edge, Face, Point, Solid, Surface, SurfaceKind, Vertex,
+};
 pub use mesh::{Mesh, MeshGroup, MeshNormals};
 pub use nurbs::{NurbsCurve, NurbsSurface};
 pub use pmi::{
@@ -110,7 +132,7 @@ pub use pmi::{
 pub use presentation::Rgb;
 pub use product::{
     Approval, ApprovalDate, Approver, Contributor, Document, MappedInstance, Occurrence, Person,
-    Placement, Scope, SecurityClassification, Target, Transform, Version,
+    Placement, Product, ProductDef, Scope, SecurityClassification, Target, Transform, Version,
 };
 pub use units::{Unit, Units};
 

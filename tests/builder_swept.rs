@@ -4,8 +4,8 @@
 mod common;
 
 use step_io::build::{CurveInput, FaceBoundInput, Frame, ProfileInput, SurfaceInput};
-use step_io::generated::model as m;
-use step_io::scene::geometry::{CurveKind, SurfaceKind};
+use step_io::model as m;
+use step_io::scene::{CurveKind, SurfaceKind};
 use step_io::{Orientation, StepBuilder, read};
 
 const Z: [f64; 3] = [0.0, 0.0, 1.0];

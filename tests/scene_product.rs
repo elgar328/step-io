@@ -6,8 +6,8 @@
 //! required references (contexts included); read does not enforce topology.
 
 use step_io::read;
+use step_io::scene::ProductDef;
 use step_io::scene::Scene;
-use step_io::scene::product::ProductDef;
 use step_io::scene::{Contributor, Scope, Target};
 
 const HEADER: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\n\

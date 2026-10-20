@@ -5,8 +5,8 @@
 mod common;
 
 use step_io::build::{CurveInput, FaceBoundInput, Frame, SurfaceInput, VoidShellNormals};
-use step_io::generated::model::AdvancedFaceId;
-use step_io::scene::geometry::{CurveKind, SurfaceKind};
+use step_io::model::AdvancedFaceId;
+use step_io::scene::{CurveKind, SurfaceKind};
 use step_io::{EntityKey, Orientation, StepBuilder, read};
 
 fn frame(origin: [f64; 3], axis: [f64; 3], ref_dir: [f64; 3]) -> Frame {
@@ -403,11 +403,11 @@ fn orientations_read_back_as_authored() {
     assert_eq!(inner_read.orientation(), Reversed);
     // Each edge read back: its two end points (in its own start → end
     // direction) and the orientation the loop runs along it.
-    let as_read = |bound: step_io::scene::geometry::Bound<'_>| {
+    let as_read = |bound: step_io::scene::Bound<'_>| {
         bound
             .oriented_edges()
             .map(|(edge, orientation)| {
-                let xy = |v: Option<step_io::scene::geometry::Vertex<'_>>| {
+                let xy = |v: Option<step_io::scene::Vertex<'_>>| {
                     let [x, y, _] = v.expect("vertex").point().expect("point").xyz();
                     [x, y]
                 };

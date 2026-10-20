@@ -101,7 +101,7 @@ fn idents(fields: &[Field]) -> Vec<(String, &Field)> {
 
 pub fn emit_model(ir: &ModelIr) -> String {
     let mut s = String::from(HEADER);
-    s.push_str("//! The schema-faithful model — [`StepModel`], one arena per entity type.\n//!\n//! It is laid out compactly: an entity refers to another by its 32-bit index\n//! in that entity's arena (the `…Id` types, [`EntityKey`]); every string is a\n//! [`Text`] into the model's text table, read with [`StepModel::text`]; and a\n//! list of at most three reals — a point's coordinates, a direction, a mesh\n//! vertex — is a [`Reals3`] held inline.\n\n");
+    s.push_str("//! The schema-faithful model — [`StepModel`], one arena per entity type.\n//! Public as `step_io::model`, whose docs describe it.\n\n");
 
     // Arena + helpers.
     s.push_str(

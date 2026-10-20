@@ -14,7 +14,11 @@ pub(crate) mod p21;
 pub(crate) mod schema;
 pub(crate) mod string;
 
-pub use entity::{Attribute, Error, Graph, ParseWarning, RawEntity, RawEntityPart};
-pub use lexer::{LexError, LexErrorKind, Span, TokenKind};
+pub use entity::{Attribute, Graph, RawEntity, RawEntityPart};
+pub use lexer::{Span, TokenKind};
 pub use p21::{MAX_NESTING_DEPTH, parse};
-pub use schema::{ApFamily, NonEmptyStringList, SchemaId, Stage};
+pub use schema::NonEmptyStringList;
+
+// Public at the crate root; here for the crate's own paths.
+pub(crate) use entity::{Error, ParseWarning};
+pub(crate) use schema::SchemaId;

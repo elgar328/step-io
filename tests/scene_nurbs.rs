@@ -4,7 +4,7 @@
 //! `EDGE_CURVE`s (there is no standalone curve enumerator).
 
 use step_io::read;
-use step_io::scene::geometry::{Curve, CurveKind};
+use step_io::scene::{Curve, CurveKind};
 use step_io::scene::{NurbsCurve, Scene};
 
 const HEADER: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\n\

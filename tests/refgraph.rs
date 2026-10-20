@@ -3,7 +3,7 @@
 //! both as its referrers — built mechanically over every entity type.
 
 use step_io::EntityKey;
-use step_io::generated::model::{CartesianPointId, LineId, PolylineId};
+use step_io::model::{CartesianPointId, LineId, PolylineId};
 use step_io::read;
 
 const HEADER: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\n\

@@ -59,7 +59,7 @@
 //! reached through the raw model via [`Scene::model`](scene::Scene::model).
 //!
 //! ```no_run
-//! use step_io::scene::geometry::SurfaceKind;
+//! use step_io::scene::SurfaceKind;
 //!
 //! let file = std::fs::File::open("part.step").unwrap();
 //! let (model, report) = step_io::read(file).unwrap();
@@ -122,7 +122,7 @@
 //! # fn surface_of(_: &KernelFace) -> SurfaceInput {
 //! #     SurfaceInput::Plane(Frame { origin: [0.0; 3], axis: [0.0, 0.0, 1.0], ref_dir: [1.0, 0.0, 0.0] })
 //! # }
-//! # fn loops_of(_: &KernelFace, _es: &[step_io::generated::model::EdgeCurveId]) -> Vec<FaceBoundInput> {
+//! # fn loops_of(_: &KernelFace, _es: &[step_io::model::EdgeCurveId]) -> Vec<FaceBoundInput> {
 //! #     Vec::new()
 //! # }
 //! use step_io::StepBuilder;
@@ -156,14 +156,36 @@
 #[cfg(test)]
 mod author_tests;
 pub mod build;
-pub mod emit;
-pub mod generated;
-pub mod header;
+mod emit;
+mod generated;
+mod header;
 mod orientation;
 pub mod parser;
-pub mod reader;
-pub mod refgraph;
+mod reader;
+mod refgraph;
 pub mod scene;
+
+pub mod model {
+    //! The schema-faithful model: [`StepModel`], with one list of entities per
+    //! entity type.
+    //!
+    //! It is laid out compactly: an entity refers to another by its 32-bit index
+    //! in that type's list (the `…Id` types, [`EntityKey`]); every string is a
+    //! [`Text`] into the model's text table, read with [`StepModel::text`]; and a
+    //! list of at most three reals — a point's coordinates, a direction, a mesh
+    //! vertex — is a [`Reals3`] held inline.
+    //!
+    //! This is the low-level layer under [`scene`](crate::scene) and
+    //! [`StepBuilder`](crate::StepBuilder), for the entities their handles do not
+    //! cover. A reference field is an `…Ref` enum naming the entity types it may
+    //! point at: [`resolve`](CurveRef::resolve) follows one to the entity it
+    //! names, and [`entity_key`](CurveRef::entity_key) gives its key for
+    //! [`RefGraph::referrers`](crate::RefGraph::referrers). New entities enter
+    //! only through the [`Ap242Author`](crate::Ap242Author) constructors.
+
+    pub use crate::generated::model::*;
+    pub use crate::generated::resolve::*;
+}
 
 pub use build::StepBuilder;
 pub use emit::write;
@@ -177,7 +199,9 @@ pub use reader::{DropKind, DropReason, Report, read};
 // harness, but not part of the supported API surface.
 #[doc(hidden)]
 pub use emit::dump_universal;
-pub use parser::{ApFamily, Error, LexError, LexErrorKind, ParseWarning, SchemaId, Stage};
+pub use parser::entity::{Error, ParseWarning};
+pub use parser::lexer::{LexError, LexErrorKind};
+pub use parser::schema::{ApFamily, SchemaId, Stage};
 pub use refgraph::RefGraph;
 
 /// Crate-wide result alias: the only fallible public entry point ([`read`])

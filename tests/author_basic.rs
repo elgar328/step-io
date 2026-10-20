@@ -4,7 +4,7 @@
 
 mod common;
 
-use step_io::generated::model as m;
+use step_io::model as m;
 use step_io::{Ap242Author, AuthorError, read};
 
 #[test]

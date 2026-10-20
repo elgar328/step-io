@@ -7,7 +7,7 @@
 mod common;
 
 use step_io::build::{CurveInput, FaceBoundInput, Frame, SurfaceInput};
-use step_io::generated::model as m;
+use step_io::model as m;
 use step_io::{Orientation, StepBuilder, read};
 
 #[test]

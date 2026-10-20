@@ -4,7 +4,7 @@
 mod common;
 
 use step_io::build::CurveInput;
-use step_io::generated::model::{CurveRef, DirectionRef, StepModel, VectorRef};
+use step_io::model::{CurveRef, DirectionRef, StepModel, VectorRef};
 use step_io::{StepBuilder, read};
 
 /// One edge from `from` to `to` over `curve`, written and read back.

@@ -6,8 +6,8 @@
 mod common;
 
 use step_io::build::{CurveInput, FaceBoundInput, Frame, SurfaceInput};
-use step_io::build::{NurbsCurve, NurbsSurface};
-use step_io::scene::geometry::{CurveKind, SurfaceKind};
+use step_io::scene::{CurveKind, SurfaceKind};
+use step_io::scene::{NurbsCurve, NurbsSurface};
 use step_io::{Orientation, StepBuilder, read};
 
 fn frame(origin: [f64; 3], axis: [f64; 3], ref_dir: [f64; 3]) -> Frame {

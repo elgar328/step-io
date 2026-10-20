@@ -4,7 +4,7 @@
 //! reference-resolvable (read does not enforce topological closure), so this is a
 //! deliberately minimal solid: one planar face, one outer bound, one edge.
 
-use step_io::scene::geometry::{CurveKind, SurfaceKind};
+use step_io::scene::{CurveKind, SurfaceKind};
 use step_io::{Orientation, read};
 
 const HEADER: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\n\

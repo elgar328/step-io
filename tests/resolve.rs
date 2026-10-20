@@ -3,7 +3,7 @@
 //! dual of `RefGraph`'s backward `referrers`. Uses a list-free chain that reads
 //! cleanly.
 
-use step_io::generated::resolve::{CartesianPointRefView, VectorRefView};
+use step_io::model::{CartesianPointRefView, VectorRefView};
 use step_io::read;
 
 const HEADER: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\n\

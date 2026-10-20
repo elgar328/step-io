@@ -76,13 +76,13 @@
 //!
 //! ```no_run
 //! use step_io::build::{
-//!     ApprovalInput, Frame, HeaderInput, MeshInput, MeshNormalsInput, PersonOrg,
-//!     Rgb, StyleTarget,
+//!     ApprovalInput, Frame, HeaderInput, MeshInput, MeshNormalsInput, PersonOrg, StyleTarget,
 //! };
+//! use step_io::scene::Rgb;
 //!
 //! # struct Kernel { mesh_points: Vec<[f64; 3]>, mesh_triangles: Vec<[usize; 3]> }
 //! # let kernel = Kernel { mesh_points: vec![], mesh_triangles: vec![] };
-//! # fn faces(_b: &mut step_io::StepBuilder) -> Vec<step_io::generated::model::AdvancedFaceId> { vec![] }
+//! # fn faces(_b: &mut step_io::StepBuilder) -> Vec<step_io::model::AdvancedFaceId> { vec![] }
 //! let mut b = step_io::StepBuilder::new().unwrap();
 //! b.header(&HeaderInput {
 //!     file_name: Some("car.step".into()),
@@ -141,7 +141,7 @@ use crate::Orientation;
 use crate::generated::author::{Ap242Author, AuthorError};
 use crate::generated::model as m;
 use crate::header::FileHeader;
-pub use crate::scene::{NurbsCurve, NurbsSurface, Rgb};
+use crate::scene::{NurbsCurve, NurbsSurface, Rgb};
 
 /// Part 21 HEADER fields for [`StepBuilder::header`]. Everything defaults
 /// to empty except the pieces the builder supplies itself: the timestamp

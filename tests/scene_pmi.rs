@@ -4,8 +4,8 @@
 //! root, so it anchors the whole chain through settling.
 
 use step_io::read;
-use step_io::scene::geometry::{CurveKind, SurfaceKind};
-use step_io::scene::pmi::{DimensionKind, Feature, FeatureGeometry, FeatureKind, ToleranceKind};
+use step_io::scene::{CurveKind, SurfaceKind};
+use step_io::scene::{DimensionKind, Feature, FeatureGeometry, FeatureKind, ToleranceKind};
 
 // A shape aspect linked to a real planar ADVANCED_FACE via
 // GEOMETRIC_ITEM_SPECIFIC_USAGE. A dimension targets the aspect (to obtain the
