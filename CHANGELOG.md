@@ -75,6 +75,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   display mesh or geometric set, which used to come back as `Other`.
 - `EntityKey::keyword()` gives the STEP keyword of the entity type a key
   names, such as `ADVANCED_FACE`, or `None` for a complex instance.
+- The `Ap242Author` constructors, and `add_complex` for the parts of a complex
+  instance, check the size of a list nested in an aggregate as they check
+  the aggregate's: a row of B-spline control points or weights, a triangle
+  strip or fan, a line strip. A row of one control point is refused with
+  `AuthorError::Cardinality`, and so is a triangle strip of two points.
 - `Bound::vertex()` gives the vertex of a `VERTEX_LOOP` boundary, such as a
   cone's apex, which has no edges.
 - `Curve::curve_3d()` reaches the 3D curve of a `SURFACE_CURVE`,

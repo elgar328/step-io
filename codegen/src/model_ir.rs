@@ -23,9 +23,13 @@ pub struct Field {
     pub derivable: bool,
     /// Outer aggregation cardinality (schema `SET [n:m]`): minimum element
     /// count and optional maximum. `(0, None)` for scalars and unbounded
-    /// aggregations. Nested inner-list bounds are not carried.
+    /// aggregations.
     pub min: u32,
     pub max: Option<u32>,
+    /// The bounds of each aggregation nested inside the outer one, outermost
+    /// first (`LIST [2:?] OF LIST [2:?] OF …` → `[(2, None)]`); `(0, None)`
+    /// for an unbounded level.
+    pub nested: Vec<(u32, Option<u32>)>,
 }
 
 /// A simple entity that gets its own arena + typed id.
@@ -548,8 +552,17 @@ fn make_field(
     // entry makes it conditionally `*` (kept as Option). The latter only
     // applies when not already a hard drop.
     let hard = dset.contains(&a.name);
-    let (min, max) =
-        crate::schema::agg_bounds(crate::schema::strip_optional(&a.ty).1).unwrap_or((0, None));
+    let ty = crate::schema::strip_optional(&a.ty).1;
+    let (min, max) = crate::schema::agg_bounds(ty).unwrap_or((0, None));
+    let mut nested = Vec::new();
+    let mut level = crate::schema::agg_inner(ty);
+    while let Some(inner) = level {
+        let Some(bounds) = crate::schema::agg_bounds(inner) else {
+            break;
+        };
+        nested.push(bounds);
+        level = crate::schema::agg_inner(inner);
+    }
     Field {
         name: a.name.clone(),
         kind,
@@ -558,6 +571,7 @@ fn make_field(
         derivable: !hard && derivable.contains(&a.name),
         min,
         max,
+        nested,
     }
 }
 

@@ -615,3 +615,136 @@ fn placement(a: &mut Ap242Author) -> m::Axis2PlacementRef {
         .expect("frame");
     m::Axis2PlacementRef::Axis2Placement3d(frame)
 }
+
+/// A list nested in an aggregate is held to its bounds as the aggregate is: a
+/// row of one control point or one weight is refused, in a plain B-spline
+/// surface and in the parts of a rational one.
+#[test]
+fn lists_nested_in_aggregates_keep_their_bounds() {
+    let mut a = Ap242Author::new();
+    let point = |a: &mut Ap242Author, c: [f64; 3]| {
+        m::CartesianPointRef::CartesianPoint(a.add_cartesian_point("", c.into()).unwrap())
+    };
+    let row = |a: &mut Ap242Author, y: f64| vec![point(a, [0.0, y, 0.0]), point(a, [1.0, y, 0.0])];
+    let short_row = vec![point(&mut a, [0.0, 2.0, 0.0])];
+    let rows = vec![row(&mut a, 0.0), row(&mut a, 1.0), short_row];
+    let nested = |entity: &'static str, attribute: &'static str, got: usize, min: usize| {
+        AuthorError::Cardinality {
+            entity,
+            attribute,
+            got,
+            min,
+            max: None,
+        }
+    };
+
+    let err = a
+        .add_b_spline_surface_with_knots(
+            "",
+            1,
+            1,
+            rows.clone(),
+            m::BSplineSurfaceForm::Unspecified,
+            m::Logical::False,
+            m::Logical::False,
+            m::Logical::False,
+            vec![2, 1, 2],
+            vec![2, 2],
+            vec![0.0, 0.5, 1.0],
+            vec![0.0, 1.0],
+            m::KnotType::Unspecified,
+        )
+        .expect_err("a row of one point");
+    assert_eq!(
+        err,
+        nested("B_SPLINE_SURFACE_WITH_KNOTS", "control_points_list", 1, 2)
+    );
+
+    let empty = a.text("");
+    let rational = |rows: Vec<Vec<m::CartesianPointRef>>, weights: Vec<Vec<f64>>| {
+        vec![
+            m::PartialEntity::BoundedSurface,
+            m::PartialEntity::BSplineSurface {
+                u_degree: 1,
+                v_degree: 1,
+                control_points_list: rows,
+                surface_form: m::BSplineSurfaceForm::Unspecified,
+                u_closed: m::Logical::False,
+                v_closed: m::Logical::False,
+                self_intersect: m::Logical::False,
+            },
+            m::PartialEntity::BSplineSurfaceWithKnots {
+                u_multiplicities: vec![2, 1, 2],
+                v_multiplicities: vec![2, 2],
+                u_knots: vec![0.0, 0.5, 1.0],
+                v_knots: vec![0.0, 1.0],
+                knot_spec: m::KnotType::Unspecified,
+            },
+            m::PartialEntity::GeometricRepresentationItem,
+            m::PartialEntity::RationalBSplineSurface {
+                weights_data: weights,
+            },
+            m::PartialEntity::RepresentationItem { name: empty },
+            m::PartialEntity::Surface,
+        ]
+    };
+    let err = a
+        .add_complex(rational(rows.clone(), vec![vec![1.0; 2]; 3]))
+        .expect_err("a row of one point in a complex instance");
+    assert_eq!(err, nested("B_SPLINE_SURFACE", "control_points_list", 1, 2));
+    let full = vec![rows[0].clone(), rows[1].clone(), row(&mut a, 2.0)];
+    let err = a
+        .add_complex(rational(
+            full.clone(),
+            vec![vec![1.0; 2], vec![1.0; 2], vec![1.0]],
+        ))
+        .expect_err("a row of one weight");
+    assert_eq!(
+        err,
+        nested("RATIONAL_B_SPLINE_SURFACE", "weights_data", 1, 2)
+    );
+    a.add_complex(rational(full, vec![vec![1.0; 2]; 3]))
+        .expect("rows of two points and two weights");
+}
+
+/// A triangle strip of two points is refused, as its list nests in the
+/// aggregate of strips.
+#[test]
+fn triangle_strips_keep_their_bounds() {
+    let mut a = Ap242Author::new();
+    let coordinates = a
+        .add_coordinates_list(
+            "",
+            3,
+            vec![
+                [0.0; 3].into(),
+                [1.0, 0.0, 0.0].into(),
+                [0.0, 1.0, 0.0].into(),
+            ],
+        )
+        .unwrap();
+    let face = |a: &mut Ap242Author, strip: Vec<i64>| {
+        a.add_complex_triangulated_face(
+            "",
+            m::CoordinatesListRef::CoordinatesList(coordinates),
+            3,
+            vec![],
+            None,
+            vec![],
+            vec![strip],
+            vec![],
+        )
+    };
+    let err = face(&mut a, vec![1, 2]).expect_err("a strip of two points");
+    assert_eq!(
+        err,
+        AuthorError::Cardinality {
+            entity: "COMPLEX_TRIANGULATED_FACE",
+            attribute: "triangle_strips",
+            got: 2,
+            min: 3,
+            max: None,
+        }
+    );
+    face(&mut a, vec![1, 2, 3]).expect("a strip of three points");
+}

@@ -80,14 +80,14 @@ impl std::error::Error for AuthorError {}
 
 /// Strict AP242 authoring handle. Owns the model privately: entities enter
 /// only through the generated constructors, which check every value against
-/// the schema's types, the size of each aggregate attribute, every reference
+/// the schema's types, the size of each aggregate attribute and of each list
+/// nested in one (such as a row of B-spline control points), every reference
 /// for an entity of a fitting type that exists in this model, every complex
 /// instance against the schema's rules for combining types, and every real
-/// for being finite. They do not check `WHERE` rules, nor the size of a list
-/// nested in an aggregate (such as a row of B-spline control points) beyond
-/// coordinate triples, and an id from another author that is in range here is
-/// taken as one of this model's. [`Ap242Author::finish`] returns
-/// the model, for [`write`](crate::write) to send out as Part 21 text.
+/// for being finite. They do not check `WHERE` rules, and an id from another
+/// author that is in range here is taken as one of this model's.
+/// [`Ap242Author::finish`] returns the model, for [`write`](crate::write) to
+/// send out as Part 21 text.
 #[derive(Default)]
 pub struct Ap242Author {
     model: StepModel,
@@ -1816,6 +1816,20 @@ impl Ap242Author {
                 });
             }
         }
+        {
+            let v = &control_points_list;
+            for e1 in v.iter() {
+                if e1.len() < 2 {
+                    return Err(AuthorError::Cardinality {
+                        entity: "B_SPLINE_SURFACE",
+                        attribute: "control_points_list",
+                        got: e1.len(),
+                        min: 2,
+                        max: None,
+                    });
+                }
+            }
+        }
         for e0 in &control_points_list {
             for e1 in e0 {
                 check_cartesian_point_ref(&self.model, e1)?;
@@ -1866,6 +1880,20 @@ impl Ap242Author {
                     min: 2,
                     max: None,
                 });
+            }
+        }
+        {
+            let v = &control_points_list;
+            for e1 in v.iter() {
+                if e1.len() < 2 {
+                    return Err(AuthorError::Cardinality {
+                        entity: "B_SPLINE_SURFACE_WITH_KNOTS",
+                        attribute: "control_points_list",
+                        got: e1.len(),
+                        min: 2,
+                        max: None,
+                    });
+                }
             }
         }
         for e0 in &control_points_list {
@@ -2021,6 +2049,20 @@ impl Ap242Author {
                     min: 2,
                     max: None,
                 });
+            }
+        }
+        {
+            let v = &control_points_list;
+            for e1 in v.iter() {
+                if e1.len() < 2 {
+                    return Err(AuthorError::Cardinality {
+                        entity: "BEZIER_SURFACE",
+                        attribute: "control_points_list",
+                        got: e1.len(),
+                        min: 2,
+                        max: None,
+                    });
+                }
             }
         }
         for e0 in &control_points_list {
@@ -3010,6 +3052,34 @@ impl Ap242Author {
         if let Some(x) = &geometric_link {
             check_face_or_surface_ref(&self.model, x)?;
         }
+        {
+            let v = &triangle_strips;
+            for e1 in v.iter() {
+                if e1.len() < 3 {
+                    return Err(AuthorError::Cardinality {
+                        entity: "COMPLEX_TRIANGULATED_FACE",
+                        attribute: "triangle_strips",
+                        got: e1.len(),
+                        min: 3,
+                        max: None,
+                    });
+                }
+            }
+        }
+        {
+            let v = &triangle_fans;
+            for e1 in v.iter() {
+                if e1.len() < 3 {
+                    return Err(AuthorError::Cardinality {
+                        entity: "COMPLEX_TRIANGULATED_FACE",
+                        attribute: "triangle_fans",
+                        got: e1.len(),
+                        min: 3,
+                        max: None,
+                    });
+                }
+            }
+        }
         let name = {
             let v = name;
             self.text(v)
@@ -3062,6 +3132,34 @@ impl Ap242Author {
                     entity: "COMPLEX_TRIANGULATED_SURFACE_SET",
                     attribute: "normals",
                 });
+            }
+        }
+        {
+            let v = &triangle_strips;
+            for e1 in v.iter() {
+                if e1.len() < 3 {
+                    return Err(AuthorError::Cardinality {
+                        entity: "COMPLEX_TRIANGULATED_SURFACE_SET",
+                        attribute: "triangle_strips",
+                        got: e1.len(),
+                        min: 3,
+                        max: None,
+                    });
+                }
+            }
+        }
+        {
+            let v = &triangle_fans;
+            for e1 in v.iter() {
+                if e1.len() < 3 {
+                    return Err(AuthorError::Cardinality {
+                        entity: "COMPLEX_TRIANGULATED_SURFACE_SET",
+                        attribute: "triangle_fans",
+                        got: e1.len(),
+                        min: 3,
+                        max: None,
+                    });
+                }
             }
         }
         let name = {
@@ -10236,6 +10334,20 @@ impl Ap242Author {
                 });
             }
         }
+        {
+            let v = &control_points_list;
+            for e1 in v.iter() {
+                if e1.len() < 2 {
+                    return Err(AuthorError::Cardinality {
+                        entity: "QUASI_UNIFORM_SURFACE",
+                        attribute: "control_points_list",
+                        got: e1.len(),
+                        min: 2,
+                        max: None,
+                    });
+                }
+            }
+        }
         for e0 in &control_points_list {
             for e1 in e0 {
                 check_cartesian_point_ref(&self.model, e1)?;
@@ -10385,6 +10497,20 @@ impl Ap242Author {
                 });
             }
         }
+        {
+            let v = &control_points_list;
+            for e1 in v.iter() {
+                if e1.len() < 2 {
+                    return Err(AuthorError::Cardinality {
+                        entity: "RATIONAL_B_SPLINE_SURFACE",
+                        attribute: "control_points_list",
+                        got: e1.len(),
+                        min: 2,
+                        max: None,
+                    });
+                }
+            }
+        }
         for e0 in &control_points_list {
             for e1 in e0 {
                 check_cartesian_point_ref(&self.model, e1)?;
@@ -10400,6 +10526,20 @@ impl Ap242Author {
                     min: 2,
                     max: None,
                 });
+            }
+        }
+        {
+            let v = &weights_data;
+            for e1 in v.iter() {
+                if e1.len() < 2 {
+                    return Err(AuthorError::Cardinality {
+                        entity: "RATIONAL_B_SPLINE_SURFACE",
+                        attribute: "weights_data",
+                        got: e1.len(),
+                        min: 2,
+                        max: None,
+                    });
+                }
             }
         }
         for f0 in &weights_data {
@@ -11994,6 +12134,20 @@ impl Ap242Author {
                 });
             }
         }
+        {
+            let v = &line_strips;
+            for e1 in v.iter() {
+                if e1.len() < 2 {
+                    return Err(AuthorError::Cardinality {
+                        entity: "TESSELLATED_CURVE_SET",
+                        attribute: "line_strips",
+                        got: e1.len(),
+                        min: 2,
+                        max: None,
+                    });
+                }
+            }
+        }
         let name = {
             let v = name;
             self.text(v)
@@ -12935,6 +13089,20 @@ impl Ap242Author {
                     min: 2,
                     max: None,
                 });
+            }
+        }
+        {
+            let v = &control_points_list;
+            for e1 in v.iter() {
+                if e1.len() < 2 {
+                    return Err(AuthorError::Cardinality {
+                        entity: "UNIFORM_SURFACE",
+                        attribute: "control_points_list",
+                        got: e1.len(),
+                        min: 2,
+                        max: None,
+                    });
+                }
             }
         }
         for e0 in &control_points_list {
@@ -16905,6 +17073,20 @@ fn check_partial_entity(model: &StepModel, p: &PartialEntity) -> Result<(), Auth
                     });
                 }
             }
+            {
+                let v = control_points_list;
+                for e1 in v.iter() {
+                    if e1.len() < 2 {
+                        return Err(AuthorError::Cardinality {
+                            entity: "B_SPLINE_SURFACE",
+                            attribute: "control_points_list",
+                            got: e1.len(),
+                            min: 2,
+                            max: None,
+                        });
+                    }
+                }
+            }
             for e0 in control_points_list {
                 for e1 in e0 {
                     check_cartesian_point_ref(model, e1)?;
@@ -18068,6 +18250,20 @@ fn check_partial_entity(model: &StepModel, p: &PartialEntity) -> Result<(), Auth
                         min: 2,
                         max: None,
                     });
+                }
+            }
+            {
+                let v = weights_data;
+                for e1 in v.iter() {
+                    if e1.len() < 2 {
+                        return Err(AuthorError::Cardinality {
+                            entity: "RATIONAL_B_SPLINE_SURFACE",
+                            attribute: "weights_data",
+                            got: e1.len(),
+                            min: 2,
+                            max: None,
+                        });
+                    }
                 }
             }
             for f0 in weights_data {

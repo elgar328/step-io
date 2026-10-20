@@ -2603,6 +2603,19 @@ fn author_card_check(
         Kind::Vec(inner) => Some(inner.as_ref()),
         _ => None,
     };
+    if let Some(check) =
+        inner.and_then(|k| nested_card_check(entity_upper, attribute, k, &f.nested, "v", 1))
+    {
+        // The bounds of lists nested in lists (`LIST [2:?] OF LIST [2:?] OF …`).
+        let amp = if expr_is_ref { "" } else { "&" };
+        if f.optional || f.derivable {
+            s.push_str(&format!(
+                "        if let Some(v) = {amp}{expr} {{ {check} }}\n"
+            ));
+        } else {
+            s.push_str(&format!("        {{ let v = {amp}{expr}; {check} }}\n"));
+        }
+    }
     if let Some(Kind::Reals3 { min, max }) = inner {
         // The inner lists' bounds (`LIST OF LIST [3:3] OF real`).
         let err = format!(
@@ -2620,6 +2633,44 @@ fn author_card_check(
         }
     }
     s
+}
+
+/// A length check on every list nested in `var`, whose elements are of kind
+/// `elems`, level by level (`bounds` outermost first), or `None` when no level
+/// is bounded. A `Reals3` level is left to its own check.
+fn nested_card_check(
+    entity_upper: &str,
+    attribute: &str,
+    elems: &Kind,
+    bounds: &[(u32, Option<u32>)],
+    var: &str,
+    depth: usize,
+) -> Option<String> {
+    let (&(min, max), deeper) = bounds.split_first()?;
+    let Kind::Vec(inner) = elems else {
+        return None;
+    };
+    let e = format!("e{depth}");
+    let here = if min == 0 && max.is_none() {
+        String::new()
+    } else {
+        let cond = match max {
+            Some(max) => format!("{e}.len() < {min} || {e}.len() > {max}"),
+            None => format!("{e}.len() < {min}"),
+        };
+        let max_expr = max.map_or_else(|| "None".to_string(), |m| format!("Some({m})"));
+        format!(
+            "if {cond} {{ return Err(AuthorError::Cardinality {{ entity: {entity_upper:?}, attribute: {attribute:?}, got: {e}.len(), min: {min}, max: {max_expr} }}); }} "
+        )
+    };
+    let below = nested_card_check(entity_upper, attribute, inner, deeper, &e, depth + 1);
+    if here.is_empty() && below.is_none() {
+        return None;
+    }
+    Some(format!(
+        "for {e} in {var}.iter() {{ {here}{} }}",
+        below.unwrap_or_default()
+    ))
 }
 
 fn author_card_check_outer(
@@ -2847,14 +2898,14 @@ impl std::error::Error for AuthorError {}
 
 /// Strict AP242 authoring handle. Owns the model privately: entities enter
 /// only through the generated constructors, which check every value against
-/// the schema's types, the size of each aggregate attribute, every reference
+/// the schema's types, the size of each aggregate attribute and of each list
+/// nested in one (such as a row of B-spline control points), every reference
 /// for an entity of a fitting type that exists in this model, every complex
 /// instance against the schema's rules for combining types, and every real
-/// for being finite. They do not check `WHERE` rules, nor the size of a list
-/// nested in an aggregate (such as a row of B-spline control points) beyond
-/// coordinate triples, and an id from another author that is in range here is
-/// taken as one of this model's. [`Ap242Author::finish`] returns
-/// the model, for [`write`](crate::write) to send out as Part 21 text.
+/// for being finite. They do not check `WHERE` rules, and an id from another
+/// author that is in range here is taken as one of this model's.
+/// [`Ap242Author::finish`] returns the model, for [`write`](crate::write) to
+/// send out as Part 21 text.
 #[derive(Default)]
 pub struct Ap242Author {
     model: StepModel,
