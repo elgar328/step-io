@@ -15,6 +15,8 @@
 
 use crate::generated::model as m;
 use crate::scene::geometry::{Curve, Edge, Face, Point, Solid};
+use crate::scene::mesh::Mesh;
+use crate::scene::sets::GeometricSet;
 use crate::scene::{Ctx, Scene};
 
 /// What a [`Dimension`] measures.
@@ -941,9 +943,14 @@ pub enum FeatureGeometry<'m> {
     /// A `MANIFOLD_SOLID_BREP` or `BREP_WITH_VOIDS`.
     Solid(Solid<'m>),
     /// A curve (`TRIMMED_CURVE`, `COMPOSITE_CURVE`, `CIRCLE`, …); dispatch its
-    /// exact kind via [`Curve::kind`](crate::scene::geometry::Curve::kind).
+    /// exact kind via [`Curve::kind`](crate::scene::Curve::kind).
     Curve(Curve<'m>),
-    /// Any other identified item (a tessellated face, a geometric set, …), by key.
+    /// A display mesh (`COMPLEX_TRIANGULATED_FACE`, …).
+    Mesh(Mesh<'m>),
+    /// A `GEOMETRIC_SET` or `GEOMETRIC_CURVE_SET`.
+    GeometricSet(GeometricSet<'m>),
+    /// Any other identified item (a tessellated geometric set, a placement, …),
+    /// by key.
     Other(m::EntityKey),
 }
 
@@ -988,10 +995,17 @@ impl<'m> Feature<'m> {
                 m::GeometricModelItemRef::BrepWithVoids(id) => {
                     FeatureGeometry::Solid(Solid::from_void_id(cx, *id))
                 }
-                other => match Curve::from_model_item(cx, other) {
-                    Some(c) => FeatureGeometry::Curve(c),
-                    None => FeatureGeometry::Other(other.entity_key()),
-                },
+                other => {
+                    if let Some(c) = Curve::from_model_item(cx, other) {
+                        FeatureGeometry::Curve(c)
+                    } else if let Some(mesh) = Mesh::from_model_item(cx, other) {
+                        FeatureGeometry::Mesh(mesh)
+                    } else if let Some(set) = GeometricSet::from_model_item(cx, other) {
+                        FeatureGeometry::GeometricSet(set)
+                    } else {
+                        FeatureGeometry::Other(other.entity_key())
+                    }
+                }
             });
         }
         out.into_iter()

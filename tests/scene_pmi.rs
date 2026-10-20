@@ -674,3 +674,30 @@ fn withdocs_part_reports_its_pmi() {
         scene.warnings()
     );
 }
+
+/// A feature can designate a display mesh or a geometric set: the rim of
+/// `GEO_CURVE` given as a triangulated face, then as a curve set.
+#[test]
+fn feature_geometry_reaches_meshes_and_geometric_sets() {
+    let circle = "#24=CIRCLE('',#23,5.0);";
+    let mesh = GEO_CURVE.replace(
+        circle,
+        "#27=COORDINATES_LIST('',3,((0.,0.,0.),(1.,0.,0.),(0.,1.,0.)));\n#24=COMPLEX_TRIANGULATED_FACE('m',#27,3,(),$,(),((1,2,3)),());",
+    );
+    let set = GEO_CURVE.replace(circle, "#24=GEOMETRIC_CURVE_SET('w',(#20));");
+    for (fixture, want_mesh) in [(mesh, true), (set, false)] {
+        let src = format!("{HEADER}{fixture}{FOOTER}");
+        let (model, report) = read(src.as_bytes()).expect("read");
+        assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+        let scene = model.scene();
+        let feat = scene.all_features().next().expect("the rim");
+        let geo: Vec<_> = feat.geometry().collect();
+        assert_eq!(geo.len(), 1);
+        match geo[0] {
+            FeatureGeometry::Mesh(m) if want_mesh => assert_eq!(m.name(), "m"),
+            FeatureGeometry::GeometricSet(g) if !want_mesh => assert_eq!(g.name(), "w"),
+            other => panic!("unexpected {other:?}"),
+        }
+        assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+    }
+}

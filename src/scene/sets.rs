@@ -73,6 +73,17 @@ impl<'m> GeometricSet<'m> {
         Some(GeometricSet { cx, which })
     }
 
+    /// A set reached as a `GEOMETRIC_ITEM_SPECIFIC_USAGE` identified item (used
+    /// by `pmi` feature geometry); `None` for an item that is not a set.
+    pub(crate) fn from_model_item(cx: Ctx<'m>, r: &m::GeometricModelItemRef) -> Option<Self> {
+        let which = match r {
+            m::GeometricModelItemRef::GeometricSet(i) => SetImpl::Set(*i),
+            m::GeometricModelItemRef::GeometricCurveSet(i) => SetImpl::Curves(*i),
+            _ => return None,
+        };
+        Some(GeometricSet { cx, which })
+    }
+
     /// This set's global identity (a `Copy` key for maps / deduplication).
     pub fn key(&self) -> m::EntityKey {
         match self.which {

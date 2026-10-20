@@ -66,6 +66,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   layer and visibility. `Scene::all_geometric_sets()` lists them, and
   `ProductDef::geometric_sets()` and `MappedInstance::geometric_sets()` reach
   them from a part.
+- Presentation on more handles: `Edge` reads the curve style styled onto the
+  `EDGE_CURVE` itself (`color()`, `width()`, `line_font()`), `Point` reads a
+  point style's marker colour, `Mesh` and `MeshGroup` read colour and
+  transparency, and these, together with `Curve`, have `layer()` and
+  `is_visible()`.
+- `FeatureGeometry::Mesh` and `FeatureGeometry::GeometricSet` give a feature's
+  display mesh or geometric set, which used to come back as `Other`.
 - `Bound::vertex()` gives the vertex of a `VERTEX_LOOP` boundary, such as a
   cone's apex, which has no edges.
 - `Curve::curve_3d()` reaches the 3D curve of a `SURFACE_CURVE`,

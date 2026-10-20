@@ -198,3 +198,35 @@ fn a_reversed_outer_shell_reaches_its_solid_and_reports_its_use() {
         scene.warnings()
     );
 }
+
+/// Display meshes and their groups carry presentation like the b-rep: a
+/// surface colour styled onto the quad and onto group A.
+#[test]
+fn meshes_and_mesh_groups_read_their_styles() {
+    let styles = "\
+#60=COLOUR_RGB('',0.25,0.5,0.75);\n\
+#61=FILL_AREA_STYLE_COLOUR('',#60);\n\
+#62=FILL_AREA_STYLE('',(#61));\n\
+#63=SURFACE_STYLE_FILL_AREA(#62);\n\
+#64=SURFACE_SIDE_STYLE('',(#63));\n\
+#65=SURFACE_STYLE_USAGE(.BOTH.,#64);\n\
+#66=PRESENTATION_STYLE_ASSIGNMENT((#65));\n\
+#67=STYLED_ITEM('',(#66),#11);\n\
+#68=STYLED_ITEM('',(#66),#80);\n\
+#69=PRESENTATION_LAYER_ASSIGNMENT('meshes','',(#11));\n";
+    let src = format!("{HEADER}{MESHES}{styles}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let quad = scene
+        .all_meshes()
+        .find(|m| m.name() == "quad")
+        .expect("quad");
+    let c = quad.color().expect("the quad is coloured");
+    assert!((c.green - 0.5).abs() < 1e-12, "{c:?}");
+    assert_eq!(quad.layer(), Some("meshes"));
+    let fan = scene.all_meshes().find(|m| m.name() == "fan").expect("fan");
+    assert!(fan.color().is_none());
+    let group = quad.group().expect("group A");
+    assert!(group.color().is_some() && group.is_visible());
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}

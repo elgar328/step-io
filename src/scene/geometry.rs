@@ -1034,6 +1034,38 @@ impl<'m> Edge<'m> {
         self.raw().same_sense
     }
 
+    /// The colour of this edge's line style (`CURVE_STYLE.curve_colour`), if
+    /// any.
+    pub fn color(&self) -> Option<crate::scene::presentation::Rgb> {
+        let this = self.about();
+        crate::scene::presentation::curve_colour_of(this.cx, this.key())
+    }
+
+    /// The line width of this edge's style (`CURVE_STYLE.curve_width`, a raw
+    /// measure value), if any.
+    pub fn width(&self) -> Option<f64> {
+        let this = self.about();
+        crate::scene::presentation::curve_width_of(this.cx, this.key())
+    }
+
+    /// The line font of this edge's style (`CURVE_STYLE.curve_font`) — a
+    /// pre-defined font name such as `continuous` or `dashed` — if any.
+    pub fn line_font(&self) -> Option<&'m str> {
+        let this = self.about();
+        crate::scene::presentation::curve_font_of(this.cx, this.key())
+    }
+
+    /// The name of the presentation layer this edge belongs to, if any.
+    pub fn layer(&self) -> Option<&'m str> {
+        crate::scene::presentation::layer_of(self.cx, self.key())
+    }
+
+    /// Whether this edge is visible — `false` if an `INVISIBILITY` hides it
+    /// (via its styled item or its layer). Defaults to visible.
+    pub fn is_visible(&self) -> bool {
+        crate::scene::presentation::is_visible(self.cx, self.key())
+    }
+
     /// The NURBS ([`NurbsCurve`](crate::scene::NurbsCurve)) form of this
     /// edge: its geometry bounded between the two vertex points, in the edge's
     /// direction (start → end). Contrast with [`Curve::to_nurbs`], which
@@ -1197,6 +1229,17 @@ impl<'m> Curve<'m> {
     pub fn line_font(&self) -> Option<&'m str> {
         let this = self.about();
         crate::scene::presentation::curve_font_of(this.cx, this.key())
+    }
+
+    /// The name of the presentation layer this curve belongs to, if any.
+    pub fn layer(&self) -> Option<&'m str> {
+        crate::scene::presentation::layer_of(self.cx, self.key())
+    }
+
+    /// Whether this curve is visible — `false` if an `INVISIBILITY` hides it
+    /// (via its styled item or its layer). Defaults to visible.
+    pub fn is_visible(&self) -> bool {
+        crate::scene::presentation::is_visible(self.cx, self.key())
     }
 
     /// The rational-B-spline ([`NurbsCurve`](crate::scene::NurbsCurve))
@@ -1450,6 +1493,24 @@ impl<'m> Point<'m> {
             .get(self.id.0)
             .coordinates
     }
+
+    /// The marker colour of this point's style (`POINT_STYLE.marker_colour`),
+    /// if any.
+    pub fn color(&self) -> Option<crate::scene::presentation::Rgb> {
+        let this = self.about();
+        crate::scene::presentation::point_colour_of(this.cx, this.key())
+    }
+
+    /// The name of the presentation layer this point belongs to, if any.
+    pub fn layer(&self) -> Option<&'m str> {
+        crate::scene::presentation::layer_of(self.cx, self.key())
+    }
+
+    /// Whether this point is visible — `false` if an `INVISIBILITY` hides it
+    /// (via its styled item or its layer). Defaults to visible.
+    pub fn is_visible(&self) -> bool {
+        crate::scene::presentation::is_visible(self.cx, self.key())
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -1572,6 +1633,7 @@ about_by_key!(
     Curve,
     Edge,
     Face,
+    Point,
     Shell,
     Solid,
     Surface,

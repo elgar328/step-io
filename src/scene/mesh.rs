@@ -171,6 +171,44 @@ impl<'m> Mesh<'m> {
         }
     }
 
+    /// The colour styled onto this mesh, if any.
+    pub fn color(&self) -> Option<crate::scene::presentation::Rgb> {
+        let this = self.about();
+        crate::scene::presentation::colour_of(this.cx, this.key())
+    }
+
+    /// The transparency styled onto this mesh (`0.0` opaque … `1.0` fully
+    /// transparent), if any.
+    pub fn transparency(&self) -> Option<f64> {
+        let this = self.about();
+        crate::scene::presentation::transparency_of(this.cx, this.key())
+    }
+
+    /// The name of the presentation layer this mesh belongs to, if any.
+    pub fn layer(&self) -> Option<&'m str> {
+        crate::scene::presentation::layer_of(self.cx, self.key())
+    }
+
+    /// Whether this mesh is visible — `false` if an `INVISIBILITY` hides it
+    /// (via its styled item or its layer). Defaults to visible.
+    pub fn is_visible(&self) -> bool {
+        crate::scene::presentation::is_visible(self.cx, self.key())
+    }
+
+    /// A mesh reached as a `GEOMETRIC_ITEM_SPECIFIC_USAGE` identified item (used
+    /// by `pmi` feature geometry); `None` for an item that is not a mesh.
+    pub(crate) fn from_model_item(cx: Ctx<'m>, r: &m::GeometricModelItemRef) -> Option<Self> {
+        let which = match r {
+            m::GeometricModelItemRef::ComplexTriangulatedFace(i) => MeshImpl::ComplexFace(*i),
+            m::GeometricModelItemRef::ComplexTriangulatedSurfaceSet(i) => {
+                MeshImpl::ComplexSurfaceSet(*i)
+            }
+            m::GeometricModelItemRef::TessellatedFace(i) => MeshImpl::PlainFace(*i),
+            _ => return None,
+        };
+        Some(Mesh { cx, which })
+    }
+
     /// The vertex positions, `pnindex` resolved: entry `n` is the position of
     /// the vertex that [`Mesh::triangles`] refers to as `n` (0-based).
     pub fn points(&self) -> Vec<[f64; 3]> {
@@ -344,6 +382,30 @@ impl<'m> MeshGroup<'m> {
         }
     }
 
+    /// The colour styled onto this mesh group, if any.
+    pub fn color(&self) -> Option<crate::scene::presentation::Rgb> {
+        let this = self.about();
+        crate::scene::presentation::colour_of(this.cx, this.key())
+    }
+
+    /// The transparency styled onto this mesh group (`0.0` opaque … `1.0` fully
+    /// transparent), if any.
+    pub fn transparency(&self) -> Option<f64> {
+        let this = self.about();
+        crate::scene::presentation::transparency_of(this.cx, this.key())
+    }
+
+    /// The name of the presentation layer this mesh group belongs to, if any.
+    pub fn layer(&self) -> Option<&'m str> {
+        crate::scene::presentation::layer_of(self.cx, self.key())
+    }
+
+    /// Whether this mesh group is visible — `false` if an `INVISIBILITY` hides it
+    /// (via its styled item or its layer). Defaults to visible.
+    pub fn is_visible(&self) -> bool {
+        crate::scene::presentation::is_visible(self.cx, self.key())
+    }
+
     /// The mesh faces bundled in this group.
     pub fn meshes(&self) -> impl Iterator<Item = Mesh<'m>> + 'm {
         let cx = self.cx;
@@ -415,4 +477,4 @@ impl<'m> Mesh<'m> {
     }
 }
 
-about_by_key!(Mesh);
+about_by_key!(Mesh, MeshGroup);

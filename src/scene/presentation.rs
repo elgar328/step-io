@@ -17,7 +17,8 @@ pub struct Rgb {
     pub blue: f64,
 }
 
-/// The colour styled onto the entity `target` (a face or solid), if any.
+/// The colour styled onto the entity `target` (a face, solid, shell, surface
+/// model or mesh), if any.
 pub(crate) fn colour_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<Rgb> {
     let rg = cx.ref_graph();
     for r in rg.referrers(target) {
@@ -347,9 +348,9 @@ pub(crate) fn is_visible(cx: Ctx<'_>, target: m::EntityKey) -> bool {
 // Curve style (an edge's / curve's colour, width, and line font)
 // ---------------------------------------------------------------------------
 //
-// Corpus: curve styles apply to standalone curves (LINE / TRIMMED_CURVE / CIRCLE,
-// ~60k) — reached via the `Curve` handle — not b-rep EDGE_CURVEs (498, a
-// two-file Spatial InterOp anomaly).
+// Corpus: curve styles apply to standalone curves (LINE / TRIMMED_CURVE / CIRCLE)
+// — reached via the `Curve` handle — and to b-rep EDGE_CURVEs, reached via the
+// `Edge` handle.
 
 /// Reverse-walk from `target` to each presentation-style select styling it
 /// (`STYLED_ITEM` → presentation-style assignment → style), running `leaf` on
