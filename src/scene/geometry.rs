@@ -383,6 +383,9 @@ impl<'m> Face<'m> {
     fn boundary_points(&self) -> Vec<[f64; 3]> {
         let mut points = Vec::new();
         for bound in self.bounds() {
+            if let Some(pt) = bound.vertex().and_then(|v| v.point()) {
+                points.push(pt.xyz());
+            }
             for edge in bound.edges() {
                 if let Some(n) = edge.to_nurbs() {
                     points.extend(n.control_points);
@@ -402,8 +405,10 @@ impl<'m> Face<'m> {
     /// face's geometry. A closed analytic surface (sphere, torus, B-spline) is
     /// returned whole via [`Surface::to_nurbs`]. An *unbounded* surface (plane,
     /// cylinder, cone, linear extrusion) is sized to the control points of its
-    /// boundary edges' NURBS forms — a guaranteed cover of the boundary — and
-    /// is the untrimmed base patch (the edge loops trim it separately).
+    /// boundary edges' NURBS forms and to the vertices of its vertex loops — a
+    /// guaranteed cover of the boundary; a cone bounded at one level reaches
+    /// its apex — and is the untrimmed base patch (the edge loops trim it
+    /// separately).
     /// `None` if the kind is unsupported or the bounds are degenerate, or for a
     /// B-spline whose degree is outside 1–25 or whose knot multiplicities do
     /// not match its control points.
@@ -718,9 +723,10 @@ impl<'m> Bound<'m> {
         })
     }
 
-    /// Edges of this boundary loop (only `EDGE_LOOP` loops carry edges),
-    /// without their per-edge orientation — use [`Bound::oriented_edges`] to
-    /// assemble a wire.
+    /// Edges of this boundary loop (only `EDGE_LOOP` loops carry edges; a
+    /// `VERTEX_LOOP`, as at a cone's apex, has its one [`vertex`](Self::vertex)
+    /// instead), without their per-edge orientation — use
+    /// [`Bound::oriented_edges`] to assemble a wire.
     pub fn edges(&self) -> impl Iterator<Item = Edge<'m>> + 'm {
         self.oriented_edges().map(|(e, _)| e)
     }
@@ -731,8 +737,9 @@ impl<'m> Bound<'m> {
     /// [`Reversed`](Orientation::Reversed) end → start — what a kernel needs
     /// to assemble the loop into a wire without end-matching heuristics.
     pub fn oriented_edges(&self) -> impl Iterator<Item = (Edge<'m>, Orientation)> + 'm {
-        let cx = self.cx;
-        resolve_edge_loop(cx.model, self.loop_ref())
+        let this = self.about();
+        let cx = this.cx;
+        resolve_edge_loop(cx, this.loop_ref())
             .into_iter()
             .flat_map(|el| el.edge_list.iter())
             .filter_map(move |oer| {
@@ -742,6 +749,18 @@ impl<'m> Bound<'m> {
                     Orientation::from_flag(oe.orientation),
                 ))
             })
+    }
+
+    /// The one vertex of a `VERTEX_LOOP` boundary — a face that closes to a
+    /// point, such as a cone at its apex. `None` for any other loop.
+    pub fn vertex(&self) -> Option<Vertex<'m>> {
+        let m::LoopRef::VertexLoop(i) = self.loop_ref() else {
+            return None;
+        };
+        Vertex::from_ref(
+            self.cx,
+            &self.cx.model.vertex_loop_arena.get(i.0).loop_vertex,
+        )
     }
 }
 
@@ -1283,15 +1302,19 @@ fn resolve_oriented_closed_shell<'m>(
     None
 }
 
-/// Resolve a `LoopRef` to an `EdgeLoop` (only edge loops carry edges).
-fn resolve_edge_loop<'m>(model: &'m StepModel, r: &m::LoopRef) -> Option<&'m m::EdgeLoop> {
-    match r {
-        m::LoopRef::EdgeLoop(i) => Some(model.edge_loop_arena.get(i.0)),
-        m::LoopRef::Loop(_)
-        | m::LoopRef::PolyLoop(_)
-        | m::LoopRef::VertexLoop(_)
-        | m::LoopRef::Complex(_) => None,
-    }
+/// Resolve a `LoopRef` to an `EdgeLoop` (only edge loops carry edges; a vertex
+/// loop is reached through [`Bound::vertex`]). Loops this layer does not read
+/// are reported.
+fn resolve_edge_loop<'m>(cx: Ctx<'m>, r: &m::LoopRef) -> Option<&'m m::EdgeLoop> {
+    let what = match r {
+        m::LoopRef::EdgeLoop(i) => return Some(cx.model.edge_loop_arena.get(i.0)),
+        m::LoopRef::VertexLoop(_) => return None,
+        m::LoopRef::PolyLoop(_) => "POLY_LOOP",
+        m::LoopRef::Loop(_) => "LOOP",
+        m::LoopRef::Complex(_) => "complex loop",
+    };
+    cx.warn(format!("FACE_BOUND: a {what} boundary is not read"));
+    None
 }
 
 /// Resolve an `OrientedEdgeRef` to an `OrientedEdge`.
@@ -1305,4 +1328,4 @@ fn resolve_oriented_edge<'m>(
     }
 }
 
-about_by_key!(Curve, Edge, Face, Solid, Surface);
+about_by_key!(Bound, Curve, Edge, Face, Solid, Surface);

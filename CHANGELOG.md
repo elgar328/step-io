@@ -49,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `FeatureGeometry` and `Target` implement `Debug` as well, and
   `FeatureGeometry` is `Clone` and `Copy`.
 - `Version::product()` reaches the product a version belongs to.
+- `Bound::vertex()` gives the vertex of a `VERTEX_LOOP` boundary, such as a
+  cone's apex, which has no edges.
 - `Curve::curve_3d()` reaches the 3D curve of a `SURFACE_CURVE`,
   `SEAM_CURVE`, `BOUNDED_SURFACE_CURVE` or `INTERSECTION_CURVE` as a `Curve`,
   where it used to take the raw model.
@@ -274,6 +276,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Face::to_nurbs()` reads a cone's half-angle in the file's plane-angle unit.
   It used to take it as radians, so a cone in a file that measures angles in
   degrees came out with the wrong radius.
+- `Face::to_nurbs()` converts a cone face that closes at its apex, bounded by
+  a circle and a `VERTEX_LOOP` at the apex or by the circle alone. It used to
+  return `None` there for a degenerate extent.
+- A face boundary that is a `POLY_LOOP`, a bare `LOOP` or a complex instance
+  is reported in `Scene::warnings`; `Bound::edges()` used to come back empty
+  without a word.
 - `MeshGroup::solid()` finds the solid of a tessellated shell linked to a
   closed shell that the solid reaches through an `ORIENTED_CLOSED_SHELL`, a
   cavity included, as `Face::solid()` does. It used to find only an outer

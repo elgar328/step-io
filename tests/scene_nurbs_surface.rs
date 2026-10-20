@@ -364,6 +364,77 @@ fn cone_face_radius_grows_with_height() {
     );
 }
 
+// A cone tip: the cone of half-angle 45° through radius 1 at z=0 closes at the
+// apex (0,0,−1). Its face is bounded by the circle at z=0 and, at the apex, a
+// VERTEX_LOOP (#30–#33) — or by the circle alone.
+const CONE_TIP: &str = "\
+#1=CARTESIAN_POINT('',(1.,0.,0.));\n\
+#3=CARTESIAN_POINT('',(0.,0.,0.));\n\
+#4=DIRECTION('',(0.,0.,1.));\n\
+#5=DIRECTION('',(1.,0.,0.));\n\
+#6=AXIS2_PLACEMENT_3D('',#3,#4,#5);\n\
+#7=CONICAL_SURFACE('',#6,1.0,0.7853981633974483);\n\
+#8=VERTEX_POINT('',#1);\n\
+#12=CIRCLE('',#6,1.0);\n\
+#13=EDGE_CURVE('',#8,#8,#12,.T.);\n\
+#14=ORIENTED_EDGE('',*,*,#13,.T.);\n\
+#15=EDGE_LOOP('',(#14));\n\
+#16=FACE_OUTER_BOUND('',#15,.T.);\n\
+#30=CARTESIAN_POINT('',(0.,0.,-1.));\n\
+#31=VERTEX_POINT('',#30);\n\
+#32=VERTEX_LOOP('',#31);\n\
+#33=FACE_BOUND('',#32,.T.);\n\
+#17=ADVANCED_FACE('',(#16,#33),#7,.T.);\n\
+#18=CLOSED_SHELL('',(#17));\n\
+#19=MANIFOLD_SOLID_BREP('',#18);\n";
+
+/// A cone face that closes at its apex converts, its patch reaching the apex —
+/// whether the apex is a `VERTEX_LOOP` boundary, reached by `Bound::vertex`,
+/// or left implicit with the circle the only boundary.
+#[test]
+fn a_cone_tip_reaches_its_apex() {
+    let without_apex = CONE_TIP.replace("(#16,#33)", "(#16)");
+    // The circle tilted by 1e-12, as rounding leaves a circle that sits at
+    // one level in the writer's model: still one level, not a sliver.
+    let noisy = without_apex.replace(
+        "#12=CIRCLE('',#6,1.0);",
+        "#40=DIRECTION('',(0.,1.E-12,1.));\n#41=AXIS2_PLACEMENT_3D('',#3,#40,#5);\n#12=CIRCLE('',#41,1.0);",
+    );
+    for (src, apex_bound) in [
+        (CONE_TIP.to_owned(), true),
+        (without_apex, false),
+        (noisy, false),
+    ] {
+        let src = format!("{HEADER}{src}{FOOTER}");
+        let (model, _rep) = read(src.as_bytes()).expect("read");
+        let scene = model.scene();
+        let face = find_face(&scene, |s| matches!(s.kind(), SurfaceKind::Conical(_)));
+
+        let apexes: Vec<_> = face
+            .bounds()
+            .filter_map(|b| b.vertex())
+            .map(|v| v.point().expect("the apex point").xyz())
+            .collect();
+        assert_eq!(
+            apexes,
+            if apex_bound {
+                vec![[0., 0., -1.]]
+            } else {
+                vec![]
+            }
+        );
+
+        let n = face.to_nurbs().expect("a cone tip → nurbs");
+        assert!(approx(&n.control_points[0][0], &[0., 0., -1.]), "apex row");
+        assert!(approx(&n.control_points[0][1], &[1., 0., 0.]), "circle row");
+        assert!(
+            scene.warnings().is_empty(),
+            "warnings: {:?}",
+            scene.warnings()
+        );
+    }
+}
+
 // A plane-angle unit of degrees, for the cone below.
 const DEGREE_UNITS: &str = "\
 #40=( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\

@@ -1879,8 +1879,9 @@ pub(crate) fn plane_patch(
 /// grows `radius + v·tan(semi_angle)`.
 ///
 /// Exact within the axial span (both surfaces are ruled). The full circle
-/// over-covers a partial face — the edge loops trim it. `None` if the axial
-/// span is degenerate.
+/// over-covers a partial face — the edge loops trim it. A cone face whose
+/// boundary sits at one level reaches the apex. `None` if the axial span is
+/// degenerate.
 pub(crate) fn cylinder_cone_patch(
     cx: Ctx<'_>,
     position: &m::Axis2Placement3dRef,
@@ -1893,17 +1894,32 @@ pub(crate) fn cylinder_cone_patch(
         return None;
     }
     let (mut v_lo, mut v_hi) = (f64::MAX, f64::MIN);
+    // The boundary's radial size, and the coordinates' magnitude, for the
+    // rounding noise in `v`.
+    let (mut size, mut magnitude) = (0.0_f64, 0.0_f64);
     for p in points {
-        let v = dot(sub(*p, center), z);
+        let rel = sub(*p, center);
+        let v = dot(rel, z);
         v_lo = v_lo.min(v);
         v_hi = v_hi.max(v);
+        let radial = sub(rel, scale(z, v));
+        size = size.max(dot(radial, radial).sqrt());
+        magnitude = magnitude.max(p.iter().fold(0.0, |m, c| m.max(c.abs())));
+    }
+    // The semi-angle is in the model's plane-angle unit.
+    let slope = (semi_angle * cx.angle_to_radians()).tan();
+    if v_hi - v_lo <= 1e-9 * size + 64.0 * f64::EPSILON * magnitude {
+        // A cone face bounded at one level only closes at the apex.
+        let apex = -radius / slope;
+        if apex.is_finite() {
+            v_lo = v_lo.min(apex);
+            v_hi = v_hi.max(apex);
+        }
     }
     if v_hi - v_lo < 1e-12 {
         cx.warn("CYLINDRICAL/CONICAL face.to_nurbs: degenerate axial extent".to_owned());
         return None;
     }
-    // The semi-angle is in the model's plane-angle unit.
-    let slope = (semi_angle * cx.angle_to_radians()).tan();
     let r_lo = radius + v_lo * slope;
     let r_hi = radius + v_hi * slope;
     let w_u = circle_weights();
