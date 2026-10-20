@@ -53,6 +53,9 @@ pub(crate) struct Parser<R> {
     /// Scratch lists, one per nesting level in use, so each parsed list is
     /// allocated once at its exact length.
     lists: Vec<Vec<Attribute>>,
+    /// Whether the ANCHOR and REFERENCE sections are kept for the caller;
+    /// otherwise each is reported as discarded.
+    keep_ed3: bool,
 }
 
 impl<R: Read> Parser<R> {
@@ -63,7 +66,15 @@ impl<R: Read> Parser<R> {
             warnings: Vec::new(),
             depth: 0,
             lists: Vec::new(),
+            keep_ed3: true,
         }
+    }
+
+    /// This parser for a caller with no place for the ANCHOR and REFERENCE
+    /// sections: each is reported as discarded, as SIGNATURE always is.
+    pub(crate) fn discarding_ed3(mut self) -> Self {
+        self.keep_ed3 = false;
+        self
     }
 
     /// Parse the entire Part 21 file and return an [`Graph`].
@@ -194,6 +205,7 @@ impl<R: Read> Parser<R> {
     /// Parse an ANCHOR or REFERENCE section into `external_references` /
     /// `anchors`; SIGNATURE (and any line shape we don't recognise) falls back
     /// to a discard + `Ed3SectionDiscarded` warning so the parse never fails.
+    /// Without `keep_ed3`, every section is reported discarded.
     fn parse_or_skip_ed3_section(
         &mut self,
         external_references: &mut BTreeMap<u64, String>,
@@ -236,7 +248,7 @@ impl<R: Read> Parser<R> {
         }
         self.expect_token_kind(&TokenKind::EndSec, "ENDSEC")?;
         self.expect_semicolon()?;
-        if discarded || section == "SIGNATURE" {
+        if discarded || section == "SIGNATURE" || !self.keep_ed3 {
             self.warnings
                 .push(ParseWarning::Ed3SectionDiscarded { section, span });
         }
@@ -1121,24 +1133,27 @@ mod tests {
 
     // --- ParseWarning: lenient acceptance of non-spec / ed.3 inputs ---
 
+    /// A file with an ANCHOR and a REFERENCE section.
+    const ED3_SECTIONS: &str = "ISO-10303-21;\n\
+                                HEADER;\n\
+                                FILE_DESCRIPTION((''),'2;1');\n\
+                                FILE_NAME('n','t',(''),(''),'p','o','a');\n\
+                                FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\n\
+                                ENDSEC;\n\
+                                ANCHOR;\n\
+                                <ParentAnchor>=#123;\n\
+                                ENDSEC;\n\
+                                REFERENCE;\n\
+                                #123=<testAnchorAndData.stp#TestAnchor>;\n\
+                                ENDSEC;\n\
+                                DATA;\n\
+                                #1=CIRCULAR_AREA('testarea',#123,2.);\n\
+                                ENDSEC;\n\
+                                END-ISO-10303-21;\n";
+
     #[test]
     fn parse_records_ed3_anchor_and_reference_sections() {
-        let src = "ISO-10303-21;\n\
-                   HEADER;\n\
-                   FILE_DESCRIPTION((''),'2;1');\n\
-                   FILE_NAME('n','t',(''),(''),'p','o','a');\n\
-                   FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\n\
-                   ENDSEC;\n\
-                   ANCHOR;\n\
-                   <ParentAnchor>=#123;\n\
-                   ENDSEC;\n\
-                   REFERENCE;\n\
-                   #123=<testAnchorAndData.stp#TestAnchor>;\n\
-                   ENDSEC;\n\
-                   DATA;\n\
-                   #1=CIRCULAR_AREA('testarea',#123,2.);\n\
-                   ENDSEC;\n\
-                   END-ISO-10303-21;\n";
+        let src = ED3_SECTIONS;
         let graph = parse(src.as_bytes()).expect("ed.3 ANCHOR/REFERENCE must be tolerated");
         assert_eq!(graph.entities.len(), 1);
         // REFERENCE recorded: #123 -> external anchor string.
@@ -1155,6 +1170,21 @@ mod tests {
                 .iter()
                 .any(|w| matches!(w, ParseWarning::Ed3SectionDiscarded { .. }))
         );
+    }
+
+    /// `read` has no place for ANCHOR and REFERENCE, and says it drops them.
+    #[test]
+    fn read_reports_the_ed3_sections_it_discards() {
+        let (_model, report) = crate::read(ED3_SECTIONS.as_bytes()).expect("reads");
+        let sections: Vec<&str> = report
+            .parse_warnings
+            .iter()
+            .filter_map(|w| match w {
+                ParseWarning::Ed3SectionDiscarded { section, .. } => Some(section.as_str()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(sections, ["ANCHOR", "REFERENCE"]);
     }
 
     #[test]

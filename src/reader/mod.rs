@@ -578,7 +578,8 @@ fn read_at_most(input: impl Read, limit: usize) -> Result<(StepModel, Report), E
     /// not hanging — `debug_assert` flags non-convergence in dev).
     const MAX_ITERS: usize = 3;
 
-    let mut parser = Parser::new(input);
+    // The model has no place for the ANCHOR and REFERENCE sections.
+    let mut parser = Parser::new(input).discarding_ed3();
     let prelude = parser.read_prelude()?;
     let header = crate::header::from_raw(&prelude.header, prelude.schema);
     let mut scan = Scan::default();

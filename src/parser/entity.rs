@@ -79,36 +79,33 @@ impl RawEntity {
 
 /// The complete result of parsing a Part 21 file.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct Graph {
-    /// Identified application protocol (AP family, edition, stage). The raw
-    /// `FILE_SCHEMA` string list is preserved inside [`SchemaId`](crate::parser::SchemaId) itself.
-    pub schema: super::schema::SchemaId,
+    /// Identified application protocol (AP family, edition, stage), with the
+    /// `FILE_SCHEMA` names as written.
+    pub schema: crate::SchemaId,
     /// Raw HEADER entities (`FILE_DESCRIPTION`, `FILE_NAME`, `FILE_SCHEMA`).
     pub header: Vec<RawEntity>,
-    /// DATA section entities keyed by their `#N` identifier.
-    /// `BTreeMap` gives deterministic iteration order (useful for the writer stage).
+    /// DATA section entities keyed by their `#N` identifier, in id order.
     pub entities: BTreeMap<u64, RawEntity>,
-    /// P21 edition 3 `REFERENCE` section: `#N -> "<url#anchor>"`. Each entry
-    /// is an entity id resolved externally rather than in the DATA section.
-    /// `BTreeMap` keeps the deterministic id order the writer relies on.
+    /// P21 edition 3 `REFERENCE` section: `#N -> "<url#anchor>"`, in id
+    /// order. Each entry is an entity id resolved outside the file rather
+    /// than in its DATA section.
     pub external_references: BTreeMap<u64, String>,
-    /// P21 edition 3 `ANCHOR` section: `(<name>, #N)` pairs naming an entity
-    /// (in this corpus, always an external reference). Order-preserving.
+    /// P21 edition 3 `ANCHOR` section: `(<name>, #N)` pairs naming an
+    /// entity, in file order.
     pub anchors: Vec<(String, u64)>,
-    /// Non-fatal issues observed while parsing. Lenient recoveries
-    /// (missing semicolons, empty attribute slots) and P21 edition 3
-    /// sections that step-io does not yet model land here so callers can
-    /// surface them without aborting the parse.
+    /// What the parser repaired or skipped without stopping, such as a
+    /// missing semicolon, a blank attribute slot or a SIGNATURE section.
     pub warnings: Vec<ParseWarning>,
 }
 
 /// Non-fatal issues observed during parsing.
 ///
 /// The parser admits a handful of spec-bending inputs to survive
-/// real-world STEP files; each tolerance pushes a [`ParseWarning`] so
-/// downstream stages can surface what was repaired or discarded. The
-/// IR itself never carries the non-standard form — input is normalised
-/// to a spec-conformant shape before it reaches [`Graph`].
+/// real-world STEP files; each tolerance records a [`ParseWarning`], so a
+/// caller can show what was repaired or discarded. What the parser hands on
+/// is always in the standard form.
 #[derive(Debug, Clone, PartialEq)]
 #[non_exhaustive]
 pub enum ParseWarning {
@@ -121,9 +118,11 @@ pub enum ParseWarning {
     /// An attribute position is blank — `(a, , b)` or trailing `(a, )`.
     /// The slot is normalised to [`Attribute::Unset`] (the spec form `$`).
     EmptyAttribute { span: super::lexer::Span },
-    /// A P21 edition 3 section was encountered (`ANCHOR`, `REFERENCE`,
-    /// or `SIGNATURE`) and discarded. step-io does not yet model these
-    /// sections in the IR.
+    /// A P21 edition 3 section (`ANCHOR`, `REFERENCE` or `SIGNATURE`) was
+    /// discarded. [`read`](crate::read) discards all three, as the model has
+    /// no place for them; [`parse`](crate::parser::parse) keeps `ANCHOR`
+    /// and `REFERENCE` in its [`Graph`] and discards `SIGNATURE`, or a
+    /// section whose lines it cannot read.
     Ed3SectionDiscarded {
         section: String,
         span: super::lexer::Span,

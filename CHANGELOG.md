@@ -245,6 +245,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `InvalidBinary`; both used to be `UnexpectedCharacter`.
 - The `step_io::Result` alias is removed; write
   `Result<T, step_io::Error>`.
+- `parser::Graph` is `#[non_exhaustive]`.
 - `Report`'s counts are `entities_read`, `entities_added` and
   `entities_kept` (were `n_in`, `n_synth` and `validated`), and
   `DropReason::key` is `DropReason::detail`. `DropKind` and `DropReason`
@@ -333,6 +334,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Face::to_nurbs()` converts a cone face that closes at its apex, bounded by
   a circle and a `VERTEX_LOOP` at the apex or by the circle alone. It used to
   return `None` there for a degenerate extent.
+- `read()` reports a Part 21 edition 3 `ANCHOR` or `REFERENCE` section in
+  `Report::parse_warnings` (`ParseWarning::Ed3SectionDiscarded`), as it
+  already did `SIGNATURE`; the model has no place for them, and they used to
+  be dropped without a word. `parser::parse()` keeps them in its `Graph` as
+  before.
 - A face boundary that is a `POLY_LOOP`, a bare `LOOP` or a complex instance
   is reported in `Scene::warnings`; `Bound::edges()` used to come back empty
   without a word.
