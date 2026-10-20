@@ -1317,3 +1317,19 @@ fn trimmed_hyperbolas_and_flipped_parabolas_convert_exactly() {
         &[flipped_at(-1.0), middle, flipped_at(2.0)].concat()
     ));
 }
+
+#[test]
+fn a_surface_curve_leads_to_its_3d_curve() {
+    let defs = format!("{OPEN_CONIC_FRAME}#9=SURFACE_CURVE('',#5,(#101),.CURVE_3D.);\n");
+    let src = edge_between(&defs, parabola_at(-1.0), parabola_at(2.0), true);
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let curve = scene.all_edges().next().expect("the edge").curve();
+    assert!(matches!(curve.kind(), CurveKind::SurfaceCurve(_)));
+    let basis = curve.curve_3d().expect("a surface curve has a 3D curve");
+    let CurveKind::Parabola(p) = basis.kind() else {
+        panic!("the PARABOLA, got {:?}", basis.kind())
+    };
+    assert_eq!(p.focal_dist, 2.0);
+    assert!(basis.curve_3d().is_none(), "a parabola is not on a surface");
+}

@@ -49,6 +49,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `FeatureGeometry` and `Target` implement `Debug` as well, and
   `FeatureGeometry` is `Clone` and `Copy`.
 - `Version::product()` reaches the product a version belongs to.
+- `Curve::curve_3d()` reaches the 3D curve of a `SURFACE_CURVE`,
+  `SEAM_CURVE`, `BOUNDED_SURFACE_CURVE` or `INTERSECTION_CURVE` as a `Curve`,
+  where it used to take the raw model.
 - `SceneWarning` names the entity a warning concerns, the handle whose
   method ran into it, next to the message.
 

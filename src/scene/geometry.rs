@@ -1045,6 +1045,23 @@ impl<'m> Curve<'m> {
         }
     }
 
+    /// The 3D curve of a curve on a surface — `SURFACE_CURVE`, `SEAM_CURVE`,
+    /// `BOUNDED_SURFACE_CURVE` or `INTERSECTION_CURVE` (its `curve_3d`), the
+    /// geometry an edge on one follows. `None` for any other curve.
+    pub fn curve_3d(&self) -> Option<Curve<'m>> {
+        let model = self.cx.model;
+        let r = match self.which {
+            CurveImpl::SurfaceCurve(i) => &model.surface_curve_arena.get(i.0).curve_3d,
+            CurveImpl::SeamCurve(i) => &model.seam_curve_arena.get(i.0).curve_3d,
+            CurveImpl::BoundedSurfaceCurve(i) => {
+                &model.bounded_surface_curve_arena.get(i.0).curve_3d
+            }
+            CurveImpl::IntersectionCurve(i) => &model.intersection_curve_arena.get(i.0).curve_3d,
+            _ => return None,
+        };
+        Some(Curve::from_curve_ref(self.cx, r))
+    }
+
     pub fn kind(&self) -> CurveKind<'m> {
         let model = self.cx.model;
         match self.which {
