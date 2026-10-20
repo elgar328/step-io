@@ -16,6 +16,7 @@ use std::collections::HashSet;
 use crate::generated::model as m;
 use crate::scene::geometry::{Solid, SurfaceModel};
 use crate::scene::pmi;
+use crate::scene::sets::GeometricSet;
 use crate::scene::{Ctx, Scene};
 
 impl Scene<'_> {
@@ -477,6 +478,18 @@ impl<'m> ProductDef<'m> {
         self.shape_items()
             .into_iter()
             .filter_map(move |it| item_surface_model(cx, it))
+            .filter(move |s| seen.insert(s.key()))
+    }
+
+    /// The geometric sets (`GEOMETRIC_SET`, `GEOMETRIC_CURVE_SET`) of this
+    /// part — its wireframes and sketches — found as [`solids`](Self::solids)
+    /// are.
+    pub fn geometric_sets(&self) -> impl Iterator<Item = GeometricSet<'m>> + 'm {
+        let cx = self.cx;
+        let mut seen: HashSet<m::EntityKey> = HashSet::new();
+        self.shape_items()
+            .into_iter()
+            .filter_map(move |it| GeometricSet::from_item(cx, it))
             .filter(move |s| seen.insert(s.key()))
     }
 
@@ -1310,6 +1323,17 @@ impl<'m> MappedInstance<'m> {
             .into_iter()
             .flatten()
             .filter_map(move |it| item_surface_model(cx, it))
+    }
+
+    /// The geometric sets of the source representation.
+    pub fn geometric_sets(&self) -> impl Iterator<Item = GeometricSet<'m>> + 'm {
+        let this = self.about();
+        let cx = this.cx;
+        this.map()
+            .and_then(|map| rep_items(cx, &map.mapped_representation))
+            .into_iter()
+            .flatten()
+            .filter_map(move |it| GeometricSet::from_item(cx, it))
     }
 
     /// Nested mapped items inside the source representation — one level of an

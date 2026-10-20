@@ -1124,6 +1124,18 @@ macro_rules! curve_impl {
                 Curve { cx, which }
             }
 
+            /// A curve element of a `GEOMETRIC_SET`; `None` for any other element.
+            pub(crate) fn from_set_select(
+                cx: Ctx<'m>,
+                r: &m::GeometricSetSelectRef,
+            ) -> Option<Self> {
+                let which = match r {
+                    $( m::GeometricSetSelectRef::$V(i) => CurveImpl::$V(*i), )+
+                    _ => return None,
+                };
+                Some(Curve { cx, which })
+            }
+
             /// A curve reached as a `GEOMETRIC_ITEM_SPECIFIC_USAGE` identified item
             /// (used by `pmi` feature geometry); `None` for a non-curve item.
             pub(crate) fn from_model_item(

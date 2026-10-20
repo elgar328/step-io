@@ -489,3 +489,12 @@ pub(crate) fn curve_font_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<&str> {
     let cs = curve_style_of(cx, target)?;
     curve_font_name(cx, cs.curve_font.as_ref()?)
 }
+
+/// The marker colour of the point style on `target`, if any.
+pub(crate) fn point_colour_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<Rgb> {
+    let style = each_presentation_style(cx, target, |cx, s| match s {
+        m::PresentationStyleSelectRef::PointStyle(i) => Some(cx.model.point_style_arena.get(i.0)),
+        _ => None,
+    })?;
+    colour_to_rgb(cx, style.marker_colour.as_ref()?)
+}

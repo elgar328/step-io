@@ -60,6 +60,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Shell` covers open shells as well (`is_closed()`), reaches back to its
   `solid()` or `surface_model()`, and has colour, transparency, layer and
   visibility; `Face::shell()` gives the shell listing a face.
+- `GeometricSet` is a `GEOMETRIC_SET` or `GEOMETRIC_CURVE_SET` — a wireframe,
+  a sketch, a set of points kept outside any b-rep. Its `elements()` are
+  `SetElement`s: a `Curve`, a `Point`, or anything else by key. It has colour,
+  layer and visibility. `Scene::all_geometric_sets()` lists them, and
+  `ProductDef::geometric_sets()` and `MappedInstance::geometric_sets()` reach
+  them from a part.
 - `Bound::vertex()` gives the vertex of a `VERTEX_LOOP` boundary, such as a
   cone's apex, which has no edges.
 - `Curve::curve_3d()` reaches the 3D curve of a `SURFACE_CURVE`,

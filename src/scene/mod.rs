@@ -14,11 +14,12 @@
 //! (`solid.faces()`, `face.surface()`, `occurrence.definition()`, …).
 //! Coverage spans:
 //!
-//! - **b-rep geometry** — `Solid → Shell → Face → Surface` and `Face → Bound →
-//!   Edge → Curve / Vertex → Point`; a shell and an edge come with the way
-//!   their solid or loop uses them ([`Orientation`](crate::Orientation)). Surfaces and curves report their analytic kind
-//!   ([`SurfaceKind`], [`CurveKind`]); a shape outside the handled set is
-//!   `Other`, carrying its STEP keyword.
+//! - **b-rep geometry** — `Solid` or [`SurfaceModel`] `→ Shell → Face →
+//!   Surface` and `Face → Bound → Edge → Curve / Vertex → Point`; a shell and
+//!   an edge come with the way their body or loop uses them
+//!   ([`Orientation`](crate::Orientation)). Surfaces and curves report their
+//!   analytic kind ([`SurfaceKind`], [`CurveKind`]); a shape outside the
+//!   handled set is `Other`, carrying its STEP keyword.
 //! - **NURBS views** — `to_nurbs()` on a [`Curve`], [`Edge`], [`Surface`] or
 //!   [`Face`] derives a [`NurbsCurve`] / [`NurbsSurface`] on demand, from the
 //!   entity as stored; it is never written back.
@@ -26,7 +27,11 @@
 //!   definitions and PLM metadata (contributors, approvals, documents); a
 //!   [`ProductDef`] descends the assembly through its
 //!   [`occurrences`](ProductDef::occurrences) and reaches its geometry through
-//!   [`solids`](ProductDef::solids).
+//!   [`solids`](ProductDef::solids),
+//!   [`surface_models`](ProductDef::surface_models) and
+//!   [`geometric_sets`](ProductDef::geometric_sets).
+//! - **geometric sets** — a [`GeometricSet`]'s curves and points, kept outside
+//!   any b-rep as a wireframe or sketch.
 //! - **display meshes** — a [`Mesh`] (points, triangles, normals) and the
 //!   [`MeshGroup`] holding it, linked back to the b-rep where the file says.
 //!   They are meshes for display, not for analysis.
@@ -132,6 +137,7 @@ pub(crate) mod nurbs;
 pub(crate) mod pmi;
 pub(crate) mod presentation;
 pub(crate) mod product;
+pub(crate) mod sets;
 pub(crate) mod units;
 
 use std::collections::HashSet;
@@ -156,6 +162,7 @@ pub use product::{
     Approval, ApprovalDate, Approver, Contributor, Document, MappedInstance, Occurrence, Person,
     Placement, Product, ProductDef, Scope, SecurityClassification, Target, Transform, Version,
 };
+pub use sets::{GeometricSet, SetElement};
 pub use units::{Unit, Units};
 
 // A handle prints as its type and entity key: the context it carries holds the
@@ -184,6 +191,7 @@ debug_by_key!(
     Edge,
     Face,
     Feature,
+    GeometricSet,
     MappedInstance,
     Mesh,
     MeshGroup,
