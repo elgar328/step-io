@@ -915,6 +915,7 @@ pub enum ApprovalItemRefView<'m> {
     OrientedClosedShell(&'m OrientedClosedShell),
     OrientedEdge(&'m OrientedEdge),
     OverRidingStyledItem(&'m OverRidingStyledItem),
+    Parabola(&'m Parabola),
     Path(&'m Path),
     Pcurve(&'m Pcurve),
     PersonAndOrganization(&'m PersonAndOrganization),
@@ -1596,6 +1597,9 @@ impl ApprovalItemRef {
             ApprovalItemRef::OverRidingStyledItem(i) => ApprovalItemRefView::OverRidingStyledItem(
                 model.over_riding_styled_item_arena.get(i.0),
             ),
+            ApprovalItemRef::Parabola(i) => {
+                ApprovalItemRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             ApprovalItemRef::Path(i) => ApprovalItemRefView::Path(model.path_arena.get(i.0)),
             ApprovalItemRef::Pcurve(i) => ApprovalItemRefView::Pcurve(model.pcurve_arena.get(i.0)),
             ApprovalItemRef::PersonAndOrganization(i) => {
@@ -2185,6 +2189,7 @@ impl ApprovalItemRef {
             ApprovalItemRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
             ApprovalItemRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
             ApprovalItemRef::OverRidingStyledItem(i) => EntityKey::OverRidingStyledItem(*i),
+            ApprovalItemRef::Parabola(i) => EntityKey::Parabola(*i),
             ApprovalItemRef::Path(i) => EntityKey::Path(*i),
             ApprovalItemRef::Pcurve(i) => EntityKey::Pcurve(*i),
             ApprovalItemRef::PersonAndOrganization(i) => EntityKey::PersonAndOrganization(*i),
@@ -3980,6 +3985,7 @@ pub enum CurveRefView<'m> {
     Hyperbola(&'m Hyperbola),
     IntersectionCurve(&'m IntersectionCurve),
     Line(&'m Line),
+    Parabola(&'m Parabola),
     Pcurve(&'m Pcurve),
     Polyline(&'m Polyline),
     QuasiUniformCurve(&'m QuasiUniformCurve),
@@ -4023,6 +4029,7 @@ impl CurveRef {
                 CurveRefView::IntersectionCurve(model.intersection_curve_arena.get(i.0))
             }
             CurveRef::Line(i) => CurveRefView::Line(model.line_arena.get(i.0)),
+            CurveRef::Parabola(i) => CurveRefView::Parabola(model.parabola_arena.get(i.0)),
             CurveRef::Pcurve(i) => CurveRefView::Pcurve(model.pcurve_arena.get(i.0)),
             CurveRef::Polyline(i) => CurveRefView::Polyline(model.polyline_arena.get(i.0)),
             CurveRef::QuasiUniformCurve(i) => {
@@ -4060,6 +4067,7 @@ impl CurveRef {
             CurveRef::Hyperbola(i) => EntityKey::Hyperbola(*i),
             CurveRef::IntersectionCurve(i) => EntityKey::IntersectionCurve(*i),
             CurveRef::Line(i) => EntityKey::Line(*i),
+            CurveRef::Parabola(i) => EntityKey::Parabola(*i),
             CurveRef::Pcurve(i) => EntityKey::Pcurve(*i),
             CurveRef::Polyline(i) => EntityKey::Polyline(*i),
             CurveRef::QuasiUniformCurve(i) => EntityKey::QuasiUniformCurve(*i),
@@ -4153,6 +4161,7 @@ pub enum CurveOrAnnotationCurveOccurrenceRefView<'m> {
     IntersectionCurve(&'m IntersectionCurve),
     LeaderCurve(&'m LeaderCurve),
     Line(&'m Line),
+    Parabola(&'m Parabola),
     Pcurve(&'m Pcurve),
     Polyline(&'m Polyline),
     QuasiUniformCurve(&'m QuasiUniformCurve),
@@ -4234,6 +4243,9 @@ impl CurveOrAnnotationCurveOccurrenceRef {
             CurveOrAnnotationCurveOccurrenceRef::Line(i) => {
                 CurveOrAnnotationCurveOccurrenceRefView::Line(model.line_arena.get(i.0))
             }
+            CurveOrAnnotationCurveOccurrenceRef::Parabola(i) => {
+                CurveOrAnnotationCurveOccurrenceRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             CurveOrAnnotationCurveOccurrenceRef::Pcurve(i) => {
                 CurveOrAnnotationCurveOccurrenceRefView::Pcurve(model.pcurve_arena.get(i.0))
             }
@@ -4299,6 +4311,7 @@ impl CurveOrAnnotationCurveOccurrenceRef {
             }
             CurveOrAnnotationCurveOccurrenceRef::LeaderCurve(i) => EntityKey::LeaderCurve(*i),
             CurveOrAnnotationCurveOccurrenceRef::Line(i) => EntityKey::Line(*i),
+            CurveOrAnnotationCurveOccurrenceRef::Parabola(i) => EntityKey::Parabola(*i),
             CurveOrAnnotationCurveOccurrenceRef::Pcurve(i) => EntityKey::Pcurve(*i),
             CurveOrAnnotationCurveOccurrenceRef::Polyline(i) => EntityKey::Polyline(*i),
             CurveOrAnnotationCurveOccurrenceRef::QuasiUniformCurve(i) => {
@@ -4333,6 +4346,7 @@ pub enum CurveOrCurveSetRefView<'m> {
     Hyperbola(&'m Hyperbola),
     IntersectionCurve(&'m IntersectionCurve),
     Line(&'m Line),
+    Parabola(&'m Parabola),
     Pcurve(&'m Pcurve),
     Polyline(&'m Polyline),
     QuasiUniformCurve(&'m QuasiUniformCurve),
@@ -4393,6 +4407,9 @@ impl CurveOrCurveSetRef {
                 CurveOrCurveSetRefView::IntersectionCurve(model.intersection_curve_arena.get(i.0))
             }
             CurveOrCurveSetRef::Line(i) => CurveOrCurveSetRefView::Line(model.line_arena.get(i.0)),
+            CurveOrCurveSetRef::Parabola(i) => {
+                CurveOrCurveSetRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             CurveOrCurveSetRef::Pcurve(i) => {
                 CurveOrCurveSetRefView::Pcurve(model.pcurve_arena.get(i.0))
             }
@@ -4441,6 +4458,7 @@ impl CurveOrCurveSetRef {
             CurveOrCurveSetRef::Hyperbola(i) => EntityKey::Hyperbola(*i),
             CurveOrCurveSetRef::IntersectionCurve(i) => EntityKey::IntersectionCurve(*i),
             CurveOrCurveSetRef::Line(i) => EntityKey::Line(*i),
+            CurveOrCurveSetRef::Parabola(i) => EntityKey::Parabola(*i),
             CurveOrCurveSetRef::Pcurve(i) => EntityKey::Pcurve(*i),
             CurveOrCurveSetRef::Polyline(i) => EntityKey::Polyline(*i),
             CurveOrCurveSetRef::QuasiUniformCurve(i) => EntityKey::QuasiUniformCurve(*i),
@@ -6391,6 +6409,7 @@ pub enum DocumentReferenceItemRefView<'m> {
     OrientedClosedShell(&'m OrientedClosedShell),
     OrientedEdge(&'m OrientedEdge),
     OverRidingStyledItem(&'m OverRidingStyledItem),
+    Parabola(&'m Parabola),
     Path(&'m Path),
     Pcurve(&'m Pcurve),
     Person(&'m Person),
@@ -6669,6 +6688,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::OrientedClosedShell(i) => DocumentReferenceItemRefView::OrientedClosedShell(model.oriented_closed_shell_arena.get(i.0)),
             DocumentReferenceItemRef::OrientedEdge(i) => DocumentReferenceItemRefView::OrientedEdge(model.oriented_edge_arena.get(i.0)),
             DocumentReferenceItemRef::OverRidingStyledItem(i) => DocumentReferenceItemRefView::OverRidingStyledItem(model.over_riding_styled_item_arena.get(i.0)),
+            DocumentReferenceItemRef::Parabola(i) => DocumentReferenceItemRefView::Parabola(model.parabola_arena.get(i.0)),
             DocumentReferenceItemRef::Path(i) => DocumentReferenceItemRefView::Path(model.path_arena.get(i.0)),
             DocumentReferenceItemRef::Pcurve(i) => DocumentReferenceItemRefView::Pcurve(model.pcurve_arena.get(i.0)),
             DocumentReferenceItemRef::Person(i) => DocumentReferenceItemRefView::Person(model.person_arena.get(i.0)),
@@ -7117,6 +7137,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::OverRidingStyledItem(i) => {
                 EntityKey::OverRidingStyledItem(*i)
             }
+            DocumentReferenceItemRef::Parabola(i) => EntityKey::Parabola(*i),
             DocumentReferenceItemRef::Path(i) => EntityKey::Path(*i),
             DocumentReferenceItemRef::Pcurve(i) => EntityKey::Pcurve(*i),
             DocumentReferenceItemRef::Person(i) => EntityKey::Person(*i),
@@ -8253,6 +8274,7 @@ pub enum ExternalIdentificationItemRefView<'m> {
     OrientedClosedShell(&'m OrientedClosedShell),
     OrientedEdge(&'m OrientedEdge),
     OverRidingStyledItem(&'m OverRidingStyledItem),
+    Parabola(&'m Parabola),
     Path(&'m Path),
     Pcurve(&'m Pcurve),
     Person(&'m Person),
@@ -8492,6 +8514,7 @@ impl ExternalIdentificationItemRef {
             ExternalIdentificationItemRef::OrientedClosedShell(i) => ExternalIdentificationItemRefView::OrientedClosedShell(model.oriented_closed_shell_arena.get(i.0)),
             ExternalIdentificationItemRef::OrientedEdge(i) => ExternalIdentificationItemRefView::OrientedEdge(model.oriented_edge_arena.get(i.0)),
             ExternalIdentificationItemRef::OverRidingStyledItem(i) => ExternalIdentificationItemRefView::OverRidingStyledItem(model.over_riding_styled_item_arena.get(i.0)),
+            ExternalIdentificationItemRef::Parabola(i) => ExternalIdentificationItemRefView::Parabola(model.parabola_arena.get(i.0)),
             ExternalIdentificationItemRef::Path(i) => ExternalIdentificationItemRefView::Path(model.path_arena.get(i.0)),
             ExternalIdentificationItemRef::Pcurve(i) => ExternalIdentificationItemRefView::Pcurve(model.pcurve_arena.get(i.0)),
             ExternalIdentificationItemRef::Person(i) => ExternalIdentificationItemRefView::Person(model.person_arena.get(i.0)),
@@ -8729,6 +8752,7 @@ impl ExternalIdentificationItemRef {
             ExternalIdentificationItemRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
             ExternalIdentificationItemRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
             ExternalIdentificationItemRef::OverRidingStyledItem(i) => EntityKey::OverRidingStyledItem(*i),
+            ExternalIdentificationItemRef::Parabola(i) => EntityKey::Parabola(*i),
             ExternalIdentificationItemRef::Path(i) => EntityKey::Path(*i),
             ExternalIdentificationItemRef::Pcurve(i) => EntityKey::Pcurve(*i),
             ExternalIdentificationItemRef::Person(i) => EntityKey::Person(*i),
@@ -9634,6 +9658,7 @@ pub enum GeometricModelItemRefView<'m> {
     OneDirectionRepeatFactor(&'m OneDirectionRepeatFactor),
     OpenShell(&'m OpenShell),
     OrientedClosedShell(&'m OrientedClosedShell),
+    Parabola(&'m Parabola),
     Pcurve(&'m Pcurve),
     Placement(&'m Placement),
     PlanarBox(&'m PlanarBox),
@@ -9956,6 +9981,9 @@ impl GeometricModelItemRef {
                     model.oriented_closed_shell_arena.get(i.0),
                 )
             }
+            GeometricModelItemRef::Parabola(i) => {
+                GeometricModelItemRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             GeometricModelItemRef::Pcurve(i) => {
                 GeometricModelItemRefView::Pcurve(model.pcurve_arena.get(i.0))
             }
@@ -10212,6 +10240,7 @@ impl GeometricModelItemRef {
             }
             GeometricModelItemRef::OpenShell(i) => EntityKey::OpenShell(*i),
             GeometricModelItemRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
+            GeometricModelItemRef::Parabola(i) => EntityKey::Parabola(*i),
             GeometricModelItemRef::Pcurve(i) => EntityKey::Pcurve(*i),
             GeometricModelItemRef::Placement(i) => EntityKey::Placement(*i),
             GeometricModelItemRef::PlanarBox(i) => EntityKey::PlanarBox(*i),
@@ -10302,6 +10331,7 @@ pub enum GeometricSetSelectRefView<'m> {
     IntersectionCurve(&'m IntersectionCurve),
     Line(&'m Line),
     OffsetSurface(&'m OffsetSurface),
+    Parabola(&'m Parabola),
     Pcurve(&'m Pcurve),
     Placement(&'m Placement),
     PlanarBox(&'m PlanarBox),
@@ -10434,6 +10464,9 @@ impl GeometricSetSelectRef {
             GeometricSetSelectRef::OffsetSurface(i) => {
                 GeometricSetSelectRefView::OffsetSurface(model.offset_surface_arena.get(i.0))
             }
+            GeometricSetSelectRef::Parabola(i) => {
+                GeometricSetSelectRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             GeometricSetSelectRef::Pcurve(i) => {
                 GeometricSetSelectRefView::Pcurve(model.pcurve_arena.get(i.0))
             }
@@ -10550,6 +10583,7 @@ impl GeometricSetSelectRef {
             GeometricSetSelectRef::IntersectionCurve(i) => EntityKey::IntersectionCurve(*i),
             GeometricSetSelectRef::Line(i) => EntityKey::Line(*i),
             GeometricSetSelectRef::OffsetSurface(i) => EntityKey::OffsetSurface(*i),
+            GeometricSetSelectRef::Parabola(i) => EntityKey::Parabola(*i),
             GeometricSetSelectRef::Pcurve(i) => EntityKey::Pcurve(*i),
             GeometricSetSelectRef::Placement(i) => EntityKey::Placement(*i),
             GeometricSetSelectRef::PlanarBox(i) => EntityKey::PlanarBox(*i),
@@ -11249,6 +11283,7 @@ pub enum GroupableItemRefView<'m> {
     OrientedClosedShell(&'m OrientedClosedShell),
     OrientedEdge(&'m OrientedEdge),
     OverRidingStyledItem(&'m OverRidingStyledItem),
+    Parabola(&'m Parabola),
     ParametricRepresentationContext(&'m ParametricRepresentationContext),
     Path(&'m Path),
     Pcurve(&'m Pcurve),
@@ -12091,6 +12126,9 @@ impl GroupableItemRef {
                     model.over_riding_styled_item_arena.get(i.0),
                 )
             }
+            GroupableItemRef::Parabola(i) => {
+                GroupableItemRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             GroupableItemRef::ParametricRepresentationContext(i) => {
                 GroupableItemRefView::ParametricRepresentationContext(
                     model.parametric_representation_context_arena.get(i.0),
@@ -12823,6 +12861,7 @@ impl GroupableItemRef {
             GroupableItemRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
             GroupableItemRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
             GroupableItemRef::OverRidingStyledItem(i) => EntityKey::OverRidingStyledItem(*i),
+            GroupableItemRef::Parabola(i) => EntityKey::Parabola(*i),
             GroupableItemRef::ParametricRepresentationContext(i) => {
                 EntityKey::ParametricRepresentationContext(*i)
             }
@@ -14546,6 +14585,7 @@ pub enum LayeredItemRefView<'m> {
     OrientedClosedShell(&'m OrientedClosedShell),
     OrientedEdge(&'m OrientedEdge),
     OverRidingStyledItem(&'m OverRidingStyledItem),
+    Parabola(&'m Parabola),
     Path(&'m Path),
     Pcurve(&'m Pcurve),
     Placement(&'m Placement),
@@ -14942,6 +14982,9 @@ impl LayeredItemRef {
             LayeredItemRef::OverRidingStyledItem(i) => LayeredItemRefView::OverRidingStyledItem(
                 model.over_riding_styled_item_arena.get(i.0),
             ),
+            LayeredItemRef::Parabola(i) => {
+                LayeredItemRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             LayeredItemRef::Path(i) => LayeredItemRefView::Path(model.path_arena.get(i.0)),
             LayeredItemRef::Pcurve(i) => LayeredItemRefView::Pcurve(model.pcurve_arena.get(i.0)),
             LayeredItemRef::Placement(i) => {
@@ -15268,6 +15311,7 @@ impl LayeredItemRef {
             LayeredItemRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
             LayeredItemRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
             LayeredItemRef::OverRidingStyledItem(i) => EntityKey::OverRidingStyledItem(*i),
+            LayeredItemRef::Parabola(i) => EntityKey::Parabola(*i),
             LayeredItemRef::Path(i) => EntityKey::Path(*i),
             LayeredItemRef::Pcurve(i) => EntityKey::Pcurve(*i),
             LayeredItemRef::Placement(i) => EntityKey::Placement(*i),
@@ -17872,6 +17916,7 @@ pub enum RepresentationItemRefView<'m> {
     OrientedClosedShell(&'m OrientedClosedShell),
     OrientedEdge(&'m OrientedEdge),
     OverRidingStyledItem(&'m OverRidingStyledItem),
+    Parabola(&'m Parabola),
     Path(&'m Path),
     Pcurve(&'m Pcurve),
     Placement(&'m Placement),
@@ -18315,6 +18360,9 @@ impl RepresentationItemRef {
                     model.over_riding_styled_item_arena.get(i.0),
                 )
             }
+            RepresentationItemRef::Parabola(i) => {
+                RepresentationItemRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             RepresentationItemRef::Path(i) => {
                 RepresentationItemRefView::Path(model.path_arena.get(i.0))
             }
@@ -18672,6 +18720,7 @@ impl RepresentationItemRef {
             RepresentationItemRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
             RepresentationItemRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
             RepresentationItemRef::OverRidingStyledItem(i) => EntityKey::OverRidingStyledItem(*i),
+            RepresentationItemRef::Parabola(i) => EntityKey::Parabola(*i),
             RepresentationItemRef::Path(i) => EntityKey::Path(*i),
             RepresentationItemRef::Pcurve(i) => EntityKey::Pcurve(*i),
             RepresentationItemRef::Placement(i) => EntityKey::Placement(*i),
@@ -20072,6 +20121,7 @@ pub enum StyleContextSelectRefView<'m> {
     OrientedClosedShell(&'m OrientedClosedShell),
     OrientedEdge(&'m OrientedEdge),
     OverRidingStyledItem(&'m OverRidingStyledItem),
+    Parabola(&'m Parabola),
     Path(&'m Path),
     Pcurve(&'m Pcurve),
     Placement(&'m Placement),
@@ -20629,6 +20679,9 @@ impl StyleContextSelectRef {
                     model.over_riding_styled_item_arena.get(i.0),
                 )
             }
+            StyleContextSelectRef::Parabola(i) => {
+                StyleContextSelectRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             StyleContextSelectRef::Path(i) => {
                 StyleContextSelectRefView::Path(model.path_arena.get(i.0))
             }
@@ -21102,6 +21155,7 @@ impl StyleContextSelectRef {
             StyleContextSelectRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
             StyleContextSelectRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
             StyleContextSelectRef::OverRidingStyledItem(i) => EntityKey::OverRidingStyledItem(*i),
+            StyleContextSelectRef::Parabola(i) => EntityKey::Parabola(*i),
             StyleContextSelectRef::Path(i) => EntityKey::Path(*i),
             StyleContextSelectRef::Pcurve(i) => EntityKey::Pcurve(*i),
             StyleContextSelectRef::Placement(i) => EntityKey::Placement(*i),
@@ -21460,6 +21514,7 @@ pub enum StyledItemTargetRefView<'m> {
     OpenShell(&'m OpenShell),
     OrientedClosedShell(&'m OrientedClosedShell),
     OrientedEdge(&'m OrientedEdge),
+    Parabola(&'m Parabola),
     Path(&'m Path),
     Pcurve(&'m Pcurve),
     Placement(&'m Placement),
@@ -21891,6 +21946,9 @@ impl StyledItemTargetRef {
             StyledItemTargetRef::OrientedEdge(i) => {
                 StyledItemTargetRefView::OrientedEdge(model.oriented_edge_arena.get(i.0))
             }
+            StyledItemTargetRef::Parabola(i) => {
+                StyledItemTargetRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             StyledItemTargetRef::Path(i) => {
                 StyledItemTargetRefView::Path(model.path_arena.get(i.0))
             }
@@ -22252,6 +22310,7 @@ impl StyledItemTargetRef {
             StyledItemTargetRef::OpenShell(i) => EntityKey::OpenShell(*i),
             StyledItemTargetRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
             StyledItemTargetRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
+            StyledItemTargetRef::Parabola(i) => EntityKey::Parabola(*i),
             StyledItemTargetRef::Path(i) => EntityKey::Path(*i),
             StyledItemTargetRef::Pcurve(i) => EntityKey::Pcurve(*i),
             StyledItemTargetRef::Placement(i) => EntityKey::Placement(*i),

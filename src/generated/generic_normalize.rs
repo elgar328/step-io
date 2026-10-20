@@ -7567,6 +7567,29 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 r3: 0,
             },
         ],
+        "PARABOLA" => &[
+            Slot {
+                k: Sk::Str,
+                req: true,
+                der: false,
+                swire: None,
+                r3: 0,
+            },
+            Slot {
+                k: Sk::Ref,
+                req: true,
+                der: false,
+                swire: None,
+                r3: 0,
+            },
+            Slot {
+                k: Sk::Real,
+                req: true,
+                der: false,
+                swire: None,
+                r3: 0,
+            },
+        ],
         "PARALLELISM_TOLERANCE" => &[
             Slot {
                 k: Sk::Str,

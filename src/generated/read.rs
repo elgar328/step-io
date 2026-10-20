@@ -451,6 +451,7 @@ pub const SIMPLE_NAMES: &[&str] = &[
     "ORIENTED_CLOSED_SHELL",
     "ORIENTED_EDGE",
     "OVER_RIDING_STYLED_ITEM",
+    "PARABOLA",
     "PARALLELISM_TOLERANCE",
     "PARAMETRIC_REPRESENTATION_CONTEXT",
     "PATH",
@@ -962,198 +963,199 @@ const SIMPLE_INDEX: &[(&str, u16)] = &[
     ("ORIENTED_CLOSED_SHELL", 305),
     ("ORIENTED_EDGE", 306),
     ("OVER_RIDING_STYLED_ITEM", 307),
-    ("PARALLELISM_TOLERANCE", 308),
-    ("PARAMETRIC_REPRESENTATION_CONTEXT", 309),
-    ("PATH", 310),
-    ("PCURVE", 311),
-    ("PERPENDICULARITY_TOLERANCE", 312),
-    ("PERSON", 313),
-    ("PERSONAL_ADDRESS", 318),
-    ("PERSON_AND_ORGANIZATION", 314),
-    ("PERSON_AND_ORGANIZATION_ADDRESS", 315),
-    ("PERSON_AND_ORGANIZATION_ASSIGNMENT", 316),
-    ("PERSON_AND_ORGANIZATION_ROLE", 317),
-    ("PLACED_DATUM_TARGET_FEATURE", 319),
-    ("PLACEMENT", 320),
-    ("PLANAR_BOX", 321),
-    ("PLANAR_EXTENT", 322),
-    ("PLANE", 323),
-    ("PLANE_ANGLE_MEASURE_WITH_UNIT", 324),
-    ("PLANE_ANGLE_UNIT", 325),
-    ("PLUS_MINUS_TOLERANCE", 326),
-    ("POINT", 327),
-    ("POINT_STYLE", 328),
-    ("POLYLINE", 330),
-    ("POLY_LOOP", 329),
-    ("POSITION_TOLERANCE", 331),
-    ("PRECISION_QUALIFIER", 344),
-    ("PRESENTATION_AREA", 345),
-    ("PRESENTATION_LAYER_ASSIGNMENT", 346),
-    ("PRESENTATION_REPRESENTATION", 347),
-    ("PRESENTATION_SET", 348),
-    ("PRESENTATION_SIZE", 349),
-    ("PRESENTATION_STYLE_ASSIGNMENT", 350),
-    ("PRESENTATION_STYLE_BY_CONTEXT", 351),
-    ("PRESENTATION_VIEW", 352),
-    ("PRESENTED_ITEM", 353),
-    ("PRESENTED_ITEM_REPRESENTATION", 354),
-    ("PRE_DEFINED_CHARACTER_GLYPH", 332),
-    ("PRE_DEFINED_COLOUR", 333),
-    ("PRE_DEFINED_CURVE_FONT", 334),
-    ("PRE_DEFINED_ITEM", 335),
-    ("PRE_DEFINED_MARKER", 336),
-    ("PRE_DEFINED_POINT_MARKER_SYMBOL", 337),
-    ("PRE_DEFINED_PRESENTATION_STYLE", 338),
-    ("PRE_DEFINED_SURFACE_SIDE_STYLE", 339),
-    ("PRE_DEFINED_SYMBOL", 340),
-    ("PRE_DEFINED_TERMINATOR_SYMBOL", 341),
-    ("PRE_DEFINED_TEXT_FONT", 342),
-    ("PRE_DEFINED_TILE", 343),
-    ("PRODUCT", 355),
-    ("PRODUCT_CATEGORY", 356),
-    ("PRODUCT_CATEGORY_RELATIONSHIP", 357),
-    ("PRODUCT_CONCEPT", 358),
-    ("PRODUCT_CONCEPT_CONTEXT", 359),
-    ("PRODUCT_CONCEPT_FEATURE", 360),
-    ("PRODUCT_CONCEPT_FEATURE_CATEGORY", 361),
-    ("PRODUCT_CONTEXT", 362),
-    ("PRODUCT_DEFINITION", 363),
-    ("PRODUCT_DEFINITION_CONTEXT", 364),
-    ("PRODUCT_DEFINITION_CONTEXT_ASSOCIATION", 365),
-    ("PRODUCT_DEFINITION_CONTEXT_ROLE", 366),
-    ("PRODUCT_DEFINITION_EFFECTIVITY", 367),
-    ("PRODUCT_DEFINITION_FORMATION", 368),
-    ("PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE", 369),
-    ("PRODUCT_DEFINITION_OCCURRENCE", 370),
-    ("PRODUCT_DEFINITION_RELATIONSHIP", 371),
-    ("PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP", 372),
-    ("PRODUCT_DEFINITION_SHAPE", 373),
-    ("PRODUCT_DEFINITION_SUBSTITUTE", 374),
-    ("PRODUCT_DEFINITION_USAGE", 375),
-    ("PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS", 376),
-    ("PRODUCT_RELATED_PRODUCT_CATEGORY", 377),
-    ("PROJECTED_ZONE_DEFINITION", 378),
-    ("PROPERTY_DEFINITION", 379),
-    ("PROPERTY_DEFINITION_RELATIONSHIP", 380),
-    ("PROPERTY_DEFINITION_REPRESENTATION", 381),
-    ("QUALIFIED_REPRESENTATION_ITEM", 382),
-    ("QUASI_UNIFORM_CURVE", 383),
-    ("QUASI_UNIFORM_SURFACE", 384),
-    ("RATIONAL_B_SPLINE_CURVE", 387),
-    ("RATIONAL_B_SPLINE_SURFACE", 388),
-    ("RATIO_MEASURE_WITH_UNIT", 385),
-    ("RATIO_UNIT", 386),
-    ("REAL_LITERAL", 389),
-    ("REAL_REPRESENTATION_ITEM", 390),
-    ("REPOSITIONED_TESSELLATED_ITEM", 391),
-    ("REPRESENTATION", 392),
-    ("REPRESENTATION_CONTEXT", 393),
-    ("REPRESENTATION_CONTEXT_REFERENCE", 394),
-    ("REPRESENTATION_ITEM", 395),
-    ("REPRESENTATION_MAP", 396),
-    ("REPRESENTATION_REFERENCE", 397),
-    ("REPRESENTATION_RELATIONSHIP", 398),
-    ("REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION", 399),
-    ("RESOURCE_PROPERTY", 400),
-    ("RESOURCE_REQUIREMENT_TYPE", 401),
-    ("ROLE_ASSOCIATION", 402),
-    ("ROUNDNESS_TOLERANCE", 403),
-    ("SEAM_CURVE", 404),
-    ("SECURITY_CLASSIFICATION", 405),
-    ("SECURITY_CLASSIFICATION_ASSIGNMENT", 406),
-    ("SECURITY_CLASSIFICATION_LEVEL", 407),
-    ("SHAPE_ASPECT", 408),
-    ("SHAPE_ASPECT_ASSOCIATIVITY", 409),
-    ("SHAPE_ASPECT_DERIVING_RELATIONSHIP", 410),
-    ("SHAPE_ASPECT_RELATIONSHIP", 411),
-    ("SHAPE_DEFINITION_REPRESENTATION", 412),
-    ("SHAPE_DIMENSION_REPRESENTATION", 413),
-    ("SHAPE_REPRESENTATION", 414),
-    ("SHAPE_REPRESENTATION_RELATIONSHIP", 415),
-    ("SHAPE_REPRESENTATION_WITH_PARAMETERS", 416),
-    ("SHELL_BASED_SURFACE_MODEL", 417),
-    ("SIMPLE_GENERIC_EXPRESSION", 419),
-    ("SIMPLE_NUMERIC_EXPRESSION", 420),
-    ("SI_UNIT", 418),
-    ("SOLID_ANGLE_UNIT", 421),
-    ("SOLID_MODEL", 422),
-    ("SPHERICAL_SURFACE", 423),
-    ("START_REQUEST", 424),
-    ("START_WORK", 425),
-    ("STATE_OBSERVED", 426),
-    ("STATE_TYPE", 427),
-    ("STRAIGHTNESS_TOLERANCE", 428),
-    ("STYLED_ITEM", 429),
-    ("SURFACE", 430),
-    ("SURFACE_CURVE", 431),
-    ("SURFACE_OF_LINEAR_EXTRUSION", 432),
-    ("SURFACE_OF_REVOLUTION", 433),
-    ("SURFACE_PROFILE_TOLERANCE", 434),
-    ("SURFACE_RENDERING_PROPERTIES", 435),
-    ("SURFACE_SIDE_STYLE", 436),
-    ("SURFACE_STYLE_BOUNDARY", 437),
-    ("SURFACE_STYLE_CONTROL_GRID", 438),
-    ("SURFACE_STYLE_FILL_AREA", 439),
-    ("SURFACE_STYLE_PARAMETER_LINE", 440),
-    ("SURFACE_STYLE_REFLECTANCE_AMBIENT", 441),
-    ("SURFACE_STYLE_RENDERING", 442),
-    ("SURFACE_STYLE_RENDERING_WITH_PROPERTIES", 443),
-    ("SURFACE_STYLE_SEGMENTATION_CURVE", 444),
-    ("SURFACE_STYLE_SILHOUETTE", 445),
-    ("SURFACE_STYLE_TRANSPARENT", 446),
-    ("SURFACE_STYLE_USAGE", 447),
-    ("SWEPT_SURFACE", 448),
-    ("SYMBOL_COLOUR", 449),
-    ("SYMBOL_REPRESENTATION", 450),
-    ("SYMBOL_STYLE", 451),
-    ("SYMBOL_TARGET", 452),
-    ("SYMMETRY_TOLERANCE", 453),
-    ("TERMINATOR_SYMBOL", 454),
-    ("TESSELLATED_ANNOTATION_OCCURRENCE", 455),
-    ("TESSELLATED_CURVE_SET", 456),
-    ("TESSELLATED_FACE", 457),
-    ("TESSELLATED_GEOMETRIC_SET", 458),
-    ("TESSELLATED_ITEM", 459),
-    ("TESSELLATED_SHAPE_REPRESENTATION", 460),
-    ("TESSELLATED_SHELL", 461),
-    ("TESSELLATED_SOLID", 462),
-    ("TESSELLATED_STRUCTURED_ITEM", 463),
-    ("TESSELLATED_SURFACE_SET", 464),
-    ("TEXTURE_STYLE_SPECIFICATION", 470),
-    ("TEXTURE_STYLE_TESSELLATION_SPECIFICATION", 471),
-    ("TEXT_FONT", 465),
-    ("TEXT_LITERAL", 466),
-    ("TEXT_STYLE", 467),
-    ("TEXT_STYLE_FOR_DEFINED_FONT", 468),
-    ("TEXT_STYLE_WITH_BOX_CHARACTERISTICS", 469),
-    ("TIME_UNIT", 472),
-    ("TOLERANCE_VALUE", 473),
-    ("TOLERANCE_ZONE", 474),
-    ("TOLERANCE_ZONE_DEFINITION", 475),
-    ("TOLERANCE_ZONE_FORM", 476),
-    ("TOLERANCE_ZONE_WITH_DATUM", 477),
-    ("TOPOLOGICAL_REPRESENTATION_ITEM", 478),
-    ("TOROIDAL_SURFACE", 479),
-    ("TOTAL_RUNOUT_TOLERANCE", 480),
-    ("TRIMMED_CURVE", 481),
-    ("TWO_DIRECTION_REPEAT_FACTOR", 482),
-    ("TYPE_QUALIFIER", 483),
-    ("UNCERTAINTY_MEASURE_WITH_UNIT", 484),
-    ("UNCERTAINTY_QUALIFIER", 485),
-    ("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE", 486),
-    ("UNIFORM_CURVE", 487),
-    ("UNIFORM_SURFACE", 488),
-    ("VALUE_FORMAT_TYPE_QUALIFIER", 489),
-    ("VALUE_REPRESENTATION_ITEM", 490),
-    ("VECTOR", 491),
-    ("VERSIONED_ACTION_REQUEST", 492),
-    ("VERTEX", 493),
-    ("VERTEX_LOOP", 494),
-    ("VERTEX_POINT", 495),
-    ("VERTEX_SHELL", 496),
-    ("VIEW_VOLUME", 497),
-    ("VOLUME_UNIT", 498),
-    ("WIRE_SHELL", 499),
+    ("PARABOLA", 308),
+    ("PARALLELISM_TOLERANCE", 309),
+    ("PARAMETRIC_REPRESENTATION_CONTEXT", 310),
+    ("PATH", 311),
+    ("PCURVE", 312),
+    ("PERPENDICULARITY_TOLERANCE", 313),
+    ("PERSON", 314),
+    ("PERSONAL_ADDRESS", 319),
+    ("PERSON_AND_ORGANIZATION", 315),
+    ("PERSON_AND_ORGANIZATION_ADDRESS", 316),
+    ("PERSON_AND_ORGANIZATION_ASSIGNMENT", 317),
+    ("PERSON_AND_ORGANIZATION_ROLE", 318),
+    ("PLACED_DATUM_TARGET_FEATURE", 320),
+    ("PLACEMENT", 321),
+    ("PLANAR_BOX", 322),
+    ("PLANAR_EXTENT", 323),
+    ("PLANE", 324),
+    ("PLANE_ANGLE_MEASURE_WITH_UNIT", 325),
+    ("PLANE_ANGLE_UNIT", 326),
+    ("PLUS_MINUS_TOLERANCE", 327),
+    ("POINT", 328),
+    ("POINT_STYLE", 329),
+    ("POLYLINE", 331),
+    ("POLY_LOOP", 330),
+    ("POSITION_TOLERANCE", 332),
+    ("PRECISION_QUALIFIER", 345),
+    ("PRESENTATION_AREA", 346),
+    ("PRESENTATION_LAYER_ASSIGNMENT", 347),
+    ("PRESENTATION_REPRESENTATION", 348),
+    ("PRESENTATION_SET", 349),
+    ("PRESENTATION_SIZE", 350),
+    ("PRESENTATION_STYLE_ASSIGNMENT", 351),
+    ("PRESENTATION_STYLE_BY_CONTEXT", 352),
+    ("PRESENTATION_VIEW", 353),
+    ("PRESENTED_ITEM", 354),
+    ("PRESENTED_ITEM_REPRESENTATION", 355),
+    ("PRE_DEFINED_CHARACTER_GLYPH", 333),
+    ("PRE_DEFINED_COLOUR", 334),
+    ("PRE_DEFINED_CURVE_FONT", 335),
+    ("PRE_DEFINED_ITEM", 336),
+    ("PRE_DEFINED_MARKER", 337),
+    ("PRE_DEFINED_POINT_MARKER_SYMBOL", 338),
+    ("PRE_DEFINED_PRESENTATION_STYLE", 339),
+    ("PRE_DEFINED_SURFACE_SIDE_STYLE", 340),
+    ("PRE_DEFINED_SYMBOL", 341),
+    ("PRE_DEFINED_TERMINATOR_SYMBOL", 342),
+    ("PRE_DEFINED_TEXT_FONT", 343),
+    ("PRE_DEFINED_TILE", 344),
+    ("PRODUCT", 356),
+    ("PRODUCT_CATEGORY", 357),
+    ("PRODUCT_CATEGORY_RELATIONSHIP", 358),
+    ("PRODUCT_CONCEPT", 359),
+    ("PRODUCT_CONCEPT_CONTEXT", 360),
+    ("PRODUCT_CONCEPT_FEATURE", 361),
+    ("PRODUCT_CONCEPT_FEATURE_CATEGORY", 362),
+    ("PRODUCT_CONTEXT", 363),
+    ("PRODUCT_DEFINITION", 364),
+    ("PRODUCT_DEFINITION_CONTEXT", 365),
+    ("PRODUCT_DEFINITION_CONTEXT_ASSOCIATION", 366),
+    ("PRODUCT_DEFINITION_CONTEXT_ROLE", 367),
+    ("PRODUCT_DEFINITION_EFFECTIVITY", 368),
+    ("PRODUCT_DEFINITION_FORMATION", 369),
+    ("PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE", 370),
+    ("PRODUCT_DEFINITION_OCCURRENCE", 371),
+    ("PRODUCT_DEFINITION_RELATIONSHIP", 372),
+    ("PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP", 373),
+    ("PRODUCT_DEFINITION_SHAPE", 374),
+    ("PRODUCT_DEFINITION_SUBSTITUTE", 375),
+    ("PRODUCT_DEFINITION_USAGE", 376),
+    ("PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS", 377),
+    ("PRODUCT_RELATED_PRODUCT_CATEGORY", 378),
+    ("PROJECTED_ZONE_DEFINITION", 379),
+    ("PROPERTY_DEFINITION", 380),
+    ("PROPERTY_DEFINITION_RELATIONSHIP", 381),
+    ("PROPERTY_DEFINITION_REPRESENTATION", 382),
+    ("QUALIFIED_REPRESENTATION_ITEM", 383),
+    ("QUASI_UNIFORM_CURVE", 384),
+    ("QUASI_UNIFORM_SURFACE", 385),
+    ("RATIONAL_B_SPLINE_CURVE", 388),
+    ("RATIONAL_B_SPLINE_SURFACE", 389),
+    ("RATIO_MEASURE_WITH_UNIT", 386),
+    ("RATIO_UNIT", 387),
+    ("REAL_LITERAL", 390),
+    ("REAL_REPRESENTATION_ITEM", 391),
+    ("REPOSITIONED_TESSELLATED_ITEM", 392),
+    ("REPRESENTATION", 393),
+    ("REPRESENTATION_CONTEXT", 394),
+    ("REPRESENTATION_CONTEXT_REFERENCE", 395),
+    ("REPRESENTATION_ITEM", 396),
+    ("REPRESENTATION_MAP", 397),
+    ("REPRESENTATION_REFERENCE", 398),
+    ("REPRESENTATION_RELATIONSHIP", 399),
+    ("REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION", 400),
+    ("RESOURCE_PROPERTY", 401),
+    ("RESOURCE_REQUIREMENT_TYPE", 402),
+    ("ROLE_ASSOCIATION", 403),
+    ("ROUNDNESS_TOLERANCE", 404),
+    ("SEAM_CURVE", 405),
+    ("SECURITY_CLASSIFICATION", 406),
+    ("SECURITY_CLASSIFICATION_ASSIGNMENT", 407),
+    ("SECURITY_CLASSIFICATION_LEVEL", 408),
+    ("SHAPE_ASPECT", 409),
+    ("SHAPE_ASPECT_ASSOCIATIVITY", 410),
+    ("SHAPE_ASPECT_DERIVING_RELATIONSHIP", 411),
+    ("SHAPE_ASPECT_RELATIONSHIP", 412),
+    ("SHAPE_DEFINITION_REPRESENTATION", 413),
+    ("SHAPE_DIMENSION_REPRESENTATION", 414),
+    ("SHAPE_REPRESENTATION", 415),
+    ("SHAPE_REPRESENTATION_RELATIONSHIP", 416),
+    ("SHAPE_REPRESENTATION_WITH_PARAMETERS", 417),
+    ("SHELL_BASED_SURFACE_MODEL", 418),
+    ("SIMPLE_GENERIC_EXPRESSION", 420),
+    ("SIMPLE_NUMERIC_EXPRESSION", 421),
+    ("SI_UNIT", 419),
+    ("SOLID_ANGLE_UNIT", 422),
+    ("SOLID_MODEL", 423),
+    ("SPHERICAL_SURFACE", 424),
+    ("START_REQUEST", 425),
+    ("START_WORK", 426),
+    ("STATE_OBSERVED", 427),
+    ("STATE_TYPE", 428),
+    ("STRAIGHTNESS_TOLERANCE", 429),
+    ("STYLED_ITEM", 430),
+    ("SURFACE", 431),
+    ("SURFACE_CURVE", 432),
+    ("SURFACE_OF_LINEAR_EXTRUSION", 433),
+    ("SURFACE_OF_REVOLUTION", 434),
+    ("SURFACE_PROFILE_TOLERANCE", 435),
+    ("SURFACE_RENDERING_PROPERTIES", 436),
+    ("SURFACE_SIDE_STYLE", 437),
+    ("SURFACE_STYLE_BOUNDARY", 438),
+    ("SURFACE_STYLE_CONTROL_GRID", 439),
+    ("SURFACE_STYLE_FILL_AREA", 440),
+    ("SURFACE_STYLE_PARAMETER_LINE", 441),
+    ("SURFACE_STYLE_REFLECTANCE_AMBIENT", 442),
+    ("SURFACE_STYLE_RENDERING", 443),
+    ("SURFACE_STYLE_RENDERING_WITH_PROPERTIES", 444),
+    ("SURFACE_STYLE_SEGMENTATION_CURVE", 445),
+    ("SURFACE_STYLE_SILHOUETTE", 446),
+    ("SURFACE_STYLE_TRANSPARENT", 447),
+    ("SURFACE_STYLE_USAGE", 448),
+    ("SWEPT_SURFACE", 449),
+    ("SYMBOL_COLOUR", 450),
+    ("SYMBOL_REPRESENTATION", 451),
+    ("SYMBOL_STYLE", 452),
+    ("SYMBOL_TARGET", 453),
+    ("SYMMETRY_TOLERANCE", 454),
+    ("TERMINATOR_SYMBOL", 455),
+    ("TESSELLATED_ANNOTATION_OCCURRENCE", 456),
+    ("TESSELLATED_CURVE_SET", 457),
+    ("TESSELLATED_FACE", 458),
+    ("TESSELLATED_GEOMETRIC_SET", 459),
+    ("TESSELLATED_ITEM", 460),
+    ("TESSELLATED_SHAPE_REPRESENTATION", 461),
+    ("TESSELLATED_SHELL", 462),
+    ("TESSELLATED_SOLID", 463),
+    ("TESSELLATED_STRUCTURED_ITEM", 464),
+    ("TESSELLATED_SURFACE_SET", 465),
+    ("TEXTURE_STYLE_SPECIFICATION", 471),
+    ("TEXTURE_STYLE_TESSELLATION_SPECIFICATION", 472),
+    ("TEXT_FONT", 466),
+    ("TEXT_LITERAL", 467),
+    ("TEXT_STYLE", 468),
+    ("TEXT_STYLE_FOR_DEFINED_FONT", 469),
+    ("TEXT_STYLE_WITH_BOX_CHARACTERISTICS", 470),
+    ("TIME_UNIT", 473),
+    ("TOLERANCE_VALUE", 474),
+    ("TOLERANCE_ZONE", 475),
+    ("TOLERANCE_ZONE_DEFINITION", 476),
+    ("TOLERANCE_ZONE_FORM", 477),
+    ("TOLERANCE_ZONE_WITH_DATUM", 478),
+    ("TOPOLOGICAL_REPRESENTATION_ITEM", 479),
+    ("TOROIDAL_SURFACE", 480),
+    ("TOTAL_RUNOUT_TOLERANCE", 481),
+    ("TRIMMED_CURVE", 482),
+    ("TWO_DIRECTION_REPEAT_FACTOR", 483),
+    ("TYPE_QUALIFIER", 484),
+    ("UNCERTAINTY_MEASURE_WITH_UNIT", 485),
+    ("UNCERTAINTY_QUALIFIER", 486),
+    ("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE", 487),
+    ("UNIFORM_CURVE", 488),
+    ("UNIFORM_SURFACE", 489),
+    ("VALUE_FORMAT_TYPE_QUALIFIER", 490),
+    ("VALUE_REPRESENTATION_ITEM", 491),
+    ("VECTOR", 492),
+    ("VERSIONED_ACTION_REQUEST", 493),
+    ("VERTEX", 494),
+    ("VERTEX_LOOP", 495),
+    ("VERTEX_POINT", 496),
+    ("VERTEX_SHELL", 497),
+    ("VIEW_VOLUME", 498),
+    ("VOLUME_UNIT", 499),
+    ("WIRE_SHELL", 500),
 ];
 pub fn simple_index(name: &str) -> Option<u16> {
     SIMPLE_INDEX
@@ -1886,7 +1888,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         2 => &[RefSlot {
             idx: 4,
             name: "requests",
-            allowed: &[492],
+            allowed: &[493],
             complex_ok: false,
             is_vec: true,
         }],
@@ -1932,7 +1934,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         7 => &[RefSlot {
             idx: 0,
             name: "assigned_action_request",
-            allowed: &[492],
+            allowed: &[493],
             complex_ok: false,
             is_vec: false,
         }],
@@ -1947,7 +1949,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "request",
-                allowed: &[492],
+                allowed: &[493],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -1988,7 +1990,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "kind",
-                allowed: &[401],
+                allowed: &[402],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -2010,10 +2012,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -2021,7 +2023,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -2038,8 +2040,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 2,
                 name: "face_geometry",
                 allowed: &[
-                    69, 70, 72, 75, 122, 141, 162, 198, 293, 323, 384, 388, 423, 430, 432, 433,
-                    448, 479, 488,
+                    69, 70, 72, 75, 122, 141, 162, 198, 293, 324, 385, 389, 424, 431, 433, 434,
+                    449, 480, 489,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -2048,7 +2050,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         16 => &[RefSlot {
             idx: 2,
             name: "of_shape",
-            allowed: &[373],
+            allowed: &[374],
             complex_ok: true,
             is_vec: false,
         }],
@@ -2058,7 +2060,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "relating_shape_aspect",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -2068,7 +2070,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "related_shape_aspect",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -2078,8 +2080,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             idx: 0,
             name: "applies_to",
             allowed: &[
-                16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227, 319,
-                408, 474, 477,
+                16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227, 320,
+                409, 475, 478,
             ],
             complex_ok: true,
             is_vec: false,
@@ -2097,7 +2099,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -2114,7 +2116,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "styles",
-                allowed: &[350, 351],
+                allowed: &[351, 352],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -2122,8 +2124,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 2,
                 name: "item",
                 allowed: &[
-                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 233, 251, 257, 267, 311, 330,
-                    383, 387, 404, 431, 481, 487,
+                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 233, 251, 257, 267, 308, 312,
+                    331, 384, 388, 405, 432, 482, 488,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -2133,7 +2135,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "styles",
-                allowed: &[350, 351],
+                allowed: &[351, 352],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -2146,10 +2148,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     110, 111, 115, 121, 122, 123, 124, 134, 135, 141, 157, 158, 159, 162, 177, 186,
                     188, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215, 219, 220, 221, 222,
                     223, 233, 236, 237, 245, 246, 251, 257, 262, 267, 271, 273, 274, 275, 283, 284,
-                    285, 293, 294, 295, 305, 306, 310, 311, 320, 321, 322, 323, 327, 329, 330, 345,
-                    347, 352, 383, 384, 387, 388, 391, 392, 397, 404, 413, 414, 416, 417, 422, 423,
-                    430, 431, 432, 433, 448, 450, 452, 456, 457, 458, 459, 460, 461, 462, 463, 464,
-                    466, 478, 479, 481, 482, 487, 488, 491, 493, 494, 495, 496, 499,
+                    285, 293, 294, 295, 305, 306, 308, 311, 312, 321, 322, 323, 324, 328, 330, 331,
+                    346, 348, 353, 384, 385, 388, 389, 392, 393, 398, 405, 414, 415, 417, 418, 423,
+                    424, 431, 432, 433, 434, 449, 451, 453, 457, 458, 459, 460, 461, 462, 463, 464,
+                    465, 467, 479, 480, 482, 483, 488, 489, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -2157,7 +2159,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "fill_style_target",
-                allowed: &[36, 37, 86, 327],
+                allowed: &[36, 37, 86, 328],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -2166,7 +2168,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "styles",
-                allowed: &[350, 351],
+                allowed: &[351, 352],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -2179,10 +2181,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     110, 111, 115, 121, 122, 123, 124, 134, 135, 141, 157, 158, 159, 162, 177, 186,
                     188, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215, 219, 220, 221, 222,
                     223, 233, 236, 237, 245, 246, 251, 257, 262, 267, 271, 273, 274, 275, 283, 284,
-                    285, 293, 294, 295, 305, 306, 310, 311, 320, 321, 322, 323, 327, 329, 330, 345,
-                    347, 352, 383, 384, 387, 388, 391, 392, 397, 404, 413, 414, 416, 417, 422, 423,
-                    430, 431, 432, 433, 448, 450, 452, 456, 457, 458, 459, 460, 461, 462, 463, 464,
-                    466, 478, 479, 481, 482, 487, 488, 491, 493, 494, 495, 496, 499,
+                    285, 293, 294, 295, 305, 306, 308, 311, 312, 321, 322, 323, 324, 328, 330, 331,
+                    346, 348, 353, 384, 385, 388, 389, 392, 393, 398, 405, 414, 415, 417, 418, 423,
+                    424, 431, 432, 433, 434, 449, 451, 453, 457, 458, 459, 460, 461, 462, 463, 464,
+                    465, 467, 479, 480, 482, 483, 488, 489, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -2192,14 +2194,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "relating_annotation_occurrence",
-                allowed: &[20, 21, 22, 26, 27, 28, 30, 33, 185, 261, 263, 454, 455],
+                allowed: &[20, 21, 22, 26, 27, 28, 30, 33, 185, 261, 263, 455, 456],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 3,
                 name: "related_annotation_occurrence",
-                allowed: &[20, 21, 22, 26, 27, 28, 30, 33, 185, 261, 263, 454, 455],
+                allowed: &[20, 21, 22, 26, 27, 28, 30, 33, 185, 261, 263, 455, 456],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -2208,14 +2210,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "relating_annotation_occurrence",
-                allowed: &[20, 21, 22, 26, 27, 28, 30, 33, 185, 261, 263, 454, 455],
+                allowed: &[20, 21, 22, 26, 27, 28, 30, 33, 185, 261, 263, 455, 456],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 3,
                 name: "related_annotation_occurrence",
-                allowed: &[20, 21, 22, 26, 27, 28, 30, 33, 185, 261, 263, 454, 455],
+                allowed: &[20, 21, 22, 26, 27, 28, 30, 33, 185, 261, 263, 455, 456],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -2231,7 +2233,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "styles",
-                allowed: &[350, 351],
+                allowed: &[351, 352],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -2244,10 +2246,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     110, 111, 115, 121, 122, 123, 124, 134, 135, 141, 157, 158, 159, 162, 177, 186,
                     188, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215, 219, 220, 221, 222,
                     223, 233, 236, 237, 245, 246, 251, 257, 262, 267, 271, 273, 274, 275, 283, 284,
-                    285, 293, 294, 295, 305, 306, 310, 311, 320, 321, 322, 323, 327, 329, 330, 345,
-                    347, 352, 383, 384, 387, 388, 391, 392, 397, 404, 413, 414, 416, 417, 422, 423,
-                    430, 431, 432, 433, 448, 450, 452, 456, 457, 458, 459, 460, 461, 462, 463, 464,
-                    466, 478, 479, 481, 482, 487, 488, 491, 493, 494, 495, 496, 499,
+                    285, 293, 294, 295, 305, 306, 308, 311, 312, 321, 322, 323, 324, 328, 330, 331,
+                    346, 348, 353, 384, 385, 388, 389, 392, 393, 398, 405, 414, 415, 417, 418, 423,
+                    424, 431, 432, 433, 434, 449, 451, 453, 457, 458, 459, 460, 461, 462, 463, 464,
+                    465, 467, 479, 480, 482, 483, 488, 489, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -2257,7 +2259,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "styles",
-                allowed: &[350, 351],
+                allowed: &[351, 352],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -2270,10 +2272,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     110, 111, 115, 121, 122, 123, 124, 134, 135, 141, 157, 158, 159, 162, 177, 186,
                     188, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215, 219, 220, 221, 222,
                     223, 233, 236, 237, 245, 246, 251, 257, 262, 267, 271, 273, 274, 275, 283, 284,
-                    285, 293, 294, 295, 305, 306, 310, 311, 320, 321, 322, 323, 327, 329, 330, 345,
-                    347, 352, 383, 384, 387, 388, 391, 392, 397, 404, 413, 414, 416, 417, 422, 423,
-                    430, 431, 432, 433, 448, 450, 452, 456, 457, 458, 459, 460, 461, 462, 463, 464,
-                    466, 478, 479, 481, 482, 487, 488, 491, 493, 494, 495, 496, 499,
+                    285, 293, 294, 295, 305, 306, 308, 311, 312, 321, 322, 323, 324, 328, 330, 331,
+                    346, 348, 353, 384, 385, 388, 389, 392, 393, 398, 405, 414, 415, 417, 418, 423,
+                    424, 431, 432, 433, 434, 449, 451, 453, 457, 458, 459, 460, 461, 462, 463, 464,
+                    465, 467, 479, 480, 482, 483, 488, 489, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -2290,14 +2292,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "styles",
-                allowed: &[350, 351],
+                allowed: &[351, 352],
                 complex_ok: true,
                 is_vec: true,
             },
             RefSlot {
                 idx: 2,
                 name: "item",
-                allowed: &[321, 323],
+                allowed: &[322, 324],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -2305,8 +2307,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 3,
                 name: "elements",
                 allowed: &[
-                    20, 21, 22, 26, 27, 28, 30, 33, 126, 185, 186, 261, 262, 263, 307, 429, 454,
-                    455,
+                    20, 21, 22, 26, 27, 28, 30, 33, 126, 185, 186, 261, 262, 263, 307, 430, 455,
+                    456,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -2316,7 +2318,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "mapping_source",
-                allowed: &[85, 396],
+                allowed: &[85, 397],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -2329,10 +2331,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -2342,7 +2344,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "styles",
-                allowed: &[350, 351],
+                allowed: &[351, 352],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -2358,7 +2360,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "mapping_source",
-                allowed: &[85, 396],
+                allowed: &[85, 397],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -2374,7 +2376,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "mapping_source",
-                allowed: &[85, 396],
+                allowed: &[85, 397],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -2390,14 +2392,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "styles",
-                allowed: &[350, 351],
+                allowed: &[351, 352],
                 complex_ok: true,
                 is_vec: true,
             },
             RefSlot {
                 idx: 2,
                 name: "item",
-                allowed: &[31, 32, 115, 157, 466],
+                allowed: &[31, 32, 115, 157, 467],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -2457,13 +2459,13 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     179, 185, 186, 188, 194, 195, 196, 197, 198, 199, 205, 211, 212, 213, 214, 215,
                     216, 219, 220, 221, 222, 223, 228, 233, 236, 237, 245, 246, 249, 251, 256, 257,
                     261, 262, 263, 267, 271, 272, 273, 274, 275, 279, 282, 283, 284, 285, 290, 293,
-                    294, 295, 296, 297, 301, 302, 305, 306, 307, 310, 311, 314, 315, 320, 321, 322,
-                    323, 327, 329, 330, 345, 347, 352, 355, 358, 360, 361, 363, 364, 367, 368, 369,
-                    371, 373, 374, 375, 376, 379, 381, 382, 383, 384, 387, 388, 390, 391, 392, 395,
-                    398, 399, 400, 404, 405, 409, 410, 411, 412, 413, 414, 415, 416, 417, 422, 423,
-                    429, 430, 431, 432, 433, 448, 450, 452, 454, 455, 456, 457, 458, 459, 460, 461,
-                    462, 463, 464, 466, 478, 479, 481, 482, 487, 488, 490, 491, 492, 493, 494, 495,
-                    496, 499,
+                    294, 295, 296, 297, 301, 302, 305, 306, 307, 308, 311, 312, 315, 316, 321, 322,
+                    323, 324, 328, 330, 331, 346, 348, 353, 356, 359, 361, 362, 364, 365, 368, 369,
+                    370, 372, 374, 375, 376, 377, 380, 382, 383, 384, 385, 388, 389, 391, 392, 393,
+                    396, 399, 400, 401, 405, 406, 410, 411, 412, 413, 414, 415, 416, 417, 418, 423,
+                    424, 430, 431, 432, 433, 434, 449, 451, 453, 455, 456, 457, 458, 459, 460, 461,
+                    462, 463, 464, 465, 467, 479, 480, 482, 483, 488, 489, 491, 492, 493, 494, 495,
+                    496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -2490,9 +2492,9 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 allowed: &[
                     0, 2, 3, 5, 6, 14, 42, 49, 52, 54, 60, 62, 88, 92, 100, 118, 119, 120, 124,
                     130, 145, 159, 168, 178, 179, 188, 197, 228, 245, 246, 272, 274, 283, 284, 285,
-                    290, 297, 301, 302, 313, 314, 315, 345, 347, 352, 355, 358, 363, 364, 367, 368,
-                    369, 371, 373, 375, 376, 379, 381, 392, 400, 405, 407, 412, 413, 414, 416, 426,
-                    427, 450, 460, 492,
+                    290, 297, 301, 302, 314, 315, 316, 346, 348, 353, 356, 359, 364, 365, 368, 369,
+                    370, 372, 374, 376, 377, 380, 382, 393, 401, 406, 408, 413, 414, 415, 417, 427,
+                    428, 451, 461, 493,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -2520,13 +2522,13 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     209, 210, 211, 212, 213, 214, 215, 216, 219, 220, 221, 222, 223, 227, 228, 233,
                     236, 237, 245, 246, 249, 251, 256, 257, 261, 262, 263, 267, 271, 272, 273, 274,
                     275, 279, 282, 283, 284, 285, 286, 290, 293, 294, 295, 296, 297, 301, 302, 303,
-                    305, 306, 307, 310, 311, 313, 314, 315, 319, 320, 321, 322, 323, 327, 329, 330,
-                    345, 347, 352, 355, 356, 358, 361, 363, 364, 367, 368, 369, 371, 373, 375, 376,
-                    377, 379, 381, 382, 383, 384, 387, 388, 390, 391, 392, 395, 398, 399, 401, 404,
-                    405, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 422, 423, 426, 427, 429,
-                    430, 431, 432, 433, 448, 450, 452, 454, 455, 456, 457, 458, 459, 460, 461, 462,
-                    463, 464, 466, 474, 477, 478, 479, 481, 482, 487, 488, 490, 491, 492, 493, 494,
-                    495, 496, 499,
+                    305, 306, 307, 308, 311, 312, 314, 315, 316, 320, 321, 322, 323, 324, 328, 330,
+                    331, 346, 348, 353, 356, 357, 359, 362, 364, 365, 368, 369, 370, 372, 374, 376,
+                    377, 378, 380, 382, 383, 384, 385, 388, 389, 391, 392, 393, 396, 399, 400, 402,
+                    405, 406, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 423, 424, 427, 428,
+                    430, 431, 432, 433, 434, 449, 451, 453, 455, 456, 457, 458, 459, 460, 461, 462,
+                    463, 464, 465, 467, 475, 478, 479, 480, 482, 483, 488, 489, 491, 492, 493, 494,
+                    495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -2559,12 +2561,12 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     198, 199, 202, 205, 211, 212, 213, 214, 215, 219, 220, 221, 222, 223, 228, 232,
                     233, 236, 237, 245, 246, 249, 251, 256, 257, 261, 262, 263, 265, 267, 271, 273,
                     274, 275, 277, 279, 283, 284, 285, 289, 290, 293, 294, 295, 296, 301, 302, 305,
-                    306, 307, 310, 311, 313, 314, 315, 318, 320, 321, 322, 323, 325, 327, 329, 330,
-                    344, 345, 347, 352, 355, 358, 359, 361, 363, 364, 367, 368, 369, 370, 373, 376,
-                    379, 382, 383, 384, 386, 387, 388, 390, 391, 392, 395, 404, 405, 413, 414, 416,
-                    417, 418, 421, 422, 423, 426, 427, 429, 430, 431, 432, 433, 448, 450, 452, 454,
-                    455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 466, 472, 478, 479, 481, 482,
-                    483, 485, 487, 488, 490, 491, 492, 493, 494, 495, 496, 498, 499,
+                    306, 307, 308, 311, 312, 314, 315, 316, 319, 321, 322, 323, 324, 326, 328, 330,
+                    331, 345, 346, 348, 353, 356, 359, 360, 362, 364, 365, 368, 369, 370, 371, 374,
+                    377, 380, 383, 384, 385, 387, 388, 389, 391, 392, 393, 396, 405, 406, 414, 415,
+                    417, 418, 419, 422, 423, 424, 427, 428, 430, 431, 432, 433, 434, 449, 451, 453,
+                    455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465, 467, 473, 479, 480, 482,
+                    483, 484, 486, 488, 489, 491, 492, 493, 494, 495, 496, 497, 499, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -2574,7 +2576,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 0,
                 name: "assigned_group",
-                allowed: &[249, 361],
+                allowed: &[249, 362],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -2592,14 +2594,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     211, 212, 213, 214, 215, 216, 219, 220, 221, 222, 223, 227, 228, 233, 234, 235,
                     236, 237, 245, 246, 247, 248, 251, 256, 257, 259, 261, 262, 263, 264, 265, 267,
                     270, 271, 272, 273, 274, 275, 276, 277, 279, 280, 282, 283, 284, 285, 289, 290,
-                    293, 294, 295, 296, 297, 299, 301, 302, 303, 305, 306, 307, 309, 310, 311, 313,
-                    314, 315, 318, 319, 320, 321, 322, 323, 324, 325, 327, 329, 330, 344, 345, 347,
-                    352, 355, 358, 359, 363, 364, 367, 368, 369, 371, 373, 375, 376, 379, 381, 382,
-                    383, 384, 385, 386, 387, 388, 390, 391, 392, 393, 395, 398, 399, 404, 405, 408,
-                    409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 421, 422, 423, 426, 427, 429,
-                    430, 431, 432, 433, 448, 450, 452, 454, 455, 456, 457, 458, 459, 460, 461, 462,
-                    463, 464, 466, 472, 474, 477, 478, 479, 481, 482, 483, 484, 485, 487, 488, 490,
-                    491, 492, 493, 494, 495, 496, 498, 499,
+                    293, 294, 295, 296, 297, 299, 301, 302, 303, 305, 306, 307, 308, 310, 311, 312,
+                    314, 315, 316, 319, 320, 321, 322, 323, 324, 325, 326, 328, 330, 331, 345, 346,
+                    348, 353, 356, 359, 360, 364, 365, 368, 369, 370, 372, 374, 376, 377, 380, 382,
+                    383, 384, 385, 386, 387, 388, 389, 391, 392, 393, 394, 396, 399, 400, 405, 406,
+                    409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 419, 422, 423, 424, 427, 428,
+                    430, 431, 432, 433, 434, 449, 451, 453, 455, 456, 457, 458, 459, 460, 461, 462,
+                    463, 464, 465, 467, 473, 475, 478, 479, 480, 482, 483, 484, 485, 486, 488, 489,
+                    491, 492, 493, 494, 495, 496, 497, 499, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -2609,14 +2611,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 0,
                 name: "assigned_person_and_organization",
-                allowed: &[314],
+                allowed: &[315],
                 complex_ok: false,
                 is_vec: false,
             },
             RefSlot {
                 idx: 1,
                 name: "role",
-                allowed: &[317],
+                allowed: &[318],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -2626,9 +2628,9 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 allowed: &[
                     0, 2, 3, 5, 6, 8, 14, 42, 43, 46, 49, 54, 60, 62, 88, 92, 100, 118, 119, 120,
                     124, 130, 145, 159, 168, 179, 184, 188, 197, 228, 245, 246, 272, 274, 283, 284,
-                    285, 290, 296, 297, 301, 302, 314, 315, 345, 347, 352, 355, 358, 360, 361, 363,
-                    364, 367, 368, 369, 371, 373, 374, 375, 376, 379, 381, 392, 400, 405, 407, 412,
-                    413, 414, 416, 426, 427, 450, 460, 492,
+                    285, 290, 296, 297, 301, 302, 315, 316, 346, 348, 353, 356, 359, 361, 362, 364,
+                    365, 368, 369, 370, 372, 374, 375, 376, 377, 380, 382, 393, 401, 406, 408, 413,
+                    414, 415, 417, 427, 428, 451, 461, 493,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -2638,7 +2640,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             idx: 0,
             name: "items",
             allowed: &[
-                0, 3, 6, 62, 272, 290, 358, 360, 361, 363, 368, 369, 371, 375, 376,
+                0, 3, 6, 62, 272, 290, 359, 361, 362, 364, 369, 370, 372, 376, 377,
             ],
             complex_ok: true,
             is_vec: true,
@@ -2647,7 +2649,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 0,
                 name: "assigned_security_classification",
-                allowed: &[405],
+                allowed: &[406],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -2656,9 +2658,9 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "items",
                 allowed: &[
                     0, 2, 3, 4, 5, 14, 43, 44, 62, 100, 118, 119, 124, 159, 178, 179, 188, 228,
-                    245, 246, 249, 272, 274, 283, 284, 285, 290, 302, 345, 347, 352, 355, 358, 360,
-                    361, 363, 368, 369, 371, 373, 375, 376, 379, 381, 392, 400, 412, 413, 414, 416,
-                    450, 460, 492,
+                    245, 246, 249, 272, 274, 283, 284, 285, 290, 302, 346, 348, 353, 356, 359, 361,
+                    362, 364, 369, 370, 372, 374, 376, 377, 380, 382, 393, 401, 413, 414, 415, 417,
+                    451, 461, 493,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -2698,7 +2700,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 0,
                 name: "person_organization",
-                allowed: &[296, 313, 314],
+                allowed: &[296, 314, 315],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -2728,14 +2730,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 0,
                 name: "area",
-                allowed: &[345],
+                allowed: &[346],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 1,
                 name: "in_set",
-                allowed: &[348],
+                allowed: &[349],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -2751,14 +2753,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "pertaining_state_type",
-                allowed: &[427],
+                allowed: &[428],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 3,
                 name: "ascribed_state_observed",
-                allowed: &[426],
+                allowed: &[427],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -2783,14 +2785,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "relating_product_definition",
-                allowed: &[232, 363, 370, 376],
+                allowed: &[232, 364, 371, 377],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 4,
                 name: "related_product_definition",
-                allowed: &[232, 363, 370, 376],
+                allowed: &[232, 364, 371, 377],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -2892,8 +2894,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 1,
                 name: "basis_surface",
                 allowed: &[
-                    69, 70, 72, 75, 122, 141, 162, 198, 293, 323, 384, 388, 423, 430, 432, 433,
-                    448, 479, 488,
+                    69, 70, 72, 75, 122, 141, 162, 198, 293, 324, 385, 389, 424, 431, 433, 434,
+                    449, 480, 489,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -2911,8 +2913,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 1,
                 name: "curve_3d",
                 allowed: &[
-                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 311, 330, 383,
-                    387, 404, 431, 481, 487,
+                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 308, 312, 331,
+                    384, 388, 405, 432, 482, 488,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -2921,8 +2923,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 2,
                 name: "associated_geometry",
                 allowed: &[
-                    69, 70, 72, 74, 75, 122, 141, 162, 198, 293, 311, 323, 384, 388, 423, 430, 432,
-                    433, 448, 479, 488,
+                    69, 70, 72, 74, 75, 122, 141, 162, 198, 293, 312, 324, 385, 389, 424, 431, 433,
+                    434, 449, 480, 489,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -2948,7 +2950,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "mapping_source",
-                allowed: &[85, 396],
+                allowed: &[85, 397],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -2961,10 +2963,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -2974,7 +2976,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "mapping_source",
-                allowed: &[85, 396],
+                allowed: &[85, 397],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -2987,10 +2989,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3007,7 +3009,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "perspective_of_volume",
-                allowed: &[497],
+                allowed: &[498],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3023,14 +3025,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "perspective_of_volume",
-                allowed: &[497],
+                allowed: &[498],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 3,
                 name: "shape_clipping",
-                allowed: &[323],
+                allowed: &[324],
                 complex_ok: false,
                 is_vec: true,
             },
@@ -3046,7 +3048,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "perspective_of_volume",
-                allowed: &[497],
+                allowed: &[498],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3061,10 +3063,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3073,8 +3075,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 1,
                 name: "mapped_representation",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 413,
-                    414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 414,
+                    415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3092,7 +3094,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 1,
                 name: "items",
                 allowed: &[
-                    92, 94, 95, 119, 120, 130, 355, 363, 368, 369, 376, 405, 424, 425,
+                    92, 94, 95, 119, 120, 130, 356, 364, 369, 370, 377, 406, 425, 426,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -3116,7 +3118,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "items",
-                allowed: &[52, 92, 94, 95, 130, 363, 376, 405, 424, 425],
+                allowed: &[52, 92, 94, 95, 130, 364, 377, 406, 425, 426],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -3125,21 +3127,21 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 0,
                 name: "assigned_person_and_organization",
-                allowed: &[314],
+                allowed: &[315],
                 complex_ok: false,
                 is_vec: false,
             },
             RefSlot {
                 idx: 1,
                 name: "role",
-                allowed: &[317],
+                allowed: &[318],
                 complex_ok: false,
                 is_vec: false,
             },
             RefSlot {
                 idx: 2,
                 name: "items",
-                allowed: &[94, 95, 120, 130, 355, 363, 368, 369, 376, 405, 424, 425],
+                allowed: &[94, 95, 120, 130, 356, 364, 369, 370, 377, 406, 425, 426],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -3148,14 +3150,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 0,
                 name: "assigned_security_classification",
-                allowed: &[405],
+                allowed: &[406],
                 complex_ok: false,
                 is_vec: false,
             },
             RefSlot {
                 idx: 1,
                 name: "items",
-                allowed: &[62, 290, 368, 369],
+                allowed: &[62, 290, 369, 370],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -3163,7 +3165,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         91 => &[RefSlot {
             idx: 2,
             name: "of_shape",
-            allowed: &[373],
+            allowed: &[374],
             complex_ok: true,
             is_vec: false,
         }],
@@ -3185,7 +3187,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "items",
-                allowed: &[368, 369],
+                allowed: &[369, 370],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -3194,14 +3196,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 0,
                 name: "assigned_action_request",
-                allowed: &[492],
+                allowed: &[493],
                 complex_ok: false,
                 is_vec: false,
             },
             RefSlot {
                 idx: 1,
                 name: "items",
-                allowed: &[368, 369],
+                allowed: &[369, 370],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -3230,10 +3232,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3242,8 +3244,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 3,
                 name: "rep",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 413,
-                    414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 414,
+                    415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3259,10 +3261,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -3270,7 +3272,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3295,7 +3297,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3328,7 +3330,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3344,7 +3346,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         108 => &[RefSlot {
             idx: 2,
             name: "of_shape",
-            allowed: &[373],
+            allowed: &[374],
             complex_ok: true,
             is_vec: false,
         }],
@@ -3360,8 +3362,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 4,
                 name: "geometric_link",
                 allowed: &[
-                    15, 69, 70, 72, 75, 122, 141, 162, 198, 212, 215, 293, 323, 384, 388, 423, 430,
-                    432, 433, 448, 479, 488,
+                    15, 69, 70, 72, 75, 122, 141, 162, 198, 212, 215, 293, 324, 385, 389, 424, 431,
+                    433, 434, 449, 480, 489,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3385,8 +3387,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             idx: 2,
             name: "parent_curve",
             allowed: &[
-                67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 311, 330, 383, 387,
-                404, 431, 481, 487,
+                67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 308, 312, 331, 384,
+                388, 405, 432, 482, 488,
             ],
             complex_ok: true,
             is_vec: false,
@@ -3394,21 +3396,21 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         113 => &[RefSlot {
             idx: 2,
             name: "of_shape",
-            allowed: &[373],
+            allowed: &[374],
             complex_ok: true,
             is_vec: false,
         }],
         114 => &[RefSlot {
             idx: 2,
             name: "of_shape",
-            allowed: &[373],
+            allowed: &[374],
             complex_ok: true,
             is_vec: false,
         }],
         115 => &[RefSlot {
             idx: 1,
             name: "collected_text",
-            allowed: &[31, 32, 115, 157, 466],
+            allowed: &[31, 32, 115, 157, 467],
             complex_ok: true,
             is_vec: true,
         }],
@@ -3421,10 +3423,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158, 162, 167,
                 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215, 219, 220,
                 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271, 273, 275,
-                279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327, 329, 330,
-                382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430, 431, 432,
-                433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466, 478, 479,
-                481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324, 328, 330,
+                331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430, 431, 432,
+                433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465, 467, 479,
+                480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
             ],
             complex_ok: true,
             is_vec: false,
@@ -3442,7 +3444,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3466,7 +3468,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "design",
-                allowed: &[363, 368, 369, 370, 376],
+                allowed: &[364, 369, 370, 371, 377],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3475,7 +3477,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "usage",
-                allowed: &[62, 272, 290, 371, 375],
+                allowed: &[62, 272, 290, 372, 376],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3490,7 +3492,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         120 => &[RefSlot {
             idx: 3,
             name: "item_concept",
-            allowed: &[358],
+            allowed: &[359],
             complex_ok: true,
             is_vec: false,
         }],
@@ -3525,10 +3527,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -3536,7 +3538,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3545,7 +3547,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "rep_1",
-                allowed: &[14, 124, 245, 246, 274, 413, 414, 416, 460],
+                allowed: &[14, 124, 245, 246, 274, 414, 415, 417, 461],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3553,8 +3555,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 3,
                 name: "rep_2",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 397,
-                    413, 414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 398,
+                    414, 415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3564,7 +3566,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "styles",
-                allowed: &[350, 351],
+                allowed: &[351, 352],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -3577,10 +3579,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     110, 111, 115, 121, 122, 123, 124, 134, 135, 141, 157, 158, 159, 162, 177, 186,
                     188, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215, 219, 220, 221, 222,
                     223, 233, 236, 237, 245, 246, 251, 257, 262, 267, 271, 273, 274, 275, 283, 284,
-                    285, 293, 294, 295, 305, 306, 310, 311, 320, 321, 322, 323, 327, 329, 330, 345,
-                    347, 352, 383, 384, 387, 388, 391, 392, 397, 404, 413, 414, 416, 417, 422, 423,
-                    430, 431, 432, 433, 448, 450, 452, 456, 457, 458, 459, 460, 461, 462, 463, 464,
-                    466, 478, 479, 481, 482, 487, 488, 491, 493, 494, 495, 496, 499,
+                    285, 293, 294, 295, 305, 306, 308, 311, 312, 321, 322, 323, 324, 328, 330, 331,
+                    346, 348, 353, 384, 385, 388, 389, 392, 393, 398, 405, 414, 415, 417, 418, 423,
+                    424, 431, 432, 433, 434, 449, 451, 453, 457, 458, 459, 460, 461, 462, 463, 464,
+                    465, 467, 479, 480, 482, 483, 488, 489, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3589,7 +3591,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 3,
                 name: "over_ridden_style",
                 allowed: &[
-                    20, 21, 22, 26, 27, 28, 30, 33, 126, 185, 261, 263, 307, 429, 454, 455,
+                    20, 21, 22, 26, 27, 28, 30, 33, 126, 185, 261, 263, 307, 430, 455, 456,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3604,11 +3606,11 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     135, 141, 157, 158, 159, 160, 161, 162, 167, 177, 185, 186, 188, 194, 195, 196,
                     198, 199, 205, 211, 212, 213, 214, 215, 219, 220, 221, 222, 223, 233, 236, 237,
                     245, 246, 249, 251, 256, 257, 261, 262, 263, 267, 271, 273, 274, 275, 279, 282,
-                    283, 284, 285, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 345, 346, 347, 348, 352, 361, 382, 383, 384, 387, 388, 390, 391, 392,
-                    395, 398, 399, 404, 413, 414, 415, 416, 417, 422, 423, 429, 430, 431, 432, 433,
-                    448, 450, 452, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 466, 478,
-                    479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    283, 284, 285, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 346, 347, 348, 349, 353, 362, 383, 384, 385, 388, 389, 391, 392,
+                    393, 396, 399, 400, 405, 414, 415, 416, 417, 418, 423, 424, 430, 431, 432, 433,
+                    434, 449, 451, 453, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465, 467,
+                    479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -3618,14 +3620,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 0,
                 name: "representation_relation",
-                allowed: &[415],
+                allowed: &[416],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 1,
                 name: "represented_product_relation",
-                allowed: &[373],
+                allowed: &[374],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3640,7 +3642,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         129 => &[RefSlot {
             idx: 2,
             name: "of_shape",
-            allowed: &[373],
+            allowed: &[374],
             complex_ok: true,
             is_vec: false,
         }],
@@ -3662,7 +3664,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "conversion_factor",
-                allowed: &[264, 276, 279, 280, 324, 385, 484],
+                allowed: &[264, 276, 279, 280, 325, 386, 485],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3671,21 +3673,21 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "curve_font",
-                allowed: &[137, 138, 192, 204, 334],
+                allowed: &[137, 138, 192, 204, 335],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 2,
                 name: "curve_width",
-                allowed: &[264, 276, 279, 280, 324, 385, 484],
+                allowed: &[264, 276, 279, 280, 325, 386, 485],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 3,
                 name: "curve_colour",
-                allowed: &[105, 106, 107, 191, 333],
+                allowed: &[105, 106, 107, 191, 334],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3700,14 +3702,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         138 => &[RefSlot {
             idx: 1,
             name: "curve_font",
-            allowed: &[137, 192, 204, 334],
+            allowed: &[137, 192, 204, 335],
             complex_ok: true,
             is_vec: false,
         }],
         140 => &[RefSlot {
             idx: 1,
             name: "rendering_properties",
-            allowed: &[435],
+            allowed: &[436],
             complex_ok: false,
             is_vec: false,
         }],
@@ -3731,7 +3733,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3772,14 +3774,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         148 => &[RefSlot {
             idx: 2,
             name: "of_shape",
-            allowed: &[373],
+            allowed: &[374],
             complex_ok: true,
             is_vec: false,
         }],
         149 => &[RefSlot {
             idx: 2,
             name: "of_shape",
-            allowed: &[373],
+            allowed: &[374],
             complex_ok: true,
             is_vec: false,
         }],
@@ -3794,7 +3796,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "of_shape",
-                allowed: &[373],
+                allowed: &[374],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3817,7 +3819,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "of_shape",
-                allowed: &[373],
+                allowed: &[374],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3847,7 +3849,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "of_shape",
-                allowed: &[373],
+                allowed: &[374],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3862,7 +3864,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         155 => &[RefSlot {
             idx: 2,
             name: "of_shape",
-            allowed: &[373],
+            allowed: &[374],
             complex_ok: true,
             is_vec: false,
         }],
@@ -3876,10 +3878,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3888,8 +3890,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 3,
                 name: "rep",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 413,
-                    414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 414,
+                    415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3897,7 +3899,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 6,
                 name: "of_shape",
-                allowed: &[373],
+                allowed: &[374],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3906,7 +3908,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "definition",
-                allowed: &[203, 332],
+                allowed: &[203, 333],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3922,14 +3924,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "definition",
-                allowed: &[208, 337, 340, 341],
+                allowed: &[208, 338, 341, 342],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 2,
                 name: "target",
-                allowed: &[452],
+                allowed: &[453],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -3944,10 +3946,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -3955,7 +3957,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -3965,8 +3967,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 2,
                 name: "rep_1",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 397,
-                    413, 414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 398,
+                    414, 415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3975,8 +3977,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 3,
                 name: "rep_2",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 397,
-                    413, 414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 398,
+                    414, 415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3987,8 +3989,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 2,
                 name: "rep_1",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 397,
-                    413, 414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 398,
+                    414, 415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -3997,8 +3999,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 3,
                 name: "rep_2",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 397,
-                    413, 414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 398,
+                    414, 415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4014,7 +4016,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         163 => &[RefSlot {
             idx: 2,
             name: "of_shape",
-            allowed: &[373],
+            allowed: &[374],
             complex_ok: true,
             is_vec: false,
         }],
@@ -4028,7 +4030,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         165 => &[RefSlot {
             idx: 0,
             name: "unit",
-            allowed: &[128, 132, 265, 277, 289, 325, 386, 418, 421, 472],
+            allowed: &[128, 132, 265, 277, 289, 326, 387, 419, 422, 473],
             complex_ok: true,
             is_vec: false,
         }],
@@ -4037,8 +4039,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             name: "described_item",
             allowed: &[
                 8, 14, 38, 53, 100, 118, 119, 124, 127, 146, 147, 159, 188, 197, 202, 245, 246,
-                274, 283, 284, 285, 298, 302, 314, 317, 345, 347, 352, 367, 381, 392, 412, 413,
-                414, 416, 450, 460,
+                274, 283, 284, 285, 298, 302, 315, 318, 346, 348, 353, 368, 382, 393, 413, 414,
+                415, 417, 451, 461,
             ],
             complex_ok: true,
             is_vec: false,
@@ -4061,7 +4063,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "representation",
-                allowed: &[413],
+                allowed: &[414],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -4072,7 +4074,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "relating_shape_aspect",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4082,7 +4084,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "related_shape_aspect",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4094,7 +4096,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "relating_shape_aspect",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4104,7 +4106,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "related_shape_aspect",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4114,7 +4116,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "path",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4124,8 +4126,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             idx: 0,
             name: "applies_to",
             allowed: &[
-                16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227, 319,
-                408, 474, 477,
+                16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227, 320,
+                409, 475, 478,
             ],
             complex_ok: true,
             is_vec: false,
@@ -4134,7 +4136,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "of_shape",
-                allowed: &[373],
+                allowed: &[374],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -4143,7 +4145,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "applies_to",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4155,7 +4157,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "applies_to",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4165,7 +4167,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "path",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4177,7 +4179,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "relating_shape_aspect",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4187,7 +4189,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "related_shape_aspect",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4218,7 +4220,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "related_product",
-                allowed: &[355, 363, 368, 369, 376],
+                allowed: &[356, 364, 369, 370, 377],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -4234,7 +4236,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "related_product",
-                allowed: &[355, 363, 368, 369, 376],
+                allowed: &[356, 364, 369, 370, 377],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -4257,7 +4259,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "styles",
-                allowed: &[350, 351],
+                allowed: &[351, 352],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -4270,10 +4272,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     110, 111, 115, 121, 122, 123, 124, 134, 135, 141, 157, 158, 159, 162, 177, 186,
                     188, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215, 219, 220, 221, 222,
                     223, 233, 236, 237, 245, 246, 251, 257, 262, 267, 271, 273, 274, 275, 283, 284,
-                    285, 293, 294, 295, 305, 306, 310, 311, 320, 321, 322, 323, 327, 329, 330, 345,
-                    347, 352, 383, 384, 387, 388, 391, 392, 397, 404, 413, 414, 416, 417, 422, 423,
-                    430, 431, 432, 433, 448, 450, 452, 456, 457, 458, 459, 460, 461, 462, 463, 464,
-                    466, 478, 479, 481, 482, 487, 488, 491, 493, 494, 495, 496, 499,
+                    285, 293, 294, 295, 305, 306, 308, 311, 312, 321, 322, 323, 324, 328, 330, 331,
+                    346, 348, 353, 384, 385, 388, 389, 392, 393, 398, 405, 414, 415, 417, 418, 423,
+                    424, 431, 432, 433, 434, 449, 451, 453, 457, 458, 459, 460, 461, 462, 463, 464,
+                    465, 467, 479, 480, 482, 483, 488, 489, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4282,7 +4284,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         186 => &[RefSlot {
             idx: 1,
             name: "contents",
-            allowed: &[20, 21, 26, 27, 30, 33, 261, 263, 454, 455],
+            allowed: &[20, 21, 26, 27, 30, 33, 261, 263, 455, 456],
             complex_ok: true,
             is_vec: true,
         }],
@@ -4312,10 +4314,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -4323,7 +4325,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -4335,8 +4337,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 allowed: &[
                     16, 17, 18, 19, 62, 91, 102, 104, 108, 113, 114, 117, 129, 142, 148, 149, 151,
                     152, 154, 155, 156, 163, 171, 172, 173, 174, 175, 176, 216, 224, 227, 238, 240,
-                    241, 242, 243, 244, 268, 272, 287, 290, 308, 312, 319, 331, 371, 373, 375, 379,
-                    403, 408, 409, 410, 411, 428, 434, 453, 474, 477, 480, 486,
+                    241, 242, 243, 244, 268, 272, 287, 290, 309, 313, 320, 332, 372, 374, 376, 380,
+                    404, 409, 410, 411, 412, 429, 435, 454, 475, 478, 481, 487,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4344,7 +4346,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "used_representation",
-                allowed: &[188, 345, 352, 450],
+                allowed: &[188, 346, 353, 451],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -4352,7 +4354,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 4,
                 name: "identified_item",
                 allowed: &[
-                    20, 21, 22, 26, 27, 28, 30, 33, 185, 186, 261, 262, 263, 454, 455,
+                    20, 21, 22, 26, 27, 28, 30, 33, 185, 186, 261, 262, 263, 455, 456,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4365,8 +4367,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 allowed: &[
                     16, 17, 18, 19, 62, 91, 102, 104, 108, 113, 114, 117, 129, 142, 148, 149, 151,
                     152, 154, 155, 156, 163, 171, 172, 173, 174, 175, 176, 216, 224, 227, 238, 240,
-                    241, 242, 243, 244, 268, 272, 287, 290, 308, 312, 319, 331, 371, 373, 375, 379,
-                    403, 408, 409, 410, 411, 428, 434, 453, 474, 477, 480, 486,
+                    241, 242, 243, 244, 268, 272, 287, 290, 309, 313, 320, 332, 372, 374, 376, 380,
+                    404, 409, 410, 411, 412, 429, 435, 454, 475, 478, 481, 487,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4374,7 +4376,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "used_representation",
-                allowed: &[188, 345, 352, 450],
+                allowed: &[188, 346, 353, 451],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -4382,7 +4384,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 4,
                 name: "identified_item",
                 allowed: &[
-                    20, 21, 22, 26, 27, 28, 30, 33, 185, 186, 261, 262, 263, 454, 455,
+                    20, 21, 22, 26, 27, 28, 30, 33, 185, 186, 261, 262, 263, 455, 456,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4399,14 +4401,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "edge_start",
-                allowed: &[493, 495],
+                allowed: &[494, 496],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 2,
                 name: "edge_end",
-                allowed: &[493, 495],
+                allowed: &[494, 496],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -4415,14 +4417,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "edge_start",
-                allowed: &[493, 495],
+                allowed: &[494, 496],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 2,
                 name: "edge_end",
-                allowed: &[493, 495],
+                allowed: &[494, 496],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -4430,8 +4432,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 3,
                 name: "edge_geometry",
                 allowed: &[
-                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 311, 330, 383,
-                    387, 404, 431, 481, 487,
+                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 308, 312, 331,
+                    384, 388, 405, 432, 482, 488,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4547,14 +4549,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         213 => &[RefSlot {
             idx: 1,
             name: "bound",
-            allowed: &[196, 271, 329, 494],
+            allowed: &[196, 271, 330, 495],
             complex_ok: true,
             is_vec: false,
         }],
         214 => &[RefSlot {
             idx: 1,
             name: "bound",
-            allowed: &[196, 271, 329, 494],
+            allowed: &[196, 271, 330, 495],
             complex_ok: true,
             is_vec: false,
         }],
@@ -4570,8 +4572,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 2,
                 name: "face_geometry",
                 allowed: &[
-                    69, 70, 72, 75, 122, 141, 162, 198, 293, 323, 384, 388, 423, 430, 432, 433,
-                    448, 479, 488,
+                    69, 70, 72, 75, 122, 141, 162, 198, 293, 324, 385, 389, 424, 431, 433, 434,
+                    449, 480, 489,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4583,7 +4585,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "relating_shape_aspect",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4593,7 +4595,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "related_shape_aspect",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4602,14 +4604,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         217 => &[RefSlot {
             idx: 1,
             name: "fill_styles",
-            allowed: &[205, 211, 218, 219, 223, 470, 471],
+            allowed: &[205, 211, 218, 219, 223, 471, 472],
             complex_ok: true,
             is_vec: true,
         }],
         218 => &[RefSlot {
             idx: 1,
             name: "fill_colour",
-            allowed: &[105, 106, 107, 191, 333],
+            allowed: &[105, 106, 107, 191, 334],
             complex_ok: true,
             is_vec: false,
         }],
@@ -4624,7 +4626,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "start_of_next_hatch_line",
-                allowed: &[294, 482],
+                allowed: &[294, 483],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -4648,8 +4650,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 1,
                 name: "closed_curve",
                 allowed: &[
-                    20, 67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 261, 267, 311,
-                    330, 383, 387, 404, 431, 481, 487,
+                    20, 67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 261, 267, 308,
+                    312, 331, 384, 388, 405, 432, 482, 488,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4657,7 +4659,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "region_colour",
-                allowed: &[105, 106, 107, 191, 333],
+                allowed: &[105, 106, 107, 191, 334],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -4672,7 +4674,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         222 => &[RefSlot {
             idx: 1,
             name: "symbol",
-            allowed: &[30, 263, 454],
+            allowed: &[30, 263, 455],
             complex_ok: true,
             is_vec: false,
         }],
@@ -4680,14 +4682,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "tiling_pattern",
-                allowed: &[482],
+                allowed: &[483],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 2,
                 name: "tiles",
-                allowed: &[210, 220, 221, 222, 343],
+                allowed: &[210, 220, 221, 222, 344],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -4705,7 +4707,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4715,7 +4717,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "of_shape",
-                allowed: &[373],
+                allowed: &[374],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -4747,8 +4749,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "derived_definition",
                 allowed: &[
                     5, 17, 18, 19, 102, 104, 117, 142, 171, 172, 173, 174, 175, 176, 224, 238, 240,
-                    241, 242, 243, 244, 268, 287, 308, 312, 331, 373, 379, 400, 403, 428, 434, 453,
-                    480, 486,
+                    241, 242, 243, 244, 268, 287, 309, 313, 332, 374, 380, 401, 404, 429, 435, 454,
+                    481, 487,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4766,8 +4768,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             name: "elements",
             allowed: &[
                 31, 36, 37, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 86, 101, 111, 121,
-                122, 135, 141, 162, 198, 199, 251, 257, 267, 293, 311, 320, 321, 323, 327, 330,
-                383, 384, 387, 388, 404, 423, 430, 431, 432, 433, 448, 479, 481, 487, 488,
+                122, 135, 141, 162, 198, 199, 251, 257, 267, 293, 308, 312, 321, 322, 324, 328,
+                331, 384, 385, 388, 389, 405, 424, 431, 432, 433, 434, 449, 480, 482, 488, 489,
             ],
             complex_ok: true,
             is_vec: true,
@@ -4778,7 +4780,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "definition",
                 allowed: &[
                     16, 17, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 171,
-                    172, 174, 176, 216, 227, 319, 408, 409, 410, 411, 474, 477,
+                    172, 174, 176, 216, 227, 320, 409, 410, 411, 412, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4786,7 +4788,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "used_representation",
-                allowed: &[14, 124, 245, 246, 274, 413, 414, 416, 460],
+                allowed: &[14, 124, 245, 246, 274, 414, 415, 417, 461],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -4798,9 +4800,9 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     74, 75, 76, 77, 81, 82, 83, 84, 86, 101, 103, 109, 110, 111, 115, 121, 122,
                     123, 134, 135, 141, 157, 158, 162, 177, 186, 195, 196, 198, 199, 205, 211, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 257, 262, 267, 273, 293, 294, 295,
-                    305, 311, 320, 321, 322, 323, 327, 329, 330, 383, 384, 387, 388, 391, 404, 417,
-                    422, 423, 430, 431, 432, 433, 448, 452, 456, 457, 458, 459, 461, 462, 463, 464,
-                    466, 479, 481, 482, 487, 488, 491, 495,
+                    305, 308, 312, 321, 322, 323, 324, 328, 330, 331, 384, 385, 388, 389, 392, 405,
+                    418, 423, 424, 431, 432, 433, 434, 449, 453, 457, 458, 459, 460, 462, 463, 464,
+                    465, 467, 480, 482, 483, 488, 489, 492, 496,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4811,8 +4813,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             name: "elements",
             allowed: &[
                 31, 36, 37, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 86, 101, 111, 121,
-                122, 135, 141, 162, 198, 199, 251, 257, 267, 293, 311, 320, 321, 323, 327, 330,
-                383, 384, 387, 388, 404, 423, 430, 431, 432, 433, 448, 479, 481, 487, 488,
+                122, 135, 141, 162, 198, 199, 251, 257, 267, 293, 308, 312, 321, 322, 324, 328,
+                331, 384, 385, 388, 389, 405, 424, 431, 432, 433, 434, 449, 480, 482, 488, 489,
             ],
             complex_ok: true,
             is_vec: true,
@@ -4830,7 +4832,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4841,8 +4843,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 2,
                 name: "relating_geometric_tolerance",
                 allowed: &[
-                    19, 102, 104, 117, 142, 224, 238, 240, 241, 242, 243, 244, 268, 287, 308, 312,
-                    331, 403, 428, 434, 453, 480, 486,
+                    19, 102, 104, 117, 142, 224, 238, 240, 241, 242, 243, 244, 268, 287, 309, 313,
+                    332, 404, 429, 435, 454, 481, 487,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4851,8 +4853,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 3,
                 name: "related_geometric_tolerance",
                 allowed: &[
-                    19, 102, 104, 117, 142, 224, 238, 240, 241, 242, 243, 244, 268, 287, 308, 312,
-                    331, 403, 428, 434, 453, 480, 486,
+                    19, 102, 104, 117, 142, 224, 238, 240, 241, 242, 243, 244, 268, 287, 309, 313,
+                    332, 404, 429, 435, 454, 481, 487,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4871,7 +4873,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4897,7 +4899,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4905,14 +4907,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 4,
                 name: "unit_size",
-                allowed: &[264, 324],
+                allowed: &[264, 325],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 6,
                 name: "second_unit_size",
-                allowed: &[264, 324],
+                allowed: &[264, 325],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -4930,7 +4932,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4938,7 +4940,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 4,
                 name: "unit_size",
-                allowed: &[264, 324],
+                allowed: &[264, 325],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -4956,7 +4958,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4982,7 +4984,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -4998,10 +5000,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -5009,7 +5011,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -5024,10 +5026,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -5035,7 +5037,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -5043,7 +5045,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         247 => &[RefSlot {
             idx: 2,
             name: "uncertainty",
-            allowed: &[484],
+            allowed: &[485],
             complex_ok: false,
             is_vec: true,
         }],
@@ -5051,7 +5053,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             idx: 2,
             name: "units",
             allowed: &[
-                59, 128, 132, 164, 265, 277, 289, 325, 386, 418, 421, 472, 498,
+                59, 128, 132, 164, 265, 277, 289, 326, 387, 419, 422, 473, 499,
             ],
             complex_ok: true,
             is_vec: true,
@@ -5059,7 +5061,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         250 => &[RefSlot {
             idx: 0,
             name: "assigned_group",
-            allowed: &[249, 361],
+            allowed: &[249, 362],
             complex_ok: true,
             is_vec: false,
         }],
@@ -5078,9 +5080,9 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 123, 124, 129, 142, 148, 149, 151, 152, 154, 155, 156, 159, 163, 171, 172, 173,
                 174, 175, 176, 188, 194, 195, 196, 212, 213, 214, 215, 216, 224, 227, 238, 240,
                 241, 242, 243, 244, 245, 246, 249, 268, 271, 274, 283, 284, 285, 287, 295, 301,
-                302, 305, 306, 308, 310, 312, 315, 318, 319, 329, 331, 345, 347, 352, 356, 361,
-                373, 377, 379, 392, 403, 408, 409, 410, 411, 413, 414, 416, 428, 434, 450, 453,
-                460, 474, 477, 478, 480, 486, 493, 494, 495, 496, 499,
+                302, 305, 306, 309, 311, 313, 316, 319, 320, 330, 332, 346, 348, 353, 357, 362,
+                374, 378, 380, 393, 404, 409, 410, 411, 412, 414, 415, 417, 429, 435, 451, 454,
+                461, 475, 478, 479, 481, 487, 494, 495, 496, 497, 500,
             ],
             complex_ok: true,
             is_vec: false,
@@ -5097,8 +5099,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 1,
                 name: "curve_3d",
                 allowed: &[
-                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 311, 330, 383,
-                    387, 404, 431, 481, 487,
+                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 308, 312, 331,
+                    384, 388, 405, 432, 482, 488,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -5107,8 +5109,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 2,
                 name: "associated_geometry",
                 allowed: &[
-                    69, 70, 72, 74, 75, 122, 141, 162, 198, 293, 311, 323, 384, 388, 423, 430, 432,
-                    433, 448, 479, 488,
+                    69, 70, 72, 74, 75, 122, 141, 162, 198, 293, 312, 324, 385, 389, 424, 431, 433,
+                    434, 449, 480, 489,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -5119,8 +5121,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             name: "invisible_items",
             allowed: &[
                 14, 20, 21, 22, 26, 27, 28, 30, 33, 100, 124, 126, 159, 185, 186, 188, 245, 246,
-                261, 262, 263, 274, 283, 284, 285, 307, 345, 346, 347, 352, 392, 413, 414, 416,
-                429, 450, 454, 455, 460,
+                261, 262, 263, 274, 283, 284, 285, 307, 346, 347, 348, 353, 393, 414, 415, 417,
+                430, 451, 455, 456, 461,
             ],
             complex_ok: true,
             is_vec: true,
@@ -5135,10 +5137,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -5152,10 +5154,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -5169,8 +5171,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     16, 17, 18, 19, 41, 42, 43, 44, 45, 46, 62, 91, 98, 99, 100, 102, 104, 108,
                     113, 114, 117, 129, 142, 148, 149, 151, 152, 154, 155, 156, 163, 171, 172, 173,
                     174, 175, 176, 179, 216, 224, 227, 228, 238, 240, 241, 242, 243, 244, 268, 272,
-                    286, 287, 290, 308, 312, 319, 331, 371, 373, 375, 379, 380, 403, 408, 409, 410,
-                    411, 428, 434, 453, 474, 477, 480, 486,
+                    286, 287, 290, 309, 313, 320, 332, 372, 374, 376, 380, 381, 404, 409, 410, 411,
+                    412, 429, 435, 454, 475, 478, 481, 487,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -5179,8 +5181,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 3,
                 name: "used_representation",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 413,
-                    414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 414,
+                    415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -5194,10 +5196,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -5207,7 +5209,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "styles",
-                allowed: &[350, 351],
+                allowed: &[351, 352],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -5215,8 +5217,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 2,
                 name: "item",
                 allowed: &[
-                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 233, 251, 257, 267, 311, 330,
-                    383, 387, 404, 431, 481, 487,
+                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 233, 251, 257, 267, 308, 312,
+                    331, 384, 388, 405, 432, 482, 488,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -5225,7 +5227,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         262 => &[RefSlot {
             idx: 1,
             name: "contents",
-            allowed: &[20, 21, 26, 27, 30, 33, 261, 263, 454, 455],
+            allowed: &[20, 21, 26, 27, 30, 33, 261, 263, 455, 456],
             complex_ok: true,
             is_vec: true,
         }],
@@ -5233,7 +5235,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "styles",
-                allowed: &[350, 351],
+                allowed: &[351, 352],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -5256,7 +5258,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             idx: 1,
             name: "unit_component",
             allowed: &[
-                59, 128, 132, 164, 265, 277, 289, 325, 386, 418, 421, 472, 498,
+                59, 128, 132, 164, 265, 277, 289, 326, 387, 419, 422, 473, 499,
             ],
             complex_ok: true,
             is_vec: false,
@@ -5279,7 +5281,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "dir",
-                allowed: &[491],
+                allowed: &[492],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -5297,7 +5299,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -5314,21 +5316,21 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "relating_product_definition",
-                allowed: &[232, 363, 370, 376],
+                allowed: &[232, 364, 371, 377],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 4,
                 name: "related_product_definition",
-                allowed: &[232, 363, 370, 376],
+                allowed: &[232, 364, 371, 377],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 7,
                 name: "quantity",
-                allowed: &[264, 276, 279, 280, 324, 385, 484],
+                allowed: &[264, 276, 279, 280, 325, 386, 485],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -5350,10 +5352,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -5361,7 +5363,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -5370,7 +5372,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "mapping_source",
-                allowed: &[85, 396],
+                allowed: &[85, 397],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -5383,10 +5385,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -5396,7 +5398,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             idx: 1,
             name: "unit_component",
             allowed: &[
-                59, 128, 132, 164, 265, 277, 289, 325, 386, 418, 421, 472, 498,
+                59, 128, 132, 164, 265, 277, 289, 326, 387, 419, 422, 473, 499,
             ],
             complex_ok: true,
             is_vec: false,
@@ -5412,14 +5414,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "qualified_measure",
-                allowed: &[264, 276, 279, 280, 324, 385, 484],
+                allowed: &[264, 276, 279, 280, 325, 386, 485],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 3,
                 name: "qualifiers",
-                allowed: &[344, 483, 485, 489],
+                allowed: &[345, 484, 486, 490],
                 complex_ok: false,
                 is_vec: true,
             },
@@ -5428,7 +5430,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             idx: 2,
             name: "unit_component",
             allowed: &[
-                59, 128, 132, 164, 265, 277, 289, 325, 386, 418, 421, 472, 498,
+                59, 128, 132, 164, 265, 277, 289, 326, 387, 419, 422, 473, 499,
             ],
             complex_ok: true,
             is_vec: false,
@@ -5437,7 +5439,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             idx: 1,
             name: "unit_component",
             allowed: &[
-                59, 128, 132, 164, 265, 277, 289, 325, 386, 418, 421, 472, 498,
+                59, 128, 132, 164, 265, 277, 289, 326, 387, 419, 422, 473, 499,
             ],
             complex_ok: true,
             is_vec: false,
@@ -5453,14 +5455,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "rep_1",
-                allowed: &[14, 188, 245, 246, 274, 283, 284, 285, 413, 414, 416, 460],
+                allowed: &[14, 188, 245, 246, 274, 283, 284, 285, 414, 415, 417, 461],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 3,
                 name: "rep_2",
-                allowed: &[14, 188, 245, 246, 274, 283, 284, 285, 413, 414, 416, 460],
+                allowed: &[14, 188, 245, 246, 274, 283, 284, 285, 414, 415, 417, 461],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -5475,10 +5477,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -5486,7 +5488,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -5501,10 +5503,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -5512,7 +5514,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -5527,10 +5529,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -5538,7 +5540,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -5553,10 +5555,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -5565,8 +5567,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 3,
                 name: "rep",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 413,
-                    414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 414,
+                    415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -5585,7 +5587,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -5595,8 +5597,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             idx: 1,
             name: "named_item",
             allowed: &[
-                8, 13, 59, 118, 119, 127, 164, 197, 301, 314, 315, 318, 363, 367, 374, 376, 381,
-                412, 498,
+                8, 13, 59, 118, 119, 127, 164, 197, 301, 315, 316, 319, 364, 368, 375, 377, 382,
+                413, 499,
             ],
             complex_ok: true,
             is_vec: false,
@@ -5612,14 +5614,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "relating_product_definition",
-                allowed: &[232, 363, 370, 376],
+                allowed: &[232, 364, 371, 377],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 4,
                 name: "related_product_definition",
-                allowed: &[232, 363, 370, 376],
+                allowed: &[232, 364, 371, 377],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -5628,8 +5630,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             idx: 1,
             name: "basis_surface",
             allowed: &[
-                69, 70, 72, 75, 122, 141, 162, 198, 293, 323, 384, 388, 423, 430, 432, 433, 448,
-                479, 488,
+                69, 70, 72, 75, 122, 141, 162, 198, 293, 324, 385, 389, 424, 431, 433, 434, 449,
+                480, 489,
             ],
             complex_ok: true,
             is_vec: false,
@@ -5637,7 +5639,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         294 => &[RefSlot {
             idx: 1,
             name: "repeat_factor",
-            allowed: &[491],
+            allowed: &[492],
             complex_ok: true,
             is_vec: false,
         }],
@@ -5714,14 +5716,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "edge_start",
-                allowed: &[493, 495],
+                allowed: &[494, 496],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 2,
                 name: "edge_end",
-                allowed: &[493, 495],
+                allowed: &[494, 496],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -5737,7 +5739,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "styles",
-                allowed: &[350, 351],
+                allowed: &[351, 352],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -5750,10 +5752,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     110, 111, 115, 121, 122, 123, 124, 134, 135, 141, 157, 158, 159, 162, 177, 186,
                     188, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215, 219, 220, 221, 222,
                     223, 233, 236, 237, 245, 246, 251, 257, 262, 267, 271, 273, 274, 275, 283, 284,
-                    285, 293, 294, 295, 305, 306, 310, 311, 320, 321, 322, 323, 327, 329, 330, 345,
-                    347, 352, 383, 384, 387, 388, 391, 392, 397, 404, 413, 414, 416, 417, 422, 423,
-                    430, 431, 432, 433, 448, 450, 452, 456, 457, 458, 459, 460, 461, 462, 463, 464,
-                    466, 478, 479, 481, 482, 487, 488, 491, 493, 494, 495, 496, 499,
+                    285, 293, 294, 295, 305, 306, 308, 311, 312, 321, 322, 323, 324, 328, 330, 331,
+                    346, 348, 353, 384, 385, 388, 389, 392, 393, 398, 405, 414, 415, 417, 418, 423,
+                    424, 431, 432, 433, 434, 449, 451, 453, 457, 458, 459, 460, 461, 462, 463, 464,
+                    465, 467, 479, 480, 482, 483, 488, 489, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -5762,13 +5764,20 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 3,
                 name: "over_ridden_style",
                 allowed: &[
-                    20, 21, 22, 26, 27, 28, 30, 33, 126, 185, 261, 263, 307, 429, 454, 455,
+                    20, 21, 22, 26, 27, 28, 30, 33, 126, 185, 261, 263, 307, 430, 455, 456,
                 ],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        308 => &[
+        308 => &[RefSlot {
+            idx: 1,
+            name: "position",
+            allowed: &[65, 66],
+            complex_ok: false,
+            is_vec: false,
+        }],
+        309 => &[
             RefSlot {
                 idx: 2,
                 name: "magnitude",
@@ -5781,7 +5790,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -5794,20 +5803,20 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 is_vec: true,
             },
         ],
-        310 => &[RefSlot {
+        311 => &[RefSlot {
             idx: 1,
             name: "edge_list",
             allowed: &[306],
             complex_ok: true,
             is_vec: true,
         }],
-        311 => &[
+        312 => &[
             RefSlot {
                 idx: 1,
                 name: "basis_surface",
                 allowed: &[
-                    69, 70, 72, 75, 122, 141, 162, 198, 293, 323, 384, 388, 423, 430, 432, 433,
-                    448, 479, 488,
+                    69, 70, 72, 75, 122, 141, 162, 198, 293, 324, 385, 389, 424, 431, 433, 434,
+                    449, 480, 489,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -5820,7 +5829,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
-        312 => &[
+        313 => &[
             RefSlot {
                 idx: 2,
                 name: "magnitude",
@@ -5833,7 +5842,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -5846,11 +5855,11 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 is_vec: true,
             },
         ],
-        314 => &[
+        315 => &[
             RefSlot {
                 idx: 0,
                 name: "the_person",
-                allowed: &[313],
+                allowed: &[314],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -5862,7 +5871,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
-        315 => &[
+        316 => &[
             RefSlot {
                 idx: 12,
                 name: "organizations",
@@ -5873,83 +5882,83 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 14,
                 name: "people",
-                allowed: &[313],
+                allowed: &[314],
                 complex_ok: false,
                 is_vec: true,
             },
         ],
-        316 => &[
+        317 => &[
             RefSlot {
                 idx: 0,
                 name: "assigned_person_and_organization",
-                allowed: &[314],
+                allowed: &[315],
                 complex_ok: false,
                 is_vec: false,
             },
             RefSlot {
                 idx: 1,
                 name: "role",
-                allowed: &[317],
+                allowed: &[318],
                 complex_ok: false,
                 is_vec: false,
             },
         ],
-        318 => &[RefSlot {
+        319 => &[RefSlot {
             idx: 12,
             name: "people",
-            allowed: &[313],
+            allowed: &[314],
             complex_ok: false,
             is_vec: true,
         }],
-        319 => &[RefSlot {
+        320 => &[RefSlot {
             idx: 2,
             name: "of_shape",
-            allowed: &[373],
+            allowed: &[374],
             complex_ok: true,
             is_vec: false,
         }],
-        320 => &[RefSlot {
+        321 => &[RefSlot {
             idx: 1,
             name: "location",
             allowed: &[36, 37, 86],
             complex_ok: false,
             is_vec: false,
         }],
-        321 => &[RefSlot {
+        322 => &[RefSlot {
             idx: 3,
             name: "placement",
             allowed: &[65, 66],
             complex_ok: false,
             is_vec: false,
         }],
-        323 => &[RefSlot {
+        324 => &[RefSlot {
             idx: 1,
             name: "position",
             allowed: &[66],
             complex_ok: false,
             is_vec: false,
         }],
-        324 => &[RefSlot {
+        325 => &[RefSlot {
             idx: 1,
             name: "unit_component",
             allowed: &[
-                59, 128, 132, 164, 265, 277, 289, 325, 386, 418, 421, 472, 498,
+                59, 128, 132, 164, 265, 277, 289, 326, 387, 419, 422, 473, 499,
             ],
             complex_ok: true,
             is_vec: false,
         }],
-        325 => &[RefSlot {
+        326 => &[RefSlot {
             idx: 0,
             name: "dimensions",
             allowed: &[170],
             complex_ok: false,
             is_vec: false,
         }],
-        326 => &[
+        327 => &[
             RefSlot {
                 idx: 0,
                 name: "range",
-                allowed: &[266, 473],
+                allowed: &[266, 474],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -5961,44 +5970,44 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
-        328 => &[
+        329 => &[
             RefSlot {
                 idx: 1,
                 name: "marker",
-                allowed: &[336, 337],
+                allowed: &[337, 338],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 2,
                 name: "marker_size",
-                allowed: &[264, 276, 279, 280, 324, 385, 484],
+                allowed: &[264, 276, 279, 280, 325, 386, 485],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 3,
                 name: "marker_colour",
-                allowed: &[105, 106, 107, 191, 333],
+                allowed: &[105, 106, 107, 191, 334],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        329 => &[RefSlot {
+        330 => &[RefSlot {
             idx: 1,
             name: "polygon",
             allowed: &[36, 37, 86],
             complex_ok: false,
             is_vec: true,
         }],
-        330 => &[RefSlot {
+        331 => &[RefSlot {
             idx: 1,
             name: "points",
             allowed: &[36, 37, 86],
             complex_ok: false,
             is_vec: true,
         }],
-        331 => &[
+        332 => &[
             RefSlot {
                 idx: 2,
                 name: "magnitude",
@@ -6011,13 +6020,13 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        345 => &[
+        346 => &[
             RefSlot {
                 idx: 1,
                 name: "items",
@@ -6027,10 +6036,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -6038,12 +6047,12 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        346 => &[RefSlot {
+        347 => &[RefSlot {
             idx: 2,
             name: "assigned_items",
             allowed: &[
@@ -6052,15 +6061,15 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158, 162, 167,
                 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215, 219, 220,
                 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271, 273, 275,
-                279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327, 329, 330,
-                345, 347, 352, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429,
-                430, 431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464,
-                466, 478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324, 328, 330,
+                331, 346, 348, 353, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424,
+                430, 431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464,
+                465, 467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
             ],
             complex_ok: true,
             is_vec: true,
         }],
-        347 => &[
+        348 => &[
             RefSlot {
                 idx: 1,
                 name: "items",
@@ -6070,10 +6079,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -6081,39 +6090,39 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        349 => &[
+        350 => &[
             RefSlot {
                 idx: 0,
                 name: "unit",
-                allowed: &[58, 345, 352],
+                allowed: &[58, 346, 353],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 1,
                 name: "size",
-                allowed: &[321],
+                allowed: &[322],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        350 => &[RefSlot {
+        351 => &[RefSlot {
             idx: 0,
             name: "styles",
-            allowed: &[55, 136, 207, 217, 328, 338, 447, 451, 467, 469, 471],
+            allowed: &[55, 136, 207, 217, 329, 339, 448, 452, 468, 470, 472],
             complex_ok: true,
             is_vec: true,
         }],
-        351 => &[
+        352 => &[
             RefSlot {
                 idx: 0,
                 name: "styles",
-                allowed: &[55, 136, 207, 217, 328, 338, 447, 451, 467, 469, 471],
+                allowed: &[55, 136, 207, 217, 329, 339, 448, 452, 468, 470, 472],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -6127,17 +6136,17 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     135, 141, 157, 158, 159, 160, 161, 162, 167, 177, 185, 186, 188, 194, 195, 196,
                     198, 199, 205, 211, 212, 213, 214, 215, 219, 220, 221, 222, 223, 233, 236, 237,
                     245, 246, 249, 251, 256, 257, 261, 262, 263, 267, 271, 273, 274, 275, 279, 282,
-                    283, 284, 285, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 345, 346, 347, 348, 352, 361, 382, 383, 384, 387, 388, 390, 391, 392,
-                    395, 398, 399, 404, 413, 414, 415, 416, 417, 422, 423, 429, 430, 431, 432, 433,
-                    448, 450, 452, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 466, 478,
-                    479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    283, 284, 285, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 346, 347, 348, 349, 353, 362, 383, 384, 385, 388, 389, 391, 392,
+                    393, 396, 399, 400, 405, 414, 415, 416, 417, 418, 423, 424, 430, 431, 432, 433,
+                    434, 449, 451, 453, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465, 467,
+                    479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        352 => &[
+        353 => &[
             RefSlot {
                 idx: 1,
                 name: "items",
@@ -6147,10 +6156,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -6158,166 +6167,150 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        354 => &[
+        355 => &[
             RefSlot {
                 idx: 0,
                 name: "presentation",
-                allowed: &[345, 347, 348, 352],
+                allowed: &[346, 348, 349, 353],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 1,
                 name: "item",
-                allowed: &[47, 353],
+                allowed: &[47, 354],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        355 => &[RefSlot {
+        356 => &[RefSlot {
             idx: 3,
             name: "frame_of_reference",
-            allowed: &[281, 362],
+            allowed: &[281, 363],
             complex_ok: true,
             is_vec: true,
         }],
-        357 => &[
+        358 => &[
             RefSlot {
                 idx: 2,
                 name: "category",
-                allowed: &[356, 377],
+                allowed: &[357, 378],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 3,
                 name: "sub_category",
-                allowed: &[356, 377],
+                allowed: &[357, 378],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        358 => &[RefSlot {
+        359 => &[RefSlot {
             idx: 3,
             name: "market_context",
-            allowed: &[359],
+            allowed: &[360],
             complex_ok: false,
             is_vec: false,
         }],
-        359 => &[RefSlot {
+        360 => &[RefSlot {
             idx: 1,
             name: "frame_of_reference",
             allowed: &[38],
             complex_ok: false,
             is_vec: false,
         }],
-        362 => &[RefSlot {
+        363 => &[RefSlot {
             idx: 1,
             name: "frame_of_reference",
             allowed: &[38],
             complex_ok: false,
             is_vec: false,
         }],
-        363 => &[
+        364 => &[
             RefSlot {
                 idx: 2,
                 name: "formation",
-                allowed: &[368, 369],
+                allowed: &[369, 370],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 3,
                 name: "frame_of_reference",
-                allowed: &[168, 364],
+                allowed: &[168, 365],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        364 => &[RefSlot {
+        365 => &[RefSlot {
             idx: 1,
             name: "frame_of_reference",
             allowed: &[38],
             complex_ok: false,
             is_vec: false,
         }],
-        365 => &[
+        366 => &[
             RefSlot {
                 idx: 0,
                 name: "definition",
-                allowed: &[363, 376],
+                allowed: &[364, 377],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 1,
                 name: "frame_of_reference",
-                allowed: &[168, 364],
+                allowed: &[168, 365],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 2,
                 name: "role",
-                allowed: &[366],
+                allowed: &[367],
                 complex_ok: false,
                 is_vec: false,
             },
         ],
-        367 => &[RefSlot {
+        368 => &[RefSlot {
             idx: 1,
             name: "usage",
-            allowed: &[62, 272, 290, 371, 375],
-            complex_ok: true,
-            is_vec: false,
-        }],
-        368 => &[RefSlot {
-            idx: 2,
-            name: "of_product",
-            allowed: &[355],
+            allowed: &[62, 272, 290, 372, 376],
             complex_ok: true,
             is_vec: false,
         }],
         369 => &[RefSlot {
             idx: 2,
             name: "of_product",
-            allowed: &[355],
+            allowed: &[356],
             complex_ok: true,
             is_vec: false,
         }],
-        370 => &[
+        370 => &[RefSlot {
+            idx: 2,
+            name: "of_product",
+            allowed: &[356],
+            complex_ok: true,
+            is_vec: false,
+        }],
+        371 => &[
             RefSlot {
                 idx: 3,
                 name: "definition",
-                allowed: &[232, 363, 370, 376],
+                allowed: &[232, 364, 371, 377],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 4,
                 name: "quantity",
-                allowed: &[264, 276, 279, 280, 324, 385, 484],
-                complex_ok: true,
-                is_vec: false,
-            },
-        ],
-        371 => &[
-            RefSlot {
-                idx: 3,
-                name: "relating_product_definition",
-                allowed: &[232, 363, 370, 376],
-                complex_ok: true,
-                is_vec: false,
-            },
-            RefSlot {
-                idx: 4,
-                name: "related_product_definition",
-                allowed: &[232, 363, 370, 376],
+                allowed: &[264, 276, 279, 280, 325, 386, 485],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -6325,76 +6318,92 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         372 => &[
             RefSlot {
                 idx: 3,
-                name: "relating",
-                allowed: &[62, 272, 290, 371, 375],
-                complex_ok: true,
-                is_vec: false,
-            },
-            RefSlot {
-                idx: 4,
-                name: "related",
-                allowed: &[62, 272, 290, 371, 375],
-                complex_ok: true,
-                is_vec: false,
-            },
-        ],
-        373 => &[RefSlot {
-            idx: 2,
-            name: "definition",
-            allowed: &[
-                16, 17, 18, 19, 62, 91, 98, 99, 100, 102, 104, 108, 113, 114, 117, 129, 142, 148,
-                149, 151, 152, 154, 155, 156, 163, 171, 172, 173, 174, 175, 176, 179, 189, 190,
-                216, 224, 227, 234, 238, 240, 241, 242, 243, 244, 260, 268, 272, 286, 287, 290,
-                308, 312, 319, 331, 363, 370, 371, 372, 373, 375, 376, 403, 408, 409, 410, 411,
-                428, 434, 453, 474, 477, 480, 486,
-            ],
-            complex_ok: true,
-            is_vec: false,
-        }],
-        374 => &[
-            RefSlot {
-                idx: 1,
-                name: "context_relationship",
-                allowed: &[62, 272, 290, 371, 375],
-                complex_ok: true,
-                is_vec: false,
-            },
-            RefSlot {
-                idx: 2,
-                name: "substitute_definition",
-                allowed: &[363, 376],
-                complex_ok: true,
-                is_vec: false,
-            },
-        ],
-        375 => &[
-            RefSlot {
-                idx: 3,
                 name: "relating_product_definition",
-                allowed: &[232, 363, 370, 376],
+                allowed: &[232, 364, 371, 377],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 4,
                 name: "related_product_definition",
-                allowed: &[232, 363, 370, 376],
+                allowed: &[232, 364, 371, 377],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        373 => &[
+            RefSlot {
+                idx: 3,
+                name: "relating",
+                allowed: &[62, 272, 290, 372, 376],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 4,
+                name: "related",
+                allowed: &[62, 272, 290, 372, 376],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        374 => &[RefSlot {
+            idx: 2,
+            name: "definition",
+            allowed: &[
+                16, 17, 18, 19, 62, 91, 98, 99, 100, 102, 104, 108, 113, 114, 117, 129, 142, 148,
+                149, 151, 152, 154, 155, 156, 163, 171, 172, 173, 174, 175, 176, 179, 189, 190,
+                216, 224, 227, 234, 238, 240, 241, 242, 243, 244, 260, 268, 272, 286, 287, 290,
+                309, 313, 320, 332, 364, 371, 372, 373, 374, 376, 377, 404, 409, 410, 411, 412,
+                429, 435, 454, 475, 478, 481, 487,
+            ],
+            complex_ok: true,
+            is_vec: false,
+        }],
+        375 => &[
+            RefSlot {
+                idx: 1,
+                name: "context_relationship",
+                allowed: &[62, 272, 290, 372, 376],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 2,
+                name: "substitute_definition",
+                allowed: &[364, 377],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
         376 => &[
             RefSlot {
+                idx: 3,
+                name: "relating_product_definition",
+                allowed: &[232, 364, 371, 377],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 4,
+                name: "related_product_definition",
+                allowed: &[232, 364, 371, 377],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        377 => &[
+            RefSlot {
                 idx: 2,
                 name: "formation",
-                allowed: &[368, 369],
+                allowed: &[369, 370],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 3,
                 name: "frame_of_reference",
-                allowed: &[168, 364],
+                allowed: &[168, 365],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -6406,18 +6415,18 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 is_vec: true,
             },
         ],
-        377 => &[RefSlot {
+        378 => &[RefSlot {
             idx: 2,
             name: "products",
-            allowed: &[355],
+            allowed: &[356],
             complex_ok: true,
             is_vec: true,
         }],
-        378 => &[
+        379 => &[
             RefSlot {
                 idx: 0,
                 name: "zone",
-                allowed: &[474, 477],
+                allowed: &[475, 478],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -6426,7 +6435,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "boundaries",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -6436,7 +6445,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "projection_end",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -6449,42 +6458,42 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
-        379 => &[RefSlot {
+        380 => &[RefSlot {
             idx: 2,
             name: "definition",
             allowed: &[
                 16, 17, 18, 19, 62, 91, 98, 99, 100, 102, 104, 108, 113, 114, 117, 129, 142, 148,
                 149, 151, 152, 154, 155, 156, 163, 171, 172, 173, 174, 175, 176, 179, 189, 190,
                 216, 224, 227, 234, 238, 240, 241, 242, 243, 244, 260, 268, 272, 286, 287, 290,
-                308, 312, 319, 331, 363, 370, 371, 372, 373, 375, 376, 403, 408, 409, 410, 411,
-                428, 434, 453, 474, 477, 480, 486,
+                309, 313, 320, 332, 364, 371, 372, 373, 374, 376, 377, 404, 409, 410, 411, 412,
+                429, 435, 454, 475, 478, 481, 487,
             ],
             complex_ok: true,
             is_vec: false,
         }],
-        380 => &[
+        381 => &[
             RefSlot {
                 idx: 2,
                 name: "relating_property_definition",
-                allowed: &[373, 379],
+                allowed: &[374, 380],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 3,
                 name: "related_property_definition",
-                allowed: &[373, 379],
+                allowed: &[374, 380],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        381 => &[
+        382 => &[
             RefSlot {
                 idx: 0,
                 name: "definition",
                 allowed: &[
                     16, 17, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 171,
-                    172, 174, 176, 216, 227, 228, 319, 373, 379, 380, 408, 409, 410, 411, 474, 477,
+                    172, 174, 176, 216, 227, 228, 320, 374, 380, 381, 409, 410, 411, 412, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -6493,58 +6502,58 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 1,
                 name: "used_representation",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 413,
-                    414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 414,
+                    415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        382 => &[RefSlot {
+        383 => &[RefSlot {
             idx: 1,
             name: "qualifiers",
-            allowed: &[344, 483, 485, 489],
+            allowed: &[345, 484, 486, 490],
             complex_ok: false,
             is_vec: true,
         }],
-        383 => &[RefSlot {
+        384 => &[RefSlot {
             idx: 2,
             name: "control_points_list",
             allowed: &[36, 37, 86],
             complex_ok: false,
             is_vec: true,
         }],
-        385 => &[RefSlot {
+        386 => &[RefSlot {
             idx: 1,
             name: "unit_component",
             allowed: &[
-                59, 128, 132, 164, 265, 277, 289, 325, 386, 418, 421, 472, 498,
+                59, 128, 132, 164, 265, 277, 289, 326, 387, 419, 422, 473, 499,
             ],
             complex_ok: true,
             is_vec: false,
         }],
-        386 => &[RefSlot {
+        387 => &[RefSlot {
             idx: 0,
             name: "dimensions",
             allowed: &[170],
             complex_ok: false,
             is_vec: false,
         }],
-        387 => &[RefSlot {
+        388 => &[RefSlot {
             idx: 2,
             name: "control_points_list",
             allowed: &[36, 37, 86],
             complex_ok: false,
             is_vec: true,
         }],
-        391 => &[RefSlot {
+        392 => &[RefSlot {
             idx: 1,
             name: "location",
             allowed: &[66],
             complex_ok: false,
             is_vec: false,
         }],
-        392 => &[
+        393 => &[
             RefSlot {
                 idx: 1,
                 name: "items",
@@ -6554,10 +6563,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -6565,12 +6574,12 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        396 => &[
+        397 => &[
             RefSlot {
                 idx: 0,
                 name: "mapping_origin",
@@ -6580,10 +6589,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -6592,49 +6601,27 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 1,
                 name: "mapped_representation",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 413,
-                    414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 414,
+                    415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        397 => &[RefSlot {
+        398 => &[RefSlot {
             idx: 1,
             name: "context_of_items",
-            allowed: &[394],
+            allowed: &[395],
             complex_ok: false,
             is_vec: false,
         }],
-        398 => &[
-            RefSlot {
-                idx: 2,
-                name: "rep_1",
-                allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 397,
-                    413, 414, 416, 450, 460,
-                ],
-                complex_ok: true,
-                is_vec: false,
-            },
-            RefSlot {
-                idx: 3,
-                name: "rep_2",
-                allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 397,
-                    413, 414, 416, 450, 460,
-                ],
-                complex_ok: true,
-                is_vec: false,
-            },
-        ],
         399 => &[
             RefSlot {
                 idx: 2,
                 name: "rep_1",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 397,
-                    413, 414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 398,
+                    414, 415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -6643,8 +6630,30 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 3,
                 name: "rep_2",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 397,
-                    413, 414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 398,
+                    414, 415, 417, 451, 461,
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        400 => &[
+            RefSlot {
+                idx: 2,
+                name: "rep_1",
+                allowed: &[
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 398,
+                    414, 415, 417, 451, 461,
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "rep_2",
+                allowed: &[
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 398,
+                    414, 415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -6657,14 +6666,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
-        400 => &[RefSlot {
+        401 => &[RefSlot {
             idx: 2,
             name: "resource",
             allowed: &[9, 10, 11],
             complex_ok: true,
             is_vec: false,
         }],
-        402 => &[
+        403 => &[
             RefSlot {
                 idx: 0,
                 name: "role",
@@ -6676,13 +6685,13 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 1,
                 name: "item_with_role",
                 allowed: &[
-                    1, 7, 41, 43, 45, 48, 50, 51, 87, 90, 94, 95, 182, 250, 406, 424, 425,
+                    1, 7, 41, 43, 45, 48, 50, 51, 87, 90, 94, 95, 182, 250, 407, 425, 426,
                 ],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        403 => &[
+        404 => &[
             RefSlot {
                 idx: 2,
                 name: "magnitude",
@@ -6695,19 +6704,19 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        404 => &[
+        405 => &[
             RefSlot {
                 idx: 1,
                 name: "curve_3d",
                 allowed: &[
-                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 311, 330, 383,
-                    387, 404, 431, 481, 487,
+                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 308, 312, 331,
+                    384, 388, 405, 432, 482, 488,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -6716,63 +6725,41 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 2,
                 name: "associated_geometry",
                 allowed: &[
-                    69, 70, 72, 74, 75, 122, 141, 162, 198, 293, 311, 323, 384, 388, 423, 430, 432,
-                    433, 448, 479, 488,
+                    69, 70, 72, 74, 75, 122, 141, 162, 198, 293, 312, 324, 385, 389, 424, 431, 433,
+                    434, 449, 480, 489,
                 ],
                 complex_ok: true,
                 is_vec: true,
             },
         ],
-        405 => &[RefSlot {
+        406 => &[RefSlot {
             idx: 2,
             name: "security_level",
-            allowed: &[407],
+            allowed: &[408],
             complex_ok: false,
             is_vec: false,
         }],
-        406 => &[RefSlot {
+        407 => &[RefSlot {
             idx: 0,
             name: "assigned_security_classification",
-            allowed: &[405],
+            allowed: &[406],
             complex_ok: false,
             is_vec: false,
         }],
-        408 => &[RefSlot {
+        409 => &[RefSlot {
             idx: 2,
             name: "of_shape",
-            allowed: &[373],
+            allowed: &[374],
             complex_ok: true,
             is_vec: false,
         }],
-        409 => &[
-            RefSlot {
-                idx: 2,
-                name: "relating_shape_aspect",
-                allowed: &[
-                    16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
-                ],
-                complex_ok: true,
-                is_vec: false,
-            },
-            RefSlot {
-                idx: 3,
-                name: "related_shape_aspect",
-                allowed: &[
-                    16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
-                ],
-                complex_ok: true,
-                is_vec: false,
-            },
-        ],
         410 => &[
             RefSlot {
                 idx: 2,
                 name: "relating_shape_aspect",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -6782,7 +6769,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "related_shape_aspect",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -6794,7 +6781,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "relating_shape_aspect",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -6804,7 +6791,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "related_shape_aspect",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -6812,11 +6799,33 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
         ],
         412 => &[
             RefSlot {
+                idx: 2,
+                name: "relating_shape_aspect",
+                allowed: &[
+                    16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
+                    320, 409, 475, 478,
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "related_shape_aspect",
+                allowed: &[
+                    16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
+                    320, 409, 475, 478,
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        413 => &[
+            RefSlot {
                 idx: 0,
                 name: "definition",
                 allowed: &[
                     16, 17, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 171,
-                    172, 174, 176, 216, 227, 228, 319, 373, 379, 380, 408, 409, 410, 411, 474, 477,
+                    172, 174, 176, 216, 227, 228, 320, 374, 380, 381, 409, 410, 411, 412, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -6825,35 +6834,9 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 1,
                 name: "used_representation",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 413,
-                    414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 414,
+                    415, 417, 451, 461,
                 ],
-                complex_ok: true,
-                is_vec: false,
-            },
-        ],
-        413 => &[
-            RefSlot {
-                idx: 1,
-                name: "items",
-                allowed: &[
-                    15, 20, 21, 22, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 63, 64, 65,
-                    66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 79, 80, 81, 82, 83, 84, 86,
-                    101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
-                    162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
-                    219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
-                ],
-                complex_ok: true,
-                is_vec: true,
-            },
-            RefSlot {
-                idx: 2,
-                name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -6868,10 +6851,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -6879,34 +6862,12 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
         415 => &[
-            RefSlot {
-                idx: 2,
-                name: "rep_1",
-                allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 397,
-                    413, 414, 416, 450, 460,
-                ],
-                complex_ok: true,
-                is_vec: false,
-            },
-            RefSlot {
-                idx: 3,
-                name: "rep_2",
-                allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 397,
-                    413, 414, 416, 450, 460,
-                ],
-                complex_ok: true,
-                is_vec: false,
-            },
-        ],
-        416 => &[
             RefSlot {
                 idx: 1,
                 name: "items",
@@ -6916,10 +6877,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -6927,56 +6888,104 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        417 => &[RefSlot {
+        416 => &[
+            RefSlot {
+                idx: 2,
+                name: "rep_1",
+                allowed: &[
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 398,
+                    414, 415, 417, 451, 461,
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 3,
+                name: "rep_2",
+                allowed: &[
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 398,
+                    414, 415, 417, 451, 461,
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        417 => &[
+            RefSlot {
+                idx: 1,
+                name: "items",
+                allowed: &[
+                    15, 20, 21, 22, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 63, 64, 65,
+                    66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 79, 80, 81, 82, 83, 84, 86,
+                    101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
+                    162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
+                    219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
+                ],
+                complex_ok: true,
+                is_vec: true,
+            },
+            RefSlot {
+                idx: 2,
+                name: "context_of_items",
+                allowed: &[235, 247, 248, 310, 394],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        418 => &[RefSlot {
             idx: 1,
             name: "sbsm_boundary",
-            allowed: &[103, 295, 305, 496, 499],
+            allowed: &[103, 295, 305, 497, 500],
             complex_ok: true,
             is_vec: true,
         }],
-        418 => &[RefSlot {
+        419 => &[RefSlot {
             idx: 0,
             name: "dimensions",
             allowed: &[170],
             complex_ok: false,
             is_vec: false,
         }],
-        421 => &[RefSlot {
+        422 => &[RefSlot {
             idx: 0,
             name: "dimensions",
             allowed: &[170],
             complex_ok: false,
             is_vec: false,
         }],
-        423 => &[RefSlot {
+        424 => &[RefSlot {
             idx: 1,
             name: "position",
             allowed: &[66],
             complex_ok: false,
             is_vec: false,
         }],
-        424 => &[
+        425 => &[
             RefSlot {
                 idx: 0,
                 name: "assigned_action_request",
-                allowed: &[492],
+                allowed: &[493],
                 complex_ok: false,
                 is_vec: false,
             },
             RefSlot {
                 idx: 1,
                 name: "items",
-                allowed: &[368, 369],
+                allowed: &[369, 370],
                 complex_ok: true,
                 is_vec: true,
             },
         ],
-        425 => &[
+        426 => &[
             RefSlot {
                 idx: 0,
                 name: "assigned_action",
@@ -6987,12 +6996,12 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "items",
-                allowed: &[368, 369],
+                allowed: &[369, 370],
                 complex_ok: true,
                 is_vec: true,
             },
         ],
-        428 => &[
+        429 => &[
             RefSlot {
                 idx: 2,
                 name: "magnitude",
@@ -7005,17 +7014,17 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        429 => &[
+        430 => &[
             RefSlot {
                 idx: 1,
                 name: "styles",
-                allowed: &[350, 351],
+                allowed: &[351, 352],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -7028,22 +7037,22 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     110, 111, 115, 121, 122, 123, 124, 134, 135, 141, 157, 158, 159, 162, 177, 186,
                     188, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215, 219, 220, 221, 222,
                     223, 233, 236, 237, 245, 246, 251, 257, 262, 267, 271, 273, 274, 275, 283, 284,
-                    285, 293, 294, 295, 305, 306, 310, 311, 320, 321, 322, 323, 327, 329, 330, 345,
-                    347, 352, 383, 384, 387, 388, 391, 392, 397, 404, 413, 414, 416, 417, 422, 423,
-                    430, 431, 432, 433, 448, 450, 452, 456, 457, 458, 459, 460, 461, 462, 463, 464,
-                    466, 478, 479, 481, 482, 487, 488, 491, 493, 494, 495, 496, 499,
+                    285, 293, 294, 295, 305, 306, 308, 311, 312, 321, 322, 323, 324, 328, 330, 331,
+                    346, 348, 353, 384, 385, 388, 389, 392, 393, 398, 405, 414, 415, 417, 418, 423,
+                    424, 431, 432, 433, 434, 449, 451, 453, 457, 458, 459, 460, 461, 462, 463, 464,
+                    465, 467, 479, 480, 482, 483, 488, 489, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        431 => &[
+        432 => &[
             RefSlot {
                 idx: 1,
                 name: "curve_3d",
                 allowed: &[
-                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 311, 330, 383,
-                    387, 404, 431, 481, 487,
+                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 308, 312, 331,
+                    384, 388, 405, 432, 482, 488,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -7052,30 +7061,11 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 2,
                 name: "associated_geometry",
                 allowed: &[
-                    69, 70, 72, 74, 75, 122, 141, 162, 198, 293, 311, 323, 384, 388, 423, 430, 432,
-                    433, 448, 479, 488,
+                    69, 70, 72, 74, 75, 122, 141, 162, 198, 293, 312, 324, 385, 389, 424, 431, 433,
+                    434, 449, 480, 489,
                 ],
                 complex_ok: true,
                 is_vec: true,
-            },
-        ],
-        432 => &[
-            RefSlot {
-                idx: 1,
-                name: "swept_curve",
-                allowed: &[
-                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 311, 330, 383,
-                    387, 404, 431, 481, 487,
-                ],
-                complex_ok: true,
-                is_vec: false,
-            },
-            RefSlot {
-                idx: 2,
-                name: "extrusion_axis",
-                allowed: &[491],
-                complex_ok: true,
-                is_vec: false,
             },
         ],
         433 => &[
@@ -7083,8 +7073,27 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 1,
                 name: "swept_curve",
                 allowed: &[
-                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 311, 330, 383,
-                    387, 404, 431, 481, 487,
+                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 308, 312, 331,
+                    384, 388, 405, 432, 482, 488,
+                ],
+                complex_ok: true,
+                is_vec: false,
+            },
+            RefSlot {
+                idx: 2,
+                name: "extrusion_axis",
+                allowed: &[492],
+                complex_ok: true,
+                is_vec: false,
+            },
+        ],
+        434 => &[
+            RefSlot {
+                idx: 1,
+                name: "swept_curve",
+                allowed: &[
+                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 308, 312, 331,
+                    384, 388, 405, 432, 482, 488,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -7097,7 +7106,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
-        434 => &[
+        435 => &[
             RefSlot {
                 idx: 2,
                 name: "magnitude",
@@ -7110,116 +7119,116 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        435 => &[RefSlot {
+        436 => &[RefSlot {
             idx: 0,
             name: "rendered_colour",
-            allowed: &[105, 106, 107, 191, 333],
+            allowed: &[105, 106, 107, 191, 334],
             complex_ok: true,
             is_vec: false,
         }],
-        436 => &[RefSlot {
+        437 => &[RefSlot {
             idx: 1,
             name: "styles",
-            allowed: &[437, 438, 439, 440, 442, 443, 444, 445],
+            allowed: &[438, 439, 440, 441, 443, 444, 445, 446],
             complex_ok: true,
             is_vec: true,
         }],
-        437 => &[RefSlot {
+        438 => &[RefSlot {
             idx: 0,
             name: "style_of_boundary",
             allowed: &[136, 140],
             complex_ok: true,
             is_vec: false,
         }],
-        438 => &[RefSlot {
+        439 => &[RefSlot {
             idx: 0,
             name: "style_of_control_grid",
             allowed: &[136, 140],
             complex_ok: true,
             is_vec: false,
         }],
-        439 => &[RefSlot {
+        440 => &[RefSlot {
             idx: 0,
             name: "fill_area",
             allowed: &[217],
             complex_ok: true,
             is_vec: false,
         }],
-        440 => &[RefSlot {
+        441 => &[RefSlot {
             idx: 0,
             name: "style_of_parameter_lines",
             allowed: &[136, 140],
             complex_ok: true,
             is_vec: false,
         }],
-        442 => &[RefSlot {
+        443 => &[RefSlot {
             idx: 1,
             name: "surface_colour",
-            allowed: &[105, 106, 107, 191, 333],
+            allowed: &[105, 106, 107, 191, 334],
             complex_ok: true,
             is_vec: false,
         }],
-        443 => &[
+        444 => &[
             RefSlot {
                 idx: 1,
                 name: "surface_colour",
-                allowed: &[105, 106, 107, 191, 333],
+                allowed: &[105, 106, 107, 191, 334],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 2,
                 name: "properties",
-                allowed: &[441, 446],
+                allowed: &[442, 447],
                 complex_ok: true,
                 is_vec: true,
             },
         ],
-        444 => &[RefSlot {
+        445 => &[RefSlot {
             idx: 0,
             name: "style_of_segmentation_curve",
             allowed: &[136, 140],
             complex_ok: true,
             is_vec: false,
         }],
-        445 => &[RefSlot {
+        446 => &[RefSlot {
             idx: 0,
             name: "style_of_silhouette",
             allowed: &[136, 140],
             complex_ok: true,
             is_vec: false,
         }],
-        447 => &[RefSlot {
-            idx: 1,
-            name: "style",
-            allowed: &[339, 436],
-            complex_ok: true,
-            is_vec: false,
-        }],
         448 => &[RefSlot {
             idx: 1,
-            name: "swept_curve",
-            allowed: &[
-                67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 311, 330, 383, 387,
-                404, 431, 481, 487,
-            ],
+            name: "style",
+            allowed: &[340, 437],
             complex_ok: true,
             is_vec: false,
         }],
         449 => &[RefSlot {
-            idx: 0,
-            name: "colour_of_symbol",
-            allowed: &[105, 106, 107, 191, 333],
+            idx: 1,
+            name: "swept_curve",
+            allowed: &[
+                67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 308, 312, 331, 384,
+                388, 405, 432, 482, 488,
+            ],
             complex_ok: true,
             is_vec: false,
         }],
-        450 => &[
+        450 => &[RefSlot {
+            idx: 0,
+            name: "colour_of_symbol",
+            allowed: &[105, 106, 107, 191, 334],
+            complex_ok: true,
+            is_vec: false,
+        }],
+        451 => &[
             RefSlot {
                 idx: 1,
                 name: "items",
@@ -7229,10 +7238,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -7240,26 +7249,26 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        451 => &[RefSlot {
+        452 => &[RefSlot {
             idx: 1,
             name: "style_of_symbol",
-            allowed: &[449],
+            allowed: &[450],
             complex_ok: false,
             is_vec: false,
         }],
-        452 => &[RefSlot {
+        453 => &[RefSlot {
             idx: 1,
             name: "placement",
             allowed: &[65, 66],
             complex_ok: false,
             is_vec: false,
         }],
-        453 => &[
+        454 => &[
             RefSlot {
                 idx: 2,
                 name: "magnitude",
@@ -7272,7 +7281,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -7285,11 +7294,11 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 is_vec: true,
             },
         ],
-        454 => &[
+        455 => &[
             RefSlot {
                 idx: 1,
                 name: "styles",
-                allowed: &[350, 351],
+                allowed: &[351, 352],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -7308,11 +7317,11 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
-        455 => &[
+        456 => &[
             RefSlot {
                 idx: 1,
                 name: "styles",
-                allowed: &[350, 351],
+                allowed: &[351, 352],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -7325,23 +7334,23 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     110, 111, 115, 121, 122, 123, 124, 134, 135, 141, 157, 158, 159, 162, 177, 186,
                     188, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215, 219, 220, 221, 222,
                     223, 233, 236, 237, 245, 246, 251, 257, 262, 267, 271, 273, 274, 275, 283, 284,
-                    285, 293, 294, 295, 305, 306, 310, 311, 320, 321, 322, 323, 327, 329, 330, 345,
-                    347, 352, 383, 384, 387, 388, 391, 392, 397, 404, 413, 414, 416, 417, 422, 423,
-                    430, 431, 432, 433, 448, 450, 452, 456, 457, 458, 459, 460, 461, 462, 463, 464,
-                    466, 478, 479, 481, 482, 487, 488, 491, 493, 494, 495, 496, 499,
+                    285, 293, 294, 295, 305, 306, 308, 311, 312, 321, 322, 323, 324, 328, 330, 331,
+                    346, 348, 353, 384, 385, 388, 389, 392, 393, 398, 405, 414, 415, 417, 418, 423,
+                    424, 431, 432, 433, 434, 449, 451, 453, 457, 458, 459, 460, 461, 462, 463, 464,
+                    465, 467, 479, 480, 482, 483, 488, 489, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        456 => &[RefSlot {
+        457 => &[RefSlot {
             idx: 1,
             name: "coordinates",
             allowed: &[134],
             complex_ok: false,
             is_vec: false,
         }],
-        457 => &[
+        458 => &[
             RefSlot {
                 idx: 1,
                 name: "coordinates",
@@ -7353,21 +7362,21 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 4,
                 name: "geometric_link",
                 allowed: &[
-                    15, 69, 70, 72, 75, 122, 141, 162, 198, 212, 215, 293, 323, 384, 388, 423, 430,
-                    432, 433, 448, 479, 488,
+                    15, 69, 70, 72, 75, 122, 141, 162, 198, 212, 215, 293, 324, 385, 389, 424, 431,
+                    433, 434, 449, 480, 489,
                 ],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        458 => &[RefSlot {
+        459 => &[RefSlot {
             idx: 1,
             name: "children",
-            allowed: &[109, 110, 134, 391, 456, 457, 458, 459, 461, 462, 463, 464],
+            allowed: &[109, 110, 134, 392, 457, 458, 459, 460, 462, 463, 464, 465],
             complex_ok: true,
             is_vec: true,
         }],
-        460 => &[
+        461 => &[
             RefSlot {
                 idx: 1,
                 name: "items",
@@ -7377,10 +7386,10 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -7388,16 +7397,16 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        461 => &[
+        462 => &[
             RefSlot {
                 idx: 1,
                 name: "items",
-                allowed: &[109, 457, 463],
+                allowed: &[109, 458, 464],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -7409,11 +7418,11 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
-        462 => &[
+        463 => &[
             RefSlot {
                 idx: 1,
                 name: "items",
-                allowed: &[109, 457, 463],
+                allowed: &[109, 458, 464],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -7425,14 +7434,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
-        464 => &[RefSlot {
+        465 => &[RefSlot {
             idx: 1,
             name: "coordinates",
             allowed: &[134],
             complex_ok: false,
             is_vec: false,
         }],
-        466 => &[
+        467 => &[
             RefSlot {
                 idx: 2,
                 name: "placement",
@@ -7443,60 +7452,60 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 5,
                 name: "font",
-                allowed: &[193, 209, 342, 465],
+                allowed: &[193, 209, 343, 466],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        467 => &[RefSlot {
+        468 => &[RefSlot {
             idx: 1,
             name: "character_appearance",
-            allowed: &[96, 97, 468],
-            complex_ok: true,
-            is_vec: false,
-        }],
-        468 => &[RefSlot {
-            idx: 0,
-            name: "text_colour",
-            allowed: &[105, 106, 107, 191, 333],
+            allowed: &[96, 97, 469],
             complex_ok: true,
             is_vec: false,
         }],
         469 => &[RefSlot {
-            idx: 1,
-            name: "character_appearance",
-            allowed: &[96, 97, 468],
+            idx: 0,
+            name: "text_colour",
+            allowed: &[105, 106, 107, 191, 334],
             complex_ok: true,
             is_vec: false,
         }],
-        472 => &[RefSlot {
+        470 => &[RefSlot {
+            idx: 1,
+            name: "character_appearance",
+            allowed: &[96, 97, 469],
+            complex_ok: true,
+            is_vec: false,
+        }],
+        473 => &[RefSlot {
             idx: 0,
             name: "dimensions",
             allowed: &[170],
             complex_ok: false,
             is_vec: false,
         }],
-        473 => &[
+        474 => &[
             RefSlot {
                 idx: 0,
                 name: "lower_bound",
-                allowed: &[264, 276, 279, 280, 324, 385, 484],
+                allowed: &[264, 276, 279, 280, 325, 386, 485],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 1,
                 name: "upper_bound",
-                allowed: &[264, 276, 279, 280, 324, 385, 484],
+                allowed: &[264, 276, 279, 280, 325, 386, 485],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        474 => &[
+        475 => &[
             RefSlot {
                 idx: 2,
                 name: "of_shape",
-                allowed: &[373],
+                allowed: &[374],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -7505,8 +7514,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "defining_tolerance",
                 allowed: &[
                     17, 18, 19, 102, 104, 117, 142, 151, 152, 171, 172, 173, 174, 175, 176, 224,
-                    227, 238, 240, 241, 242, 243, 244, 268, 287, 308, 312, 331, 403, 428, 434, 453,
-                    480, 486,
+                    227, 238, 240, 241, 242, 243, 244, 268, 287, 309, 313, 332, 404, 429, 435, 454,
+                    481, 487,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -7514,16 +7523,16 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 5,
                 name: "form",
-                allowed: &[476],
+                allowed: &[477],
                 complex_ok: false,
                 is_vec: false,
             },
         ],
-        475 => &[
+        476 => &[
             RefSlot {
                 idx: 0,
                 name: "zone",
-                allowed: &[474, 477],
+                allowed: &[475, 478],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -7532,17 +7541,17 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "boundaries",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: true,
             },
         ],
-        477 => &[
+        478 => &[
             RefSlot {
                 idx: 2,
                 name: "of_shape",
-                allowed: &[373],
+                allowed: &[374],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -7551,8 +7560,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "defining_tolerance",
                 allowed: &[
                     17, 18, 19, 102, 104, 117, 142, 151, 152, 171, 172, 173, 174, 175, 176, 224,
-                    227, 238, 240, 241, 242, 243, 244, 268, 287, 308, 312, 331, 403, 428, 434, 453,
-                    480, 486,
+                    227, 238, 240, 241, 242, 243, 244, 268, 287, 309, 313, 332, 404, 429, 435, 454,
+                    481, 487,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -7560,7 +7569,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 5,
                 name: "form",
-                allowed: &[476],
+                allowed: &[477],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -7572,14 +7581,14 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
-        479 => &[RefSlot {
+        480 => &[RefSlot {
             idx: 1,
             name: "position",
             allowed: &[66],
             complex_ok: false,
             is_vec: false,
         }],
-        480 => &[
+        481 => &[
             RefSlot {
                 idx: 2,
                 name: "magnitude",
@@ -7592,7 +7601,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -7605,13 +7614,13 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 is_vec: true,
             },
         ],
-        481 => &[
+        482 => &[
             RefSlot {
                 idx: 1,
                 name: "basis_curve",
                 allowed: &[
-                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 311, 330, 383,
-                    387, 404, 431, 481, 487,
+                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 308, 312, 331,
+                    384, 388, 405, 432, 482, 488,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -7631,32 +7640,32 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 is_vec: true,
             },
         ],
-        482 => &[
+        483 => &[
             RefSlot {
                 idx: 1,
                 name: "repeat_factor",
-                allowed: &[491],
+                allowed: &[492],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 2,
                 name: "second_repeat_factor",
-                allowed: &[491],
+                allowed: &[492],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        484 => &[RefSlot {
+        485 => &[RefSlot {
             idx: 1,
             name: "unit_component",
             allowed: &[
-                59, 128, 132, 164, 265, 277, 289, 325, 386, 418, 421, 472, 498,
+                59, 128, 132, 164, 265, 277, 289, 326, 387, 419, 422, 473, 499,
             ],
             complex_ok: true,
             is_vec: false,
         }],
-        486 => &[
+        487 => &[
             RefSlot {
                 idx: 2,
                 name: "magnitude",
@@ -7669,7 +7678,7 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -7682,42 +7691,42 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 is_vec: false,
             },
         ],
-        487 => &[RefSlot {
+        488 => &[RefSlot {
             idx: 2,
             name: "control_points_list",
             allowed: &[36, 37, 86],
             complex_ok: false,
             is_vec: true,
         }],
-        491 => &[RefSlot {
+        492 => &[RefSlot {
             idx: 1,
             name: "orientation",
             allowed: &[177],
             complex_ok: true,
             is_vec: false,
         }],
-        494 => &[RefSlot {
-            idx: 1,
-            name: "loop_vertex",
-            allowed: &[493, 495],
-            complex_ok: true,
-            is_vec: false,
-        }],
         495 => &[RefSlot {
             idx: 1,
-            name: "vertex_geometry",
-            allowed: &[36, 37, 86, 327],
+            name: "loop_vertex",
+            allowed: &[494, 496],
             complex_ok: true,
             is_vec: false,
         }],
         496 => &[RefSlot {
             idx: 1,
+            name: "vertex_geometry",
+            allowed: &[36, 37, 86, 328],
+            complex_ok: true,
+            is_vec: false,
+        }],
+        497 => &[RefSlot {
+            idx: 1,
             name: "vertex_shell_extent",
-            allowed: &[494],
+            allowed: &[495],
             complex_ok: false,
             is_vec: false,
         }],
-        497 => &[
+        498 => &[
             RefSlot {
                 idx: 1,
                 name: "projection_point",
@@ -7728,22 +7737,22 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 8,
                 name: "view_window",
-                allowed: &[321],
+                allowed: &[322],
                 complex_ok: true,
                 is_vec: false,
             },
         ],
-        498 => &[RefSlot {
+        499 => &[RefSlot {
             idx: 0,
             name: "elements",
             allowed: &[165],
             complex_ok: false,
             is_vec: true,
         }],
-        499 => &[RefSlot {
+        500 => &[RefSlot {
             idx: 1,
             name: "wire_shell_extent",
-            allowed: &[196, 271, 329, 494],
+            allowed: &[196, 271, 330, 495],
             complex_ok: true,
             is_vec: true,
         }],
@@ -7795,7 +7804,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         4 => &[RefSlot {
             idx: 0,
             name: "assigned_action_request",
-            allowed: &[492],
+            allowed: &[493],
             complex_ok: false,
             is_vec: false,
         }],
@@ -7819,7 +7828,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "kind",
-                allowed: &[401],
+                allowed: &[402],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -7834,7 +7843,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         11 => &[RefSlot {
             idx: 0,
             name: "fill_style_target",
-            allowed: &[36, 37, 86, 327],
+            allowed: &[36, 37, 86, 328],
             complex_ok: true,
             is_vec: false,
         }],
@@ -7842,14 +7851,14 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "relating_annotation_occurrence",
-                allowed: &[20, 21, 22, 26, 27, 28, 30, 33, 185, 261, 263, 454, 455],
+                allowed: &[20, 21, 22, 26, 27, 28, 30, 33, 185, 261, 263, 455, 456],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 3,
                 name: "related_annotation_occurrence",
-                allowed: &[20, 21, 22, 26, 27, 28, 30, 33, 185, 261, 263, 454, 455],
+                allowed: &[20, 21, 22, 26, 27, 28, 30, 33, 185, 261, 263, 455, 456],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -7865,7 +7874,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             idx: 0,
             name: "elements",
             allowed: &[
-                20, 21, 22, 26, 27, 28, 30, 33, 126, 185, 186, 261, 262, 263, 307, 429, 454, 455,
+                20, 21, 22, 26, 27, 28, 30, 33, 126, 185, 186, 261, 262, 263, 307, 430, 455, 456,
             ],
             complex_ok: true,
             is_vec: true,
@@ -7889,12 +7898,13 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 186, 188, 194, 195, 196, 197, 198, 199, 205, 211, 212, 213, 214, 215, 216, 219,
                 220, 221, 222, 223, 228, 233, 236, 237, 245, 246, 249, 251, 256, 257, 261, 262,
                 263, 267, 271, 272, 273, 274, 275, 279, 282, 283, 284, 285, 290, 293, 294, 295,
-                296, 297, 301, 302, 305, 306, 307, 310, 311, 314, 315, 320, 321, 322, 323, 327,
-                329, 330, 345, 347, 352, 355, 358, 360, 361, 363, 364, 367, 368, 369, 371, 373,
-                374, 375, 376, 379, 381, 382, 383, 384, 387, 388, 390, 391, 392, 395, 398, 399,
-                400, 404, 405, 409, 410, 411, 412, 413, 414, 415, 416, 417, 422, 423, 429, 430,
-                431, 432, 433, 448, 450, 452, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463,
-                464, 466, 478, 479, 481, 482, 487, 488, 490, 491, 492, 493, 494, 495, 496, 499,
+                296, 297, 301, 302, 305, 306, 307, 308, 311, 312, 315, 316, 321, 322, 323, 324,
+                328, 330, 331, 346, 348, 353, 356, 359, 361, 362, 364, 365, 368, 369, 370, 372,
+                374, 375, 376, 377, 380, 382, 383, 384, 385, 388, 389, 391, 392, 393, 396, 399,
+                400, 401, 405, 406, 410, 411, 412, 413, 414, 415, 416, 417, 418, 423, 424, 430,
+                431, 432, 433, 434, 449, 451, 453, 455, 456, 457, 458, 459, 460, 461, 462, 463,
+                464, 465, 467, 479, 480, 482, 483, 488, 489, 491, 492, 493, 494, 495, 496, 497,
+                500,
             ],
             complex_ok: true,
             is_vec: true,
@@ -7905,9 +7915,9 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             allowed: &[
                 0, 2, 3, 5, 6, 14, 42, 49, 52, 54, 60, 62, 88, 92, 100, 118, 119, 120, 124, 130,
                 145, 159, 168, 178, 179, 188, 197, 228, 245, 246, 272, 274, 283, 284, 285, 290,
-                297, 301, 302, 313, 314, 315, 345, 347, 352, 355, 358, 363, 364, 367, 368, 369,
-                371, 373, 375, 376, 379, 381, 392, 400, 405, 407, 412, 413, 414, 416, 426, 427,
-                450, 460, 492,
+                297, 301, 302, 314, 315, 316, 346, 348, 353, 356, 359, 364, 365, 368, 369, 370,
+                372, 374, 376, 377, 380, 382, 393, 401, 406, 408, 413, 414, 415, 417, 427, 428,
+                451, 461, 493,
             ],
             complex_ok: true,
             is_vec: true,
@@ -7926,12 +7936,13 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 212, 213, 214, 215, 216, 219, 220, 221, 222, 223, 227, 228, 233, 236, 237, 245,
                 246, 249, 251, 256, 257, 261, 262, 263, 267, 271, 272, 273, 274, 275, 279, 282,
                 283, 284, 285, 286, 290, 293, 294, 295, 296, 297, 301, 302, 303, 305, 306, 307,
-                310, 311, 313, 314, 315, 319, 320, 321, 322, 323, 327, 329, 330, 345, 347, 352,
-                355, 356, 358, 361, 363, 364, 367, 368, 369, 371, 373, 375, 376, 377, 379, 381,
-                382, 383, 384, 387, 388, 390, 391, 392, 395, 398, 399, 401, 404, 405, 408, 409,
-                410, 411, 412, 413, 414, 415, 416, 417, 422, 423, 426, 427, 429, 430, 431, 432,
-                433, 448, 450, 452, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 466,
-                474, 477, 478, 479, 481, 482, 487, 488, 490, 491, 492, 493, 494, 495, 496, 499,
+                308, 311, 312, 314, 315, 316, 320, 321, 322, 323, 324, 328, 330, 331, 346, 348,
+                353, 356, 357, 359, 362, 364, 365, 368, 369, 370, 372, 374, 376, 377, 378, 380,
+                382, 383, 384, 385, 388, 389, 391, 392, 393, 396, 399, 400, 402, 405, 406, 409,
+                410, 411, 412, 413, 414, 415, 416, 417, 418, 423, 424, 427, 428, 430, 431, 432,
+                433, 434, 449, 451, 453, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465,
+                467, 475, 478, 479, 480, 482, 483, 488, 489, 491, 492, 493, 494, 495, 496, 497,
+                500,
             ],
             complex_ok: true,
             is_vec: true,
@@ -7947,13 +7958,13 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 162, 164, 167, 168, 177, 179, 185, 186, 188, 194, 195, 196, 197, 198, 199, 202,
                 205, 211, 212, 213, 214, 215, 219, 220, 221, 222, 223, 228, 232, 233, 236, 237,
                 245, 246, 249, 251, 256, 257, 261, 262, 263, 265, 267, 271, 273, 274, 275, 277,
-                279, 283, 284, 285, 289, 290, 293, 294, 295, 296, 301, 302, 305, 306, 307, 310,
-                311, 313, 314, 315, 318, 320, 321, 322, 323, 325, 327, 329, 330, 344, 345, 347,
-                352, 355, 358, 359, 361, 363, 364, 367, 368, 369, 370, 373, 376, 379, 382, 383,
-                384, 386, 387, 388, 390, 391, 392, 395, 404, 405, 413, 414, 416, 417, 418, 421,
-                422, 423, 426, 427, 429, 430, 431, 432, 433, 448, 450, 452, 454, 455, 456, 457,
-                458, 459, 460, 461, 462, 463, 464, 466, 472, 478, 479, 481, 482, 483, 485, 487,
-                488, 490, 491, 492, 493, 494, 495, 496, 498, 499,
+                279, 283, 284, 285, 289, 290, 293, 294, 295, 296, 301, 302, 305, 306, 307, 308,
+                311, 312, 314, 315, 316, 319, 321, 322, 323, 324, 326, 328, 330, 331, 345, 346,
+                348, 353, 356, 359, 360, 362, 364, 365, 368, 369, 370, 371, 374, 377, 380, 383,
+                384, 385, 387, 388, 389, 391, 392, 393, 396, 405, 406, 414, 415, 417, 418, 419,
+                422, 423, 424, 427, 428, 430, 431, 432, 433, 434, 449, 451, 453, 455, 456, 457,
+                458, 459, 460, 461, 462, 463, 464, 465, 467, 473, 479, 480, 482, 483, 484, 486,
+                488, 489, 491, 492, 493, 494, 495, 496, 497, 499, 500,
             ],
             complex_ok: true,
             is_vec: true,
@@ -7972,14 +7983,14 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 213, 214, 215, 216, 219, 220, 221, 222, 223, 227, 228, 233, 234, 235, 236, 237,
                 245, 246, 247, 248, 251, 256, 257, 259, 261, 262, 263, 264, 265, 267, 270, 271,
                 272, 273, 274, 275, 276, 277, 279, 280, 282, 283, 284, 285, 289, 290, 293, 294,
-                295, 296, 297, 299, 301, 302, 303, 305, 306, 307, 309, 310, 311, 313, 314, 315,
-                318, 319, 320, 321, 322, 323, 324, 325, 327, 329, 330, 344, 345, 347, 352, 355,
-                358, 359, 363, 364, 367, 368, 369, 371, 373, 375, 376, 379, 381, 382, 383, 384,
-                385, 386, 387, 388, 390, 391, 392, 393, 395, 398, 399, 404, 405, 408, 409, 410,
-                411, 412, 413, 414, 415, 416, 417, 418, 421, 422, 423, 426, 427, 429, 430, 431,
-                432, 433, 448, 450, 452, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464,
-                466, 472, 474, 477, 478, 479, 481, 482, 483, 484, 485, 487, 488, 490, 491, 492,
-                493, 494, 495, 496, 498, 499,
+                295, 296, 297, 299, 301, 302, 303, 305, 306, 307, 308, 310, 311, 312, 314, 315,
+                316, 319, 320, 321, 322, 323, 324, 325, 326, 328, 330, 331, 345, 346, 348, 353,
+                356, 359, 360, 364, 365, 368, 369, 370, 372, 374, 376, 377, 380, 382, 383, 384,
+                385, 386, 387, 388, 389, 391, 392, 393, 394, 396, 399, 400, 405, 406, 409, 410,
+                411, 412, 413, 414, 415, 416, 417, 418, 419, 422, 423, 424, 427, 428, 430, 431,
+                432, 433, 434, 449, 451, 453, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464,
+                465, 467, 473, 475, 478, 479, 480, 482, 483, 484, 485, 486, 488, 489, 491, 492,
+                493, 494, 495, 496, 497, 499, 500,
             ],
             complex_ok: true,
             is_vec: true,
@@ -7990,9 +8001,9 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             allowed: &[
                 0, 2, 3, 5, 6, 8, 14, 42, 43, 46, 49, 54, 60, 62, 88, 92, 100, 118, 119, 120, 124,
                 130, 145, 159, 168, 179, 184, 188, 197, 228, 245, 246, 272, 274, 283, 284, 285,
-                290, 296, 297, 301, 302, 314, 315, 345, 347, 352, 355, 358, 360, 361, 363, 364,
-                367, 368, 369, 371, 373, 374, 375, 376, 379, 381, 392, 400, 405, 407, 412, 413,
-                414, 416, 426, 427, 450, 460, 492,
+                290, 296, 297, 301, 302, 315, 316, 346, 348, 353, 356, 359, 361, 362, 364, 365,
+                368, 369, 370, 372, 374, 375, 376, 377, 380, 382, 393, 401, 406, 408, 413, 414,
+                415, 417, 427, 428, 451, 461, 493,
             ],
             complex_ok: true,
             is_vec: true,
@@ -8001,7 +8012,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             idx: 0,
             name: "items",
             allowed: &[
-                0, 3, 6, 62, 272, 290, 358, 360, 361, 363, 368, 369, 371, 375, 376,
+                0, 3, 6, 62, 272, 290, 359, 361, 362, 364, 369, 370, 372, 376, 377,
             ],
             complex_ok: true,
             is_vec: true,
@@ -8011,9 +8022,9 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             name: "items",
             allowed: &[
                 0, 2, 3, 4, 5, 14, 43, 44, 62, 100, 118, 119, 124, 159, 178, 179, 188, 228, 245,
-                246, 249, 272, 274, 283, 284, 285, 290, 302, 345, 347, 352, 355, 358, 360, 361,
-                363, 368, 369, 371, 373, 375, 376, 379, 381, 392, 400, 412, 413, 414, 416, 450,
-                460, 492,
+                246, 249, 272, 274, 283, 284, 285, 290, 302, 346, 348, 353, 356, 359, 361, 362,
+                364, 369, 370, 372, 374, 376, 377, 380, 382, 393, 401, 413, 414, 415, 417, 451,
+                461, 493,
             ],
             complex_ok: true,
             is_vec: true,
@@ -8029,14 +8040,14 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 0,
                 name: "area",
-                allowed: &[345],
+                allowed: &[346],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 1,
                 name: "in_set",
-                allowed: &[348],
+                allowed: &[349],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -8082,7 +8093,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "perspective_of_volume",
-                allowed: &[497],
+                allowed: &[498],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -8090,7 +8101,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         51 => &[RefSlot {
             idx: 0,
             name: "shape_clipping",
-            allowed: &[323],
+            allowed: &[324],
             complex_ok: false,
             is_vec: true,
         }],
@@ -8098,7 +8109,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             idx: 0,
             name: "items",
             allowed: &[
-                92, 94, 95, 119, 120, 130, 355, 363, 368, 369, 376, 405, 424, 425,
+                92, 94, 95, 119, 120, 130, 356, 364, 369, 370, 377, 406, 425, 426,
             ],
             complex_ok: true,
             is_vec: true,
@@ -8106,28 +8117,28 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         55 => &[RefSlot {
             idx: 0,
             name: "items",
-            allowed: &[52, 92, 94, 95, 130, 363, 376, 405, 424, 425],
+            allowed: &[52, 92, 94, 95, 130, 364, 377, 406, 425, 426],
             complex_ok: true,
             is_vec: true,
         }],
         56 => &[RefSlot {
             idx: 0,
             name: "items",
-            allowed: &[94, 95, 120, 130, 355, 363, 368, 369, 376, 405, 424, 425],
+            allowed: &[94, 95, 120, 130, 356, 364, 369, 370, 377, 406, 425, 426],
             complex_ok: true,
             is_vec: true,
         }],
         57 => &[RefSlot {
             idx: 0,
             name: "items",
-            allowed: &[62, 290, 368, 369],
+            allowed: &[62, 290, 369, 370],
             complex_ok: true,
             is_vec: true,
         }],
         58 => &[RefSlot {
             idx: 0,
             name: "items",
-            allowed: &[368, 369],
+            allowed: &[369, 370],
             complex_ok: true,
             is_vec: true,
         }],
@@ -8155,10 +8166,10 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -8167,8 +8178,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 idx: 1,
                 name: "rep",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 413,
-                    414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 414,
+                    415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -8185,8 +8196,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             idx: 2,
             name: "parent_curve",
             allowed: &[
-                67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 311, 330, 383, 387,
-                404, 431, 481, 487,
+                67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 308, 312, 331, 384,
+                388, 405, 432, 482, 488,
             ],
             complex_ok: true,
             is_vec: false,
@@ -8194,7 +8205,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         74 => &[RefSlot {
             idx: 0,
             name: "collected_text",
-            allowed: &[31, 32, 115, 157, 466],
+            allowed: &[31, 32, 115, 157, 467],
             complex_ok: true,
             is_vec: true,
         }],
@@ -8207,10 +8218,10 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158, 162, 167,
                 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215, 219, 220,
                 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271, 273, 275,
-                279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327, 329, 330,
-                382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430, 431, 432,
-                433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466, 478, 479,
-                481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324, 328, 330,
+                331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430, 431, 432,
+                433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465, 467, 479,
+                480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
             ],
             complex_ok: true,
             is_vec: false,
@@ -8225,7 +8236,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         77 => &[RefSlot {
             idx: 3,
             name: "item_concept",
-            allowed: &[358],
+            allowed: &[359],
             complex_ok: true,
             is_vec: false,
         }],
@@ -8246,11 +8257,11 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 141, 157, 158, 159, 160, 161, 162, 167, 177, 185, 186, 188, 194, 195, 196, 198,
                 199, 205, 211, 212, 213, 214, 215, 219, 220, 221, 222, 223, 233, 236, 237, 245,
                 246, 249, 251, 256, 257, 261, 262, 263, 267, 271, 273, 274, 275, 279, 282, 283,
-                284, 285, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327, 329,
-                330, 345, 346, 347, 348, 352, 361, 382, 383, 384, 387, 388, 390, 391, 392, 395,
-                398, 399, 404, 413, 414, 415, 416, 417, 422, 423, 429, 430, 431, 432, 433, 448,
-                450, 452, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 466, 478, 479,
-                481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                284, 285, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324, 328,
+                330, 331, 346, 347, 348, 349, 353, 362, 383, 384, 385, 388, 389, 391, 392, 393,
+                396, 399, 400, 405, 414, 415, 416, 417, 418, 423, 424, 430, 431, 432, 433, 434,
+                449, 451, 453, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465, 467, 479,
+                480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
             ],
             complex_ok: true,
             is_vec: true,
@@ -8258,7 +8269,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         82 => &[RefSlot {
             idx: 1,
             name: "conversion_factor",
-            allowed: &[264, 276, 279, 280, 324, 385, 484],
+            allowed: &[264, 276, 279, 280, 325, 386, 485],
             complex_ok: true,
             is_vec: false,
         }],
@@ -8266,21 +8277,21 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "curve_font",
-                allowed: &[137, 138, 192, 204, 334],
+                allowed: &[137, 138, 192, 204, 335],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 2,
                 name: "curve_width",
-                allowed: &[264, 276, 279, 280, 324, 385, 484],
+                allowed: &[264, 276, 279, 280, 325, 386, 485],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 3,
                 name: "curve_colour",
-                allowed: &[105, 106, 107, 191, 333],
+                allowed: &[105, 106, 107, 191, 334],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -8295,7 +8306,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         86 => &[RefSlot {
             idx: 1,
             name: "curve_font",
-            allowed: &[137, 192, 204, 334],
+            allowed: &[137, 192, 204, 335],
             complex_ok: true,
             is_vec: false,
         }],
@@ -8356,8 +8367,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             idx: 0,
             name: "applies_to",
             allowed: &[
-                16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227, 319,
-                408, 474, 477,
+                16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227, 320,
+                409, 475, 478,
             ],
             complex_ok: true,
             is_vec: false,
@@ -8380,7 +8391,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "related_product",
-                allowed: &[355, 363, 368, 369, 376],
+                allowed: &[356, 364, 369, 370, 377],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -8395,7 +8406,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         112 => &[RefSlot {
             idx: 0,
             name: "contents",
-            allowed: &[20, 21, 26, 27, 30, 33, 261, 263, 454, 455],
+            allowed: &[20, 21, 26, 27, 30, 33, 261, 263, 455, 456],
             complex_ok: true,
             is_vec: true,
         }],
@@ -8426,14 +8437,14 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 0,
                 name: "edge_start",
-                allowed: &[493, 495],
+                allowed: &[494, 496],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 1,
                 name: "edge_end",
-                allowed: &[493, 495],
+                allowed: &[494, 496],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -8442,8 +8453,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             idx: 0,
             name: "edge_geometry",
             allowed: &[
-                67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 311, 330, 383, 387,
-                404, 431, 481, 487,
+                67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 308, 312, 331, 384,
+                388, 405, 432, 482, 488,
             ],
             complex_ok: true,
             is_vec: false,
@@ -8479,7 +8490,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         138 => &[RefSlot {
             idx: 0,
             name: "bound",
-            allowed: &[196, 271, 329, 494],
+            allowed: &[196, 271, 330, 495],
             complex_ok: true,
             is_vec: false,
         }],
@@ -8487,8 +8498,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             idx: 0,
             name: "face_geometry",
             allowed: &[
-                69, 70, 72, 75, 122, 141, 162, 198, 293, 323, 384, 388, 423, 430, 432, 433, 448,
-                479, 488,
+                69, 70, 72, 75, 122, 141, 162, 198, 293, 324, 385, 389, 424, 431, 433, 434, 449,
+                480, 489,
             ],
             complex_ok: true,
             is_vec: false,
@@ -8496,7 +8507,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         141 => &[RefSlot {
             idx: 1,
             name: "fill_styles",
-            allowed: &[205, 211, 218, 219, 223, 470, 471],
+            allowed: &[205, 211, 218, 219, 223, 471, 472],
             complex_ok: true,
             is_vec: true,
         }],
@@ -8511,7 +8522,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "start_of_next_hatch_line",
-                allowed: &[294, 482],
+                allowed: &[294, 483],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -8533,7 +8544,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         143 => &[RefSlot {
             idx: 0,
             name: "symbol",
-            allowed: &[30, 263, 454],
+            allowed: &[30, 263, 455],
             complex_ok: true,
             is_vec: false,
         }],
@@ -8541,14 +8552,14 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 0,
                 name: "tiling_pattern",
-                allowed: &[482],
+                allowed: &[483],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 1,
                 name: "tiles",
-                allowed: &[210, 220, 221, 222, 343],
+                allowed: &[210, 220, 221, 222, 344],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -8581,8 +8592,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             name: "elements",
             allowed: &[
                 31, 36, 37, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 86, 101, 111, 121,
-                122, 135, 141, 162, 198, 199, 251, 257, 267, 293, 311, 320, 321, 323, 327, 330,
-                383, 384, 387, 388, 404, 423, 430, 431, 432, 433, 448, 479, 481, 487, 488,
+                122, 135, 141, 162, 198, 199, 251, 257, 267, 293, 308, 312, 321, 322, 324, 328,
+                331, 384, 385, 388, 389, 405, 424, 431, 432, 433, 434, 449, 480, 482, 488, 489,
             ],
             complex_ok: true,
             is_vec: true,
@@ -8600,7 +8611,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 name: "toleranced_shape_aspect",
                 allowed: &[
                     16, 17, 18, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163,
-                    171, 172, 173, 174, 175, 176, 227, 319, 373, 408, 474, 477,
+                    171, 172, 173, 174, 175, 176, 227, 320, 374, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -8616,14 +8627,14 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         160 => &[RefSlot {
             idx: 1,
             name: "second_unit_size",
-            allowed: &[264, 324],
+            allowed: &[264, 325],
             complex_ok: true,
             is_vec: false,
         }],
         161 => &[RefSlot {
             idx: 0,
             name: "unit_size",
-            allowed: &[264, 324],
+            allowed: &[264, 325],
             complex_ok: true,
             is_vec: false,
         }],
@@ -8637,7 +8648,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         166 => &[RefSlot {
             idx: 0,
             name: "uncertainty",
-            allowed: &[484],
+            allowed: &[485],
             complex_ok: false,
             is_vec: true,
         }],
@@ -8645,7 +8656,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             idx: 0,
             name: "units",
             allowed: &[
-                59, 128, 132, 164, 265, 277, 289, 325, 386, 418, 421, 472, 498,
+                59, 128, 132, 164, 265, 277, 289, 326, 387, 419, 422, 473, 499,
             ],
             complex_ok: true,
             is_vec: true,
@@ -8653,7 +8664,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         169 => &[RefSlot {
             idx: 0,
             name: "assigned_group",
-            allowed: &[249, 361],
+            allowed: &[249, 362],
             complex_ok: true,
             is_vec: false,
         }],
@@ -8669,8 +8680,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             name: "invisible_items",
             allowed: &[
                 14, 20, 21, 22, 26, 27, 28, 30, 33, 100, 124, 126, 159, 185, 186, 188, 245, 246,
-                261, 262, 263, 274, 283, 284, 285, 307, 345, 346, 347, 352, 392, 413, 414, 416,
-                429, 450, 454, 455, 460,
+                261, 262, 263, 274, 283, 284, 285, 307, 346, 347, 348, 353, 393, 414, 415, 417,
+                430, 451, 455, 456, 461,
             ],
             complex_ok: true,
             is_vec: true,
@@ -8685,10 +8696,10 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -8702,10 +8713,10 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -8719,8 +8730,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                     16, 17, 18, 19, 41, 42, 43, 44, 45, 46, 62, 91, 98, 99, 100, 102, 104, 108,
                     113, 114, 117, 129, 142, 148, 149, 151, 152, 154, 155, 156, 163, 171, 172, 173,
                     174, 175, 176, 179, 216, 224, 227, 228, 238, 240, 241, 242, 243, 244, 268, 272,
-                    286, 287, 290, 308, 312, 319, 331, 371, 373, 375, 379, 380, 403, 408, 409, 410,
-                    411, 428, 434, 453, 474, 477, 480, 486,
+                    286, 287, 290, 309, 313, 320, 332, 372, 374, 376, 380, 381, 404, 409, 410, 411,
+                    412, 429, 435, 454, 475, 478, 481, 487,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -8729,8 +8740,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 idx: 3,
                 name: "used_representation",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 413,
-                    414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 414,
+                    415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -8744,10 +8755,10 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -8764,7 +8775,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 0,
                 name: "mapping_source",
-                allowed: &[85, 396],
+                allowed: &[85, 397],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -8777,10 +8788,10 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -8790,7 +8801,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             idx: 1,
             name: "unit_component",
             allowed: &[
-                59, 128, 132, 164, 265, 277, 289, 325, 386, 418, 421, 472, 498,
+                59, 128, 132, 164, 265, 277, 289, 326, 387, 419, 422, 473, 499,
             ],
             complex_ok: true,
             is_vec: false,
@@ -8805,7 +8816,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         198 => &[RefSlot {
             idx: 0,
             name: "repeat_factor",
-            allowed: &[491],
+            allowed: &[492],
             complex_ok: true,
             is_vec: false,
         }],
@@ -8834,7 +8845,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             idx: 0,
             name: "over_ridden_style",
             allowed: &[
-                20, 21, 22, 26, 27, 28, 30, 33, 126, 185, 261, 263, 307, 429, 454, 455,
+                20, 21, 22, 26, 27, 28, 30, 33, 126, 185, 261, 263, 307, 430, 455, 456,
             ],
             complex_ok: true,
             is_vec: false,
@@ -8851,8 +8862,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 idx: 0,
                 name: "basis_surface",
                 allowed: &[
-                    69, 70, 72, 75, 122, 141, 162, 198, 293, 323, 384, 388, 423, 430, 432, 433,
-                    448, 479, 488,
+                    69, 70, 72, 75, 122, 141, 162, 198, 293, 324, 385, 389, 424, 431, 433, 434,
+                    449, 480, 489,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -8869,14 +8880,14 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 0,
                 name: "assigned_person_and_organization",
-                allowed: &[314],
+                allowed: &[315],
                 complex_ok: false,
                 is_vec: false,
             },
             RefSlot {
                 idx: 1,
                 name: "role",
-                allowed: &[317],
+                allowed: &[318],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -8884,7 +8895,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         211 => &[RefSlot {
             idx: 0,
             name: "people",
-            allowed: &[313],
+            allowed: &[314],
             complex_ok: false,
             is_vec: true,
         }],
@@ -8906,21 +8917,21 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "marker",
-                allowed: &[336, 337],
+                allowed: &[337, 338],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 2,
                 name: "marker_size",
-                allowed: &[264, 276, 279, 280, 324, 385, 484],
+                allowed: &[264, 276, 279, 280, 325, 386, 485],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 3,
                 name: "marker_colour",
-                allowed: &[105, 106, 107, 191, 333],
+                allowed: &[105, 106, 107, 191, 334],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -8935,7 +8946,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         237 => &[RefSlot {
             idx: 0,
             name: "styles",
-            allowed: &[55, 136, 207, 217, 328, 338, 447, 451, 467, 469, 471],
+            allowed: &[55, 136, 207, 217, 329, 339, 448, 452, 468, 470, 472],
             complex_ok: true,
             is_vec: true,
         }],
@@ -8949,11 +8960,11 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 141, 157, 158, 159, 160, 161, 162, 167, 177, 185, 186, 188, 194, 195, 196, 198,
                 199, 205, 211, 212, 213, 214, 215, 219, 220, 221, 222, 223, 233, 236, 237, 245,
                 246, 249, 251, 256, 257, 261, 262, 263, 267, 271, 273, 274, 275, 279, 282, 283,
-                284, 285, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327, 329,
-                330, 345, 346, 347, 348, 352, 361, 382, 383, 384, 387, 388, 390, 391, 392, 395,
-                398, 399, 404, 413, 414, 415, 416, 417, 422, 423, 429, 430, 431, 432, 433, 448,
-                450, 452, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 466, 478, 479,
-                481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                284, 285, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324, 328,
+                330, 331, 346, 347, 348, 349, 353, 362, 383, 384, 385, 388, 389, 391, 392, 393,
+                396, 399, 400, 405, 414, 415, 416, 417, 418, 423, 424, 430, 431, 432, 433, 434,
+                449, 451, 453, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465, 467, 479,
+                480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
             ],
             complex_ok: true,
             is_vec: false,
@@ -8961,14 +8972,14 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         241 => &[RefSlot {
             idx: 3,
             name: "frame_of_reference",
-            allowed: &[281, 362],
+            allowed: &[281, 363],
             complex_ok: true,
             is_vec: true,
         }],
         243 => &[RefSlot {
             idx: 3,
             name: "market_context",
-            allowed: &[359],
+            allowed: &[360],
             complex_ok: false,
             is_vec: false,
         }],
@@ -8976,14 +8987,14 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "formation",
-                allowed: &[368, 369],
+                allowed: &[369, 370],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 3,
                 name: "frame_of_reference",
-                allowed: &[168, 364],
+                allowed: &[168, 365],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -8991,14 +9002,14 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         249 => &[RefSlot {
             idx: 0,
             name: "usage",
-            allowed: &[62, 272, 290, 371, 375],
+            allowed: &[62, 272, 290, 372, 376],
             complex_ok: true,
             is_vec: false,
         }],
         250 => &[RefSlot {
             idx: 2,
             name: "of_product",
-            allowed: &[355],
+            allowed: &[356],
             complex_ok: true,
             is_vec: false,
         }],
@@ -9006,14 +9017,14 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "definition",
-                allowed: &[232, 363, 370, 376],
+                allowed: &[232, 364, 371, 377],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 4,
                 name: "quantity",
-                allowed: &[264, 276, 279, 280, 324, 385, 484],
+                allowed: &[264, 276, 279, 280, 325, 386, 485],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -9022,14 +9033,14 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "relating_product_definition",
-                allowed: &[232, 363, 370, 376],
+                allowed: &[232, 364, 371, 377],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 4,
                 name: "related_product_definition",
-                allowed: &[232, 363, 370, 376],
+                allowed: &[232, 364, 371, 377],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -9038,14 +9049,14 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "relating",
-                allowed: &[62, 272, 290, 371, 375],
+                allowed: &[62, 272, 290, 372, 376],
                 complex_ok: true,
                 is_vec: false,
             },
             RefSlot {
                 idx: 4,
                 name: "related",
-                allowed: &[62, 272, 290, 371, 375],
+                allowed: &[62, 272, 290, 372, 376],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -9060,7 +9071,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         258 => &[RefSlot {
             idx: 0,
             name: "products",
-            allowed: &[355],
+            allowed: &[356],
             complex_ok: true,
             is_vec: true,
         }],
@@ -9070,7 +9081,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 name: "projection_end",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -9090,8 +9101,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 16, 17, 18, 19, 62, 91, 98, 99, 100, 102, 104, 108, 113, 114, 117, 129, 142, 148,
                 149, 151, 152, 154, 155, 156, 163, 171, 172, 173, 174, 175, 176, 179, 189, 190,
                 216, 224, 227, 234, 238, 240, 241, 242, 243, 244, 260, 268, 272, 286, 287, 290,
-                308, 312, 319, 331, 363, 370, 371, 372, 373, 375, 376, 403, 408, 409, 410, 411,
-                428, 434, 453, 474, 477, 480, 486,
+                309, 313, 320, 332, 364, 371, 372, 373, 374, 376, 377, 404, 409, 410, 411, 412,
+                429, 435, 454, 475, 478, 481, 487,
             ],
             complex_ok: true,
             is_vec: false,
@@ -9102,7 +9113,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 name: "definition",
                 allowed: &[
                     16, 17, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 171,
-                    172, 174, 176, 216, 227, 228, 319, 373, 379, 380, 408, 409, 410, 411, 474, 477,
+                    172, 174, 176, 216, 227, 228, 320, 374, 380, 381, 409, 410, 411, 412, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -9111,8 +9122,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 idx: 1,
                 name: "used_representation",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 413,
-                    414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 414,
+                    415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -9121,7 +9132,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         262 => &[RefSlot {
             idx: 0,
             name: "qualifiers",
-            allowed: &[344, 483, 485, 489],
+            allowed: &[345, 484, 486, 490],
             complex_ok: false,
             is_vec: true,
         }],
@@ -9142,10 +9153,10 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -9153,7 +9164,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "context_of_items",
-                allowed: &[235, 247, 248, 309, 393],
+                allowed: &[235, 247, 248, 310, 394],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -9168,10 +9179,10 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                     101, 103, 109, 110, 111, 115, 116, 121, 122, 123, 126, 134, 135, 141, 157, 158,
                     162, 167, 177, 185, 186, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215,
                     219, 220, 221, 222, 223, 233, 236, 237, 251, 256, 257, 261, 262, 263, 267, 271,
-                    273, 275, 279, 293, 294, 295, 305, 306, 307, 310, 311, 320, 321, 322, 323, 327,
-                    329, 330, 382, 383, 384, 387, 388, 390, 391, 395, 404, 417, 422, 423, 429, 430,
-                    431, 432, 433, 448, 452, 454, 455, 456, 457, 458, 459, 461, 462, 463, 464, 466,
-                    478, 479, 481, 482, 487, 488, 490, 491, 493, 494, 495, 496, 499,
+                    273, 275, 279, 293, 294, 295, 305, 306, 307, 308, 311, 312, 321, 322, 323, 324,
+                    328, 330, 331, 383, 384, 385, 388, 389, 391, 392, 396, 405, 418, 423, 424, 430,
+                    431, 432, 433, 434, 449, 453, 455, 456, 457, 458, 459, 460, 462, 463, 464, 465,
+                    467, 479, 480, 482, 483, 488, 489, 491, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -9180,8 +9191,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 idx: 1,
                 name: "mapped_representation",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 413,
-                    414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 414,
+                    415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -9190,7 +9201,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         276 => &[RefSlot {
             idx: 1,
             name: "context_of_items",
-            allowed: &[394],
+            allowed: &[395],
             complex_ok: false,
             is_vec: false,
         }],
@@ -9199,8 +9210,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 idx: 2,
                 name: "rep_1",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 397,
-                    413, 414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 398,
+                    414, 415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -9209,8 +9220,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 idx: 3,
                 name: "rep_2",
                 allowed: &[
-                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 345, 347, 352, 392, 397,
-                    413, 414, 416, 450, 460,
+                    14, 100, 124, 159, 188, 245, 246, 274, 283, 284, 285, 346, 348, 353, 393, 398,
+                    414, 415, 417, 451, 461,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -9226,14 +9237,14 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         281 => &[RefSlot {
             idx: 0,
             name: "assigned_security_classification",
-            allowed: &[405],
+            allowed: &[406],
             complex_ok: false,
             is_vec: false,
         }],
         282 => &[RefSlot {
             idx: 2,
             name: "of_shape",
-            allowed: &[373],
+            allowed: &[374],
             complex_ok: true,
             is_vec: false,
         }],
@@ -9243,7 +9254,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 name: "relating_shape_aspect",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -9253,7 +9264,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 name: "related_shape_aspect",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -9262,14 +9273,14 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         289 => &[RefSlot {
             idx: 0,
             name: "sbsm_boundary",
-            allowed: &[103, 295, 305, 496, 499],
+            allowed: &[103, 295, 305, 497, 500],
             complex_ok: true,
             is_vec: true,
         }],
         295 => &[RefSlot {
             idx: 0,
             name: "items",
-            allowed: &[368, 369],
+            allowed: &[369, 370],
             complex_ok: true,
             is_vec: true,
         }],
@@ -9277,7 +9288,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 0,
                 name: "styles",
-                allowed: &[350, 351],
+                allowed: &[351, 352],
                 complex_ok: true,
                 is_vec: true,
             },
@@ -9290,10 +9301,10 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                     110, 111, 115, 121, 122, 123, 124, 134, 135, 141, 157, 158, 159, 162, 177, 186,
                     188, 194, 195, 196, 198, 199, 205, 211, 212, 213, 214, 215, 219, 220, 221, 222,
                     223, 233, 236, 237, 245, 246, 251, 257, 262, 267, 271, 273, 274, 275, 283, 284,
-                    285, 293, 294, 295, 305, 306, 310, 311, 320, 321, 322, 323, 327, 329, 330, 345,
-                    347, 352, 383, 384, 387, 388, 391, 392, 397, 404, 413, 414, 416, 417, 422, 423,
-                    430, 431, 432, 433, 448, 450, 452, 456, 457, 458, 459, 460, 461, 462, 463, 464,
-                    466, 478, 479, 481, 482, 487, 488, 491, 493, 494, 495, 496, 499,
+                    285, 293, 294, 295, 305, 306, 308, 311, 312, 321, 322, 323, 324, 328, 330, 331,
+                    346, 348, 353, 384, 385, 388, 389, 392, 393, 398, 405, 414, 415, 417, 418, 423,
+                    424, 431, 432, 433, 434, 449, 451, 453, 457, 458, 459, 460, 461, 462, 463, 464,
+                    465, 467, 479, 480, 482, 483, 488, 489, 492, 494, 495, 496, 497, 500,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -9304,8 +9315,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 idx: 0,
                 name: "curve_3d",
                 allowed: &[
-                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 311, 330, 383,
-                    387, 404, 431, 481, 487,
+                    67, 68, 71, 73, 74, 76, 101, 111, 121, 135, 199, 251, 257, 267, 308, 312, 331,
+                    384, 388, 405, 432, 482, 488,
                 ],
                 complex_ok: true,
                 is_vec: false,
@@ -9314,8 +9325,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 idx: 1,
                 name: "associated_geometry",
                 allowed: &[
-                    69, 70, 72, 74, 75, 122, 141, 162, 198, 293, 311, 323, 384, 388, 423, 430, 432,
-                    433, 448, 479, 488,
+                    69, 70, 72, 74, 75, 122, 141, 162, 198, 293, 312, 324, 385, 389, 424, 431, 433,
+                    434, 449, 480, 489,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -9324,7 +9335,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         303 => &[RefSlot {
             idx: 1,
             name: "styles",
-            allowed: &[437, 438, 439, 440, 442, 443, 444, 445],
+            allowed: &[438, 439, 440, 441, 443, 444, 445, 446],
             complex_ok: true,
             is_vec: true,
         }],
@@ -9359,14 +9370,14 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         309 => &[RefSlot {
             idx: 1,
             name: "surface_colour",
-            allowed: &[105, 106, 107, 191, 333],
+            allowed: &[105, 106, 107, 191, 334],
             complex_ok: true,
             is_vec: false,
         }],
         310 => &[RefSlot {
             idx: 0,
             name: "properties",
-            allowed: &[441, 446],
+            allowed: &[442, 447],
             complex_ok: true,
             is_vec: true,
         }],
@@ -9387,14 +9398,14 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         313 => &[RefSlot {
             idx: 1,
             name: "style",
-            allowed: &[339, 436],
+            allowed: &[340, 437],
             complex_ok: true,
             is_vec: false,
         }],
         315 => &[RefSlot {
             idx: 1,
             name: "style_of_symbol",
-            allowed: &[449],
+            allowed: &[450],
             complex_ok: false,
             is_vec: false,
         }],
@@ -9408,7 +9419,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         317 => &[RefSlot {
             idx: 0,
             name: "children",
-            allowed: &[109, 110, 134, 391, 456, 457, 458, 459, 461, 462, 463, 464],
+            allowed: &[109, 110, 134, 392, 457, 458, 459, 460, 462, 463, 464, 465],
             complex_ok: true,
             is_vec: true,
         }],
@@ -9423,7 +9434,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 4,
                 name: "font",
-                allowed: &[193, 209, 342, 465],
+                allowed: &[193, 209, 343, 466],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -9431,7 +9442,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         322 => &[RefSlot {
             idx: 1,
             name: "character_appearance",
-            allowed: &[96, 97, 468],
+            allowed: &[96, 97, 469],
             complex_ok: true,
             is_vec: false,
         }],
@@ -9441,8 +9452,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 name: "defining_tolerance",
                 allowed: &[
                     17, 18, 19, 102, 104, 117, 142, 151, 152, 171, 172, 173, 174, 175, 176, 224,
-                    227, 238, 240, 241, 242, 243, 244, 268, 287, 308, 312, 331, 403, 428, 434, 453,
-                    480, 486,
+                    227, 238, 240, 241, 242, 243, 244, 268, 287, 309, 313, 332, 404, 429, 435, 454,
+                    481, 487,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -9450,7 +9461,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "form",
-                allowed: &[476],
+                allowed: &[477],
                 complex_ok: false,
                 is_vec: false,
             },
@@ -9459,7 +9470,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 0,
                 name: "zone",
-                allowed: &[474, 477],
+                allowed: &[475, 478],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -9468,7 +9479,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 name: "boundaries",
                 allowed: &[
                     16, 91, 108, 113, 114, 129, 148, 149, 151, 152, 154, 155, 156, 163, 174, 227,
-                    319, 408, 474, 477,
+                    320, 409, 475, 478,
                 ],
                 complex_ok: true,
                 is_vec: true,
@@ -9484,7 +9495,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         332 => &[RefSlot {
             idx: 0,
             name: "second_repeat_factor",
-            allowed: &[491],
+            allowed: &[492],
             complex_ok: true,
             is_vec: false,
         }],
@@ -9505,7 +9516,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         339 => &[RefSlot {
             idx: 0,
             name: "vertex_geometry",
-            allowed: &[36, 37, 86, 327],
+            allowed: &[36, 37, 86, 328],
             complex_ok: true,
             is_vec: false,
         }],
@@ -9520,7 +9531,7 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 8,
                 name: "view_window",
-                allowed: &[321],
+                allowed: &[322],
                 complex_ok: true,
                 is_vec: false,
             },
@@ -9781,145 +9792,146 @@ pub fn ref_field_slots(ix: u16) -> &'static [u16] {
         305 => &[2],
         306 => &[3],
         307 => &[1, 2, 3],
-        308 => &[2, 3, 4],
-        310 => &[1],
-        311 => &[1, 2],
-        312 => &[2, 3, 4],
-        314 => &[0, 1],
-        315 => &[12, 14],
-        316 => &[0, 1],
-        318 => &[12],
-        319 => &[2],
-        320 => &[1],
-        321 => &[3],
-        323 => &[1],
+        308 => &[1],
+        309 => &[2, 3, 4],
+        311 => &[1],
+        312 => &[1, 2],
+        313 => &[2, 3, 4],
+        315 => &[0, 1],
+        316 => &[12, 14],
+        317 => &[0, 1],
+        319 => &[12],
+        320 => &[2],
+        321 => &[1],
+        322 => &[3],
         324 => &[1],
-        325 => &[0],
-        326 => &[0, 1],
-        328 => &[1, 2, 3],
-        329 => &[1],
+        325 => &[1],
+        326 => &[0],
+        327 => &[0, 1],
+        329 => &[1, 2, 3],
         330 => &[1],
-        331 => &[2, 3],
-        345 => &[1, 2],
-        346 => &[2],
-        347 => &[1, 2],
-        349 => &[0, 1],
-        350 => &[0],
-        351 => &[0, 1],
-        352 => &[1, 2],
-        354 => &[0, 1],
-        355 => &[3],
-        357 => &[2, 3],
-        358 => &[3],
-        359 => &[1],
-        362 => &[1],
-        363 => &[2, 3],
-        364 => &[1],
-        365 => &[0, 1, 2],
-        367 => &[1],
-        368 => &[2],
+        331 => &[1],
+        332 => &[2, 3],
+        346 => &[1, 2],
+        347 => &[2],
+        348 => &[1, 2],
+        350 => &[0, 1],
+        351 => &[0],
+        352 => &[0, 1],
+        353 => &[1, 2],
+        355 => &[0, 1],
+        356 => &[3],
+        358 => &[2, 3],
+        359 => &[3],
+        360 => &[1],
+        363 => &[1],
+        364 => &[2, 3],
+        365 => &[1],
+        366 => &[0, 1, 2],
+        368 => &[1],
         369 => &[2],
-        370 => &[3, 4],
+        370 => &[2],
         371 => &[3, 4],
         372 => &[3, 4],
-        373 => &[2],
-        374 => &[1, 2],
-        375 => &[3, 4],
-        376 => &[2, 3, 4],
-        377 => &[2],
-        378 => &[0, 1, 2, 3],
-        379 => &[2],
-        380 => &[2, 3],
-        381 => &[0, 1],
-        382 => &[1],
-        383 => &[2],
-        384 => &[3],
-        385 => &[1],
-        386 => &[0],
-        387 => &[2],
-        388 => &[3],
-        391 => &[1],
-        392 => &[1, 2],
-        396 => &[0, 1],
-        397 => &[1],
-        398 => &[2, 3],
-        399 => &[2, 3, 4],
-        400 => &[2],
-        402 => &[0, 1],
-        403 => &[2, 3],
-        404 => &[1, 2],
-        405 => &[2],
-        406 => &[0],
-        408 => &[2],
-        409 => &[2, 3],
+        373 => &[3, 4],
+        374 => &[2],
+        375 => &[1, 2],
+        376 => &[3, 4],
+        377 => &[2, 3, 4],
+        378 => &[2],
+        379 => &[0, 1, 2, 3],
+        380 => &[2],
+        381 => &[2, 3],
+        382 => &[0, 1],
+        383 => &[1],
+        384 => &[2],
+        385 => &[3],
+        386 => &[1],
+        387 => &[0],
+        388 => &[2],
+        389 => &[3],
+        392 => &[1],
+        393 => &[1, 2],
+        397 => &[0, 1],
+        398 => &[1],
+        399 => &[2, 3],
+        400 => &[2, 3, 4],
+        401 => &[2],
+        403 => &[0, 1],
+        404 => &[2, 3],
+        405 => &[1, 2],
+        406 => &[2],
+        407 => &[0],
+        409 => &[2],
         410 => &[2, 3],
         411 => &[2, 3],
-        412 => &[0, 1],
-        413 => &[1, 2],
+        412 => &[2, 3],
+        413 => &[0, 1],
         414 => &[1, 2],
-        415 => &[2, 3],
-        416 => &[1, 2],
-        417 => &[1],
-        421 => &[0],
-        423 => &[1],
-        424 => &[0, 1],
+        415 => &[1, 2],
+        416 => &[2, 3],
+        417 => &[1, 2],
+        418 => &[1],
+        422 => &[0],
+        424 => &[1],
         425 => &[0, 1],
-        428 => &[2, 3],
-        429 => &[1, 2],
-        431 => &[1, 2],
+        426 => &[0, 1],
+        429 => &[2, 3],
+        430 => &[1, 2],
         432 => &[1, 2],
         433 => &[1, 2],
-        434 => &[2, 3],
-        435 => &[0],
-        436 => &[1],
-        437 => &[0],
+        434 => &[1, 2],
+        435 => &[2, 3],
+        436 => &[0],
+        437 => &[1],
         438 => &[0],
         439 => &[0],
         440 => &[0],
-        442 => &[1],
-        443 => &[1, 2],
-        444 => &[0],
+        441 => &[0],
+        443 => &[1],
+        444 => &[1, 2],
         445 => &[0],
-        447 => &[1],
+        446 => &[0],
         448 => &[1],
-        449 => &[0],
-        450 => &[1, 2],
-        451 => &[1],
+        449 => &[1],
+        450 => &[0],
+        451 => &[1, 2],
         452 => &[1],
-        453 => &[2, 3, 4],
-        454 => &[1, 2, 3],
-        455 => &[1, 2],
-        456 => &[1],
-        457 => &[1, 4],
-        458 => &[1],
-        460 => &[1, 2],
+        453 => &[1],
+        454 => &[2, 3, 4],
+        455 => &[1, 2, 3],
+        456 => &[1, 2],
+        457 => &[1],
+        458 => &[1, 4],
+        459 => &[1],
         461 => &[1, 2],
         462 => &[1, 2],
-        464 => &[1],
-        466 => &[2, 5],
-        467 => &[1],
-        468 => &[0],
-        469 => &[1],
-        472 => &[0],
-        473 => &[0, 1],
-        474 => &[2, 4, 5],
-        475 => &[0, 1],
-        477 => &[2, 4, 5, 6],
-        479 => &[1],
-        480 => &[2, 3, 4],
-        481 => &[1, 2, 3],
-        482 => &[1, 2],
-        484 => &[1],
-        486 => &[2, 3, 4],
-        487 => &[2],
-        488 => &[3],
-        491 => &[1],
-        494 => &[1],
+        463 => &[1, 2],
+        465 => &[1],
+        467 => &[2, 5],
+        468 => &[1],
+        469 => &[0],
+        470 => &[1],
+        473 => &[0],
+        474 => &[0, 1],
+        475 => &[2, 4, 5],
+        476 => &[0, 1],
+        478 => &[2, 4, 5, 6],
+        480 => &[1],
+        481 => &[2, 3, 4],
+        482 => &[1, 2, 3],
+        483 => &[1, 2],
+        485 => &[1],
+        487 => &[2, 3, 4],
+        488 => &[2],
+        489 => &[3],
+        492 => &[1],
         495 => &[1],
         496 => &[1],
-        497 => &[1, 8],
-        498 => &[0],
-        499 => &[1],
+        497 => &[1],
+        498 => &[1, 8],
+        499 => &[0],
+        500 => &[1],
         _ => &[],
     }
 }
@@ -16165,6 +16177,17 @@ fn build_over_riding_styled_item_arena(
     })
 }
 
+fn build_parabola_arena(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<Parabola, String> {
+    Ok(Parabola {
+        name: (as_text(req(attributes, 0, "PARABOLA.name")?, "PARABOLA.name", tt))?,
+        position: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)),
+        focal_dist: (as_real(
+            req(attributes, 2, "PARABOLA.focal_dist")?,
+            "PARABOLA.focal_dist",
+        ))?,
+    })
+}
+
 fn build_parallelism_tolerance_arena(
     attributes: &[Attribute],
     tt: &mut TextIn<'_>,
@@ -20861,645 +20884,648 @@ pub fn build_entity(
             .over_riding_styled_item_arena
             .push(build_over_riding_styled_item_arena(attributes, &mut tt)?),
         308 => model
+            .parabola_arena
+            .push(build_parabola_arena(attributes, &mut tt)?),
+        309 => model
             .parallelism_tolerance_arena
             .push(build_parallelism_tolerance_arena(attributes, &mut tt)?),
-        309 => model.parametric_representation_context_arena.push(
+        310 => model.parametric_representation_context_arena.push(
             build_parametric_representation_context_arena(attributes, &mut tt)?,
         ),
-        310 => model
+        311 => model
             .path_arena
             .push(build_path_arena(attributes, &mut tt)?),
-        311 => model
+        312 => model
             .pcurve_arena
             .push(build_pcurve_arena(attributes, &mut tt)?),
-        312 => model
+        313 => model
             .perpendicularity_tolerance_arena
             .push(build_perpendicularity_tolerance_arena(attributes, &mut tt)?),
-        313 => model
+        314 => model
             .person_arena
             .push(build_person_arena(attributes, &mut tt)?),
-        314 => model
+        315 => model
             .person_and_organization_arena
             .push(build_person_and_organization_arena(attributes, &mut tt)?),
-        315 => model.person_and_organization_address_arena.push(
+        316 => model.person_and_organization_address_arena.push(
             build_person_and_organization_address_arena(attributes, &mut tt)?,
         ),
-        316 => model.person_and_organization_assignment_arena.push(
+        317 => model.person_and_organization_assignment_arena.push(
             build_person_and_organization_assignment_arena(attributes, &mut tt)?,
         ),
-        317 => {
+        318 => {
             model
                 .person_and_organization_role_arena
                 .push(build_person_and_organization_role_arena(
                     attributes, &mut tt,
                 )?)
         }
-        318 => model
+        319 => model
             .personal_address_arena
             .push(build_personal_address_arena(attributes, &mut tt)?),
-        319 => {
+        320 => {
             model
                 .placed_datum_target_feature_arena
                 .push(build_placed_datum_target_feature_arena(
                     attributes, &mut tt,
                 )?)
         }
-        320 => model
+        321 => model
             .placement_arena
             .push(build_placement_arena(attributes, &mut tt)?),
-        321 => model
+        322 => model
             .planar_box_arena
             .push(build_planar_box_arena(attributes, &mut tt)?),
-        322 => model
+        323 => model
             .planar_extent_arena
             .push(build_planar_extent_arena(attributes, &mut tt)?),
-        323 => model
+        324 => model
             .plane_arena
             .push(build_plane_arena(attributes, &mut tt)?),
-        324 => model.plane_angle_measure_with_unit_arena.push(
+        325 => model.plane_angle_measure_with_unit_arena.push(
             build_plane_angle_measure_with_unit_arena(attributes, &mut tt)?,
         ),
-        325 => model
+        326 => model
             .plane_angle_unit_arena
             .push(build_plane_angle_unit_arena(attributes, &mut tt)?),
-        326 => model
+        327 => model
             .plus_minus_tolerance_arena
             .push(build_plus_minus_tolerance_arena(attributes, &mut tt)?),
-        327 => model
+        328 => model
             .point_arena
             .push(build_point_arena(attributes, &mut tt)?),
-        328 => model
+        329 => model
             .point_style_arena
             .push(build_point_style_arena(attributes, &mut tt)?),
-        329 => model
+        330 => model
             .poly_loop_arena
             .push(build_poly_loop_arena(attributes, &mut tt)?),
-        330 => model
+        331 => model
             .polyline_arena
             .push(build_polyline_arena(attributes, &mut tt)?),
-        331 => model
+        332 => model
             .position_tolerance_arena
             .push(build_position_tolerance_arena(attributes, &mut tt)?),
-        332 => {
+        333 => {
             model
                 .pre_defined_character_glyph_arena
                 .push(build_pre_defined_character_glyph_arena(
                     attributes, &mut tt,
                 )?)
         }
-        333 => model
+        334 => model
             .pre_defined_colour_arena
             .push(build_pre_defined_colour_arena(attributes, &mut tt)?),
-        334 => model
+        335 => model
             .pre_defined_curve_font_arena
             .push(build_pre_defined_curve_font_arena(attributes, &mut tt)?),
-        335 => model
+        336 => model
             .pre_defined_item_arena
             .push(build_pre_defined_item_arena(attributes, &mut tt)?),
-        336 => model
+        337 => model
             .pre_defined_marker_arena
             .push(build_pre_defined_marker_arena(attributes, &mut tt)?),
-        337 => model.pre_defined_point_marker_symbol_arena.push(
+        338 => model.pre_defined_point_marker_symbol_arena.push(
             build_pre_defined_point_marker_symbol_arena(attributes, &mut tt)?,
         ),
-        338 => model.pre_defined_presentation_style_arena.push(
+        339 => model.pre_defined_presentation_style_arena.push(
             build_pre_defined_presentation_style_arena(attributes, &mut tt)?,
         ),
-        339 => model.pre_defined_surface_side_style_arena.push(
+        340 => model.pre_defined_surface_side_style_arena.push(
             build_pre_defined_surface_side_style_arena(attributes, &mut tt)?,
         ),
-        340 => model
+        341 => model
             .pre_defined_symbol_arena
             .push(build_pre_defined_symbol_arena(attributes, &mut tt)?),
-        341 => model.pre_defined_terminator_symbol_arena.push(
+        342 => model.pre_defined_terminator_symbol_arena.push(
             build_pre_defined_terminator_symbol_arena(attributes, &mut tt)?,
         ),
-        342 => model
+        343 => model
             .pre_defined_text_font_arena
             .push(build_pre_defined_text_font_arena(attributes, &mut tt)?),
-        343 => model
+        344 => model
             .pre_defined_tile_arena
             .push(build_pre_defined_tile_arena(attributes, &mut tt)?),
-        344 => model
+        345 => model
             .precision_qualifier_arena
             .push(build_precision_qualifier_arena(attributes, &mut tt)?),
-        345 => model
+        346 => model
             .presentation_area_arena
             .push(build_presentation_area_arena(attributes, &mut tt)?),
-        346 => model.presentation_layer_assignment_arena.push(
+        347 => model.presentation_layer_assignment_arena.push(
             build_presentation_layer_assignment_arena(attributes, &mut tt)?,
         ),
-        347 => {
+        348 => {
             model
                 .presentation_representation_arena
                 .push(build_presentation_representation_arena(
                     attributes, &mut tt,
                 )?)
         }
-        348 => model
+        349 => model
             .presentation_set_arena
             .push(build_presentation_set_arena(attributes, &mut tt)?),
-        349 => model
+        350 => model
             .presentation_size_arena
             .push(build_presentation_size_arena(attributes, &mut tt)?),
-        350 => model.presentation_style_assignment_arena.push(
+        351 => model.presentation_style_assignment_arena.push(
             build_presentation_style_assignment_arena(attributes, &mut tt)?,
         ),
-        351 => model.presentation_style_by_context_arena.push(
+        352 => model.presentation_style_by_context_arena.push(
             build_presentation_style_by_context_arena(attributes, &mut tt)?,
         ),
-        352 => model
+        353 => model
             .presentation_view_arena
             .push(build_presentation_view_arena(attributes, &mut tt)?),
-        353 => model
+        354 => model
             .presented_item_arena
             .push(build_presented_item_arena(attributes, &mut tt)?),
-        354 => model.presented_item_representation_arena.push(
+        355 => model.presented_item_representation_arena.push(
             build_presented_item_representation_arena(attributes, &mut tt)?,
         ),
-        355 => model
+        356 => model
             .product_arena
             .push(build_product_arena(attributes, &mut tt)?),
-        356 => model
+        357 => model
             .product_category_arena
             .push(build_product_category_arena(attributes, &mut tt)?),
-        357 => model.product_category_relationship_arena.push(
+        358 => model.product_category_relationship_arena.push(
             build_product_category_relationship_arena(attributes, &mut tt)?,
         ),
-        358 => model
+        359 => model
             .product_concept_arena
             .push(build_product_concept_arena(attributes, &mut tt)?),
-        359 => model
+        360 => model
             .product_concept_context_arena
             .push(build_product_concept_context_arena(attributes, &mut tt)?),
-        360 => model
+        361 => model
             .product_concept_feature_arena
             .push(build_product_concept_feature_arena(attributes, &mut tt)?),
-        361 => model.product_concept_feature_category_arena.push(
+        362 => model.product_concept_feature_category_arena.push(
             build_product_concept_feature_category_arena(attributes, &mut tt)?,
         ),
-        362 => model
+        363 => model
             .product_context_arena
             .push(build_product_context_arena(attributes, &mut tt)?),
-        363 => model
+        364 => model
             .product_definition_arena
             .push(build_product_definition_arena(attributes, &mut tt)?),
-        364 => model
+        365 => model
             .product_definition_context_arena
             .push(build_product_definition_context_arena(attributes, &mut tt)?),
-        365 => model.product_definition_context_association_arena.push(
+        366 => model.product_definition_context_association_arena.push(
             build_product_definition_context_association_arena(attributes, &mut tt)?,
         ),
-        366 => model.product_definition_context_role_arena.push(
+        367 => model.product_definition_context_role_arena.push(
             build_product_definition_context_role_arena(attributes, &mut tt)?,
         ),
-        367 => model.product_definition_effectivity_arena.push(
+        368 => model.product_definition_effectivity_arena.push(
             build_product_definition_effectivity_arena(attributes, &mut tt)?,
         ),
-        368 => {
+        369 => {
             model
                 .product_definition_formation_arena
                 .push(build_product_definition_formation_arena(
                     attributes, &mut tt,
                 )?)
         }
-        369 => model
+        370 => model
             .product_definition_formation_with_specified_source_arena
             .push(
                 build_product_definition_formation_with_specified_source_arena(
                     attributes, &mut tt,
                 )?,
             ),
-        370 => model.product_definition_occurrence_arena.push(
+        371 => model.product_definition_occurrence_arena.push(
             build_product_definition_occurrence_arena(attributes, &mut tt)?,
         ),
-        371 => model.product_definition_relationship_arena.push(
+        372 => model.product_definition_relationship_arena.push(
             build_product_definition_relationship_arena(attributes, &mut tt)?,
         ),
-        372 => model
+        373 => model
             .product_definition_relationship_relationship_arena
             .push(build_product_definition_relationship_relationship_arena(
                 attributes, &mut tt,
             )?),
-        373 => model
+        374 => model
             .product_definition_shape_arena
             .push(build_product_definition_shape_arena(attributes, &mut tt)?),
-        374 => model.product_definition_substitute_arena.push(
+        375 => model.product_definition_substitute_arena.push(
             build_product_definition_substitute_arena(attributes, &mut tt)?,
         ),
-        375 => model
+        376 => model
             .product_definition_usage_arena
             .push(build_product_definition_usage_arena(attributes, &mut tt)?),
-        376 => model
+        377 => model
             .product_definition_with_associated_documents_arena
             .push(build_product_definition_with_associated_documents_arena(
                 attributes, &mut tt,
             )?),
-        377 => model.product_related_product_category_arena.push(
+        378 => model.product_related_product_category_arena.push(
             build_product_related_product_category_arena(attributes, &mut tt)?,
         ),
-        378 => model
+        379 => model
             .projected_zone_definition_arena
             .push(build_projected_zone_definition_arena(attributes, &mut tt)?),
-        379 => model
+        380 => model
             .property_definition_arena
             .push(build_property_definition_arena(attributes, &mut tt)?),
-        380 => model.property_definition_relationship_arena.push(
+        381 => model.property_definition_relationship_arena.push(
             build_property_definition_relationship_arena(attributes, &mut tt)?,
         ),
-        381 => model.property_definition_representation_arena.push(
+        382 => model.property_definition_representation_arena.push(
             build_property_definition_representation_arena(attributes, &mut tt)?,
         ),
-        382 => model.qualified_representation_item_arena.push(
+        383 => model.qualified_representation_item_arena.push(
             build_qualified_representation_item_arena(attributes, &mut tt)?,
         ),
-        383 => model
+        384 => model
             .quasi_uniform_curve_arena
             .push(build_quasi_uniform_curve_arena(attributes, &mut tt)?),
-        384 => model
+        385 => model
             .quasi_uniform_surface_arena
             .push(build_quasi_uniform_surface_arena(attributes, &mut tt)?),
-        385 => model
+        386 => model
             .ratio_measure_with_unit_arena
             .push(build_ratio_measure_with_unit_arena(attributes, &mut tt)?),
-        386 => model
+        387 => model
             .ratio_unit_arena
             .push(build_ratio_unit_arena(attributes, &mut tt)?),
-        387 => model
+        388 => model
             .rational_b_spline_curve_arena
             .push(build_rational_b_spline_curve_arena(attributes, &mut tt)?),
-        388 => model
+        389 => model
             .rational_b_spline_surface_arena
             .push(build_rational_b_spline_surface_arena(attributes, &mut tt)?),
-        389 => model
+        390 => model
             .real_literal_arena
             .push(build_real_literal_arena(attributes, &mut tt)?),
-        390 => model
+        391 => model
             .real_representation_item_arena
             .push(build_real_representation_item_arena(attributes, &mut tt)?),
-        391 => model.repositioned_tessellated_item_arena.push(
+        392 => model.repositioned_tessellated_item_arena.push(
             build_repositioned_tessellated_item_arena(attributes, &mut tt)?,
         ),
-        392 => model
+        393 => model
             .representation_arena
             .push(build_representation_arena(attributes, &mut tt)?),
-        393 => model
+        394 => model
             .representation_context_arena
             .push(build_representation_context_arena(attributes, &mut tt)?),
-        394 => model.representation_context_reference_arena.push(
+        395 => model.representation_context_reference_arena.push(
             build_representation_context_reference_arena(attributes, &mut tt)?,
         ),
-        395 => model
+        396 => model
             .representation_item_arena
             .push(build_representation_item_arena(attributes, &mut tt)?),
-        396 => model
+        397 => model
             .representation_map_arena
             .push(build_representation_map_arena(attributes, &mut tt)?),
-        397 => model
+        398 => model
             .representation_reference_arena
             .push(build_representation_reference_arena(attributes, &mut tt)?),
-        398 => {
+        399 => {
             model
                 .representation_relationship_arena
                 .push(build_representation_relationship_arena(
                     attributes, &mut tt,
                 )?)
         }
-        399 => model
+        400 => model
             .representation_relationship_with_transformation_arena
             .push(build_representation_relationship_with_transformation_arena(
                 attributes, &mut tt,
             )?),
-        400 => model
+        401 => model
             .resource_property_arena
             .push(build_resource_property_arena(attributes, &mut tt)?),
-        401 => model
+        402 => model
             .resource_requirement_type_arena
             .push(build_resource_requirement_type_arena(attributes, &mut tt)?),
-        402 => model
+        403 => model
             .role_association_arena
             .push(build_role_association_arena(attributes, &mut tt)?),
-        403 => model
+        404 => model
             .roundness_tolerance_arena
             .push(build_roundness_tolerance_arena(attributes, &mut tt)?),
-        404 => model
+        405 => model
             .seam_curve_arena
             .push(build_seam_curve_arena(attributes, &mut tt)?),
-        405 => model
+        406 => model
             .security_classification_arena
             .push(build_security_classification_arena(attributes, &mut tt)?),
-        406 => model.security_classification_assignment_arena.push(
+        407 => model.security_classification_assignment_arena.push(
             build_security_classification_assignment_arena(attributes, &mut tt)?,
         ),
-        407 => model.security_classification_level_arena.push(
+        408 => model.security_classification_level_arena.push(
             build_security_classification_level_arena(attributes, &mut tt)?,
         ),
-        408 => model
+        409 => model
             .shape_aspect_arena
             .push(build_shape_aspect_arena(attributes, &mut tt)?),
-        409 => model
+        410 => model
             .shape_aspect_associativity_arena
             .push(build_shape_aspect_associativity_arena(attributes, &mut tt)?),
-        410 => model.shape_aspect_deriving_relationship_arena.push(
+        411 => model.shape_aspect_deriving_relationship_arena.push(
             build_shape_aspect_deriving_relationship_arena(attributes, &mut tt)?,
         ),
-        411 => model
+        412 => model
             .shape_aspect_relationship_arena
             .push(build_shape_aspect_relationship_arena(attributes, &mut tt)?),
-        412 => model.shape_definition_representation_arena.push(
+        413 => model.shape_definition_representation_arena.push(
             build_shape_definition_representation_arena(attributes, &mut tt)?,
         ),
-        413 => model.shape_dimension_representation_arena.push(
+        414 => model.shape_dimension_representation_arena.push(
             build_shape_dimension_representation_arena(attributes, &mut tt)?,
         ),
-        414 => model
+        415 => model
             .shape_representation_arena
             .push(build_shape_representation_arena(attributes, &mut tt)?),
-        415 => model.shape_representation_relationship_arena.push(
+        416 => model.shape_representation_relationship_arena.push(
             build_shape_representation_relationship_arena(attributes, &mut tt)?,
         ),
-        416 => model.shape_representation_with_parameters_arena.push(
+        417 => model.shape_representation_with_parameters_arena.push(
             build_shape_representation_with_parameters_arena(attributes, &mut tt)?,
         ),
-        417 => model
+        418 => model
             .shell_based_surface_model_arena
             .push(build_shell_based_surface_model_arena(attributes, &mut tt)?),
-        418 => model
+        419 => model
             .si_unit_arena
             .push(build_si_unit_arena(attributes, &mut tt)?),
-        419 => model
+        420 => model
             .simple_generic_expression_arena
             .push(build_simple_generic_expression_arena(attributes, &mut tt)?),
-        420 => model
+        421 => model
             .simple_numeric_expression_arena
             .push(build_simple_numeric_expression_arena(attributes, &mut tt)?),
-        421 => model
+        422 => model
             .solid_angle_unit_arena
             .push(build_solid_angle_unit_arena(attributes, &mut tt)?),
-        422 => model
+        423 => model
             .solid_model_arena
             .push(build_solid_model_arena(attributes, &mut tt)?),
-        423 => model
+        424 => model
             .spherical_surface_arena
             .push(build_spherical_surface_arena(attributes, &mut tt)?),
-        424 => model
+        425 => model
             .start_request_arena
             .push(build_start_request_arena(attributes, &mut tt)?),
-        425 => model
+        426 => model
             .start_work_arena
             .push(build_start_work_arena(attributes, &mut tt)?),
-        426 => model
+        427 => model
             .state_observed_arena
             .push(build_state_observed_arena(attributes, &mut tt)?),
-        427 => model
+        428 => model
             .state_type_arena
             .push(build_state_type_arena(attributes, &mut tt)?),
-        428 => model
+        429 => model
             .straightness_tolerance_arena
             .push(build_straightness_tolerance_arena(attributes, &mut tt)?),
-        429 => model
+        430 => model
             .styled_item_arena
             .push(build_styled_item_arena(attributes, &mut tt)?),
-        430 => model
+        431 => model
             .surface_arena
             .push(build_surface_arena(attributes, &mut tt)?),
-        431 => model
+        432 => model
             .surface_curve_arena
             .push(build_surface_curve_arena(attributes, &mut tt)?),
-        432 => {
+        433 => {
             model
                 .surface_of_linear_extrusion_arena
                 .push(build_surface_of_linear_extrusion_arena(
                     attributes, &mut tt,
                 )?)
         }
-        433 => model
+        434 => model
             .surface_of_revolution_arena
             .push(build_surface_of_revolution_arena(attributes, &mut tt)?),
-        434 => model
+        435 => model
             .surface_profile_tolerance_arena
             .push(build_surface_profile_tolerance_arena(attributes, &mut tt)?),
-        435 => {
+        436 => {
             model
                 .surface_rendering_properties_arena
                 .push(build_surface_rendering_properties_arena(
                     attributes, &mut tt,
                 )?)
         }
-        436 => model
+        437 => model
             .surface_side_style_arena
             .push(build_surface_side_style_arena(attributes, &mut tt)?),
-        437 => model
+        438 => model
             .surface_style_boundary_arena
             .push(build_surface_style_boundary_arena(attributes, &mut tt)?),
-        438 => model
+        439 => model
             .surface_style_control_grid_arena
             .push(build_surface_style_control_grid_arena(attributes, &mut tt)?),
-        439 => model
+        440 => model
             .surface_style_fill_area_arena
             .push(build_surface_style_fill_area_arena(attributes, &mut tt)?),
-        440 => {
+        441 => {
             model
                 .surface_style_parameter_line_arena
                 .push(build_surface_style_parameter_line_arena(
                     attributes, &mut tt,
                 )?)
         }
-        441 => model.surface_style_reflectance_ambient_arena.push(
+        442 => model.surface_style_reflectance_ambient_arena.push(
             build_surface_style_reflectance_ambient_arena(attributes, &mut tt)?,
         ),
-        442 => model
+        443 => model
             .surface_style_rendering_arena
             .push(build_surface_style_rendering_arena(attributes, &mut tt)?),
-        443 => model.surface_style_rendering_with_properties_arena.push(
+        444 => model.surface_style_rendering_with_properties_arena.push(
             build_surface_style_rendering_with_properties_arena(attributes, &mut tt)?,
         ),
-        444 => model.surface_style_segmentation_curve_arena.push(
+        445 => model.surface_style_segmentation_curve_arena.push(
             build_surface_style_segmentation_curve_arena(attributes, &mut tt)?,
         ),
-        445 => model
+        446 => model
             .surface_style_silhouette_arena
             .push(build_surface_style_silhouette_arena(attributes, &mut tt)?),
-        446 => model
+        447 => model
             .surface_style_transparent_arena
             .push(build_surface_style_transparent_arena(attributes, &mut tt)?),
-        447 => model
+        448 => model
             .surface_style_usage_arena
             .push(build_surface_style_usage_arena(attributes, &mut tt)?),
-        448 => model
+        449 => model
             .swept_surface_arena
             .push(build_swept_surface_arena(attributes, &mut tt)?),
-        449 => model
+        450 => model
             .symbol_colour_arena
             .push(build_symbol_colour_arena(attributes, &mut tt)?),
-        450 => model
+        451 => model
             .symbol_representation_arena
             .push(build_symbol_representation_arena(attributes, &mut tt)?),
-        451 => model
+        452 => model
             .symbol_style_arena
             .push(build_symbol_style_arena(attributes, &mut tt)?),
-        452 => model
+        453 => model
             .symbol_target_arena
             .push(build_symbol_target_arena(attributes, &mut tt)?),
-        453 => model
+        454 => model
             .symmetry_tolerance_arena
             .push(build_symmetry_tolerance_arena(attributes, &mut tt)?),
-        454 => model
+        455 => model
             .terminator_symbol_arena
             .push(build_terminator_symbol_arena(attributes, &mut tt)?),
-        455 => model.tessellated_annotation_occurrence_arena.push(
+        456 => model.tessellated_annotation_occurrence_arena.push(
             build_tessellated_annotation_occurrence_arena(attributes, &mut tt)?,
         ),
-        456 => model
+        457 => model
             .tessellated_curve_set_arena
             .push(build_tessellated_curve_set_arena(attributes, &mut tt)?),
-        457 => model
+        458 => model
             .tessellated_face_arena
             .push(build_tessellated_face_arena(attributes, &mut tt)?),
-        458 => model
+        459 => model
             .tessellated_geometric_set_arena
             .push(build_tessellated_geometric_set_arena(attributes, &mut tt)?),
-        459 => model
+        460 => model
             .tessellated_item_arena
             .push(build_tessellated_item_arena(attributes, &mut tt)?),
-        460 => model.tessellated_shape_representation_arena.push(
+        461 => model.tessellated_shape_representation_arena.push(
             build_tessellated_shape_representation_arena(attributes, &mut tt)?,
         ),
-        461 => model
+        462 => model
             .tessellated_shell_arena
             .push(build_tessellated_shell_arena(attributes, &mut tt)?),
-        462 => model
+        463 => model
             .tessellated_solid_arena
             .push(build_tessellated_solid_arena(attributes, &mut tt)?),
-        463 => {
+        464 => {
             model
                 .tessellated_structured_item_arena
                 .push(build_tessellated_structured_item_arena(
                     attributes, &mut tt,
                 )?)
         }
-        464 => model
+        465 => model
             .tessellated_surface_set_arena
             .push(build_tessellated_surface_set_arena(attributes, &mut tt)?),
-        465 => model
+        466 => model
             .text_font_arena
             .push(build_text_font_arena(attributes, &mut tt)?),
-        466 => model
+        467 => model
             .text_literal_arena
             .push(build_text_literal_arena(attributes, &mut tt)?),
-        467 => model
+        468 => model
             .text_style_arena
             .push(build_text_style_arena(attributes, &mut tt)?),
-        468 => {
+        469 => {
             model
                 .text_style_for_defined_font_arena
                 .push(build_text_style_for_defined_font_arena(
                     attributes, &mut tt,
                 )?)
         }
-        469 => model.text_style_with_box_characteristics_arena.push(
+        470 => model.text_style_with_box_characteristics_arena.push(
             build_text_style_with_box_characteristics_arena(attributes, &mut tt)?,
         ),
-        470 => {
+        471 => {
             model
                 .texture_style_specification_arena
                 .push(build_texture_style_specification_arena(
                     attributes, &mut tt,
                 )?)
         }
-        471 => model.texture_style_tessellation_specification_arena.push(
+        472 => model.texture_style_tessellation_specification_arena.push(
             build_texture_style_tessellation_specification_arena(attributes, &mut tt)?,
         ),
-        472 => model
+        473 => model
             .time_unit_arena
             .push(build_time_unit_arena(attributes, &mut tt)?),
-        473 => model
+        474 => model
             .tolerance_value_arena
             .push(build_tolerance_value_arena(attributes, &mut tt)?),
-        474 => model
+        475 => model
             .tolerance_zone_arena
             .push(build_tolerance_zone_arena(attributes, &mut tt)?),
-        475 => model
+        476 => model
             .tolerance_zone_definition_arena
             .push(build_tolerance_zone_definition_arena(attributes, &mut tt)?),
-        476 => model
+        477 => model
             .tolerance_zone_form_arena
             .push(build_tolerance_zone_form_arena(attributes, &mut tt)?),
-        477 => model
+        478 => model
             .tolerance_zone_with_datum_arena
             .push(build_tolerance_zone_with_datum_arena(attributes, &mut tt)?),
-        478 => model.topological_representation_item_arena.push(
+        479 => model.topological_representation_item_arena.push(
             build_topological_representation_item_arena(attributes, &mut tt)?,
         ),
-        479 => model
+        480 => model
             .toroidal_surface_arena
             .push(build_toroidal_surface_arena(attributes, &mut tt)?),
-        480 => model
+        481 => model
             .total_runout_tolerance_arena
             .push(build_total_runout_tolerance_arena(attributes, &mut tt)?),
-        481 => model
+        482 => model
             .trimmed_curve_arena
             .push(build_trimmed_curve_arena(attributes, &mut tt)?),
-        482 => {
+        483 => {
             model
                 .two_direction_repeat_factor_arena
                 .push(build_two_direction_repeat_factor_arena(
                     attributes, &mut tt,
                 )?)
         }
-        483 => model
+        484 => model
             .type_qualifier_arena
             .push(build_type_qualifier_arena(attributes, &mut tt)?),
-        484 => model.uncertainty_measure_with_unit_arena.push(
+        485 => model.uncertainty_measure_with_unit_arena.push(
             build_uncertainty_measure_with_unit_arena(attributes, &mut tt)?,
         ),
-        485 => model
+        486 => model
             .uncertainty_qualifier_arena
             .push(build_uncertainty_qualifier_arena(attributes, &mut tt)?),
-        486 => model.unequally_disposed_geometric_tolerance_arena.push(
+        487 => model.unequally_disposed_geometric_tolerance_arena.push(
             build_unequally_disposed_geometric_tolerance_arena(attributes, &mut tt)?,
         ),
-        487 => model
+        488 => model
             .uniform_curve_arena
             .push(build_uniform_curve_arena(attributes, &mut tt)?),
-        488 => model
+        489 => model
             .uniform_surface_arena
             .push(build_uniform_surface_arena(attributes, &mut tt)?),
-        489 => {
+        490 => {
             model
                 .value_format_type_qualifier_arena
                 .push(build_value_format_type_qualifier_arena(
                     attributes, &mut tt,
                 )?)
         }
-        490 => model
+        491 => model
             .value_representation_item_arena
             .push(build_value_representation_item_arena(attributes, &mut tt)?),
-        491 => model
+        492 => model
             .vector_arena
             .push(build_vector_arena(attributes, &mut tt)?),
-        492 => model
+        493 => model
             .versioned_action_request_arena
             .push(build_versioned_action_request_arena(attributes, &mut tt)?),
-        493 => model
+        494 => model
             .vertex_arena
             .push(build_vertex_arena(attributes, &mut tt)?),
-        494 => model
+        495 => model
             .vertex_loop_arena
             .push(build_vertex_loop_arena(attributes, &mut tt)?),
-        495 => model
+        496 => model
             .vertex_point_arena
             .push(build_vertex_point_arena(attributes, &mut tt)?),
-        496 => model
+        497 => model
             .vertex_shell_arena
             .push(build_vertex_shell_arena(attributes, &mut tt)?),
-        497 => model
+        498 => model
             .view_volume_arena
             .push(build_view_volume_arena(attributes, &mut tt)?),
-        498 => model
+        499 => model
             .volume_unit_arena
             .push(build_volume_unit_arena(attributes, &mut tt)?),
-        499 => model
+        500 => model
             .wire_shell_arena
             .push(build_wire_shell_arena(attributes, &mut tt)?),
         _ => return Err(format!("no entity type #{ix}")),
@@ -21864,214 +21890,215 @@ pub fn key_of(ix: u16, i: u32) -> Option<EntityKey> {
         305 => EntityKey::OrientedClosedShell(OrientedClosedShellId(i)),
         306 => EntityKey::OrientedEdge(OrientedEdgeId(i)),
         307 => EntityKey::OverRidingStyledItem(OverRidingStyledItemId(i)),
-        308 => EntityKey::ParallelismTolerance(ParallelismToleranceId(i)),
-        309 => EntityKey::ParametricRepresentationContext(ParametricRepresentationContextId(i)),
-        310 => EntityKey::Path(PathId(i)),
-        311 => EntityKey::Pcurve(PcurveId(i)),
-        312 => EntityKey::PerpendicularityTolerance(PerpendicularityToleranceId(i)),
-        313 => EntityKey::Person(PersonId(i)),
-        314 => EntityKey::PersonAndOrganization(PersonAndOrganizationId(i)),
-        315 => EntityKey::PersonAndOrganizationAddress(PersonAndOrganizationAddressId(i)),
-        316 => EntityKey::PersonAndOrganizationAssignment(PersonAndOrganizationAssignmentId(i)),
-        317 => EntityKey::PersonAndOrganizationRole(PersonAndOrganizationRoleId(i)),
-        318 => EntityKey::PersonalAddress(PersonalAddressId(i)),
-        319 => EntityKey::PlacedDatumTargetFeature(PlacedDatumTargetFeatureId(i)),
-        320 => EntityKey::Placement(PlacementId(i)),
-        321 => EntityKey::PlanarBox(PlanarBoxId(i)),
-        322 => EntityKey::PlanarExtent(PlanarExtentId(i)),
-        323 => EntityKey::Plane(PlaneId(i)),
-        324 => EntityKey::PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId(i)),
-        325 => EntityKey::PlaneAngleUnit(PlaneAngleUnitId(i)),
-        326 => EntityKey::PlusMinusTolerance(PlusMinusToleranceId(i)),
-        327 => EntityKey::Point(PointId(i)),
-        328 => EntityKey::PointStyle(PointStyleId(i)),
-        329 => EntityKey::PolyLoop(PolyLoopId(i)),
-        330 => EntityKey::Polyline(PolylineId(i)),
-        331 => EntityKey::PositionTolerance(PositionToleranceId(i)),
-        332 => EntityKey::PreDefinedCharacterGlyph(PreDefinedCharacterGlyphId(i)),
-        333 => EntityKey::PreDefinedColour(PreDefinedColourId(i)),
-        334 => EntityKey::PreDefinedCurveFont(PreDefinedCurveFontId(i)),
-        335 => EntityKey::PreDefinedItem(PreDefinedItemId(i)),
-        336 => EntityKey::PreDefinedMarker(PreDefinedMarkerId(i)),
-        337 => EntityKey::PreDefinedPointMarkerSymbol(PreDefinedPointMarkerSymbolId(i)),
-        338 => EntityKey::PreDefinedPresentationStyle(PreDefinedPresentationStyleId(i)),
-        339 => EntityKey::PreDefinedSurfaceSideStyle(PreDefinedSurfaceSideStyleId(i)),
-        340 => EntityKey::PreDefinedSymbol(PreDefinedSymbolId(i)),
-        341 => EntityKey::PreDefinedTerminatorSymbol(PreDefinedTerminatorSymbolId(i)),
-        342 => EntityKey::PreDefinedTextFont(PreDefinedTextFontId(i)),
-        343 => EntityKey::PreDefinedTile(PreDefinedTileId(i)),
-        344 => EntityKey::PrecisionQualifier(PrecisionQualifierId(i)),
-        345 => EntityKey::PresentationArea(PresentationAreaId(i)),
-        346 => EntityKey::PresentationLayerAssignment(PresentationLayerAssignmentId(i)),
-        347 => EntityKey::PresentationRepresentation(PresentationRepresentationId(i)),
-        348 => EntityKey::PresentationSet(PresentationSetId(i)),
-        349 => EntityKey::PresentationSize(PresentationSizeId(i)),
-        350 => EntityKey::PresentationStyleAssignment(PresentationStyleAssignmentId(i)),
-        351 => EntityKey::PresentationStyleByContext(PresentationStyleByContextId(i)),
-        352 => EntityKey::PresentationView(PresentationViewId(i)),
-        353 => EntityKey::PresentedItem(PresentedItemId(i)),
-        354 => EntityKey::PresentedItemRepresentation(PresentedItemRepresentationId(i)),
-        355 => EntityKey::Product(ProductId(i)),
-        356 => EntityKey::ProductCategory(ProductCategoryId(i)),
-        357 => EntityKey::ProductCategoryRelationship(ProductCategoryRelationshipId(i)),
-        358 => EntityKey::ProductConcept(ProductConceptId(i)),
-        359 => EntityKey::ProductConceptContext(ProductConceptContextId(i)),
-        360 => EntityKey::ProductConceptFeature(ProductConceptFeatureId(i)),
-        361 => EntityKey::ProductConceptFeatureCategory(ProductConceptFeatureCategoryId(i)),
-        362 => EntityKey::ProductContext(ProductContextId(i)),
-        363 => EntityKey::ProductDefinition(ProductDefinitionId(i)),
-        364 => EntityKey::ProductDefinitionContext(ProductDefinitionContextId(i)),
-        365 => {
+        308 => EntityKey::Parabola(ParabolaId(i)),
+        309 => EntityKey::ParallelismTolerance(ParallelismToleranceId(i)),
+        310 => EntityKey::ParametricRepresentationContext(ParametricRepresentationContextId(i)),
+        311 => EntityKey::Path(PathId(i)),
+        312 => EntityKey::Pcurve(PcurveId(i)),
+        313 => EntityKey::PerpendicularityTolerance(PerpendicularityToleranceId(i)),
+        314 => EntityKey::Person(PersonId(i)),
+        315 => EntityKey::PersonAndOrganization(PersonAndOrganizationId(i)),
+        316 => EntityKey::PersonAndOrganizationAddress(PersonAndOrganizationAddressId(i)),
+        317 => EntityKey::PersonAndOrganizationAssignment(PersonAndOrganizationAssignmentId(i)),
+        318 => EntityKey::PersonAndOrganizationRole(PersonAndOrganizationRoleId(i)),
+        319 => EntityKey::PersonalAddress(PersonalAddressId(i)),
+        320 => EntityKey::PlacedDatumTargetFeature(PlacedDatumTargetFeatureId(i)),
+        321 => EntityKey::Placement(PlacementId(i)),
+        322 => EntityKey::PlanarBox(PlanarBoxId(i)),
+        323 => EntityKey::PlanarExtent(PlanarExtentId(i)),
+        324 => EntityKey::Plane(PlaneId(i)),
+        325 => EntityKey::PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId(i)),
+        326 => EntityKey::PlaneAngleUnit(PlaneAngleUnitId(i)),
+        327 => EntityKey::PlusMinusTolerance(PlusMinusToleranceId(i)),
+        328 => EntityKey::Point(PointId(i)),
+        329 => EntityKey::PointStyle(PointStyleId(i)),
+        330 => EntityKey::PolyLoop(PolyLoopId(i)),
+        331 => EntityKey::Polyline(PolylineId(i)),
+        332 => EntityKey::PositionTolerance(PositionToleranceId(i)),
+        333 => EntityKey::PreDefinedCharacterGlyph(PreDefinedCharacterGlyphId(i)),
+        334 => EntityKey::PreDefinedColour(PreDefinedColourId(i)),
+        335 => EntityKey::PreDefinedCurveFont(PreDefinedCurveFontId(i)),
+        336 => EntityKey::PreDefinedItem(PreDefinedItemId(i)),
+        337 => EntityKey::PreDefinedMarker(PreDefinedMarkerId(i)),
+        338 => EntityKey::PreDefinedPointMarkerSymbol(PreDefinedPointMarkerSymbolId(i)),
+        339 => EntityKey::PreDefinedPresentationStyle(PreDefinedPresentationStyleId(i)),
+        340 => EntityKey::PreDefinedSurfaceSideStyle(PreDefinedSurfaceSideStyleId(i)),
+        341 => EntityKey::PreDefinedSymbol(PreDefinedSymbolId(i)),
+        342 => EntityKey::PreDefinedTerminatorSymbol(PreDefinedTerminatorSymbolId(i)),
+        343 => EntityKey::PreDefinedTextFont(PreDefinedTextFontId(i)),
+        344 => EntityKey::PreDefinedTile(PreDefinedTileId(i)),
+        345 => EntityKey::PrecisionQualifier(PrecisionQualifierId(i)),
+        346 => EntityKey::PresentationArea(PresentationAreaId(i)),
+        347 => EntityKey::PresentationLayerAssignment(PresentationLayerAssignmentId(i)),
+        348 => EntityKey::PresentationRepresentation(PresentationRepresentationId(i)),
+        349 => EntityKey::PresentationSet(PresentationSetId(i)),
+        350 => EntityKey::PresentationSize(PresentationSizeId(i)),
+        351 => EntityKey::PresentationStyleAssignment(PresentationStyleAssignmentId(i)),
+        352 => EntityKey::PresentationStyleByContext(PresentationStyleByContextId(i)),
+        353 => EntityKey::PresentationView(PresentationViewId(i)),
+        354 => EntityKey::PresentedItem(PresentedItemId(i)),
+        355 => EntityKey::PresentedItemRepresentation(PresentedItemRepresentationId(i)),
+        356 => EntityKey::Product(ProductId(i)),
+        357 => EntityKey::ProductCategory(ProductCategoryId(i)),
+        358 => EntityKey::ProductCategoryRelationship(ProductCategoryRelationshipId(i)),
+        359 => EntityKey::ProductConcept(ProductConceptId(i)),
+        360 => EntityKey::ProductConceptContext(ProductConceptContextId(i)),
+        361 => EntityKey::ProductConceptFeature(ProductConceptFeatureId(i)),
+        362 => EntityKey::ProductConceptFeatureCategory(ProductConceptFeatureCategoryId(i)),
+        363 => EntityKey::ProductContext(ProductContextId(i)),
+        364 => EntityKey::ProductDefinition(ProductDefinitionId(i)),
+        365 => EntityKey::ProductDefinitionContext(ProductDefinitionContextId(i)),
+        366 => {
             EntityKey::ProductDefinitionContextAssociation(ProductDefinitionContextAssociationId(i))
         }
-        366 => EntityKey::ProductDefinitionContextRole(ProductDefinitionContextRoleId(i)),
-        367 => EntityKey::ProductDefinitionEffectivity(ProductDefinitionEffectivityId(i)),
-        368 => EntityKey::ProductDefinitionFormation(ProductDefinitionFormationId(i)),
-        369 => EntityKey::ProductDefinitionFormationWithSpecifiedSource(
+        367 => EntityKey::ProductDefinitionContextRole(ProductDefinitionContextRoleId(i)),
+        368 => EntityKey::ProductDefinitionEffectivity(ProductDefinitionEffectivityId(i)),
+        369 => EntityKey::ProductDefinitionFormation(ProductDefinitionFormationId(i)),
+        370 => EntityKey::ProductDefinitionFormationWithSpecifiedSource(
             ProductDefinitionFormationWithSpecifiedSourceId(i),
         ),
-        370 => EntityKey::ProductDefinitionOccurrence(ProductDefinitionOccurrenceId(i)),
-        371 => EntityKey::ProductDefinitionRelationship(ProductDefinitionRelationshipId(i)),
-        372 => EntityKey::ProductDefinitionRelationshipRelationship(
+        371 => EntityKey::ProductDefinitionOccurrence(ProductDefinitionOccurrenceId(i)),
+        372 => EntityKey::ProductDefinitionRelationship(ProductDefinitionRelationshipId(i)),
+        373 => EntityKey::ProductDefinitionRelationshipRelationship(
             ProductDefinitionRelationshipRelationshipId(i),
         ),
-        373 => EntityKey::ProductDefinitionShape(ProductDefinitionShapeId(i)),
-        374 => EntityKey::ProductDefinitionSubstitute(ProductDefinitionSubstituteId(i)),
-        375 => EntityKey::ProductDefinitionUsage(ProductDefinitionUsageId(i)),
-        376 => EntityKey::ProductDefinitionWithAssociatedDocuments(
+        374 => EntityKey::ProductDefinitionShape(ProductDefinitionShapeId(i)),
+        375 => EntityKey::ProductDefinitionSubstitute(ProductDefinitionSubstituteId(i)),
+        376 => EntityKey::ProductDefinitionUsage(ProductDefinitionUsageId(i)),
+        377 => EntityKey::ProductDefinitionWithAssociatedDocuments(
             ProductDefinitionWithAssociatedDocumentsId(i),
         ),
-        377 => EntityKey::ProductRelatedProductCategory(ProductRelatedProductCategoryId(i)),
-        378 => EntityKey::ProjectedZoneDefinition(ProjectedZoneDefinitionId(i)),
-        379 => EntityKey::PropertyDefinition(PropertyDefinitionId(i)),
-        380 => EntityKey::PropertyDefinitionRelationship(PropertyDefinitionRelationshipId(i)),
-        381 => EntityKey::PropertyDefinitionRepresentation(PropertyDefinitionRepresentationId(i)),
-        382 => EntityKey::QualifiedRepresentationItem(QualifiedRepresentationItemId(i)),
-        383 => EntityKey::QuasiUniformCurve(QuasiUniformCurveId(i)),
-        384 => EntityKey::QuasiUniformSurface(QuasiUniformSurfaceId(i)),
-        385 => EntityKey::RatioMeasureWithUnit(RatioMeasureWithUnitId(i)),
-        386 => EntityKey::RatioUnit(RatioUnitId(i)),
-        387 => EntityKey::RationalBSplineCurve(RationalBSplineCurveId(i)),
-        388 => EntityKey::RationalBSplineSurface(RationalBSplineSurfaceId(i)),
-        389 => EntityKey::RealLiteral(RealLiteralId(i)),
-        390 => EntityKey::RealRepresentationItem(RealRepresentationItemId(i)),
-        391 => EntityKey::RepositionedTessellatedItem(RepositionedTessellatedItemId(i)),
-        392 => EntityKey::Representation(RepresentationId(i)),
-        393 => EntityKey::RepresentationContext(RepresentationContextId(i)),
-        394 => EntityKey::RepresentationContextReference(RepresentationContextReferenceId(i)),
-        395 => EntityKey::RepresentationItem(RepresentationItemId(i)),
-        396 => EntityKey::RepresentationMap(RepresentationMapId(i)),
-        397 => EntityKey::RepresentationReference(RepresentationReferenceId(i)),
-        398 => EntityKey::RepresentationRelationship(RepresentationRelationshipId(i)),
-        399 => EntityKey::RepresentationRelationshipWithTransformation(
+        378 => EntityKey::ProductRelatedProductCategory(ProductRelatedProductCategoryId(i)),
+        379 => EntityKey::ProjectedZoneDefinition(ProjectedZoneDefinitionId(i)),
+        380 => EntityKey::PropertyDefinition(PropertyDefinitionId(i)),
+        381 => EntityKey::PropertyDefinitionRelationship(PropertyDefinitionRelationshipId(i)),
+        382 => EntityKey::PropertyDefinitionRepresentation(PropertyDefinitionRepresentationId(i)),
+        383 => EntityKey::QualifiedRepresentationItem(QualifiedRepresentationItemId(i)),
+        384 => EntityKey::QuasiUniformCurve(QuasiUniformCurveId(i)),
+        385 => EntityKey::QuasiUniformSurface(QuasiUniformSurfaceId(i)),
+        386 => EntityKey::RatioMeasureWithUnit(RatioMeasureWithUnitId(i)),
+        387 => EntityKey::RatioUnit(RatioUnitId(i)),
+        388 => EntityKey::RationalBSplineCurve(RationalBSplineCurveId(i)),
+        389 => EntityKey::RationalBSplineSurface(RationalBSplineSurfaceId(i)),
+        390 => EntityKey::RealLiteral(RealLiteralId(i)),
+        391 => EntityKey::RealRepresentationItem(RealRepresentationItemId(i)),
+        392 => EntityKey::RepositionedTessellatedItem(RepositionedTessellatedItemId(i)),
+        393 => EntityKey::Representation(RepresentationId(i)),
+        394 => EntityKey::RepresentationContext(RepresentationContextId(i)),
+        395 => EntityKey::RepresentationContextReference(RepresentationContextReferenceId(i)),
+        396 => EntityKey::RepresentationItem(RepresentationItemId(i)),
+        397 => EntityKey::RepresentationMap(RepresentationMapId(i)),
+        398 => EntityKey::RepresentationReference(RepresentationReferenceId(i)),
+        399 => EntityKey::RepresentationRelationship(RepresentationRelationshipId(i)),
+        400 => EntityKey::RepresentationRelationshipWithTransformation(
             RepresentationRelationshipWithTransformationId(i),
         ),
-        400 => EntityKey::ResourceProperty(ResourcePropertyId(i)),
-        401 => EntityKey::ResourceRequirementType(ResourceRequirementTypeId(i)),
-        402 => EntityKey::RoleAssociation(RoleAssociationId(i)),
-        403 => EntityKey::RoundnessTolerance(RoundnessToleranceId(i)),
-        404 => EntityKey::SeamCurve(SeamCurveId(i)),
-        405 => EntityKey::SecurityClassification(SecurityClassificationId(i)),
-        406 => EntityKey::SecurityClassificationAssignment(SecurityClassificationAssignmentId(i)),
-        407 => EntityKey::SecurityClassificationLevel(SecurityClassificationLevelId(i)),
-        408 => EntityKey::ShapeAspect(ShapeAspectId(i)),
-        409 => EntityKey::ShapeAspectAssociativity(ShapeAspectAssociativityId(i)),
-        410 => EntityKey::ShapeAspectDerivingRelationship(ShapeAspectDerivingRelationshipId(i)),
-        411 => EntityKey::ShapeAspectRelationship(ShapeAspectRelationshipId(i)),
-        412 => EntityKey::ShapeDefinitionRepresentation(ShapeDefinitionRepresentationId(i)),
-        413 => EntityKey::ShapeDimensionRepresentation(ShapeDimensionRepresentationId(i)),
-        414 => EntityKey::ShapeRepresentation(ShapeRepresentationId(i)),
-        415 => EntityKey::ShapeRepresentationRelationship(ShapeRepresentationRelationshipId(i)),
-        416 => EntityKey::ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId(i)),
-        417 => EntityKey::ShellBasedSurfaceModel(ShellBasedSurfaceModelId(i)),
-        418 => EntityKey::SiUnit(SiUnitId(i)),
-        419 => EntityKey::SimpleGenericExpression(SimpleGenericExpressionId(i)),
-        420 => EntityKey::SimpleNumericExpression(SimpleNumericExpressionId(i)),
-        421 => EntityKey::SolidAngleUnit(SolidAngleUnitId(i)),
-        422 => EntityKey::SolidModel(SolidModelId(i)),
-        423 => EntityKey::SphericalSurface(SphericalSurfaceId(i)),
-        424 => EntityKey::StartRequest(StartRequestId(i)),
-        425 => EntityKey::StartWork(StartWorkId(i)),
-        426 => EntityKey::StateObserved(StateObservedId(i)),
-        427 => EntityKey::StateType(StateTypeId(i)),
-        428 => EntityKey::StraightnessTolerance(StraightnessToleranceId(i)),
-        429 => EntityKey::StyledItem(StyledItemId(i)),
-        430 => EntityKey::Surface(SurfaceId(i)),
-        431 => EntityKey::SurfaceCurve(SurfaceCurveId(i)),
-        432 => EntityKey::SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId(i)),
-        433 => EntityKey::SurfaceOfRevolution(SurfaceOfRevolutionId(i)),
-        434 => EntityKey::SurfaceProfileTolerance(SurfaceProfileToleranceId(i)),
-        435 => EntityKey::SurfaceRenderingProperties(SurfaceRenderingPropertiesId(i)),
-        436 => EntityKey::SurfaceSideStyle(SurfaceSideStyleId(i)),
-        437 => EntityKey::SurfaceStyleBoundary(SurfaceStyleBoundaryId(i)),
-        438 => EntityKey::SurfaceStyleControlGrid(SurfaceStyleControlGridId(i)),
-        439 => EntityKey::SurfaceStyleFillArea(SurfaceStyleFillAreaId(i)),
-        440 => EntityKey::SurfaceStyleParameterLine(SurfaceStyleParameterLineId(i)),
-        441 => EntityKey::SurfaceStyleReflectanceAmbient(SurfaceStyleReflectanceAmbientId(i)),
-        442 => EntityKey::SurfaceStyleRendering(SurfaceStyleRenderingId(i)),
-        443 => {
+        401 => EntityKey::ResourceProperty(ResourcePropertyId(i)),
+        402 => EntityKey::ResourceRequirementType(ResourceRequirementTypeId(i)),
+        403 => EntityKey::RoleAssociation(RoleAssociationId(i)),
+        404 => EntityKey::RoundnessTolerance(RoundnessToleranceId(i)),
+        405 => EntityKey::SeamCurve(SeamCurveId(i)),
+        406 => EntityKey::SecurityClassification(SecurityClassificationId(i)),
+        407 => EntityKey::SecurityClassificationAssignment(SecurityClassificationAssignmentId(i)),
+        408 => EntityKey::SecurityClassificationLevel(SecurityClassificationLevelId(i)),
+        409 => EntityKey::ShapeAspect(ShapeAspectId(i)),
+        410 => EntityKey::ShapeAspectAssociativity(ShapeAspectAssociativityId(i)),
+        411 => EntityKey::ShapeAspectDerivingRelationship(ShapeAspectDerivingRelationshipId(i)),
+        412 => EntityKey::ShapeAspectRelationship(ShapeAspectRelationshipId(i)),
+        413 => EntityKey::ShapeDefinitionRepresentation(ShapeDefinitionRepresentationId(i)),
+        414 => EntityKey::ShapeDimensionRepresentation(ShapeDimensionRepresentationId(i)),
+        415 => EntityKey::ShapeRepresentation(ShapeRepresentationId(i)),
+        416 => EntityKey::ShapeRepresentationRelationship(ShapeRepresentationRelationshipId(i)),
+        417 => EntityKey::ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId(i)),
+        418 => EntityKey::ShellBasedSurfaceModel(ShellBasedSurfaceModelId(i)),
+        419 => EntityKey::SiUnit(SiUnitId(i)),
+        420 => EntityKey::SimpleGenericExpression(SimpleGenericExpressionId(i)),
+        421 => EntityKey::SimpleNumericExpression(SimpleNumericExpressionId(i)),
+        422 => EntityKey::SolidAngleUnit(SolidAngleUnitId(i)),
+        423 => EntityKey::SolidModel(SolidModelId(i)),
+        424 => EntityKey::SphericalSurface(SphericalSurfaceId(i)),
+        425 => EntityKey::StartRequest(StartRequestId(i)),
+        426 => EntityKey::StartWork(StartWorkId(i)),
+        427 => EntityKey::StateObserved(StateObservedId(i)),
+        428 => EntityKey::StateType(StateTypeId(i)),
+        429 => EntityKey::StraightnessTolerance(StraightnessToleranceId(i)),
+        430 => EntityKey::StyledItem(StyledItemId(i)),
+        431 => EntityKey::Surface(SurfaceId(i)),
+        432 => EntityKey::SurfaceCurve(SurfaceCurveId(i)),
+        433 => EntityKey::SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId(i)),
+        434 => EntityKey::SurfaceOfRevolution(SurfaceOfRevolutionId(i)),
+        435 => EntityKey::SurfaceProfileTolerance(SurfaceProfileToleranceId(i)),
+        436 => EntityKey::SurfaceRenderingProperties(SurfaceRenderingPropertiesId(i)),
+        437 => EntityKey::SurfaceSideStyle(SurfaceSideStyleId(i)),
+        438 => EntityKey::SurfaceStyleBoundary(SurfaceStyleBoundaryId(i)),
+        439 => EntityKey::SurfaceStyleControlGrid(SurfaceStyleControlGridId(i)),
+        440 => EntityKey::SurfaceStyleFillArea(SurfaceStyleFillAreaId(i)),
+        441 => EntityKey::SurfaceStyleParameterLine(SurfaceStyleParameterLineId(i)),
+        442 => EntityKey::SurfaceStyleReflectanceAmbient(SurfaceStyleReflectanceAmbientId(i)),
+        443 => EntityKey::SurfaceStyleRendering(SurfaceStyleRenderingId(i)),
+        444 => {
             EntityKey::SurfaceStyleRenderingWithProperties(SurfaceStyleRenderingWithPropertiesId(i))
         }
-        444 => EntityKey::SurfaceStyleSegmentationCurve(SurfaceStyleSegmentationCurveId(i)),
-        445 => EntityKey::SurfaceStyleSilhouette(SurfaceStyleSilhouetteId(i)),
-        446 => EntityKey::SurfaceStyleTransparent(SurfaceStyleTransparentId(i)),
-        447 => EntityKey::SurfaceStyleUsage(SurfaceStyleUsageId(i)),
-        448 => EntityKey::SweptSurface(SweptSurfaceId(i)),
-        449 => EntityKey::SymbolColour(SymbolColourId(i)),
-        450 => EntityKey::SymbolRepresentation(SymbolRepresentationId(i)),
-        451 => EntityKey::SymbolStyle(SymbolStyleId(i)),
-        452 => EntityKey::SymbolTarget(SymbolTargetId(i)),
-        453 => EntityKey::SymmetryTolerance(SymmetryToleranceId(i)),
-        454 => EntityKey::TerminatorSymbol(TerminatorSymbolId(i)),
-        455 => EntityKey::TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId(i)),
-        456 => EntityKey::TessellatedCurveSet(TessellatedCurveSetId(i)),
-        457 => EntityKey::TessellatedFace(TessellatedFaceId(i)),
-        458 => EntityKey::TessellatedGeometricSet(TessellatedGeometricSetId(i)),
-        459 => EntityKey::TessellatedItem(TessellatedItemId(i)),
-        460 => EntityKey::TessellatedShapeRepresentation(TessellatedShapeRepresentationId(i)),
-        461 => EntityKey::TessellatedShell(TessellatedShellId(i)),
-        462 => EntityKey::TessellatedSolid(TessellatedSolidId(i)),
-        463 => EntityKey::TessellatedStructuredItem(TessellatedStructuredItemId(i)),
-        464 => EntityKey::TessellatedSurfaceSet(TessellatedSurfaceSetId(i)),
-        465 => EntityKey::TextFont(TextFontId(i)),
-        466 => EntityKey::TextLiteral(TextLiteralId(i)),
-        467 => EntityKey::TextStyle(TextStyleId(i)),
-        468 => EntityKey::TextStyleForDefinedFont(TextStyleForDefinedFontId(i)),
-        469 => EntityKey::TextStyleWithBoxCharacteristics(TextStyleWithBoxCharacteristicsId(i)),
-        470 => EntityKey::TextureStyleSpecification(TextureStyleSpecificationId(i)),
-        471 => EntityKey::TextureStyleTessellationSpecification(
+        445 => EntityKey::SurfaceStyleSegmentationCurve(SurfaceStyleSegmentationCurveId(i)),
+        446 => EntityKey::SurfaceStyleSilhouette(SurfaceStyleSilhouetteId(i)),
+        447 => EntityKey::SurfaceStyleTransparent(SurfaceStyleTransparentId(i)),
+        448 => EntityKey::SurfaceStyleUsage(SurfaceStyleUsageId(i)),
+        449 => EntityKey::SweptSurface(SweptSurfaceId(i)),
+        450 => EntityKey::SymbolColour(SymbolColourId(i)),
+        451 => EntityKey::SymbolRepresentation(SymbolRepresentationId(i)),
+        452 => EntityKey::SymbolStyle(SymbolStyleId(i)),
+        453 => EntityKey::SymbolTarget(SymbolTargetId(i)),
+        454 => EntityKey::SymmetryTolerance(SymmetryToleranceId(i)),
+        455 => EntityKey::TerminatorSymbol(TerminatorSymbolId(i)),
+        456 => EntityKey::TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId(i)),
+        457 => EntityKey::TessellatedCurveSet(TessellatedCurveSetId(i)),
+        458 => EntityKey::TessellatedFace(TessellatedFaceId(i)),
+        459 => EntityKey::TessellatedGeometricSet(TessellatedGeometricSetId(i)),
+        460 => EntityKey::TessellatedItem(TessellatedItemId(i)),
+        461 => EntityKey::TessellatedShapeRepresentation(TessellatedShapeRepresentationId(i)),
+        462 => EntityKey::TessellatedShell(TessellatedShellId(i)),
+        463 => EntityKey::TessellatedSolid(TessellatedSolidId(i)),
+        464 => EntityKey::TessellatedStructuredItem(TessellatedStructuredItemId(i)),
+        465 => EntityKey::TessellatedSurfaceSet(TessellatedSurfaceSetId(i)),
+        466 => EntityKey::TextFont(TextFontId(i)),
+        467 => EntityKey::TextLiteral(TextLiteralId(i)),
+        468 => EntityKey::TextStyle(TextStyleId(i)),
+        469 => EntityKey::TextStyleForDefinedFont(TextStyleForDefinedFontId(i)),
+        470 => EntityKey::TextStyleWithBoxCharacteristics(TextStyleWithBoxCharacteristicsId(i)),
+        471 => EntityKey::TextureStyleSpecification(TextureStyleSpecificationId(i)),
+        472 => EntityKey::TextureStyleTessellationSpecification(
             TextureStyleTessellationSpecificationId(i),
         ),
-        472 => EntityKey::TimeUnit(TimeUnitId(i)),
-        473 => EntityKey::ToleranceValue(ToleranceValueId(i)),
-        474 => EntityKey::ToleranceZone(ToleranceZoneId(i)),
-        475 => EntityKey::ToleranceZoneDefinition(ToleranceZoneDefinitionId(i)),
-        476 => EntityKey::ToleranceZoneForm(ToleranceZoneFormId(i)),
-        477 => EntityKey::ToleranceZoneWithDatum(ToleranceZoneWithDatumId(i)),
-        478 => EntityKey::TopologicalRepresentationItem(TopologicalRepresentationItemId(i)),
-        479 => EntityKey::ToroidalSurface(ToroidalSurfaceId(i)),
-        480 => EntityKey::TotalRunoutTolerance(TotalRunoutToleranceId(i)),
-        481 => EntityKey::TrimmedCurve(TrimmedCurveId(i)),
-        482 => EntityKey::TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId(i)),
-        483 => EntityKey::TypeQualifier(TypeQualifierId(i)),
-        484 => EntityKey::UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId(i)),
-        485 => EntityKey::UncertaintyQualifier(UncertaintyQualifierId(i)),
-        486 => {
+        473 => EntityKey::TimeUnit(TimeUnitId(i)),
+        474 => EntityKey::ToleranceValue(ToleranceValueId(i)),
+        475 => EntityKey::ToleranceZone(ToleranceZoneId(i)),
+        476 => EntityKey::ToleranceZoneDefinition(ToleranceZoneDefinitionId(i)),
+        477 => EntityKey::ToleranceZoneForm(ToleranceZoneFormId(i)),
+        478 => EntityKey::ToleranceZoneWithDatum(ToleranceZoneWithDatumId(i)),
+        479 => EntityKey::TopologicalRepresentationItem(TopologicalRepresentationItemId(i)),
+        480 => EntityKey::ToroidalSurface(ToroidalSurfaceId(i)),
+        481 => EntityKey::TotalRunoutTolerance(TotalRunoutToleranceId(i)),
+        482 => EntityKey::TrimmedCurve(TrimmedCurveId(i)),
+        483 => EntityKey::TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId(i)),
+        484 => EntityKey::TypeQualifier(TypeQualifierId(i)),
+        485 => EntityKey::UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId(i)),
+        486 => EntityKey::UncertaintyQualifier(UncertaintyQualifierId(i)),
+        487 => {
             EntityKey::UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId(i))
         }
-        487 => EntityKey::UniformCurve(UniformCurveId(i)),
-        488 => EntityKey::UniformSurface(UniformSurfaceId(i)),
-        489 => EntityKey::ValueFormatTypeQualifier(ValueFormatTypeQualifierId(i)),
-        490 => EntityKey::ValueRepresentationItem(ValueRepresentationItemId(i)),
-        491 => EntityKey::Vector(VectorId(i)),
-        492 => EntityKey::VersionedActionRequest(VersionedActionRequestId(i)),
-        493 => EntityKey::Vertex(VertexId(i)),
-        494 => EntityKey::VertexLoop(VertexLoopId(i)),
-        495 => EntityKey::VertexPoint(VertexPointId(i)),
-        496 => EntityKey::VertexShell(VertexShellId(i)),
-        497 => EntityKey::ViewVolume(ViewVolumeId(i)),
-        498 => EntityKey::VolumeUnit(VolumeUnitId(i)),
-        499 => EntityKey::WireShell(WireShellId(i)),
+        488 => EntityKey::UniformCurve(UniformCurveId(i)),
+        489 => EntityKey::UniformSurface(UniformSurfaceId(i)),
+        490 => EntityKey::ValueFormatTypeQualifier(ValueFormatTypeQualifierId(i)),
+        491 => EntityKey::ValueRepresentationItem(ValueRepresentationItemId(i)),
+        492 => EntityKey::Vector(VectorId(i)),
+        493 => EntityKey::VersionedActionRequest(VersionedActionRequestId(i)),
+        494 => EntityKey::Vertex(VertexId(i)),
+        495 => EntityKey::VertexLoop(VertexLoopId(i)),
+        496 => EntityKey::VertexPoint(VertexPointId(i)),
+        497 => EntityKey::VertexShell(VertexShellId(i)),
+        498 => EntityKey::ViewVolume(ViewVolumeId(i)),
+        499 => EntityKey::VolumeUnit(VolumeUnitId(i)),
+        500 => EntityKey::WireShell(WireShellId(i)),
         _ => return None,
     })
 }
@@ -23357,688 +23384,689 @@ pub fn resolve_entity(
             idmap,
             dedup,
         ),
-        308 => resolve_parallelism_tolerance_arena(
+        308 => resolve_parabola_arena(model, ParabolaId(i), attributes, idmap, dedup),
+        309 => resolve_parallelism_tolerance_arena(
             model,
             ParallelismToleranceId(i),
             attributes,
             idmap,
             dedup,
         ),
-        310 => resolve_path_arena(model, PathId(i), attributes, idmap, dedup),
-        311 => resolve_pcurve_arena(model, PcurveId(i), attributes, idmap, dedup),
-        312 => resolve_perpendicularity_tolerance_arena(
+        311 => resolve_path_arena(model, PathId(i), attributes, idmap, dedup),
+        312 => resolve_pcurve_arena(model, PcurveId(i), attributes, idmap, dedup),
+        313 => resolve_perpendicularity_tolerance_arena(
             model,
             PerpendicularityToleranceId(i),
             attributes,
             idmap,
             dedup,
         ),
-        314 => resolve_person_and_organization_arena(
+        315 => resolve_person_and_organization_arena(
             model,
             PersonAndOrganizationId(i),
             attributes,
             idmap,
             dedup,
         ),
-        315 => resolve_person_and_organization_address_arena(
+        316 => resolve_person_and_organization_address_arena(
             model,
             PersonAndOrganizationAddressId(i),
             attributes,
             idmap,
             dedup,
         ),
-        316 => resolve_person_and_organization_assignment_arena(
+        317 => resolve_person_and_organization_assignment_arena(
             model,
             PersonAndOrganizationAssignmentId(i),
             attributes,
             idmap,
             dedup,
         ),
-        318 => {
+        319 => {
             resolve_personal_address_arena(model, PersonalAddressId(i), attributes, idmap, dedup)
         }
-        319 => resolve_placed_datum_target_feature_arena(
+        320 => resolve_placed_datum_target_feature_arena(
             model,
             PlacedDatumTargetFeatureId(i),
             attributes,
             idmap,
             dedup,
         ),
-        320 => resolve_placement_arena(model, PlacementId(i), attributes, idmap, dedup),
-        321 => resolve_planar_box_arena(model, PlanarBoxId(i), attributes, idmap, dedup),
-        323 => resolve_plane_arena(model, PlaneId(i), attributes, idmap, dedup),
-        324 => resolve_plane_angle_measure_with_unit_arena(
+        321 => resolve_placement_arena(model, PlacementId(i), attributes, idmap, dedup),
+        322 => resolve_planar_box_arena(model, PlanarBoxId(i), attributes, idmap, dedup),
+        324 => resolve_plane_arena(model, PlaneId(i), attributes, idmap, dedup),
+        325 => resolve_plane_angle_measure_with_unit_arena(
             model,
             PlaneAngleMeasureWithUnitId(i),
             attributes,
             idmap,
             dedup,
         ),
-        325 => resolve_plane_angle_unit_arena(model, PlaneAngleUnitId(i), attributes, idmap, dedup),
-        326 => resolve_plus_minus_tolerance_arena(
+        326 => resolve_plane_angle_unit_arena(model, PlaneAngleUnitId(i), attributes, idmap, dedup),
+        327 => resolve_plus_minus_tolerance_arena(
             model,
             PlusMinusToleranceId(i),
             attributes,
             idmap,
             dedup,
         ),
-        328 => resolve_point_style_arena(model, PointStyleId(i), attributes, idmap, dedup),
-        329 => resolve_poly_loop_arena(model, PolyLoopId(i), attributes, idmap, dedup),
-        330 => resolve_polyline_arena(model, PolylineId(i), attributes, idmap, dedup),
-        331 => resolve_position_tolerance_arena(
+        329 => resolve_point_style_arena(model, PointStyleId(i), attributes, idmap, dedup),
+        330 => resolve_poly_loop_arena(model, PolyLoopId(i), attributes, idmap, dedup),
+        331 => resolve_polyline_arena(model, PolylineId(i), attributes, idmap, dedup),
+        332 => resolve_position_tolerance_arena(
             model,
             PositionToleranceId(i),
             attributes,
             idmap,
             dedup,
         ),
-        345 => {
+        346 => {
             resolve_presentation_area_arena(model, PresentationAreaId(i), attributes, idmap, dedup)
         }
-        346 => resolve_presentation_layer_assignment_arena(
+        347 => resolve_presentation_layer_assignment_arena(
             model,
             PresentationLayerAssignmentId(i),
             attributes,
             idmap,
             dedup,
         ),
-        347 => resolve_presentation_representation_arena(
+        348 => resolve_presentation_representation_arena(
             model,
             PresentationRepresentationId(i),
             attributes,
             idmap,
             dedup,
         ),
-        349 => {
+        350 => {
             resolve_presentation_size_arena(model, PresentationSizeId(i), attributes, idmap, dedup)
         }
-        350 => resolve_presentation_style_assignment_arena(
+        351 => resolve_presentation_style_assignment_arena(
             model,
             PresentationStyleAssignmentId(i),
             attributes,
             idmap,
             dedup,
         ),
-        351 => resolve_presentation_style_by_context_arena(
+        352 => resolve_presentation_style_by_context_arena(
             model,
             PresentationStyleByContextId(i),
             attributes,
             idmap,
             dedup,
         ),
-        352 => {
+        353 => {
             resolve_presentation_view_arena(model, PresentationViewId(i), attributes, idmap, dedup)
         }
-        354 => resolve_presented_item_representation_arena(
+        355 => resolve_presented_item_representation_arena(
             model,
             PresentedItemRepresentationId(i),
             attributes,
             idmap,
             dedup,
         ),
-        355 => resolve_product_arena(model, ProductId(i), attributes, idmap, dedup),
-        357 => resolve_product_category_relationship_arena(
+        356 => resolve_product_arena(model, ProductId(i), attributes, idmap, dedup),
+        358 => resolve_product_category_relationship_arena(
             model,
             ProductCategoryRelationshipId(i),
             attributes,
             idmap,
             dedup,
         ),
-        358 => resolve_product_concept_arena(model, ProductConceptId(i), attributes, idmap, dedup),
-        359 => resolve_product_concept_context_arena(
+        359 => resolve_product_concept_arena(model, ProductConceptId(i), attributes, idmap, dedup),
+        360 => resolve_product_concept_context_arena(
             model,
             ProductConceptContextId(i),
             attributes,
             idmap,
             dedup,
         ),
-        362 => resolve_product_context_arena(model, ProductContextId(i), attributes, idmap, dedup),
-        363 => resolve_product_definition_arena(
+        363 => resolve_product_context_arena(model, ProductContextId(i), attributes, idmap, dedup),
+        364 => resolve_product_definition_arena(
             model,
             ProductDefinitionId(i),
             attributes,
             idmap,
             dedup,
         ),
-        364 => resolve_product_definition_context_arena(
+        365 => resolve_product_definition_context_arena(
             model,
             ProductDefinitionContextId(i),
             attributes,
             idmap,
             dedup,
         ),
-        365 => resolve_product_definition_context_association_arena(
+        366 => resolve_product_definition_context_association_arena(
             model,
             ProductDefinitionContextAssociationId(i),
             attributes,
             idmap,
             dedup,
         ),
-        367 => resolve_product_definition_effectivity_arena(
+        368 => resolve_product_definition_effectivity_arena(
             model,
             ProductDefinitionEffectivityId(i),
             attributes,
             idmap,
             dedup,
         ),
-        368 => resolve_product_definition_formation_arena(
+        369 => resolve_product_definition_formation_arena(
             model,
             ProductDefinitionFormationId(i),
             attributes,
             idmap,
             dedup,
         ),
-        369 => resolve_product_definition_formation_with_specified_source_arena(
+        370 => resolve_product_definition_formation_with_specified_source_arena(
             model,
             ProductDefinitionFormationWithSpecifiedSourceId(i),
             attributes,
             idmap,
             dedup,
         ),
-        370 => resolve_product_definition_occurrence_arena(
+        371 => resolve_product_definition_occurrence_arena(
             model,
             ProductDefinitionOccurrenceId(i),
             attributes,
             idmap,
             dedup,
         ),
-        371 => resolve_product_definition_relationship_arena(
+        372 => resolve_product_definition_relationship_arena(
             model,
             ProductDefinitionRelationshipId(i),
             attributes,
             idmap,
             dedup,
         ),
-        372 => resolve_product_definition_relationship_relationship_arena(
+        373 => resolve_product_definition_relationship_relationship_arena(
             model,
             ProductDefinitionRelationshipRelationshipId(i),
             attributes,
             idmap,
             dedup,
         ),
-        373 => resolve_product_definition_shape_arena(
+        374 => resolve_product_definition_shape_arena(
             model,
             ProductDefinitionShapeId(i),
             attributes,
             idmap,
             dedup,
         ),
-        374 => resolve_product_definition_substitute_arena(
+        375 => resolve_product_definition_substitute_arena(
             model,
             ProductDefinitionSubstituteId(i),
             attributes,
             idmap,
             dedup,
         ),
-        375 => resolve_product_definition_usage_arena(
+        376 => resolve_product_definition_usage_arena(
             model,
             ProductDefinitionUsageId(i),
             attributes,
             idmap,
             dedup,
         ),
-        376 => resolve_product_definition_with_associated_documents_arena(
+        377 => resolve_product_definition_with_associated_documents_arena(
             model,
             ProductDefinitionWithAssociatedDocumentsId(i),
             attributes,
             idmap,
             dedup,
         ),
-        377 => resolve_product_related_product_category_arena(
+        378 => resolve_product_related_product_category_arena(
             model,
             ProductRelatedProductCategoryId(i),
             attributes,
             idmap,
             dedup,
         ),
-        378 => resolve_projected_zone_definition_arena(
+        379 => resolve_projected_zone_definition_arena(
             model,
             ProjectedZoneDefinitionId(i),
             attributes,
             idmap,
             dedup,
         ),
-        379 => resolve_property_definition_arena(
+        380 => resolve_property_definition_arena(
             model,
             PropertyDefinitionId(i),
             attributes,
             idmap,
             dedup,
         ),
-        380 => resolve_property_definition_relationship_arena(
+        381 => resolve_property_definition_relationship_arena(
             model,
             PropertyDefinitionRelationshipId(i),
             attributes,
             idmap,
             dedup,
         ),
-        381 => resolve_property_definition_representation_arena(
+        382 => resolve_property_definition_representation_arena(
             model,
             PropertyDefinitionRepresentationId(i),
             attributes,
             idmap,
             dedup,
         ),
-        382 => resolve_qualified_representation_item_arena(
+        383 => resolve_qualified_representation_item_arena(
             model,
             QualifiedRepresentationItemId(i),
             attributes,
             idmap,
             dedup,
         ),
-        383 => resolve_quasi_uniform_curve_arena(
+        384 => resolve_quasi_uniform_curve_arena(
             model,
             QuasiUniformCurveId(i),
             attributes,
             idmap,
             dedup,
         ),
-        384 => resolve_quasi_uniform_surface_arena(
+        385 => resolve_quasi_uniform_surface_arena(
             model,
             QuasiUniformSurfaceId(i),
             attributes,
             idmap,
             dedup,
         ),
-        385 => resolve_ratio_measure_with_unit_arena(
+        386 => resolve_ratio_measure_with_unit_arena(
             model,
             RatioMeasureWithUnitId(i),
             attributes,
             idmap,
             dedup,
         ),
-        386 => resolve_ratio_unit_arena(model, RatioUnitId(i), attributes, idmap, dedup),
-        387 => resolve_rational_b_spline_curve_arena(
+        387 => resolve_ratio_unit_arena(model, RatioUnitId(i), attributes, idmap, dedup),
+        388 => resolve_rational_b_spline_curve_arena(
             model,
             RationalBSplineCurveId(i),
             attributes,
             idmap,
             dedup,
         ),
-        388 => resolve_rational_b_spline_surface_arena(
+        389 => resolve_rational_b_spline_surface_arena(
             model,
             RationalBSplineSurfaceId(i),
             attributes,
             idmap,
             dedup,
         ),
-        391 => resolve_repositioned_tessellated_item_arena(
+        392 => resolve_repositioned_tessellated_item_arena(
             model,
             RepositionedTessellatedItemId(i),
             attributes,
             idmap,
             dedup,
         ),
-        392 => resolve_representation_arena(model, RepresentationId(i), attributes, idmap, dedup),
-        396 => resolve_representation_map_arena(
+        393 => resolve_representation_arena(model, RepresentationId(i), attributes, idmap, dedup),
+        397 => resolve_representation_map_arena(
             model,
             RepresentationMapId(i),
             attributes,
             idmap,
             dedup,
         ),
-        397 => resolve_representation_reference_arena(
+        398 => resolve_representation_reference_arena(
             model,
             RepresentationReferenceId(i),
             attributes,
             idmap,
             dedup,
         ),
-        398 => resolve_representation_relationship_arena(
+        399 => resolve_representation_relationship_arena(
             model,
             RepresentationRelationshipId(i),
             attributes,
             idmap,
             dedup,
         ),
-        399 => resolve_representation_relationship_with_transformation_arena(
+        400 => resolve_representation_relationship_with_transformation_arena(
             model,
             RepresentationRelationshipWithTransformationId(i),
             attributes,
             idmap,
             dedup,
         ),
-        400 => {
+        401 => {
             resolve_resource_property_arena(model, ResourcePropertyId(i), attributes, idmap, dedup)
         }
-        402 => {
+        403 => {
             resolve_role_association_arena(model, RoleAssociationId(i), attributes, idmap, dedup)
         }
-        403 => resolve_roundness_tolerance_arena(
+        404 => resolve_roundness_tolerance_arena(
             model,
             RoundnessToleranceId(i),
             attributes,
             idmap,
             dedup,
         ),
-        404 => resolve_seam_curve_arena(model, SeamCurveId(i), attributes, idmap, dedup),
-        405 => resolve_security_classification_arena(
+        405 => resolve_seam_curve_arena(model, SeamCurveId(i), attributes, idmap, dedup),
+        406 => resolve_security_classification_arena(
             model,
             SecurityClassificationId(i),
             attributes,
             idmap,
             dedup,
         ),
-        406 => resolve_security_classification_assignment_arena(
+        407 => resolve_security_classification_assignment_arena(
             model,
             SecurityClassificationAssignmentId(i),
             attributes,
             idmap,
             dedup,
         ),
-        408 => resolve_shape_aspect_arena(model, ShapeAspectId(i), attributes, idmap, dedup),
-        409 => resolve_shape_aspect_associativity_arena(
+        409 => resolve_shape_aspect_arena(model, ShapeAspectId(i), attributes, idmap, dedup),
+        410 => resolve_shape_aspect_associativity_arena(
             model,
             ShapeAspectAssociativityId(i),
             attributes,
             idmap,
             dedup,
         ),
-        410 => resolve_shape_aspect_deriving_relationship_arena(
+        411 => resolve_shape_aspect_deriving_relationship_arena(
             model,
             ShapeAspectDerivingRelationshipId(i),
             attributes,
             idmap,
             dedup,
         ),
-        411 => resolve_shape_aspect_relationship_arena(
+        412 => resolve_shape_aspect_relationship_arena(
             model,
             ShapeAspectRelationshipId(i),
             attributes,
             idmap,
             dedup,
         ),
-        412 => resolve_shape_definition_representation_arena(
+        413 => resolve_shape_definition_representation_arena(
             model,
             ShapeDefinitionRepresentationId(i),
             attributes,
             idmap,
             dedup,
         ),
-        413 => resolve_shape_dimension_representation_arena(
+        414 => resolve_shape_dimension_representation_arena(
             model,
             ShapeDimensionRepresentationId(i),
             attributes,
             idmap,
             dedup,
         ),
-        414 => resolve_shape_representation_arena(
+        415 => resolve_shape_representation_arena(
             model,
             ShapeRepresentationId(i),
             attributes,
             idmap,
             dedup,
         ),
-        415 => resolve_shape_representation_relationship_arena(
+        416 => resolve_shape_representation_relationship_arena(
             model,
             ShapeRepresentationRelationshipId(i),
             attributes,
             idmap,
             dedup,
         ),
-        416 => resolve_shape_representation_with_parameters_arena(
+        417 => resolve_shape_representation_with_parameters_arena(
             model,
             ShapeRepresentationWithParametersId(i),
             attributes,
             idmap,
             dedup,
         ),
-        417 => resolve_shell_based_surface_model_arena(
+        418 => resolve_shell_based_surface_model_arena(
             model,
             ShellBasedSurfaceModelId(i),
             attributes,
             idmap,
             dedup,
         ),
-        418 => resolve_si_unit_arena(model, SiUnitId(i), attributes, idmap, dedup),
-        421 => resolve_solid_angle_unit_arena(model, SolidAngleUnitId(i), attributes, idmap, dedup),
-        423 => {
+        419 => resolve_si_unit_arena(model, SiUnitId(i), attributes, idmap, dedup),
+        422 => resolve_solid_angle_unit_arena(model, SolidAngleUnitId(i), attributes, idmap, dedup),
+        424 => {
             resolve_spherical_surface_arena(model, SphericalSurfaceId(i), attributes, idmap, dedup)
         }
-        424 => resolve_start_request_arena(model, StartRequestId(i), attributes, idmap, dedup),
-        425 => resolve_start_work_arena(model, StartWorkId(i), attributes, idmap, dedup),
-        428 => resolve_straightness_tolerance_arena(
+        425 => resolve_start_request_arena(model, StartRequestId(i), attributes, idmap, dedup),
+        426 => resolve_start_work_arena(model, StartWorkId(i), attributes, idmap, dedup),
+        429 => resolve_straightness_tolerance_arena(
             model,
             StraightnessToleranceId(i),
             attributes,
             idmap,
             dedup,
         ),
-        429 => resolve_styled_item_arena(model, StyledItemId(i), attributes, idmap, dedup),
-        431 => resolve_surface_curve_arena(model, SurfaceCurveId(i), attributes, idmap, dedup),
-        432 => resolve_surface_of_linear_extrusion_arena(
+        430 => resolve_styled_item_arena(model, StyledItemId(i), attributes, idmap, dedup),
+        432 => resolve_surface_curve_arena(model, SurfaceCurveId(i), attributes, idmap, dedup),
+        433 => resolve_surface_of_linear_extrusion_arena(
             model,
             SurfaceOfLinearExtrusionId(i),
             attributes,
             idmap,
             dedup,
         ),
-        433 => resolve_surface_of_revolution_arena(
+        434 => resolve_surface_of_revolution_arena(
             model,
             SurfaceOfRevolutionId(i),
             attributes,
             idmap,
             dedup,
         ),
-        434 => resolve_surface_profile_tolerance_arena(
+        435 => resolve_surface_profile_tolerance_arena(
             model,
             SurfaceProfileToleranceId(i),
             attributes,
             idmap,
             dedup,
         ),
-        435 => resolve_surface_rendering_properties_arena(
+        436 => resolve_surface_rendering_properties_arena(
             model,
             SurfaceRenderingPropertiesId(i),
             attributes,
             idmap,
             dedup,
         ),
-        436 => {
+        437 => {
             resolve_surface_side_style_arena(model, SurfaceSideStyleId(i), attributes, idmap, dedup)
         }
-        437 => resolve_surface_style_boundary_arena(
+        438 => resolve_surface_style_boundary_arena(
             model,
             SurfaceStyleBoundaryId(i),
             attributes,
             idmap,
             dedup,
         ),
-        438 => resolve_surface_style_control_grid_arena(
+        439 => resolve_surface_style_control_grid_arena(
             model,
             SurfaceStyleControlGridId(i),
             attributes,
             idmap,
             dedup,
         ),
-        439 => resolve_surface_style_fill_area_arena(
+        440 => resolve_surface_style_fill_area_arena(
             model,
             SurfaceStyleFillAreaId(i),
             attributes,
             idmap,
             dedup,
         ),
-        440 => resolve_surface_style_parameter_line_arena(
+        441 => resolve_surface_style_parameter_line_arena(
             model,
             SurfaceStyleParameterLineId(i),
             attributes,
             idmap,
             dedup,
         ),
-        442 => resolve_surface_style_rendering_arena(
+        443 => resolve_surface_style_rendering_arena(
             model,
             SurfaceStyleRenderingId(i),
             attributes,
             idmap,
             dedup,
         ),
-        443 => resolve_surface_style_rendering_with_properties_arena(
+        444 => resolve_surface_style_rendering_with_properties_arena(
             model,
             SurfaceStyleRenderingWithPropertiesId(i),
             attributes,
             idmap,
             dedup,
         ),
-        444 => resolve_surface_style_segmentation_curve_arena(
+        445 => resolve_surface_style_segmentation_curve_arena(
             model,
             SurfaceStyleSegmentationCurveId(i),
             attributes,
             idmap,
             dedup,
         ),
-        445 => resolve_surface_style_silhouette_arena(
+        446 => resolve_surface_style_silhouette_arena(
             model,
             SurfaceStyleSilhouetteId(i),
             attributes,
             idmap,
             dedup,
         ),
-        447 => resolve_surface_style_usage_arena(
+        448 => resolve_surface_style_usage_arena(
             model,
             SurfaceStyleUsageId(i),
             attributes,
             idmap,
             dedup,
         ),
-        448 => resolve_swept_surface_arena(model, SweptSurfaceId(i), attributes, idmap, dedup),
-        449 => resolve_symbol_colour_arena(model, SymbolColourId(i), attributes, idmap, dedup),
-        450 => resolve_symbol_representation_arena(
+        449 => resolve_swept_surface_arena(model, SweptSurfaceId(i), attributes, idmap, dedup),
+        450 => resolve_symbol_colour_arena(model, SymbolColourId(i), attributes, idmap, dedup),
+        451 => resolve_symbol_representation_arena(
             model,
             SymbolRepresentationId(i),
             attributes,
             idmap,
             dedup,
         ),
-        451 => resolve_symbol_style_arena(model, SymbolStyleId(i), attributes, idmap, dedup),
-        452 => resolve_symbol_target_arena(model, SymbolTargetId(i), attributes, idmap, dedup),
-        453 => resolve_symmetry_tolerance_arena(
+        452 => resolve_symbol_style_arena(model, SymbolStyleId(i), attributes, idmap, dedup),
+        453 => resolve_symbol_target_arena(model, SymbolTargetId(i), attributes, idmap, dedup),
+        454 => resolve_symmetry_tolerance_arena(
             model,
             SymmetryToleranceId(i),
             attributes,
             idmap,
             dedup,
         ),
-        454 => {
+        455 => {
             resolve_terminator_symbol_arena(model, TerminatorSymbolId(i), attributes, idmap, dedup)
         }
-        455 => resolve_tessellated_annotation_occurrence_arena(
+        456 => resolve_tessellated_annotation_occurrence_arena(
             model,
             TessellatedAnnotationOccurrenceId(i),
             attributes,
             idmap,
             dedup,
         ),
-        456 => resolve_tessellated_curve_set_arena(
+        457 => resolve_tessellated_curve_set_arena(
             model,
             TessellatedCurveSetId(i),
             attributes,
             idmap,
             dedup,
         ),
-        457 => {
+        458 => {
             resolve_tessellated_face_arena(model, TessellatedFaceId(i), attributes, idmap, dedup)
         }
-        458 => resolve_tessellated_geometric_set_arena(
+        459 => resolve_tessellated_geometric_set_arena(
             model,
             TessellatedGeometricSetId(i),
             attributes,
             idmap,
             dedup,
         ),
-        460 => resolve_tessellated_shape_representation_arena(
+        461 => resolve_tessellated_shape_representation_arena(
             model,
             TessellatedShapeRepresentationId(i),
             attributes,
             idmap,
             dedup,
         ),
-        461 => {
+        462 => {
             resolve_tessellated_shell_arena(model, TessellatedShellId(i), attributes, idmap, dedup)
         }
-        462 => {
+        463 => {
             resolve_tessellated_solid_arena(model, TessellatedSolidId(i), attributes, idmap, dedup)
         }
-        464 => resolve_tessellated_surface_set_arena(
+        465 => resolve_tessellated_surface_set_arena(
             model,
             TessellatedSurfaceSetId(i),
             attributes,
             idmap,
             dedup,
         ),
-        466 => resolve_text_literal_arena(model, TextLiteralId(i), attributes, idmap, dedup),
-        467 => resolve_text_style_arena(model, TextStyleId(i), attributes, idmap, dedup),
-        468 => resolve_text_style_for_defined_font_arena(
+        467 => resolve_text_literal_arena(model, TextLiteralId(i), attributes, idmap, dedup),
+        468 => resolve_text_style_arena(model, TextStyleId(i), attributes, idmap, dedup),
+        469 => resolve_text_style_for_defined_font_arena(
             model,
             TextStyleForDefinedFontId(i),
             attributes,
             idmap,
             dedup,
         ),
-        469 => resolve_text_style_with_box_characteristics_arena(
+        470 => resolve_text_style_with_box_characteristics_arena(
             model,
             TextStyleWithBoxCharacteristicsId(i),
             attributes,
             idmap,
             dedup,
         ),
-        472 => resolve_time_unit_arena(model, TimeUnitId(i), attributes, idmap, dedup),
-        473 => resolve_tolerance_value_arena(model, ToleranceValueId(i), attributes, idmap, dedup),
-        474 => resolve_tolerance_zone_arena(model, ToleranceZoneId(i), attributes, idmap, dedup),
-        475 => resolve_tolerance_zone_definition_arena(
+        473 => resolve_time_unit_arena(model, TimeUnitId(i), attributes, idmap, dedup),
+        474 => resolve_tolerance_value_arena(model, ToleranceValueId(i), attributes, idmap, dedup),
+        475 => resolve_tolerance_zone_arena(model, ToleranceZoneId(i), attributes, idmap, dedup),
+        476 => resolve_tolerance_zone_definition_arena(
             model,
             ToleranceZoneDefinitionId(i),
             attributes,
             idmap,
             dedup,
         ),
-        477 => resolve_tolerance_zone_with_datum_arena(
+        478 => resolve_tolerance_zone_with_datum_arena(
             model,
             ToleranceZoneWithDatumId(i),
             attributes,
             idmap,
             dedup,
         ),
-        479 => {
+        480 => {
             resolve_toroidal_surface_arena(model, ToroidalSurfaceId(i), attributes, idmap, dedup)
         }
-        480 => resolve_total_runout_tolerance_arena(
+        481 => resolve_total_runout_tolerance_arena(
             model,
             TotalRunoutToleranceId(i),
             attributes,
             idmap,
             dedup,
         ),
-        481 => resolve_trimmed_curve_arena(model, TrimmedCurveId(i), attributes, idmap, dedup),
-        482 => resolve_two_direction_repeat_factor_arena(
+        482 => resolve_trimmed_curve_arena(model, TrimmedCurveId(i), attributes, idmap, dedup),
+        483 => resolve_two_direction_repeat_factor_arena(
             model,
             TwoDirectionRepeatFactorId(i),
             attributes,
             idmap,
             dedup,
         ),
-        484 => resolve_uncertainty_measure_with_unit_arena(
+        485 => resolve_uncertainty_measure_with_unit_arena(
             model,
             UncertaintyMeasureWithUnitId(i),
             attributes,
             idmap,
             dedup,
         ),
-        486 => resolve_unequally_disposed_geometric_tolerance_arena(
+        487 => resolve_unequally_disposed_geometric_tolerance_arena(
             model,
             UnequallyDisposedGeometricToleranceId(i),
             attributes,
             idmap,
             dedup,
         ),
-        487 => resolve_uniform_curve_arena(model, UniformCurveId(i), attributes, idmap, dedup),
-        488 => resolve_uniform_surface_arena(model, UniformSurfaceId(i), attributes, idmap, dedup),
-        491 => resolve_vector_arena(model, VectorId(i), attributes, idmap, dedup),
-        494 => resolve_vertex_loop_arena(model, VertexLoopId(i), attributes, idmap, dedup),
-        495 => resolve_vertex_point_arena(model, VertexPointId(i), attributes, idmap, dedup),
-        496 => resolve_vertex_shell_arena(model, VertexShellId(i), attributes, idmap, dedup),
-        497 => resolve_view_volume_arena(model, ViewVolumeId(i), attributes, idmap, dedup),
-        498 => resolve_volume_unit_arena(model, VolumeUnitId(i), attributes, idmap, dedup),
-        499 => resolve_wire_shell_arena(model, WireShellId(i), attributes, idmap, dedup),
+        488 => resolve_uniform_curve_arena(model, UniformCurveId(i), attributes, idmap, dedup),
+        489 => resolve_uniform_surface_arena(model, UniformSurfaceId(i), attributes, idmap, dedup),
+        492 => resolve_vector_arena(model, VectorId(i), attributes, idmap, dedup),
+        495 => resolve_vertex_loop_arena(model, VertexLoopId(i), attributes, idmap, dedup),
+        496 => resolve_vertex_point_arena(model, VertexPointId(i), attributes, idmap, dedup),
+        497 => resolve_vertex_shell_arena(model, VertexShellId(i), attributes, idmap, dedup),
+        498 => resolve_view_volume_arena(model, ViewVolumeId(i), attributes, idmap, dedup),
+        499 => resolve_volume_unit_arena(model, VolumeUnitId(i), attributes, idmap, dedup),
+        500 => resolve_wire_shell_arena(model, WireShellId(i), attributes, idmap, dedup),
         _ => Ok(()),
     }
 }
@@ -24997,581 +25025,584 @@ pub fn finalize_arenas(model: &mut StepModel, order: &[Vec<u32>], complex: &[u32
         .over_riding_styled_item_arena
         .retain_order(order.get(307).map_or(&[], Vec::as_slice));
     model
-        .parallelism_tolerance_arena
+        .parabola_arena
         .retain_order(order.get(308).map_or(&[], Vec::as_slice));
     model
-        .parametric_representation_context_arena
+        .parallelism_tolerance_arena
         .retain_order(order.get(309).map_or(&[], Vec::as_slice));
     model
-        .path_arena
+        .parametric_representation_context_arena
         .retain_order(order.get(310).map_or(&[], Vec::as_slice));
     model
-        .pcurve_arena
+        .path_arena
         .retain_order(order.get(311).map_or(&[], Vec::as_slice));
     model
-        .perpendicularity_tolerance_arena
+        .pcurve_arena
         .retain_order(order.get(312).map_or(&[], Vec::as_slice));
     model
-        .person_arena
+        .perpendicularity_tolerance_arena
         .retain_order(order.get(313).map_or(&[], Vec::as_slice));
     model
-        .person_and_organization_arena
+        .person_arena
         .retain_order(order.get(314).map_or(&[], Vec::as_slice));
     model
-        .person_and_organization_address_arena
+        .person_and_organization_arena
         .retain_order(order.get(315).map_or(&[], Vec::as_slice));
     model
-        .person_and_organization_assignment_arena
+        .person_and_organization_address_arena
         .retain_order(order.get(316).map_or(&[], Vec::as_slice));
     model
-        .person_and_organization_role_arena
+        .person_and_organization_assignment_arena
         .retain_order(order.get(317).map_or(&[], Vec::as_slice));
     model
-        .personal_address_arena
+        .person_and_organization_role_arena
         .retain_order(order.get(318).map_or(&[], Vec::as_slice));
     model
-        .placed_datum_target_feature_arena
+        .personal_address_arena
         .retain_order(order.get(319).map_or(&[], Vec::as_slice));
     model
-        .placement_arena
+        .placed_datum_target_feature_arena
         .retain_order(order.get(320).map_or(&[], Vec::as_slice));
     model
-        .planar_box_arena
+        .placement_arena
         .retain_order(order.get(321).map_or(&[], Vec::as_slice));
     model
-        .planar_extent_arena
+        .planar_box_arena
         .retain_order(order.get(322).map_or(&[], Vec::as_slice));
     model
-        .plane_arena
+        .planar_extent_arena
         .retain_order(order.get(323).map_or(&[], Vec::as_slice));
     model
-        .plane_angle_measure_with_unit_arena
+        .plane_arena
         .retain_order(order.get(324).map_or(&[], Vec::as_slice));
     model
-        .plane_angle_unit_arena
+        .plane_angle_measure_with_unit_arena
         .retain_order(order.get(325).map_or(&[], Vec::as_slice));
     model
-        .plus_minus_tolerance_arena
+        .plane_angle_unit_arena
         .retain_order(order.get(326).map_or(&[], Vec::as_slice));
     model
-        .point_arena
+        .plus_minus_tolerance_arena
         .retain_order(order.get(327).map_or(&[], Vec::as_slice));
     model
-        .point_style_arena
+        .point_arena
         .retain_order(order.get(328).map_or(&[], Vec::as_slice));
     model
-        .poly_loop_arena
+        .point_style_arena
         .retain_order(order.get(329).map_or(&[], Vec::as_slice));
     model
-        .polyline_arena
+        .poly_loop_arena
         .retain_order(order.get(330).map_or(&[], Vec::as_slice));
     model
-        .position_tolerance_arena
+        .polyline_arena
         .retain_order(order.get(331).map_or(&[], Vec::as_slice));
     model
-        .pre_defined_character_glyph_arena
+        .position_tolerance_arena
         .retain_order(order.get(332).map_or(&[], Vec::as_slice));
     model
-        .pre_defined_colour_arena
+        .pre_defined_character_glyph_arena
         .retain_order(order.get(333).map_or(&[], Vec::as_slice));
     model
-        .pre_defined_curve_font_arena
+        .pre_defined_colour_arena
         .retain_order(order.get(334).map_or(&[], Vec::as_slice));
     model
-        .pre_defined_item_arena
+        .pre_defined_curve_font_arena
         .retain_order(order.get(335).map_or(&[], Vec::as_slice));
     model
-        .pre_defined_marker_arena
+        .pre_defined_item_arena
         .retain_order(order.get(336).map_or(&[], Vec::as_slice));
     model
-        .pre_defined_point_marker_symbol_arena
+        .pre_defined_marker_arena
         .retain_order(order.get(337).map_or(&[], Vec::as_slice));
     model
-        .pre_defined_presentation_style_arena
+        .pre_defined_point_marker_symbol_arena
         .retain_order(order.get(338).map_or(&[], Vec::as_slice));
     model
-        .pre_defined_surface_side_style_arena
+        .pre_defined_presentation_style_arena
         .retain_order(order.get(339).map_or(&[], Vec::as_slice));
     model
-        .pre_defined_symbol_arena
+        .pre_defined_surface_side_style_arena
         .retain_order(order.get(340).map_or(&[], Vec::as_slice));
     model
-        .pre_defined_terminator_symbol_arena
+        .pre_defined_symbol_arena
         .retain_order(order.get(341).map_or(&[], Vec::as_slice));
     model
-        .pre_defined_text_font_arena
+        .pre_defined_terminator_symbol_arena
         .retain_order(order.get(342).map_or(&[], Vec::as_slice));
     model
-        .pre_defined_tile_arena
+        .pre_defined_text_font_arena
         .retain_order(order.get(343).map_or(&[], Vec::as_slice));
     model
-        .precision_qualifier_arena
+        .pre_defined_tile_arena
         .retain_order(order.get(344).map_or(&[], Vec::as_slice));
     model
-        .presentation_area_arena
+        .precision_qualifier_arena
         .retain_order(order.get(345).map_or(&[], Vec::as_slice));
     model
-        .presentation_layer_assignment_arena
+        .presentation_area_arena
         .retain_order(order.get(346).map_or(&[], Vec::as_slice));
     model
-        .presentation_representation_arena
+        .presentation_layer_assignment_arena
         .retain_order(order.get(347).map_or(&[], Vec::as_slice));
     model
-        .presentation_set_arena
+        .presentation_representation_arena
         .retain_order(order.get(348).map_or(&[], Vec::as_slice));
     model
-        .presentation_size_arena
+        .presentation_set_arena
         .retain_order(order.get(349).map_or(&[], Vec::as_slice));
     model
-        .presentation_style_assignment_arena
+        .presentation_size_arena
         .retain_order(order.get(350).map_or(&[], Vec::as_slice));
     model
-        .presentation_style_by_context_arena
+        .presentation_style_assignment_arena
         .retain_order(order.get(351).map_or(&[], Vec::as_slice));
     model
-        .presentation_view_arena
+        .presentation_style_by_context_arena
         .retain_order(order.get(352).map_or(&[], Vec::as_slice));
     model
-        .presented_item_arena
+        .presentation_view_arena
         .retain_order(order.get(353).map_or(&[], Vec::as_slice));
     model
-        .presented_item_representation_arena
+        .presented_item_arena
         .retain_order(order.get(354).map_or(&[], Vec::as_slice));
     model
-        .product_arena
+        .presented_item_representation_arena
         .retain_order(order.get(355).map_or(&[], Vec::as_slice));
     model
-        .product_category_arena
+        .product_arena
         .retain_order(order.get(356).map_or(&[], Vec::as_slice));
     model
-        .product_category_relationship_arena
+        .product_category_arena
         .retain_order(order.get(357).map_or(&[], Vec::as_slice));
     model
-        .product_concept_arena
+        .product_category_relationship_arena
         .retain_order(order.get(358).map_or(&[], Vec::as_slice));
     model
-        .product_concept_context_arena
+        .product_concept_arena
         .retain_order(order.get(359).map_or(&[], Vec::as_slice));
     model
-        .product_concept_feature_arena
+        .product_concept_context_arena
         .retain_order(order.get(360).map_or(&[], Vec::as_slice));
     model
-        .product_concept_feature_category_arena
+        .product_concept_feature_arena
         .retain_order(order.get(361).map_or(&[], Vec::as_slice));
     model
-        .product_context_arena
+        .product_concept_feature_category_arena
         .retain_order(order.get(362).map_or(&[], Vec::as_slice));
     model
-        .product_definition_arena
+        .product_context_arena
         .retain_order(order.get(363).map_or(&[], Vec::as_slice));
     model
-        .product_definition_context_arena
+        .product_definition_arena
         .retain_order(order.get(364).map_or(&[], Vec::as_slice));
     model
-        .product_definition_context_association_arena
+        .product_definition_context_arena
         .retain_order(order.get(365).map_or(&[], Vec::as_slice));
     model
-        .product_definition_context_role_arena
+        .product_definition_context_association_arena
         .retain_order(order.get(366).map_or(&[], Vec::as_slice));
     model
-        .product_definition_effectivity_arena
+        .product_definition_context_role_arena
         .retain_order(order.get(367).map_or(&[], Vec::as_slice));
     model
-        .product_definition_formation_arena
+        .product_definition_effectivity_arena
         .retain_order(order.get(368).map_or(&[], Vec::as_slice));
     model
-        .product_definition_formation_with_specified_source_arena
+        .product_definition_formation_arena
         .retain_order(order.get(369).map_or(&[], Vec::as_slice));
     model
-        .product_definition_occurrence_arena
+        .product_definition_formation_with_specified_source_arena
         .retain_order(order.get(370).map_or(&[], Vec::as_slice));
     model
-        .product_definition_relationship_arena
+        .product_definition_occurrence_arena
         .retain_order(order.get(371).map_or(&[], Vec::as_slice));
     model
-        .product_definition_relationship_relationship_arena
+        .product_definition_relationship_arena
         .retain_order(order.get(372).map_or(&[], Vec::as_slice));
     model
-        .product_definition_shape_arena
+        .product_definition_relationship_relationship_arena
         .retain_order(order.get(373).map_or(&[], Vec::as_slice));
     model
-        .product_definition_substitute_arena
+        .product_definition_shape_arena
         .retain_order(order.get(374).map_or(&[], Vec::as_slice));
     model
-        .product_definition_usage_arena
+        .product_definition_substitute_arena
         .retain_order(order.get(375).map_or(&[], Vec::as_slice));
     model
-        .product_definition_with_associated_documents_arena
+        .product_definition_usage_arena
         .retain_order(order.get(376).map_or(&[], Vec::as_slice));
     model
-        .product_related_product_category_arena
+        .product_definition_with_associated_documents_arena
         .retain_order(order.get(377).map_or(&[], Vec::as_slice));
     model
-        .projected_zone_definition_arena
+        .product_related_product_category_arena
         .retain_order(order.get(378).map_or(&[], Vec::as_slice));
     model
-        .property_definition_arena
+        .projected_zone_definition_arena
         .retain_order(order.get(379).map_or(&[], Vec::as_slice));
     model
-        .property_definition_relationship_arena
+        .property_definition_arena
         .retain_order(order.get(380).map_or(&[], Vec::as_slice));
     model
-        .property_definition_representation_arena
+        .property_definition_relationship_arena
         .retain_order(order.get(381).map_or(&[], Vec::as_slice));
     model
-        .qualified_representation_item_arena
+        .property_definition_representation_arena
         .retain_order(order.get(382).map_or(&[], Vec::as_slice));
     model
-        .quasi_uniform_curve_arena
+        .qualified_representation_item_arena
         .retain_order(order.get(383).map_or(&[], Vec::as_slice));
     model
-        .quasi_uniform_surface_arena
+        .quasi_uniform_curve_arena
         .retain_order(order.get(384).map_or(&[], Vec::as_slice));
     model
-        .ratio_measure_with_unit_arena
+        .quasi_uniform_surface_arena
         .retain_order(order.get(385).map_or(&[], Vec::as_slice));
     model
-        .ratio_unit_arena
+        .ratio_measure_with_unit_arena
         .retain_order(order.get(386).map_or(&[], Vec::as_slice));
     model
-        .rational_b_spline_curve_arena
+        .ratio_unit_arena
         .retain_order(order.get(387).map_or(&[], Vec::as_slice));
     model
-        .rational_b_spline_surface_arena
+        .rational_b_spline_curve_arena
         .retain_order(order.get(388).map_or(&[], Vec::as_slice));
     model
-        .real_literal_arena
+        .rational_b_spline_surface_arena
         .retain_order(order.get(389).map_or(&[], Vec::as_slice));
     model
-        .real_representation_item_arena
+        .real_literal_arena
         .retain_order(order.get(390).map_or(&[], Vec::as_slice));
     model
-        .repositioned_tessellated_item_arena
+        .real_representation_item_arena
         .retain_order(order.get(391).map_or(&[], Vec::as_slice));
     model
-        .representation_arena
+        .repositioned_tessellated_item_arena
         .retain_order(order.get(392).map_or(&[], Vec::as_slice));
     model
-        .representation_context_arena
+        .representation_arena
         .retain_order(order.get(393).map_or(&[], Vec::as_slice));
     model
-        .representation_context_reference_arena
+        .representation_context_arena
         .retain_order(order.get(394).map_or(&[], Vec::as_slice));
     model
-        .representation_item_arena
+        .representation_context_reference_arena
         .retain_order(order.get(395).map_or(&[], Vec::as_slice));
     model
-        .representation_map_arena
+        .representation_item_arena
         .retain_order(order.get(396).map_or(&[], Vec::as_slice));
     model
-        .representation_reference_arena
+        .representation_map_arena
         .retain_order(order.get(397).map_or(&[], Vec::as_slice));
     model
-        .representation_relationship_arena
+        .representation_reference_arena
         .retain_order(order.get(398).map_or(&[], Vec::as_slice));
     model
-        .representation_relationship_with_transformation_arena
+        .representation_relationship_arena
         .retain_order(order.get(399).map_or(&[], Vec::as_slice));
     model
-        .resource_property_arena
+        .representation_relationship_with_transformation_arena
         .retain_order(order.get(400).map_or(&[], Vec::as_slice));
     model
-        .resource_requirement_type_arena
+        .resource_property_arena
         .retain_order(order.get(401).map_or(&[], Vec::as_slice));
     model
-        .role_association_arena
+        .resource_requirement_type_arena
         .retain_order(order.get(402).map_or(&[], Vec::as_slice));
     model
-        .roundness_tolerance_arena
+        .role_association_arena
         .retain_order(order.get(403).map_or(&[], Vec::as_slice));
     model
-        .seam_curve_arena
+        .roundness_tolerance_arena
         .retain_order(order.get(404).map_or(&[], Vec::as_slice));
     model
-        .security_classification_arena
+        .seam_curve_arena
         .retain_order(order.get(405).map_or(&[], Vec::as_slice));
     model
-        .security_classification_assignment_arena
+        .security_classification_arena
         .retain_order(order.get(406).map_or(&[], Vec::as_slice));
     model
-        .security_classification_level_arena
+        .security_classification_assignment_arena
         .retain_order(order.get(407).map_or(&[], Vec::as_slice));
     model
-        .shape_aspect_arena
+        .security_classification_level_arena
         .retain_order(order.get(408).map_or(&[], Vec::as_slice));
     model
-        .shape_aspect_associativity_arena
+        .shape_aspect_arena
         .retain_order(order.get(409).map_or(&[], Vec::as_slice));
     model
-        .shape_aspect_deriving_relationship_arena
+        .shape_aspect_associativity_arena
         .retain_order(order.get(410).map_or(&[], Vec::as_slice));
     model
-        .shape_aspect_relationship_arena
+        .shape_aspect_deriving_relationship_arena
         .retain_order(order.get(411).map_or(&[], Vec::as_slice));
     model
-        .shape_definition_representation_arena
+        .shape_aspect_relationship_arena
         .retain_order(order.get(412).map_or(&[], Vec::as_slice));
     model
-        .shape_dimension_representation_arena
+        .shape_definition_representation_arena
         .retain_order(order.get(413).map_or(&[], Vec::as_slice));
     model
-        .shape_representation_arena
+        .shape_dimension_representation_arena
         .retain_order(order.get(414).map_or(&[], Vec::as_slice));
     model
-        .shape_representation_relationship_arena
+        .shape_representation_arena
         .retain_order(order.get(415).map_or(&[], Vec::as_slice));
     model
-        .shape_representation_with_parameters_arena
+        .shape_representation_relationship_arena
         .retain_order(order.get(416).map_or(&[], Vec::as_slice));
     model
-        .shell_based_surface_model_arena
+        .shape_representation_with_parameters_arena
         .retain_order(order.get(417).map_or(&[], Vec::as_slice));
     model
-        .si_unit_arena
+        .shell_based_surface_model_arena
         .retain_order(order.get(418).map_or(&[], Vec::as_slice));
     model
-        .simple_generic_expression_arena
+        .si_unit_arena
         .retain_order(order.get(419).map_or(&[], Vec::as_slice));
     model
-        .simple_numeric_expression_arena
+        .simple_generic_expression_arena
         .retain_order(order.get(420).map_or(&[], Vec::as_slice));
     model
-        .solid_angle_unit_arena
+        .simple_numeric_expression_arena
         .retain_order(order.get(421).map_or(&[], Vec::as_slice));
     model
-        .solid_model_arena
+        .solid_angle_unit_arena
         .retain_order(order.get(422).map_or(&[], Vec::as_slice));
     model
-        .spherical_surface_arena
+        .solid_model_arena
         .retain_order(order.get(423).map_or(&[], Vec::as_slice));
     model
-        .start_request_arena
+        .spherical_surface_arena
         .retain_order(order.get(424).map_or(&[], Vec::as_slice));
     model
-        .start_work_arena
+        .start_request_arena
         .retain_order(order.get(425).map_or(&[], Vec::as_slice));
     model
-        .state_observed_arena
+        .start_work_arena
         .retain_order(order.get(426).map_or(&[], Vec::as_slice));
     model
-        .state_type_arena
+        .state_observed_arena
         .retain_order(order.get(427).map_or(&[], Vec::as_slice));
     model
-        .straightness_tolerance_arena
+        .state_type_arena
         .retain_order(order.get(428).map_or(&[], Vec::as_slice));
     model
-        .styled_item_arena
+        .straightness_tolerance_arena
         .retain_order(order.get(429).map_or(&[], Vec::as_slice));
     model
-        .surface_arena
+        .styled_item_arena
         .retain_order(order.get(430).map_or(&[], Vec::as_slice));
     model
-        .surface_curve_arena
+        .surface_arena
         .retain_order(order.get(431).map_or(&[], Vec::as_slice));
     model
-        .surface_of_linear_extrusion_arena
+        .surface_curve_arena
         .retain_order(order.get(432).map_or(&[], Vec::as_slice));
     model
-        .surface_of_revolution_arena
+        .surface_of_linear_extrusion_arena
         .retain_order(order.get(433).map_or(&[], Vec::as_slice));
     model
-        .surface_profile_tolerance_arena
+        .surface_of_revolution_arena
         .retain_order(order.get(434).map_or(&[], Vec::as_slice));
     model
-        .surface_rendering_properties_arena
+        .surface_profile_tolerance_arena
         .retain_order(order.get(435).map_or(&[], Vec::as_slice));
     model
-        .surface_side_style_arena
+        .surface_rendering_properties_arena
         .retain_order(order.get(436).map_or(&[], Vec::as_slice));
     model
-        .surface_style_boundary_arena
+        .surface_side_style_arena
         .retain_order(order.get(437).map_or(&[], Vec::as_slice));
     model
-        .surface_style_control_grid_arena
+        .surface_style_boundary_arena
         .retain_order(order.get(438).map_or(&[], Vec::as_slice));
     model
-        .surface_style_fill_area_arena
+        .surface_style_control_grid_arena
         .retain_order(order.get(439).map_or(&[], Vec::as_slice));
     model
-        .surface_style_parameter_line_arena
+        .surface_style_fill_area_arena
         .retain_order(order.get(440).map_or(&[], Vec::as_slice));
     model
-        .surface_style_reflectance_ambient_arena
+        .surface_style_parameter_line_arena
         .retain_order(order.get(441).map_or(&[], Vec::as_slice));
     model
-        .surface_style_rendering_arena
+        .surface_style_reflectance_ambient_arena
         .retain_order(order.get(442).map_or(&[], Vec::as_slice));
     model
-        .surface_style_rendering_with_properties_arena
+        .surface_style_rendering_arena
         .retain_order(order.get(443).map_or(&[], Vec::as_slice));
     model
-        .surface_style_segmentation_curve_arena
+        .surface_style_rendering_with_properties_arena
         .retain_order(order.get(444).map_or(&[], Vec::as_slice));
     model
-        .surface_style_silhouette_arena
+        .surface_style_segmentation_curve_arena
         .retain_order(order.get(445).map_or(&[], Vec::as_slice));
     model
-        .surface_style_transparent_arena
+        .surface_style_silhouette_arena
         .retain_order(order.get(446).map_or(&[], Vec::as_slice));
     model
-        .surface_style_usage_arena
+        .surface_style_transparent_arena
         .retain_order(order.get(447).map_or(&[], Vec::as_slice));
     model
-        .swept_surface_arena
+        .surface_style_usage_arena
         .retain_order(order.get(448).map_or(&[], Vec::as_slice));
     model
-        .symbol_colour_arena
+        .swept_surface_arena
         .retain_order(order.get(449).map_or(&[], Vec::as_slice));
     model
-        .symbol_representation_arena
+        .symbol_colour_arena
         .retain_order(order.get(450).map_or(&[], Vec::as_slice));
     model
-        .symbol_style_arena
+        .symbol_representation_arena
         .retain_order(order.get(451).map_or(&[], Vec::as_slice));
     model
-        .symbol_target_arena
+        .symbol_style_arena
         .retain_order(order.get(452).map_or(&[], Vec::as_slice));
     model
-        .symmetry_tolerance_arena
+        .symbol_target_arena
         .retain_order(order.get(453).map_or(&[], Vec::as_slice));
     model
-        .terminator_symbol_arena
+        .symmetry_tolerance_arena
         .retain_order(order.get(454).map_or(&[], Vec::as_slice));
     model
-        .tessellated_annotation_occurrence_arena
+        .terminator_symbol_arena
         .retain_order(order.get(455).map_or(&[], Vec::as_slice));
     model
-        .tessellated_curve_set_arena
+        .tessellated_annotation_occurrence_arena
         .retain_order(order.get(456).map_or(&[], Vec::as_slice));
     model
-        .tessellated_face_arena
+        .tessellated_curve_set_arena
         .retain_order(order.get(457).map_or(&[], Vec::as_slice));
     model
-        .tessellated_geometric_set_arena
+        .tessellated_face_arena
         .retain_order(order.get(458).map_or(&[], Vec::as_slice));
     model
-        .tessellated_item_arena
+        .tessellated_geometric_set_arena
         .retain_order(order.get(459).map_or(&[], Vec::as_slice));
     model
-        .tessellated_shape_representation_arena
+        .tessellated_item_arena
         .retain_order(order.get(460).map_or(&[], Vec::as_slice));
     model
-        .tessellated_shell_arena
+        .tessellated_shape_representation_arena
         .retain_order(order.get(461).map_or(&[], Vec::as_slice));
     model
-        .tessellated_solid_arena
+        .tessellated_shell_arena
         .retain_order(order.get(462).map_or(&[], Vec::as_slice));
     model
-        .tessellated_structured_item_arena
+        .tessellated_solid_arena
         .retain_order(order.get(463).map_or(&[], Vec::as_slice));
     model
-        .tessellated_surface_set_arena
+        .tessellated_structured_item_arena
         .retain_order(order.get(464).map_or(&[], Vec::as_slice));
     model
-        .text_font_arena
+        .tessellated_surface_set_arena
         .retain_order(order.get(465).map_or(&[], Vec::as_slice));
     model
-        .text_literal_arena
+        .text_font_arena
         .retain_order(order.get(466).map_or(&[], Vec::as_slice));
     model
-        .text_style_arena
+        .text_literal_arena
         .retain_order(order.get(467).map_or(&[], Vec::as_slice));
     model
-        .text_style_for_defined_font_arena
+        .text_style_arena
         .retain_order(order.get(468).map_or(&[], Vec::as_slice));
     model
-        .text_style_with_box_characteristics_arena
+        .text_style_for_defined_font_arena
         .retain_order(order.get(469).map_or(&[], Vec::as_slice));
     model
-        .texture_style_specification_arena
+        .text_style_with_box_characteristics_arena
         .retain_order(order.get(470).map_or(&[], Vec::as_slice));
     model
-        .texture_style_tessellation_specification_arena
+        .texture_style_specification_arena
         .retain_order(order.get(471).map_or(&[], Vec::as_slice));
     model
-        .time_unit_arena
+        .texture_style_tessellation_specification_arena
         .retain_order(order.get(472).map_or(&[], Vec::as_slice));
     model
-        .tolerance_value_arena
+        .time_unit_arena
         .retain_order(order.get(473).map_or(&[], Vec::as_slice));
     model
-        .tolerance_zone_arena
+        .tolerance_value_arena
         .retain_order(order.get(474).map_or(&[], Vec::as_slice));
     model
-        .tolerance_zone_definition_arena
+        .tolerance_zone_arena
         .retain_order(order.get(475).map_or(&[], Vec::as_slice));
     model
-        .tolerance_zone_form_arena
+        .tolerance_zone_definition_arena
         .retain_order(order.get(476).map_or(&[], Vec::as_slice));
     model
-        .tolerance_zone_with_datum_arena
+        .tolerance_zone_form_arena
         .retain_order(order.get(477).map_or(&[], Vec::as_slice));
     model
-        .topological_representation_item_arena
+        .tolerance_zone_with_datum_arena
         .retain_order(order.get(478).map_or(&[], Vec::as_slice));
     model
-        .toroidal_surface_arena
+        .topological_representation_item_arena
         .retain_order(order.get(479).map_or(&[], Vec::as_slice));
     model
-        .total_runout_tolerance_arena
+        .toroidal_surface_arena
         .retain_order(order.get(480).map_or(&[], Vec::as_slice));
     model
-        .trimmed_curve_arena
+        .total_runout_tolerance_arena
         .retain_order(order.get(481).map_or(&[], Vec::as_slice));
     model
-        .two_direction_repeat_factor_arena
+        .trimmed_curve_arena
         .retain_order(order.get(482).map_or(&[], Vec::as_slice));
     model
-        .type_qualifier_arena
+        .two_direction_repeat_factor_arena
         .retain_order(order.get(483).map_or(&[], Vec::as_slice));
     model
-        .uncertainty_measure_with_unit_arena
+        .type_qualifier_arena
         .retain_order(order.get(484).map_or(&[], Vec::as_slice));
     model
-        .uncertainty_qualifier_arena
+        .uncertainty_measure_with_unit_arena
         .retain_order(order.get(485).map_or(&[], Vec::as_slice));
     model
-        .unequally_disposed_geometric_tolerance_arena
+        .uncertainty_qualifier_arena
         .retain_order(order.get(486).map_or(&[], Vec::as_slice));
     model
-        .uniform_curve_arena
+        .unequally_disposed_geometric_tolerance_arena
         .retain_order(order.get(487).map_or(&[], Vec::as_slice));
     model
-        .uniform_surface_arena
+        .uniform_curve_arena
         .retain_order(order.get(488).map_or(&[], Vec::as_slice));
     model
-        .value_format_type_qualifier_arena
+        .uniform_surface_arena
         .retain_order(order.get(489).map_or(&[], Vec::as_slice));
     model
-        .value_representation_item_arena
+        .value_format_type_qualifier_arena
         .retain_order(order.get(490).map_or(&[], Vec::as_slice));
     model
-        .vector_arena
+        .value_representation_item_arena
         .retain_order(order.get(491).map_or(&[], Vec::as_slice));
     model
-        .versioned_action_request_arena
+        .vector_arena
         .retain_order(order.get(492).map_or(&[], Vec::as_slice));
     model
-        .vertex_arena
+        .versioned_action_request_arena
         .retain_order(order.get(493).map_or(&[], Vec::as_slice));
     model
-        .vertex_loop_arena
+        .vertex_arena
         .retain_order(order.get(494).map_or(&[], Vec::as_slice));
     model
-        .vertex_point_arena
+        .vertex_loop_arena
         .retain_order(order.get(495).map_or(&[], Vec::as_slice));
     model
-        .vertex_shell_arena
+        .vertex_point_arena
         .retain_order(order.get(496).map_or(&[], Vec::as_slice));
     model
-        .view_volume_arena
+        .vertex_shell_arena
         .retain_order(order.get(497).map_or(&[], Vec::as_slice));
     model
-        .volume_unit_arena
+        .view_volume_arena
         .retain_order(order.get(498).map_or(&[], Vec::as_slice));
     model
-        .wire_shell_arena
+        .volume_unit_arena
         .retain_order(order.get(499).map_or(&[], Vec::as_slice));
+    model
+        .wire_shell_arena
+        .retain_order(order.get(500).map_or(&[], Vec::as_slice));
     model.complex_unit_arena.retain_order(complex);
 }
 
@@ -26197,6 +26228,7 @@ pub fn shrink_arenas(model: &mut StepModel) {
     model.oriented_closed_shell_arena.items.shrink_to_fit();
     model.oriented_edge_arena.items.shrink_to_fit();
     model.over_riding_styled_item_arena.items.shrink_to_fit();
+    model.parabola_arena.items.shrink_to_fit();
     model.parallelism_tolerance_arena.items.shrink_to_fit();
     model
         .parametric_representation_context_arena
@@ -37030,6 +37062,33 @@ fn resolve_over_riding_styled_item_arena(
     it.styles = styles_v;
     it.item = item_v;
     it.over_ridden_style = over_ridden_style_v;
+    Ok(())
+}
+
+fn resolve_parabola_arena(
+    model: &mut StepModel,
+    aid: ParabolaId,
+    attrs: &[Attribute],
+    idmap: &IdMap,
+    dedup: &mut TextDedup,
+) -> Result<(), String> {
+    let tt = &mut TextIn {
+        texts: &mut model.texts,
+        dedup,
+    };
+    let position_v = {
+        let a = req(attrs, 1, "PARABOLA.position")?;
+        ((|| -> Result<Axis2PlacementRef, String> {
+            Ok(Axis2PlacementRef::from_any(
+                idmap
+                    .get(as_ref_id(a, "PARABOLA.position")?)
+                    .ok_or_else(|| format!("PARABOLA.position: dangling ref"))?,
+            )
+            .map_err(|e| format!("PARABOLA.position: {e}"))?)
+        })())?
+    };
+    let it = &mut model.parabola_arena.items[aid.0 as usize];
+    it.position = position_v;
     Ok(())
 }
 

@@ -371,6 +371,7 @@ pub struct Writer<'a> {
     oriented_closed_shell_ids: Vec<Option<u64>>,
     oriented_edge_ids: Vec<Option<u64>>,
     over_riding_styled_item_ids: Vec<Option<u64>>,
+    parabola_ids: Vec<Option<u64>>,
     parallelism_tolerance_ids: Vec<Option<u64>>,
     parametric_representation_context_ids: Vec<Option<u64>>,
     path_ids: Vec<Option<u64>>,
@@ -1612,6 +1613,7 @@ impl<'a> Writer<'a> {
                 None;
                 model.over_riding_styled_item_arena.items.len()
             ],
+            parabola_ids: vec![None; model.parabola_arena.items.len()],
             parallelism_tolerance_ids: vec![None; model.parallelism_tolerance_arena.items.len()],
             parametric_representation_context_ids: vec![
                 None;
@@ -2822,6 +2824,7 @@ impl<'a> Writer<'a> {
             EntityKey::OrientedClosedShell(i) => self.oriented_closed_shell_ids[i.0 as usize],
             EntityKey::OrientedEdge(i) => self.oriented_edge_ids[i.0 as usize],
             EntityKey::OverRidingStyledItem(i) => self.over_riding_styled_item_ids[i.0 as usize],
+            EntityKey::Parabola(i) => self.parabola_ids[i.0 as usize],
             EntityKey::ParallelismTolerance(i) => self.parallelism_tolerance_ids[i.0 as usize],
             EntityKey::ParametricRepresentationContext(i) => {
                 self.parametric_representation_context_ids[i.0 as usize]
@@ -3845,6 +3848,7 @@ impl<'a> Writer<'a> {
             EntityKey::OverRidingStyledItem(i) => {
                 self.over_riding_styled_item_ids[i.0 as usize] = Some(n)
             }
+            EntityKey::Parabola(i) => self.parabola_ids[i.0 as usize] = Some(n),
             EntityKey::ParallelismTolerance(i) => {
                 self.parallelism_tolerance_ids[i.0 as usize] = Some(n)
             }
@@ -5254,6 +5258,9 @@ impl<'a> Writer<'a> {
             ApprovalItemRef::OverRidingStyledItem(i) => {
                 self.over_riding_styled_item_ids[i.0 as usize].expect("dep id assigned")
             }
+            ApprovalItemRef::Parabola(i) => {
+                self.parabola_ids[i.0 as usize].expect("dep id assigned")
+            }
             ApprovalItemRef::Path(i) => self.path_ids[i.0 as usize].expect("dep id assigned"),
             ApprovalItemRef::Pcurve(i) => self.pcurve_ids[i.0 as usize].expect("dep id assigned"),
             ApprovalItemRef::PersonAndOrganization(i) => {
@@ -5798,6 +5805,7 @@ impl<'a> Writer<'a> {
             ApprovalItemRef::OverRidingStyledItem(i) => {
                 out.push(EntityKey::OverRidingStyledItem(*i))
             }
+            ApprovalItemRef::Parabola(i) => out.push(EntityKey::Parabola(*i)),
             ApprovalItemRef::Path(i) => out.push(EntityKey::Path(*i)),
             ApprovalItemRef::Pcurve(i) => out.push(EntityKey::Pcurve(*i)),
             ApprovalItemRef::PersonAndOrganization(i) => {
@@ -7258,6 +7266,9 @@ impl<'a> Writer<'a> {
             CompoundItemDefinitionRef::OverRidingStyledItem(i) => {
                 self.over_riding_styled_item_ids[i.0 as usize].expect("dep id assigned")
             }
+            CompoundItemDefinitionRef::Parabola(i) => {
+                self.parabola_ids[i.0 as usize].expect("dep id assigned")
+            }
             CompoundItemDefinitionRef::Path(i) => {
                 self.path_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -7632,6 +7643,7 @@ impl<'a> Writer<'a> {
             CompoundItemDefinitionRef::OverRidingStyledItem(i) => {
                 out.push(EntityKey::OverRidingStyledItem(*i))
             }
+            CompoundItemDefinitionRef::Parabola(i) => out.push(EntityKey::Parabola(*i)),
             CompoundItemDefinitionRef::Path(i) => out.push(EntityKey::Path(*i)),
             CompoundItemDefinitionRef::Pcurve(i) => out.push(EntityKey::Pcurve(*i)),
             CompoundItemDefinitionRef::Placement(i) => out.push(EntityKey::Placement(*i)),
@@ -8054,6 +8066,9 @@ impl<'a> Writer<'a> {
             CurveOrAnnotationCurveOccurrenceRef::Line(i) => {
                 self.line_ids[i.0 as usize].expect("dep id assigned")
             }
+            CurveOrAnnotationCurveOccurrenceRef::Parabola(i) => {
+                self.parabola_ids[i.0 as usize].expect("dep id assigned")
+            }
             CurveOrAnnotationCurveOccurrenceRef::Pcurve(i) => {
                 self.pcurve_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -8125,6 +8140,7 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::LeaderCurve(*i))
             }
             CurveOrAnnotationCurveOccurrenceRef::Line(i) => out.push(EntityKey::Line(*i)),
+            CurveOrAnnotationCurveOccurrenceRef::Parabola(i) => out.push(EntityKey::Parabola(*i)),
             CurveOrAnnotationCurveOccurrenceRef::Pcurve(i) => out.push(EntityKey::Pcurve(*i)),
             CurveOrAnnotationCurveOccurrenceRef::Polyline(i) => out.push(EntityKey::Polyline(*i)),
             CurveOrAnnotationCurveOccurrenceRef::QuasiUniformCurve(i) => {
@@ -8188,6 +8204,9 @@ impl<'a> Writer<'a> {
                 self.intersection_curve_ids[i.0 as usize].expect("dep id assigned")
             }
             CurveOrCurveSetRef::Line(i) => self.line_ids[i.0 as usize].expect("dep id assigned"),
+            CurveOrCurveSetRef::Parabola(i) => {
+                self.parabola_ids[i.0 as usize].expect("dep id assigned")
+            }
             CurveOrCurveSetRef::Pcurve(i) => {
                 self.pcurve_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -8239,6 +8258,7 @@ impl<'a> Writer<'a> {
             CurveOrCurveSetRef::Hyperbola(i) => out.push(EntityKey::Hyperbola(*i)),
             CurveOrCurveSetRef::IntersectionCurve(i) => out.push(EntityKey::IntersectionCurve(*i)),
             CurveOrCurveSetRef::Line(i) => out.push(EntityKey::Line(*i)),
+            CurveOrCurveSetRef::Parabola(i) => out.push(EntityKey::Parabola(*i)),
             CurveOrCurveSetRef::Pcurve(i) => out.push(EntityKey::Pcurve(*i)),
             CurveOrCurveSetRef::Polyline(i) => out.push(EntityKey::Polyline(*i)),
             CurveOrCurveSetRef::QuasiUniformCurve(i) => out.push(EntityKey::QuasiUniformCurve(*i)),
@@ -8309,6 +8329,7 @@ impl<'a> Writer<'a> {
                 self.intersection_curve_ids[i.0 as usize].expect("dep id assigned")
             }
             CurveRef::Line(i) => self.line_ids[i.0 as usize].expect("dep id assigned"),
+            CurveRef::Parabola(i) => self.parabola_ids[i.0 as usize].expect("dep id assigned"),
             CurveRef::Pcurve(i) => self.pcurve_ids[i.0 as usize].expect("dep id assigned"),
             CurveRef::Polyline(i) => self.polyline_ids[i.0 as usize].expect("dep id assigned"),
             CurveRef::QuasiUniformCurve(i) => {
@@ -8347,6 +8368,7 @@ impl<'a> Writer<'a> {
             CurveRef::Hyperbola(i) => out.push(EntityKey::Hyperbola(*i)),
             CurveRef::IntersectionCurve(i) => out.push(EntityKey::IntersectionCurve(*i)),
             CurveRef::Line(i) => out.push(EntityKey::Line(*i)),
+            CurveRef::Parabola(i) => out.push(EntityKey::Parabola(*i)),
             CurveRef::Pcurve(i) => out.push(EntityKey::Pcurve(*i)),
             CurveRef::Polyline(i) => out.push(EntityKey::Polyline(*i)),
             CurveRef::QuasiUniformCurve(i) => out.push(EntityKey::QuasiUniformCurve(*i)),
@@ -10172,6 +10194,9 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::OverRidingStyledItem(i) => {
                 self.over_riding_styled_item_ids[i.0 as usize].expect("dep id assigned")
             }
+            DocumentReferenceItemRef::Parabola(i) => {
+                self.parabola_ids[i.0 as usize].expect("dep id assigned")
+            }
             DocumentReferenceItemRef::Path(i) => {
                 self.path_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -10881,6 +10906,7 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::OverRidingStyledItem(i) => {
                 out.push(EntityKey::OverRidingStyledItem(*i))
             }
+            DocumentReferenceItemRef::Parabola(i) => out.push(EntityKey::Parabola(*i)),
             DocumentReferenceItemRef::Path(i) => out.push(EntityKey::Path(*i)),
             DocumentReferenceItemRef::Pcurve(i) => out.push(EntityKey::Pcurve(*i)),
             DocumentReferenceItemRef::Person(i) => out.push(EntityKey::Person(*i)),
@@ -11815,6 +11841,7 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::OrientedClosedShell(i) => self.oriented_closed_shell_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::OrientedEdge(i) => self.oriented_edge_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::OverRidingStyledItem(i) => self.over_riding_styled_item_ids[i.0 as usize].expect("dep id assigned"),
+        ExternalIdentificationItemRef::Parabola(i) => self.parabola_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::Path(i) => self.path_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::Pcurve(i) => self.pcurve_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::Person(i) => self.person_ids[i.0 as usize].expect("dep id assigned"),
@@ -12056,6 +12083,7 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::OrientedClosedShell(i) => out.push(EntityKey::OrientedClosedShell(*i)),
         ExternalIdentificationItemRef::OrientedEdge(i) => out.push(EntityKey::OrientedEdge(*i)),
         ExternalIdentificationItemRef::OverRidingStyledItem(i) => out.push(EntityKey::OverRidingStyledItem(*i)),
+        ExternalIdentificationItemRef::Parabola(i) => out.push(EntityKey::Parabola(*i)),
         ExternalIdentificationItemRef::Path(i) => out.push(EntityKey::Path(*i)),
         ExternalIdentificationItemRef::Pcurve(i) => out.push(EntityKey::Pcurve(*i)),
         ExternalIdentificationItemRef::Person(i) => out.push(EntityKey::Person(*i)),
@@ -12911,6 +12939,9 @@ impl<'a> Writer<'a> {
             GeometricModelItemRef::OrientedClosedShell(i) => {
                 self.oriented_closed_shell_ids[i.0 as usize].expect("dep id assigned")
             }
+            GeometricModelItemRef::Parabola(i) => {
+                self.parabola_ids[i.0 as usize].expect("dep id assigned")
+            }
             GeometricModelItemRef::Pcurve(i) => {
                 self.pcurve_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -13172,6 +13203,7 @@ impl<'a> Writer<'a> {
             GeometricModelItemRef::OrientedClosedShell(i) => {
                 out.push(EntityKey::OrientedClosedShell(*i))
             }
+            GeometricModelItemRef::Parabola(i) => out.push(EntityKey::Parabola(*i)),
             GeometricModelItemRef::Pcurve(i) => out.push(EntityKey::Pcurve(*i)),
             GeometricModelItemRef::Placement(i) => out.push(EntityKey::Placement(*i)),
             GeometricModelItemRef::PlanarBox(i) => out.push(EntityKey::PlanarBox(*i)),
@@ -13331,6 +13363,9 @@ impl<'a> Writer<'a> {
             GeometricSetSelectRef::OffsetSurface(i) => {
                 self.offset_surface_ids[i.0 as usize].expect("dep id assigned")
             }
+            GeometricSetSelectRef::Parabola(i) => {
+                self.parabola_ids[i.0 as usize].expect("dep id assigned")
+            }
             GeometricSetSelectRef::Pcurve(i) => {
                 self.pcurve_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -13448,6 +13483,7 @@ impl<'a> Writer<'a> {
             }
             GeometricSetSelectRef::Line(i) => out.push(EntityKey::Line(*i)),
             GeometricSetSelectRef::OffsetSurface(i) => out.push(EntityKey::OffsetSurface(*i)),
+            GeometricSetSelectRef::Parabola(i) => out.push(EntityKey::Parabola(*i)),
             GeometricSetSelectRef::Pcurve(i) => out.push(EntityKey::Pcurve(*i)),
             GeometricSetSelectRef::Placement(i) => out.push(EntityKey::Placement(*i)),
             GeometricSetSelectRef::PlanarBox(i) => out.push(EntityKey::PlanarBox(*i)),
@@ -14361,6 +14397,9 @@ impl<'a> Writer<'a> {
             GroupableItemRef::OverRidingStyledItem(i) => {
                 self.over_riding_styled_item_ids[i.0 as usize].expect("dep id assigned")
             }
+            GroupableItemRef::Parabola(i) => {
+                self.parabola_ids[i.0 as usize].expect("dep id assigned")
+            }
             GroupableItemRef::ParametricRepresentationContext(i) => {
                 self.parametric_representation_context_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -15046,6 +15085,7 @@ impl<'a> Writer<'a> {
             GroupableItemRef::OverRidingStyledItem(i) => {
                 out.push(EntityKey::OverRidingStyledItem(*i))
             }
+            GroupableItemRef::Parabola(i) => out.push(EntityKey::Parabola(*i)),
             GroupableItemRef::ParametricRepresentationContext(i) => {
                 out.push(EntityKey::ParametricRepresentationContext(*i))
             }
@@ -16383,6 +16423,7 @@ impl<'a> Writer<'a> {
         ItemIdentifiedRepresentationUsageSelectRef::OrientedClosedShell(i) => self.oriented_closed_shell_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::OrientedEdge(i) => self.oriented_edge_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::OverRidingStyledItem(i) => self.over_riding_styled_item_ids[i.0 as usize].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::Parabola(i) => self.parabola_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::Path(i) => self.path_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::Pcurve(i) => self.pcurve_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::Placement(i) => self.placement_ids[i.0 as usize].expect("dep id assigned"),
@@ -16542,6 +16583,7 @@ impl<'a> Writer<'a> {
         ItemIdentifiedRepresentationUsageSelectRef::OrientedClosedShell(i) => out.push(EntityKey::OrientedClosedShell(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::OrientedEdge(i) => out.push(EntityKey::OrientedEdge(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::OverRidingStyledItem(i) => out.push(EntityKey::OverRidingStyledItem(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Parabola(i) => out.push(EntityKey::Parabola(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::Path(i) => out.push(EntityKey::Path(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::Pcurve(i) => out.push(EntityKey::Pcurve(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::Placement(i) => out.push(EntityKey::Placement(*i)),
@@ -16874,6 +16916,9 @@ impl<'a> Writer<'a> {
             LayeredItemRef::OverRidingStyledItem(i) => {
                 self.over_riding_styled_item_ids[i.0 as usize].expect("dep id assigned")
             }
+            LayeredItemRef::Parabola(i) => {
+                self.parabola_ids[i.0 as usize].expect("dep id assigned")
+            }
             LayeredItemRef::Path(i) => self.path_ids[i.0 as usize].expect("dep id assigned"),
             LayeredItemRef::Pcurve(i) => self.pcurve_ids[i.0 as usize].expect("dep id assigned"),
             LayeredItemRef::Placement(i) => {
@@ -17201,6 +17246,7 @@ impl<'a> Writer<'a> {
             LayeredItemRef::OverRidingStyledItem(i) => {
                 out.push(EntityKey::OverRidingStyledItem(*i))
             }
+            LayeredItemRef::Parabola(i) => out.push(EntityKey::Parabola(*i)),
             LayeredItemRef::Path(i) => out.push(EntityKey::Path(*i)),
             LayeredItemRef::Pcurve(i) => out.push(EntityKey::Pcurve(*i)),
             LayeredItemRef::Placement(i) => out.push(EntityKey::Placement(*i)),
@@ -19310,6 +19356,9 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::OverRidingStyledItem(i) => {
                 self.over_riding_styled_item_ids[i.0 as usize].expect("dep id assigned")
             }
+            RepresentationItemRef::Parabola(i) => {
+                self.parabola_ids[i.0 as usize].expect("dep id assigned")
+            }
             RepresentationItemRef::Path(i) => self.path_ids[i.0 as usize].expect("dep id assigned"),
             RepresentationItemRef::Pcurve(i) => {
                 self.pcurve_ids[i.0 as usize].expect("dep id assigned")
@@ -19662,6 +19711,7 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::OverRidingStyledItem(i) => {
                 out.push(EntityKey::OverRidingStyledItem(*i))
             }
+            RepresentationItemRef::Parabola(i) => out.push(EntityKey::Parabola(*i)),
             RepresentationItemRef::Path(i) => out.push(EntityKey::Path(*i)),
             RepresentationItemRef::Pcurve(i) => out.push(EntityKey::Pcurve(*i)),
             RepresentationItemRef::Placement(i) => out.push(EntityKey::Placement(*i)),
@@ -21124,6 +21174,9 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::OverRidingStyledItem(i) => {
                 self.over_riding_styled_item_ids[i.0 as usize].expect("dep id assigned")
             }
+            StyleContextSelectRef::Parabola(i) => {
+                self.parabola_ids[i.0 as usize].expect("dep id assigned")
+            }
             StyleContextSelectRef::Path(i) => self.path_ids[i.0 as usize].expect("dep id assigned"),
             StyleContextSelectRef::Pcurve(i) => {
                 self.pcurve_ids[i.0 as usize].expect("dep id assigned")
@@ -21568,6 +21621,7 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::OverRidingStyledItem(i) => {
                 out.push(EntityKey::OverRidingStyledItem(*i))
             }
+            StyleContextSelectRef::Parabola(i) => out.push(EntityKey::Parabola(*i)),
             StyleContextSelectRef::Path(i) => out.push(EntityKey::Path(*i)),
             StyleContextSelectRef::Pcurve(i) => out.push(EntityKey::Pcurve(*i)),
             StyleContextSelectRef::Placement(i) => out.push(EntityKey::Placement(*i)),
@@ -22063,6 +22117,9 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::OrientedEdge(i) => {
                 self.oriented_edge_ids[i.0 as usize].expect("dep id assigned")
             }
+            StyledItemTargetRef::Parabola(i) => {
+                self.parabola_ids[i.0 as usize].expect("dep id assigned")
+            }
             StyledItemTargetRef::Path(i) => self.path_ids[i.0 as usize].expect("dep id assigned"),
             StyledItemTargetRef::Pcurve(i) => {
                 self.pcurve_ids[i.0 as usize].expect("dep id assigned")
@@ -22403,6 +22460,7 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::OrientedClosedShell(*i))
             }
             StyledItemTargetRef::OrientedEdge(i) => out.push(EntityKey::OrientedEdge(*i)),
+            StyledItemTargetRef::Parabola(i) => out.push(EntityKey::Parabola(*i)),
             StyledItemTargetRef::Path(i) => out.push(EntityKey::Path(*i)),
             StyledItemTargetRef::Pcurve(i) => out.push(EntityKey::Pcurve(*i)),
             StyledItemTargetRef::Placement(i) => out.push(EntityKey::Placement(*i)),
@@ -25034,6 +25092,10 @@ impl<'a> Writer<'a> {
                 }
                 Self::deps_ref_styled_item_target(&it.item, out);
                 Self::deps_ref_styled_item(&it.over_ridden_style, out);
+            }
+            EntityKey::Parabola(id) => {
+                let it = model.parabola_arena.get(id.0);
+                Self::deps_ref_axis2_placement(&it.position, out);
             }
             EntityKey::ParallelismTolerance(id) => {
                 let it = model.parallelism_tolerance_arena.get(id.0);
@@ -32151,6 +32213,17 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
+            EntityKey::Parabola(id) => {
+                let it = self.model.parabola_arena.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let kw = Self::name_of(any);
+                let attrs: Vec<String> = vec![
+                    step_str(self.model.text(it.name)),
+                    format!("#{}", self.id_of_ref_axis2_placement(&it.position)),
+                    real(it.focal_dist),
+                ];
+                format!("#{n} = {kw}({});\n", attrs.join(","))
+            }
             EntityKey::ParallelismTolerance(id) => {
                 let it = self.model.parallelism_tolerance_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -35982,6 +36055,7 @@ impl<'a> Writer<'a> {
             EntityKey::OrientedClosedShell(_) => "ORIENTED_CLOSED_SHELL",
             EntityKey::OrientedEdge(_) => "ORIENTED_EDGE",
             EntityKey::OverRidingStyledItem(_) => "OVER_RIDING_STYLED_ITEM",
+            EntityKey::Parabola(_) => "PARABOLA",
             EntityKey::ParallelismTolerance(_) => "PARALLELISM_TOLERANCE",
             EntityKey::ParametricRepresentationContext(_) => "PARAMETRIC_REPRESENTATION_CONTEXT",
             EntityKey::Path(_) => "PATH",
@@ -37666,6 +37740,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.over_riding_styled_item_arena.items.len() as u32 {
             roots.push(EntityKey::OverRidingStyledItem(OverRidingStyledItemId(i)));
+        }
+        for i in 0..self.model.parabola_arena.items.len() as u32 {
+            roots.push(EntityKey::Parabola(ParabolaId(i)));
         }
         for i in 0..self.model.parallelism_tolerance_arena.items.len() as u32 {
             roots.push(EntityKey::ParallelismTolerance(ParallelismToleranceId(i)));

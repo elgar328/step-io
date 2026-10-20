@@ -8209,6 +8209,31 @@ impl Ap242Author {
         ))
     }
 
+    /// `PARABOLA` — strict AP242 constructor.
+    pub fn add_parabola(
+        &mut self,
+        name: String,
+        position: Axis2PlacementRef,
+        focal_dist: f64,
+    ) -> Result<ParabolaId, AuthorError> {
+        check_axis2_placement_ref(&self.model, &position)?;
+        if !focal_dist.is_finite() {
+            return Err(AuthorError::NonFiniteReal {
+                entity: "PARABOLA",
+                attribute: "focal_dist",
+            });
+        }
+        let name = {
+            let v = name;
+            self.text(&v)
+        };
+        Ok(ParabolaId(self.model.parabola_arena.push(Parabola {
+            name,
+            position,
+            focal_dist,
+        })))
+    }
+
     /// `PARALLELISM_TOLERANCE` — strict AP242 constructor.
     pub fn add_parallelism_tolerance(
         &mut self,
@@ -20245,6 +20270,11 @@ fn check_approval_item_ref(model: &StepModel, r: &ApprovalItemRef) -> Result<(),
                 });
             }
         }
+        ApprovalItemRef::Parabola(i) => {
+            if i.0 as usize >= model.parabola_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
+            }
+        }
         ApprovalItemRef::Path(i) => {
             if i.0 as usize >= model.path_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "PATH" });
@@ -23088,6 +23118,11 @@ fn check_compound_item_definition_ref(
                 });
             }
         }
+        CompoundItemDefinitionRef::Parabola(i) => {
+            if i.0 as usize >= model.parabola_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
+            }
+        }
         CompoundItemDefinitionRef::Path(i) => {
             if i.0 as usize >= model.path_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "PATH" });
@@ -23888,6 +23923,11 @@ fn check_curve_ref(model: &StepModel, r: &CurveRef) -> Result<(), AuthorError> {
                 return Err(AuthorError::DanglingRef { entity: "LINE" });
             }
         }
+        CurveRef::Parabola(i) => {
+            if i.0 as usize >= model.parabola_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
+            }
+        }
         CurveRef::Pcurve(i) => {
             if i.0 as usize >= model.pcurve_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "PCURVE" });
@@ -24141,6 +24181,11 @@ fn check_curve_or_annotation_curve_occurrence_ref(
                 return Err(AuthorError::DanglingRef { entity: "LINE" });
             }
         }
+        CurveOrAnnotationCurveOccurrenceRef::Parabola(i) => {
+            if i.0 as usize >= model.parabola_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
+            }
+        }
         CurveOrAnnotationCurveOccurrenceRef::Pcurve(i) => {
             if i.0 as usize >= model.pcurve_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "PCURVE" });
@@ -24325,6 +24370,11 @@ fn check_curve_or_curve_set_ref(
         CurveOrCurveSetRef::Line(i) => {
             if i.0 as usize >= model.line_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "LINE" });
+            }
+        }
+        CurveOrCurveSetRef::Parabola(i) => {
+            if i.0 as usize >= model.parabola_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
             }
         }
         CurveOrCurveSetRef::Pcurve(i) => {
@@ -27768,6 +27818,11 @@ fn check_document_reference_item_ref(
                 });
             }
         }
+        DocumentReferenceItemRef::Parabola(i) => {
+            if i.0 as usize >= model.parabola_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
+            }
+        }
         DocumentReferenceItemRef::Path(i) => {
             if i.0 as usize >= model.path_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "PATH" });
@@ -30491,6 +30546,11 @@ fn check_external_identification_item_ref(
                 });
             }
         }
+        ExternalIdentificationItemRef::Parabola(i) => {
+            if i.0 as usize >= model.parabola_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
+            }
+        }
         ExternalIdentificationItemRef::Path(i) => {
             if i.0 as usize >= model.path_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "PATH" });
@@ -32584,6 +32644,11 @@ fn check_geometric_model_item_ref(
                 });
             }
         }
+        GeometricModelItemRef::Parabola(i) => {
+            if i.0 as usize >= model.parabola_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
+            }
+        }
         GeometricModelItemRef::Pcurve(i) => {
             if i.0 as usize >= model.pcurve_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "PCURVE" });
@@ -33132,6 +33197,11 @@ fn check_geometric_set_select_ref(
                 return Err(AuthorError::DanglingRef {
                     entity: "OFFSET_SURFACE",
                 });
+            }
+        }
+        GeometricSetSelectRef::Parabola(i) => {
+            if i.0 as usize >= model.parabola_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
             }
         }
         GeometricSetSelectRef::Pcurve(i) => {
@@ -35124,6 +35194,11 @@ fn check_groupable_item_ref(model: &StepModel, r: &GroupableItemRef) -> Result<(
                 return Err(AuthorError::DanglingRef {
                     entity: "OVER_RIDING_STYLED_ITEM",
                 });
+            }
+        }
+        GroupableItemRef::Parabola(i) => {
+            if i.0 as usize >= model.parabola_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
             }
         }
         GroupableItemRef::ParametricRepresentationContext(i) => {
@@ -38153,6 +38228,7 @@ fn check_item_identified_representation_usage_select_ref(
         ItemIdentifiedRepresentationUsageSelectRef::OrientedClosedShell(i) => { if i.0 as usize >= model.oriented_closed_shell_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "ORIENTED_CLOSED_SHELL" }); } }
         ItemIdentifiedRepresentationUsageSelectRef::OrientedEdge(i) => { if i.0 as usize >= model.oriented_edge_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "ORIENTED_EDGE" }); } }
         ItemIdentifiedRepresentationUsageSelectRef::OverRidingStyledItem(i) => { if i.0 as usize >= model.over_riding_styled_item_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "OVER_RIDING_STYLED_ITEM" }); } }
+        ItemIdentifiedRepresentationUsageSelectRef::Parabola(i) => { if i.0 as usize >= model.parabola_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "PARABOLA" }); } }
         ItemIdentifiedRepresentationUsageSelectRef::Path(i) => { if i.0 as usize >= model.path_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "PATH" }); } }
         ItemIdentifiedRepresentationUsageSelectRef::Pcurve(i) => { if i.0 as usize >= model.pcurve_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "PCURVE" }); } }
         ItemIdentifiedRepresentationUsageSelectRef::Placement(i) => { if i.0 as usize >= model.placement_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "PLACEMENT" }); } }
@@ -38868,6 +38944,11 @@ fn check_layered_item_ref(model: &StepModel, r: &LayeredItemRef) -> Result<(), A
                 return Err(AuthorError::DanglingRef {
                     entity: "OVER_RIDING_STYLED_ITEM",
                 });
+            }
+        }
+        LayeredItemRef::Parabola(i) => {
+            if i.0 as usize >= model.parabola_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
             }
         }
         LayeredItemRef::Path(i) => {
@@ -43018,6 +43099,11 @@ fn check_representation_item_ref(
                 });
             }
         }
+        RepresentationItemRef::Parabola(i) => {
+            if i.0 as usize >= model.parabola_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
+            }
+        }
         RepresentationItemRef::Path(i) => {
             if i.0 as usize >= model.path_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "PATH" });
@@ -45889,6 +45975,11 @@ fn check_style_context_select_ref(
                 });
             }
         }
+        StyleContextSelectRef::Parabola(i) => {
+            if i.0 as usize >= model.parabola_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
+            }
+        }
         StyleContextSelectRef::Path(i) => {
             if i.0 as usize >= model.path_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "PATH" });
@@ -47308,6 +47399,11 @@ fn check_styled_item_target_ref(
                 return Err(AuthorError::DanglingRef {
                     entity: "ORIENTED_EDGE",
                 });
+            }
+        }
+        StyledItemTargetRef::Parabola(i) => {
+            if i.0 as usize >= model.parabola_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
             }
         }
         StyledItemTargetRef::Path(i) => {

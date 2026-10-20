@@ -1032,3 +1032,69 @@ fn conic_trims_whose_span_overflows_are_refused() {
         "non-finite conic trim angle",
     );
 }
+
+// A parabola (focal distance 2) and a hyperbola (semi-axes 3 and 1.5) in the
+// frame at (1,2,3). The parabola `#9` is an edge's curve directly; the
+// hyperbola sits under a `SURFACE_CURVE` on the plane there, the shape Open
+// CASCADE writes conics in.
+const CONICS: &str = "\
+#1=CARTESIAN_POINT('',(1.,2.,3.));\n\
+#2=DIRECTION('',(0.,0.,1.));\n\
+#3=DIRECTION('',(1.,0.,0.));\n\
+#4=AXIS2_PLACEMENT_3D('',#1,#2,#3);\n\
+#5=PLANE('',#4);\n\
+#7=HYPERBOLA('',#4,3.,1.5);\n\
+#9=PARABOLA('',#4,2.);\n\
+#10=SURFACE_CURVE('',#7,(#5),.CURVE_3D.);\n\
+#11=CARTESIAN_POINT('',(4.,2.,3.));\n\
+#12=CARTESIAN_POINT('',(6.,5.,3.));\n\
+#13=VERTEX_POINT('',#11);\n\
+#14=VERTEX_POINT('',#12);\n\
+#15=EDGE_CURVE('',#13,#14,#10,.T.);\n\
+#16=ORIENTED_EDGE('',*,*,#15,.T.);\n\
+#17=EDGE_LOOP('',(#16));\n\
+#18=FACE_OUTER_BOUND('',#17,.T.);\n\
+#19=ADVANCED_FACE('',(#18),#5,.T.);\n\
+#20=CLOSED_SHELL('',(#19));\n\
+#21=MANIFOLD_SOLID_BREP('',#20);\n";
+
+#[test]
+fn parabolas_and_hyperbolas_are_read_and_typed() {
+    let src = one_edge(CONICS);
+    let (model, report) = read(src.as_bytes()).expect("read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    let scene = model.scene();
+
+    let kinds: Vec<String> = scene
+        .all_edges()
+        .map(|e| match e.curve().kind() {
+            CurveKind::Parabola(p) => format!("parabola {}", p.focal_dist),
+            CurveKind::SurfaceCurve(sc) => match &sc.curve_3d {
+                step_io::model::CurveRef::Hyperbola(id) => {
+                    let h = &model[*id];
+                    format!("hyperbola {} {}", h.semi_axis, h.semi_imag_axis)
+                }
+                other => format!("{other:?}"),
+            },
+            other => format!("{other:?}"),
+        })
+        .collect();
+    assert_eq!(kinds, ["hyperbola 3 1.5", "parabola 2"]);
+    assert_eq!(model.all::<step_io::model::Hyperbola>().len(), 1);
+}
+
+#[test]
+fn parabolas_and_hyperbolas_are_written_back() {
+    let src = one_edge(CONICS);
+    let (model, _) = read(src.as_bytes()).expect("read");
+    let mut out = Vec::new();
+    step_io::write(&model, &mut out).expect("write");
+    let text = String::from_utf8(out).expect("ascii");
+    assert!(text.contains("PARABOLA('',"), "{text}");
+    assert!(text.contains("HYPERBOLA('',"), "{text}");
+
+    let (again, report) = read(text.as_bytes()).expect("re-read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    assert_eq!(again.all::<step_io::model::Parabola>().len(), 1);
+    assert_eq!(again.all::<step_io::model::Hyperbola>().len(), 1);
+}

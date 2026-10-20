@@ -780,6 +780,8 @@ pub enum CurveKind<'m> {
     Line(&'m m::Line),
     Circle(&'m m::Circle),
     Ellipse(&'m m::Ellipse),
+    Parabola(&'m m::Parabola),
+    Hyperbola(&'m m::Hyperbola),
     BSpline(&'m m::BSplineCurve),
     BSplineWithKnots(&'m m::BSplineCurveWithKnots),
     Trimmed(&'m m::TrimmedCurve),
@@ -857,6 +859,7 @@ curve_impl! {
     Hyperbola, HyperbolaId;
     IntersectionCurve, IntersectionCurveId;
     Line, LineId;
+    Parabola, ParabolaId;
     Pcurve, PcurveId;
     Polyline, PolylineId;
     QuasiUniformCurve, QuasiUniformCurveId;
@@ -992,7 +995,8 @@ impl<'m> Curve<'m> {
             }
             CurveImpl::Conic(_) => CurveKind::Other("CONIC"),
             CurveImpl::Curve(_) => CurveKind::Other("CURVE"),
-            CurveImpl::Hyperbola(_) => CurveKind::Other("HYPERBOLA"),
+            CurveImpl::Hyperbola(i) => CurveKind::Hyperbola(model.hyperbola_arena.get(i.0)),
+            CurveImpl::Parabola(i) => CurveKind::Parabola(model.parabola_arena.get(i.0)),
             CurveImpl::IntersectionCurve(i) => {
                 CurveKind::IntersectionCurve(model.intersection_curve_arena.get(i.0))
             }

@@ -1290,6 +1290,9 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model.over_riding_styled_item_arena.items.len() as u32 {
         f(EntityKey::OverRidingStyledItem(OverRidingStyledItemId(i)));
     }
+    for i in 0..model.parabola_arena.items.len() as u32 {
+        f(EntityKey::Parabola(ParabolaId(i)));
+    }
     for i in 0..model.parallelism_tolerance_arena.items.len() as u32 {
         f(EntityKey::ParallelismTolerance(ParallelismToleranceId(i)));
     }

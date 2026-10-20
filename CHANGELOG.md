@@ -22,9 +22,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   an escape that cannot be decoded and is kept as written, and
   `LowercaseHexEscape`, for a hex escape with lower-case digits, which is
   decoded all the same.
+- `PARABOLA` is read and written. A file using one used to lose the curve,
+  and with it the edges and faces built on it; Open CASCADE writes a
+  parabola wherever a plane cuts a cone parallel to a side.
+- `CurveKind::Parabola` and `CurveKind::Hyperbola` give the two curves with
+  their parameters (focal distance; semi-axes).
 
 ### Changed
 
+- A hyperbola's `CurveKind` is `Hyperbola` instead of `Other("HYPERBOLA")`.
 - `StepBuilder::face` takes an `Orientation` instead of the `same_sense`
   boolean, and `FaceBoundInput` holds an `Orientation` in each edge pair and
   in its `orientation` field instead of a boolean. The file written is
