@@ -285,6 +285,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   per control point) and a mesh without triangles, with an index past its
   points, or with per-vertex normals that do not number the points, with
   the new `AuthorError::InvalidInput`.
+- The types of a complex instance take Part 21's names: `ComplexEntity`
+  (was `ComplexUnit`) and its `ComplexEntityId`, `PartialEntity` (was
+  `UnitPart`) for each entity type it combines, and `EntityKey::ComplexEntity`.
+  They hold every complex instance, not only units.
 - The `Ap242Author` constructors take their strings as `&str`, an optional
   one as `Option<&str>`, and `add_person`'s name lists as `Option<&[&str]>`,
   instead of `String`s: write `a.add_product("p1", "part", None, …)` rather

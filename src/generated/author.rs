@@ -13782,15 +13782,20 @@ impl Ap242Author {
     /// supertype-chain completeness, connectivity, ONEOF exclusivity), then
     /// every reference field is checked; parts are stored in Part 21 order
     /// (alphabetical).
-    pub fn add_complex(&mut self, mut parts: Vec<UnitPart>) -> Result<ComplexUnitId, AuthorError> {
+    pub fn add_complex(
+        &mut self,
+        mut parts: Vec<PartialEntity>,
+    ) -> Result<ComplexEntityId, AuthorError> {
         let names: Vec<&'static str> = parts.iter().map(part_name).collect();
         complex_rule(&names)?;
         for p in &parts {
-            check_unit_part(&self.model, p)?;
+            check_partial_entity(&self.model, p)?;
         }
         parts.sort_by(|a, b| part_name(a).cmp(part_name(b)));
-        Ok(ComplexUnitId(
-            self.model.complex_unit_arena.push(ComplexUnit { parts }),
+        Ok(ComplexEntityId(
+            self.model
+                .complex_entity_arena
+                .push(ComplexEntity { parts }),
         ))
     }
 }
@@ -14374,405 +14379,427 @@ fn cyclic_check_trimmed_curve(model: &StepModel, id: u32) -> Result<(), AuthorEr
     Ok(())
 }
 
-fn part_name(p: &UnitPart) -> &'static str {
+fn part_name(p: &PartialEntity) -> &'static str {
     match p {
-        UnitPart::Action { .. } => "ACTION",
-        UnitPart::ActionMethod { .. } => "ACTION_METHOD",
-        UnitPart::ActionMethodRelationship { .. } => "ACTION_METHOD_RELATIONSHIP",
-        UnitPart::ActionRelationship { .. } => "ACTION_RELATIONSHIP",
-        UnitPart::ActionRequestAssignment { .. } => "ACTION_REQUEST_ASSIGNMENT",
-        UnitPart::ActionResource { .. } => "ACTION_RESOURCE",
-        UnitPart::ActionResourceRequirement { .. } => "ACTION_RESOURCE_REQUIREMENT",
-        UnitPart::Address { .. } => "ADDRESS",
-        UnitPart::AdvancedBrepShapeRepresentation => "ADVANCED_BREP_SHAPE_REPRESENTATION",
-        UnitPart::AdvancedFace => "ADVANCED_FACE",
-        UnitPart::AnnotationCurveOccurrence => "ANNOTATION_CURVE_OCCURRENCE",
-        UnitPart::AnnotationFillAreaOccurrence { .. } => "ANNOTATION_FILL_AREA_OCCURRENCE",
-        UnitPart::AnnotationOccurrence => "ANNOTATION_OCCURRENCE",
-        UnitPart::AnnotationOccurrenceAssociativity => "ANNOTATION_OCCURRENCE_ASSOCIATIVITY",
-        UnitPart::AnnotationOccurrenceRelationship { .. } => "ANNOTATION_OCCURRENCE_RELATIONSHIP",
-        UnitPart::AnnotationPlaceholderOccurrence { .. } => "ANNOTATION_PLACEHOLDER_OCCURRENCE",
-        UnitPart::AnnotationPlaceholderOccurrenceWithLeaderLine { .. } => {
+        PartialEntity::Action { .. } => "ACTION",
+        PartialEntity::ActionMethod { .. } => "ACTION_METHOD",
+        PartialEntity::ActionMethodRelationship { .. } => "ACTION_METHOD_RELATIONSHIP",
+        PartialEntity::ActionRelationship { .. } => "ACTION_RELATIONSHIP",
+        PartialEntity::ActionRequestAssignment { .. } => "ACTION_REQUEST_ASSIGNMENT",
+        PartialEntity::ActionResource { .. } => "ACTION_RESOURCE",
+        PartialEntity::ActionResourceRequirement { .. } => "ACTION_RESOURCE_REQUIREMENT",
+        PartialEntity::Address { .. } => "ADDRESS",
+        PartialEntity::AdvancedBrepShapeRepresentation => "ADVANCED_BREP_SHAPE_REPRESENTATION",
+        PartialEntity::AdvancedFace => "ADVANCED_FACE",
+        PartialEntity::AnnotationCurveOccurrence => "ANNOTATION_CURVE_OCCURRENCE",
+        PartialEntity::AnnotationFillAreaOccurrence { .. } => "ANNOTATION_FILL_AREA_OCCURRENCE",
+        PartialEntity::AnnotationOccurrence => "ANNOTATION_OCCURRENCE",
+        PartialEntity::AnnotationOccurrenceAssociativity => "ANNOTATION_OCCURRENCE_ASSOCIATIVITY",
+        PartialEntity::AnnotationOccurrenceRelationship { .. } => {
+            "ANNOTATION_OCCURRENCE_RELATIONSHIP"
+        }
+        PartialEntity::AnnotationPlaceholderOccurrence { .. } => {
+            "ANNOTATION_PLACEHOLDER_OCCURRENCE"
+        }
+        PartialEntity::AnnotationPlaceholderOccurrenceWithLeaderLine { .. } => {
             "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE"
         }
-        UnitPart::AnnotationPlane { .. } => "ANNOTATION_PLANE",
-        UnitPart::AnnotationSymbol => "ANNOTATION_SYMBOL",
-        UnitPart::AnnotationSymbolOccurrence => "ANNOTATION_SYMBOL_OCCURRENCE",
-        UnitPart::AnnotationText => "ANNOTATION_TEXT",
-        UnitPart::AnnotationTextCharacter { .. } => "ANNOTATION_TEXT_CHARACTER",
-        UnitPart::AnnotationTextOccurrence => "ANNOTATION_TEXT_OCCURRENCE",
-        UnitPart::ApplicationContextElement { .. } => "APPLICATION_CONTEXT_ELEMENT",
-        UnitPart::AppliedApprovalAssignment { .. } => "APPLIED_APPROVAL_ASSIGNMENT",
-        UnitPart::AppliedDateAndTimeAssignment { .. } => "APPLIED_DATE_AND_TIME_ASSIGNMENT",
-        UnitPart::AppliedDocumentReference { .. } => "APPLIED_DOCUMENT_REFERENCE",
-        UnitPart::AppliedExternalIdentificationAssignment { .. } => {
+        PartialEntity::AnnotationPlane { .. } => "ANNOTATION_PLANE",
+        PartialEntity::AnnotationSymbol => "ANNOTATION_SYMBOL",
+        PartialEntity::AnnotationSymbolOccurrence => "ANNOTATION_SYMBOL_OCCURRENCE",
+        PartialEntity::AnnotationText => "ANNOTATION_TEXT",
+        PartialEntity::AnnotationTextCharacter { .. } => "ANNOTATION_TEXT_CHARACTER",
+        PartialEntity::AnnotationTextOccurrence => "ANNOTATION_TEXT_OCCURRENCE",
+        PartialEntity::ApplicationContextElement { .. } => "APPLICATION_CONTEXT_ELEMENT",
+        PartialEntity::AppliedApprovalAssignment { .. } => "APPLIED_APPROVAL_ASSIGNMENT",
+        PartialEntity::AppliedDateAndTimeAssignment { .. } => "APPLIED_DATE_AND_TIME_ASSIGNMENT",
+        PartialEntity::AppliedDocumentReference { .. } => "APPLIED_DOCUMENT_REFERENCE",
+        PartialEntity::AppliedExternalIdentificationAssignment { .. } => {
             "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT"
         }
-        UnitPart::AppliedGroupAssignment { .. } => "APPLIED_GROUP_ASSIGNMENT",
-        UnitPart::AppliedPersonAndOrganizationAssignment { .. } => {
+        PartialEntity::AppliedGroupAssignment { .. } => "APPLIED_GROUP_ASSIGNMENT",
+        PartialEntity::AppliedPersonAndOrganizationAssignment { .. } => {
             "APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT"
         }
-        UnitPart::AppliedPresentedItem { .. } => "APPLIED_PRESENTED_ITEM",
-        UnitPart::AppliedSecurityClassificationAssignment { .. } => {
+        PartialEntity::AppliedPresentedItem { .. } => "APPLIED_PRESENTED_ITEM",
+        PartialEntity::AppliedSecurityClassificationAssignment { .. } => {
             "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT"
         }
-        UnitPart::ApprovalAssignment { .. } => "APPROVAL_ASSIGNMENT",
-        UnitPart::AreaInSet { .. } => "AREA_IN_SET",
-        UnitPart::AscribableStateRelationship { .. } => "ASCRIBABLE_STATE_RELATIONSHIP",
-        UnitPart::AssemblyComponentUsage { .. } => "ASSEMBLY_COMPONENT_USAGE",
-        UnitPart::BSplineCurve { .. } => "B_SPLINE_CURVE",
-        UnitPart::BSplineCurveWithKnots { .. } => "B_SPLINE_CURVE_WITH_KNOTS",
-        UnitPart::BSplineSurface { .. } => "B_SPLINE_SURFACE",
-        UnitPart::BSplineSurfaceWithKnots { .. } => "B_SPLINE_SURFACE_WITH_KNOTS",
-        UnitPart::BezierCurve => "BEZIER_CURVE",
-        UnitPart::BezierSurface => "BEZIER_SURFACE",
-        UnitPart::BoundedCurve => "BOUNDED_CURVE",
-        UnitPart::BoundedPcurve => "BOUNDED_PCURVE",
-        UnitPart::BoundedSurface => "BOUNDED_SURFACE",
-        UnitPart::BoundedSurfaceCurve => "BOUNDED_SURFACE_CURVE",
-        UnitPart::BrepWithVoids { .. } => "BREP_WITH_VOIDS",
-        UnitPart::CameraImage => "CAMERA_IMAGE",
-        UnitPart::CameraImage3dWithScale => "CAMERA_IMAGE_3D_WITH_SCALE",
-        UnitPart::CameraModel => "CAMERA_MODEL",
-        UnitPart::CameraModelD3 { .. } => "CAMERA_MODEL_D3",
-        UnitPart::CameraModelD3MultiClipping { .. } => "CAMERA_MODEL_D3_MULTI_CLIPPING",
-        UnitPart::CameraModelD3WithHlhsr { .. } => "CAMERA_MODEL_D3_WITH_HLHSR",
-        UnitPart::CameraUsage => "CAMERA_USAGE",
-        UnitPart::CcDesignApproval { .. } => "CC_DESIGN_APPROVAL",
-        UnitPart::CcDesignDateAndTimeAssignment { .. } => "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
-        UnitPart::CcDesignPersonAndOrganizationAssignment { .. } => {
+        PartialEntity::ApprovalAssignment { .. } => "APPROVAL_ASSIGNMENT",
+        PartialEntity::AreaInSet { .. } => "AREA_IN_SET",
+        PartialEntity::AscribableStateRelationship { .. } => "ASCRIBABLE_STATE_RELATIONSHIP",
+        PartialEntity::AssemblyComponentUsage { .. } => "ASSEMBLY_COMPONENT_USAGE",
+        PartialEntity::BSplineCurve { .. } => "B_SPLINE_CURVE",
+        PartialEntity::BSplineCurveWithKnots { .. } => "B_SPLINE_CURVE_WITH_KNOTS",
+        PartialEntity::BSplineSurface { .. } => "B_SPLINE_SURFACE",
+        PartialEntity::BSplineSurfaceWithKnots { .. } => "B_SPLINE_SURFACE_WITH_KNOTS",
+        PartialEntity::BezierCurve => "BEZIER_CURVE",
+        PartialEntity::BezierSurface => "BEZIER_SURFACE",
+        PartialEntity::BoundedCurve => "BOUNDED_CURVE",
+        PartialEntity::BoundedPcurve => "BOUNDED_PCURVE",
+        PartialEntity::BoundedSurface => "BOUNDED_SURFACE",
+        PartialEntity::BoundedSurfaceCurve => "BOUNDED_SURFACE_CURVE",
+        PartialEntity::BrepWithVoids { .. } => "BREP_WITH_VOIDS",
+        PartialEntity::CameraImage => "CAMERA_IMAGE",
+        PartialEntity::CameraImage3dWithScale => "CAMERA_IMAGE_3D_WITH_SCALE",
+        PartialEntity::CameraModel => "CAMERA_MODEL",
+        PartialEntity::CameraModelD3 { .. } => "CAMERA_MODEL_D3",
+        PartialEntity::CameraModelD3MultiClipping { .. } => "CAMERA_MODEL_D3_MULTI_CLIPPING",
+        PartialEntity::CameraModelD3WithHlhsr { .. } => "CAMERA_MODEL_D3_WITH_HLHSR",
+        PartialEntity::CameraUsage => "CAMERA_USAGE",
+        PartialEntity::CcDesignApproval { .. } => "CC_DESIGN_APPROVAL",
+        PartialEntity::CcDesignDateAndTimeAssignment { .. } => "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
+        PartialEntity::CcDesignPersonAndOrganizationAssignment { .. } => {
             "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT"
         }
-        UnitPart::CcDesignSecurityClassification { .. } => "CC_DESIGN_SECURITY_CLASSIFICATION",
-        UnitPart::ChangeRequest { .. } => "CHANGE_REQUEST",
-        UnitPart::CharacterGlyphStyleOutline { .. } => "CHARACTER_GLYPH_STYLE_OUTLINE",
-        UnitPart::CharacterGlyphStyleStroke { .. } => "CHARACTER_GLYPH_STYLE_STROKE",
-        UnitPart::CharacterizedItemWithinRepresentation { .. } => {
+        PartialEntity::CcDesignSecurityClassification { .. } => "CC_DESIGN_SECURITY_CLASSIFICATION",
+        PartialEntity::ChangeRequest { .. } => "CHANGE_REQUEST",
+        PartialEntity::CharacterGlyphStyleOutline { .. } => "CHARACTER_GLYPH_STYLE_OUTLINE",
+        PartialEntity::CharacterGlyphStyleStroke { .. } => "CHARACTER_GLYPH_STYLE_STROKE",
+        PartialEntity::CharacterizedItemWithinRepresentation { .. } => {
             "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION"
         }
-        UnitPart::CharacterizedObject { .. } => "CHARACTERIZED_OBJECT",
-        UnitPart::CharacterizedRepresentation => "CHARACTERIZED_REPRESENTATION",
-        UnitPart::CircularRunoutTolerance => "CIRCULAR_RUNOUT_TOLERANCE",
-        UnitPart::ClosedShell => "CLOSED_SHELL",
-        UnitPart::Colour => "COLOUR",
-        UnitPart::ColourRgb { .. } => "COLOUR_RGB",
-        UnitPart::ColourSpecification { .. } => "COLOUR_SPECIFICATION",
-        UnitPart::CommonDatum => "COMMON_DATUM",
-        UnitPart::CompositeCurve { .. } => "COMPOSITE_CURVE",
-        UnitPart::CompositeCurveSegment { .. } => "COMPOSITE_CURVE_SEGMENT",
-        UnitPart::CompositeGroupShapeAspect => "COMPOSITE_GROUP_SHAPE_ASPECT",
-        UnitPart::CompositeShapeAspect => "COMPOSITE_SHAPE_ASPECT",
-        UnitPart::CompositeText { .. } => "COMPOSITE_TEXT",
-        UnitPart::CompoundRepresentationItem { .. } => "COMPOUND_REPRESENTATION_ITEM",
-        UnitPart::ConfigurationEffectivity { .. } => "CONFIGURATION_EFFECTIVITY",
-        UnitPart::ConfigurationItem { .. } => "CONFIGURATION_ITEM",
-        UnitPart::ConnectedFaceSet { .. } => "CONNECTED_FACE_SET",
-        UnitPart::ConstructiveGeometryRepresentationRelationship => {
+        PartialEntity::CharacterizedObject { .. } => "CHARACTERIZED_OBJECT",
+        PartialEntity::CharacterizedRepresentation => "CHARACTERIZED_REPRESENTATION",
+        PartialEntity::CircularRunoutTolerance => "CIRCULAR_RUNOUT_TOLERANCE",
+        PartialEntity::ClosedShell => "CLOSED_SHELL",
+        PartialEntity::Colour => "COLOUR",
+        PartialEntity::ColourRgb { .. } => "COLOUR_RGB",
+        PartialEntity::ColourSpecification { .. } => "COLOUR_SPECIFICATION",
+        PartialEntity::CommonDatum => "COMMON_DATUM",
+        PartialEntity::CompositeCurve { .. } => "COMPOSITE_CURVE",
+        PartialEntity::CompositeCurveSegment { .. } => "COMPOSITE_CURVE_SEGMENT",
+        PartialEntity::CompositeGroupShapeAspect => "COMPOSITE_GROUP_SHAPE_ASPECT",
+        PartialEntity::CompositeShapeAspect => "COMPOSITE_SHAPE_ASPECT",
+        PartialEntity::CompositeText { .. } => "COMPOSITE_TEXT",
+        PartialEntity::CompoundRepresentationItem { .. } => "COMPOUND_REPRESENTATION_ITEM",
+        PartialEntity::ConfigurationEffectivity { .. } => "CONFIGURATION_EFFECTIVITY",
+        PartialEntity::ConfigurationItem { .. } => "CONFIGURATION_ITEM",
+        PartialEntity::ConnectedFaceSet { .. } => "CONNECTED_FACE_SET",
+        PartialEntity::ConstructiveGeometryRepresentationRelationship => {
             "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP"
         }
-        UnitPart::ContextDependentOverRidingStyledItem { .. } => {
+        PartialEntity::ContextDependentOverRidingStyledItem { .. } => {
             "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM"
         }
-        UnitPart::ContextDependentUnit { .. } => "CONTEXT_DEPENDENT_UNIT",
-        UnitPart::ConversionBasedUnit { .. } => "CONVERSION_BASED_UNIT",
-        UnitPart::Curve => "CURVE",
-        UnitPart::CurveStyle { .. } => "CURVE_STYLE",
-        UnitPart::CurveStyleFont { .. } => "CURVE_STYLE_FONT",
-        UnitPart::CurveStyleFontAndScaling { .. } => "CURVE_STYLE_FONT_AND_SCALING",
-        UnitPart::CurveStyleFontPattern { .. } => "CURVE_STYLE_FONT_PATTERN",
-        UnitPart::CylindricityTolerance => "CYLINDRICITY_TOLERANCE",
-        UnitPart::Date { .. } => "DATE",
-        UnitPart::DateAndTime { .. } => "DATE_AND_TIME",
-        UnitPart::DateAndTimeAssignment { .. } => "DATE_AND_TIME_ASSIGNMENT",
-        UnitPart::Datum { .. } => "DATUM",
-        UnitPart::DatumFeature => "DATUM_FEATURE",
-        UnitPart::DatumReference { .. } => "DATUM_REFERENCE",
-        UnitPart::DatumSystem { .. } => "DATUM_SYSTEM",
-        UnitPart::DatumTarget { .. } => "DATUM_TARGET",
-        UnitPart::DefaultModelGeometricView => "DEFAULT_MODEL_GEOMETRIC_VIEW",
-        UnitPart::DefinitionalRepresentation => "DEFINITIONAL_REPRESENTATION",
-        UnitPart::DefinitionalRepresentationRelationship => {
+        PartialEntity::ContextDependentUnit { .. } => "CONTEXT_DEPENDENT_UNIT",
+        PartialEntity::ConversionBasedUnit { .. } => "CONVERSION_BASED_UNIT",
+        PartialEntity::Curve => "CURVE",
+        PartialEntity::CurveStyle { .. } => "CURVE_STYLE",
+        PartialEntity::CurveStyleFont { .. } => "CURVE_STYLE_FONT",
+        PartialEntity::CurveStyleFontAndScaling { .. } => "CURVE_STYLE_FONT_AND_SCALING",
+        PartialEntity::CurveStyleFontPattern { .. } => "CURVE_STYLE_FONT_PATTERN",
+        PartialEntity::CylindricityTolerance => "CYLINDRICITY_TOLERANCE",
+        PartialEntity::Date { .. } => "DATE",
+        PartialEntity::DateAndTime { .. } => "DATE_AND_TIME",
+        PartialEntity::DateAndTimeAssignment { .. } => "DATE_AND_TIME_ASSIGNMENT",
+        PartialEntity::Datum { .. } => "DATUM",
+        PartialEntity::DatumFeature => "DATUM_FEATURE",
+        PartialEntity::DatumReference { .. } => "DATUM_REFERENCE",
+        PartialEntity::DatumSystem { .. } => "DATUM_SYSTEM",
+        PartialEntity::DatumTarget { .. } => "DATUM_TARGET",
+        PartialEntity::DefaultModelGeometricView => "DEFAULT_MODEL_GEOMETRIC_VIEW",
+        PartialEntity::DefinitionalRepresentation => "DEFINITIONAL_REPRESENTATION",
+        PartialEntity::DefinitionalRepresentationRelationship => {
             "DEFINITIONAL_REPRESENTATION_RELATIONSHIP"
         }
-        UnitPart::DefinitionalRepresentationRelationshipWithSameContext => {
+        PartialEntity::DefinitionalRepresentationRelationshipWithSameContext => {
             "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT"
         }
-        UnitPart::DegenerateToroidalSurface { .. } => "DEGENERATE_TOROIDAL_SURFACE",
-        UnitPart::DerivedUnit { .. } => "DERIVED_UNIT",
-        UnitPart::DesignContext => "DESIGN_CONTEXT",
-        UnitPart::DimensionalSize { .. } => "DIMENSIONAL_SIZE",
-        UnitPart::Direction { .. } => "DIRECTION",
-        UnitPart::Document { .. } => "DOCUMENT",
-        UnitPart::DocumentFile => "DOCUMENT_FILE",
-        UnitPart::DocumentProductAssociation { .. } => "DOCUMENT_PRODUCT_ASSOCIATION",
-        UnitPart::DocumentProductEquivalence => "DOCUMENT_PRODUCT_EQUIVALENCE",
-        UnitPart::DocumentReference { .. } => "DOCUMENT_REFERENCE",
-        UnitPart::DraughtingAnnotationOccurrence => "DRAUGHTING_ANNOTATION_OCCURRENCE",
-        UnitPart::DraughtingCallout { .. } => "DRAUGHTING_CALLOUT",
-        UnitPart::DraughtingCalloutRelationship { .. } => "DRAUGHTING_CALLOUT_RELATIONSHIP",
-        UnitPart::DraughtingModel => "DRAUGHTING_MODEL",
-        UnitPart::DraughtingModelItemAssociation => "DRAUGHTING_MODEL_ITEM_ASSOCIATION",
-        UnitPart::DraughtingModelItemAssociationWithPlaceholder { .. } => {
+        PartialEntity::DegenerateToroidalSurface { .. } => "DEGENERATE_TOROIDAL_SURFACE",
+        PartialEntity::DerivedUnit { .. } => "DERIVED_UNIT",
+        PartialEntity::DesignContext => "DESIGN_CONTEXT",
+        PartialEntity::DimensionalSize { .. } => "DIMENSIONAL_SIZE",
+        PartialEntity::Direction { .. } => "DIRECTION",
+        PartialEntity::Document { .. } => "DOCUMENT",
+        PartialEntity::DocumentFile => "DOCUMENT_FILE",
+        PartialEntity::DocumentProductAssociation { .. } => "DOCUMENT_PRODUCT_ASSOCIATION",
+        PartialEntity::DocumentProductEquivalence => "DOCUMENT_PRODUCT_EQUIVALENCE",
+        PartialEntity::DocumentReference { .. } => "DOCUMENT_REFERENCE",
+        PartialEntity::DraughtingAnnotationOccurrence => "DRAUGHTING_ANNOTATION_OCCURRENCE",
+        PartialEntity::DraughtingCallout { .. } => "DRAUGHTING_CALLOUT",
+        PartialEntity::DraughtingCalloutRelationship { .. } => "DRAUGHTING_CALLOUT_RELATIONSHIP",
+        PartialEntity::DraughtingModel => "DRAUGHTING_MODEL",
+        PartialEntity::DraughtingModelItemAssociation => "DRAUGHTING_MODEL_ITEM_ASSOCIATION",
+        PartialEntity::DraughtingModelItemAssociationWithPlaceholder { .. } => {
             "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER"
         }
-        UnitPart::DraughtingPreDefinedColour => "DRAUGHTING_PRE_DEFINED_COLOUR",
-        UnitPart::DraughtingPreDefinedCurveFont => "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
-        UnitPart::DraughtingPreDefinedTextFont => "DRAUGHTING_PRE_DEFINED_TEXT_FONT",
-        UnitPart::Edge { .. } => "EDGE",
-        UnitPart::EdgeCurve { .. } => "EDGE_CURVE",
-        UnitPart::EdgeLoop => "EDGE_LOOP",
-        UnitPart::Effectivity { .. } => "EFFECTIVITY",
-        UnitPart::ElementarySurface { .. } => "ELEMENTARY_SURFACE",
-        UnitPart::Expression => "EXPRESSION",
-        UnitPart::ExternalIdentificationAssignment { .. } => "EXTERNAL_IDENTIFICATION_ASSIGNMENT",
-        UnitPart::ExternalSource { .. } => "EXTERNAL_SOURCE",
-        UnitPart::ExternallyDefinedCharacterGlyph => "EXTERNALLY_DEFINED_CHARACTER_GLYPH",
-        UnitPart::ExternallyDefinedCurveFont => "EXTERNALLY_DEFINED_CURVE_FONT",
-        UnitPart::ExternallyDefinedHatchStyle => "EXTERNALLY_DEFINED_HATCH_STYLE",
-        UnitPart::ExternallyDefinedItem { .. } => "EXTERNALLY_DEFINED_ITEM",
-        UnitPart::ExternallyDefinedStyle => "EXTERNALLY_DEFINED_STYLE",
-        UnitPart::ExternallyDefinedSymbol => "EXTERNALLY_DEFINED_SYMBOL",
-        UnitPart::ExternallyDefinedTextFont => "EXTERNALLY_DEFINED_TEXT_FONT",
-        UnitPart::ExternallyDefinedTile => "EXTERNALLY_DEFINED_TILE",
-        UnitPart::ExternallyDefinedTileStyle => "EXTERNALLY_DEFINED_TILE_STYLE",
-        UnitPart::Face { .. } => "FACE",
-        UnitPart::FaceBound { .. } => "FACE_BOUND",
-        UnitPart::FaceOuterBound => "FACE_OUTER_BOUND",
-        UnitPart::FaceSurface { .. } => "FACE_SURFACE",
-        UnitPart::FillAreaStyle { .. } => "FILL_AREA_STYLE",
-        UnitPart::FillAreaStyleHatching { .. } => "FILL_AREA_STYLE_HATCHING",
-        UnitPart::FillAreaStyleTileSymbolWithStyle { .. } => {
+        PartialEntity::DraughtingPreDefinedColour => "DRAUGHTING_PRE_DEFINED_COLOUR",
+        PartialEntity::DraughtingPreDefinedCurveFont => "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
+        PartialEntity::DraughtingPreDefinedTextFont => "DRAUGHTING_PRE_DEFINED_TEXT_FONT",
+        PartialEntity::Edge { .. } => "EDGE",
+        PartialEntity::EdgeCurve { .. } => "EDGE_CURVE",
+        PartialEntity::EdgeLoop => "EDGE_LOOP",
+        PartialEntity::Effectivity { .. } => "EFFECTIVITY",
+        PartialEntity::ElementarySurface { .. } => "ELEMENTARY_SURFACE",
+        PartialEntity::Expression => "EXPRESSION",
+        PartialEntity::ExternalIdentificationAssignment { .. } => {
+            "EXTERNAL_IDENTIFICATION_ASSIGNMENT"
+        }
+        PartialEntity::ExternalSource { .. } => "EXTERNAL_SOURCE",
+        PartialEntity::ExternallyDefinedCharacterGlyph => "EXTERNALLY_DEFINED_CHARACTER_GLYPH",
+        PartialEntity::ExternallyDefinedCurveFont => "EXTERNALLY_DEFINED_CURVE_FONT",
+        PartialEntity::ExternallyDefinedHatchStyle => "EXTERNALLY_DEFINED_HATCH_STYLE",
+        PartialEntity::ExternallyDefinedItem { .. } => "EXTERNALLY_DEFINED_ITEM",
+        PartialEntity::ExternallyDefinedStyle => "EXTERNALLY_DEFINED_STYLE",
+        PartialEntity::ExternallyDefinedSymbol => "EXTERNALLY_DEFINED_SYMBOL",
+        PartialEntity::ExternallyDefinedTextFont => "EXTERNALLY_DEFINED_TEXT_FONT",
+        PartialEntity::ExternallyDefinedTile => "EXTERNALLY_DEFINED_TILE",
+        PartialEntity::ExternallyDefinedTileStyle => "EXTERNALLY_DEFINED_TILE_STYLE",
+        PartialEntity::Face { .. } => "FACE",
+        PartialEntity::FaceBound { .. } => "FACE_BOUND",
+        PartialEntity::FaceOuterBound => "FACE_OUTER_BOUND",
+        PartialEntity::FaceSurface { .. } => "FACE_SURFACE",
+        PartialEntity::FillAreaStyle { .. } => "FILL_AREA_STYLE",
+        PartialEntity::FillAreaStyleHatching { .. } => "FILL_AREA_STYLE_HATCHING",
+        PartialEntity::FillAreaStyleTileSymbolWithStyle { .. } => {
             "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE"
         }
-        UnitPart::FillAreaStyleTiles { .. } => "FILL_AREA_STYLE_TILES",
-        UnitPart::FlatnessTolerance => "FLATNESS_TOLERANCE",
-        UnitPart::FoundedItem => "FOUNDED_ITEM",
-        UnitPart::FunctionallyDefinedTransformation { .. } => "FUNCTIONALLY_DEFINED_TRANSFORMATION",
-        UnitPart::GeneralDatumReference { .. } => "GENERAL_DATUM_REFERENCE",
-        UnitPart::GeneralProperty { .. } => "GENERAL_PROPERTY",
-        UnitPart::GenericExpression => "GENERIC_EXPRESSION",
-        UnitPart::GenericLiteral => "GENERIC_LITERAL",
-        UnitPart::GenericProductDefinitionReference { .. } => {
+        PartialEntity::FillAreaStyleTiles { .. } => "FILL_AREA_STYLE_TILES",
+        PartialEntity::FlatnessTolerance => "FLATNESS_TOLERANCE",
+        PartialEntity::FoundedItem => "FOUNDED_ITEM",
+        PartialEntity::FunctionallyDefinedTransformation { .. } => {
+            "FUNCTIONALLY_DEFINED_TRANSFORMATION"
+        }
+        PartialEntity::GeneralDatumReference { .. } => "GENERAL_DATUM_REFERENCE",
+        PartialEntity::GeneralProperty { .. } => "GENERAL_PROPERTY",
+        PartialEntity::GenericExpression => "GENERIC_EXPRESSION",
+        PartialEntity::GenericLiteral => "GENERIC_LITERAL",
+        PartialEntity::GenericProductDefinitionReference { .. } => {
             "GENERIC_PRODUCT_DEFINITION_REFERENCE"
         }
-        UnitPart::GeometricCurveSet => "GEOMETRIC_CURVE_SET",
-        UnitPart::GeometricItemSpecificUsage => "GEOMETRIC_ITEM_SPECIFIC_USAGE",
-        UnitPart::GeometricRepresentationContext { .. } => "GEOMETRIC_REPRESENTATION_CONTEXT",
-        UnitPart::GeometricRepresentationItem => "GEOMETRIC_REPRESENTATION_ITEM",
-        UnitPart::GeometricSet { .. } => "GEOMETRIC_SET",
-        UnitPart::GeometricTolerance { .. } => "GEOMETRIC_TOLERANCE",
-        UnitPart::GeometricToleranceWithDatumReference { .. } => {
+        PartialEntity::GeometricCurveSet => "GEOMETRIC_CURVE_SET",
+        PartialEntity::GeometricItemSpecificUsage => "GEOMETRIC_ITEM_SPECIFIC_USAGE",
+        PartialEntity::GeometricRepresentationContext { .. } => "GEOMETRIC_REPRESENTATION_CONTEXT",
+        PartialEntity::GeometricRepresentationItem => "GEOMETRIC_REPRESENTATION_ITEM",
+        PartialEntity::GeometricSet { .. } => "GEOMETRIC_SET",
+        PartialEntity::GeometricTolerance { .. } => "GEOMETRIC_TOLERANCE",
+        PartialEntity::GeometricToleranceWithDatumReference { .. } => {
             "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE"
         }
-        UnitPart::GeometricToleranceWithDefinedAreaUnit { .. } => {
+        PartialEntity::GeometricToleranceWithDefinedAreaUnit { .. } => {
             "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT"
         }
-        UnitPart::GeometricToleranceWithDefinedUnit { .. } => {
+        PartialEntity::GeometricToleranceWithDefinedUnit { .. } => {
             "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT"
         }
-        UnitPart::GeometricToleranceWithMaximumTolerance { .. } => {
+        PartialEntity::GeometricToleranceWithMaximumTolerance { .. } => {
             "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE"
         }
-        UnitPart::GeometricToleranceWithModifiers { .. } => "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
-        UnitPart::GeometricallyBoundedSurfaceShapeRepresentation => {
+        PartialEntity::GeometricToleranceWithModifiers { .. } => {
+            "GEOMETRIC_TOLERANCE_WITH_MODIFIERS"
+        }
+        PartialEntity::GeometricallyBoundedSurfaceShapeRepresentation => {
             "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION"
         }
-        UnitPart::GeometricallyBoundedWireframeShapeRepresentation => {
+        PartialEntity::GeometricallyBoundedWireframeShapeRepresentation => {
             "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION"
         }
-        UnitPart::GlobalUncertaintyAssignedContext { .. } => "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
-        UnitPart::GlobalUnitAssignedContext { .. } => "GLOBAL_UNIT_ASSIGNED_CONTEXT",
-        UnitPart::Group { .. } => "GROUP",
-        UnitPart::GroupAssignment { .. } => "GROUP_ASSIGNMENT",
-        UnitPart::IdentificationAssignment { .. } => "IDENTIFICATION_ASSIGNMENT",
-        UnitPart::IntLiteral => "INT_LITERAL",
-        UnitPart::IntegerRepresentationItem => "INTEGER_REPRESENTATION_ITEM",
-        UnitPart::IntersectionCurve => "INTERSECTION_CURVE",
-        UnitPart::Invisibility { .. } => "INVISIBILITY",
-        UnitPart::ItemDefinedTransformation { .. } => "ITEM_DEFINED_TRANSFORMATION",
-        UnitPart::ItemIdentifiedRepresentationUsage { .. } => {
+        PartialEntity::GlobalUncertaintyAssignedContext { .. } => {
+            "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT"
+        }
+        PartialEntity::GlobalUnitAssignedContext { .. } => "GLOBAL_UNIT_ASSIGNED_CONTEXT",
+        PartialEntity::Group { .. } => "GROUP",
+        PartialEntity::GroupAssignment { .. } => "GROUP_ASSIGNMENT",
+        PartialEntity::IdentificationAssignment { .. } => "IDENTIFICATION_ASSIGNMENT",
+        PartialEntity::IntLiteral => "INT_LITERAL",
+        PartialEntity::IntegerRepresentationItem => "INTEGER_REPRESENTATION_ITEM",
+        PartialEntity::IntersectionCurve => "INTERSECTION_CURVE",
+        PartialEntity::Invisibility { .. } => "INVISIBILITY",
+        PartialEntity::ItemDefinedTransformation { .. } => "ITEM_DEFINED_TRANSFORMATION",
+        PartialEntity::ItemIdentifiedRepresentationUsage { .. } => {
             "ITEM_IDENTIFIED_REPRESENTATION_USAGE"
         }
-        UnitPart::LeaderCurve => "LEADER_CURVE",
-        UnitPart::LeaderDirectedCallout => "LEADER_DIRECTED_CALLOUT",
-        UnitPart::LeaderTerminator => "LEADER_TERMINATOR",
-        UnitPart::LengthMeasureWithUnit => "LENGTH_MEASURE_WITH_UNIT",
-        UnitPart::LengthUnit => "LENGTH_UNIT",
-        UnitPart::LineProfileTolerance => "LINE_PROFILE_TOLERANCE",
-        UnitPart::LiteralNumber { .. } => "LITERAL_NUMBER",
-        UnitPart::Loop => "LOOP",
-        UnitPart::ManifoldSolidBrep { .. } => "MANIFOLD_SOLID_BREP",
-        UnitPart::ManifoldSurfaceShapeRepresentation => "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
-        UnitPart::MappedItem { .. } => "MAPPED_ITEM",
-        UnitPart::MassUnit => "MASS_UNIT",
-        UnitPart::MeasureRepresentationItem => "MEASURE_REPRESENTATION_ITEM",
-        UnitPart::MeasureWithUnit { .. } => "MEASURE_WITH_UNIT",
-        UnitPart::MechanicalContext => "MECHANICAL_CONTEXT",
-        UnitPart::MechanicalDesignAndDraughtingRelationship => {
+        PartialEntity::LeaderCurve => "LEADER_CURVE",
+        PartialEntity::LeaderDirectedCallout => "LEADER_DIRECTED_CALLOUT",
+        PartialEntity::LeaderTerminator => "LEADER_TERMINATOR",
+        PartialEntity::LengthMeasureWithUnit => "LENGTH_MEASURE_WITH_UNIT",
+        PartialEntity::LengthUnit => "LENGTH_UNIT",
+        PartialEntity::LineProfileTolerance => "LINE_PROFILE_TOLERANCE",
+        PartialEntity::LiteralNumber { .. } => "LITERAL_NUMBER",
+        PartialEntity::Loop => "LOOP",
+        PartialEntity::ManifoldSolidBrep { .. } => "MANIFOLD_SOLID_BREP",
+        PartialEntity::ManifoldSurfaceShapeRepresentation => {
+            "MANIFOLD_SURFACE_SHAPE_REPRESENTATION"
+        }
+        PartialEntity::MappedItem { .. } => "MAPPED_ITEM",
+        PartialEntity::MassUnit => "MASS_UNIT",
+        PartialEntity::MeasureRepresentationItem => "MEASURE_REPRESENTATION_ITEM",
+        PartialEntity::MeasureWithUnit { .. } => "MEASURE_WITH_UNIT",
+        PartialEntity::MechanicalContext => "MECHANICAL_CONTEXT",
+        PartialEntity::MechanicalDesignAndDraughtingRelationship => {
             "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP"
         }
-        UnitPart::ModelGeometricView => "MODEL_GEOMETRIC_VIEW",
-        UnitPart::ModifiedGeometricTolerance { .. } => "MODIFIED_GEOMETRIC_TOLERANCE",
-        UnitPart::NamedUnit { .. } => "NAMED_UNIT",
-        UnitPart::NextAssemblyUsageOccurrence => "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
-        UnitPart::NumericExpression => "NUMERIC_EXPRESSION",
-        UnitPart::OneDirectionRepeatFactor { .. } => "ONE_DIRECTION_REPEAT_FACTOR",
-        UnitPart::OpenShell => "OPEN_SHELL",
-        UnitPart::OrganizationalAddress { .. } => "ORGANIZATIONAL_ADDRESS",
-        UnitPart::OrientedClosedShell { .. } => "ORIENTED_CLOSED_SHELL",
-        UnitPart::OrientedEdge { .. } => "ORIENTED_EDGE",
-        UnitPart::OverRidingStyledItem { .. } => "OVER_RIDING_STYLED_ITEM",
-        UnitPart::ParallelismTolerance => "PARALLELISM_TOLERANCE",
-        UnitPart::ParametricRepresentationContext => "PARAMETRIC_REPRESENTATION_CONTEXT",
-        UnitPart::Path { .. } => "PATH",
-        UnitPart::Pcurve { .. } => "PCURVE",
-        UnitPart::PerpendicularityTolerance => "PERPENDICULARITY_TOLERANCE",
-        UnitPart::PersonAndOrganizationAddress => "PERSON_AND_ORGANIZATION_ADDRESS",
-        UnitPart::PersonAndOrganizationAssignment { .. } => "PERSON_AND_ORGANIZATION_ASSIGNMENT",
-        UnitPart::PersonalAddress { .. } => "PERSONAL_ADDRESS",
-        UnitPart::PlacedDatumTargetFeature => "PLACED_DATUM_TARGET_FEATURE",
-        UnitPart::Placement { .. } => "PLACEMENT",
-        UnitPart::PlanarBox { .. } => "PLANAR_BOX",
-        UnitPart::PlanarExtent { .. } => "PLANAR_EXTENT",
-        UnitPart::PlaneAngleMeasureWithUnit => "PLANE_ANGLE_MEASURE_WITH_UNIT",
-        UnitPart::PlaneAngleUnit => "PLANE_ANGLE_UNIT",
-        UnitPart::Point => "POINT",
-        UnitPart::PointStyle { .. } => "POINT_STYLE",
-        UnitPart::PolyLoop { .. } => "POLY_LOOP",
-        UnitPart::PositionTolerance => "POSITION_TOLERANCE",
-        UnitPart::PreDefinedCharacterGlyph => "PRE_DEFINED_CHARACTER_GLYPH",
-        UnitPart::PreDefinedColour => "PRE_DEFINED_COLOUR",
-        UnitPart::PreDefinedCurveFont => "PRE_DEFINED_CURVE_FONT",
-        UnitPart::PreDefinedItem { .. } => "PRE_DEFINED_ITEM",
-        UnitPart::PreDefinedMarker => "PRE_DEFINED_MARKER",
-        UnitPart::PreDefinedPointMarkerSymbol => "PRE_DEFINED_POINT_MARKER_SYMBOL",
-        UnitPart::PreDefinedPresentationStyle => "PRE_DEFINED_PRESENTATION_STYLE",
-        UnitPart::PreDefinedSurfaceSideStyle => "PRE_DEFINED_SURFACE_SIDE_STYLE",
-        UnitPart::PreDefinedSymbol => "PRE_DEFINED_SYMBOL",
-        UnitPart::PreDefinedTerminatorSymbol => "PRE_DEFINED_TERMINATOR_SYMBOL",
-        UnitPart::PreDefinedTextFont => "PRE_DEFINED_TEXT_FONT",
-        UnitPart::PreDefinedTile => "PRE_DEFINED_TILE",
-        UnitPart::PresentationArea => "PRESENTATION_AREA",
-        UnitPart::PresentationRepresentation => "PRESENTATION_REPRESENTATION",
-        UnitPart::PresentationSet => "PRESENTATION_SET",
-        UnitPart::PresentationStyleAssignment { .. } => "PRESENTATION_STYLE_ASSIGNMENT",
-        UnitPart::PresentationStyleByContext { .. } => "PRESENTATION_STYLE_BY_CONTEXT",
-        UnitPart::PresentationView => "PRESENTATION_VIEW",
-        UnitPart::PresentedItem => "PRESENTED_ITEM",
-        UnitPart::Product { .. } => "PRODUCT",
-        UnitPart::ProductCategory { .. } => "PRODUCT_CATEGORY",
-        UnitPart::ProductConcept { .. } => "PRODUCT_CONCEPT",
-        UnitPart::ProductConceptFeature { .. } => "PRODUCT_CONCEPT_FEATURE",
-        UnitPart::ProductConceptFeatureCategory => "PRODUCT_CONCEPT_FEATURE_CATEGORY",
-        UnitPart::ProductContext { .. } => "PRODUCT_CONTEXT",
-        UnitPart::ProductDefinition { .. } => "PRODUCT_DEFINITION",
-        UnitPart::ProductDefinitionContext { .. } => "PRODUCT_DEFINITION_CONTEXT",
-        UnitPart::ProductDefinitionEffectivity { .. } => "PRODUCT_DEFINITION_EFFECTIVITY",
-        UnitPart::ProductDefinitionFormation { .. } => "PRODUCT_DEFINITION_FORMATION",
-        UnitPart::ProductDefinitionFormationWithSpecifiedSource { .. } => {
+        PartialEntity::ModelGeometricView => "MODEL_GEOMETRIC_VIEW",
+        PartialEntity::ModifiedGeometricTolerance { .. } => "MODIFIED_GEOMETRIC_TOLERANCE",
+        PartialEntity::NamedUnit { .. } => "NAMED_UNIT",
+        PartialEntity::NextAssemblyUsageOccurrence => "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+        PartialEntity::NumericExpression => "NUMERIC_EXPRESSION",
+        PartialEntity::OneDirectionRepeatFactor { .. } => "ONE_DIRECTION_REPEAT_FACTOR",
+        PartialEntity::OpenShell => "OPEN_SHELL",
+        PartialEntity::OrganizationalAddress { .. } => "ORGANIZATIONAL_ADDRESS",
+        PartialEntity::OrientedClosedShell { .. } => "ORIENTED_CLOSED_SHELL",
+        PartialEntity::OrientedEdge { .. } => "ORIENTED_EDGE",
+        PartialEntity::OverRidingStyledItem { .. } => "OVER_RIDING_STYLED_ITEM",
+        PartialEntity::ParallelismTolerance => "PARALLELISM_TOLERANCE",
+        PartialEntity::ParametricRepresentationContext => "PARAMETRIC_REPRESENTATION_CONTEXT",
+        PartialEntity::Path { .. } => "PATH",
+        PartialEntity::Pcurve { .. } => "PCURVE",
+        PartialEntity::PerpendicularityTolerance => "PERPENDICULARITY_TOLERANCE",
+        PartialEntity::PersonAndOrganizationAddress => "PERSON_AND_ORGANIZATION_ADDRESS",
+        PartialEntity::PersonAndOrganizationAssignment { .. } => {
+            "PERSON_AND_ORGANIZATION_ASSIGNMENT"
+        }
+        PartialEntity::PersonalAddress { .. } => "PERSONAL_ADDRESS",
+        PartialEntity::PlacedDatumTargetFeature => "PLACED_DATUM_TARGET_FEATURE",
+        PartialEntity::Placement { .. } => "PLACEMENT",
+        PartialEntity::PlanarBox { .. } => "PLANAR_BOX",
+        PartialEntity::PlanarExtent { .. } => "PLANAR_EXTENT",
+        PartialEntity::PlaneAngleMeasureWithUnit => "PLANE_ANGLE_MEASURE_WITH_UNIT",
+        PartialEntity::PlaneAngleUnit => "PLANE_ANGLE_UNIT",
+        PartialEntity::Point => "POINT",
+        PartialEntity::PointStyle { .. } => "POINT_STYLE",
+        PartialEntity::PolyLoop { .. } => "POLY_LOOP",
+        PartialEntity::PositionTolerance => "POSITION_TOLERANCE",
+        PartialEntity::PreDefinedCharacterGlyph => "PRE_DEFINED_CHARACTER_GLYPH",
+        PartialEntity::PreDefinedColour => "PRE_DEFINED_COLOUR",
+        PartialEntity::PreDefinedCurveFont => "PRE_DEFINED_CURVE_FONT",
+        PartialEntity::PreDefinedItem { .. } => "PRE_DEFINED_ITEM",
+        PartialEntity::PreDefinedMarker => "PRE_DEFINED_MARKER",
+        PartialEntity::PreDefinedPointMarkerSymbol => "PRE_DEFINED_POINT_MARKER_SYMBOL",
+        PartialEntity::PreDefinedPresentationStyle => "PRE_DEFINED_PRESENTATION_STYLE",
+        PartialEntity::PreDefinedSurfaceSideStyle => "PRE_DEFINED_SURFACE_SIDE_STYLE",
+        PartialEntity::PreDefinedSymbol => "PRE_DEFINED_SYMBOL",
+        PartialEntity::PreDefinedTerminatorSymbol => "PRE_DEFINED_TERMINATOR_SYMBOL",
+        PartialEntity::PreDefinedTextFont => "PRE_DEFINED_TEXT_FONT",
+        PartialEntity::PreDefinedTile => "PRE_DEFINED_TILE",
+        PartialEntity::PresentationArea => "PRESENTATION_AREA",
+        PartialEntity::PresentationRepresentation => "PRESENTATION_REPRESENTATION",
+        PartialEntity::PresentationSet => "PRESENTATION_SET",
+        PartialEntity::PresentationStyleAssignment { .. } => "PRESENTATION_STYLE_ASSIGNMENT",
+        PartialEntity::PresentationStyleByContext { .. } => "PRESENTATION_STYLE_BY_CONTEXT",
+        PartialEntity::PresentationView => "PRESENTATION_VIEW",
+        PartialEntity::PresentedItem => "PRESENTED_ITEM",
+        PartialEntity::Product { .. } => "PRODUCT",
+        PartialEntity::ProductCategory { .. } => "PRODUCT_CATEGORY",
+        PartialEntity::ProductConcept { .. } => "PRODUCT_CONCEPT",
+        PartialEntity::ProductConceptFeature { .. } => "PRODUCT_CONCEPT_FEATURE",
+        PartialEntity::ProductConceptFeatureCategory => "PRODUCT_CONCEPT_FEATURE_CATEGORY",
+        PartialEntity::ProductContext { .. } => "PRODUCT_CONTEXT",
+        PartialEntity::ProductDefinition { .. } => "PRODUCT_DEFINITION",
+        PartialEntity::ProductDefinitionContext { .. } => "PRODUCT_DEFINITION_CONTEXT",
+        PartialEntity::ProductDefinitionEffectivity { .. } => "PRODUCT_DEFINITION_EFFECTIVITY",
+        PartialEntity::ProductDefinitionFormation { .. } => "PRODUCT_DEFINITION_FORMATION",
+        PartialEntity::ProductDefinitionFormationWithSpecifiedSource { .. } => {
             "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE"
         }
-        UnitPart::ProductDefinitionOccurrence { .. } => "PRODUCT_DEFINITION_OCCURRENCE",
-        UnitPart::ProductDefinitionRelationship { .. } => "PRODUCT_DEFINITION_RELATIONSHIP",
-        UnitPart::ProductDefinitionRelationshipRelationship { .. } => {
+        PartialEntity::ProductDefinitionOccurrence { .. } => "PRODUCT_DEFINITION_OCCURRENCE",
+        PartialEntity::ProductDefinitionRelationship { .. } => "PRODUCT_DEFINITION_RELATIONSHIP",
+        PartialEntity::ProductDefinitionRelationshipRelationship { .. } => {
             "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP"
         }
-        UnitPart::ProductDefinitionShape => "PRODUCT_DEFINITION_SHAPE",
-        UnitPart::ProductDefinitionUsage => "PRODUCT_DEFINITION_USAGE",
-        UnitPart::ProductDefinitionWithAssociatedDocuments { .. } => {
+        PartialEntity::ProductDefinitionShape => "PRODUCT_DEFINITION_SHAPE",
+        PartialEntity::ProductDefinitionUsage => "PRODUCT_DEFINITION_USAGE",
+        PartialEntity::ProductDefinitionWithAssociatedDocuments { .. } => {
             "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS"
         }
-        UnitPart::ProductRelatedProductCategory { .. } => "PRODUCT_RELATED_PRODUCT_CATEGORY",
-        UnitPart::ProjectedZoneDefinition { .. } => "PROJECTED_ZONE_DEFINITION",
-        UnitPart::PropertyDefinition { .. } => "PROPERTY_DEFINITION",
-        UnitPart::PropertyDefinitionRepresentation { .. } => "PROPERTY_DEFINITION_REPRESENTATION",
-        UnitPart::QualifiedRepresentationItem { .. } => "QUALIFIED_REPRESENTATION_ITEM",
-        UnitPart::QuasiUniformCurve => "QUASI_UNIFORM_CURVE",
-        UnitPart::QuasiUniformSurface => "QUASI_UNIFORM_SURFACE",
-        UnitPart::RatioMeasureWithUnit => "RATIO_MEASURE_WITH_UNIT",
-        UnitPart::RatioUnit => "RATIO_UNIT",
-        UnitPart::RationalBSplineCurve { .. } => "RATIONAL_B_SPLINE_CURVE",
-        UnitPart::RationalBSplineSurface { .. } => "RATIONAL_B_SPLINE_SURFACE",
-        UnitPart::RealLiteral => "REAL_LITERAL",
-        UnitPart::RealRepresentationItem => "REAL_REPRESENTATION_ITEM",
-        UnitPart::RepositionedTessellatedItem { .. } => "REPOSITIONED_TESSELLATED_ITEM",
-        UnitPart::Representation { .. } => "REPRESENTATION",
-        UnitPart::RepresentationContext { .. } => "REPRESENTATION_CONTEXT",
-        UnitPart::RepresentationItem { .. } => "REPRESENTATION_ITEM",
-        UnitPart::RepresentationMap { .. } => "REPRESENTATION_MAP",
-        UnitPart::RepresentationReference { .. } => "REPRESENTATION_REFERENCE",
-        UnitPart::RepresentationRelationship { .. } => "REPRESENTATION_RELATIONSHIP",
-        UnitPart::RepresentationRelationshipWithTransformation { .. } => {
+        PartialEntity::ProductRelatedProductCategory { .. } => "PRODUCT_RELATED_PRODUCT_CATEGORY",
+        PartialEntity::ProjectedZoneDefinition { .. } => "PROJECTED_ZONE_DEFINITION",
+        PartialEntity::PropertyDefinition { .. } => "PROPERTY_DEFINITION",
+        PartialEntity::PropertyDefinitionRepresentation { .. } => {
+            "PROPERTY_DEFINITION_REPRESENTATION"
+        }
+        PartialEntity::QualifiedRepresentationItem { .. } => "QUALIFIED_REPRESENTATION_ITEM",
+        PartialEntity::QuasiUniformCurve => "QUASI_UNIFORM_CURVE",
+        PartialEntity::QuasiUniformSurface => "QUASI_UNIFORM_SURFACE",
+        PartialEntity::RatioMeasureWithUnit => "RATIO_MEASURE_WITH_UNIT",
+        PartialEntity::RatioUnit => "RATIO_UNIT",
+        PartialEntity::RationalBSplineCurve { .. } => "RATIONAL_B_SPLINE_CURVE",
+        PartialEntity::RationalBSplineSurface { .. } => "RATIONAL_B_SPLINE_SURFACE",
+        PartialEntity::RealLiteral => "REAL_LITERAL",
+        PartialEntity::RealRepresentationItem => "REAL_REPRESENTATION_ITEM",
+        PartialEntity::RepositionedTessellatedItem { .. } => "REPOSITIONED_TESSELLATED_ITEM",
+        PartialEntity::Representation { .. } => "REPRESENTATION",
+        PartialEntity::RepresentationContext { .. } => "REPRESENTATION_CONTEXT",
+        PartialEntity::RepresentationItem { .. } => "REPRESENTATION_ITEM",
+        PartialEntity::RepresentationMap { .. } => "REPRESENTATION_MAP",
+        PartialEntity::RepresentationReference { .. } => "REPRESENTATION_REFERENCE",
+        PartialEntity::RepresentationRelationship { .. } => "REPRESENTATION_RELATIONSHIP",
+        PartialEntity::RepresentationRelationshipWithTransformation { .. } => {
             "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION"
         }
-        UnitPart::RoundnessTolerance => "ROUNDNESS_TOLERANCE",
-        UnitPart::SeamCurve => "SEAM_CURVE",
-        UnitPart::SecurityClassificationAssignment { .. } => "SECURITY_CLASSIFICATION_ASSIGNMENT",
-        UnitPart::ShapeAspect { .. } => "SHAPE_ASPECT",
-        UnitPart::ShapeAspectRelationship { .. } => "SHAPE_ASPECT_RELATIONSHIP",
-        UnitPart::ShapeDefinitionRepresentation => "SHAPE_DEFINITION_REPRESENTATION",
-        UnitPart::ShapeDimensionRepresentation => "SHAPE_DIMENSION_REPRESENTATION",
-        UnitPart::ShapeRepresentation => "SHAPE_REPRESENTATION",
-        UnitPart::ShapeRepresentationRelationship => "SHAPE_REPRESENTATION_RELATIONSHIP",
-        UnitPart::ShapeRepresentationWithParameters => "SHAPE_REPRESENTATION_WITH_PARAMETERS",
-        UnitPart::ShellBasedSurfaceModel { .. } => "SHELL_BASED_SURFACE_MODEL",
-        UnitPart::SiUnit { .. } => "SI_UNIT",
-        UnitPart::SimpleGenericExpression => "SIMPLE_GENERIC_EXPRESSION",
-        UnitPart::SimpleNumericExpression => "SIMPLE_NUMERIC_EXPRESSION",
-        UnitPart::SolidAngleUnit => "SOLID_ANGLE_UNIT",
-        UnitPart::SolidModel => "SOLID_MODEL",
-        UnitPart::StartRequest { .. } => "START_REQUEST",
-        UnitPart::StateObserved { .. } => "STATE_OBSERVED",
-        UnitPart::StateType { .. } => "STATE_TYPE",
-        UnitPart::StraightnessTolerance => "STRAIGHTNESS_TOLERANCE",
-        UnitPart::StyledItem { .. } => "STYLED_ITEM",
-        UnitPart::Surface => "SURFACE",
-        UnitPart::SurfaceCurve { .. } => "SURFACE_CURVE",
-        UnitPart::SurfaceProfileTolerance => "SURFACE_PROFILE_TOLERANCE",
-        UnitPart::SurfaceSideStyle { .. } => "SURFACE_SIDE_STYLE",
-        UnitPart::SurfaceStyleBoundary { .. } => "SURFACE_STYLE_BOUNDARY",
-        UnitPart::SurfaceStyleControlGrid { .. } => "SURFACE_STYLE_CONTROL_GRID",
-        UnitPart::SurfaceStyleFillArea { .. } => "SURFACE_STYLE_FILL_AREA",
-        UnitPart::SurfaceStyleParameterLine { .. } => "SURFACE_STYLE_PARAMETER_LINE",
-        UnitPart::SurfaceStyleReflectanceAmbient { .. } => "SURFACE_STYLE_REFLECTANCE_AMBIENT",
-        UnitPart::SurfaceStyleRendering { .. } => "SURFACE_STYLE_RENDERING",
-        UnitPart::SurfaceStyleRenderingWithProperties { .. } => {
+        PartialEntity::RoundnessTolerance => "ROUNDNESS_TOLERANCE",
+        PartialEntity::SeamCurve => "SEAM_CURVE",
+        PartialEntity::SecurityClassificationAssignment { .. } => {
+            "SECURITY_CLASSIFICATION_ASSIGNMENT"
+        }
+        PartialEntity::ShapeAspect { .. } => "SHAPE_ASPECT",
+        PartialEntity::ShapeAspectRelationship { .. } => "SHAPE_ASPECT_RELATIONSHIP",
+        PartialEntity::ShapeDefinitionRepresentation => "SHAPE_DEFINITION_REPRESENTATION",
+        PartialEntity::ShapeDimensionRepresentation => "SHAPE_DIMENSION_REPRESENTATION",
+        PartialEntity::ShapeRepresentation => "SHAPE_REPRESENTATION",
+        PartialEntity::ShapeRepresentationRelationship => "SHAPE_REPRESENTATION_RELATIONSHIP",
+        PartialEntity::ShapeRepresentationWithParameters => "SHAPE_REPRESENTATION_WITH_PARAMETERS",
+        PartialEntity::ShellBasedSurfaceModel { .. } => "SHELL_BASED_SURFACE_MODEL",
+        PartialEntity::SiUnit { .. } => "SI_UNIT",
+        PartialEntity::SimpleGenericExpression => "SIMPLE_GENERIC_EXPRESSION",
+        PartialEntity::SimpleNumericExpression => "SIMPLE_NUMERIC_EXPRESSION",
+        PartialEntity::SolidAngleUnit => "SOLID_ANGLE_UNIT",
+        PartialEntity::SolidModel => "SOLID_MODEL",
+        PartialEntity::StartRequest { .. } => "START_REQUEST",
+        PartialEntity::StateObserved { .. } => "STATE_OBSERVED",
+        PartialEntity::StateType { .. } => "STATE_TYPE",
+        PartialEntity::StraightnessTolerance => "STRAIGHTNESS_TOLERANCE",
+        PartialEntity::StyledItem { .. } => "STYLED_ITEM",
+        PartialEntity::Surface => "SURFACE",
+        PartialEntity::SurfaceCurve { .. } => "SURFACE_CURVE",
+        PartialEntity::SurfaceProfileTolerance => "SURFACE_PROFILE_TOLERANCE",
+        PartialEntity::SurfaceSideStyle { .. } => "SURFACE_SIDE_STYLE",
+        PartialEntity::SurfaceStyleBoundary { .. } => "SURFACE_STYLE_BOUNDARY",
+        PartialEntity::SurfaceStyleControlGrid { .. } => "SURFACE_STYLE_CONTROL_GRID",
+        PartialEntity::SurfaceStyleFillArea { .. } => "SURFACE_STYLE_FILL_AREA",
+        PartialEntity::SurfaceStyleParameterLine { .. } => "SURFACE_STYLE_PARAMETER_LINE",
+        PartialEntity::SurfaceStyleReflectanceAmbient { .. } => "SURFACE_STYLE_REFLECTANCE_AMBIENT",
+        PartialEntity::SurfaceStyleRendering { .. } => "SURFACE_STYLE_RENDERING",
+        PartialEntity::SurfaceStyleRenderingWithProperties { .. } => {
             "SURFACE_STYLE_RENDERING_WITH_PROPERTIES"
         }
-        UnitPart::SurfaceStyleSegmentationCurve { .. } => "SURFACE_STYLE_SEGMENTATION_CURVE",
-        UnitPart::SurfaceStyleSilhouette { .. } => "SURFACE_STYLE_SILHOUETTE",
-        UnitPart::SurfaceStyleUsage { .. } => "SURFACE_STYLE_USAGE",
-        UnitPart::SymbolRepresentation => "SYMBOL_REPRESENTATION",
-        UnitPart::SymbolStyle { .. } => "SYMBOL_STYLE",
-        UnitPart::TerminatorSymbol { .. } => "TERMINATOR_SYMBOL",
-        UnitPart::TessellatedGeometricSet { .. } => "TESSELLATED_GEOMETRIC_SET",
-        UnitPart::TessellatedItem => "TESSELLATED_ITEM",
-        UnitPart::TessellatedShapeRepresentation => "TESSELLATED_SHAPE_REPRESENTATION",
-        UnitPart::TessellatedStructuredItem => "TESSELLATED_STRUCTURED_ITEM",
-        UnitPart::TextLiteral { .. } => "TEXT_LITERAL",
-        UnitPart::TextStyle { .. } => "TEXT_STYLE",
-        UnitPart::TextStyleWithBoxCharacteristics { .. } => "TEXT_STYLE_WITH_BOX_CHARACTERISTICS",
-        UnitPart::TextureStyleSpecification => "TEXTURE_STYLE_SPECIFICATION",
-        UnitPart::TextureStyleTessellationSpecification => {
+        PartialEntity::SurfaceStyleSegmentationCurve { .. } => "SURFACE_STYLE_SEGMENTATION_CURVE",
+        PartialEntity::SurfaceStyleSilhouette { .. } => "SURFACE_STYLE_SILHOUETTE",
+        PartialEntity::SurfaceStyleUsage { .. } => "SURFACE_STYLE_USAGE",
+        PartialEntity::SymbolRepresentation => "SYMBOL_REPRESENTATION",
+        PartialEntity::SymbolStyle { .. } => "SYMBOL_STYLE",
+        PartialEntity::TerminatorSymbol { .. } => "TERMINATOR_SYMBOL",
+        PartialEntity::TessellatedGeometricSet { .. } => "TESSELLATED_GEOMETRIC_SET",
+        PartialEntity::TessellatedItem => "TESSELLATED_ITEM",
+        PartialEntity::TessellatedShapeRepresentation => "TESSELLATED_SHAPE_REPRESENTATION",
+        PartialEntity::TessellatedStructuredItem => "TESSELLATED_STRUCTURED_ITEM",
+        PartialEntity::TextLiteral { .. } => "TEXT_LITERAL",
+        PartialEntity::TextStyle { .. } => "TEXT_STYLE",
+        PartialEntity::TextStyleWithBoxCharacteristics { .. } => {
+            "TEXT_STYLE_WITH_BOX_CHARACTERISTICS"
+        }
+        PartialEntity::TextureStyleSpecification => "TEXTURE_STYLE_SPECIFICATION",
+        PartialEntity::TextureStyleTessellationSpecification => {
             "TEXTURE_STYLE_TESSELLATION_SPECIFICATION"
         }
-        UnitPart::TimeUnit => "TIME_UNIT",
-        UnitPart::ToleranceZone { .. } => "TOLERANCE_ZONE",
-        UnitPart::ToleranceZoneDefinition { .. } => "TOLERANCE_ZONE_DEFINITION",
-        UnitPart::ToleranceZoneWithDatum { .. } => "TOLERANCE_ZONE_WITH_DATUM",
-        UnitPart::TopologicalRepresentationItem => "TOPOLOGICAL_REPRESENTATION_ITEM",
-        UnitPart::ToroidalSurface { .. } => "TOROIDAL_SURFACE",
-        UnitPart::TwoDirectionRepeatFactor { .. } => "TWO_DIRECTION_REPEAT_FACTOR",
-        UnitPart::UnequallyDisposedGeometricTolerance { .. } => {
+        PartialEntity::TimeUnit => "TIME_UNIT",
+        PartialEntity::ToleranceZone { .. } => "TOLERANCE_ZONE",
+        PartialEntity::ToleranceZoneDefinition { .. } => "TOLERANCE_ZONE_DEFINITION",
+        PartialEntity::ToleranceZoneWithDatum { .. } => "TOLERANCE_ZONE_WITH_DATUM",
+        PartialEntity::TopologicalRepresentationItem => "TOPOLOGICAL_REPRESENTATION_ITEM",
+        PartialEntity::ToroidalSurface { .. } => "TOROIDAL_SURFACE",
+        PartialEntity::TwoDirectionRepeatFactor { .. } => "TWO_DIRECTION_REPEAT_FACTOR",
+        PartialEntity::UnequallyDisposedGeometricTolerance { .. } => {
             "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE"
         }
-        UnitPart::UniformCurve => "UNIFORM_CURVE",
-        UnitPart::UniformSurface => "UNIFORM_SURFACE",
-        UnitPart::ValueRepresentationItem { .. } => "VALUE_REPRESENTATION_ITEM",
-        UnitPart::Vector { .. } => "VECTOR",
-        UnitPart::Vertex => "VERTEX",
-        UnitPart::VertexPoint { .. } => "VERTEX_POINT",
-        UnitPart::ViewVolume { .. } => "VIEW_VOLUME",
+        PartialEntity::UniformCurve => "UNIFORM_CURVE",
+        PartialEntity::UniformSurface => "UNIFORM_SURFACE",
+        PartialEntity::ValueRepresentationItem { .. } => "VALUE_REPRESENTATION_ITEM",
+        PartialEntity::Vector { .. } => "VECTOR",
+        PartialEntity::Vertex => "VERTEX",
+        PartialEntity::VertexPoint { .. } => "VERTEX_POINT",
+        PartialEntity::ViewVolume { .. } => "VIEW_VOLUME",
     }
 }
 
@@ -16527,12 +16554,12 @@ pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
     Ok(())
 }
 
-fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
+fn check_partial_entity(model: &StepModel, p: &PartialEntity) -> Result<(), AuthorError> {
     match p {
-        UnitPart::Action { chosen_method, .. } => {
+        PartialEntity::Action { chosen_method, .. } => {
             check_action_method_ref(model, chosen_method)?;
         }
-        UnitPart::ActionMethodRelationship {
+        PartialEntity::ActionMethodRelationship {
             relating_method,
             related_method,
             ..
@@ -16540,7 +16567,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_action_method_ref(model, relating_method)?;
             check_action_method_ref(model, related_method)?;
         }
-        UnitPart::ActionRelationship {
+        PartialEntity::ActionRelationship {
             relating_action,
             related_action,
             ..
@@ -16548,13 +16575,13 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_action_ref(model, relating_action)?;
             check_action_ref(model, related_action)?;
         }
-        UnitPart::ActionRequestAssignment {
+        PartialEntity::ActionRequestAssignment {
             assigned_action_request,
             ..
         } => {
             check_versioned_action_request_ref(model, assigned_action_request)?;
         }
-        UnitPart::ActionResource { usage, kind, .. } => {
+        PartialEntity::ActionResource { usage, kind, .. } => {
             {
                 let x = usage;
                 if x.len() < 1 {
@@ -16572,7 +16599,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             }
             check_action_resource_type_ref(model, kind)?;
         }
-        UnitPart::ActionResourceRequirement {
+        PartialEntity::ActionResourceRequirement {
             kind, operations, ..
         } => {
             check_resource_requirement_type_ref(model, kind)?;
@@ -16592,12 +16619,12 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_characterized_action_definition_ref(model, e0)?;
             }
         }
-        UnitPart::AnnotationFillAreaOccurrence {
+        PartialEntity::AnnotationFillAreaOccurrence {
             fill_style_target, ..
         } => {
             check_point_ref(model, fill_style_target)?;
         }
-        UnitPart::AnnotationOccurrenceRelationship {
+        PartialEntity::AnnotationOccurrenceRelationship {
             relating_annotation_occurrence,
             related_annotation_occurrence,
             ..
@@ -16605,7 +16632,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_annotation_occurrence_ref(model, relating_annotation_occurrence)?;
             check_annotation_occurrence_ref(model, related_annotation_occurrence)?;
         }
-        UnitPart::AnnotationPlaceholderOccurrence { line_spacing, .. } => {
+        PartialEntity::AnnotationPlaceholderOccurrence { line_spacing, .. } => {
             if !line_spacing.is_finite() {
                 return Err(AuthorError::NonFiniteReal {
                     entity: "ANNOTATION_PLACEHOLDER_OCCURRENCE",
@@ -16613,7 +16640,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 });
             }
         }
-        UnitPart::AnnotationPlaceholderOccurrenceWithLeaderLine { leader_line, .. } => {
+        PartialEntity::AnnotationPlaceholderOccurrenceWithLeaderLine { leader_line, .. } => {
             {
                 let x = leader_line;
                 if x.len() < 1 {
@@ -16630,7 +16657,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_annotation_placeholder_leader_line_ref(model, e0)?;
             }
         }
-        UnitPart::AnnotationPlane { elements, .. } => {
+        PartialEntity::AnnotationPlane { elements, .. } => {
             if let Some(x) = elements {
                 if x.len() < 1 {
                     return Err(AuthorError::Cardinality {
@@ -16648,12 +16675,12 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 }
             }
         }
-        UnitPart::ApplicationContextElement {
+        PartialEntity::ApplicationContextElement {
             frame_of_reference, ..
         } => {
             check_application_context_ref(model, frame_of_reference)?;
         }
-        UnitPart::AppliedApprovalAssignment { items, .. } => {
+        PartialEntity::AppliedApprovalAssignment { items, .. } => {
             {
                 let x = items;
                 if x.len() < 1 {
@@ -16670,7 +16697,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_approval_item_ref(model, e0)?;
             }
         }
-        UnitPart::AppliedDateAndTimeAssignment { items, .. } => {
+        PartialEntity::AppliedDateAndTimeAssignment { items, .. } => {
             {
                 let x = items;
                 if x.len() < 1 {
@@ -16687,7 +16714,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_date_and_time_item_ref(model, e0)?;
             }
         }
-        UnitPart::AppliedDocumentReference { items, .. } => {
+        PartialEntity::AppliedDocumentReference { items, .. } => {
             {
                 let x = items;
                 if x.len() < 1 {
@@ -16704,7 +16731,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_document_reference_item_ref(model, e0)?;
             }
         }
-        UnitPart::AppliedExternalIdentificationAssignment { items, .. } => {
+        PartialEntity::AppliedExternalIdentificationAssignment { items, .. } => {
             {
                 let x = items;
                 if x.len() < 1 {
@@ -16721,7 +16748,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_external_identification_item_ref(model, e0)?;
             }
         }
-        UnitPart::AppliedGroupAssignment { items, .. } => {
+        PartialEntity::AppliedGroupAssignment { items, .. } => {
             {
                 let x = items;
                 if x.len() < 1 {
@@ -16738,7 +16765,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_groupable_item_ref(model, e0)?;
             }
         }
-        UnitPart::AppliedPersonAndOrganizationAssignment { items, .. } => {
+        PartialEntity::AppliedPersonAndOrganizationAssignment { items, .. } => {
             {
                 let x = items;
                 if x.len() < 1 {
@@ -16755,7 +16782,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_person_and_organization_item_ref(model, e0)?;
             }
         }
-        UnitPart::AppliedPresentedItem { items, .. } => {
+        PartialEntity::AppliedPresentedItem { items, .. } => {
             {
                 let x = items;
                 if x.len() < 1 {
@@ -16772,7 +16799,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_presented_item_select_ref(model, e0)?;
             }
         }
-        UnitPart::AppliedSecurityClassificationAssignment { items, .. } => {
+        PartialEntity::AppliedSecurityClassificationAssignment { items, .. } => {
             {
                 let x = items;
                 if x.len() < 1 {
@@ -16789,16 +16816,16 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_security_classification_item_ref(model, e0)?;
             }
         }
-        UnitPart::ApprovalAssignment {
+        PartialEntity::ApprovalAssignment {
             assigned_approval, ..
         } => {
             check_approval_ref(model, assigned_approval)?;
         }
-        UnitPart::AreaInSet { area, in_set, .. } => {
+        PartialEntity::AreaInSet { area, in_set, .. } => {
             check_presentation_area_ref(model, area)?;
             check_presentation_set_ref(model, in_set)?;
         }
-        UnitPart::AscribableStateRelationship {
+        PartialEntity::AscribableStateRelationship {
             relating_ascribable_state,
             related_ascribable_state,
             ..
@@ -16806,7 +16833,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_ascribable_state_ref(model, relating_ascribable_state)?;
             check_ascribable_state_ref(model, related_ascribable_state)?;
         }
-        UnitPart::BSplineCurve {
+        PartialEntity::BSplineCurve {
             control_points_list,
             ..
         } => {
@@ -16826,7 +16853,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_cartesian_point_ref(model, e0)?;
             }
         }
-        UnitPart::BSplineCurveWithKnots {
+        PartialEntity::BSplineCurveWithKnots {
             knot_multiplicities,
             knots,
             ..
@@ -16862,7 +16889,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 });
             }
         }
-        UnitPart::BSplineSurface {
+        PartialEntity::BSplineSurface {
             control_points_list,
             ..
         } => {
@@ -16884,7 +16911,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 }
             }
         }
-        UnitPart::BSplineSurfaceWithKnots {
+        PartialEntity::BSplineSurfaceWithKnots {
             u_multiplicities,
             v_multiplicities,
             u_knots,
@@ -16952,7 +16979,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 });
             }
         }
-        UnitPart::BrepWithVoids { voids, .. } => {
+        PartialEntity::BrepWithVoids { voids, .. } => {
             {
                 let x = voids;
                 if x.len() < 1 {
@@ -16969,7 +16996,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_oriented_closed_shell_ref(model, e0)?;
             }
         }
-        UnitPart::CameraModelD3 {
+        PartialEntity::CameraModelD3 {
             view_reference_system,
             perspective_of_volume,
             ..
@@ -16977,7 +17004,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_axis2_placement3d_ref(model, view_reference_system)?;
             check_view_volume_ref(model, perspective_of_volume)?;
         }
-        UnitPart::CameraModelD3MultiClipping { shape_clipping, .. } => {
+        PartialEntity::CameraModelD3MultiClipping { shape_clipping, .. } => {
             {
                 let x = shape_clipping;
                 if x.len() < 1 {
@@ -16994,7 +17021,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_camera_model_d3_multi_clipping_intersection_select_ref(model, e0)?;
             }
         }
-        UnitPart::CcDesignApproval { items, .. } => {
+        PartialEntity::CcDesignApproval { items, .. } => {
             {
                 let x = items;
                 if x.len() < 1 {
@@ -17011,7 +17038,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_approved_item_ref(model, e0)?;
             }
         }
-        UnitPart::CcDesignDateAndTimeAssignment { items, .. } => {
+        PartialEntity::CcDesignDateAndTimeAssignment { items, .. } => {
             {
                 let x = items;
                 if x.len() < 1 {
@@ -17028,7 +17055,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_date_time_item_ref(model, e0)?;
             }
         }
-        UnitPart::CcDesignPersonAndOrganizationAssignment { items, .. } => {
+        PartialEntity::CcDesignPersonAndOrganizationAssignment { items, .. } => {
             {
                 let x = items;
                 if x.len() < 1 {
@@ -17045,7 +17072,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_cc_person_organization_item_ref(model, e0)?;
             }
         }
-        UnitPart::CcDesignSecurityClassification { items, .. } => {
+        PartialEntity::CcDesignSecurityClassification { items, .. } => {
             {
                 let x = items;
                 if x.len() < 1 {
@@ -17062,7 +17089,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_cc_classified_item_ref(model, e0)?;
             }
         }
-        UnitPart::ChangeRequest { items, .. } => {
+        PartialEntity::ChangeRequest { items, .. } => {
             {
                 let x = items;
                 if x.len() < 1 {
@@ -17079,17 +17106,17 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_change_request_item_ref(model, e0)?;
             }
         }
-        UnitPart::CharacterGlyphStyleOutline { outline_style, .. } => {
+        PartialEntity::CharacterGlyphStyleOutline { outline_style, .. } => {
             check_curve_style_ref(model, outline_style)?;
         }
-        UnitPart::CharacterGlyphStyleStroke { stroke_style, .. } => {
+        PartialEntity::CharacterGlyphStyleStroke { stroke_style, .. } => {
             check_curve_style_ref(model, stroke_style)?;
         }
-        UnitPart::CharacterizedItemWithinRepresentation { item, rep, .. } => {
+        PartialEntity::CharacterizedItemWithinRepresentation { item, rep, .. } => {
             check_representation_item_ref(model, item)?;
             check_representation_ref(model, rep)?;
         }
-        UnitPart::ColourRgb {
+        PartialEntity::ColourRgb {
             red, green, blue, ..
         } => {
             if !red.is_finite() {
@@ -17111,7 +17138,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 });
             }
         }
-        UnitPart::CompositeCurve { segments, .. } => {
+        PartialEntity::CompositeCurve { segments, .. } => {
             {
                 let x = segments;
                 if x.len() < 1 {
@@ -17128,10 +17155,10 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_composite_curve_segment_ref(model, e0)?;
             }
         }
-        UnitPart::CompositeCurveSegment { parent_curve, .. } => {
+        PartialEntity::CompositeCurveSegment { parent_curve, .. } => {
             check_curve_ref(model, parent_curve)?;
         }
-        UnitPart::CompositeText { collected_text, .. } => {
+        PartialEntity::CompositeText { collected_text, .. } => {
             {
                 let x = collected_text;
                 if x.len() < 2 {
@@ -17148,16 +17175,16 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_text_or_character_ref(model, e0)?;
             }
         }
-        UnitPart::CompoundRepresentationItem { item_element, .. } => {
+        PartialEntity::CompoundRepresentationItem { item_element, .. } => {
             check_compound_item_definition_ref(model, item_element)?;
         }
-        UnitPart::ConfigurationEffectivity { configuration, .. } => {
+        PartialEntity::ConfigurationEffectivity { configuration, .. } => {
             check_configuration_design_ref(model, configuration)?;
         }
-        UnitPart::ConfigurationItem { item_concept, .. } => {
+        PartialEntity::ConfigurationItem { item_concept, .. } => {
             check_product_concept_ref(model, item_concept)?;
         }
-        UnitPart::ConnectedFaceSet { cfs_faces, .. } => {
+        PartialEntity::ConnectedFaceSet { cfs_faces, .. } => {
             if let Some(x) = cfs_faces {
                 if x.len() < 1 {
                     return Err(AuthorError::Cardinality {
@@ -17175,7 +17202,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 }
             }
         }
-        UnitPart::ContextDependentOverRidingStyledItem { style_context, .. } => {
+        PartialEntity::ContextDependentOverRidingStyledItem { style_context, .. } => {
             {
                 let x = style_context;
                 if x.len() < 1 {
@@ -17192,12 +17219,12 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_style_context_select_ref(model, e0)?;
             }
         }
-        UnitPart::ConversionBasedUnit {
+        PartialEntity::ConversionBasedUnit {
             conversion_factor, ..
         } => {
             check_measure_with_unit_ref(model, conversion_factor)?;
         }
-        UnitPart::CurveStyle {
+        PartialEntity::CurveStyle {
             curve_font,
             curve_width,
             curve_colour,
@@ -17213,7 +17240,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_colour_ref(model, x)?;
             }
         }
-        UnitPart::CurveStyleFont { pattern_list, .. } => {
+        PartialEntity::CurveStyleFont { pattern_list, .. } => {
             {
                 let x = pattern_list;
                 if x.len() < 1 {
@@ -17230,7 +17257,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_curve_style_font_pattern_ref(model, e0)?;
             }
         }
-        UnitPart::CurveStyleFontAndScaling {
+        PartialEntity::CurveStyleFontAndScaling {
             curve_font,
             curve_font_scaling,
             ..
@@ -17243,7 +17270,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 });
             }
         }
-        UnitPart::CurveStyleFontPattern {
+        PartialEntity::CurveStyleFontPattern {
             visible_segment_length,
             invisible_segment_length,
             ..
@@ -17261,7 +17288,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 });
             }
         }
-        UnitPart::DateAndTime {
+        PartialEntity::DateAndTime {
             date_component,
             time_component,
             ..
@@ -17269,7 +17296,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_date_ref(model, date_component)?;
             check_local_time_ref(model, time_component)?;
         }
-        UnitPart::DateAndTimeAssignment {
+        PartialEntity::DateAndTimeAssignment {
             assigned_date_and_time,
             role,
             ..
@@ -17277,12 +17304,12 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_date_and_time_ref(model, assigned_date_and_time)?;
             check_date_time_role_ref(model, role)?;
         }
-        UnitPart::DatumReference {
+        PartialEntity::DatumReference {
             referenced_datum, ..
         } => {
             check_datum_ref(model, referenced_datum)?;
         }
-        UnitPart::DatumSystem { constituents, .. } => {
+        PartialEntity::DatumSystem { constituents, .. } => {
             {
                 let x = constituents;
                 if x.len() < 1 || x.len() > 3 {
@@ -17299,7 +17326,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_datum_reference_compartment_ref(model, e0)?;
             }
         }
-        UnitPart::DerivedUnit { elements, .. } => {
+        PartialEntity::DerivedUnit { elements, .. } => {
             {
                 let x = elements;
                 if x.len() < 1 {
@@ -17316,10 +17343,10 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_derived_unit_element_ref(model, e0)?;
             }
         }
-        UnitPart::DimensionalSize { applies_to, .. } => {
+        PartialEntity::DimensionalSize { applies_to, .. } => {
             check_shape_aspect_ref(model, applies_to)?;
         }
-        UnitPart::Direction {
+        PartialEntity::Direction {
             direction_ratios, ..
         } => {
             {
@@ -17341,10 +17368,10 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 });
             }
         }
-        UnitPart::Document { kind, .. } => {
+        PartialEntity::Document { kind, .. } => {
             check_document_type_ref(model, kind)?;
         }
-        UnitPart::DocumentProductAssociation {
+        PartialEntity::DocumentProductAssociation {
             relating_document,
             related_product,
             ..
@@ -17352,12 +17379,12 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_document_ref(model, relating_document)?;
             check_product_or_formation_or_definition_ref(model, related_product)?;
         }
-        UnitPart::DocumentReference {
+        PartialEntity::DocumentReference {
             assigned_document, ..
         } => {
             check_document_ref(model, assigned_document)?;
         }
-        UnitPart::DraughtingCallout { contents, .. } => {
+        PartialEntity::DraughtingCallout { contents, .. } => {
             {
                 let x = contents;
                 if x.len() < 1 {
@@ -17374,7 +17401,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_draughting_callout_element_ref(model, e0)?;
             }
         }
-        UnitPart::DraughtingCalloutRelationship {
+        PartialEntity::DraughtingCalloutRelationship {
             relating_draughting_callout,
             related_draughting_callout,
             ..
@@ -17382,13 +17409,13 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_draughting_callout_ref(model, relating_draughting_callout)?;
             check_draughting_callout_ref(model, related_draughting_callout)?;
         }
-        UnitPart::DraughtingModelItemAssociationWithPlaceholder {
+        PartialEntity::DraughtingModelItemAssociationWithPlaceholder {
             annotation_placeholder,
             ..
         } => {
             check_annotation_placeholder_occurrence_ref(model, annotation_placeholder)?;
         }
-        UnitPart::Edge {
+        PartialEntity::Edge {
             edge_start,
             edge_end,
             ..
@@ -17400,19 +17427,19 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_vertex_ref(model, x)?;
             }
         }
-        UnitPart::EdgeCurve { edge_geometry, .. } => {
+        PartialEntity::EdgeCurve { edge_geometry, .. } => {
             check_curve_ref(model, edge_geometry)?;
         }
-        UnitPart::ElementarySurface { position, .. } => {
+        PartialEntity::ElementarySurface { position, .. } => {
             check_axis2_placement3d_ref(model, position)?;
         }
-        UnitPart::ExternalIdentificationAssignment { source, .. } => {
+        PartialEntity::ExternalIdentificationAssignment { source, .. } => {
             check_external_source_ref(model, source)?;
         }
-        UnitPart::ExternallyDefinedItem { source, .. } => {
+        PartialEntity::ExternallyDefinedItem { source, .. } => {
             check_external_source_ref(model, source)?;
         }
-        UnitPart::Face { bounds, .. } => {
+        PartialEntity::Face { bounds, .. } => {
             {
                 let x = bounds;
                 if x.len() < 1 {
@@ -17429,13 +17456,13 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_face_bound_ref(model, e0)?;
             }
         }
-        UnitPart::FaceBound { bound, .. } => {
+        PartialEntity::FaceBound { bound, .. } => {
             check_loop_ref(model, bound)?;
         }
-        UnitPart::FaceSurface { face_geometry, .. } => {
+        PartialEntity::FaceSurface { face_geometry, .. } => {
             check_surface_ref(model, face_geometry)?;
         }
-        UnitPart::FillAreaStyle { fill_styles, .. } => {
+        PartialEntity::FillAreaStyle { fill_styles, .. } => {
             {
                 let x = fill_styles;
                 if x.len() < 1 {
@@ -17452,7 +17479,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_fill_style_select_ref(model, e0)?;
             }
         }
-        UnitPart::FillAreaStyleHatching {
+        PartialEntity::FillAreaStyleHatching {
             hatch_line_appearance,
             start_of_next_hatch_line,
             point_of_reference_hatch_line,
@@ -17471,10 +17498,10 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 });
             }
         }
-        UnitPart::FillAreaStyleTileSymbolWithStyle { symbol, .. } => {
+        PartialEntity::FillAreaStyleTileSymbolWithStyle { symbol, .. } => {
             check_annotation_symbol_occurrence_ref(model, symbol)?;
         }
-        UnitPart::FillAreaStyleTiles {
+        PartialEntity::FillAreaStyleTiles {
             tiling_pattern,
             tiles,
             tiling_scale,
@@ -17503,7 +17530,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 });
             }
         }
-        UnitPart::GeneralDatumReference {
+        PartialEntity::GeneralDatumReference {
             base, modifiers, ..
         } => {
             check_datum_or_common_datum_ref(model, base)?;
@@ -17524,10 +17551,10 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 }
             }
         }
-        UnitPart::GenericProductDefinitionReference { source, .. } => {
+        PartialEntity::GenericProductDefinitionReference { source, .. } => {
             check_external_source_ref(model, source)?;
         }
-        UnitPart::GeometricSet { elements, .. } => {
+        PartialEntity::GeometricSet { elements, .. } => {
             {
                 let x = elements;
                 if x.len() < 1 {
@@ -17544,7 +17571,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_geometric_set_select_ref(model, e0)?;
             }
         }
-        UnitPart::GeometricTolerance {
+        PartialEntity::GeometricTolerance {
             magnitude,
             toleranced_shape_aspect,
             ..
@@ -17554,7 +17581,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             }
             check_geometric_tolerance_target_ref(model, toleranced_shape_aspect)?;
         }
-        UnitPart::GeometricToleranceWithDatumReference { datum_system, .. } => {
+        PartialEntity::GeometricToleranceWithDatumReference { datum_system, .. } => {
             {
                 let x = datum_system;
                 if x.len() < 1 {
@@ -17571,23 +17598,23 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_datum_system_or_reference_ref(model, e0)?;
             }
         }
-        UnitPart::GeometricToleranceWithDefinedAreaUnit {
+        PartialEntity::GeometricToleranceWithDefinedAreaUnit {
             second_unit_size, ..
         } => {
             if let Some(x) = second_unit_size {
                 check_length_or_plane_angle_measure_with_unit_select_ref(model, x)?;
             }
         }
-        UnitPart::GeometricToleranceWithDefinedUnit { unit_size, .. } => {
+        PartialEntity::GeometricToleranceWithDefinedUnit { unit_size, .. } => {
             check_length_or_plane_angle_measure_with_unit_select_ref(model, unit_size)?;
         }
-        UnitPart::GeometricToleranceWithMaximumTolerance {
+        PartialEntity::GeometricToleranceWithMaximumTolerance {
             maximum_upper_tolerance,
             ..
         } => {
             check_length_measure_with_unit_ref(model, maximum_upper_tolerance)?;
         }
-        UnitPart::GeometricToleranceWithModifiers { modifiers, .. } => {
+        PartialEntity::GeometricToleranceWithModifiers { modifiers, .. } => {
             let x = modifiers;
             if x.len() < 1 {
                 return Err(AuthorError::Cardinality {
@@ -17599,7 +17626,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 });
             }
         }
-        UnitPart::GlobalUncertaintyAssignedContext { uncertainty, .. } => {
+        PartialEntity::GlobalUncertaintyAssignedContext { uncertainty, .. } => {
             {
                 let x = uncertainty;
                 if x.len() < 1 {
@@ -17616,7 +17643,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_uncertainty_measure_with_unit_ref(model, e0)?;
             }
         }
-        UnitPart::GlobalUnitAssignedContext { units, .. } => {
+        PartialEntity::GlobalUnitAssignedContext { units, .. } => {
             {
                 let x = units;
                 if x.len() < 1 {
@@ -17633,13 +17660,13 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_unit_ref(model, e0)?;
             }
         }
-        UnitPart::GroupAssignment { assigned_group, .. } => {
+        PartialEntity::GroupAssignment { assigned_group, .. } => {
             check_group_ref(model, assigned_group)?;
         }
-        UnitPart::IdentificationAssignment { role, .. } => {
+        PartialEntity::IdentificationAssignment { role, .. } => {
             check_identification_role_ref(model, role)?;
         }
-        UnitPart::Invisibility {
+        PartialEntity::Invisibility {
             invisible_items, ..
         } => {
             {
@@ -17658,7 +17685,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_invisible_item_ref(model, e0)?;
             }
         }
-        UnitPart::ItemDefinedTransformation {
+        PartialEntity::ItemDefinedTransformation {
             transform_item_1,
             transform_item_2,
             ..
@@ -17666,7 +17693,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_representation_item_ref(model, transform_item_1)?;
             check_representation_item_ref(model, transform_item_2)?;
         }
-        UnitPart::ItemIdentifiedRepresentationUsage {
+        PartialEntity::ItemIdentifiedRepresentationUsage {
             definition,
             used_representation,
             identified_item,
@@ -17676,7 +17703,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_representation_ref(model, used_representation)?;
             check_item_identified_representation_usage_select_ref(model, identified_item)?;
         }
-        UnitPart::LiteralNumber { the_value, .. } => {
+        PartialEntity::LiteralNumber { the_value, .. } => {
             if !the_value.is_finite() {
                 return Err(AuthorError::NonFiniteReal {
                     entity: "LITERAL_NUMBER",
@@ -17684,10 +17711,10 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 });
             }
         }
-        UnitPart::ManifoldSolidBrep { outer, .. } => {
+        PartialEntity::ManifoldSolidBrep { outer, .. } => {
             check_closed_shell_ref(model, outer)?;
         }
-        UnitPart::MappedItem {
+        PartialEntity::MappedItem {
             mapping_source,
             mapping_target,
             ..
@@ -17695,7 +17722,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_representation_map_ref(model, mapping_source)?;
             check_representation_item_ref(model, mapping_target)?;
         }
-        UnitPart::MeasureWithUnit {
+        PartialEntity::MeasureWithUnit {
             value_component,
             unit_component,
             ..
@@ -17710,15 +17737,15 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             }
             check_unit_ref(model, unit_component)?;
         }
-        UnitPart::NamedUnit { dimensions, .. } => {
+        PartialEntity::NamedUnit { dimensions, .. } => {
             if let Some(x) = dimensions {
                 check_dimensional_exponents_ref(model, x)?;
             }
         }
-        UnitPart::OneDirectionRepeatFactor { repeat_factor, .. } => {
+        PartialEntity::OneDirectionRepeatFactor { repeat_factor, .. } => {
             check_vector_ref(model, repeat_factor)?;
         }
-        UnitPart::OrganizationalAddress { organizations, .. } => {
+        PartialEntity::OrganizationalAddress { organizations, .. } => {
             {
                 let x = organizations;
                 if x.len() < 1 {
@@ -17735,21 +17762,21 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_organization_ref(model, e0)?;
             }
         }
-        UnitPart::OrientedClosedShell {
+        PartialEntity::OrientedClosedShell {
             closed_shell_element,
             ..
         } => {
             check_closed_shell_ref(model, closed_shell_element)?;
         }
-        UnitPart::OrientedEdge { edge_element, .. } => {
+        PartialEntity::OrientedEdge { edge_element, .. } => {
             check_edge_ref(model, edge_element)?;
         }
-        UnitPart::OverRidingStyledItem {
+        PartialEntity::OverRidingStyledItem {
             over_ridden_style, ..
         } => {
             check_styled_item_ref(model, over_ridden_style)?;
         }
-        UnitPart::Path { edge_list, .. } => {
+        PartialEntity::Path { edge_list, .. } => {
             {
                 let x = edge_list;
                 if x.len() < 1 {
@@ -17766,7 +17793,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_oriented_edge_ref(model, e0)?;
             }
         }
-        UnitPart::Pcurve {
+        PartialEntity::Pcurve {
             basis_surface,
             reference_to_curve,
             ..
@@ -17774,7 +17801,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_surface_ref(model, basis_surface)?;
             check_definitional_representation_ref(model, reference_to_curve)?;
         }
-        UnitPart::PersonAndOrganizationAssignment {
+        PartialEntity::PersonAndOrganizationAssignment {
             assigned_person_and_organization,
             role,
             ..
@@ -17782,7 +17809,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_person_and_organization_ref(model, assigned_person_and_organization)?;
             check_person_and_organization_role_ref(model, role)?;
         }
-        UnitPart::PersonalAddress { people, .. } => {
+        PartialEntity::PersonalAddress { people, .. } => {
             {
                 let x = people;
                 if x.len() < 1 {
@@ -17799,13 +17826,13 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_person_ref(model, e0)?;
             }
         }
-        UnitPart::Placement { location, .. } => {
+        PartialEntity::Placement { location, .. } => {
             check_cartesian_point_ref(model, location)?;
         }
-        UnitPart::PlanarBox { placement, .. } => {
+        PartialEntity::PlanarBox { placement, .. } => {
             check_axis2_placement_ref(model, placement)?;
         }
-        UnitPart::PlanarExtent {
+        PartialEntity::PlanarExtent {
             size_in_x,
             size_in_y,
             ..
@@ -17823,7 +17850,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 });
             }
         }
-        UnitPart::PointStyle {
+        PartialEntity::PointStyle {
             marker,
             marker_size,
             marker_colour,
@@ -17839,7 +17866,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_colour_ref(model, x)?;
             }
         }
-        UnitPart::PolyLoop { polygon, .. } => {
+        PartialEntity::PolyLoop { polygon, .. } => {
             {
                 let x = polygon;
                 if x.len() < 3 {
@@ -17856,7 +17883,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_cartesian_point_ref(model, e0)?;
             }
         }
-        UnitPart::PresentationStyleAssignment { styles, .. } => {
+        PartialEntity::PresentationStyleAssignment { styles, .. } => {
             {
                 let x = styles;
                 if x.len() < 1 {
@@ -17873,10 +17900,10 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_presentation_style_select_ref(model, e0)?;
             }
         }
-        UnitPart::PresentationStyleByContext { style_context, .. } => {
+        PartialEntity::PresentationStyleByContext { style_context, .. } => {
             check_style_context_select_ref(model, style_context)?;
         }
-        UnitPart::Product {
+        PartialEntity::Product {
             frame_of_reference, ..
         } => {
             {
@@ -17895,10 +17922,10 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_product_context_ref(model, e0)?;
             }
         }
-        UnitPart::ProductConcept { market_context, .. } => {
+        PartialEntity::ProductConcept { market_context, .. } => {
             check_product_concept_context_ref(model, market_context)?;
         }
-        UnitPart::ProductDefinition {
+        PartialEntity::ProductDefinition {
             formation,
             frame_of_reference,
             ..
@@ -17906,13 +17933,13 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_product_definition_formation_ref(model, formation)?;
             check_product_definition_context_ref(model, frame_of_reference)?;
         }
-        UnitPart::ProductDefinitionEffectivity { usage, .. } => {
+        PartialEntity::ProductDefinitionEffectivity { usage, .. } => {
             check_product_definition_relationship_ref(model, usage)?;
         }
-        UnitPart::ProductDefinitionFormation { of_product, .. } => {
+        PartialEntity::ProductDefinitionFormation { of_product, .. } => {
             check_product_ref(model, of_product)?;
         }
-        UnitPart::ProductDefinitionOccurrence {
+        PartialEntity::ProductDefinitionOccurrence {
             definition,
             quantity,
             ..
@@ -17924,7 +17951,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_measure_with_unit_ref(model, x)?;
             }
         }
-        UnitPart::ProductDefinitionRelationship {
+        PartialEntity::ProductDefinitionRelationship {
             relating_product_definition,
             related_product_definition,
             ..
@@ -17932,13 +17959,13 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_product_definition_or_reference_ref(model, relating_product_definition)?;
             check_product_definition_or_reference_ref(model, related_product_definition)?;
         }
-        UnitPart::ProductDefinitionRelationshipRelationship {
+        PartialEntity::ProductDefinitionRelationshipRelationship {
             relating, related, ..
         } => {
             check_product_definition_relationship_ref(model, relating)?;
             check_product_definition_relationship_ref(model, related)?;
         }
-        UnitPart::ProductDefinitionWithAssociatedDocuments {
+        PartialEntity::ProductDefinitionWithAssociatedDocuments {
             documentation_ids, ..
         } => {
             {
@@ -17957,7 +17984,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_document_ref(model, e0)?;
             }
         }
-        UnitPart::ProductRelatedProductCategory { products, .. } => {
+        PartialEntity::ProductRelatedProductCategory { products, .. } => {
             {
                 let x = products;
                 if x.len() < 1 {
@@ -17974,7 +18001,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_product_ref(model, e0)?;
             }
         }
-        UnitPart::ProjectedZoneDefinition {
+        PartialEntity::ProjectedZoneDefinition {
             projection_end,
             projected_length,
             ..
@@ -17982,10 +18009,10 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_shape_aspect_ref(model, projection_end)?;
             check_length_measure_with_unit_ref(model, projected_length)?;
         }
-        UnitPart::PropertyDefinition { definition, .. } => {
+        PartialEntity::PropertyDefinition { definition, .. } => {
             check_characterized_definition_ref(model, definition)?;
         }
-        UnitPart::PropertyDefinitionRepresentation {
+        PartialEntity::PropertyDefinitionRepresentation {
             definition,
             used_representation,
             ..
@@ -17993,7 +18020,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_represented_definition_ref(model, definition)?;
             check_representation_ref(model, used_representation)?;
         }
-        UnitPart::QualifiedRepresentationItem { qualifiers, .. } => {
+        PartialEntity::QualifiedRepresentationItem { qualifiers, .. } => {
             {
                 let x = qualifiers;
                 if x.len() < 1 {
@@ -18010,7 +18037,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_value_qualifier_ref(model, e0)?;
             }
         }
-        UnitPart::RationalBSplineCurve { weights_data, .. } => {
+        PartialEntity::RationalBSplineCurve { weights_data, .. } => {
             {
                 let x = weights_data;
                 if x.len() < 2 {
@@ -18030,7 +18057,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 });
             }
         }
-        UnitPart::RationalBSplineSurface { weights_data, .. } => {
+        PartialEntity::RationalBSplineSurface { weights_data, .. } => {
             {
                 let x = weights_data;
                 if x.len() < 2 {
@@ -18052,10 +18079,10 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 }
             }
         }
-        UnitPart::RepositionedTessellatedItem { location, .. } => {
+        PartialEntity::RepositionedTessellatedItem { location, .. } => {
             check_axis2_placement3d_ref(model, location)?;
         }
-        UnitPart::Representation {
+        PartialEntity::Representation {
             items,
             context_of_items,
             ..
@@ -18077,7 +18104,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             }
             check_representation_context_ref(model, context_of_items)?;
         }
-        UnitPart::RepresentationMap {
+        PartialEntity::RepresentationMap {
             mapping_origin,
             mapped_representation,
             ..
@@ -18085,31 +18112,31 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_representation_item_ref(model, mapping_origin)?;
             check_representation_ref(model, mapped_representation)?;
         }
-        UnitPart::RepresentationReference {
+        PartialEntity::RepresentationReference {
             context_of_items, ..
         } => {
             check_representation_context_reference_ref(model, context_of_items)?;
         }
-        UnitPart::RepresentationRelationship { rep_1, rep_2, .. } => {
+        PartialEntity::RepresentationRelationship { rep_1, rep_2, .. } => {
             check_representation_or_representation_reference_ref(model, rep_1)?;
             check_representation_or_representation_reference_ref(model, rep_2)?;
         }
-        UnitPart::RepresentationRelationshipWithTransformation {
+        PartialEntity::RepresentationRelationshipWithTransformation {
             transformation_operator,
             ..
         } => {
             check_transformation_ref(model, transformation_operator)?;
         }
-        UnitPart::SecurityClassificationAssignment {
+        PartialEntity::SecurityClassificationAssignment {
             assigned_security_classification,
             ..
         } => {
             check_security_classification_ref(model, assigned_security_classification)?;
         }
-        UnitPart::ShapeAspect { of_shape, .. } => {
+        PartialEntity::ShapeAspect { of_shape, .. } => {
             check_product_definition_shape_ref(model, of_shape)?;
         }
-        UnitPart::ShapeAspectRelationship {
+        PartialEntity::ShapeAspectRelationship {
             relating_shape_aspect,
             related_shape_aspect,
             ..
@@ -18117,7 +18144,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             check_shape_aspect_ref(model, relating_shape_aspect)?;
             check_shape_aspect_ref(model, related_shape_aspect)?;
         }
-        UnitPart::ShellBasedSurfaceModel { sbsm_boundary, .. } => {
+        PartialEntity::ShellBasedSurfaceModel { sbsm_boundary, .. } => {
             {
                 let x = sbsm_boundary;
                 if x.len() < 1 {
@@ -18134,7 +18161,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_shell_ref(model, e0)?;
             }
         }
-        UnitPart::StartRequest { items, .. } => {
+        PartialEntity::StartRequest { items, .. } => {
             {
                 let x = items;
                 if x.len() < 1 {
@@ -18151,13 +18178,13 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_start_request_item_ref(model, e0)?;
             }
         }
-        UnitPart::StyledItem { styles, item, .. } => {
+        PartialEntity::StyledItem { styles, item, .. } => {
             for e0 in styles {
                 check_presentation_style_assignment_ref(model, e0)?;
             }
             check_styled_item_target_ref(model, item)?;
         }
-        UnitPart::SurfaceCurve {
+        PartialEntity::SurfaceCurve {
             curve_3d,
             associated_geometry,
             ..
@@ -18179,7 +18206,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_pcurve_or_surface_ref(model, e0)?;
             }
         }
-        UnitPart::SurfaceSideStyle { styles, .. } => {
+        PartialEntity::SurfaceSideStyle { styles, .. } => {
             {
                 let x = styles;
                 if x.len() < 1 || x.len() > 7 {
@@ -18196,21 +18223,21 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_surface_style_element_select_ref(model, e0)?;
             }
         }
-        UnitPart::SurfaceStyleBoundary {
+        PartialEntity::SurfaceStyleBoundary {
             style_of_boundary, ..
         } => {
             check_curve_or_render_ref(model, style_of_boundary)?;
         }
-        UnitPart::SurfaceStyleControlGrid {
+        PartialEntity::SurfaceStyleControlGrid {
             style_of_control_grid,
             ..
         } => {
             check_curve_or_render_ref(model, style_of_control_grid)?;
         }
-        UnitPart::SurfaceStyleFillArea { fill_area, .. } => {
+        PartialEntity::SurfaceStyleFillArea { fill_area, .. } => {
             check_fill_area_style_ref(model, fill_area)?;
         }
-        UnitPart::SurfaceStyleParameterLine {
+        PartialEntity::SurfaceStyleParameterLine {
             style_of_parameter_lines,
             direction_counts,
             ..
@@ -18229,7 +18256,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 }
             }
         }
-        UnitPart::SurfaceStyleReflectanceAmbient {
+        PartialEntity::SurfaceStyleReflectanceAmbient {
             ambient_reflectance,
             ..
         } => {
@@ -18240,10 +18267,10 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 });
             }
         }
-        UnitPart::SurfaceStyleRendering { surface_colour, .. } => {
+        PartialEntity::SurfaceStyleRendering { surface_colour, .. } => {
             check_colour_ref(model, surface_colour)?;
         }
-        UnitPart::SurfaceStyleRenderingWithProperties { properties, .. } => {
+        PartialEntity::SurfaceStyleRenderingWithProperties { properties, .. } => {
             {
                 let x = properties;
                 if x.len() < 1 || x.len() > 2 {
@@ -18260,32 +18287,32 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_rendering_properties_select_ref(model, e0)?;
             }
         }
-        UnitPart::SurfaceStyleSegmentationCurve {
+        PartialEntity::SurfaceStyleSegmentationCurve {
             style_of_segmentation_curve,
             ..
         } => {
             check_curve_or_render_ref(model, style_of_segmentation_curve)?;
         }
-        UnitPart::SurfaceStyleSilhouette {
+        PartialEntity::SurfaceStyleSilhouette {
             style_of_silhouette,
             ..
         } => {
             check_curve_or_render_ref(model, style_of_silhouette)?;
         }
-        UnitPart::SurfaceStyleUsage { style, .. } => {
+        PartialEntity::SurfaceStyleUsage { style, .. } => {
             check_surface_side_style_select_ref(model, style)?;
         }
-        UnitPart::SymbolStyle {
+        PartialEntity::SymbolStyle {
             style_of_symbol, ..
         } => {
             check_symbol_style_select_ref(model, style_of_symbol)?;
         }
-        UnitPart::TerminatorSymbol {
+        PartialEntity::TerminatorSymbol {
             annotated_curve, ..
         } => {
             check_annotation_curve_occurrence_ref(model, annotated_curve)?;
         }
-        UnitPart::TessellatedGeometricSet { children, .. } => {
+        PartialEntity::TessellatedGeometricSet { children, .. } => {
             {
                 let x = children;
                 if x.len() < 1 {
@@ -18302,19 +18329,19 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_tessellated_item_ref(model, e0)?;
             }
         }
-        UnitPart::TextLiteral {
+        PartialEntity::TextLiteral {
             placement, font, ..
         } => {
             check_axis2_placement_ref(model, placement)?;
             check_font_select_ref(model, font)?;
         }
-        UnitPart::TextStyle {
+        PartialEntity::TextStyle {
             character_appearance,
             ..
         } => {
             check_character_style_select_ref(model, character_appearance)?;
         }
-        UnitPart::TextStyleWithBoxCharacteristics {
+        PartialEntity::TextStyleWithBoxCharacteristics {
             characteristics, ..
         } => {
             {
@@ -18340,7 +18367,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 }
             }
         }
-        UnitPart::ToleranceZone {
+        PartialEntity::ToleranceZone {
             defining_tolerance,
             form,
             ..
@@ -18362,7 +18389,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
             }
             check_tolerance_zone_form_ref(model, form)?;
         }
-        UnitPart::ToleranceZoneDefinition {
+        PartialEntity::ToleranceZoneDefinition {
             zone, boundaries, ..
         } => {
             check_tolerance_zone_ref(model, zone)?;
@@ -18370,12 +18397,12 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 check_shape_aspect_ref(model, e0)?;
             }
         }
-        UnitPart::ToleranceZoneWithDatum {
+        PartialEntity::ToleranceZoneWithDatum {
             datum_reference, ..
         } => {
             check_datum_system_ref(model, datum_reference)?;
         }
-        UnitPart::ToroidalSurface {
+        PartialEntity::ToroidalSurface {
             major_radius,
             minor_radius,
             ..
@@ -18393,16 +18420,16 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 });
             }
         }
-        UnitPart::TwoDirectionRepeatFactor {
+        PartialEntity::TwoDirectionRepeatFactor {
             second_repeat_factor,
             ..
         } => {
             check_vector_ref(model, second_repeat_factor)?;
         }
-        UnitPart::UnequallyDisposedGeometricTolerance { displacement, .. } => {
+        PartialEntity::UnequallyDisposedGeometricTolerance { displacement, .. } => {
             check_length_measure_with_unit_ref(model, displacement)?;
         }
-        UnitPart::ValueRepresentationItem {
+        PartialEntity::ValueRepresentationItem {
             value_component, ..
         } => {
             if let MeasureScalar::Real(v) = &value_component.value {
@@ -18414,7 +18441,7 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 }
             }
         }
-        UnitPart::Vector {
+        PartialEntity::Vector {
             orientation,
             magnitude,
             ..
@@ -18427,12 +18454,12 @@ fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {
                 });
             }
         }
-        UnitPart::VertexPoint {
+        PartialEntity::VertexPoint {
             vertex_geometry, ..
         } => {
             check_point_ref(model, vertex_geometry)?;
         }
-        UnitPart::ViewVolume {
+        PartialEntity::ViewVolume {
             projection_point,
             view_plane_distance,
             front_plane_distance,
@@ -18474,7 +18501,7 @@ fn check_action_ref(model: &StepModel, r: &ActionRef) -> Result<(), AuthorError>
             }
         }
         ActionRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| ["ACTION"].contains(&part_name(p))) {
@@ -18496,7 +18523,7 @@ fn check_action_method_ref(model: &StepModel, r: &ActionMethodRef) -> Result<(),
             }
         }
         ActionMethodRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -18522,7 +18549,7 @@ fn check_action_resource_ref(model: &StepModel, r: &ActionResourceRef) -> Result
             }
         }
         ActionResourceRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -18573,7 +18600,7 @@ fn check_annotation_curve_occurrence_ref(
             }
         }
         AnnotationCurveOccurrenceRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -18684,7 +18711,7 @@ fn check_annotation_occurrence_ref(
             }
         }
         AnnotationOccurrenceRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -18758,7 +18785,7 @@ fn check_annotation_placeholder_occurrence_ref(
             });
         }
         AnnotationPlaceholderOccurrenceRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -18911,7 +18938,7 @@ fn check_annotation_plane_element_ref(
             }
         }
         AnnotationPlaneElementRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -18978,7 +19005,7 @@ fn check_annotation_representation_select_ref(
             }
         }
         AnnotationRepresentationSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -19025,7 +19052,7 @@ fn check_annotation_symbol_occurrence_ref(
             }
         }
         AnnotationSymbolOccurrenceRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -19064,7 +19091,7 @@ fn check_annotation_symbol_occurrence_item_ref(
             }
         }
         AnnotationSymbolOccurrenceItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -19121,7 +19148,7 @@ fn check_annotation_text_occurrence_item_ref(
             }
         }
         AnnotationTextOccurrenceItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -20890,7 +20917,7 @@ fn check_approval_item_ref(model: &StepModel, r: &ApprovalItemRef) -> Result<(),
             }
         }
         ApprovalItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -21203,7 +21230,7 @@ fn check_approved_item_ref(model: &StepModel, r: &ApprovedItemRef) -> Result<(),
             }
         }
         ApprovedItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -21363,7 +21390,7 @@ fn check_cc_classified_item_ref(
             }
         }
         CcClassifiedItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -21477,7 +21504,7 @@ fn check_cc_person_organization_item_ref(
             }
         }
         CcPersonOrganizationItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -21541,7 +21568,7 @@ fn check_change_request_item_ref(
             }
         }
         ChangeRequestItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -21586,7 +21613,7 @@ fn check_character_style_select_ref(
             }
         }
         CharacterStyleSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -21636,7 +21663,7 @@ fn check_characterized_action_definition_ref(
             }
         }
         CharacterizedActionDefinitionRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -22221,7 +22248,7 @@ fn check_characterized_definition_ref(
             }
         }
         CharacterizedDefinitionRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -22315,7 +22342,7 @@ fn check_characterized_resource_definition_ref(
             }
         }
         CharacterizedResourceDefinitionRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -22348,7 +22375,7 @@ fn check_closed_shell_ref(model: &StepModel, r: &ClosedShellRef) -> Result<(), A
             }
         }
         ClosedShellRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -22400,7 +22427,7 @@ fn check_colour_ref(model: &StepModel, r: &ColourRef) -> Result<(), AuthorError>
             }
         }
         ColourRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -22434,7 +22461,7 @@ fn check_composite_curve_segment_ref(
             }
         }
         CompositeCurveSegmentRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -23476,7 +23503,7 @@ fn check_compound_item_definition_ref(
             }
         }
         CompoundItemDefinitionRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -23663,7 +23690,7 @@ fn check_configuration_design_item_ref(
             }
         }
         ConfigurationDesignItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -23697,7 +23724,7 @@ fn check_configuration_item_ref(
             }
         }
         ConfigurationItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -23747,7 +23774,7 @@ fn check_connected_face_set_ref(
             }
         }
         ConnectedFaceSetRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -23781,7 +23808,7 @@ fn check_constructive_geometry_representation_or_shape_representation_ref(
         ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentation(i) => { if i.0 as usize >= model.shape_representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "SHAPE_REPRESENTATION" }); } }
         ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentationWithParameters(i) => { if i.0 as usize >= model.shape_representation_with_parameters_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "SHAPE_REPRESENTATION_WITH_PARAMETERS" }); } }
         ConstructiveGeometryRepresentationOrShapeRepresentationRef::TessellatedShapeRepresentation(i) => { if i.0 as usize >= model.tessellated_shape_representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "TESSELLATED_SHAPE_REPRESENTATION" }); } }
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::Complex(i) => { let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else { return Err(AuthorError::DanglingRef { entity: "COMPLEX" }); }; if !c.parts.iter().any(|p| ["ADVANCED_BREP_SHAPE_REPRESENTATION", "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION", "MANIFOLD_SURFACE_SHAPE_REPRESENTATION", "SHAPE_DIMENSION_REPRESENTATION", "SHAPE_REPRESENTATION", "SHAPE_REPRESENTATION_WITH_PARAMETERS", "TESSELLATED_SHAPE_REPRESENTATION"].contains(&part_name(p))) { return Err(AuthorError::InvalidComplex { reason: "not a CONSTRUCTIVE_GEOMETRY_REPRESENTATION_OR_SHAPE_REPRESENTATION" }); } }
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::Complex(i) => { let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else { return Err(AuthorError::DanglingRef { entity: "COMPLEX" }); }; if !c.parts.iter().any(|p| ["ADVANCED_BREP_SHAPE_REPRESENTATION", "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION", "MANIFOLD_SURFACE_SHAPE_REPRESENTATION", "SHAPE_DIMENSION_REPRESENTATION", "SHAPE_REPRESENTATION", "SHAPE_REPRESENTATION_WITH_PARAMETERS", "TESSELLATED_SHAPE_REPRESENTATION"].contains(&part_name(p))) { return Err(AuthorError::InvalidComplex { reason: "not a CONSTRUCTIVE_GEOMETRY_REPRESENTATION_OR_SHAPE_REPRESENTATION" }); } }
     }
     Ok(())
 }
@@ -23975,7 +24002,7 @@ fn check_curve_ref(model: &StepModel, r: &CurveRef) -> Result<(), AuthorError> {
             }
         }
         CurveRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -24047,7 +24074,7 @@ fn check_curve_font_or_scaled_curve_font_select_ref(
             }
         }
         CurveFontOrScaledCurveFontSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -24233,7 +24260,7 @@ fn check_curve_or_annotation_curve_occurrence_ref(
             }
         }
         CurveOrAnnotationCurveOccurrenceRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -24424,7 +24451,7 @@ fn check_curve_or_curve_set_ref(
             }
         }
         CurveOrCurveSetRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -24473,7 +24500,7 @@ fn check_curve_or_render_ref(model: &StepModel, r: &CurveOrRenderRef) -> Result<
             }
         }
         CurveOrRenderRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -24499,7 +24526,7 @@ fn check_curve_style_ref(model: &StepModel, r: &CurveStyleRef) -> Result<(), Aut
             }
         }
         CurveStyleRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -24528,7 +24555,7 @@ fn check_curve_style_font_pattern_ref(
             }
         }
         CurveStyleFontPatternRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -24578,7 +24605,7 @@ fn check_curve_style_font_select_ref(
             }
         }
         CurveStyleFontSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -24613,7 +24640,7 @@ fn check_date_ref(model: &StepModel, r: &DateRef) -> Result<(), AuthorError> {
             }
         }
         DateRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| ["DATE"].contains(&part_name(p))) {
@@ -24635,7 +24662,7 @@ fn check_date_and_time_ref(model: &StepModel, r: &DateAndTimeRef) -> Result<(), 
             }
         }
         DateAndTimeRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -25182,7 +25209,7 @@ fn check_date_and_time_item_ref(
             }
         }
         DateAndTimeItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -25321,7 +25348,7 @@ fn check_date_time_item_ref(model: &StepModel, r: &DateTimeItemRef) -> Result<()
             }
         }
         DateTimeItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -25382,7 +25409,7 @@ fn check_date_time_select_ref(model: &StepModel, r: &DateTimeSelectRef) -> Resul
             }
         }
         DateTimeSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -25413,7 +25440,7 @@ fn check_datum_ref(model: &StepModel, r: &DatumRef) -> Result<(), AuthorError> {
             }
         }
         DatumRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -25459,7 +25486,7 @@ fn check_datum_or_common_datum_ref(
             }
         }
         DatumOrCommonDatumRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -25531,7 +25558,7 @@ fn check_datum_system_ref(model: &StepModel, r: &DatumSystemRef) -> Result<(), A
             }
         }
         DatumSystemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -25567,7 +25594,7 @@ fn check_datum_system_or_reference_ref(
             }
         }
         DatumSystemOrReferenceRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -25603,7 +25630,7 @@ fn check_defined_glyph_select_ref(
             }
         }
         DefinedGlyphSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -25655,7 +25682,7 @@ fn check_defined_symbol_select_ref(
             }
         }
         DefinedSymbolSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -25688,7 +25715,7 @@ fn check_definitional_representation_ref(
             }
         }
         DefinitionalRepresentationRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -25980,7 +26007,7 @@ fn check_derived_property_select_ref(
             }
         }
         DerivedPropertySelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -26352,7 +26379,7 @@ fn check_description_attribute_select_ref(
             }
         }
         DescriptionAttributeSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -26452,7 +26479,7 @@ fn check_dimensional_characteristic_ref(
             }
         }
         DimensionalCharacteristicRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -26493,7 +26520,7 @@ fn check_direction_ref(model: &StepModel, r: &DirectionRef) -> Result<(), Author
             }
         }
         DirectionRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -26524,7 +26551,7 @@ fn check_document_ref(model: &StepModel, r: &DocumentRef) -> Result<(), AuthorEr
             }
         }
         DocumentRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -28485,7 +28512,7 @@ fn check_document_reference_item_ref(
             }
         }
         DocumentReferenceItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -28724,7 +28751,7 @@ fn check_draughting_callout_ref(
             }
         }
         DraughtingCalloutRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -28814,7 +28841,7 @@ fn check_draughting_callout_element_ref(
             }
         }
         DraughtingCalloutElementRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -28950,7 +28977,7 @@ fn check_draughting_model_item_association_select_ref(
             }
         }
         DraughtingModelItemAssociationSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -29441,7 +29468,7 @@ fn check_draughting_model_item_definition_ref(
             }
         }
         DraughtingModelItemDefinitionRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -29518,7 +29545,7 @@ fn check_edge_ref(model: &StepModel, r: &EdgeRef) -> Result<(), AuthorError> {
             }
         }
         EdgeRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -31171,7 +31198,7 @@ fn check_external_identification_item_ref(
             }
         }
         ExternalIdentificationItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -31364,7 +31391,7 @@ fn check_external_source_ref(model: &StepModel, r: &ExternalSourceRef) -> Result
             }
         }
         ExternalSourceRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -31402,7 +31429,7 @@ fn check_face_ref(model: &StepModel, r: &FaceRef) -> Result<(), AuthorError> {
             }
         }
         FaceRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -31435,7 +31462,7 @@ fn check_face_bound_ref(model: &StepModel, r: &FaceBoundRef) -> Result<(), Autho
             }
         }
         FaceBoundRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -31602,7 +31629,7 @@ fn check_face_or_surface_ref(model: &StepModel, r: &FaceOrSurfaceRef) -> Result<
             }
         }
         FaceOrSurfaceRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -31649,7 +31676,7 @@ fn check_face_surface_ref(model: &StepModel, r: &FaceSurfaceRef) -> Result<(), A
             }
         }
         FaceSurfaceRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -31675,7 +31702,7 @@ fn check_fill_area_style_ref(model: &StepModel, r: &FillAreaStyleRef) -> Result<
             }
         }
         FillAreaStyleRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -31742,7 +31769,7 @@ fn check_fill_area_style_tile_shape_select_ref(
             }
         }
         FillAreaStyleTileShapeSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -31821,7 +31848,7 @@ fn check_fill_style_select_ref(
             }
         }
         FillStyleSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -31874,7 +31901,7 @@ fn check_font_select_ref(model: &StepModel, r: &FontSelectRef) -> Result<(), Aut
             }
         }
         FontSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -31906,7 +31933,7 @@ fn check_general_property_ref(
             }
         }
         GeneralPropertyRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -32127,7 +32154,7 @@ fn check_geometric_item_specific_usage_select_ref(
             }
         }
         GeometricItemSpecificUsageSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -32905,7 +32932,7 @@ fn check_geometric_model_item_ref(
             }
         }
         GeometricModelItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -33336,7 +33363,7 @@ fn check_geometric_set_select_ref(
             }
         }
         GeometricSetSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -33574,7 +33601,7 @@ fn check_geometric_tolerance_ref(
             }
         }
         GeometricToleranceRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -33808,7 +33835,7 @@ fn check_geometric_tolerance_target_ref(
             }
         }
         GeometricToleranceTargetRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -33854,7 +33881,7 @@ fn check_group_ref(model: &StepModel, r: &GroupRef) -> Result<(), AuthorError> {
             }
         }
         GroupRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -35945,7 +35972,7 @@ fn check_groupable_item_ref(model: &StepModel, r: &GroupableItemRef) -> Result<(
             }
         }
         GroupableItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -36979,7 +37006,7 @@ fn check_id_attribute_select_ref(
             }
         }
         IdAttributeSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -37399,7 +37426,7 @@ fn check_invisible_item_ref(model: &StepModel, r: &InvisibleItemRef) -> Result<(
             }
         }
         InvisibleItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -37461,7 +37488,7 @@ fn check_item_defined_transformation_ref(
             }
         }
         ItemDefinedTransformationRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -38054,7 +38081,7 @@ fn check_item_identified_representation_usage_definition_ref(
             }
         }
         ItemIdentifiedRepresentationUsageDefinitionRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -38277,7 +38304,7 @@ fn check_item_identified_representation_usage_select_ref(
         ItemIdentifiedRepresentationUsageSelectRef::WireShell(i) => { if i.0 as usize >= model.wire_shell_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "WIRE_SHELL" }); } }
         ItemIdentifiedRepresentationUsageSelectRef::ListRepresentationItem(v) => { for e in v { check_representation_item_ref(model, e)?; } }
         ItemIdentifiedRepresentationUsageSelectRef::SetRepresentationItem(v) => { for e in v { check_representation_item_ref(model, e)?; } }
-        ItemIdentifiedRepresentationUsageSelectRef::Complex(i) => { let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else { return Err(AuthorError::DanglingRef { entity: "COMPLEX" }); }; if !c.parts.iter().any(|p| ["ADVANCED_FACE", "ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_FILL_AREA_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT", "ANNOTATION_TEXT_CHARACTER", "ANNOTATION_TEXT_OCCURRENCE", "B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS", "BEZIER_CURVE", "BEZIER_SURFACE", "BOUNDED_CURVE", "BOUNDED_PCURVE", "BOUNDED_SURFACE", "BOUNDED_SURFACE_CURVE", "BREP_WITH_VOIDS", "CAMERA_IMAGE", "CAMERA_IMAGE_3D_WITH_SCALE", "CAMERA_MODEL", "CAMERA_MODEL_D3", "CAMERA_MODEL_D3_MULTI_CLIPPING", "CAMERA_MODEL_D3_WITH_HLHSR", "CLOSED_SHELL", "COMPOSITE_CURVE", "COMPOSITE_TEXT", "COMPOUND_REPRESENTATION_ITEM", "CONNECTED_FACE_SET", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "CURVE", "DEGENERATE_TOROIDAL_SURFACE", "DIRECTION", "DRAUGHTING_ANNOTATION_OCCURRENCE", "DRAUGHTING_CALLOUT", "EDGE", "EDGE_CURVE", "EDGE_LOOP", "ELEMENTARY_SURFACE", "EXTERNALLY_DEFINED_HATCH_STYLE", "EXTERNALLY_DEFINED_TILE_STYLE", "FACE", "FACE_BOUND", "FACE_OUTER_BOUND", "FACE_SURFACE", "FILL_AREA_STYLE_HATCHING", "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE", "FILL_AREA_STYLE_TILES", "GEOMETRIC_CURVE_SET", "GEOMETRIC_REPRESENTATION_ITEM", "GEOMETRIC_SET", "INTEGER_REPRESENTATION_ITEM", "INTERSECTION_CURVE", "LEADER_CURVE", "LEADER_DIRECTED_CALLOUT", "LEADER_TERMINATOR", "LOOP", "MANIFOLD_SOLID_BREP", "MAPPED_ITEM", "MEASURE_REPRESENTATION_ITEM", "ONE_DIRECTION_REPEAT_FACTOR", "OPEN_SHELL", "ORIENTED_CLOSED_SHELL", "ORIENTED_EDGE", "OVER_RIDING_STYLED_ITEM", "PATH", "PCURVE", "PLACEMENT", "PLANAR_BOX", "PLANAR_EXTENT", "POINT", "POLY_LOOP", "QUALIFIED_REPRESENTATION_ITEM", "QUASI_UNIFORM_CURVE", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_CURVE", "RATIONAL_B_SPLINE_SURFACE", "REAL_REPRESENTATION_ITEM", "REPOSITIONED_TESSELLATED_ITEM", "REPRESENTATION_ITEM", "SEAM_CURVE", "SHELL_BASED_SURFACE_MODEL", "SOLID_MODEL", "STYLED_ITEM", "SURFACE", "SURFACE_CURVE", "TERMINATOR_SYMBOL", "TESSELLATED_GEOMETRIC_SET", "TESSELLATED_ITEM", "TESSELLATED_STRUCTURED_ITEM", "TEXT_LITERAL", "TOPOLOGICAL_REPRESENTATION_ITEM", "TOROIDAL_SURFACE", "TWO_DIRECTION_REPEAT_FACTOR", "UNIFORM_CURVE", "UNIFORM_SURFACE", "VALUE_REPRESENTATION_ITEM", "VECTOR", "VERTEX", "VERTEX_POINT"].contains(&part_name(p))) { return Err(AuthorError::InvalidComplex { reason: "not a ITEM_IDENTIFIED_REPRESENTATION_USAGE_SELECT" }); } }
+        ItemIdentifiedRepresentationUsageSelectRef::Complex(i) => { let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else { return Err(AuthorError::DanglingRef { entity: "COMPLEX" }); }; if !c.parts.iter().any(|p| ["ADVANCED_FACE", "ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_FILL_AREA_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT", "ANNOTATION_TEXT_CHARACTER", "ANNOTATION_TEXT_OCCURRENCE", "B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS", "BEZIER_CURVE", "BEZIER_SURFACE", "BOUNDED_CURVE", "BOUNDED_PCURVE", "BOUNDED_SURFACE", "BOUNDED_SURFACE_CURVE", "BREP_WITH_VOIDS", "CAMERA_IMAGE", "CAMERA_IMAGE_3D_WITH_SCALE", "CAMERA_MODEL", "CAMERA_MODEL_D3", "CAMERA_MODEL_D3_MULTI_CLIPPING", "CAMERA_MODEL_D3_WITH_HLHSR", "CLOSED_SHELL", "COMPOSITE_CURVE", "COMPOSITE_TEXT", "COMPOUND_REPRESENTATION_ITEM", "CONNECTED_FACE_SET", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "CURVE", "DEGENERATE_TOROIDAL_SURFACE", "DIRECTION", "DRAUGHTING_ANNOTATION_OCCURRENCE", "DRAUGHTING_CALLOUT", "EDGE", "EDGE_CURVE", "EDGE_LOOP", "ELEMENTARY_SURFACE", "EXTERNALLY_DEFINED_HATCH_STYLE", "EXTERNALLY_DEFINED_TILE_STYLE", "FACE", "FACE_BOUND", "FACE_OUTER_BOUND", "FACE_SURFACE", "FILL_AREA_STYLE_HATCHING", "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE", "FILL_AREA_STYLE_TILES", "GEOMETRIC_CURVE_SET", "GEOMETRIC_REPRESENTATION_ITEM", "GEOMETRIC_SET", "INTEGER_REPRESENTATION_ITEM", "INTERSECTION_CURVE", "LEADER_CURVE", "LEADER_DIRECTED_CALLOUT", "LEADER_TERMINATOR", "LOOP", "MANIFOLD_SOLID_BREP", "MAPPED_ITEM", "MEASURE_REPRESENTATION_ITEM", "ONE_DIRECTION_REPEAT_FACTOR", "OPEN_SHELL", "ORIENTED_CLOSED_SHELL", "ORIENTED_EDGE", "OVER_RIDING_STYLED_ITEM", "PATH", "PCURVE", "PLACEMENT", "PLANAR_BOX", "PLANAR_EXTENT", "POINT", "POLY_LOOP", "QUALIFIED_REPRESENTATION_ITEM", "QUASI_UNIFORM_CURVE", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_CURVE", "RATIONAL_B_SPLINE_SURFACE", "REAL_REPRESENTATION_ITEM", "REPOSITIONED_TESSELLATED_ITEM", "REPRESENTATION_ITEM", "SEAM_CURVE", "SHELL_BASED_SURFACE_MODEL", "SOLID_MODEL", "STYLED_ITEM", "SURFACE", "SURFACE_CURVE", "TERMINATOR_SYMBOL", "TESSELLATED_GEOMETRIC_SET", "TESSELLATED_ITEM", "TESSELLATED_STRUCTURED_ITEM", "TEXT_LITERAL", "TOPOLOGICAL_REPRESENTATION_ITEM", "TOROIDAL_SURFACE", "TWO_DIRECTION_REPEAT_FACTOR", "UNIFORM_CURVE", "UNIFORM_SURFACE", "VALUE_REPRESENTATION_ITEM", "VECTOR", "VERTEX", "VERTEX_POINT"].contains(&part_name(p))) { return Err(AuthorError::InvalidComplex { reason: "not a ITEM_IDENTIFIED_REPRESENTATION_USAGE_SELECT" }); } }
     }
     Ok(())
 }
@@ -39315,7 +39342,7 @@ fn check_layered_item_ref(model: &StepModel, r: &LayeredItemRef) -> Result<(), A
             }
         }
         LayeredItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -39452,7 +39479,7 @@ fn check_length_measure_with_unit_ref(
             }
         }
         LengthMeasureWithUnitRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -39488,7 +39515,7 @@ fn check_length_or_plane_angle_measure_with_unit_select_ref(
             }
         }
         LengthOrPlaneAngleMeasureWithUnitSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -39544,7 +39571,7 @@ fn check_loop_ref(model: &StepModel, r: &LoopRef) -> Result<(), AuthorError> {
             }
         }
         LoopRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -39580,7 +39607,7 @@ fn check_manifold_solid_brep_ref(
             }
         }
         ManifoldSolidBrepRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -39614,7 +39641,7 @@ fn check_marker_select_ref(model: &StepModel, r: &MarkerSelectRef) -> Result<(),
         }
         MarkerSelectRef::MarkerType(_) => {}
         MarkerSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -39683,7 +39710,7 @@ fn check_measure_with_unit_ref(
             }
         }
         MeasureWithUnitRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -39721,7 +39748,7 @@ fn check_mechanical_design_and_draughting_relationship_select_ref(
         MechanicalDesignAndDraughtingRelationshipSelectRef::ShapeRepresentation(i) => { if i.0 as usize >= model.shape_representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "SHAPE_REPRESENTATION" }); } }
         MechanicalDesignAndDraughtingRelationshipSelectRef::ShapeRepresentationWithParameters(i) => { if i.0 as usize >= model.shape_representation_with_parameters_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "SHAPE_REPRESENTATION_WITH_PARAMETERS" }); } }
         MechanicalDesignAndDraughtingRelationshipSelectRef::TessellatedShapeRepresentation(i) => { if i.0 as usize >= model.tessellated_shape_representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "TESSELLATED_SHAPE_REPRESENTATION" }); } }
-        MechanicalDesignAndDraughtingRelationshipSelectRef::Complex(i) => { let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else { return Err(AuthorError::DanglingRef { entity: "COMPLEX" }); }; if !c.parts.iter().any(|p| ["ADVANCED_BREP_SHAPE_REPRESENTATION", "DRAUGHTING_MODEL", "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION", "MANIFOLD_SURFACE_SHAPE_REPRESENTATION", "SHAPE_DIMENSION_REPRESENTATION", "SHAPE_REPRESENTATION", "SHAPE_REPRESENTATION_WITH_PARAMETERS", "TESSELLATED_SHAPE_REPRESENTATION"].contains(&part_name(p))) { return Err(AuthorError::InvalidComplex { reason: "not a MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP_SELECT" }); } }
+        MechanicalDesignAndDraughtingRelationshipSelectRef::Complex(i) => { let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else { return Err(AuthorError::DanglingRef { entity: "COMPLEX" }); }; if !c.parts.iter().any(|p| ["ADVANCED_BREP_SHAPE_REPRESENTATION", "DRAUGHTING_MODEL", "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION", "MANIFOLD_SURFACE_SHAPE_REPRESENTATION", "SHAPE_DIMENSION_REPRESENTATION", "SHAPE_REPRESENTATION", "SHAPE_REPRESENTATION_WITH_PARAMETERS", "TESSELLATED_SHAPE_REPRESENTATION"].contains(&part_name(p))) { return Err(AuthorError::InvalidComplex { reason: "not a MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP_SELECT" }); } }
     }
     Ok(())
 }
@@ -39872,7 +39899,7 @@ fn check_name_attribute_select_ref(
             }
         }
         NameAttributeSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -39971,7 +39998,7 @@ fn check_named_unit_ref(model: &StepModel, r: &NamedUnitRef) -> Result<(), Autho
             }
         }
         NamedUnitRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -40029,7 +40056,7 @@ fn check_one_direction_repeat_factor_ref(
             }
         }
         OneDirectionRepeatFactorRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -40084,7 +40111,7 @@ fn check_oriented_closed_shell_ref(
             }
         }
         OrientedClosedShellRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -40110,7 +40137,7 @@ fn check_oriented_edge_ref(model: &StepModel, r: &OrientedEdgeRef) -> Result<(),
             }
         }
         OrientedEdgeRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -40273,7 +40300,7 @@ fn check_pcurve_or_surface_ref(
             }
         }
         PcurveOrSurfaceRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -40904,7 +40931,7 @@ fn check_person_and_organization_item_ref(
             }
         }
         PersonAndOrganizationItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -41024,7 +41051,7 @@ fn check_planar_box_ref(model: &StepModel, r: &PlanarBoxRef) -> Result<(), Autho
             }
         }
         PlanarBoxRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -41058,7 +41085,7 @@ fn check_plane_or_planar_box_ref(
             }
         }
         PlaneOrPlanarBoxRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -41099,7 +41126,7 @@ fn check_point_ref(model: &StepModel, r: &PointRef) -> Result<(), AuthorError> {
             }
         }
         PointRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| ["POINT"].contains(&part_name(p))) {
@@ -41124,7 +41151,7 @@ fn check_presentation_area_ref(
             }
         }
         PresentationAreaRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -41174,7 +41201,7 @@ fn check_presentation_representation_select_ref(
             }
         }
         PresentationRepresentationSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -41207,7 +41234,7 @@ fn check_presentation_set_ref(
             }
         }
         PresentationSetRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -41250,7 +41277,7 @@ fn check_presentation_size_assignment_select_ref(
             }
         }
         PresentationSizeAssignmentSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -41284,7 +41311,7 @@ fn check_presentation_style_assignment_ref(
             }
         }
         PresentationStyleAssignmentRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -41387,7 +41414,7 @@ fn check_presentation_style_select_ref(
         }
         PresentationStyleSelectRef::NullStyle(_) => {}
         PresentationStyleSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -41430,7 +41457,7 @@ fn check_presented_item_ref(model: &StepModel, r: &PresentedItemRef) -> Result<(
             }
         }
         PresentedItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -41565,7 +41592,7 @@ fn check_presented_item_select_ref(
             }
         }
         PresentedItemSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -41603,7 +41630,7 @@ fn check_product_ref(model: &StepModel, r: &ProductRef) -> Result<(), AuthorErro
             }
         }
         ProductRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| ["PRODUCT"].contains(&part_name(p))) {
@@ -41635,7 +41662,7 @@ fn check_product_category_ref(
             }
         }
         ProductCategoryRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -41659,7 +41686,7 @@ fn check_product_concept_ref(model: &StepModel, r: &ProductConceptRef) -> Result
             }
         }
         ProductConceptRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -41707,7 +41734,7 @@ fn check_product_context_ref(model: &StepModel, r: &ProductContextRef) -> Result
             }
         }
         ProductContextRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -41748,7 +41775,7 @@ fn check_product_definition_ref(
             }
         }
         ProductDefinitionRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -41786,7 +41813,7 @@ fn check_product_definition_context_ref(
             }
         }
         ProductDefinitionContextRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -41842,7 +41869,7 @@ fn check_product_definition_formation_ref(
             }
         }
         ProductDefinitionFormationRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -41899,7 +41926,7 @@ fn check_product_definition_or_reference_ref(
             }
         }
         ProductDefinitionOrReferenceRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -41960,7 +41987,7 @@ fn check_product_definition_relationship_ref(
             }
         }
         ProductDefinitionRelationshipRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -41993,7 +42020,7 @@ fn check_product_definition_shape_ref(
             }
         }
         ProductDefinitionShapeRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -42058,7 +42085,7 @@ fn check_product_or_formation_or_definition_ref(
             }
         }
         ProductOrFormationOrDefinitionRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -42099,7 +42126,7 @@ fn check_property_definition_ref(
             }
         }
         PropertyDefinitionRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -42133,7 +42160,7 @@ fn check_rendering_properties_select_ref(
             }
         }
         RenderingPropertiesSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -42322,7 +42349,7 @@ fn check_representation_ref(model: &StepModel, r: &RepresentationRef) -> Result<
             }
         }
         RepresentationRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -42395,7 +42422,7 @@ fn check_representation_context_ref(
             }
         }
         RepresentationContextRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -43447,7 +43474,7 @@ fn check_representation_item_ref(
             }
         }
         RepresentationItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -43588,7 +43615,7 @@ fn check_representation_map_ref(
             }
         }
         RepresentationMapRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -43630,7 +43657,7 @@ fn check_representation_or_representation_reference_ref(
         RepresentationOrRepresentationReferenceRef::ShapeRepresentationWithParameters(i) => { if i.0 as usize >= model.shape_representation_with_parameters_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "SHAPE_REPRESENTATION_WITH_PARAMETERS" }); } }
         RepresentationOrRepresentationReferenceRef::SymbolRepresentation(i) => { if i.0 as usize >= model.symbol_representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "SYMBOL_REPRESENTATION" }); } }
         RepresentationOrRepresentationReferenceRef::TessellatedShapeRepresentation(i) => { if i.0 as usize >= model.tessellated_shape_representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "TESSELLATED_SHAPE_REPRESENTATION" }); } }
-        RepresentationOrRepresentationReferenceRef::Complex(i) => { let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else { return Err(AuthorError::DanglingRef { entity: "COMPLEX" }); }; if !c.parts.iter().any(|p| ["ADVANCED_BREP_SHAPE_REPRESENTATION", "CHARACTERIZED_REPRESENTATION", "DEFINITIONAL_REPRESENTATION", "DRAUGHTING_MODEL", "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION", "MANIFOLD_SURFACE_SHAPE_REPRESENTATION", "PRESENTATION_AREA", "PRESENTATION_REPRESENTATION", "PRESENTATION_VIEW", "REPRESENTATION", "REPRESENTATION_REFERENCE", "SHAPE_DIMENSION_REPRESENTATION", "SHAPE_REPRESENTATION", "SHAPE_REPRESENTATION_WITH_PARAMETERS", "SYMBOL_REPRESENTATION", "TESSELLATED_SHAPE_REPRESENTATION"].contains(&part_name(p))) { return Err(AuthorError::InvalidComplex { reason: "not a REPRESENTATION_OR_REPRESENTATION_REFERENCE" }); } }
+        RepresentationOrRepresentationReferenceRef::Complex(i) => { let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else { return Err(AuthorError::DanglingRef { entity: "COMPLEX" }); }; if !c.parts.iter().any(|p| ["ADVANCED_BREP_SHAPE_REPRESENTATION", "CHARACTERIZED_REPRESENTATION", "DEFINITIONAL_REPRESENTATION", "DRAUGHTING_MODEL", "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION", "MANIFOLD_SURFACE_SHAPE_REPRESENTATION", "PRESENTATION_AREA", "PRESENTATION_REPRESENTATION", "PRESENTATION_VIEW", "REPRESENTATION", "REPRESENTATION_REFERENCE", "SHAPE_DIMENSION_REPRESENTATION", "SHAPE_REPRESENTATION", "SHAPE_REPRESENTATION_WITH_PARAMETERS", "SYMBOL_REPRESENTATION", "TESSELLATED_SHAPE_REPRESENTATION"].contains(&part_name(p))) { return Err(AuthorError::InvalidComplex { reason: "not a REPRESENTATION_OR_REPRESENTATION_REFERENCE" }); } }
     }
     Ok(())
 }
@@ -43867,7 +43894,7 @@ fn check_represented_definition_ref(
             }
         }
         RepresentedDefinitionRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -44040,7 +44067,7 @@ fn check_role_select_ref(model: &StepModel, r: &RoleSelectRef) -> Result<(), Aut
             }
         }
         RoleSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -44500,7 +44527,7 @@ fn check_security_classification_item_ref(
             }
         }
         SecurityClassificationItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -44714,7 +44741,7 @@ fn check_shape_aspect_ref(model: &StepModel, r: &ShapeAspectRef) -> Result<(), A
             }
         }
         ShapeAspectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -44756,7 +44783,7 @@ fn check_shape_dimension_representation_ref(
             }
         }
         ShapeDimensionRepresentationRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -44853,7 +44880,7 @@ fn check_shape_model_ref(model: &StepModel, r: &ShapeModelRef) -> Result<(), Aut
             }
         }
         ShapeModelRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -44890,7 +44917,7 @@ fn check_shape_representation_relationship_ref(
             }
         }
         ShapeRepresentationRelationshipRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -44944,7 +44971,7 @@ fn check_shell_ref(model: &StepModel, r: &ShellRef) -> Result<(), AuthorError> {
             }
         }
         ShellRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -45019,7 +45046,7 @@ fn check_size_select_ref(model: &StepModel, r: &SizeSelectRef) -> Result<(), Aut
             }
         }
         SizeSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -45065,7 +45092,7 @@ fn check_start_request_item_ref(
             }
         }
         StartRequestItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -45093,7 +45120,7 @@ fn check_state_observed_ref(model: &StepModel, r: &StateObservedRef) -> Result<(
             }
         }
         StateObservedRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -45119,7 +45146,7 @@ fn check_state_type_ref(model: &StepModel, r: &StateTypeRef) -> Result<(), Autho
             }
         }
         StateTypeRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -46433,7 +46460,7 @@ fn check_style_context_select_ref(
             }
         }
         StyleContextSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -46698,7 +46725,7 @@ fn check_styled_item_ref(model: &StepModel, r: &StyledItemRef) -> Result<(), Aut
             }
         }
         StyledItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -47770,7 +47797,7 @@ fn check_styled_item_target_ref(
             }
         }
         StyledItemTargetRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -47911,7 +47938,7 @@ fn check_supported_item_ref(model: &StepModel, r: &SupportedItemRef) -> Result<(
             }
         }
         SupportedItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -48059,7 +48086,7 @@ fn check_surface_ref(model: &StepModel, r: &SurfaceRef) -> Result<(), AuthorErro
             }
         }
         SurfaceRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -48121,7 +48148,7 @@ fn check_surface_side_style_select_ref(
             }
         }
         SurfaceSideStyleSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -48202,7 +48229,7 @@ fn check_surface_style_element_select_ref(
             }
         }
         SurfaceStyleElementSelectRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -48343,7 +48370,7 @@ fn check_tessellated_item_ref(
             }
         }
         TessellatedItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -48390,7 +48417,7 @@ fn check_tessellated_structured_item_ref(
             }
         }
         TessellatedStructuredItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -48447,7 +48474,7 @@ fn check_text_or_character_ref(
             }
         }
         TextOrCharacterRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -48524,7 +48551,7 @@ fn check_tolerance_zone_ref(model: &StepModel, r: &ToleranceZoneRef) -> Result<(
             }
         }
         ToleranceZoneRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -48824,7 +48851,7 @@ fn check_tolerance_zone_target_ref(
             }
         }
         ToleranceZoneTargetRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -48887,7 +48914,7 @@ fn check_transformation_ref(model: &StepModel, r: &TransformationRef) -> Result<
             }
         }
         TransformationRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -48948,7 +48975,7 @@ fn check_two_direction_repeat_factor_ref(
             }
         }
         TwoDirectionRepeatFactorRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -49071,7 +49098,7 @@ fn check_unit_ref(model: &StepModel, r: &UnitRef) -> Result<(), AuthorError> {
             }
         }
         UnitRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {
@@ -49139,7 +49166,7 @@ fn check_vector_ref(model: &StepModel, r: &VectorRef) -> Result<(), AuthorError>
             }
         }
         VectorRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| ["VECTOR"].contains(&part_name(p))) {
@@ -49181,7 +49208,7 @@ fn check_vertex_ref(model: &StepModel, r: &VertexRef) -> Result<(), AuthorError>
             }
         }
         VertexRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -49219,7 +49246,7 @@ fn check_view_volume_ref(model: &StepModel, r: &ViewVolumeRef) -> Result<(), Aut
             }
         }
         ViewVolumeRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c
@@ -49257,7 +49284,7 @@ fn check_work_item_ref(model: &StepModel, r: &WorkItemRef) -> Result<(), AuthorE
             }
         }
         WorkItemRef::Complex(i) => {
-            let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
             if !c.parts.iter().any(|p| {

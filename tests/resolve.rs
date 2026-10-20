@@ -57,7 +57,7 @@ fn reads_entities_by_type_and_by_id() {
 #[test]
 fn entity_keys_name_their_keyword() {
     use step_io::EntityKey;
-    use step_io::model::{AdvancedFaceId, ComplexUnitId, ShellBasedSurfaceModelId};
+    use step_io::model::{AdvancedFaceId, ComplexEntityId, ShellBasedSurfaceModelId};
     assert_eq!(
         EntityKey::AdvancedFace(AdvancedFaceId(0)).keyword(),
         Some("ADVANCED_FACE")
@@ -66,5 +66,5 @@ fn entity_keys_name_their_keyword() {
         EntityKey::ShellBasedSurfaceModel(ShellBasedSurfaceModelId(3)).keyword(),
         Some("SHELL_BASED_SURFACE_MODEL")
     );
-    assert_eq!(EntityKey::ComplexUnit(ComplexUnitId(0)).keyword(), None);
+    assert_eq!(EntityKey::ComplexEntity(ComplexEntityId(0)).keyword(), None);
 }

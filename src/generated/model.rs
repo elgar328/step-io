@@ -2292,7 +2292,7 @@ pub struct VolumeUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct WireShellId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ComplexUnitId(pub u32);
+pub struct ComplexEntityId(pub u32);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EntityKey {
@@ -2811,7 +2811,7 @@ pub enum EntityKey {
     ViewVolume(ViewVolumeId),
     VolumeUnit(VolumeUnitId),
     WireShell(WireShellId),
-    ComplexUnit(ComplexUnitId),
+    ComplexEntity(ComplexEntityId),
 }
 
 impl EntityKey {
@@ -3322,7 +3322,7 @@ impl EntityKey {
             EntityKey::ViewVolume(i) => (498, i.0),
             EntityKey::VolumeUnit(i) => (499, i.0),
             EntityKey::WireShell(i) => (500, i.0),
-            EntityKey::ComplexUnit(i) => (501, i.0),
+            EntityKey::ComplexEntity(i) => (501, i.0),
         }
     }
 
@@ -3984,7 +3984,7 @@ impl EntityKey {
             EntityKey::ViewVolume(_) => Some("VIEW_VOLUME"),
             EntityKey::VolumeUnit(_) => Some("VOLUME_UNIT"),
             EntityKey::WireShell(_) => Some("WIRE_SHELL"),
-            EntityKey::ComplexUnit(_) => None,
+            EntityKey::ComplexEntity(_) => None,
         }
     }
 }
@@ -3992,13 +3992,13 @@ impl EntityKey {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ActionMethodRef {
     ActionMethod(ActionMethodId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ActionMethodRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionMethod(i) => Ok(Self::ActionMethod(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ActionMethodRef target, got {other:?}")),
         }
     }
@@ -4007,13 +4007,13 @@ impl ActionMethodRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ActionRef {
     Action(ActionId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ActionRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Action(i) => Ok(Self::Action(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ActionRef target, got {other:?}")),
         }
     }
@@ -4022,13 +4022,13 @@ impl ActionRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ActionResourceRef {
     ActionResource(ActionResourceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ActionResourceRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionResource(i) => Ok(Self::ActionResource(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ActionResourceRef target, got {other:?}")),
         }
     }
@@ -4053,14 +4053,14 @@ impl ActionResourceTypeRef {
 pub enum AnnotationCurveOccurrenceRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
     LeaderCurve(LeaderCurveId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl AnnotationCurveOccurrenceRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
             EntityKey::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected AnnotationCurveOccurrenceRef target, got {other:?}"
             )),
@@ -4083,7 +4083,7 @@ pub enum AnnotationOccurrenceRef {
     LeaderTerminator(LeaderTerminatorId),
     TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl AnnotationOccurrenceRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -4109,7 +4109,7 @@ impl AnnotationOccurrenceRef {
             EntityKey::TessellatedAnnotationOccurrence(i) => {
                 Ok(Self::TessellatedAnnotationOccurrence(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected AnnotationOccurrenceRef target, got {other:?}"
             )),
@@ -4146,7 +4146,7 @@ impl AnnotationPlaceholderLeaderLineRef {
 pub enum AnnotationPlaceholderOccurrenceRef {
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl AnnotationPlaceholderOccurrenceRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -4157,7 +4157,7 @@ impl AnnotationPlaceholderOccurrenceRef {
             EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
                 Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected AnnotationPlaceholderOccurrenceRef target, got {other:?}"
             )),
@@ -4185,7 +4185,7 @@ pub enum AnnotationPlaneElementRef {
     StyledItem(StyledItemId),
     TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl AnnotationPlaneElementRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -4218,7 +4218,7 @@ impl AnnotationPlaneElementRef {
             EntityKey::TessellatedAnnotationOccurrence(i) => {
                 Ok(Self::TessellatedAnnotationOccurrence(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected AnnotationPlaneElementRef target, got {other:?}"
             )),
@@ -4232,7 +4232,7 @@ pub enum AnnotationRepresentationSelectRef {
     PresentationArea(PresentationAreaId),
     PresentationView(PresentationViewId),
     SymbolRepresentation(SymbolRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl AnnotationRepresentationSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -4241,7 +4241,7 @@ impl AnnotationRepresentationSelectRef {
             EntityKey::PresentationArea(i) => Ok(Self::PresentationArea(i)),
             EntityKey::PresentationView(i) => Ok(Self::PresentationView(i)),
             EntityKey::SymbolRepresentation(i) => Ok(Self::SymbolRepresentation(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected AnnotationRepresentationSelectRef target, got {other:?}"
             )),
@@ -4253,14 +4253,14 @@ impl AnnotationRepresentationSelectRef {
 pub enum AnnotationSymbolOccurrenceItemRef {
     AnnotationSymbol(AnnotationSymbolId),
     DefinedSymbol(DefinedSymbolId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl AnnotationSymbolOccurrenceItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
             EntityKey::DefinedSymbol(i) => Ok(Self::DefinedSymbol(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected AnnotationSymbolOccurrenceItemRef target, got {other:?}"
             )),
@@ -4273,7 +4273,7 @@ pub enum AnnotationSymbolOccurrenceRef {
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     LeaderTerminator(LeaderTerminatorId),
     TerminatorSymbol(TerminatorSymbolId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl AnnotationSymbolOccurrenceRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -4281,7 +4281,7 @@ impl AnnotationSymbolOccurrenceRef {
             EntityKey::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
             EntityKey::LeaderTerminator(i) => Ok(Self::LeaderTerminator(i)),
             EntityKey::TerminatorSymbol(i) => Ok(Self::TerminatorSymbol(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected AnnotationSymbolOccurrenceRef target, got {other:?}"
             )),
@@ -4296,7 +4296,7 @@ pub enum AnnotationTextOccurrenceItemRef {
     CompositeText(CompositeTextId),
     DefinedCharacterGlyph(DefinedCharacterGlyphId),
     TextLiteral(TextLiteralId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl AnnotationTextOccurrenceItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -4306,7 +4306,7 @@ impl AnnotationTextOccurrenceItemRef {
             EntityKey::CompositeText(i) => Ok(Self::CompositeText(i)),
             EntityKey::DefinedCharacterGlyph(i) => Ok(Self::DefinedCharacterGlyph(i)),
             EntityKey::TextLiteral(i) => Ok(Self::TextLiteral(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected AnnotationTextOccurrenceItemRef target, got {other:?}"
             )),
@@ -4599,7 +4599,7 @@ pub enum ApprovalItemRef {
     VertexPoint(VertexPointId),
     VertexShell(VertexShellId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ApprovalItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -4923,7 +4923,7 @@ impl ApprovalItemRef {
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ApprovalItemRef target, got {other:?}")),
         }
     }
@@ -4984,7 +4984,7 @@ pub enum ApprovedItemRef {
     SecurityClassification(SecurityClassificationId),
     StartRequest(StartRequestId),
     StartWork(StartWorkId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ApprovedItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -5007,7 +5007,7 @@ impl ApprovedItemRef {
             EntityKey::SecurityClassification(i) => Ok(Self::SecurityClassification(i)),
             EntityKey::StartRequest(i) => Ok(Self::StartRequest(i)),
             EntityKey::StartWork(i) => Ok(Self::StartWork(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ApprovedItemRef target, got {other:?}")),
         }
     }
@@ -5107,7 +5107,7 @@ pub enum CcClassifiedItemRef {
     NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
     ProductDefinitionFormation(ProductDefinitionFormationId),
     ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CcClassifiedItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -5118,7 +5118,7 @@ impl CcClassifiedItemRef {
             EntityKey::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CcClassifiedItemRef target, got {other:?}"
             )),
@@ -5140,7 +5140,7 @@ pub enum CcPersonOrganizationItemRef {
     SecurityClassification(SecurityClassificationId),
     StartRequest(StartRequestId),
     StartWork(StartWorkId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CcPersonOrganizationItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -5161,7 +5161,7 @@ impl CcPersonOrganizationItemRef {
             EntityKey::SecurityClassification(i) => Ok(Self::SecurityClassification(i)),
             EntityKey::StartRequest(i) => Ok(Self::StartRequest(i)),
             EntityKey::StartWork(i) => Ok(Self::StartWork(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CcPersonOrganizationItemRef target, got {other:?}"
             )),
@@ -5188,7 +5188,7 @@ impl CertificationTypeRef {
 pub enum ChangeRequestItemRef {
     ProductDefinitionFormation(ProductDefinitionFormationId),
     ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ChangeRequestItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -5197,7 +5197,7 @@ impl ChangeRequestItemRef {
             EntityKey::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ChangeRequestItemRef target, got {other:?}"
             )),
@@ -5210,7 +5210,7 @@ pub enum CharacterStyleSelectRef {
     CharacterGlyphStyleOutline(CharacterGlyphStyleOutlineId),
     CharacterGlyphStyleStroke(CharacterGlyphStyleStrokeId),
     TextStyleForDefinedFont(TextStyleForDefinedFontId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CharacterStyleSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -5218,7 +5218,7 @@ impl CharacterStyleSelectRef {
             EntityKey::CharacterGlyphStyleOutline(i) => Ok(Self::CharacterGlyphStyleOutline(i)),
             EntityKey::CharacterGlyphStyleStroke(i) => Ok(Self::CharacterGlyphStyleStroke(i)),
             EntityKey::TextStyleForDefinedFont(i) => Ok(Self::TextStyleForDefinedFont(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CharacterStyleSelectRef target, got {other:?}"
             )),
@@ -5232,7 +5232,7 @@ pub enum CharacterizedActionDefinitionRef {
     ActionMethod(ActionMethodId),
     ActionMethodRelationship(ActionMethodRelationshipId),
     ActionRelationship(ActionRelationshipId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CharacterizedActionDefinitionRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -5241,7 +5241,7 @@ impl CharacterizedActionDefinitionRef {
             EntityKey::ActionMethod(i) => Ok(Self::ActionMethod(i)),
             EntityKey::ActionMethodRelationship(i) => Ok(Self::ActionMethodRelationship(i)),
             EntityKey::ActionRelationship(i) => Ok(Self::ActionRelationship(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CharacterizedActionDefinitionRef target, got {other:?}"
             )),
@@ -5324,7 +5324,7 @@ pub enum CharacterizedDefinitionRef {
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
     TotalRunoutTolerance(TotalRunoutToleranceId),
     UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CharacterizedDefinitionRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -5434,7 +5434,7 @@ impl CharacterizedDefinitionRef {
             EntityKey::UnequallyDisposedGeometricTolerance(i) => {
                 Ok(Self::UnequallyDisposedGeometricTolerance(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CharacterizedDefinitionRef target, got {other:?}"
             )),
@@ -5447,7 +5447,7 @@ pub enum CharacterizedResourceDefinitionRef {
     ActionResource(ActionResourceId),
     ActionResourceRelationship(ActionResourceRelationshipId),
     ActionResourceRequirement(ActionResourceRequirementId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CharacterizedResourceDefinitionRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -5455,7 +5455,7 @@ impl CharacterizedResourceDefinitionRef {
             EntityKey::ActionResource(i) => Ok(Self::ActionResource(i)),
             EntityKey::ActionResourceRelationship(i) => Ok(Self::ActionResourceRelationship(i)),
             EntityKey::ActionResourceRequirement(i) => Ok(Self::ActionResourceRequirement(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CharacterizedResourceDefinitionRef target, got {other:?}"
             )),
@@ -5467,14 +5467,14 @@ impl CharacterizedResourceDefinitionRef {
 pub enum ClosedShellRef {
     ClosedShell(ClosedShellId),
     OrientedClosedShell(OrientedClosedShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ClosedShellRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ClosedShell(i) => Ok(Self::ClosedShell(i)),
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ClosedShellRef target, got {other:?}")),
         }
     }
@@ -5487,7 +5487,7 @@ pub enum ColourRef {
     ColourSpecification(ColourSpecificationId),
     DraughtingPreDefinedColour(DraughtingPreDefinedColourId),
     PreDefinedColour(PreDefinedColourId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ColourRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -5497,7 +5497,7 @@ impl ColourRef {
             EntityKey::ColourSpecification(i) => Ok(Self::ColourSpecification(i)),
             EntityKey::DraughtingPreDefinedColour(i) => Ok(Self::DraughtingPreDefinedColour(i)),
             EntityKey::PreDefinedColour(i) => Ok(Self::PreDefinedColour(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ColourRef target, got {other:?}")),
         }
     }
@@ -5506,13 +5506,13 @@ impl ColourRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum CompositeCurveSegmentRef {
     CompositeCurveSegment(CompositeCurveSegmentId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CompositeCurveSegmentRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CompositeCurveSegment(i) => Ok(Self::CompositeCurveSegment(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CompositeCurveSegmentRef target, got {other:?}"
             )),
@@ -5673,7 +5673,7 @@ pub enum CompoundItemDefinitionRef {
     WireShell(WireShellId),
     ListRepresentationItem(Vec<RepresentationItemRef>),
     SetRepresentationItem(Vec<RepresentationItemRef>),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CompoundItemDefinitionRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -5853,7 +5853,7 @@ impl CompoundItemDefinitionRef {
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CompoundItemDefinitionRef target, got {other:?}"
             )),
@@ -5868,7 +5868,7 @@ pub enum ConfigurationDesignItemRef {
     ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
     ProductDefinitionOccurrence(ProductDefinitionOccurrenceId),
     ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ConfigurationDesignItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -5882,7 +5882,7 @@ impl ConfigurationDesignItemRef {
             EntityKey::ProductDefinitionWithAssociatedDocuments(i) => {
                 Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ConfigurationDesignItemRef target, got {other:?}"
             )),
@@ -5908,13 +5908,13 @@ impl ConfigurationDesignRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConfigurationItemRef {
     ConfigurationItem(ConfigurationItemId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ConfigurationItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ConfigurationItem(i) => Ok(Self::ConfigurationItem(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ConfigurationItemRef target, got {other:?}"
             )),
@@ -5928,7 +5928,7 @@ pub enum ConnectedFaceSetRef {
     ConnectedFaceSet(ConnectedFaceSetId),
     OpenShell(OpenShellId),
     OrientedClosedShell(OrientedClosedShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ConnectedFaceSetRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -5937,7 +5937,7 @@ impl ConnectedFaceSetRef {
             EntityKey::ConnectedFaceSet(i) => Ok(Self::ConnectedFaceSet(i)),
             EntityKey::OpenShell(i) => Ok(Self::OpenShell(i)),
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ConnectedFaceSetRef target, got {other:?}"
             )),
@@ -5960,7 +5960,7 @@ pub enum ConstructiveGeometryRepresentationOrShapeRepresentationRef {
     ShapeRepresentation(ShapeRepresentationId),
     ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ConstructiveGeometryRepresentationOrShapeRepresentationRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -5988,7 +5988,7 @@ impl ConstructiveGeometryRepresentationOrShapeRepresentationRef {
             EntityKey::TessellatedShapeRepresentation(i) => {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ConstructiveGeometryRepresentationOrShapeRepresentationRef target, got {other:?}"
             )),
@@ -6046,7 +6046,7 @@ pub enum CurveFontOrScaledCurveFontSelectRef {
     DraughtingPreDefinedCurveFont(DraughtingPreDefinedCurveFontId),
     ExternallyDefinedCurveFont(ExternallyDefinedCurveFontId),
     PreDefinedCurveFont(PreDefinedCurveFontId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CurveFontOrScaledCurveFontSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -6058,7 +6058,7 @@ impl CurveFontOrScaledCurveFontSelectRef {
             }
             EntityKey::ExternallyDefinedCurveFont(i) => Ok(Self::ExternallyDefinedCurveFont(i)),
             EntityKey::PreDefinedCurveFont(i) => Ok(Self::PreDefinedCurveFont(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CurveFontOrScaledCurveFontSelectRef target, got {other:?}"
             )),
@@ -6093,7 +6093,7 @@ pub enum CurveOrAnnotationCurveOccurrenceRef {
     SurfaceCurve(SurfaceCurveId),
     TrimmedCurve(TrimmedCurveId),
     UniformCurve(UniformCurveId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CurveOrAnnotationCurveOccurrenceRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -6123,7 +6123,7 @@ impl CurveOrAnnotationCurveOccurrenceRef {
             EntityKey::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
             EntityKey::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
             EntityKey::UniformCurve(i) => Ok(Self::UniformCurve(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CurveOrAnnotationCurveOccurrenceRef target, got {other:?}"
             )),
@@ -6157,7 +6157,7 @@ pub enum CurveOrCurveSetRef {
     SurfaceCurve(SurfaceCurveId),
     TrimmedCurve(TrimmedCurveId),
     UniformCurve(UniformCurveId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CurveOrCurveSetRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -6186,7 +6186,7 @@ impl CurveOrCurveSetRef {
             EntityKey::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
             EntityKey::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
             EntityKey::UniformCurve(i) => Ok(Self::UniformCurve(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected CurveOrCurveSetRef target, got {other:?}")),
         }
     }
@@ -6196,14 +6196,14 @@ impl CurveOrCurveSetRef {
 pub enum CurveOrRenderRef {
     CurveStyle(CurveStyleId),
     CurveStyleRendering(CurveStyleRenderingId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CurveOrRenderRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CurveStyle(i) => Ok(Self::CurveStyle(i)),
             EntityKey::CurveStyleRendering(i) => Ok(Self::CurveStyleRendering(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected CurveOrRenderRef target, got {other:?}")),
         }
     }
@@ -6234,7 +6234,7 @@ pub enum CurveRef {
     SurfaceCurve(SurfaceCurveId),
     TrimmedCurve(TrimmedCurveId),
     UniformCurve(UniformCurveId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CurveRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -6262,7 +6262,7 @@ impl CurveRef {
             EntityKey::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
             EntityKey::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
             EntityKey::UniformCurve(i) => Ok(Self::UniformCurve(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected CurveRef target, got {other:?}")),
         }
     }
@@ -6271,13 +6271,13 @@ impl CurveRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum CurveStyleFontPatternRef {
     CurveStyleFontPattern(CurveStyleFontPatternId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CurveStyleFontPatternRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CurveStyleFontPattern(i) => Ok(Self::CurveStyleFontPattern(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CurveStyleFontPatternRef target, got {other:?}"
             )),
@@ -6291,7 +6291,7 @@ pub enum CurveStyleFontSelectRef {
     DraughtingPreDefinedCurveFont(DraughtingPreDefinedCurveFontId),
     ExternallyDefinedCurveFont(ExternallyDefinedCurveFontId),
     PreDefinedCurveFont(PreDefinedCurveFontId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CurveStyleFontSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -6302,7 +6302,7 @@ impl CurveStyleFontSelectRef {
             }
             EntityKey::ExternallyDefinedCurveFont(i) => Ok(Self::ExternallyDefinedCurveFont(i)),
             EntityKey::PreDefinedCurveFont(i) => Ok(Self::PreDefinedCurveFont(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CurveStyleFontSelectRef target, got {other:?}"
             )),
@@ -6313,13 +6313,13 @@ impl CurveStyleFontSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum CurveStyleRef {
     CurveStyle(CurveStyleId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CurveStyleRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CurveStyle(i) => Ok(Self::CurveStyle(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected CurveStyleRef target, got {other:?}")),
         }
     }
@@ -6408,7 +6408,7 @@ pub enum DateAndTimeItemRef {
     SymbolRepresentation(SymbolRepresentationId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
     VersionedActionRequest(VersionedActionRequestId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DateAndTimeItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -6516,7 +6516,7 @@ impl DateAndTimeItemRef {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
             EntityKey::VersionedActionRequest(i) => Ok(Self::VersionedActionRequest(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected DateAndTimeItemRef target, got {other:?}")),
         }
     }
@@ -6525,13 +6525,13 @@ impl DateAndTimeItemRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum DateAndTimeRef {
     DateAndTime(DateAndTimeId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DateAndTimeRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DateAndTime(i) => Ok(Self::DateAndTime(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected DateAndTimeRef target, got {other:?}")),
         }
     }
@@ -6541,14 +6541,14 @@ impl DateAndTimeRef {
 pub enum DateRef {
     CalendarDate(CalendarDateId),
     Date(DateId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DateRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CalendarDate(i) => Ok(Self::CalendarDate(i)),
             EntityKey::Date(i) => Ok(Self::Date(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected DateRef target, got {other:?}")),
         }
     }
@@ -6566,7 +6566,7 @@ pub enum DateTimeItemRef {
     SecurityClassification(SecurityClassificationId),
     StartRequest(StartRequestId),
     StartWork(StartWorkId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DateTimeItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -6583,7 +6583,7 @@ impl DateTimeItemRef {
             EntityKey::SecurityClassification(i) => Ok(Self::SecurityClassification(i)),
             EntityKey::StartRequest(i) => Ok(Self::StartRequest(i)),
             EntityKey::StartWork(i) => Ok(Self::StartWork(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected DateTimeItemRef target, got {other:?}")),
         }
     }
@@ -6608,7 +6608,7 @@ pub enum DateTimeSelectRef {
     Date(DateId),
     DateAndTime(DateAndTimeId),
     LocalTime(LocalTimeId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DateTimeSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -6617,7 +6617,7 @@ impl DateTimeSelectRef {
             EntityKey::Date(i) => Ok(Self::Date(i)),
             EntityKey::DateAndTime(i) => Ok(Self::DateAndTime(i)),
             EntityKey::LocalTime(i) => Ok(Self::LocalTime(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected DateTimeSelectRef target, got {other:?}")),
         }
     }
@@ -6629,7 +6629,7 @@ pub enum DatumOrCommonDatumRef {
     Datum(DatumId),
     DatumReferenceElement(DatumReferenceElementId),
     CommonDatumList(Vec<DatumReferenceElementRef>),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DatumOrCommonDatumRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -6637,7 +6637,7 @@ impl DatumOrCommonDatumRef {
             EntityKey::CommonDatum(i) => Ok(Self::CommonDatum(i)),
             EntityKey::Datum(i) => Ok(Self::Datum(i)),
             EntityKey::DatumReferenceElement(i) => Ok(Self::DatumReferenceElement(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DatumOrCommonDatumRef target, got {other:?}"
             )),
@@ -6649,14 +6649,14 @@ impl DatumOrCommonDatumRef {
 pub enum DatumRef {
     CommonDatum(CommonDatumId),
     Datum(DatumId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DatumRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CommonDatum(i) => Ok(Self::CommonDatum(i)),
             EntityKey::Datum(i) => Ok(Self::Datum(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected DatumRef target, got {other:?}")),
         }
     }
@@ -6714,14 +6714,14 @@ impl DatumReferenceModifierRef {
 pub enum DatumSystemOrReferenceRef {
     DatumReference(DatumReferenceId),
     DatumSystem(DatumSystemId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DatumSystemOrReferenceRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DatumReference(i) => Ok(Self::DatumReference(i)),
             EntityKey::DatumSystem(i) => Ok(Self::DatumSystem(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DatumSystemOrReferenceRef target, got {other:?}"
             )),
@@ -6732,13 +6732,13 @@ impl DatumSystemOrReferenceRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum DatumSystemRef {
     DatumSystem(DatumSystemId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DatumSystemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DatumSystem(i) => Ok(Self::DatumSystem(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected DatumSystemRef target, got {other:?}")),
         }
     }
@@ -6748,7 +6748,7 @@ impl DatumSystemRef {
 pub enum DefinedGlyphSelectRef {
     ExternallyDefinedCharacterGlyph(ExternallyDefinedCharacterGlyphId),
     PreDefinedCharacterGlyph(PreDefinedCharacterGlyphId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DefinedGlyphSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -6757,7 +6757,7 @@ impl DefinedGlyphSelectRef {
                 Ok(Self::ExternallyDefinedCharacterGlyph(i))
             }
             EntityKey::PreDefinedCharacterGlyph(i) => Ok(Self::PreDefinedCharacterGlyph(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DefinedGlyphSelectRef target, got {other:?}"
             )),
@@ -6771,7 +6771,7 @@ pub enum DefinedSymbolSelectRef {
     PreDefinedPointMarkerSymbol(PreDefinedPointMarkerSymbolId),
     PreDefinedSymbol(PreDefinedSymbolId),
     PreDefinedTerminatorSymbol(PreDefinedTerminatorSymbolId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DefinedSymbolSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -6780,7 +6780,7 @@ impl DefinedSymbolSelectRef {
             EntityKey::PreDefinedPointMarkerSymbol(i) => Ok(Self::PreDefinedPointMarkerSymbol(i)),
             EntityKey::PreDefinedSymbol(i) => Ok(Self::PreDefinedSymbol(i)),
             EntityKey::PreDefinedTerminatorSymbol(i) => Ok(Self::PreDefinedTerminatorSymbol(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DefinedSymbolSelectRef target, got {other:?}"
             )),
@@ -6791,13 +6791,13 @@ impl DefinedSymbolSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum DefinitionalRepresentationRef {
     DefinitionalRepresentation(DefinitionalRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DefinitionalRepresentationRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DefinitionalRepresentation(i) => Ok(Self::DefinitionalRepresentation(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DefinitionalRepresentationRef target, got {other:?}"
             )),
@@ -6842,7 +6842,7 @@ pub enum DerivedPropertySelectRef {
     SymmetryTolerance(SymmetryToleranceId),
     TotalRunoutTolerance(TotalRunoutToleranceId),
     UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DerivedPropertySelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -6896,7 +6896,7 @@ impl DerivedPropertySelectRef {
             EntityKey::UnequallyDisposedGeometricTolerance(i) => {
                 Ok(Self::UnequallyDisposedGeometricTolerance(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DerivedPropertySelectRef target, got {other:?}"
             )),
@@ -6985,7 +6985,7 @@ pub enum DescriptionAttributeSelectRef {
     ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     SymbolRepresentation(SymbolRepresentationId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DescriptionAttributeSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -7053,7 +7053,7 @@ impl DescriptionAttributeSelectRef {
             EntityKey::TessellatedShapeRepresentation(i) => {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DescriptionAttributeSelectRef target, got {other:?}"
             )),
@@ -7071,7 +7071,7 @@ pub enum DimensionalCharacteristicRef {
     DimensionalSizeWithDatumFeature(DimensionalSizeWithDatumFeatureId),
     DimensionalSizeWithPath(DimensionalSizeWithPathId),
     DirectedDimensionalLocation(DirectedDimensionalLocationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DimensionalCharacteristicRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -7086,7 +7086,7 @@ impl DimensionalCharacteristicRef {
             }
             EntityKey::DimensionalSizeWithPath(i) => Ok(Self::DimensionalSizeWithPath(i)),
             EntityKey::DirectedDimensionalLocation(i) => Ok(Self::DirectedDimensionalLocation(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DimensionalCharacteristicRef target, got {other:?}"
             )),
@@ -7112,13 +7112,13 @@ impl DimensionalExponentsRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum DirectionRef {
     Direction(DirectionId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DirectionRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Direction(i) => Ok(Self::Direction(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected DirectionRef target, got {other:?}")),
         }
     }
@@ -7128,14 +7128,14 @@ impl DirectionRef {
 pub enum DocumentRef {
     Document(DocumentId),
     DocumentFile(DocumentFileId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DocumentRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Document(i) => Ok(Self::Document(i)),
             EntityKey::DocumentFile(i) => Ok(Self::DocumentFile(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected DocumentRef target, got {other:?}")),
         }
     }
@@ -7429,7 +7429,7 @@ pub enum DocumentReferenceItemRef {
     VertexPoint(VertexPointId),
     VertexShell(VertexShellId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DocumentReferenceItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -7794,7 +7794,7 @@ impl DocumentReferenceItemRef {
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DocumentReferenceItemRef target, got {other:?}"
             )),
@@ -7827,7 +7827,7 @@ pub enum DraughtingCalloutElementRef {
     LeaderTerminator(LeaderTerminatorId),
     TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DraughtingCalloutElementRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -7848,7 +7848,7 @@ impl DraughtingCalloutElementRef {
             EntityKey::TessellatedAnnotationOccurrence(i) => {
                 Ok(Self::TessellatedAnnotationOccurrence(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DraughtingCalloutElementRef target, got {other:?}"
             )),
@@ -7860,14 +7860,14 @@ impl DraughtingCalloutElementRef {
 pub enum DraughtingCalloutRef {
     DraughtingCallout(DraughtingCalloutId),
     LeaderDirectedCallout(LeaderDirectedCalloutId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DraughtingCalloutRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DraughtingCallout(i) => Ok(Self::DraughtingCallout(i)),
             EntityKey::LeaderDirectedCallout(i) => Ok(Self::LeaderDirectedCallout(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DraughtingCalloutRef target, got {other:?}"
             )),
@@ -7892,7 +7892,7 @@ pub enum DraughtingModelItemAssociationSelectRef {
     LeaderTerminator(LeaderTerminatorId),
     TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DraughtingModelItemAssociationSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -7920,7 +7920,7 @@ impl DraughtingModelItemAssociationSelectRef {
             EntityKey::TessellatedAnnotationOccurrence(i) => {
                 Ok(Self::TessellatedAnnotationOccurrence(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DraughtingModelItemAssociationSelectRef target, got {other:?}"
             )),
@@ -7991,7 +7991,7 @@ pub enum DraughtingModelItemDefinitionRef {
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
     TotalRunoutTolerance(TotalRunoutToleranceId),
     UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DraughtingModelItemDefinitionRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -8077,7 +8077,7 @@ impl DraughtingModelItemDefinitionRef {
             EntityKey::UnequallyDisposedGeometricTolerance(i) => {
                 Ok(Self::UnequallyDisposedGeometricTolerance(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DraughtingModelItemDefinitionRef target, got {other:?}"
             )),
@@ -8090,7 +8090,7 @@ pub enum EdgeRef {
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
     OrientedEdge(OrientedEdgeId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl EdgeRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -8098,7 +8098,7 @@ impl EdgeRef {
             EntityKey::Edge(i) => Ok(Self::Edge(i)),
             EntityKey::EdgeCurve(i) => Ok(Self::EdgeCurve(i)),
             EntityKey::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected EdgeRef target, got {other:?}")),
         }
     }
@@ -8349,7 +8349,7 @@ pub enum ExternalIdentificationItemRef {
     VertexShell(VertexShellId),
     VolumeUnit(VolumeUnitId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ExternalIdentificationItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -8645,7 +8645,7 @@ impl ExternalIdentificationItemRef {
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::VolumeUnit(i) => Ok(Self::VolumeUnit(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ExternalIdentificationItemRef target, got {other:?}"
             )),
@@ -8656,13 +8656,13 @@ impl ExternalIdentificationItemRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExternalSourceRef {
     ExternalSource(ExternalSourceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ExternalSourceRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ExternalSource(i) => Ok(Self::ExternalSource(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ExternalSourceRef target, got {other:?}")),
         }
     }
@@ -8672,14 +8672,14 @@ impl ExternalSourceRef {
 pub enum FaceBoundRef {
     FaceBound(FaceBoundId),
     FaceOuterBound(FaceOuterBoundId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl FaceBoundRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::FaceBound(i) => Ok(Self::FaceBound(i)),
             EntityKey::FaceOuterBound(i) => Ok(Self::FaceOuterBound(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected FaceBoundRef target, got {other:?}")),
         }
     }
@@ -8709,7 +8709,7 @@ pub enum FaceOrSurfaceRef {
     SweptSurface(SweptSurfaceId),
     ToroidalSurface(ToroidalSurfaceId),
     UniformSurface(UniformSurfaceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl FaceOrSurfaceRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -8736,7 +8736,7 @@ impl FaceOrSurfaceRef {
             EntityKey::SweptSurface(i) => Ok(Self::SweptSurface(i)),
             EntityKey::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
             EntityKey::UniformSurface(i) => Ok(Self::UniformSurface(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected FaceOrSurfaceRef target, got {other:?}")),
         }
     }
@@ -8747,7 +8747,7 @@ pub enum FaceRef {
     AdvancedFace(AdvancedFaceId),
     Face(FaceId),
     FaceSurface(FaceSurfaceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl FaceRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -8755,7 +8755,7 @@ impl FaceRef {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::Face(i) => Ok(Self::Face(i)),
             EntityKey::FaceSurface(i) => Ok(Self::FaceSurface(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected FaceRef target, got {other:?}")),
         }
     }
@@ -8765,14 +8765,14 @@ impl FaceRef {
 pub enum FaceSurfaceRef {
     AdvancedFace(AdvancedFaceId),
     FaceSurface(FaceSurfaceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl FaceSurfaceRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::FaceSurface(i) => Ok(Self::FaceSurface(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected FaceSurfaceRef target, got {other:?}")),
         }
     }
@@ -8781,13 +8781,13 @@ impl FaceSurfaceRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum FillAreaStyleRef {
     FillAreaStyle(FillAreaStyleId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl FillAreaStyleRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::FillAreaStyle(i) => Ok(Self::FillAreaStyle(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected FillAreaStyleRef target, got {other:?}")),
         }
     }
@@ -8800,7 +8800,7 @@ pub enum FillAreaStyleTileShapeSelectRef {
     FillAreaStyleTileCurveWithStyle(FillAreaStyleTileCurveWithStyleId),
     FillAreaStyleTileSymbolWithStyle(FillAreaStyleTileSymbolWithStyleId),
     PreDefinedTile(PreDefinedTileId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl FillAreaStyleTileShapeSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -8816,7 +8816,7 @@ impl FillAreaStyleTileShapeSelectRef {
                 Ok(Self::FillAreaStyleTileSymbolWithStyle(i))
             }
             EntityKey::PreDefinedTile(i) => Ok(Self::PreDefinedTile(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected FillAreaStyleTileShapeSelectRef target, got {other:?}"
             )),
@@ -8833,7 +8833,7 @@ pub enum FillStyleSelectRef {
     FillAreaStyleTiles(FillAreaStyleTilesId),
     TextureStyleSpecification(TextureStyleSpecificationId),
     TextureStyleTessellationSpecification(TextureStyleTessellationSpecificationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl FillStyleSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -8847,7 +8847,7 @@ impl FillStyleSelectRef {
             EntityKey::TextureStyleTessellationSpecification(i) => {
                 Ok(Self::TextureStyleTessellationSpecification(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected FillStyleSelectRef target, got {other:?}")),
         }
     }
@@ -8859,7 +8859,7 @@ pub enum FontSelectRef {
     ExternallyDefinedTextFont(ExternallyDefinedTextFontId),
     PreDefinedTextFont(PreDefinedTextFontId),
     TextFont(TextFontId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl FontSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -8868,7 +8868,7 @@ impl FontSelectRef {
             EntityKey::ExternallyDefinedTextFont(i) => Ok(Self::ExternallyDefinedTextFont(i)),
             EntityKey::PreDefinedTextFont(i) => Ok(Self::PreDefinedTextFont(i)),
             EntityKey::TextFont(i) => Ok(Self::TextFont(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected FontSelectRef target, got {other:?}")),
         }
     }
@@ -8877,13 +8877,13 @@ impl FontSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeneralPropertyRef {
     GeneralProperty(GeneralPropertyId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl GeneralPropertyRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::GeneralProperty(i) => Ok(Self::GeneralProperty(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected GeneralPropertyRef target, got {other:?}")),
         }
     }
@@ -8919,7 +8919,7 @@ pub enum GeometricItemSpecificUsageSelectRef {
     ShapeAspectRelationship(ShapeAspectRelationshipId),
     ToleranceZone(ToleranceZoneId),
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl GeometricItemSpecificUsageSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -8958,7 +8958,7 @@ impl GeometricItemSpecificUsageSelectRef {
             EntityKey::ShapeAspectRelationship(i) => Ok(Self::ShapeAspectRelationship(i)),
             EntityKey::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
             EntityKey::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected GeometricItemSpecificUsageSelectRef target, got {other:?}"
             )),
@@ -9078,7 +9078,7 @@ pub enum GeometricModelItemRef {
     UniformSurface(UniformSurfaceId),
     Vector(VectorId),
     VertexPoint(VertexPointId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl GeometricModelItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -9209,7 +9209,7 @@ impl GeometricModelItemRef {
             EntityKey::UniformSurface(i) => Ok(Self::UniformSurface(i)),
             EntityKey::Vector(i) => Ok(Self::Vector(i)),
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected GeometricModelItemRef target, got {other:?}"
             )),
@@ -9271,7 +9271,7 @@ pub enum GeometricSetSelectRef {
     TrimmedCurve(TrimmedCurveId),
     UniformCurve(UniformCurveId),
     UniformSurface(UniformSurfaceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl GeometricSetSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -9328,7 +9328,7 @@ impl GeometricSetSelectRef {
             EntityKey::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
             EntityKey::UniformCurve(i) => Ok(Self::UniformCurve(i)),
             EntityKey::UniformSurface(i) => Ok(Self::UniformSurface(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected GeometricSetSelectRef target, got {other:?}"
             )),
@@ -9361,7 +9361,7 @@ pub enum GeometricToleranceRef {
     SymmetryTolerance(SymmetryToleranceId),
     TotalRunoutTolerance(TotalRunoutToleranceId),
     UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl GeometricToleranceRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -9401,7 +9401,7 @@ impl GeometricToleranceRef {
             EntityKey::UnequallyDisposedGeometricTolerance(i) => {
                 Ok(Self::UnequallyDisposedGeometricTolerance(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected GeometricToleranceRef target, got {other:?}"
             )),
@@ -9439,7 +9439,7 @@ pub enum GeometricToleranceTargetRef {
     ShapeAspect(ShapeAspectId),
     ToleranceZone(ToleranceZoneId),
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl GeometricToleranceTargetRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -9474,7 +9474,7 @@ impl GeometricToleranceTargetRef {
             EntityKey::ShapeAspect(i) => Ok(Self::ShapeAspect(i)),
             EntityKey::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
             EntityKey::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected GeometricToleranceTargetRef target, got {other:?}"
             )),
@@ -9486,7 +9486,7 @@ impl GeometricToleranceTargetRef {
 pub enum GroupRef {
     Group(GroupId),
     ProductConceptFeatureCategory(ProductConceptFeatureCategoryId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl GroupRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -9495,7 +9495,7 @@ impl GroupRef {
             EntityKey::ProductConceptFeatureCategory(i) => {
                 Ok(Self::ProductConceptFeatureCategory(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected GroupRef target, got {other:?}")),
         }
     }
@@ -9809,7 +9809,7 @@ pub enum GroupableItemRef {
     VertexShell(VertexShellId),
     VolumeUnit(VolumeUnitId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl GroupableItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -10194,7 +10194,7 @@ impl GroupableItemRef {
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::VolumeUnit(i) => Ok(Self::VolumeUnit(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected GroupableItemRef target, got {other:?}")),
         }
     }
@@ -10322,7 +10322,7 @@ pub enum IdAttributeSelectRef {
     VertexPoint(VertexPointId),
     VertexShell(VertexShellId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl IdAttributeSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -10481,7 +10481,7 @@ impl IdAttributeSelectRef {
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected IdAttributeSelectRef target, got {other:?}"
             )),
@@ -10555,7 +10555,7 @@ pub enum InvisibleItemRef {
     TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl InvisibleItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -10629,7 +10629,7 @@ impl InvisibleItemRef {
             EntityKey::TessellatedShapeRepresentation(i) => {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected InvisibleItemRef target, got {other:?}")),
         }
     }
@@ -10638,13 +10638,13 @@ impl InvisibleItemRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ItemDefinedTransformationRef {
     ItemDefinedTransformation(ItemDefinedTransformationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ItemDefinedTransformationRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ItemDefinedTransformation(i) => Ok(Self::ItemDefinedTransformation(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ItemDefinedTransformationRef target, got {other:?}"
             )),
@@ -10728,7 +10728,7 @@ pub enum ItemIdentifiedRepresentationUsageDefinitionRef {
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
     TotalRunoutTolerance(TotalRunoutToleranceId),
     UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ItemIdentifiedRepresentationUsageDefinitionRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -10835,7 +10835,7 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             EntityKey::UnequallyDisposedGeometricTolerance(i) => {
                 Ok(Self::UnequallyDisposedGeometricTolerance(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ItemIdentifiedRepresentationUsageDefinitionRef target, got {other:?}"
             )),
@@ -10996,7 +10996,7 @@ pub enum ItemIdentifiedRepresentationUsageSelectRef {
     WireShell(WireShellId),
     ListRepresentationItem(Vec<RepresentationItemRef>),
     SetRepresentationItem(Vec<RepresentationItemRef>),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ItemIdentifiedRepresentationUsageSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -11176,7 +11176,7 @@ impl ItemIdentifiedRepresentationUsageSelectRef {
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ItemIdentifiedRepresentationUsageSelectRef target, got {other:?}"
             )),
@@ -11338,7 +11338,7 @@ pub enum LayeredItemRef {
     VertexPoint(VertexPointId),
     VertexShell(VertexShellId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl LayeredItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -11521,7 +11521,7 @@ impl LayeredItemRef {
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected LayeredItemRef target, got {other:?}")),
         }
     }
@@ -11530,13 +11530,13 @@ impl LayeredItemRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum LengthMeasureWithUnitRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl LengthMeasureWithUnitRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::LengthMeasureWithUnit(i) => Ok(Self::LengthMeasureWithUnit(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected LengthMeasureWithUnitRef target, got {other:?}"
             )),
@@ -11548,14 +11548,14 @@ impl LengthMeasureWithUnitRef {
 pub enum LengthOrPlaneAngleMeasureWithUnitSelectRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
     PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::LengthMeasureWithUnit(i) => Ok(Self::LengthMeasureWithUnit(i)),
             EntityKey::PlaneAngleMeasureWithUnit(i) => Ok(Self::PlaneAngleMeasureWithUnit(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected LengthOrPlaneAngleMeasureWithUnitSelectRef target, got {other:?}"
             )),
@@ -11582,7 +11582,7 @@ pub enum LoopRef {
     Loop(LoopId),
     PolyLoop(PolyLoopId),
     VertexLoop(VertexLoopId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl LoopRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -11591,7 +11591,7 @@ impl LoopRef {
             EntityKey::Loop(i) => Ok(Self::Loop(i)),
             EntityKey::PolyLoop(i) => Ok(Self::PolyLoop(i)),
             EntityKey::VertexLoop(i) => Ok(Self::VertexLoop(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected LoopRef target, got {other:?}")),
         }
     }
@@ -11601,14 +11601,14 @@ impl LoopRef {
 pub enum ManifoldSolidBrepRef {
     BrepWithVoids(BrepWithVoidsId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ManifoldSolidBrepRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::BrepWithVoids(i) => Ok(Self::BrepWithVoids(i)),
             EntityKey::ManifoldSolidBrep(i) => Ok(Self::ManifoldSolidBrep(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ManifoldSolidBrepRef target, got {other:?}"
             )),
@@ -11621,14 +11621,14 @@ pub enum MarkerSelectRef {
     PreDefinedMarker(PreDefinedMarkerId),
     PreDefinedPointMarkerSymbol(PreDefinedPointMarkerSymbolId),
     MarkerType(MarkerType),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl MarkerSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PreDefinedMarker(i) => Ok(Self::PreDefinedMarker(i)),
             EntityKey::PreDefinedPointMarkerSymbol(i) => Ok(Self::PreDefinedPointMarkerSymbol(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected MarkerSelectRef target, got {other:?}")),
         }
     }
@@ -11643,7 +11643,7 @@ pub enum MeasureWithUnitRef {
     PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
     RatioMeasureWithUnit(RatioMeasureWithUnitId),
     UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl MeasureWithUnitRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -11655,7 +11655,7 @@ impl MeasureWithUnitRef {
             EntityKey::PlaneAngleMeasureWithUnit(i) => Ok(Self::PlaneAngleMeasureWithUnit(i)),
             EntityKey::RatioMeasureWithUnit(i) => Ok(Self::RatioMeasureWithUnit(i)),
             EntityKey::UncertaintyMeasureWithUnit(i) => Ok(Self::UncertaintyMeasureWithUnit(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected MeasureWithUnitRef target, got {other:?}")),
         }
     }
@@ -11685,7 +11685,7 @@ pub enum MechanicalDesignAndDraughtingRelationshipSelectRef {
     ShapeRepresentation(ShapeRepresentationId),
     ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl MechanicalDesignAndDraughtingRelationshipSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -11720,7 +11720,7 @@ impl MechanicalDesignAndDraughtingRelationshipSelectRef {
             EntityKey::TessellatedShapeRepresentation(i) => {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected MechanicalDesignAndDraughtingRelationshipSelectRef target, got {other:?}"
             )),
@@ -11749,7 +11749,7 @@ pub enum NameAttributeSelectRef {
     PropertyDefinitionRepresentation(PropertyDefinitionRepresentationId),
     ShapeDefinitionRepresentation(ShapeDefinitionRepresentationId),
     VolumeUnit(VolumeUnitId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl NameAttributeSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -11781,7 +11781,7 @@ impl NameAttributeSelectRef {
                 Ok(Self::ShapeDefinitionRepresentation(i))
             }
             EntityKey::VolumeUnit(i) => Ok(Self::VolumeUnit(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected NameAttributeSelectRef target, got {other:?}"
             )),
@@ -11801,7 +11801,7 @@ pub enum NamedUnitRef {
     SiUnit(SiUnitId),
     SolidAngleUnit(SolidAngleUnitId),
     TimeUnit(TimeUnitId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl NamedUnitRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -11816,7 +11816,7 @@ impl NamedUnitRef {
             EntityKey::SiUnit(i) => Ok(Self::SiUnit(i)),
             EntityKey::SolidAngleUnit(i) => Ok(Self::SolidAngleUnit(i)),
             EntityKey::TimeUnit(i) => Ok(Self::TimeUnit(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected NamedUnitRef target, got {other:?}")),
         }
     }
@@ -11839,14 +11839,14 @@ impl ObjectRoleRef {
 pub enum OneDirectionRepeatFactorRef {
     OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
     TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl OneDirectionRepeatFactorRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::OneDirectionRepeatFactor(i) => Ok(Self::OneDirectionRepeatFactor(i)),
             EntityKey::TwoDirectionRepeatFactor(i) => Ok(Self::TwoDirectionRepeatFactor(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected OneDirectionRepeatFactorRef target, got {other:?}"
             )),
@@ -11885,13 +11885,13 @@ impl OrganizationalProjectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum OrientedClosedShellRef {
     OrientedClosedShell(OrientedClosedShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl OrientedClosedShellRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected OrientedClosedShellRef target, got {other:?}"
             )),
@@ -11902,13 +11902,13 @@ impl OrientedClosedShellRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum OrientedEdgeRef {
     OrientedEdge(OrientedEdgeId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl OrientedEdgeRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected OrientedEdgeRef target, got {other:?}")),
         }
     }
@@ -11937,7 +11937,7 @@ pub enum PcurveOrSurfaceRef {
     SweptSurface(SweptSurfaceId),
     ToroidalSurface(ToroidalSurfaceId),
     UniformSurface(UniformSurfaceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PcurveOrSurfaceRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -11963,7 +11963,7 @@ impl PcurveOrSurfaceRef {
             EntityKey::SweptSurface(i) => Ok(Self::SweptSurface(i)),
             EntityKey::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
             EntityKey::UniformSurface(i) => Ok(Self::UniformSurface(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected PcurveOrSurfaceRef target, got {other:?}")),
         }
     }
@@ -12057,7 +12057,7 @@ pub enum PersonAndOrganizationItemRef {
     SymbolRepresentation(SymbolRepresentationId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
     VersionedActionRequest(VersionedActionRequestId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PersonAndOrganizationItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -12174,7 +12174,7 @@ impl PersonAndOrganizationItemRef {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
             EntityKey::VersionedActionRequest(i) => Ok(Self::VersionedActionRequest(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected PersonAndOrganizationItemRef target, got {other:?}"
             )),
@@ -12247,13 +12247,13 @@ impl PersonRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum PlanarBoxRef {
     PlanarBox(PlanarBoxId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PlanarBoxRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PlanarBox(i) => Ok(Self::PlanarBox(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected PlanarBoxRef target, got {other:?}")),
         }
     }
@@ -12263,14 +12263,14 @@ impl PlanarBoxRef {
 pub enum PlaneOrPlanarBoxRef {
     PlanarBox(PlanarBoxId),
     Plane(PlaneId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PlaneOrPlanarBoxRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PlanarBox(i) => Ok(Self::PlanarBox(i)),
             EntityKey::Plane(i) => Ok(Self::Plane(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected PlaneOrPlanarBoxRef target, got {other:?}"
             )),
@@ -12284,7 +12284,7 @@ pub enum PointRef {
     ApllPointWithSurface(ApllPointWithSurfaceId),
     CartesianPoint(CartesianPointId),
     Point(PointId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PointRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -12293,7 +12293,7 @@ impl PointRef {
             EntityKey::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
             EntityKey::CartesianPoint(i) => Ok(Self::CartesianPoint(i)),
             EntityKey::Point(i) => Ok(Self::Point(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected PointRef target, got {other:?}")),
         }
     }
@@ -12302,13 +12302,13 @@ impl PointRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum PresentationAreaRef {
     PresentationArea(PresentationAreaId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PresentationAreaRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PresentationArea(i) => Ok(Self::PresentationArea(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected PresentationAreaRef target, got {other:?}"
             )),
@@ -12322,7 +12322,7 @@ pub enum PresentationRepresentationSelectRef {
     PresentationRepresentation(PresentationRepresentationId),
     PresentationSet(PresentationSetId),
     PresentationView(PresentationViewId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PresentationRepresentationSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -12331,7 +12331,7 @@ impl PresentationRepresentationSelectRef {
             EntityKey::PresentationRepresentation(i) => Ok(Self::PresentationRepresentation(i)),
             EntityKey::PresentationSet(i) => Ok(Self::PresentationSet(i)),
             EntityKey::PresentationView(i) => Ok(Self::PresentationView(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected PresentationRepresentationSelectRef target, got {other:?}"
             )),
@@ -12342,13 +12342,13 @@ impl PresentationRepresentationSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum PresentationSetRef {
     PresentationSet(PresentationSetId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PresentationSetRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PresentationSet(i) => Ok(Self::PresentationSet(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected PresentationSetRef target, got {other:?}")),
         }
     }
@@ -12359,7 +12359,7 @@ pub enum PresentationSizeAssignmentSelectRef {
     AreaInSet(AreaInSetId),
     PresentationArea(PresentationAreaId),
     PresentationView(PresentationViewId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PresentationSizeAssignmentSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -12367,7 +12367,7 @@ impl PresentationSizeAssignmentSelectRef {
             EntityKey::AreaInSet(i) => Ok(Self::AreaInSet(i)),
             EntityKey::PresentationArea(i) => Ok(Self::PresentationArea(i)),
             EntityKey::PresentationView(i) => Ok(Self::PresentationView(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected PresentationSizeAssignmentSelectRef target, got {other:?}"
             )),
@@ -12379,14 +12379,14 @@ impl PresentationSizeAssignmentSelectRef {
 pub enum PresentationStyleAssignmentRef {
     PresentationStyleAssignment(PresentationStyleAssignmentId),
     PresentationStyleByContext(PresentationStyleByContextId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PresentationStyleAssignmentRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PresentationStyleAssignment(i) => Ok(Self::PresentationStyleAssignment(i)),
             EntityKey::PresentationStyleByContext(i) => Ok(Self::PresentationStyleByContext(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected PresentationStyleAssignmentRef target, got {other:?}"
             )),
@@ -12408,7 +12408,7 @@ pub enum PresentationStyleSelectRef {
     TextStyleWithBoxCharacteristics(TextStyleWithBoxCharacteristicsId),
     TextureStyleTessellationSpecification(TextureStyleTessellationSpecificationId),
     NullStyle(NullStyle),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PresentationStyleSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -12428,7 +12428,7 @@ impl PresentationStyleSelectRef {
             EntityKey::TextureStyleTessellationSpecification(i) => {
                 Ok(Self::TextureStyleTessellationSpecification(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected PresentationStyleSelectRef target, got {other:?}"
             )),
@@ -12440,14 +12440,14 @@ impl PresentationStyleSelectRef {
 pub enum PresentedItemRef {
     AppliedPresentedItem(AppliedPresentedItemId),
     PresentedItem(PresentedItemId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PresentedItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AppliedPresentedItem(i) => Ok(Self::AppliedPresentedItem(i)),
             EntityKey::PresentedItem(i) => Ok(Self::PresentedItem(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected PresentedItemRef target, got {other:?}")),
         }
     }
@@ -12470,7 +12470,7 @@ pub enum PresentedItemSelectRef {
     ProductDefinitionRelationship(ProductDefinitionRelationshipId),
     ProductDefinitionUsage(ProductDefinitionUsageId),
     ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PresentedItemSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -12498,7 +12498,7 @@ impl PresentedItemSelectRef {
             EntityKey::ProductDefinitionWithAssociatedDocuments(i) => {
                 Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected PresentedItemSelectRef target, got {other:?}"
             )),
@@ -12510,7 +12510,7 @@ impl PresentedItemSelectRef {
 pub enum ProductCategoryRef {
     ProductCategory(ProductCategoryId),
     ProductRelatedProductCategory(ProductRelatedProductCategoryId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductCategoryRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -12519,7 +12519,7 @@ impl ProductCategoryRef {
             EntityKey::ProductRelatedProductCategory(i) => {
                 Ok(Self::ProductRelatedProductCategory(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ProductCategoryRef target, got {other:?}")),
         }
     }
@@ -12543,13 +12543,13 @@ impl ProductConceptContextRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductConceptRef {
     ProductConcept(ProductConceptId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductConceptRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductConcept(i) => Ok(Self::ProductConcept(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ProductConceptRef target, got {other:?}")),
         }
     }
@@ -12559,14 +12559,14 @@ impl ProductConceptRef {
 pub enum ProductContextRef {
     MechanicalContext(MechanicalContextId),
     ProductContext(ProductContextId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductContextRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::MechanicalContext(i) => Ok(Self::MechanicalContext(i)),
             EntityKey::ProductContext(i) => Ok(Self::ProductContext(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ProductContextRef target, got {other:?}")),
         }
     }
@@ -12576,14 +12576,14 @@ impl ProductContextRef {
 pub enum ProductDefinitionContextRef {
     DesignContext(DesignContextId),
     ProductDefinitionContext(ProductDefinitionContextId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductDefinitionContextRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DesignContext(i) => Ok(Self::DesignContext(i)),
             EntityKey::ProductDefinitionContext(i) => Ok(Self::ProductDefinitionContext(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ProductDefinitionContextRef target, got {other:?}"
             )),
@@ -12610,7 +12610,7 @@ impl ProductDefinitionContextRoleRef {
 pub enum ProductDefinitionFormationRef {
     ProductDefinitionFormation(ProductDefinitionFormationId),
     ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductDefinitionFormationRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -12619,7 +12619,7 @@ impl ProductDefinitionFormationRef {
             EntityKey::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ProductDefinitionFormationRef target, got {other:?}"
             )),
@@ -12633,7 +12633,7 @@ pub enum ProductDefinitionOrReferenceRef {
     ProductDefinition(ProductDefinitionId),
     ProductDefinitionOccurrence(ProductDefinitionOccurrenceId),
     ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductDefinitionOrReferenceRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -12646,7 +12646,7 @@ impl ProductDefinitionOrReferenceRef {
             EntityKey::ProductDefinitionWithAssociatedDocuments(i) => {
                 Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ProductDefinitionOrReferenceRef target, got {other:?}"
             )),
@@ -12658,7 +12658,7 @@ impl ProductDefinitionOrReferenceRef {
 pub enum ProductDefinitionRef {
     ProductDefinition(ProductDefinitionId),
     ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductDefinitionRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -12667,7 +12667,7 @@ impl ProductDefinitionRef {
             EntityKey::ProductDefinitionWithAssociatedDocuments(i) => {
                 Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ProductDefinitionRef target, got {other:?}"
             )),
@@ -12682,7 +12682,7 @@ pub enum ProductDefinitionRelationshipRef {
     NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
     ProductDefinitionRelationship(ProductDefinitionRelationshipId),
     ProductDefinitionUsage(ProductDefinitionUsageId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductDefinitionRelationshipRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -12694,7 +12694,7 @@ impl ProductDefinitionRelationshipRef {
                 Ok(Self::ProductDefinitionRelationship(i))
             }
             EntityKey::ProductDefinitionUsage(i) => Ok(Self::ProductDefinitionUsage(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ProductDefinitionRelationshipRef target, got {other:?}"
             )),
@@ -12705,13 +12705,13 @@ impl ProductDefinitionRelationshipRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductDefinitionShapeRef {
     ProductDefinitionShape(ProductDefinitionShapeId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductDefinitionShapeRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ProductDefinitionShapeRef target, got {other:?}"
             )),
@@ -12726,7 +12726,7 @@ pub enum ProductOrFormationOrDefinitionRef {
     ProductDefinitionFormation(ProductDefinitionFormationId),
     ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
     ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductOrFormationOrDefinitionRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -12740,7 +12740,7 @@ impl ProductOrFormationOrDefinitionRef {
             EntityKey::ProductDefinitionWithAssociatedDocuments(i) => {
                 Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ProductOrFormationOrDefinitionRef target, got {other:?}"
             )),
@@ -12751,13 +12751,13 @@ impl ProductOrFormationOrDefinitionRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductRef {
     Product(ProductId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Product(i) => Ok(Self::Product(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ProductRef target, got {other:?}")),
         }
     }
@@ -12767,14 +12767,14 @@ impl ProductRef {
 pub enum PropertyDefinitionRef {
     ProductDefinitionShape(ProductDefinitionShapeId),
     PropertyDefinition(PropertyDefinitionId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PropertyDefinitionRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
             EntityKey::PropertyDefinition(i) => Ok(Self::PropertyDefinition(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected PropertyDefinitionRef target, got {other:?}"
             )),
@@ -12786,7 +12786,7 @@ impl PropertyDefinitionRef {
 pub enum RenderingPropertiesSelectRef {
     SurfaceStyleReflectanceAmbient(SurfaceStyleReflectanceAmbientId),
     SurfaceStyleTransparent(SurfaceStyleTransparentId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl RenderingPropertiesSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -12795,7 +12795,7 @@ impl RenderingPropertiesSelectRef {
                 Ok(Self::SurfaceStyleReflectanceAmbient(i))
             }
             EntityKey::SurfaceStyleTransparent(i) => Ok(Self::SurfaceStyleTransparent(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected RenderingPropertiesSelectRef target, got {other:?}"
             )),
@@ -12810,7 +12810,7 @@ pub enum RepresentationContextRef {
     GlobalUnitAssignedContext(GlobalUnitAssignedContextId),
     ParametricRepresentationContext(ParametricRepresentationContextId),
     RepresentationContext(RepresentationContextId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl RepresentationContextRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -12826,7 +12826,7 @@ impl RepresentationContextRef {
                 Ok(Self::ParametricRepresentationContext(i))
             }
             EntityKey::RepresentationContext(i) => Ok(Self::RepresentationContext(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected RepresentationContextRef target, got {other:?}"
             )),
@@ -13002,7 +13002,7 @@ pub enum RepresentationItemRef {
     VertexPoint(VertexPointId),
     VertexShell(VertexShellId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl RepresentationItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -13182,7 +13182,7 @@ impl RepresentationItemRef {
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected RepresentationItemRef target, got {other:?}"
             )),
@@ -13194,14 +13194,14 @@ impl RepresentationItemRef {
 pub enum RepresentationMapRef {
     CameraUsage(CameraUsageId),
     RepresentationMap(RepresentationMapId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl RepresentationMapRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CameraUsage(i) => Ok(Self::CameraUsage(i)),
             EntityKey::RepresentationMap(i) => Ok(Self::RepresentationMap(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected RepresentationMapRef target, got {other:?}"
             )),
@@ -13242,7 +13242,7 @@ pub enum RepresentationOrRepresentationReferenceRef {
     ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     SymbolRepresentation(SymbolRepresentationId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl RepresentationOrRepresentationReferenceRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -13288,7 +13288,7 @@ impl RepresentationOrRepresentationReferenceRef {
             EntityKey::TessellatedShapeRepresentation(i) => {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected RepresentationOrRepresentationReferenceRef target, got {other:?}"
             )),
@@ -13328,7 +13328,7 @@ pub enum RepresentationRef {
     ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     SymbolRepresentation(SymbolRepresentationId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl RepresentationRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -13373,7 +13373,7 @@ impl RepresentationRef {
             EntityKey::TessellatedShapeRepresentation(i) => {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected RepresentationRef target, got {other:?}")),
         }
     }
@@ -13413,7 +13413,7 @@ pub enum RepresentedDefinitionRef {
     ShapeAspectRelationship(ShapeAspectRelationshipId),
     ToleranceZone(ToleranceZoneId),
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl RepresentedDefinitionRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -13458,7 +13458,7 @@ impl RepresentedDefinitionRef {
             EntityKey::ShapeAspectRelationship(i) => Ok(Self::ShapeAspectRelationship(i)),
             EntityKey::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
             EntityKey::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected RepresentedDefinitionRef target, got {other:?}"
             )),
@@ -13500,7 +13500,7 @@ pub enum RoleSelectRef {
     SecurityClassificationAssignment(SecurityClassificationAssignmentId),
     StartRequest(StartRequestId),
     StartWork(StartWorkId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl RoleSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -13528,7 +13528,7 @@ impl RoleSelectRef {
             }
             EntityKey::StartRequest(i) => Ok(Self::StartRequest(i)),
             EntityKey::StartWork(i) => Ok(Self::StartWork(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected RoleSelectRef target, got {other:?}")),
         }
     }
@@ -13599,7 +13599,7 @@ pub enum SecurityClassificationItemRef {
     SymbolRepresentation(SymbolRepresentationId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
     VersionedActionRequest(VersionedActionRequestId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl SecurityClassificationItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -13691,7 +13691,7 @@ impl SecurityClassificationItemRef {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
             EntityKey::VersionedActionRequest(i) => Ok(Self::VersionedActionRequest(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected SecurityClassificationItemRef target, got {other:?}"
             )),
@@ -13751,7 +13751,7 @@ pub enum ShapeAspectRef {
     ShapeAspect(ShapeAspectId),
     ToleranceZone(ToleranceZoneId),
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ShapeAspectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -13778,7 +13778,7 @@ impl ShapeAspectRef {
             EntityKey::ShapeAspect(i) => Ok(Self::ShapeAspect(i)),
             EntityKey::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
             EntityKey::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ShapeAspectRef target, got {other:?}")),
         }
     }
@@ -13787,13 +13787,13 @@ impl ShapeAspectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ShapeDimensionRepresentationRef {
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ShapeDimensionRepresentationRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ShapeDimensionRepresentationRef target, got {other:?}"
             )),
@@ -13816,7 +13816,7 @@ pub enum ShapeModelRef {
     ShapeRepresentation(ShapeRepresentationId),
     ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ShapeModelRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -13844,7 +13844,7 @@ impl ShapeModelRef {
             EntityKey::TessellatedShapeRepresentation(i) => {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ShapeModelRef target, got {other:?}")),
         }
     }
@@ -13853,7 +13853,7 @@ impl ShapeModelRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ShapeRepresentationRelationshipRef {
     ShapeRepresentationRelationship(ShapeRepresentationRelationshipId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ShapeRepresentationRelationshipRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -13861,7 +13861,7 @@ impl ShapeRepresentationRelationshipRef {
             EntityKey::ShapeRepresentationRelationship(i) => {
                 Ok(Self::ShapeRepresentationRelationship(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ShapeRepresentationRelationshipRef target, got {other:?}"
             )),
@@ -13876,7 +13876,7 @@ pub enum ShellRef {
     OrientedClosedShell(OrientedClosedShellId),
     VertexShell(VertexShellId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ShellRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -13886,7 +13886,7 @@ impl ShellRef {
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ShellRef target, got {other:?}")),
         }
     }
@@ -13903,7 +13903,7 @@ pub enum SizeSelectRef {
     UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
     DescriptiveMeasure(Text),
     PositiveLengthMeasure(f64),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl SizeSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -13915,7 +13915,7 @@ impl SizeSelectRef {
             EntityKey::PlaneAngleMeasureWithUnit(i) => Ok(Self::PlaneAngleMeasureWithUnit(i)),
             EntityKey::RatioMeasureWithUnit(i) => Ok(Self::RatioMeasureWithUnit(i)),
             EntityKey::UncertaintyMeasureWithUnit(i) => Ok(Self::UncertaintyMeasureWithUnit(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected SizeSelectRef target, got {other:?}")),
         }
     }
@@ -13925,7 +13925,7 @@ impl SizeSelectRef {
 pub enum StartRequestItemRef {
     ProductDefinitionFormation(ProductDefinitionFormationId),
     ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl StartRequestItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -13934,7 +13934,7 @@ impl StartRequestItemRef {
             EntityKey::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected StartRequestItemRef target, got {other:?}"
             )),
@@ -13945,13 +13945,13 @@ impl StartRequestItemRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum StateObservedRef {
     StateObserved(StateObservedId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl StateObservedRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::StateObserved(i) => Ok(Self::StateObserved(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected StateObservedRef target, got {other:?}")),
         }
     }
@@ -13960,13 +13960,13 @@ impl StateObservedRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum StateTypeRef {
     StateType(StateTypeId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl StateTypeRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::StateType(i) => Ok(Self::StateType(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected StateTypeRef target, got {other:?}")),
         }
     }
@@ -14169,7 +14169,7 @@ pub enum StyleContextSelectRef {
     VertexPoint(VertexPointId),
     VertexShell(VertexShellId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl StyleContextSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -14417,7 +14417,7 @@ impl StyleContextSelectRef {
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected StyleContextSelectRef target, got {other:?}"
             )),
@@ -14443,7 +14443,7 @@ pub enum StyledItemRef {
     StyledItem(StyledItemId),
     TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl StyledItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -14474,7 +14474,7 @@ impl StyledItemRef {
             EntityKey::TessellatedAnnotationOccurrence(i) => {
                 Ok(Self::TessellatedAnnotationOccurrence(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected StyledItemRef target, got {other:?}")),
         }
     }
@@ -14641,7 +14641,7 @@ pub enum StyledItemTargetRef {
     VertexPoint(VertexPointId),
     VertexShell(VertexShellId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl StyledItemTargetRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -14833,7 +14833,7 @@ impl StyledItemTargetRef {
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected StyledItemTargetRef target, got {other:?}"
             )),
@@ -14846,7 +14846,7 @@ pub enum SupportedItemRef {
     Action(ActionId),
     ActionDirective(ActionDirectiveId),
     ActionMethod(ActionMethodId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl SupportedItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -14854,7 +14854,7 @@ impl SupportedItemRef {
             EntityKey::Action(i) => Ok(Self::Action(i)),
             EntityKey::ActionDirective(i) => Ok(Self::ActionDirective(i)),
             EntityKey::ActionMethod(i) => Ok(Self::ActionMethod(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected SupportedItemRef target, got {other:?}")),
         }
     }
@@ -14881,7 +14881,7 @@ pub enum SurfaceRef {
     SweptSurface(SweptSurfaceId),
     ToroidalSurface(ToroidalSurfaceId),
     UniformSurface(UniformSurfaceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl SurfaceRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -14905,7 +14905,7 @@ impl SurfaceRef {
             EntityKey::SweptSurface(i) => Ok(Self::SweptSurface(i)),
             EntityKey::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
             EntityKey::UniformSurface(i) => Ok(Self::UniformSurface(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected SurfaceRef target, got {other:?}")),
         }
     }
@@ -14930,14 +14930,14 @@ impl SurfaceRenderingPropertiesRef {
 pub enum SurfaceSideStyleSelectRef {
     PreDefinedSurfaceSideStyle(PreDefinedSurfaceSideStyleId),
     SurfaceSideStyle(SurfaceSideStyleId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl SurfaceSideStyleSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PreDefinedSurfaceSideStyle(i) => Ok(Self::PreDefinedSurfaceSideStyle(i)),
             EntityKey::SurfaceSideStyle(i) => Ok(Self::SurfaceSideStyle(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected SurfaceSideStyleSelectRef target, got {other:?}"
             )),
@@ -14955,7 +14955,7 @@ pub enum SurfaceStyleElementSelectRef {
     SurfaceStyleRenderingWithProperties(SurfaceStyleRenderingWithPropertiesId),
     SurfaceStyleSegmentationCurve(SurfaceStyleSegmentationCurveId),
     SurfaceStyleSilhouette(SurfaceStyleSilhouetteId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl SurfaceStyleElementSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -14972,7 +14972,7 @@ impl SurfaceStyleElementSelectRef {
                 Ok(Self::SurfaceStyleSegmentationCurve(i))
             }
             EntityKey::SurfaceStyleSilhouette(i) => Ok(Self::SurfaceStyleSilhouette(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected SurfaceStyleElementSelectRef target, got {other:?}"
             )),
@@ -15022,7 +15022,7 @@ pub enum TessellatedItemRef {
     TessellatedSolid(TessellatedSolidId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl TessellatedItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -15041,7 +15041,7 @@ impl TessellatedItemRef {
             EntityKey::TessellatedSolid(i) => Ok(Self::TessellatedSolid(i)),
             EntityKey::TessellatedStructuredItem(i) => Ok(Self::TessellatedStructuredItem(i)),
             EntityKey::TessellatedSurfaceSet(i) => Ok(Self::TessellatedSurfaceSet(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected TessellatedItemRef target, got {other:?}")),
         }
     }
@@ -15052,7 +15052,7 @@ pub enum TessellatedStructuredItemRef {
     ComplexTriangulatedFace(ComplexTriangulatedFaceId),
     TessellatedFace(TessellatedFaceId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl TessellatedStructuredItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -15060,7 +15060,7 @@ impl TessellatedStructuredItemRef {
             EntityKey::ComplexTriangulatedFace(i) => Ok(Self::ComplexTriangulatedFace(i)),
             EntityKey::TessellatedFace(i) => Ok(Self::TessellatedFace(i)),
             EntityKey::TessellatedStructuredItem(i) => Ok(Self::TessellatedStructuredItem(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected TessellatedStructuredItemRef target, got {other:?}"
             )),
@@ -15075,7 +15075,7 @@ pub enum TextOrCharacterRef {
     CompositeText(CompositeTextId),
     DefinedCharacterGlyph(DefinedCharacterGlyphId),
     TextLiteral(TextLiteralId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl TextOrCharacterRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -15085,7 +15085,7 @@ impl TextOrCharacterRef {
             EntityKey::CompositeText(i) => Ok(Self::CompositeText(i)),
             EntityKey::DefinedCharacterGlyph(i) => Ok(Self::DefinedCharacterGlyph(i)),
             EntityKey::TextLiteral(i) => Ok(Self::TextLiteral(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected TextOrCharacterRef target, got {other:?}")),
         }
     }
@@ -15146,14 +15146,14 @@ impl ToleranceZoneFormRef {
 pub enum ToleranceZoneRef {
     ToleranceZone(ToleranceZoneId),
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ToleranceZoneRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
             EntityKey::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ToleranceZoneRef target, got {other:?}")),
         }
     }
@@ -15195,7 +15195,7 @@ pub enum ToleranceZoneTargetRef {
     SymmetryTolerance(SymmetryToleranceId),
     TotalRunoutTolerance(TotalRunoutToleranceId),
     UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ToleranceZoneTargetRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -15248,7 +15248,7 @@ impl ToleranceZoneTargetRef {
             EntityKey::UnequallyDisposedGeometricTolerance(i) => {
                 Ok(Self::UnequallyDisposedGeometricTolerance(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ToleranceZoneTargetRef target, got {other:?}"
             )),
@@ -15262,7 +15262,7 @@ pub enum TransformationRef {
     ItemDefinedTransformation(ItemDefinedTransformationId),
     ListItemDefinedTransformation(Vec<ItemDefinedTransformationRef>),
     SetItemDefinedTransformation(Vec<ItemDefinedTransformationRef>),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl TransformationRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -15271,7 +15271,7 @@ impl TransformationRef {
                 Ok(Self::FunctionallyDefinedTransformation(i))
             }
             EntityKey::ItemDefinedTransformation(i) => Ok(Self::ItemDefinedTransformation(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected TransformationRef target, got {other:?}")),
         }
     }
@@ -15298,13 +15298,13 @@ impl TrimmingSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum TwoDirectionRepeatFactorRef {
     TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl TwoDirectionRepeatFactorRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::TwoDirectionRepeatFactor(i) => Ok(Self::TwoDirectionRepeatFactor(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected TwoDirectionRepeatFactorRef target, got {other:?}"
             )),
@@ -15342,7 +15342,7 @@ pub enum UnitRef {
     SolidAngleUnit(SolidAngleUnitId),
     TimeUnit(TimeUnitId),
     VolumeUnit(VolumeUnitId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl UnitRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -15360,7 +15360,7 @@ impl UnitRef {
             EntityKey::SolidAngleUnit(i) => Ok(Self::SolidAngleUnit(i)),
             EntityKey::TimeUnit(i) => Ok(Self::TimeUnit(i)),
             EntityKey::VolumeUnit(i) => Ok(Self::VolumeUnit(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected UnitRef target, got {other:?}")),
         }
     }
@@ -15388,13 +15388,13 @@ impl ValueQualifierRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum VectorRef {
     Vector(VectorId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl VectorRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Vector(i) => Ok(Self::Vector(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected VectorRef target, got {other:?}")),
         }
     }
@@ -15432,14 +15432,14 @@ impl VertexLoopRef {
 pub enum VertexRef {
     Vertex(VertexId),
     VertexPoint(VertexPointId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl VertexRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Vertex(i) => Ok(Self::Vertex(i)),
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected VertexRef target, got {other:?}")),
         }
     }
@@ -15448,13 +15448,13 @@ impl VertexRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ViewVolumeRef {
     ViewVolume(ViewVolumeId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ViewVolumeRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ViewVolume(i) => Ok(Self::ViewVolume(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ViewVolumeRef target, got {other:?}")),
         }
     }
@@ -15464,7 +15464,7 @@ impl ViewVolumeRef {
 pub enum WorkItemRef {
     ProductDefinitionFormation(ProductDefinitionFormationId),
     ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl WorkItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
@@ -15473,7 +15473,7 @@ impl WorkItemRef {
             EntityKey::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected WorkItemRef target, got {other:?}")),
         }
     }
@@ -18987,8 +18987,10 @@ pub struct WireShell {
     pub wire_shell_extent: Vec<LoopRef>,
 }
 
+/// One entity type's share of a [`ComplexEntity`] — Part 21's partial entity
+/// instance, such as `B_SPLINE_CURVE(...)` in a rational B-spline curve.
 #[derive(Debug, Clone, PartialEq)]
-pub enum UnitPart {
+pub enum PartialEntity {
     Action {
         name: Text,
         description: Option<Text>,
@@ -19932,9 +19934,12 @@ pub enum UnitPart {
     },
 }
 
+/// A complex entity instance: one `#id` that combines several entity
+/// types, written as `( A(...) B(...) … )`, with one [`PartialEntity`] per
+/// type.
 #[derive(Debug, Clone, PartialEq)]
-pub struct ComplexUnit {
-    pub parts: Vec<UnitPart>,
+pub struct ComplexEntity {
+    pub parts: Vec<PartialEntity>,
 }
 
 #[derive(Debug, Default)]
@@ -20477,7 +20482,7 @@ pub struct StepModel {
     pub(crate) view_volume_arena: Arena<ViewVolume>,
     pub(crate) volume_unit_arena: Arena<VolumeUnit>,
     pub(crate) wire_shell_arena: Arena<WireShell>,
-    pub(crate) complex_unit_arena: Arena<ComplexUnit>,
+    pub(crate) complex_entity_arena: Arena<ComplexEntity>,
 }
 impl StepModel {
     /// The string `t` stands for (`""` for a `Text` of another model).
@@ -20490,7 +20495,7 @@ impl StepModel {
     }
 }
 
-/// An entity type of the model: a generated entity struct, or [`ComplexUnit`]
+/// An entity type of the model: a generated entity struct, or [`ComplexEntity`]
 /// for a complex instance. [`StepModel::all`] lists the entities of a type.
 /// The trait is sealed: only the model's own types implement it.
 pub trait Entity: sealed::SealedEntity {
@@ -22392,4 +22397,4 @@ entity!(VertexShell, VertexShellId, vertex_shell_arena);
 entity!(ViewVolume, ViewVolumeId, view_volume_arena);
 entity!(VolumeUnit, VolumeUnitId, volume_unit_arena);
 entity!(WireShell, WireShellId, wire_shell_arena);
-entity!(ComplexUnit, ComplexUnitId, complex_unit_arena);
+entity!(ComplexEntity, ComplexEntityId, complex_entity_arena);

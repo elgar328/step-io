@@ -2071,7 +2071,7 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model.wire_shell_arena.items.len() as u32 {
         f(EntityKey::WireShell(WireShellId(i)));
     }
-    for i in 0..model.complex_unit_arena.items.len() as u32 {
-        f(EntityKey::ComplexUnit(ComplexUnitId(i)));
+    for i in 0..model.complex_entity_arena.items.len() as u32 {
+        f(EntityKey::ComplexEntity(ComplexEntityId(i)));
     }
 }

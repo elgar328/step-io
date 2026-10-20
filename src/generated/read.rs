@@ -24080,13 +24080,13 @@ pub fn build_complex_entity(
         texts: &mut model.texts,
         dedup,
     };
-    Ok(model.complex_unit_arena.push(ComplexUnit {
+    Ok(model.complex_entity_arena.push(ComplexEntity {
         parts: read_complex_parts_norefs(parts, &mut tt)?,
     }))
 }
 
 pub fn complex_key_of(i: u32) -> Option<EntityKey> {
-    Some(EntityKey::ComplexUnit(ComplexUnitId(i)))
+    Some(EntityKey::ComplexEntity(ComplexEntityId(i)))
 }
 
 pub fn resolve_complex_entity(
@@ -24096,7 +24096,7 @@ pub fn resolve_complex_entity(
     idmap: &IdMap,
     dedup: &mut TextDedup,
 ) -> Result<(), String> {
-    resolve_complex(model, ComplexUnitId(i), parts, idmap, dedup)
+    resolve_complex(model, ComplexEntityId(i), parts, idmap, dedup)
 }
 
 pub fn finalize_arenas(model: &mut StepModel, order: &[Vec<u32>], complex: &[u32]) {
@@ -25603,7 +25603,7 @@ pub fn finalize_arenas(model: &mut StepModel, order: &[Vec<u32>], complex: &[u32
     model
         .wire_shell_arena
         .retain_order(order.get(500).map_or(&[], Vec::as_slice));
-    model.complex_unit_arena.retain_order(complex);
+    model.complex_entity_arena.retain_order(complex);
 }
 
 pub fn shrink_arenas(model: &mut StepModel) {
@@ -26604,7 +26604,7 @@ pub fn shrink_arenas(model: &mut StepModel) {
     model.view_volume_arena.items.shrink_to_fit();
     model.volume_unit_arena.items.shrink_to_fit();
     model.wire_shell_arena.items.shrink_to_fit();
-    model.complex_unit_arena.items.shrink_to_fit();
+    model.complex_entity_arena.items.shrink_to_fit();
 }
 
 fn resolve_action_arena(
@@ -42921,356 +42921,356 @@ fn resolve_wire_shell_arena(
 fn read_complex_parts_norefs(
     parts: &[RawEntityPart],
     tt: &mut TextIn<'_>,
-) -> Result<Vec<UnitPart>, String> {
-    parts.iter().map(|p| -> Result<UnitPart, String> { Ok(match p.name.as_str() {
-        "ACTION" => UnitPart::Action { name: (as_text(req(&p.attributes, 0, "ACTION.name")?, "ACTION.name", tt))?, description: match req(&p.attributes, 1, "ACTION.description")? { Attribute::Unset => None, other => Some((as_text(other, "ACTION.description", tt))?) }, chosen_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)), },
-        "ACTION_METHOD" => UnitPart::ActionMethod { name: (as_text(req(&p.attributes, 0, "ACTION_METHOD.name")?, "ACTION_METHOD.name", tt))?, description: match req(&p.attributes, 1, "ACTION_METHOD.description")? { Attribute::Unset => None, other => Some((as_text(other, "ACTION_METHOD.description", tt))?) }, consequence: (as_text(req(&p.attributes, 2, "ACTION_METHOD.consequence")?, "ACTION_METHOD.consequence", tt))?, purpose: (as_text(req(&p.attributes, 3, "ACTION_METHOD.purpose")?, "ACTION_METHOD.purpose", tt))?, },
-        "ACTION_METHOD_RELATIONSHIP" => UnitPart::ActionMethodRelationship { name: (as_text(req(&p.attributes, 0, "ACTION_METHOD_RELATIONSHIP.name")?, "ACTION_METHOD_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 1, "ACTION_METHOD_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "ACTION_METHOD_RELATIONSHIP.description", tt))?) }, relating_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)), related_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)), },
-        "ACTION_RELATIONSHIP" => UnitPart::ActionRelationship { name: (as_text(req(&p.attributes, 0, "ACTION_RELATIONSHIP.name")?, "ACTION_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 1, "ACTION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "ACTION_RELATIONSHIP.description", tt))?) }, relating_action: ActionRef::Action(ActionId(u32::MAX)), related_action: ActionRef::Action(ActionId(u32::MAX)), },
-        "ACTION_REQUEST_ASSIGNMENT" => UnitPart::ActionRequestAssignment { assigned_action_request: VersionedActionRequestRef::VersionedActionRequest(VersionedActionRequestId(u32::MAX)), },
-        "ACTION_RESOURCE" => UnitPart::ActionResource { name: (as_text(req(&p.attributes, 0, "ACTION_RESOURCE.name")?, "ACTION_RESOURCE.name", tt))?, description: match req(&p.attributes, 1, "ACTION_RESOURCE.description")? { Attribute::Unset => None, other => Some((as_text(other, "ACTION_RESOURCE.description", tt))?) }, usage: Vec::new(), kind: ActionResourceTypeRef::ActionResourceType(ActionResourceTypeId(u32::MAX)), },
-        "ACTION_RESOURCE_REQUIREMENT" => UnitPart::ActionResourceRequirement { name: (as_text(req(&p.attributes, 0, "ACTION_RESOURCE_REQUIREMENT.name")?, "ACTION_RESOURCE_REQUIREMENT.name", tt))?, description: (as_text(req(&p.attributes, 1, "ACTION_RESOURCE_REQUIREMENT.description")?, "ACTION_RESOURCE_REQUIREMENT.description", tt))?, kind: ResourceRequirementTypeRef::ResourceRequirementType(ResourceRequirementTypeId(u32::MAX)), operations: Vec::new(), },
-        "ADDRESS" => UnitPart::Address { internal_location: match req(&p.attributes, 0, "ADDRESS.internal_location")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.internal_location", tt))?) }, street_number: match req(&p.attributes, 1, "ADDRESS.street_number")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.street_number", tt))?) }, street: match req(&p.attributes, 2, "ADDRESS.street")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.street", tt))?) }, postal_box: match req(&p.attributes, 3, "ADDRESS.postal_box")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.postal_box", tt))?) }, town: match req(&p.attributes, 4, "ADDRESS.town")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.town", tt))?) }, region: match req(&p.attributes, 5, "ADDRESS.region")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.region", tt))?) }, postal_code: match req(&p.attributes, 6, "ADDRESS.postal_code")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.postal_code", tt))?) }, country: match req(&p.attributes, 7, "ADDRESS.country")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.country", tt))?) }, facsimile_number: match req(&p.attributes, 8, "ADDRESS.facsimile_number")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.facsimile_number", tt))?) }, telephone_number: match req(&p.attributes, 9, "ADDRESS.telephone_number")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.telephone_number", tt))?) }, electronic_mail_address: match req(&p.attributes, 10, "ADDRESS.electronic_mail_address")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.electronic_mail_address", tt))?) }, telex_number: match req(&p.attributes, 11, "ADDRESS.telex_number")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.telex_number", tt))?) }, },
-        "ADVANCED_BREP_SHAPE_REPRESENTATION" => UnitPart::AdvancedBrepShapeRepresentation,
-        "ADVANCED_FACE" => UnitPart::AdvancedFace,
-        "ANNOTATION_CURVE_OCCURRENCE" => UnitPart::AnnotationCurveOccurrence,
-        "ANNOTATION_FILL_AREA_OCCURRENCE" => UnitPart::AnnotationFillAreaOccurrence { fill_style_target: PointRef::ApllPoint(ApllPointId(u32::MAX)), },
-        "ANNOTATION_OCCURRENCE" => UnitPart::AnnotationOccurrence,
-        "ANNOTATION_OCCURRENCE_ASSOCIATIVITY" => UnitPart::AnnotationOccurrenceAssociativity,
-        "ANNOTATION_OCCURRENCE_RELATIONSHIP" => UnitPart::AnnotationOccurrenceRelationship { name: (as_text(req(&p.attributes, 0, "ANNOTATION_OCCURRENCE_RELATIONSHIP.name")?, "ANNOTATION_OCCURRENCE_RELATIONSHIP.name", tt))?, description: (as_text(req(&p.attributes, 1, "ANNOTATION_OCCURRENCE_RELATIONSHIP.description")?, "ANNOTATION_OCCURRENCE_RELATIONSHIP.description", tt))?, relating_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(u32::MAX)), related_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(u32::MAX)), },
-        "ANNOTATION_PLACEHOLDER_OCCURRENCE" => UnitPart::AnnotationPlaceholderOccurrence { role: (match req(&p.attributes, 0, "ANNOTATION_PLACEHOLDER_OCCURRENCE.role")? { Attribute::Enum(s) => AnnotationPlaceholderOccurrenceRole::parse(s).ok_or_else(|| format!("ANNOTATION_PLACEHOLDER_OCCURRENCE.role: bad enum {s:?}")), o => Err(format!("ANNOTATION_PLACEHOLDER_OCCURRENCE.role: expected enum, got {o:?}")) })?, line_spacing: (as_real(req(&p.attributes, 1, "ANNOTATION_PLACEHOLDER_OCCURRENCE.line_spacing")?, "ANNOTATION_PLACEHOLDER_OCCURRENCE.line_spacing"))?, },
-        "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE" => UnitPart::AnnotationPlaceholderOccurrenceWithLeaderLine { leader_line: Vec::new(), },
-        "ANNOTATION_PLANE" => UnitPart::AnnotationPlane { elements: None, },
-        "ANNOTATION_SYMBOL" => UnitPart::AnnotationSymbol,
-        "ANNOTATION_SYMBOL_OCCURRENCE" => UnitPart::AnnotationSymbolOccurrence,
-        "ANNOTATION_TEXT" => UnitPart::AnnotationText,
-        "ANNOTATION_TEXT_CHARACTER" => UnitPart::AnnotationTextCharacter { alignment: (as_text(req(&p.attributes, 0, "ANNOTATION_TEXT_CHARACTER.alignment")?, "ANNOTATION_TEXT_CHARACTER.alignment", tt))?, },
-        "ANNOTATION_TEXT_OCCURRENCE" => UnitPart::AnnotationTextOccurrence,
-        "APPLICATION_CONTEXT_ELEMENT" => UnitPart::ApplicationContextElement { name: (as_text(req(&p.attributes, 0, "APPLICATION_CONTEXT_ELEMENT.name")?, "APPLICATION_CONTEXT_ELEMENT.name", tt))?, frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(u32::MAX)), },
-        "APPLIED_APPROVAL_ASSIGNMENT" => UnitPart::AppliedApprovalAssignment { items: Vec::new(), },
-        "APPLIED_DATE_AND_TIME_ASSIGNMENT" => UnitPart::AppliedDateAndTimeAssignment { items: Vec::new(), },
-        "APPLIED_DOCUMENT_REFERENCE" => UnitPart::AppliedDocumentReference { items: Vec::new(), },
-        "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT" => UnitPart::AppliedExternalIdentificationAssignment { items: Vec::new(), },
-        "APPLIED_GROUP_ASSIGNMENT" => UnitPart::AppliedGroupAssignment { items: Vec::new(), },
-        "APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT" => UnitPart::AppliedPersonAndOrganizationAssignment { items: Vec::new(), },
-        "APPLIED_PRESENTED_ITEM" => UnitPart::AppliedPresentedItem { items: Vec::new(), },
-        "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT" => UnitPart::AppliedSecurityClassificationAssignment { items: Vec::new(), },
-        "APPROVAL_ASSIGNMENT" => UnitPart::ApprovalAssignment { assigned_approval: ApprovalRef::Approval(ApprovalId(u32::MAX)), },
-        "AREA_IN_SET" => UnitPart::AreaInSet { area: PresentationAreaRef::PresentationArea(PresentationAreaId(u32::MAX)), in_set: PresentationSetRef::PresentationSet(PresentationSetId(u32::MAX)), },
-        "ASCRIBABLE_STATE_RELATIONSHIP" => UnitPart::AscribableStateRelationship { name: (as_text(req(&p.attributes, 0, "ASCRIBABLE_STATE_RELATIONSHIP.name")?, "ASCRIBABLE_STATE_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 1, "ASCRIBABLE_STATE_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "ASCRIBABLE_STATE_RELATIONSHIP.description", tt))?) }, relating_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(u32::MAX)), related_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(u32::MAX)), },
-        "ASSEMBLY_COMPONENT_USAGE" => UnitPart::AssemblyComponentUsage { reference_designator: match req(&p.attributes, 0, "ASSEMBLY_COMPONENT_USAGE.reference_designator")? { Attribute::Unset => None, other => Some((as_text(other, "ASSEMBLY_COMPONENT_USAGE.reference_designator", tt))?) }, },
-        "B_SPLINE_CURVE" => UnitPart::BSplineCurve { degree: (as_int(req(&p.attributes, 0, "B_SPLINE_CURVE.degree")?, "B_SPLINE_CURVE.degree"))?, control_points_list: Vec::new(), curve_form: (match req(&p.attributes, 2, "B_SPLINE_CURVE.curve_form")? { Attribute::Enum(s) => BSplineCurveForm::parse(s).ok_or_else(|| format!("B_SPLINE_CURVE.curve_form: bad enum {s:?}")), o => Err(format!("B_SPLINE_CURVE.curve_form: expected enum, got {o:?}")) })?, closed_curve: (as_logical(req(&p.attributes, 3, "B_SPLINE_CURVE.closed_curve")?, "B_SPLINE_CURVE.closed_curve"))?, self_intersect: (as_logical(req(&p.attributes, 4, "B_SPLINE_CURVE.self_intersect")?, "B_SPLINE_CURVE.self_intersect"))?, },
-        "B_SPLINE_CURVE_WITH_KNOTS" => UnitPart::BSplineCurveWithKnots { knot_multiplicities: (match req(&p.attributes, 0, "B_SPLINE_CURVE_WITH_KNOTS.knot_multiplicities")? { Attribute::List(l) => l.iter().map(|e| as_int(e, "B_SPLINE_CURVE_WITH_KNOTS.knot_multiplicities")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_CURVE_WITH_KNOTS.knot_multiplicities: expected list, got {o:?}")) })?, knots: (match req(&p.attributes, 1, "B_SPLINE_CURVE_WITH_KNOTS.knots")? { Attribute::List(l) => l.iter().map(|e| as_real(e, "B_SPLINE_CURVE_WITH_KNOTS.knots")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_CURVE_WITH_KNOTS.knots: expected list, got {o:?}")) })?, knot_spec: (match req(&p.attributes, 2, "B_SPLINE_CURVE_WITH_KNOTS.knot_spec")? { Attribute::Enum(s) => KnotType::parse(s).ok_or_else(|| format!("B_SPLINE_CURVE_WITH_KNOTS.knot_spec: bad enum {s:?}")), o => Err(format!("B_SPLINE_CURVE_WITH_KNOTS.knot_spec: expected enum, got {o:?}")) })?, },
-        "B_SPLINE_SURFACE" => UnitPart::BSplineSurface { u_degree: (as_int(req(&p.attributes, 0, "B_SPLINE_SURFACE.u_degree")?, "B_SPLINE_SURFACE.u_degree"))?, v_degree: (as_int(req(&p.attributes, 1, "B_SPLINE_SURFACE.v_degree")?, "B_SPLINE_SURFACE.v_degree"))?, control_points_list: Vec::new(), surface_form: (match req(&p.attributes, 3, "B_SPLINE_SURFACE.surface_form")? { Attribute::Enum(s) => BSplineSurfaceForm::parse(s).ok_or_else(|| format!("B_SPLINE_SURFACE.surface_form: bad enum {s:?}")), o => Err(format!("B_SPLINE_SURFACE.surface_form: expected enum, got {o:?}")) })?, u_closed: (as_logical(req(&p.attributes, 4, "B_SPLINE_SURFACE.u_closed")?, "B_SPLINE_SURFACE.u_closed"))?, v_closed: (as_logical(req(&p.attributes, 5, "B_SPLINE_SURFACE.v_closed")?, "B_SPLINE_SURFACE.v_closed"))?, self_intersect: (as_logical(req(&p.attributes, 6, "B_SPLINE_SURFACE.self_intersect")?, "B_SPLINE_SURFACE.self_intersect"))?, },
-        "B_SPLINE_SURFACE_WITH_KNOTS" => UnitPart::BSplineSurfaceWithKnots { u_multiplicities: (match req(&p.attributes, 0, "B_SPLINE_SURFACE_WITH_KNOTS.u_multiplicities")? { Attribute::List(l) => l.iter().map(|e| as_int(e, "B_SPLINE_SURFACE_WITH_KNOTS.u_multiplicities")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_SURFACE_WITH_KNOTS.u_multiplicities: expected list, got {o:?}")) })?, v_multiplicities: (match req(&p.attributes, 1, "B_SPLINE_SURFACE_WITH_KNOTS.v_multiplicities")? { Attribute::List(l) => l.iter().map(|e| as_int(e, "B_SPLINE_SURFACE_WITH_KNOTS.v_multiplicities")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_SURFACE_WITH_KNOTS.v_multiplicities: expected list, got {o:?}")) })?, u_knots: (match req(&p.attributes, 2, "B_SPLINE_SURFACE_WITH_KNOTS.u_knots")? { Attribute::List(l) => l.iter().map(|e| as_real(e, "B_SPLINE_SURFACE_WITH_KNOTS.u_knots")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_SURFACE_WITH_KNOTS.u_knots: expected list, got {o:?}")) })?, v_knots: (match req(&p.attributes, 3, "B_SPLINE_SURFACE_WITH_KNOTS.v_knots")? { Attribute::List(l) => l.iter().map(|e| as_real(e, "B_SPLINE_SURFACE_WITH_KNOTS.v_knots")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_SURFACE_WITH_KNOTS.v_knots: expected list, got {o:?}")) })?, knot_spec: (match req(&p.attributes, 4, "B_SPLINE_SURFACE_WITH_KNOTS.knot_spec")? { Attribute::Enum(s) => KnotType::parse(s).ok_or_else(|| format!("B_SPLINE_SURFACE_WITH_KNOTS.knot_spec: bad enum {s:?}")), o => Err(format!("B_SPLINE_SURFACE_WITH_KNOTS.knot_spec: expected enum, got {o:?}")) })?, },
-        "BEZIER_CURVE" => UnitPart::BezierCurve,
-        "BEZIER_SURFACE" => UnitPart::BezierSurface,
-        "BOUNDED_CURVE" => UnitPart::BoundedCurve,
-        "BOUNDED_PCURVE" => UnitPart::BoundedPcurve,
-        "BOUNDED_SURFACE" => UnitPart::BoundedSurface,
-        "BOUNDED_SURFACE_CURVE" => UnitPart::BoundedSurfaceCurve,
-        "BREP_WITH_VOIDS" => UnitPart::BrepWithVoids { voids: Vec::new(), },
-        "CAMERA_IMAGE" => UnitPart::CameraImage,
-        "CAMERA_IMAGE_3D_WITH_SCALE" => UnitPart::CameraImage3dWithScale,
-        "CAMERA_MODEL" => UnitPart::CameraModel,
-        "CAMERA_MODEL_D3" => UnitPart::CameraModelD3 { view_reference_system: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)), perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(u32::MAX)), },
-        "CAMERA_MODEL_D3_MULTI_CLIPPING" => UnitPart::CameraModelD3MultiClipping { shape_clipping: Vec::new(), },
-        "CAMERA_MODEL_D3_WITH_HLHSR" => UnitPart::CameraModelD3WithHlhsr { hidden_line_surface_removal: (Ok::<bool, String>(matches!(req(&p.attributes, 0, "CAMERA_MODEL_D3_WITH_HLHSR.hidden_line_surface_removal")?, Attribute::Enum(s) if s == "T")))?, },
-        "CAMERA_USAGE" => UnitPart::CameraUsage,
-        "CC_DESIGN_APPROVAL" => UnitPart::CcDesignApproval { items: Vec::new(), },
-        "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT" => UnitPart::CcDesignDateAndTimeAssignment { items: Vec::new(), },
-        "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT" => UnitPart::CcDesignPersonAndOrganizationAssignment { items: Vec::new(), },
-        "CC_DESIGN_SECURITY_CLASSIFICATION" => UnitPart::CcDesignSecurityClassification { items: Vec::new(), },
-        "CHANGE_REQUEST" => UnitPart::ChangeRequest { items: Vec::new(), },
-        "CHARACTER_GLYPH_STYLE_OUTLINE" => UnitPart::CharacterGlyphStyleOutline { outline_style: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)), },
-        "CHARACTER_GLYPH_STYLE_STROKE" => UnitPart::CharacterGlyphStyleStroke { stroke_style: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)), },
-        "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION" => UnitPart::CharacterizedItemWithinRepresentation { item: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), rep: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
-        "CHARACTERIZED_OBJECT" => UnitPart::CharacterizedObject { name: match req(&p.attributes, 0, "CHARACTERIZED_OBJECT.name")? { Attribute::Derived => None, other => Some((as_text(other, "CHARACTERIZED_OBJECT.name", tt))?) }, description: match req(&p.attributes, 1, "CHARACTERIZED_OBJECT.description")? { Attribute::Derived => None, other => Some((as_text(other, "CHARACTERIZED_OBJECT.description", tt))?) }, },
-        "CHARACTERIZED_REPRESENTATION" => UnitPart::CharacterizedRepresentation,
-        "CIRCULAR_RUNOUT_TOLERANCE" => UnitPart::CircularRunoutTolerance,
-        "CLOSED_SHELL" => UnitPart::ClosedShell,
-        "COLOUR" => UnitPart::Colour,
-        "COLOUR_RGB" => UnitPart::ColourRgb { red: (as_real(req(&p.attributes, 0, "COLOUR_RGB.red")?, "COLOUR_RGB.red"))?, green: (as_real(req(&p.attributes, 1, "COLOUR_RGB.green")?, "COLOUR_RGB.green"))?, blue: (as_real(req(&p.attributes, 2, "COLOUR_RGB.blue")?, "COLOUR_RGB.blue"))?, },
-        "COLOUR_SPECIFICATION" => UnitPart::ColourSpecification { name: (as_text(req(&p.attributes, 0, "COLOUR_SPECIFICATION.name")?, "COLOUR_SPECIFICATION.name", tt))?, },
-        "COMMON_DATUM" => UnitPart::CommonDatum,
-        "COMPOSITE_CURVE" => UnitPart::CompositeCurve { segments: Vec::new(), self_intersect: (as_logical(req(&p.attributes, 1, "COMPOSITE_CURVE.self_intersect")?, "COMPOSITE_CURVE.self_intersect"))?, },
-        "COMPOSITE_CURVE_SEGMENT" => UnitPart::CompositeCurveSegment { transition: (match req(&p.attributes, 0, "COMPOSITE_CURVE_SEGMENT.transition")? { Attribute::Enum(s) => TransitionCode::parse(s).ok_or_else(|| format!("COMPOSITE_CURVE_SEGMENT.transition: bad enum {s:?}")), o => Err(format!("COMPOSITE_CURVE_SEGMENT.transition: expected enum, got {o:?}")) })?, same_sense: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "COMPOSITE_CURVE_SEGMENT.same_sense")?, Attribute::Enum(s) if s == "T")))?, parent_curve: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)), },
-        "COMPOSITE_GROUP_SHAPE_ASPECT" => UnitPart::CompositeGroupShapeAspect,
-        "COMPOSITE_SHAPE_ASPECT" => UnitPart::CompositeShapeAspect,
-        "COMPOSITE_TEXT" => UnitPart::CompositeText { collected_text: Vec::new(), },
-        "COMPOUND_REPRESENTATION_ITEM" => UnitPart::CompoundRepresentationItem { item_element: CompoundItemDefinitionRef::AdvancedFace(AdvancedFaceId(u32::MAX)), },
-        "CONFIGURATION_EFFECTIVITY" => UnitPart::ConfigurationEffectivity { configuration: ConfigurationDesignRef::ConfigurationDesign(ConfigurationDesignId(u32::MAX)), },
-        "CONFIGURATION_ITEM" => UnitPart::ConfigurationItem { id: (as_text(req(&p.attributes, 0, "CONFIGURATION_ITEM.id")?, "CONFIGURATION_ITEM.id", tt))?, name: (as_text(req(&p.attributes, 1, "CONFIGURATION_ITEM.name")?, "CONFIGURATION_ITEM.name", tt))?, description: match req(&p.attributes, 2, "CONFIGURATION_ITEM.description")? { Attribute::Unset => None, other => Some((as_text(other, "CONFIGURATION_ITEM.description", tt))?) }, item_concept: ProductConceptRef::ProductConcept(ProductConceptId(u32::MAX)), purpose: match req(&p.attributes, 4, "CONFIGURATION_ITEM.purpose")? { Attribute::Unset => None, other => Some((as_text(other, "CONFIGURATION_ITEM.purpose", tt))?) }, },
-        "CONNECTED_FACE_SET" => UnitPart::ConnectedFaceSet { cfs_faces: None, },
-        "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP" => UnitPart::ConstructiveGeometryRepresentationRelationship,
-        "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => UnitPart::ContextDependentOverRidingStyledItem { style_context: Vec::new(), },
-        "CONTEXT_DEPENDENT_UNIT" => UnitPart::ContextDependentUnit { name: (as_text(req(&p.attributes, 0, "CONTEXT_DEPENDENT_UNIT.name")?, "CONTEXT_DEPENDENT_UNIT.name", tt))?, },
-        "CONVERSION_BASED_UNIT" => UnitPart::ConversionBasedUnit { name: (as_text(req(&p.attributes, 0, "CONVERSION_BASED_UNIT.name")?, "CONVERSION_BASED_UNIT.name", tt))?, conversion_factor: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
-        "CURVE" => UnitPart::Curve,
-        "CURVE_STYLE" => UnitPart::CurveStyle { name: (as_text(req(&p.attributes, 0, "CURVE_STYLE.name")?, "CURVE_STYLE.name", tt))?, curve_font: None, curve_width: None, curve_colour: None, },
-        "CURVE_STYLE_FONT" => UnitPart::CurveStyleFont { name: (as_text(req(&p.attributes, 0, "CURVE_STYLE_FONT.name")?, "CURVE_STYLE_FONT.name", tt))?, pattern_list: Vec::new(), },
-        "CURVE_STYLE_FONT_AND_SCALING" => UnitPart::CurveStyleFontAndScaling { name: (as_text(req(&p.attributes, 0, "CURVE_STYLE_FONT_AND_SCALING.name")?, "CURVE_STYLE_FONT_AND_SCALING.name", tt))?, curve_font: CurveStyleFontSelectRef::CurveStyleFont(CurveStyleFontId(u32::MAX)), curve_font_scaling: (as_real(req(&p.attributes, 2, "CURVE_STYLE_FONT_AND_SCALING.curve_font_scaling")?, "CURVE_STYLE_FONT_AND_SCALING.curve_font_scaling"))?, },
-        "CURVE_STYLE_FONT_PATTERN" => UnitPart::CurveStyleFontPattern { visible_segment_length: (as_real(req(&p.attributes, 0, "CURVE_STYLE_FONT_PATTERN.visible_segment_length")?, "CURVE_STYLE_FONT_PATTERN.visible_segment_length"))?, invisible_segment_length: (as_real(req(&p.attributes, 1, "CURVE_STYLE_FONT_PATTERN.invisible_segment_length")?, "CURVE_STYLE_FONT_PATTERN.invisible_segment_length"))?, },
-        "CYLINDRICITY_TOLERANCE" => UnitPart::CylindricityTolerance,
-        "DATE" => UnitPart::Date { year_component: (as_int(req(&p.attributes, 0, "DATE.year_component")?, "DATE.year_component"))?, },
-        "DATE_AND_TIME" => UnitPart::DateAndTime { date_component: DateRef::CalendarDate(CalendarDateId(u32::MAX)), time_component: LocalTimeRef::LocalTime(LocalTimeId(u32::MAX)), },
-        "DATE_AND_TIME_ASSIGNMENT" => UnitPart::DateAndTimeAssignment { assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(u32::MAX)), role: DateTimeRoleRef::DateTimeRole(DateTimeRoleId(u32::MAX)), },
-        "DATUM" => UnitPart::Datum { identification: (as_text(req(&p.attributes, 0, "DATUM.identification")?, "DATUM.identification", tt))?, },
-        "DATUM_FEATURE" => UnitPart::DatumFeature,
-        "DATUM_REFERENCE" => UnitPart::DatumReference { precedence: (as_int(req(&p.attributes, 0, "DATUM_REFERENCE.precedence")?, "DATUM_REFERENCE.precedence"))?, referenced_datum: DatumRef::CommonDatum(CommonDatumId(u32::MAX)), },
-        "DATUM_SYSTEM" => UnitPart::DatumSystem { constituents: Vec::new(), },
-        "DATUM_TARGET" => UnitPart::DatumTarget { target_id: (as_text(req(&p.attributes, 0, "DATUM_TARGET.target_id")?, "DATUM_TARGET.target_id", tt))?, },
-        "DEFAULT_MODEL_GEOMETRIC_VIEW" => UnitPart::DefaultModelGeometricView,
-        "DEFINITIONAL_REPRESENTATION" => UnitPart::DefinitionalRepresentation,
-        "DEFINITIONAL_REPRESENTATION_RELATIONSHIP" => UnitPart::DefinitionalRepresentationRelationship,
-        "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT" => UnitPart::DefinitionalRepresentationRelationshipWithSameContext,
-        "DEGENERATE_TOROIDAL_SURFACE" => UnitPart::DegenerateToroidalSurface { select_outer: (Ok::<bool, String>(matches!(req(&p.attributes, 0, "DEGENERATE_TOROIDAL_SURFACE.select_outer")?, Attribute::Enum(s) if s == "T")))?, },
-        "DERIVED_UNIT" => UnitPart::DerivedUnit { elements: Vec::new(), },
-        "DESIGN_CONTEXT" => UnitPart::DesignContext,
-        "DIMENSIONAL_SIZE" => UnitPart::DimensionalSize { applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), name: (as_text(req(&p.attributes, 1, "DIMENSIONAL_SIZE.name")?, "DIMENSIONAL_SIZE.name", tt))?, },
-        "DIRECTION" => UnitPart::Direction { direction_ratios: (match req(&p.attributes, 0, "DIRECTION.direction_ratios")? { Attribute::List(l) => Reals3::try_collect(l.iter().map(|e| as_real(e, "DIRECTION.direction_ratios")), "DIRECTION.direction_ratios"), o => Err(format!("DIRECTION.direction_ratios: expected list, got {o:?}")) })?, },
-        "DOCUMENT" => UnitPart::Document { id: (as_text(req(&p.attributes, 0, "DOCUMENT.id")?, "DOCUMENT.id", tt))?, name: (as_text(req(&p.attributes, 1, "DOCUMENT.name")?, "DOCUMENT.name", tt))?, description: match req(&p.attributes, 2, "DOCUMENT.description")? { Attribute::Unset => None, other => Some((as_text(other, "DOCUMENT.description", tt))?) }, kind: DocumentTypeRef::DocumentType(DocumentTypeId(u32::MAX)), },
-        "DOCUMENT_FILE" => UnitPart::DocumentFile,
-        "DOCUMENT_PRODUCT_ASSOCIATION" => UnitPart::DocumentProductAssociation { name: (as_text(req(&p.attributes, 0, "DOCUMENT_PRODUCT_ASSOCIATION.name")?, "DOCUMENT_PRODUCT_ASSOCIATION.name", tt))?, description: match req(&p.attributes, 1, "DOCUMENT_PRODUCT_ASSOCIATION.description")? { Attribute::Unset => None, other => Some((as_text(other, "DOCUMENT_PRODUCT_ASSOCIATION.description", tt))?) }, relating_document: DocumentRef::Document(DocumentId(u32::MAX)), related_product: ProductOrFormationOrDefinitionRef::Product(ProductId(u32::MAX)), },
-        "DOCUMENT_PRODUCT_EQUIVALENCE" => UnitPart::DocumentProductEquivalence,
-        "DOCUMENT_REFERENCE" => UnitPart::DocumentReference { assigned_document: DocumentRef::Document(DocumentId(u32::MAX)), source: (as_text(req(&p.attributes, 1, "DOCUMENT_REFERENCE.source")?, "DOCUMENT_REFERENCE.source", tt))?, },
-        "DRAUGHTING_ANNOTATION_OCCURRENCE" => UnitPart::DraughtingAnnotationOccurrence,
-        "DRAUGHTING_CALLOUT" => UnitPart::DraughtingCallout { contents: Vec::new(), },
-        "DRAUGHTING_CALLOUT_RELATIONSHIP" => UnitPart::DraughtingCalloutRelationship { name: (as_text(req(&p.attributes, 0, "DRAUGHTING_CALLOUT_RELATIONSHIP.name")?, "DRAUGHTING_CALLOUT_RELATIONSHIP.name", tt))?, description: (as_text(req(&p.attributes, 1, "DRAUGHTING_CALLOUT_RELATIONSHIP.description")?, "DRAUGHTING_CALLOUT_RELATIONSHIP.description", tt))?, relating_draughting_callout: DraughtingCalloutRef::DraughtingCallout(DraughtingCalloutId(u32::MAX)), related_draughting_callout: DraughtingCalloutRef::DraughtingCallout(DraughtingCalloutId(u32::MAX)), },
-        "DRAUGHTING_MODEL" => UnitPart::DraughtingModel,
-        "DRAUGHTING_MODEL_ITEM_ASSOCIATION" => UnitPart::DraughtingModelItemAssociation,
-        "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER" => UnitPart::DraughtingModelItemAssociationWithPlaceholder { annotation_placeholder: AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId(u32::MAX)), },
-        "DRAUGHTING_PRE_DEFINED_COLOUR" => UnitPart::DraughtingPreDefinedColour,
-        "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => UnitPart::DraughtingPreDefinedCurveFont,
-        "DRAUGHTING_PRE_DEFINED_TEXT_FONT" => UnitPart::DraughtingPreDefinedTextFont,
-        "EDGE" => UnitPart::Edge { edge_start: None, edge_end: None, },
-        "EDGE_CURVE" => UnitPart::EdgeCurve { edge_geometry: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)), same_sense: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "EDGE_CURVE.same_sense")?, Attribute::Enum(s) if s == "T")))?, },
-        "EDGE_LOOP" => UnitPart::EdgeLoop,
-        "EFFECTIVITY" => UnitPart::Effectivity { id: (as_text(req(&p.attributes, 0, "EFFECTIVITY.id")?, "EFFECTIVITY.id", tt))?, },
-        "ELEMENTARY_SURFACE" => UnitPart::ElementarySurface { position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)), },
-        "EXPRESSION" => UnitPart::Expression,
-        "EXTERNAL_IDENTIFICATION_ASSIGNMENT" => UnitPart::ExternalIdentificationAssignment { source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)), },
-        "EXTERNAL_SOURCE" => UnitPart::ExternalSource { source_id: (read_string_select(req(&p.attributes, 0, "EXTERNAL_SOURCE.source_id")?, "EXTERNAL_SOURCE.source_id", tt))?, },
-        "EXTERNALLY_DEFINED_CHARACTER_GLYPH" => UnitPart::ExternallyDefinedCharacterGlyph,
-        "EXTERNALLY_DEFINED_CURVE_FONT" => UnitPart::ExternallyDefinedCurveFont,
-        "EXTERNALLY_DEFINED_HATCH_STYLE" => UnitPart::ExternallyDefinedHatchStyle,
-        "EXTERNALLY_DEFINED_ITEM" => UnitPart::ExternallyDefinedItem { item_id: (read_string_select(req(&p.attributes, 0, "EXTERNALLY_DEFINED_ITEM.item_id")?, "EXTERNALLY_DEFINED_ITEM.item_id", tt))?, source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)), },
-        "EXTERNALLY_DEFINED_STYLE" => UnitPart::ExternallyDefinedStyle,
-        "EXTERNALLY_DEFINED_SYMBOL" => UnitPart::ExternallyDefinedSymbol,
-        "EXTERNALLY_DEFINED_TEXT_FONT" => UnitPart::ExternallyDefinedTextFont,
-        "EXTERNALLY_DEFINED_TILE" => UnitPart::ExternallyDefinedTile,
-        "EXTERNALLY_DEFINED_TILE_STYLE" => UnitPart::ExternallyDefinedTileStyle,
-        "FACE" => UnitPart::Face { bounds: Vec::new(), },
-        "FACE_BOUND" => UnitPart::FaceBound { bound: LoopRef::EdgeLoop(EdgeLoopId(u32::MAX)), orientation: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "FACE_BOUND.orientation")?, Attribute::Enum(s) if s == "T")))?, },
-        "FACE_OUTER_BOUND" => UnitPart::FaceOuterBound,
-        "FACE_SURFACE" => UnitPart::FaceSurface { face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)), same_sense: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "FACE_SURFACE.same_sense")?, Attribute::Enum(s) if s == "T")))?, },
-        "FILL_AREA_STYLE" => UnitPart::FillAreaStyle { name: (as_text(req(&p.attributes, 0, "FILL_AREA_STYLE.name")?, "FILL_AREA_STYLE.name", tt))?, fill_styles: Vec::new(), },
-        "FILL_AREA_STYLE_HATCHING" => UnitPart::FillAreaStyleHatching { hatch_line_appearance: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)), start_of_next_hatch_line: OneDirectionRepeatFactorRef::OneDirectionRepeatFactor(OneDirectionRepeatFactorId(u32::MAX)), point_of_reference_hatch_line: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)), pattern_start: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)), hatch_line_angle: (as_real(req(&p.attributes, 4, "FILL_AREA_STYLE_HATCHING.hatch_line_angle")?, "FILL_AREA_STYLE_HATCHING.hatch_line_angle"))?, },
-        "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE" => UnitPart::FillAreaStyleTileSymbolWithStyle { symbol: AnnotationSymbolOccurrenceRef::AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId(u32::MAX)), },
-        "FILL_AREA_STYLE_TILES" => UnitPart::FillAreaStyleTiles { tiling_pattern: TwoDirectionRepeatFactorRef::TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId(u32::MAX)), tiles: Vec::new(), tiling_scale: (as_real(req(&p.attributes, 2, "FILL_AREA_STYLE_TILES.tiling_scale")?, "FILL_AREA_STYLE_TILES.tiling_scale"))?, },
-        "FLATNESS_TOLERANCE" => UnitPart::FlatnessTolerance,
-        "FOUNDED_ITEM" => UnitPart::FoundedItem,
-        "FUNCTIONALLY_DEFINED_TRANSFORMATION" => UnitPart::FunctionallyDefinedTransformation { name: (as_text(req(&p.attributes, 0, "FUNCTIONALLY_DEFINED_TRANSFORMATION.name")?, "FUNCTIONALLY_DEFINED_TRANSFORMATION.name", tt))?, description: match req(&p.attributes, 1, "FUNCTIONALLY_DEFINED_TRANSFORMATION.description")? { Attribute::Unset => None, other => Some((as_text(other, "FUNCTIONALLY_DEFINED_TRANSFORMATION.description", tt))?) }, },
-        "GENERAL_DATUM_REFERENCE" => UnitPart::GeneralDatumReference { base: DatumOrCommonDatumRef::CommonDatum(CommonDatumId(u32::MAX)), modifiers: None, },
-        "GENERAL_PROPERTY" => UnitPart::GeneralProperty { id: (as_text(req(&p.attributes, 0, "GENERAL_PROPERTY.id")?, "GENERAL_PROPERTY.id", tt))?, name: (as_text(req(&p.attributes, 1, "GENERAL_PROPERTY.name")?, "GENERAL_PROPERTY.name", tt))?, description: match req(&p.attributes, 2, "GENERAL_PROPERTY.description")? { Attribute::Unset => None, other => Some((as_text(other, "GENERAL_PROPERTY.description", tt))?) }, },
-        "GENERIC_EXPRESSION" => UnitPart::GenericExpression,
-        "GENERIC_LITERAL" => UnitPart::GenericLiteral,
-        "GENERIC_PRODUCT_DEFINITION_REFERENCE" => UnitPart::GenericProductDefinitionReference { source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)), },
-        "GEOMETRIC_CURVE_SET" => UnitPart::GeometricCurveSet,
-        "GEOMETRIC_ITEM_SPECIFIC_USAGE" => UnitPart::GeometricItemSpecificUsage,
-        "GEOMETRIC_REPRESENTATION_CONTEXT" => UnitPart::GeometricRepresentationContext { coordinate_space_dimension: (as_int(req(&p.attributes, 0, "GEOMETRIC_REPRESENTATION_CONTEXT.coordinate_space_dimension")?, "GEOMETRIC_REPRESENTATION_CONTEXT.coordinate_space_dimension"))?, },
-        "GEOMETRIC_REPRESENTATION_ITEM" => UnitPart::GeometricRepresentationItem,
-        "GEOMETRIC_SET" => UnitPart::GeometricSet { elements: Vec::new(), },
-        "GEOMETRIC_TOLERANCE" => UnitPart::GeometricTolerance { name: (as_text(req(&p.attributes, 0, "GEOMETRIC_TOLERANCE.name")?, "GEOMETRIC_TOLERANCE.name", tt))?, description: match req(&p.attributes, 1, "GEOMETRIC_TOLERANCE.description")? { Attribute::Unset => None, other => Some((as_text(other, "GEOMETRIC_TOLERANCE.description", tt))?) }, magnitude: None, toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), },
-        "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE" => UnitPart::GeometricToleranceWithDatumReference { datum_system: Vec::new(), },
-        "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT" => UnitPart::GeometricToleranceWithDefinedAreaUnit { area_type: (match req(&p.attributes, 0, "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.area_type")? { Attribute::Enum(s) => AreaUnitType::parse(s).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.area_type: bad enum {s:?}")), o => Err(format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.area_type: expected enum, got {o:?}")) })?, second_unit_size: None, },
-        "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT" => UnitPart::GeometricToleranceWithDefinedUnit { unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
-        "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE" => UnitPart::GeometricToleranceWithMaximumTolerance { maximum_upper_tolerance: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
-        "GEOMETRIC_TOLERANCE_WITH_MODIFIERS" => UnitPart::GeometricToleranceWithModifiers { modifiers: (match req(&p.attributes, 0, "GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers")? { Attribute::List(l) => l.iter().map(|e| match e { Attribute::Enum(s) => GeometricToleranceModifier::parse(s).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers: bad enum {s:?}")), o => Err(format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers: expected enum, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers: expected list, got {o:?}")) })?, },
-        "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION" => UnitPart::GeometricallyBoundedSurfaceShapeRepresentation,
-        "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION" => UnitPart::GeometricallyBoundedWireframeShapeRepresentation,
-        "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT" => UnitPart::GlobalUncertaintyAssignedContext { uncertainty: Vec::new(), },
-        "GLOBAL_UNIT_ASSIGNED_CONTEXT" => UnitPart::GlobalUnitAssignedContext { units: Vec::new(), },
-        "GROUP" => UnitPart::Group { name: (as_text(req(&p.attributes, 0, "GROUP.name")?, "GROUP.name", tt))?, description: match req(&p.attributes, 1, "GROUP.description")? { Attribute::Unset => None, other => Some((as_text(other, "GROUP.description", tt))?) }, },
-        "GROUP_ASSIGNMENT" => UnitPart::GroupAssignment { assigned_group: GroupRef::Group(GroupId(u32::MAX)), },
-        "IDENTIFICATION_ASSIGNMENT" => UnitPart::IdentificationAssignment { assigned_id: (as_text(req(&p.attributes, 0, "IDENTIFICATION_ASSIGNMENT.assigned_id")?, "IDENTIFICATION_ASSIGNMENT.assigned_id", tt))?, role: IdentificationRoleRef::IdentificationRole(IdentificationRoleId(u32::MAX)), },
-        "INT_LITERAL" => UnitPart::IntLiteral,
-        "INTEGER_REPRESENTATION_ITEM" => UnitPart::IntegerRepresentationItem,
-        "INTERSECTION_CURVE" => UnitPart::IntersectionCurve,
-        "INVISIBILITY" => UnitPart::Invisibility { invisible_items: Vec::new(), },
-        "ITEM_DEFINED_TRANSFORMATION" => UnitPart::ItemDefinedTransformation { name: (as_text(req(&p.attributes, 0, "ITEM_DEFINED_TRANSFORMATION.name")?, "ITEM_DEFINED_TRANSFORMATION.name", tt))?, description: match req(&p.attributes, 1, "ITEM_DEFINED_TRANSFORMATION.description")? { Attribute::Unset => None, other => Some((as_text(other, "ITEM_DEFINED_TRANSFORMATION.description", tt))?) }, transform_item_1: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), transform_item_2: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), },
-        "ITEM_IDENTIFIED_REPRESENTATION_USAGE" => UnitPart::ItemIdentifiedRepresentationUsage { name: (as_text(req(&p.attributes, 0, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.name")?, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.name", tt))?, description: match req(&p.attributes, 1, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.description")? { Attribute::Unset => None, other => Some((as_text(other, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.description", tt))?) }, definition: ItemIdentifiedRepresentationUsageDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), identified_item: ItemIdentifiedRepresentationUsageSelectRef::AdvancedFace(AdvancedFaceId(u32::MAX)), },
-        "LEADER_CURVE" => UnitPart::LeaderCurve,
-        "LEADER_DIRECTED_CALLOUT" => UnitPart::LeaderDirectedCallout,
-        "LEADER_TERMINATOR" => UnitPart::LeaderTerminator,
-        "LENGTH_MEASURE_WITH_UNIT" => UnitPart::LengthMeasureWithUnit,
-        "LENGTH_UNIT" => UnitPart::LengthUnit,
-        "LINE_PROFILE_TOLERANCE" => UnitPart::LineProfileTolerance,
-        "LITERAL_NUMBER" => UnitPart::LiteralNumber { the_value: (as_real(req(&p.attributes, 0, "LITERAL_NUMBER.the_value")?, "LITERAL_NUMBER.the_value"))?, },
-        "LOOP" => UnitPart::Loop,
-        "MANIFOLD_SOLID_BREP" => UnitPart::ManifoldSolidBrep { outer: ClosedShellRef::ClosedShell(ClosedShellId(u32::MAX)), },
-        "MANIFOLD_SURFACE_SHAPE_REPRESENTATION" => UnitPart::ManifoldSurfaceShapeRepresentation,
-        "MAPPED_ITEM" => UnitPart::MappedItem { mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(u32::MAX)), mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), },
-        "MASS_UNIT" => UnitPart::MassUnit,
-        "MEASURE_REPRESENTATION_ITEM" => UnitPart::MeasureRepresentationItem,
-        "MEASURE_WITH_UNIT" => UnitPart::MeasureWithUnit { value_component: (read_measure_value(req(&p.attributes, 0, "MEASURE_WITH_UNIT.value_component")?, "MEASURE_WITH_UNIT.value_component", tt))?, unit_component: UnitRef::AreaUnit(AreaUnitId(u32::MAX)), },
-        "MECHANICAL_CONTEXT" => UnitPart::MechanicalContext,
-        "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP" => UnitPart::MechanicalDesignAndDraughtingRelationship,
-        "MODEL_GEOMETRIC_VIEW" => UnitPart::ModelGeometricView,
-        "MODIFIED_GEOMETRIC_TOLERANCE" => UnitPart::ModifiedGeometricTolerance { modifier: (match req(&p.attributes, 0, "MODIFIED_GEOMETRIC_TOLERANCE.modifier")? { Attribute::Enum(s) => LimitCondition::parse(s).ok_or_else(|| format!("MODIFIED_GEOMETRIC_TOLERANCE.modifier: bad enum {s:?}")), o => Err(format!("MODIFIED_GEOMETRIC_TOLERANCE.modifier: expected enum, got {o:?}")) })?, },
-        "NAMED_UNIT" => UnitPart::NamedUnit { dimensions: None, },
-        "NEXT_ASSEMBLY_USAGE_OCCURRENCE" => UnitPart::NextAssemblyUsageOccurrence,
-        "NUMERIC_EXPRESSION" => UnitPart::NumericExpression,
-        "ONE_DIRECTION_REPEAT_FACTOR" => UnitPart::OneDirectionRepeatFactor { repeat_factor: VectorRef::Vector(VectorId(u32::MAX)), },
-        "OPEN_SHELL" => UnitPart::OpenShell,
-        "ORGANIZATIONAL_ADDRESS" => UnitPart::OrganizationalAddress { organizations: Vec::new(), description: match req(&p.attributes, 1, "ORGANIZATIONAL_ADDRESS.description")? { Attribute::Unset => None, other => Some((as_text(other, "ORGANIZATIONAL_ADDRESS.description", tt))?) }, },
-        "ORIENTED_CLOSED_SHELL" => UnitPart::OrientedClosedShell { closed_shell_element: ClosedShellRef::ClosedShell(ClosedShellId(u32::MAX)), orientation: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "ORIENTED_CLOSED_SHELL.orientation")?, Attribute::Enum(s) if s == "T")))?, },
-        "ORIENTED_EDGE" => UnitPart::OrientedEdge { edge_element: EdgeRef::Edge(EdgeId(u32::MAX)), orientation: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "ORIENTED_EDGE.orientation")?, Attribute::Enum(s) if s == "T")))?, },
-        "OVER_RIDING_STYLED_ITEM" => UnitPart::OverRidingStyledItem { over_ridden_style: StyledItemRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(u32::MAX)), },
-        "PARALLELISM_TOLERANCE" => UnitPart::ParallelismTolerance,
-        "PARAMETRIC_REPRESENTATION_CONTEXT" => UnitPart::ParametricRepresentationContext,
-        "PATH" => UnitPart::Path { edge_list: Vec::new(), },
-        "PCURVE" => UnitPart::Pcurve { basis_surface: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)), reference_to_curve: DefinitionalRepresentationRef::DefinitionalRepresentation(DefinitionalRepresentationId(u32::MAX)), },
-        "PERPENDICULARITY_TOLERANCE" => UnitPart::PerpendicularityTolerance,
-        "PERSON_AND_ORGANIZATION_ADDRESS" => UnitPart::PersonAndOrganizationAddress,
-        "PERSON_AND_ORGANIZATION_ASSIGNMENT" => UnitPart::PersonAndOrganizationAssignment { assigned_person_and_organization: PersonAndOrganizationRef::PersonAndOrganization(PersonAndOrganizationId(u32::MAX)), role: PersonAndOrganizationRoleRef::PersonAndOrganizationRole(PersonAndOrganizationRoleId(u32::MAX)), },
-        "PERSONAL_ADDRESS" => UnitPart::PersonalAddress { people: Vec::new(), description: match req(&p.attributes, 1, "PERSONAL_ADDRESS.description")? { Attribute::Unset => None, other => Some((as_text(other, "PERSONAL_ADDRESS.description", tt))?) }, },
-        "PLACED_DATUM_TARGET_FEATURE" => UnitPart::PlacedDatumTargetFeature,
-        "PLACEMENT" => UnitPart::Placement { location: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)), },
-        "PLANAR_BOX" => UnitPart::PlanarBox { placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)), },
-        "PLANAR_EXTENT" => UnitPart::PlanarExtent { size_in_x: (as_real(req(&p.attributes, 0, "PLANAR_EXTENT.size_in_x")?, "PLANAR_EXTENT.size_in_x"))?, size_in_y: (as_real(req(&p.attributes, 1, "PLANAR_EXTENT.size_in_y")?, "PLANAR_EXTENT.size_in_y"))?, },
-        "PLANE_ANGLE_MEASURE_WITH_UNIT" => UnitPart::PlaneAngleMeasureWithUnit,
-        "PLANE_ANGLE_UNIT" => UnitPart::PlaneAngleUnit,
-        "POINT" => UnitPart::Point,
-        "POINT_STYLE" => UnitPart::PointStyle { name: (as_text(req(&p.attributes, 0, "POINT_STYLE.name")?, "POINT_STYLE.name", tt))?, marker: None, marker_size: None, marker_colour: None, },
-        "POLY_LOOP" => UnitPart::PolyLoop { polygon: Vec::new(), },
-        "POSITION_TOLERANCE" => UnitPart::PositionTolerance,
-        "PRE_DEFINED_CHARACTER_GLYPH" => UnitPart::PreDefinedCharacterGlyph,
-        "PRE_DEFINED_COLOUR" => UnitPart::PreDefinedColour,
-        "PRE_DEFINED_CURVE_FONT" => UnitPart::PreDefinedCurveFont,
-        "PRE_DEFINED_ITEM" => UnitPart::PreDefinedItem { name: (as_text(req(&p.attributes, 0, "PRE_DEFINED_ITEM.name")?, "PRE_DEFINED_ITEM.name", tt))?, },
-        "PRE_DEFINED_MARKER" => UnitPart::PreDefinedMarker,
-        "PRE_DEFINED_POINT_MARKER_SYMBOL" => UnitPart::PreDefinedPointMarkerSymbol,
-        "PRE_DEFINED_PRESENTATION_STYLE" => UnitPart::PreDefinedPresentationStyle,
-        "PRE_DEFINED_SURFACE_SIDE_STYLE" => UnitPart::PreDefinedSurfaceSideStyle,
-        "PRE_DEFINED_SYMBOL" => UnitPart::PreDefinedSymbol,
-        "PRE_DEFINED_TERMINATOR_SYMBOL" => UnitPart::PreDefinedTerminatorSymbol,
-        "PRE_DEFINED_TEXT_FONT" => UnitPart::PreDefinedTextFont,
-        "PRE_DEFINED_TILE" => UnitPart::PreDefinedTile,
-        "PRESENTATION_AREA" => UnitPart::PresentationArea,
-        "PRESENTATION_REPRESENTATION" => UnitPart::PresentationRepresentation,
-        "PRESENTATION_SET" => UnitPart::PresentationSet,
-        "PRESENTATION_STYLE_ASSIGNMENT" => UnitPart::PresentationStyleAssignment { styles: Vec::new(), },
-        "PRESENTATION_STYLE_BY_CONTEXT" => UnitPart::PresentationStyleByContext { style_context: StyleContextSelectRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
-        "PRESENTATION_VIEW" => UnitPart::PresentationView,
-        "PRESENTED_ITEM" => UnitPart::PresentedItem,
-        "PRODUCT" => UnitPart::Product { id: (as_text(req(&p.attributes, 0, "PRODUCT.id")?, "PRODUCT.id", tt))?, name: (as_text(req(&p.attributes, 1, "PRODUCT.name")?, "PRODUCT.name", tt))?, description: match req(&p.attributes, 2, "PRODUCT.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT.description", tt))?) }, frame_of_reference: Vec::new(), },
-        "PRODUCT_CATEGORY" => UnitPart::ProductCategory { name: (as_text(req(&p.attributes, 0, "PRODUCT_CATEGORY.name")?, "PRODUCT_CATEGORY.name", tt))?, description: match req(&p.attributes, 1, "PRODUCT_CATEGORY.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_CATEGORY.description", tt))?) }, },
-        "PRODUCT_CONCEPT" => UnitPart::ProductConcept { id: (as_text(req(&p.attributes, 0, "PRODUCT_CONCEPT.id")?, "PRODUCT_CONCEPT.id", tt))?, name: (as_text(req(&p.attributes, 1, "PRODUCT_CONCEPT.name")?, "PRODUCT_CONCEPT.name", tt))?, description: match req(&p.attributes, 2, "PRODUCT_CONCEPT.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_CONCEPT.description", tt))?) }, market_context: ProductConceptContextRef::ProductConceptContext(ProductConceptContextId(u32::MAX)), },
-        "PRODUCT_CONCEPT_FEATURE" => UnitPart::ProductConceptFeature { id: (as_text(req(&p.attributes, 0, "PRODUCT_CONCEPT_FEATURE.id")?, "PRODUCT_CONCEPT_FEATURE.id", tt))?, name: (as_text(req(&p.attributes, 1, "PRODUCT_CONCEPT_FEATURE.name")?, "PRODUCT_CONCEPT_FEATURE.name", tt))?, description: match req(&p.attributes, 2, "PRODUCT_CONCEPT_FEATURE.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_CONCEPT_FEATURE.description", tt))?) }, },
-        "PRODUCT_CONCEPT_FEATURE_CATEGORY" => UnitPart::ProductConceptFeatureCategory,
-        "PRODUCT_CONTEXT" => UnitPart::ProductContext { discipline_type: (as_text(req(&p.attributes, 0, "PRODUCT_CONTEXT.discipline_type")?, "PRODUCT_CONTEXT.discipline_type", tt))?, },
-        "PRODUCT_DEFINITION" => UnitPart::ProductDefinition { id: (as_text(req(&p.attributes, 0, "PRODUCT_DEFINITION.id")?, "PRODUCT_DEFINITION.id", tt))?, description: match req(&p.attributes, 1, "PRODUCT_DEFINITION.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_DEFINITION.description", tt))?) }, formation: ProductDefinitionFormationRef::ProductDefinitionFormation(ProductDefinitionFormationId(u32::MAX)), frame_of_reference: ProductDefinitionContextRef::DesignContext(DesignContextId(u32::MAX)), },
-        "PRODUCT_DEFINITION_CONTEXT" => UnitPart::ProductDefinitionContext { life_cycle_stage: (as_text(req(&p.attributes, 0, "PRODUCT_DEFINITION_CONTEXT.life_cycle_stage")?, "PRODUCT_DEFINITION_CONTEXT.life_cycle_stage", tt))?, },
-        "PRODUCT_DEFINITION_EFFECTIVITY" => UnitPart::ProductDefinitionEffectivity { usage: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(u32::MAX)), },
-        "PRODUCT_DEFINITION_FORMATION" => UnitPart::ProductDefinitionFormation { id: (as_text(req(&p.attributes, 0, "PRODUCT_DEFINITION_FORMATION.id")?, "PRODUCT_DEFINITION_FORMATION.id", tt))?, description: match req(&p.attributes, 1, "PRODUCT_DEFINITION_FORMATION.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_DEFINITION_FORMATION.description", tt))?) }, of_product: ProductRef::Product(ProductId(u32::MAX)), },
-        "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE" => UnitPart::ProductDefinitionFormationWithSpecifiedSource { make_or_buy: (match req(&p.attributes, 0, "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE.make_or_buy")? { Attribute::Enum(s) => Source::parse(s).ok_or_else(|| format!("PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE.make_or_buy: bad enum {s:?}")), o => Err(format!("PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE.make_or_buy: expected enum, got {o:?}")) })?, },
-        "PRODUCT_DEFINITION_OCCURRENCE" => UnitPart::ProductDefinitionOccurrence { id: (as_text(req(&p.attributes, 0, "PRODUCT_DEFINITION_OCCURRENCE.id")?, "PRODUCT_DEFINITION_OCCURRENCE.id", tt))?, name: match req(&p.attributes, 1, "PRODUCT_DEFINITION_OCCURRENCE.name")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_DEFINITION_OCCURRENCE.name", tt))?) }, description: match req(&p.attributes, 2, "PRODUCT_DEFINITION_OCCURRENCE.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_DEFINITION_OCCURRENCE.description", tt))?) }, definition: None, quantity: None, },
-        "PRODUCT_DEFINITION_RELATIONSHIP" => UnitPart::ProductDefinitionRelationship { id: (as_text(req(&p.attributes, 0, "PRODUCT_DEFINITION_RELATIONSHIP.id")?, "PRODUCT_DEFINITION_RELATIONSHIP.id", tt))?, name: (as_text(req(&p.attributes, 1, "PRODUCT_DEFINITION_RELATIONSHIP.name")?, "PRODUCT_DEFINITION_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 2, "PRODUCT_DEFINITION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_DEFINITION_RELATIONSHIP.description", tt))?) }, relating_product_definition: ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(GenericProductDefinitionReferenceId(u32::MAX)), related_product_definition: ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(GenericProductDefinitionReferenceId(u32::MAX)), },
-        "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP" => UnitPart::ProductDefinitionRelationshipRelationship { id: (as_text(req(&p.attributes, 0, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.id")?, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.id", tt))?, name: (as_text(req(&p.attributes, 1, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.name")?, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 2, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.description", tt))?) }, relating: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(u32::MAX)), related: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(u32::MAX)), },
-        "PRODUCT_DEFINITION_SHAPE" => UnitPart::ProductDefinitionShape,
-        "PRODUCT_DEFINITION_USAGE" => UnitPart::ProductDefinitionUsage,
-        "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS" => UnitPart::ProductDefinitionWithAssociatedDocuments { documentation_ids: Vec::new(), },
-        "PRODUCT_RELATED_PRODUCT_CATEGORY" => UnitPart::ProductRelatedProductCategory { products: Vec::new(), },
-        "PROJECTED_ZONE_DEFINITION" => UnitPart::ProjectedZoneDefinition { projection_end: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), projected_length: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
-        "PROPERTY_DEFINITION" => UnitPart::PropertyDefinition { name: (as_text(req(&p.attributes, 0, "PROPERTY_DEFINITION.name")?, "PROPERTY_DEFINITION.name", tt))?, description: match req(&p.attributes, 1, "PROPERTY_DEFINITION.description")? { Attribute::Unset => None, other => Some((as_text(other, "PROPERTY_DEFINITION.description", tt))?) }, definition: CharacterizedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), },
-        "PROPERTY_DEFINITION_REPRESENTATION" => UnitPart::PropertyDefinitionRepresentation { definition: RepresentedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
-        "QUALIFIED_REPRESENTATION_ITEM" => UnitPart::QualifiedRepresentationItem { qualifiers: Vec::new(), },
-        "QUASI_UNIFORM_CURVE" => UnitPart::QuasiUniformCurve,
-        "QUASI_UNIFORM_SURFACE" => UnitPart::QuasiUniformSurface,
-        "RATIO_MEASURE_WITH_UNIT" => UnitPart::RatioMeasureWithUnit,
-        "RATIO_UNIT" => UnitPart::RatioUnit,
-        "RATIONAL_B_SPLINE_CURVE" => UnitPart::RationalBSplineCurve { weights_data: (match req(&p.attributes, 0, "RATIONAL_B_SPLINE_CURVE.weights_data")? { Attribute::List(l) => l.iter().map(|e| as_real(e, "RATIONAL_B_SPLINE_CURVE.weights_data")).collect::<Result<Vec<_>, String>>(), o => Err(format!("RATIONAL_B_SPLINE_CURVE.weights_data: expected list, got {o:?}")) })?, },
-        "RATIONAL_B_SPLINE_SURFACE" => UnitPart::RationalBSplineSurface { weights_data: (match req(&p.attributes, 0, "RATIONAL_B_SPLINE_SURFACE.weights_data")? { Attribute::List(l) => l.iter().map(|e| match e { Attribute::List(l) => l.iter().map(|e| as_real(e, "RATIONAL_B_SPLINE_SURFACE.weights_data")).collect::<Result<Vec<_>, String>>(), o => Err(format!("RATIONAL_B_SPLINE_SURFACE.weights_data: expected list, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("RATIONAL_B_SPLINE_SURFACE.weights_data: expected list, got {o:?}")) })?, },
-        "REAL_LITERAL" => UnitPart::RealLiteral,
-        "REAL_REPRESENTATION_ITEM" => UnitPart::RealRepresentationItem,
-        "REPOSITIONED_TESSELLATED_ITEM" => UnitPart::RepositionedTessellatedItem { location: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)), },
-        "REPRESENTATION" => UnitPart::Representation { name: (as_text(req(&p.attributes, 0, "REPRESENTATION.name")?, "REPRESENTATION.name", tt))?, items: Vec::new(), context_of_items: RepresentationContextRef::GeometricRepresentationContext(GeometricRepresentationContextId(u32::MAX)), },
-        "REPRESENTATION_CONTEXT" => UnitPart::RepresentationContext { context_identifier: (as_text(req(&p.attributes, 0, "REPRESENTATION_CONTEXT.context_identifier")?, "REPRESENTATION_CONTEXT.context_identifier", tt))?, context_type: (as_text(req(&p.attributes, 1, "REPRESENTATION_CONTEXT.context_type")?, "REPRESENTATION_CONTEXT.context_type", tt))?, },
-        "REPRESENTATION_ITEM" => UnitPart::RepresentationItem { name: (as_text(req(&p.attributes, 0, "REPRESENTATION_ITEM.name")?, "REPRESENTATION_ITEM.name", tt))?, },
-        "REPRESENTATION_MAP" => UnitPart::RepresentationMap { mapping_origin: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), mapped_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
-        "REPRESENTATION_REFERENCE" => UnitPart::RepresentationReference { id: (as_text(req(&p.attributes, 0, "REPRESENTATION_REFERENCE.id")?, "REPRESENTATION_REFERENCE.id", tt))?, context_of_items: RepresentationContextReferenceRef::RepresentationContextReference(RepresentationContextReferenceId(u32::MAX)), },
-        "REPRESENTATION_RELATIONSHIP" => UnitPart::RepresentationRelationship { name: (as_text(req(&p.attributes, 0, "REPRESENTATION_RELATIONSHIP.name")?, "REPRESENTATION_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 1, "REPRESENTATION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "REPRESENTATION_RELATIONSHIP.description", tt))?) }, rep_1: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), rep_2: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
-        "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION" => UnitPart::RepresentationRelationshipWithTransformation { transformation_operator: TransformationRef::FunctionallyDefinedTransformation(FunctionallyDefinedTransformationId(u32::MAX)), },
-        "ROUNDNESS_TOLERANCE" => UnitPart::RoundnessTolerance,
-        "SEAM_CURVE" => UnitPart::SeamCurve,
-        "SECURITY_CLASSIFICATION_ASSIGNMENT" => UnitPart::SecurityClassificationAssignment { assigned_security_classification: SecurityClassificationRef::SecurityClassification(SecurityClassificationId(u32::MAX)), },
-        "SHAPE_ASPECT" => UnitPart::ShapeAspect { name: (as_text(req(&p.attributes, 0, "SHAPE_ASPECT.name")?, "SHAPE_ASPECT.name", tt))?, description: match req(&p.attributes, 1, "SHAPE_ASPECT.description")? { Attribute::Unset => None, other => Some((as_text(other, "SHAPE_ASPECT.description", tt))?) }, of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(u32::MAX)), product_definitional: match req(&p.attributes, 3, "SHAPE_ASPECT.product_definitional")? { Attribute::Derived => None, other => Some((as_logical(other, "SHAPE_ASPECT.product_definitional"))?) }, },
-        "SHAPE_ASPECT_RELATIONSHIP" => UnitPart::ShapeAspectRelationship { name: (as_text(req(&p.attributes, 0, "SHAPE_ASPECT_RELATIONSHIP.name")?, "SHAPE_ASPECT_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 1, "SHAPE_ASPECT_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "SHAPE_ASPECT_RELATIONSHIP.description", tt))?) }, relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), },
-        "SHAPE_DEFINITION_REPRESENTATION" => UnitPart::ShapeDefinitionRepresentation,
-        "SHAPE_DIMENSION_REPRESENTATION" => UnitPart::ShapeDimensionRepresentation,
-        "SHAPE_REPRESENTATION" => UnitPart::ShapeRepresentation,
-        "SHAPE_REPRESENTATION_RELATIONSHIP" => UnitPart::ShapeRepresentationRelationship,
-        "SHAPE_REPRESENTATION_WITH_PARAMETERS" => UnitPart::ShapeRepresentationWithParameters,
-        "SHELL_BASED_SURFACE_MODEL" => UnitPart::ShellBasedSurfaceModel { sbsm_boundary: Vec::new(), },
-        "SI_UNIT" => UnitPart::SiUnit { prefix: match req(&p.attributes, 0, "SI_UNIT.prefix")? { Attribute::Unset => None, other => Some((match other { Attribute::Enum(s) => SiPrefix::parse(s).ok_or_else(|| format!("SI_UNIT.prefix: bad enum {s:?}")), o => Err(format!("SI_UNIT.prefix: expected enum, got {o:?}")) })?) }, name: (match req(&p.attributes, 1, "SI_UNIT.name")? { Attribute::Enum(s) => SiUnitName::parse(s).ok_or_else(|| format!("SI_UNIT.name: bad enum {s:?}")), o => Err(format!("SI_UNIT.name: expected enum, got {o:?}")) })?, },
-        "SIMPLE_GENERIC_EXPRESSION" => UnitPart::SimpleGenericExpression,
-        "SIMPLE_NUMERIC_EXPRESSION" => UnitPart::SimpleNumericExpression,
-        "SOLID_ANGLE_UNIT" => UnitPart::SolidAngleUnit,
-        "SOLID_MODEL" => UnitPart::SolidModel,
-        "START_REQUEST" => UnitPart::StartRequest { items: Vec::new(), },
-        "STATE_OBSERVED" => UnitPart::StateObserved { name: (as_text(req(&p.attributes, 0, "STATE_OBSERVED.name")?, "STATE_OBSERVED.name", tt))?, description: match req(&p.attributes, 1, "STATE_OBSERVED.description")? { Attribute::Unset => None, other => Some((as_text(other, "STATE_OBSERVED.description", tt))?) }, },
-        "STATE_TYPE" => UnitPart::StateType { name: (as_text(req(&p.attributes, 0, "STATE_TYPE.name")?, "STATE_TYPE.name", tt))?, description: match req(&p.attributes, 1, "STATE_TYPE.description")? { Attribute::Unset => None, other => Some((as_text(other, "STATE_TYPE.description", tt))?) }, },
-        "STRAIGHTNESS_TOLERANCE" => UnitPart::StraightnessTolerance,
-        "STYLED_ITEM" => UnitPart::StyledItem { styles: Vec::new(), item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
-        "SURFACE" => UnitPart::Surface,
-        "SURFACE_CURVE" => UnitPart::SurfaceCurve { curve_3d: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)), associated_geometry: Vec::new(), master_representation: (match req(&p.attributes, 2, "SURFACE_CURVE.master_representation")? { Attribute::Enum(s) => PreferredSurfaceCurveRepresentation::parse(s).ok_or_else(|| format!("SURFACE_CURVE.master_representation: bad enum {s:?}")), o => Err(format!("SURFACE_CURVE.master_representation: expected enum, got {o:?}")) })?, },
-        "SURFACE_PROFILE_TOLERANCE" => UnitPart::SurfaceProfileTolerance,
-        "SURFACE_SIDE_STYLE" => UnitPart::SurfaceSideStyle { name: (as_text(req(&p.attributes, 0, "SURFACE_SIDE_STYLE.name")?, "SURFACE_SIDE_STYLE.name", tt))?, styles: Vec::new(), },
-        "SURFACE_STYLE_BOUNDARY" => UnitPart::SurfaceStyleBoundary { style_of_boundary: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), },
-        "SURFACE_STYLE_CONTROL_GRID" => UnitPart::SurfaceStyleControlGrid { style_of_control_grid: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), },
-        "SURFACE_STYLE_FILL_AREA" => UnitPart::SurfaceStyleFillArea { fill_area: FillAreaStyleRef::FillAreaStyle(FillAreaStyleId(u32::MAX)), },
-        "SURFACE_STYLE_PARAMETER_LINE" => UnitPart::SurfaceStyleParameterLine { style_of_parameter_lines: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), direction_counts: (match req(&p.attributes, 1, "SURFACE_STYLE_PARAMETER_LINE.direction_counts")? { Attribute::List(l) => l.iter().map(|e| read_int_measure_value(e, "SURFACE_STYLE_PARAMETER_LINE.direction_counts", tt)).collect::<Result<Vec<_>, String>>(), o => Err(format!("SURFACE_STYLE_PARAMETER_LINE.direction_counts: expected list, got {o:?}")) })?, },
-        "SURFACE_STYLE_REFLECTANCE_AMBIENT" => UnitPart::SurfaceStyleReflectanceAmbient { ambient_reflectance: (as_real(req(&p.attributes, 0, "SURFACE_STYLE_REFLECTANCE_AMBIENT.ambient_reflectance")?, "SURFACE_STYLE_REFLECTANCE_AMBIENT.ambient_reflectance"))?, },
-        "SURFACE_STYLE_RENDERING" => UnitPart::SurfaceStyleRendering { rendering_method: (match req(&p.attributes, 0, "SURFACE_STYLE_RENDERING.rendering_method")? { Attribute::Enum(s) => ShadingSurfaceMethod::parse(s).ok_or_else(|| format!("SURFACE_STYLE_RENDERING.rendering_method: bad enum {s:?}")), o => Err(format!("SURFACE_STYLE_RENDERING.rendering_method: expected enum, got {o:?}")) })?, surface_colour: ColourRef::Colour(ColourId(u32::MAX)), },
-        "SURFACE_STYLE_RENDERING_WITH_PROPERTIES" => UnitPart::SurfaceStyleRenderingWithProperties { properties: Vec::new(), },
-        "SURFACE_STYLE_SEGMENTATION_CURVE" => UnitPart::SurfaceStyleSegmentationCurve { style_of_segmentation_curve: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), },
-        "SURFACE_STYLE_SILHOUETTE" => UnitPart::SurfaceStyleSilhouette { style_of_silhouette: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), },
-        "SURFACE_STYLE_USAGE" => UnitPart::SurfaceStyleUsage { side: (match req(&p.attributes, 0, "SURFACE_STYLE_USAGE.side")? { Attribute::Enum(s) => SurfaceSide::parse(s).ok_or_else(|| format!("SURFACE_STYLE_USAGE.side: bad enum {s:?}")), o => Err(format!("SURFACE_STYLE_USAGE.side: expected enum, got {o:?}")) })?, style: SurfaceSideStyleSelectRef::PreDefinedSurfaceSideStyle(PreDefinedSurfaceSideStyleId(u32::MAX)), },
-        "SYMBOL_REPRESENTATION" => UnitPart::SymbolRepresentation,
-        "SYMBOL_STYLE" => UnitPart::SymbolStyle { name: (as_text(req(&p.attributes, 0, "SYMBOL_STYLE.name")?, "SYMBOL_STYLE.name", tt))?, style_of_symbol: SymbolStyleSelectRef::SymbolColour(SymbolColourId(u32::MAX)), },
-        "TERMINATOR_SYMBOL" => UnitPart::TerminatorSymbol { annotated_curve: AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(u32::MAX)), },
-        "TESSELLATED_GEOMETRIC_SET" => UnitPart::TessellatedGeometricSet { children: Vec::new(), },
-        "TESSELLATED_ITEM" => UnitPart::TessellatedItem,
-        "TESSELLATED_SHAPE_REPRESENTATION" => UnitPart::TessellatedShapeRepresentation,
-        "TESSELLATED_STRUCTURED_ITEM" => UnitPart::TessellatedStructuredItem,
-        "TEXT_LITERAL" => UnitPart::TextLiteral { literal: (as_text(req(&p.attributes, 0, "TEXT_LITERAL.literal")?, "TEXT_LITERAL.literal", tt))?, placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)), alignment: (as_text(req(&p.attributes, 2, "TEXT_LITERAL.alignment")?, "TEXT_LITERAL.alignment", tt))?, path: (match req(&p.attributes, 3, "TEXT_LITERAL.path")? { Attribute::Enum(s) => TextPath::parse(s).ok_or_else(|| format!("TEXT_LITERAL.path: bad enum {s:?}")), o => Err(format!("TEXT_LITERAL.path: expected enum, got {o:?}")) })?, font: FontSelectRef::DraughtingPreDefinedTextFont(DraughtingPreDefinedTextFontId(u32::MAX)), },
-        "TEXT_STYLE" => UnitPart::TextStyle { name: (as_text(req(&p.attributes, 0, "TEXT_STYLE.name")?, "TEXT_STYLE.name", tt))?, character_appearance: CharacterStyleSelectRef::CharacterGlyphStyleOutline(CharacterGlyphStyleOutlineId(u32::MAX)), },
-        "TEXT_STYLE_WITH_BOX_CHARACTERISTICS" => UnitPart::TextStyleWithBoxCharacteristics { characteristics: (match req(&p.attributes, 0, "TEXT_STYLE_WITH_BOX_CHARACTERISTICS.characteristics")? { Attribute::List(l) => l.iter().map(|e| read_measure_value(e, "TEXT_STYLE_WITH_BOX_CHARACTERISTICS.characteristics", tt)).collect::<Result<Vec<_>, String>>(), o => Err(format!("TEXT_STYLE_WITH_BOX_CHARACTERISTICS.characteristics: expected list, got {o:?}")) })?, },
-        "TEXTURE_STYLE_SPECIFICATION" => UnitPart::TextureStyleSpecification,
-        "TEXTURE_STYLE_TESSELLATION_SPECIFICATION" => UnitPart::TextureStyleTessellationSpecification,
-        "TIME_UNIT" => UnitPart::TimeUnit,
-        "TOLERANCE_ZONE" => UnitPart::ToleranceZone { defining_tolerance: Vec::new(), form: ToleranceZoneFormRef::ToleranceZoneForm(ToleranceZoneFormId(u32::MAX)), },
-        "TOLERANCE_ZONE_DEFINITION" => UnitPart::ToleranceZoneDefinition { zone: ToleranceZoneRef::ToleranceZone(ToleranceZoneId(u32::MAX)), boundaries: Vec::new(), },
-        "TOLERANCE_ZONE_WITH_DATUM" => UnitPart::ToleranceZoneWithDatum { datum_reference: DatumSystemRef::DatumSystem(DatumSystemId(u32::MAX)), },
-        "TOPOLOGICAL_REPRESENTATION_ITEM" => UnitPart::TopologicalRepresentationItem,
-        "TOROIDAL_SURFACE" => UnitPart::ToroidalSurface { major_radius: (as_real(req(&p.attributes, 0, "TOROIDAL_SURFACE.major_radius")?, "TOROIDAL_SURFACE.major_radius"))?, minor_radius: (as_real(req(&p.attributes, 1, "TOROIDAL_SURFACE.minor_radius")?, "TOROIDAL_SURFACE.minor_radius"))?, },
-        "TWO_DIRECTION_REPEAT_FACTOR" => UnitPart::TwoDirectionRepeatFactor { second_repeat_factor: VectorRef::Vector(VectorId(u32::MAX)), },
-        "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE" => UnitPart::UnequallyDisposedGeometricTolerance { displacement: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
-        "UNIFORM_CURVE" => UnitPart::UniformCurve,
-        "UNIFORM_SURFACE" => UnitPart::UniformSurface,
-        "VALUE_REPRESENTATION_ITEM" => UnitPart::ValueRepresentationItem { value_component: (read_measure_value(req(&p.attributes, 0, "VALUE_REPRESENTATION_ITEM.value_component")?, "VALUE_REPRESENTATION_ITEM.value_component", tt))?, },
-        "VECTOR" => UnitPart::Vector { orientation: DirectionRef::Direction(DirectionId(u32::MAX)), magnitude: (as_real(req(&p.attributes, 1, "VECTOR.magnitude")?, "VECTOR.magnitude"))?, },
-        "VERTEX" => UnitPart::Vertex,
-        "VERTEX_POINT" => UnitPart::VertexPoint { vertex_geometry: PointRef::ApllPoint(ApllPointId(u32::MAX)), },
-        "VIEW_VOLUME" => UnitPart::ViewVolume { projection_type: (match req(&p.attributes, 0, "VIEW_VOLUME.projection_type")? { Attribute::Enum(s) => CentralOrParallel::parse(s).ok_or_else(|| format!("VIEW_VOLUME.projection_type: bad enum {s:?}")), o => Err(format!("VIEW_VOLUME.projection_type: expected enum, got {o:?}")) })?, projection_point: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)), view_plane_distance: (as_real(req(&p.attributes, 2, "VIEW_VOLUME.view_plane_distance")?, "VIEW_VOLUME.view_plane_distance"))?, front_plane_distance: (as_real(req(&p.attributes, 3, "VIEW_VOLUME.front_plane_distance")?, "VIEW_VOLUME.front_plane_distance"))?, front_plane_clipping: (Ok::<bool, String>(matches!(req(&p.attributes, 4, "VIEW_VOLUME.front_plane_clipping")?, Attribute::Enum(s) if s == "T")))?, back_plane_distance: (as_real(req(&p.attributes, 5, "VIEW_VOLUME.back_plane_distance")?, "VIEW_VOLUME.back_plane_distance"))?, back_plane_clipping: (Ok::<bool, String>(matches!(req(&p.attributes, 6, "VIEW_VOLUME.back_plane_clipping")?, Attribute::Enum(s) if s == "T")))?, view_volume_sides_clipping: (Ok::<bool, String>(matches!(req(&p.attributes, 7, "VIEW_VOLUME.view_volume_sides_clipping")?, Attribute::Enum(s) if s == "T")))?, view_window: PlanarBoxRef::PlanarBox(PlanarBoxId(u32::MAX)), },
+) -> Result<Vec<PartialEntity>, String> {
+    parts.iter().map(|p| -> Result<PartialEntity, String> { Ok(match p.name.as_str() {
+        "ACTION" => PartialEntity::Action { name: (as_text(req(&p.attributes, 0, "ACTION.name")?, "ACTION.name", tt))?, description: match req(&p.attributes, 1, "ACTION.description")? { Attribute::Unset => None, other => Some((as_text(other, "ACTION.description", tt))?) }, chosen_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)), },
+        "ACTION_METHOD" => PartialEntity::ActionMethod { name: (as_text(req(&p.attributes, 0, "ACTION_METHOD.name")?, "ACTION_METHOD.name", tt))?, description: match req(&p.attributes, 1, "ACTION_METHOD.description")? { Attribute::Unset => None, other => Some((as_text(other, "ACTION_METHOD.description", tt))?) }, consequence: (as_text(req(&p.attributes, 2, "ACTION_METHOD.consequence")?, "ACTION_METHOD.consequence", tt))?, purpose: (as_text(req(&p.attributes, 3, "ACTION_METHOD.purpose")?, "ACTION_METHOD.purpose", tt))?, },
+        "ACTION_METHOD_RELATIONSHIP" => PartialEntity::ActionMethodRelationship { name: (as_text(req(&p.attributes, 0, "ACTION_METHOD_RELATIONSHIP.name")?, "ACTION_METHOD_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 1, "ACTION_METHOD_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "ACTION_METHOD_RELATIONSHIP.description", tt))?) }, relating_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)), related_method: ActionMethodRef::ActionMethod(ActionMethodId(u32::MAX)), },
+        "ACTION_RELATIONSHIP" => PartialEntity::ActionRelationship { name: (as_text(req(&p.attributes, 0, "ACTION_RELATIONSHIP.name")?, "ACTION_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 1, "ACTION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "ACTION_RELATIONSHIP.description", tt))?) }, relating_action: ActionRef::Action(ActionId(u32::MAX)), related_action: ActionRef::Action(ActionId(u32::MAX)), },
+        "ACTION_REQUEST_ASSIGNMENT" => PartialEntity::ActionRequestAssignment { assigned_action_request: VersionedActionRequestRef::VersionedActionRequest(VersionedActionRequestId(u32::MAX)), },
+        "ACTION_RESOURCE" => PartialEntity::ActionResource { name: (as_text(req(&p.attributes, 0, "ACTION_RESOURCE.name")?, "ACTION_RESOURCE.name", tt))?, description: match req(&p.attributes, 1, "ACTION_RESOURCE.description")? { Attribute::Unset => None, other => Some((as_text(other, "ACTION_RESOURCE.description", tt))?) }, usage: Vec::new(), kind: ActionResourceTypeRef::ActionResourceType(ActionResourceTypeId(u32::MAX)), },
+        "ACTION_RESOURCE_REQUIREMENT" => PartialEntity::ActionResourceRequirement { name: (as_text(req(&p.attributes, 0, "ACTION_RESOURCE_REQUIREMENT.name")?, "ACTION_RESOURCE_REQUIREMENT.name", tt))?, description: (as_text(req(&p.attributes, 1, "ACTION_RESOURCE_REQUIREMENT.description")?, "ACTION_RESOURCE_REQUIREMENT.description", tt))?, kind: ResourceRequirementTypeRef::ResourceRequirementType(ResourceRequirementTypeId(u32::MAX)), operations: Vec::new(), },
+        "ADDRESS" => PartialEntity::Address { internal_location: match req(&p.attributes, 0, "ADDRESS.internal_location")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.internal_location", tt))?) }, street_number: match req(&p.attributes, 1, "ADDRESS.street_number")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.street_number", tt))?) }, street: match req(&p.attributes, 2, "ADDRESS.street")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.street", tt))?) }, postal_box: match req(&p.attributes, 3, "ADDRESS.postal_box")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.postal_box", tt))?) }, town: match req(&p.attributes, 4, "ADDRESS.town")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.town", tt))?) }, region: match req(&p.attributes, 5, "ADDRESS.region")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.region", tt))?) }, postal_code: match req(&p.attributes, 6, "ADDRESS.postal_code")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.postal_code", tt))?) }, country: match req(&p.attributes, 7, "ADDRESS.country")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.country", tt))?) }, facsimile_number: match req(&p.attributes, 8, "ADDRESS.facsimile_number")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.facsimile_number", tt))?) }, telephone_number: match req(&p.attributes, 9, "ADDRESS.telephone_number")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.telephone_number", tt))?) }, electronic_mail_address: match req(&p.attributes, 10, "ADDRESS.electronic_mail_address")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.electronic_mail_address", tt))?) }, telex_number: match req(&p.attributes, 11, "ADDRESS.telex_number")? { Attribute::Unset => None, other => Some((as_text(other, "ADDRESS.telex_number", tt))?) }, },
+        "ADVANCED_BREP_SHAPE_REPRESENTATION" => PartialEntity::AdvancedBrepShapeRepresentation,
+        "ADVANCED_FACE" => PartialEntity::AdvancedFace,
+        "ANNOTATION_CURVE_OCCURRENCE" => PartialEntity::AnnotationCurveOccurrence,
+        "ANNOTATION_FILL_AREA_OCCURRENCE" => PartialEntity::AnnotationFillAreaOccurrence { fill_style_target: PointRef::ApllPoint(ApllPointId(u32::MAX)), },
+        "ANNOTATION_OCCURRENCE" => PartialEntity::AnnotationOccurrence,
+        "ANNOTATION_OCCURRENCE_ASSOCIATIVITY" => PartialEntity::AnnotationOccurrenceAssociativity,
+        "ANNOTATION_OCCURRENCE_RELATIONSHIP" => PartialEntity::AnnotationOccurrenceRelationship { name: (as_text(req(&p.attributes, 0, "ANNOTATION_OCCURRENCE_RELATIONSHIP.name")?, "ANNOTATION_OCCURRENCE_RELATIONSHIP.name", tt))?, description: (as_text(req(&p.attributes, 1, "ANNOTATION_OCCURRENCE_RELATIONSHIP.description")?, "ANNOTATION_OCCURRENCE_RELATIONSHIP.description", tt))?, relating_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(u32::MAX)), related_annotation_occurrence: AnnotationOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(u32::MAX)), },
+        "ANNOTATION_PLACEHOLDER_OCCURRENCE" => PartialEntity::AnnotationPlaceholderOccurrence { role: (match req(&p.attributes, 0, "ANNOTATION_PLACEHOLDER_OCCURRENCE.role")? { Attribute::Enum(s) => AnnotationPlaceholderOccurrenceRole::parse(s).ok_or_else(|| format!("ANNOTATION_PLACEHOLDER_OCCURRENCE.role: bad enum {s:?}")), o => Err(format!("ANNOTATION_PLACEHOLDER_OCCURRENCE.role: expected enum, got {o:?}")) })?, line_spacing: (as_real(req(&p.attributes, 1, "ANNOTATION_PLACEHOLDER_OCCURRENCE.line_spacing")?, "ANNOTATION_PLACEHOLDER_OCCURRENCE.line_spacing"))?, },
+        "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE" => PartialEntity::AnnotationPlaceholderOccurrenceWithLeaderLine { leader_line: Vec::new(), },
+        "ANNOTATION_PLANE" => PartialEntity::AnnotationPlane { elements: None, },
+        "ANNOTATION_SYMBOL" => PartialEntity::AnnotationSymbol,
+        "ANNOTATION_SYMBOL_OCCURRENCE" => PartialEntity::AnnotationSymbolOccurrence,
+        "ANNOTATION_TEXT" => PartialEntity::AnnotationText,
+        "ANNOTATION_TEXT_CHARACTER" => PartialEntity::AnnotationTextCharacter { alignment: (as_text(req(&p.attributes, 0, "ANNOTATION_TEXT_CHARACTER.alignment")?, "ANNOTATION_TEXT_CHARACTER.alignment", tt))?, },
+        "ANNOTATION_TEXT_OCCURRENCE" => PartialEntity::AnnotationTextOccurrence,
+        "APPLICATION_CONTEXT_ELEMENT" => PartialEntity::ApplicationContextElement { name: (as_text(req(&p.attributes, 0, "APPLICATION_CONTEXT_ELEMENT.name")?, "APPLICATION_CONTEXT_ELEMENT.name", tt))?, frame_of_reference: ApplicationContextRef::ApplicationContext(ApplicationContextId(u32::MAX)), },
+        "APPLIED_APPROVAL_ASSIGNMENT" => PartialEntity::AppliedApprovalAssignment { items: Vec::new(), },
+        "APPLIED_DATE_AND_TIME_ASSIGNMENT" => PartialEntity::AppliedDateAndTimeAssignment { items: Vec::new(), },
+        "APPLIED_DOCUMENT_REFERENCE" => PartialEntity::AppliedDocumentReference { items: Vec::new(), },
+        "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT" => PartialEntity::AppliedExternalIdentificationAssignment { items: Vec::new(), },
+        "APPLIED_GROUP_ASSIGNMENT" => PartialEntity::AppliedGroupAssignment { items: Vec::new(), },
+        "APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT" => PartialEntity::AppliedPersonAndOrganizationAssignment { items: Vec::new(), },
+        "APPLIED_PRESENTED_ITEM" => PartialEntity::AppliedPresentedItem { items: Vec::new(), },
+        "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT" => PartialEntity::AppliedSecurityClassificationAssignment { items: Vec::new(), },
+        "APPROVAL_ASSIGNMENT" => PartialEntity::ApprovalAssignment { assigned_approval: ApprovalRef::Approval(ApprovalId(u32::MAX)), },
+        "AREA_IN_SET" => PartialEntity::AreaInSet { area: PresentationAreaRef::PresentationArea(PresentationAreaId(u32::MAX)), in_set: PresentationSetRef::PresentationSet(PresentationSetId(u32::MAX)), },
+        "ASCRIBABLE_STATE_RELATIONSHIP" => PartialEntity::AscribableStateRelationship { name: (as_text(req(&p.attributes, 0, "ASCRIBABLE_STATE_RELATIONSHIP.name")?, "ASCRIBABLE_STATE_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 1, "ASCRIBABLE_STATE_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "ASCRIBABLE_STATE_RELATIONSHIP.description", tt))?) }, relating_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(u32::MAX)), related_ascribable_state: AscribableStateRef::AscribableState(AscribableStateId(u32::MAX)), },
+        "ASSEMBLY_COMPONENT_USAGE" => PartialEntity::AssemblyComponentUsage { reference_designator: match req(&p.attributes, 0, "ASSEMBLY_COMPONENT_USAGE.reference_designator")? { Attribute::Unset => None, other => Some((as_text(other, "ASSEMBLY_COMPONENT_USAGE.reference_designator", tt))?) }, },
+        "B_SPLINE_CURVE" => PartialEntity::BSplineCurve { degree: (as_int(req(&p.attributes, 0, "B_SPLINE_CURVE.degree")?, "B_SPLINE_CURVE.degree"))?, control_points_list: Vec::new(), curve_form: (match req(&p.attributes, 2, "B_SPLINE_CURVE.curve_form")? { Attribute::Enum(s) => BSplineCurveForm::parse(s).ok_or_else(|| format!("B_SPLINE_CURVE.curve_form: bad enum {s:?}")), o => Err(format!("B_SPLINE_CURVE.curve_form: expected enum, got {o:?}")) })?, closed_curve: (as_logical(req(&p.attributes, 3, "B_SPLINE_CURVE.closed_curve")?, "B_SPLINE_CURVE.closed_curve"))?, self_intersect: (as_logical(req(&p.attributes, 4, "B_SPLINE_CURVE.self_intersect")?, "B_SPLINE_CURVE.self_intersect"))?, },
+        "B_SPLINE_CURVE_WITH_KNOTS" => PartialEntity::BSplineCurveWithKnots { knot_multiplicities: (match req(&p.attributes, 0, "B_SPLINE_CURVE_WITH_KNOTS.knot_multiplicities")? { Attribute::List(l) => l.iter().map(|e| as_int(e, "B_SPLINE_CURVE_WITH_KNOTS.knot_multiplicities")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_CURVE_WITH_KNOTS.knot_multiplicities: expected list, got {o:?}")) })?, knots: (match req(&p.attributes, 1, "B_SPLINE_CURVE_WITH_KNOTS.knots")? { Attribute::List(l) => l.iter().map(|e| as_real(e, "B_SPLINE_CURVE_WITH_KNOTS.knots")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_CURVE_WITH_KNOTS.knots: expected list, got {o:?}")) })?, knot_spec: (match req(&p.attributes, 2, "B_SPLINE_CURVE_WITH_KNOTS.knot_spec")? { Attribute::Enum(s) => KnotType::parse(s).ok_or_else(|| format!("B_SPLINE_CURVE_WITH_KNOTS.knot_spec: bad enum {s:?}")), o => Err(format!("B_SPLINE_CURVE_WITH_KNOTS.knot_spec: expected enum, got {o:?}")) })?, },
+        "B_SPLINE_SURFACE" => PartialEntity::BSplineSurface { u_degree: (as_int(req(&p.attributes, 0, "B_SPLINE_SURFACE.u_degree")?, "B_SPLINE_SURFACE.u_degree"))?, v_degree: (as_int(req(&p.attributes, 1, "B_SPLINE_SURFACE.v_degree")?, "B_SPLINE_SURFACE.v_degree"))?, control_points_list: Vec::new(), surface_form: (match req(&p.attributes, 3, "B_SPLINE_SURFACE.surface_form")? { Attribute::Enum(s) => BSplineSurfaceForm::parse(s).ok_or_else(|| format!("B_SPLINE_SURFACE.surface_form: bad enum {s:?}")), o => Err(format!("B_SPLINE_SURFACE.surface_form: expected enum, got {o:?}")) })?, u_closed: (as_logical(req(&p.attributes, 4, "B_SPLINE_SURFACE.u_closed")?, "B_SPLINE_SURFACE.u_closed"))?, v_closed: (as_logical(req(&p.attributes, 5, "B_SPLINE_SURFACE.v_closed")?, "B_SPLINE_SURFACE.v_closed"))?, self_intersect: (as_logical(req(&p.attributes, 6, "B_SPLINE_SURFACE.self_intersect")?, "B_SPLINE_SURFACE.self_intersect"))?, },
+        "B_SPLINE_SURFACE_WITH_KNOTS" => PartialEntity::BSplineSurfaceWithKnots { u_multiplicities: (match req(&p.attributes, 0, "B_SPLINE_SURFACE_WITH_KNOTS.u_multiplicities")? { Attribute::List(l) => l.iter().map(|e| as_int(e, "B_SPLINE_SURFACE_WITH_KNOTS.u_multiplicities")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_SURFACE_WITH_KNOTS.u_multiplicities: expected list, got {o:?}")) })?, v_multiplicities: (match req(&p.attributes, 1, "B_SPLINE_SURFACE_WITH_KNOTS.v_multiplicities")? { Attribute::List(l) => l.iter().map(|e| as_int(e, "B_SPLINE_SURFACE_WITH_KNOTS.v_multiplicities")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_SURFACE_WITH_KNOTS.v_multiplicities: expected list, got {o:?}")) })?, u_knots: (match req(&p.attributes, 2, "B_SPLINE_SURFACE_WITH_KNOTS.u_knots")? { Attribute::List(l) => l.iter().map(|e| as_real(e, "B_SPLINE_SURFACE_WITH_KNOTS.u_knots")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_SURFACE_WITH_KNOTS.u_knots: expected list, got {o:?}")) })?, v_knots: (match req(&p.attributes, 3, "B_SPLINE_SURFACE_WITH_KNOTS.v_knots")? { Attribute::List(l) => l.iter().map(|e| as_real(e, "B_SPLINE_SURFACE_WITH_KNOTS.v_knots")).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_SURFACE_WITH_KNOTS.v_knots: expected list, got {o:?}")) })?, knot_spec: (match req(&p.attributes, 4, "B_SPLINE_SURFACE_WITH_KNOTS.knot_spec")? { Attribute::Enum(s) => KnotType::parse(s).ok_or_else(|| format!("B_SPLINE_SURFACE_WITH_KNOTS.knot_spec: bad enum {s:?}")), o => Err(format!("B_SPLINE_SURFACE_WITH_KNOTS.knot_spec: expected enum, got {o:?}")) })?, },
+        "BEZIER_CURVE" => PartialEntity::BezierCurve,
+        "BEZIER_SURFACE" => PartialEntity::BezierSurface,
+        "BOUNDED_CURVE" => PartialEntity::BoundedCurve,
+        "BOUNDED_PCURVE" => PartialEntity::BoundedPcurve,
+        "BOUNDED_SURFACE" => PartialEntity::BoundedSurface,
+        "BOUNDED_SURFACE_CURVE" => PartialEntity::BoundedSurfaceCurve,
+        "BREP_WITH_VOIDS" => PartialEntity::BrepWithVoids { voids: Vec::new(), },
+        "CAMERA_IMAGE" => PartialEntity::CameraImage,
+        "CAMERA_IMAGE_3D_WITH_SCALE" => PartialEntity::CameraImage3dWithScale,
+        "CAMERA_MODEL" => PartialEntity::CameraModel,
+        "CAMERA_MODEL_D3" => PartialEntity::CameraModelD3 { view_reference_system: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)), perspective_of_volume: ViewVolumeRef::ViewVolume(ViewVolumeId(u32::MAX)), },
+        "CAMERA_MODEL_D3_MULTI_CLIPPING" => PartialEntity::CameraModelD3MultiClipping { shape_clipping: Vec::new(), },
+        "CAMERA_MODEL_D3_WITH_HLHSR" => PartialEntity::CameraModelD3WithHlhsr { hidden_line_surface_removal: (Ok::<bool, String>(matches!(req(&p.attributes, 0, "CAMERA_MODEL_D3_WITH_HLHSR.hidden_line_surface_removal")?, Attribute::Enum(s) if s == "T")))?, },
+        "CAMERA_USAGE" => PartialEntity::CameraUsage,
+        "CC_DESIGN_APPROVAL" => PartialEntity::CcDesignApproval { items: Vec::new(), },
+        "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT" => PartialEntity::CcDesignDateAndTimeAssignment { items: Vec::new(), },
+        "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT" => PartialEntity::CcDesignPersonAndOrganizationAssignment { items: Vec::new(), },
+        "CC_DESIGN_SECURITY_CLASSIFICATION" => PartialEntity::CcDesignSecurityClassification { items: Vec::new(), },
+        "CHANGE_REQUEST" => PartialEntity::ChangeRequest { items: Vec::new(), },
+        "CHARACTER_GLYPH_STYLE_OUTLINE" => PartialEntity::CharacterGlyphStyleOutline { outline_style: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)), },
+        "CHARACTER_GLYPH_STYLE_STROKE" => PartialEntity::CharacterGlyphStyleStroke { stroke_style: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)), },
+        "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION" => PartialEntity::CharacterizedItemWithinRepresentation { item: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), rep: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
+        "CHARACTERIZED_OBJECT" => PartialEntity::CharacterizedObject { name: match req(&p.attributes, 0, "CHARACTERIZED_OBJECT.name")? { Attribute::Derived => None, other => Some((as_text(other, "CHARACTERIZED_OBJECT.name", tt))?) }, description: match req(&p.attributes, 1, "CHARACTERIZED_OBJECT.description")? { Attribute::Derived => None, other => Some((as_text(other, "CHARACTERIZED_OBJECT.description", tt))?) }, },
+        "CHARACTERIZED_REPRESENTATION" => PartialEntity::CharacterizedRepresentation,
+        "CIRCULAR_RUNOUT_TOLERANCE" => PartialEntity::CircularRunoutTolerance,
+        "CLOSED_SHELL" => PartialEntity::ClosedShell,
+        "COLOUR" => PartialEntity::Colour,
+        "COLOUR_RGB" => PartialEntity::ColourRgb { red: (as_real(req(&p.attributes, 0, "COLOUR_RGB.red")?, "COLOUR_RGB.red"))?, green: (as_real(req(&p.attributes, 1, "COLOUR_RGB.green")?, "COLOUR_RGB.green"))?, blue: (as_real(req(&p.attributes, 2, "COLOUR_RGB.blue")?, "COLOUR_RGB.blue"))?, },
+        "COLOUR_SPECIFICATION" => PartialEntity::ColourSpecification { name: (as_text(req(&p.attributes, 0, "COLOUR_SPECIFICATION.name")?, "COLOUR_SPECIFICATION.name", tt))?, },
+        "COMMON_DATUM" => PartialEntity::CommonDatum,
+        "COMPOSITE_CURVE" => PartialEntity::CompositeCurve { segments: Vec::new(), self_intersect: (as_logical(req(&p.attributes, 1, "COMPOSITE_CURVE.self_intersect")?, "COMPOSITE_CURVE.self_intersect"))?, },
+        "COMPOSITE_CURVE_SEGMENT" => PartialEntity::CompositeCurveSegment { transition: (match req(&p.attributes, 0, "COMPOSITE_CURVE_SEGMENT.transition")? { Attribute::Enum(s) => TransitionCode::parse(s).ok_or_else(|| format!("COMPOSITE_CURVE_SEGMENT.transition: bad enum {s:?}")), o => Err(format!("COMPOSITE_CURVE_SEGMENT.transition: expected enum, got {o:?}")) })?, same_sense: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "COMPOSITE_CURVE_SEGMENT.same_sense")?, Attribute::Enum(s) if s == "T")))?, parent_curve: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)), },
+        "COMPOSITE_GROUP_SHAPE_ASPECT" => PartialEntity::CompositeGroupShapeAspect,
+        "COMPOSITE_SHAPE_ASPECT" => PartialEntity::CompositeShapeAspect,
+        "COMPOSITE_TEXT" => PartialEntity::CompositeText { collected_text: Vec::new(), },
+        "COMPOUND_REPRESENTATION_ITEM" => PartialEntity::CompoundRepresentationItem { item_element: CompoundItemDefinitionRef::AdvancedFace(AdvancedFaceId(u32::MAX)), },
+        "CONFIGURATION_EFFECTIVITY" => PartialEntity::ConfigurationEffectivity { configuration: ConfigurationDesignRef::ConfigurationDesign(ConfigurationDesignId(u32::MAX)), },
+        "CONFIGURATION_ITEM" => PartialEntity::ConfigurationItem { id: (as_text(req(&p.attributes, 0, "CONFIGURATION_ITEM.id")?, "CONFIGURATION_ITEM.id", tt))?, name: (as_text(req(&p.attributes, 1, "CONFIGURATION_ITEM.name")?, "CONFIGURATION_ITEM.name", tt))?, description: match req(&p.attributes, 2, "CONFIGURATION_ITEM.description")? { Attribute::Unset => None, other => Some((as_text(other, "CONFIGURATION_ITEM.description", tt))?) }, item_concept: ProductConceptRef::ProductConcept(ProductConceptId(u32::MAX)), purpose: match req(&p.attributes, 4, "CONFIGURATION_ITEM.purpose")? { Attribute::Unset => None, other => Some((as_text(other, "CONFIGURATION_ITEM.purpose", tt))?) }, },
+        "CONNECTED_FACE_SET" => PartialEntity::ConnectedFaceSet { cfs_faces: None, },
+        "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP" => PartialEntity::ConstructiveGeometryRepresentationRelationship,
+        "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM" => PartialEntity::ContextDependentOverRidingStyledItem { style_context: Vec::new(), },
+        "CONTEXT_DEPENDENT_UNIT" => PartialEntity::ContextDependentUnit { name: (as_text(req(&p.attributes, 0, "CONTEXT_DEPENDENT_UNIT.name")?, "CONTEXT_DEPENDENT_UNIT.name", tt))?, },
+        "CONVERSION_BASED_UNIT" => PartialEntity::ConversionBasedUnit { name: (as_text(req(&p.attributes, 0, "CONVERSION_BASED_UNIT.name")?, "CONVERSION_BASED_UNIT.name", tt))?, conversion_factor: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
+        "CURVE" => PartialEntity::Curve,
+        "CURVE_STYLE" => PartialEntity::CurveStyle { name: (as_text(req(&p.attributes, 0, "CURVE_STYLE.name")?, "CURVE_STYLE.name", tt))?, curve_font: None, curve_width: None, curve_colour: None, },
+        "CURVE_STYLE_FONT" => PartialEntity::CurveStyleFont { name: (as_text(req(&p.attributes, 0, "CURVE_STYLE_FONT.name")?, "CURVE_STYLE_FONT.name", tt))?, pattern_list: Vec::new(), },
+        "CURVE_STYLE_FONT_AND_SCALING" => PartialEntity::CurveStyleFontAndScaling { name: (as_text(req(&p.attributes, 0, "CURVE_STYLE_FONT_AND_SCALING.name")?, "CURVE_STYLE_FONT_AND_SCALING.name", tt))?, curve_font: CurveStyleFontSelectRef::CurveStyleFont(CurveStyleFontId(u32::MAX)), curve_font_scaling: (as_real(req(&p.attributes, 2, "CURVE_STYLE_FONT_AND_SCALING.curve_font_scaling")?, "CURVE_STYLE_FONT_AND_SCALING.curve_font_scaling"))?, },
+        "CURVE_STYLE_FONT_PATTERN" => PartialEntity::CurveStyleFontPattern { visible_segment_length: (as_real(req(&p.attributes, 0, "CURVE_STYLE_FONT_PATTERN.visible_segment_length")?, "CURVE_STYLE_FONT_PATTERN.visible_segment_length"))?, invisible_segment_length: (as_real(req(&p.attributes, 1, "CURVE_STYLE_FONT_PATTERN.invisible_segment_length")?, "CURVE_STYLE_FONT_PATTERN.invisible_segment_length"))?, },
+        "CYLINDRICITY_TOLERANCE" => PartialEntity::CylindricityTolerance,
+        "DATE" => PartialEntity::Date { year_component: (as_int(req(&p.attributes, 0, "DATE.year_component")?, "DATE.year_component"))?, },
+        "DATE_AND_TIME" => PartialEntity::DateAndTime { date_component: DateRef::CalendarDate(CalendarDateId(u32::MAX)), time_component: LocalTimeRef::LocalTime(LocalTimeId(u32::MAX)), },
+        "DATE_AND_TIME_ASSIGNMENT" => PartialEntity::DateAndTimeAssignment { assigned_date_and_time: DateAndTimeRef::DateAndTime(DateAndTimeId(u32::MAX)), role: DateTimeRoleRef::DateTimeRole(DateTimeRoleId(u32::MAX)), },
+        "DATUM" => PartialEntity::Datum { identification: (as_text(req(&p.attributes, 0, "DATUM.identification")?, "DATUM.identification", tt))?, },
+        "DATUM_FEATURE" => PartialEntity::DatumFeature,
+        "DATUM_REFERENCE" => PartialEntity::DatumReference { precedence: (as_int(req(&p.attributes, 0, "DATUM_REFERENCE.precedence")?, "DATUM_REFERENCE.precedence"))?, referenced_datum: DatumRef::CommonDatum(CommonDatumId(u32::MAX)), },
+        "DATUM_SYSTEM" => PartialEntity::DatumSystem { constituents: Vec::new(), },
+        "DATUM_TARGET" => PartialEntity::DatumTarget { target_id: (as_text(req(&p.attributes, 0, "DATUM_TARGET.target_id")?, "DATUM_TARGET.target_id", tt))?, },
+        "DEFAULT_MODEL_GEOMETRIC_VIEW" => PartialEntity::DefaultModelGeometricView,
+        "DEFINITIONAL_REPRESENTATION" => PartialEntity::DefinitionalRepresentation,
+        "DEFINITIONAL_REPRESENTATION_RELATIONSHIP" => PartialEntity::DefinitionalRepresentationRelationship,
+        "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT" => PartialEntity::DefinitionalRepresentationRelationshipWithSameContext,
+        "DEGENERATE_TOROIDAL_SURFACE" => PartialEntity::DegenerateToroidalSurface { select_outer: (Ok::<bool, String>(matches!(req(&p.attributes, 0, "DEGENERATE_TOROIDAL_SURFACE.select_outer")?, Attribute::Enum(s) if s == "T")))?, },
+        "DERIVED_UNIT" => PartialEntity::DerivedUnit { elements: Vec::new(), },
+        "DESIGN_CONTEXT" => PartialEntity::DesignContext,
+        "DIMENSIONAL_SIZE" => PartialEntity::DimensionalSize { applies_to: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), name: (as_text(req(&p.attributes, 1, "DIMENSIONAL_SIZE.name")?, "DIMENSIONAL_SIZE.name", tt))?, },
+        "DIRECTION" => PartialEntity::Direction { direction_ratios: (match req(&p.attributes, 0, "DIRECTION.direction_ratios")? { Attribute::List(l) => Reals3::try_collect(l.iter().map(|e| as_real(e, "DIRECTION.direction_ratios")), "DIRECTION.direction_ratios"), o => Err(format!("DIRECTION.direction_ratios: expected list, got {o:?}")) })?, },
+        "DOCUMENT" => PartialEntity::Document { id: (as_text(req(&p.attributes, 0, "DOCUMENT.id")?, "DOCUMENT.id", tt))?, name: (as_text(req(&p.attributes, 1, "DOCUMENT.name")?, "DOCUMENT.name", tt))?, description: match req(&p.attributes, 2, "DOCUMENT.description")? { Attribute::Unset => None, other => Some((as_text(other, "DOCUMENT.description", tt))?) }, kind: DocumentTypeRef::DocumentType(DocumentTypeId(u32::MAX)), },
+        "DOCUMENT_FILE" => PartialEntity::DocumentFile,
+        "DOCUMENT_PRODUCT_ASSOCIATION" => PartialEntity::DocumentProductAssociation { name: (as_text(req(&p.attributes, 0, "DOCUMENT_PRODUCT_ASSOCIATION.name")?, "DOCUMENT_PRODUCT_ASSOCIATION.name", tt))?, description: match req(&p.attributes, 1, "DOCUMENT_PRODUCT_ASSOCIATION.description")? { Attribute::Unset => None, other => Some((as_text(other, "DOCUMENT_PRODUCT_ASSOCIATION.description", tt))?) }, relating_document: DocumentRef::Document(DocumentId(u32::MAX)), related_product: ProductOrFormationOrDefinitionRef::Product(ProductId(u32::MAX)), },
+        "DOCUMENT_PRODUCT_EQUIVALENCE" => PartialEntity::DocumentProductEquivalence,
+        "DOCUMENT_REFERENCE" => PartialEntity::DocumentReference { assigned_document: DocumentRef::Document(DocumentId(u32::MAX)), source: (as_text(req(&p.attributes, 1, "DOCUMENT_REFERENCE.source")?, "DOCUMENT_REFERENCE.source", tt))?, },
+        "DRAUGHTING_ANNOTATION_OCCURRENCE" => PartialEntity::DraughtingAnnotationOccurrence,
+        "DRAUGHTING_CALLOUT" => PartialEntity::DraughtingCallout { contents: Vec::new(), },
+        "DRAUGHTING_CALLOUT_RELATIONSHIP" => PartialEntity::DraughtingCalloutRelationship { name: (as_text(req(&p.attributes, 0, "DRAUGHTING_CALLOUT_RELATIONSHIP.name")?, "DRAUGHTING_CALLOUT_RELATIONSHIP.name", tt))?, description: (as_text(req(&p.attributes, 1, "DRAUGHTING_CALLOUT_RELATIONSHIP.description")?, "DRAUGHTING_CALLOUT_RELATIONSHIP.description", tt))?, relating_draughting_callout: DraughtingCalloutRef::DraughtingCallout(DraughtingCalloutId(u32::MAX)), related_draughting_callout: DraughtingCalloutRef::DraughtingCallout(DraughtingCalloutId(u32::MAX)), },
+        "DRAUGHTING_MODEL" => PartialEntity::DraughtingModel,
+        "DRAUGHTING_MODEL_ITEM_ASSOCIATION" => PartialEntity::DraughtingModelItemAssociation,
+        "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER" => PartialEntity::DraughtingModelItemAssociationWithPlaceholder { annotation_placeholder: AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId(u32::MAX)), },
+        "DRAUGHTING_PRE_DEFINED_COLOUR" => PartialEntity::DraughtingPreDefinedColour,
+        "DRAUGHTING_PRE_DEFINED_CURVE_FONT" => PartialEntity::DraughtingPreDefinedCurveFont,
+        "DRAUGHTING_PRE_DEFINED_TEXT_FONT" => PartialEntity::DraughtingPreDefinedTextFont,
+        "EDGE" => PartialEntity::Edge { edge_start: None, edge_end: None, },
+        "EDGE_CURVE" => PartialEntity::EdgeCurve { edge_geometry: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)), same_sense: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "EDGE_CURVE.same_sense")?, Attribute::Enum(s) if s == "T")))?, },
+        "EDGE_LOOP" => PartialEntity::EdgeLoop,
+        "EFFECTIVITY" => PartialEntity::Effectivity { id: (as_text(req(&p.attributes, 0, "EFFECTIVITY.id")?, "EFFECTIVITY.id", tt))?, },
+        "ELEMENTARY_SURFACE" => PartialEntity::ElementarySurface { position: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)), },
+        "EXPRESSION" => PartialEntity::Expression,
+        "EXTERNAL_IDENTIFICATION_ASSIGNMENT" => PartialEntity::ExternalIdentificationAssignment { source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)), },
+        "EXTERNAL_SOURCE" => PartialEntity::ExternalSource { source_id: (read_string_select(req(&p.attributes, 0, "EXTERNAL_SOURCE.source_id")?, "EXTERNAL_SOURCE.source_id", tt))?, },
+        "EXTERNALLY_DEFINED_CHARACTER_GLYPH" => PartialEntity::ExternallyDefinedCharacterGlyph,
+        "EXTERNALLY_DEFINED_CURVE_FONT" => PartialEntity::ExternallyDefinedCurveFont,
+        "EXTERNALLY_DEFINED_HATCH_STYLE" => PartialEntity::ExternallyDefinedHatchStyle,
+        "EXTERNALLY_DEFINED_ITEM" => PartialEntity::ExternallyDefinedItem { item_id: (read_string_select(req(&p.attributes, 0, "EXTERNALLY_DEFINED_ITEM.item_id")?, "EXTERNALLY_DEFINED_ITEM.item_id", tt))?, source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)), },
+        "EXTERNALLY_DEFINED_STYLE" => PartialEntity::ExternallyDefinedStyle,
+        "EXTERNALLY_DEFINED_SYMBOL" => PartialEntity::ExternallyDefinedSymbol,
+        "EXTERNALLY_DEFINED_TEXT_FONT" => PartialEntity::ExternallyDefinedTextFont,
+        "EXTERNALLY_DEFINED_TILE" => PartialEntity::ExternallyDefinedTile,
+        "EXTERNALLY_DEFINED_TILE_STYLE" => PartialEntity::ExternallyDefinedTileStyle,
+        "FACE" => PartialEntity::Face { bounds: Vec::new(), },
+        "FACE_BOUND" => PartialEntity::FaceBound { bound: LoopRef::EdgeLoop(EdgeLoopId(u32::MAX)), orientation: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "FACE_BOUND.orientation")?, Attribute::Enum(s) if s == "T")))?, },
+        "FACE_OUTER_BOUND" => PartialEntity::FaceOuterBound,
+        "FACE_SURFACE" => PartialEntity::FaceSurface { face_geometry: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)), same_sense: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "FACE_SURFACE.same_sense")?, Attribute::Enum(s) if s == "T")))?, },
+        "FILL_AREA_STYLE" => PartialEntity::FillAreaStyle { name: (as_text(req(&p.attributes, 0, "FILL_AREA_STYLE.name")?, "FILL_AREA_STYLE.name", tt))?, fill_styles: Vec::new(), },
+        "FILL_AREA_STYLE_HATCHING" => PartialEntity::FillAreaStyleHatching { hatch_line_appearance: CurveStyleRef::CurveStyle(CurveStyleId(u32::MAX)), start_of_next_hatch_line: OneDirectionRepeatFactorRef::OneDirectionRepeatFactor(OneDirectionRepeatFactorId(u32::MAX)), point_of_reference_hatch_line: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)), pattern_start: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)), hatch_line_angle: (as_real(req(&p.attributes, 4, "FILL_AREA_STYLE_HATCHING.hatch_line_angle")?, "FILL_AREA_STYLE_HATCHING.hatch_line_angle"))?, },
+        "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE" => PartialEntity::FillAreaStyleTileSymbolWithStyle { symbol: AnnotationSymbolOccurrenceRef::AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId(u32::MAX)), },
+        "FILL_AREA_STYLE_TILES" => PartialEntity::FillAreaStyleTiles { tiling_pattern: TwoDirectionRepeatFactorRef::TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId(u32::MAX)), tiles: Vec::new(), tiling_scale: (as_real(req(&p.attributes, 2, "FILL_AREA_STYLE_TILES.tiling_scale")?, "FILL_AREA_STYLE_TILES.tiling_scale"))?, },
+        "FLATNESS_TOLERANCE" => PartialEntity::FlatnessTolerance,
+        "FOUNDED_ITEM" => PartialEntity::FoundedItem,
+        "FUNCTIONALLY_DEFINED_TRANSFORMATION" => PartialEntity::FunctionallyDefinedTransformation { name: (as_text(req(&p.attributes, 0, "FUNCTIONALLY_DEFINED_TRANSFORMATION.name")?, "FUNCTIONALLY_DEFINED_TRANSFORMATION.name", tt))?, description: match req(&p.attributes, 1, "FUNCTIONALLY_DEFINED_TRANSFORMATION.description")? { Attribute::Unset => None, other => Some((as_text(other, "FUNCTIONALLY_DEFINED_TRANSFORMATION.description", tt))?) }, },
+        "GENERAL_DATUM_REFERENCE" => PartialEntity::GeneralDatumReference { base: DatumOrCommonDatumRef::CommonDatum(CommonDatumId(u32::MAX)), modifiers: None, },
+        "GENERAL_PROPERTY" => PartialEntity::GeneralProperty { id: (as_text(req(&p.attributes, 0, "GENERAL_PROPERTY.id")?, "GENERAL_PROPERTY.id", tt))?, name: (as_text(req(&p.attributes, 1, "GENERAL_PROPERTY.name")?, "GENERAL_PROPERTY.name", tt))?, description: match req(&p.attributes, 2, "GENERAL_PROPERTY.description")? { Attribute::Unset => None, other => Some((as_text(other, "GENERAL_PROPERTY.description", tt))?) }, },
+        "GENERIC_EXPRESSION" => PartialEntity::GenericExpression,
+        "GENERIC_LITERAL" => PartialEntity::GenericLiteral,
+        "GENERIC_PRODUCT_DEFINITION_REFERENCE" => PartialEntity::GenericProductDefinitionReference { source: ExternalSourceRef::ExternalSource(ExternalSourceId(u32::MAX)), },
+        "GEOMETRIC_CURVE_SET" => PartialEntity::GeometricCurveSet,
+        "GEOMETRIC_ITEM_SPECIFIC_USAGE" => PartialEntity::GeometricItemSpecificUsage,
+        "GEOMETRIC_REPRESENTATION_CONTEXT" => PartialEntity::GeometricRepresentationContext { coordinate_space_dimension: (as_int(req(&p.attributes, 0, "GEOMETRIC_REPRESENTATION_CONTEXT.coordinate_space_dimension")?, "GEOMETRIC_REPRESENTATION_CONTEXT.coordinate_space_dimension"))?, },
+        "GEOMETRIC_REPRESENTATION_ITEM" => PartialEntity::GeometricRepresentationItem,
+        "GEOMETRIC_SET" => PartialEntity::GeometricSet { elements: Vec::new(), },
+        "GEOMETRIC_TOLERANCE" => PartialEntity::GeometricTolerance { name: (as_text(req(&p.attributes, 0, "GEOMETRIC_TOLERANCE.name")?, "GEOMETRIC_TOLERANCE.name", tt))?, description: match req(&p.attributes, 1, "GEOMETRIC_TOLERANCE.description")? { Attribute::Unset => None, other => Some((as_text(other, "GEOMETRIC_TOLERANCE.description", tt))?) }, magnitude: None, toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), },
+        "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE" => PartialEntity::GeometricToleranceWithDatumReference { datum_system: Vec::new(), },
+        "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT" => PartialEntity::GeometricToleranceWithDefinedAreaUnit { area_type: (match req(&p.attributes, 0, "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.area_type")? { Attribute::Enum(s) => AreaUnitType::parse(s).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.area_type: bad enum {s:?}")), o => Err(format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.area_type: expected enum, got {o:?}")) })?, second_unit_size: None, },
+        "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT" => PartialEntity::GeometricToleranceWithDefinedUnit { unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
+        "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE" => PartialEntity::GeometricToleranceWithMaximumTolerance { maximum_upper_tolerance: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
+        "GEOMETRIC_TOLERANCE_WITH_MODIFIERS" => PartialEntity::GeometricToleranceWithModifiers { modifiers: (match req(&p.attributes, 0, "GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers")? { Attribute::List(l) => l.iter().map(|e| match e { Attribute::Enum(s) => GeometricToleranceModifier::parse(s).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers: bad enum {s:?}")), o => Err(format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers: expected enum, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers: expected list, got {o:?}")) })?, },
+        "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION" => PartialEntity::GeometricallyBoundedSurfaceShapeRepresentation,
+        "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION" => PartialEntity::GeometricallyBoundedWireframeShapeRepresentation,
+        "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT" => PartialEntity::GlobalUncertaintyAssignedContext { uncertainty: Vec::new(), },
+        "GLOBAL_UNIT_ASSIGNED_CONTEXT" => PartialEntity::GlobalUnitAssignedContext { units: Vec::new(), },
+        "GROUP" => PartialEntity::Group { name: (as_text(req(&p.attributes, 0, "GROUP.name")?, "GROUP.name", tt))?, description: match req(&p.attributes, 1, "GROUP.description")? { Attribute::Unset => None, other => Some((as_text(other, "GROUP.description", tt))?) }, },
+        "GROUP_ASSIGNMENT" => PartialEntity::GroupAssignment { assigned_group: GroupRef::Group(GroupId(u32::MAX)), },
+        "IDENTIFICATION_ASSIGNMENT" => PartialEntity::IdentificationAssignment { assigned_id: (as_text(req(&p.attributes, 0, "IDENTIFICATION_ASSIGNMENT.assigned_id")?, "IDENTIFICATION_ASSIGNMENT.assigned_id", tt))?, role: IdentificationRoleRef::IdentificationRole(IdentificationRoleId(u32::MAX)), },
+        "INT_LITERAL" => PartialEntity::IntLiteral,
+        "INTEGER_REPRESENTATION_ITEM" => PartialEntity::IntegerRepresentationItem,
+        "INTERSECTION_CURVE" => PartialEntity::IntersectionCurve,
+        "INVISIBILITY" => PartialEntity::Invisibility { invisible_items: Vec::new(), },
+        "ITEM_DEFINED_TRANSFORMATION" => PartialEntity::ItemDefinedTransformation { name: (as_text(req(&p.attributes, 0, "ITEM_DEFINED_TRANSFORMATION.name")?, "ITEM_DEFINED_TRANSFORMATION.name", tt))?, description: match req(&p.attributes, 1, "ITEM_DEFINED_TRANSFORMATION.description")? { Attribute::Unset => None, other => Some((as_text(other, "ITEM_DEFINED_TRANSFORMATION.description", tt))?) }, transform_item_1: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), transform_item_2: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), },
+        "ITEM_IDENTIFIED_REPRESENTATION_USAGE" => PartialEntity::ItemIdentifiedRepresentationUsage { name: (as_text(req(&p.attributes, 0, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.name")?, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.name", tt))?, description: match req(&p.attributes, 1, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.description")? { Attribute::Unset => None, other => Some((as_text(other, "ITEM_IDENTIFIED_REPRESENTATION_USAGE.description", tt))?) }, definition: ItemIdentifiedRepresentationUsageDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), identified_item: ItemIdentifiedRepresentationUsageSelectRef::AdvancedFace(AdvancedFaceId(u32::MAX)), },
+        "LEADER_CURVE" => PartialEntity::LeaderCurve,
+        "LEADER_DIRECTED_CALLOUT" => PartialEntity::LeaderDirectedCallout,
+        "LEADER_TERMINATOR" => PartialEntity::LeaderTerminator,
+        "LENGTH_MEASURE_WITH_UNIT" => PartialEntity::LengthMeasureWithUnit,
+        "LENGTH_UNIT" => PartialEntity::LengthUnit,
+        "LINE_PROFILE_TOLERANCE" => PartialEntity::LineProfileTolerance,
+        "LITERAL_NUMBER" => PartialEntity::LiteralNumber { the_value: (as_real(req(&p.attributes, 0, "LITERAL_NUMBER.the_value")?, "LITERAL_NUMBER.the_value"))?, },
+        "LOOP" => PartialEntity::Loop,
+        "MANIFOLD_SOLID_BREP" => PartialEntity::ManifoldSolidBrep { outer: ClosedShellRef::ClosedShell(ClosedShellId(u32::MAX)), },
+        "MANIFOLD_SURFACE_SHAPE_REPRESENTATION" => PartialEntity::ManifoldSurfaceShapeRepresentation,
+        "MAPPED_ITEM" => PartialEntity::MappedItem { mapping_source: RepresentationMapRef::CameraUsage(CameraUsageId(u32::MAX)), mapping_target: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), },
+        "MASS_UNIT" => PartialEntity::MassUnit,
+        "MEASURE_REPRESENTATION_ITEM" => PartialEntity::MeasureRepresentationItem,
+        "MEASURE_WITH_UNIT" => PartialEntity::MeasureWithUnit { value_component: (read_measure_value(req(&p.attributes, 0, "MEASURE_WITH_UNIT.value_component")?, "MEASURE_WITH_UNIT.value_component", tt))?, unit_component: UnitRef::AreaUnit(AreaUnitId(u32::MAX)), },
+        "MECHANICAL_CONTEXT" => PartialEntity::MechanicalContext,
+        "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP" => PartialEntity::MechanicalDesignAndDraughtingRelationship,
+        "MODEL_GEOMETRIC_VIEW" => PartialEntity::ModelGeometricView,
+        "MODIFIED_GEOMETRIC_TOLERANCE" => PartialEntity::ModifiedGeometricTolerance { modifier: (match req(&p.attributes, 0, "MODIFIED_GEOMETRIC_TOLERANCE.modifier")? { Attribute::Enum(s) => LimitCondition::parse(s).ok_or_else(|| format!("MODIFIED_GEOMETRIC_TOLERANCE.modifier: bad enum {s:?}")), o => Err(format!("MODIFIED_GEOMETRIC_TOLERANCE.modifier: expected enum, got {o:?}")) })?, },
+        "NAMED_UNIT" => PartialEntity::NamedUnit { dimensions: None, },
+        "NEXT_ASSEMBLY_USAGE_OCCURRENCE" => PartialEntity::NextAssemblyUsageOccurrence,
+        "NUMERIC_EXPRESSION" => PartialEntity::NumericExpression,
+        "ONE_DIRECTION_REPEAT_FACTOR" => PartialEntity::OneDirectionRepeatFactor { repeat_factor: VectorRef::Vector(VectorId(u32::MAX)), },
+        "OPEN_SHELL" => PartialEntity::OpenShell,
+        "ORGANIZATIONAL_ADDRESS" => PartialEntity::OrganizationalAddress { organizations: Vec::new(), description: match req(&p.attributes, 1, "ORGANIZATIONAL_ADDRESS.description")? { Attribute::Unset => None, other => Some((as_text(other, "ORGANIZATIONAL_ADDRESS.description", tt))?) }, },
+        "ORIENTED_CLOSED_SHELL" => PartialEntity::OrientedClosedShell { closed_shell_element: ClosedShellRef::ClosedShell(ClosedShellId(u32::MAX)), orientation: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "ORIENTED_CLOSED_SHELL.orientation")?, Attribute::Enum(s) if s == "T")))?, },
+        "ORIENTED_EDGE" => PartialEntity::OrientedEdge { edge_element: EdgeRef::Edge(EdgeId(u32::MAX)), orientation: (Ok::<bool, String>(matches!(req(&p.attributes, 1, "ORIENTED_EDGE.orientation")?, Attribute::Enum(s) if s == "T")))?, },
+        "OVER_RIDING_STYLED_ITEM" => PartialEntity::OverRidingStyledItem { over_ridden_style: StyledItemRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(u32::MAX)), },
+        "PARALLELISM_TOLERANCE" => PartialEntity::ParallelismTolerance,
+        "PARAMETRIC_REPRESENTATION_CONTEXT" => PartialEntity::ParametricRepresentationContext,
+        "PATH" => PartialEntity::Path { edge_list: Vec::new(), },
+        "PCURVE" => PartialEntity::Pcurve { basis_surface: SurfaceRef::BSplineSurface(BSplineSurfaceId(u32::MAX)), reference_to_curve: DefinitionalRepresentationRef::DefinitionalRepresentation(DefinitionalRepresentationId(u32::MAX)), },
+        "PERPENDICULARITY_TOLERANCE" => PartialEntity::PerpendicularityTolerance,
+        "PERSON_AND_ORGANIZATION_ADDRESS" => PartialEntity::PersonAndOrganizationAddress,
+        "PERSON_AND_ORGANIZATION_ASSIGNMENT" => PartialEntity::PersonAndOrganizationAssignment { assigned_person_and_organization: PersonAndOrganizationRef::PersonAndOrganization(PersonAndOrganizationId(u32::MAX)), role: PersonAndOrganizationRoleRef::PersonAndOrganizationRole(PersonAndOrganizationRoleId(u32::MAX)), },
+        "PERSONAL_ADDRESS" => PartialEntity::PersonalAddress { people: Vec::new(), description: match req(&p.attributes, 1, "PERSONAL_ADDRESS.description")? { Attribute::Unset => None, other => Some((as_text(other, "PERSONAL_ADDRESS.description", tt))?) }, },
+        "PLACED_DATUM_TARGET_FEATURE" => PartialEntity::PlacedDatumTargetFeature,
+        "PLACEMENT" => PartialEntity::Placement { location: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)), },
+        "PLANAR_BOX" => PartialEntity::PlanarBox { placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)), },
+        "PLANAR_EXTENT" => PartialEntity::PlanarExtent { size_in_x: (as_real(req(&p.attributes, 0, "PLANAR_EXTENT.size_in_x")?, "PLANAR_EXTENT.size_in_x"))?, size_in_y: (as_real(req(&p.attributes, 1, "PLANAR_EXTENT.size_in_y")?, "PLANAR_EXTENT.size_in_y"))?, },
+        "PLANE_ANGLE_MEASURE_WITH_UNIT" => PartialEntity::PlaneAngleMeasureWithUnit,
+        "PLANE_ANGLE_UNIT" => PartialEntity::PlaneAngleUnit,
+        "POINT" => PartialEntity::Point,
+        "POINT_STYLE" => PartialEntity::PointStyle { name: (as_text(req(&p.attributes, 0, "POINT_STYLE.name")?, "POINT_STYLE.name", tt))?, marker: None, marker_size: None, marker_colour: None, },
+        "POLY_LOOP" => PartialEntity::PolyLoop { polygon: Vec::new(), },
+        "POSITION_TOLERANCE" => PartialEntity::PositionTolerance,
+        "PRE_DEFINED_CHARACTER_GLYPH" => PartialEntity::PreDefinedCharacterGlyph,
+        "PRE_DEFINED_COLOUR" => PartialEntity::PreDefinedColour,
+        "PRE_DEFINED_CURVE_FONT" => PartialEntity::PreDefinedCurveFont,
+        "PRE_DEFINED_ITEM" => PartialEntity::PreDefinedItem { name: (as_text(req(&p.attributes, 0, "PRE_DEFINED_ITEM.name")?, "PRE_DEFINED_ITEM.name", tt))?, },
+        "PRE_DEFINED_MARKER" => PartialEntity::PreDefinedMarker,
+        "PRE_DEFINED_POINT_MARKER_SYMBOL" => PartialEntity::PreDefinedPointMarkerSymbol,
+        "PRE_DEFINED_PRESENTATION_STYLE" => PartialEntity::PreDefinedPresentationStyle,
+        "PRE_DEFINED_SURFACE_SIDE_STYLE" => PartialEntity::PreDefinedSurfaceSideStyle,
+        "PRE_DEFINED_SYMBOL" => PartialEntity::PreDefinedSymbol,
+        "PRE_DEFINED_TERMINATOR_SYMBOL" => PartialEntity::PreDefinedTerminatorSymbol,
+        "PRE_DEFINED_TEXT_FONT" => PartialEntity::PreDefinedTextFont,
+        "PRE_DEFINED_TILE" => PartialEntity::PreDefinedTile,
+        "PRESENTATION_AREA" => PartialEntity::PresentationArea,
+        "PRESENTATION_REPRESENTATION" => PartialEntity::PresentationRepresentation,
+        "PRESENTATION_SET" => PartialEntity::PresentationSet,
+        "PRESENTATION_STYLE_ASSIGNMENT" => PartialEntity::PresentationStyleAssignment { styles: Vec::new(), },
+        "PRESENTATION_STYLE_BY_CONTEXT" => PartialEntity::PresentationStyleByContext { style_context: StyleContextSelectRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
+        "PRESENTATION_VIEW" => PartialEntity::PresentationView,
+        "PRESENTED_ITEM" => PartialEntity::PresentedItem,
+        "PRODUCT" => PartialEntity::Product { id: (as_text(req(&p.attributes, 0, "PRODUCT.id")?, "PRODUCT.id", tt))?, name: (as_text(req(&p.attributes, 1, "PRODUCT.name")?, "PRODUCT.name", tt))?, description: match req(&p.attributes, 2, "PRODUCT.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT.description", tt))?) }, frame_of_reference: Vec::new(), },
+        "PRODUCT_CATEGORY" => PartialEntity::ProductCategory { name: (as_text(req(&p.attributes, 0, "PRODUCT_CATEGORY.name")?, "PRODUCT_CATEGORY.name", tt))?, description: match req(&p.attributes, 1, "PRODUCT_CATEGORY.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_CATEGORY.description", tt))?) }, },
+        "PRODUCT_CONCEPT" => PartialEntity::ProductConcept { id: (as_text(req(&p.attributes, 0, "PRODUCT_CONCEPT.id")?, "PRODUCT_CONCEPT.id", tt))?, name: (as_text(req(&p.attributes, 1, "PRODUCT_CONCEPT.name")?, "PRODUCT_CONCEPT.name", tt))?, description: match req(&p.attributes, 2, "PRODUCT_CONCEPT.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_CONCEPT.description", tt))?) }, market_context: ProductConceptContextRef::ProductConceptContext(ProductConceptContextId(u32::MAX)), },
+        "PRODUCT_CONCEPT_FEATURE" => PartialEntity::ProductConceptFeature { id: (as_text(req(&p.attributes, 0, "PRODUCT_CONCEPT_FEATURE.id")?, "PRODUCT_CONCEPT_FEATURE.id", tt))?, name: (as_text(req(&p.attributes, 1, "PRODUCT_CONCEPT_FEATURE.name")?, "PRODUCT_CONCEPT_FEATURE.name", tt))?, description: match req(&p.attributes, 2, "PRODUCT_CONCEPT_FEATURE.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_CONCEPT_FEATURE.description", tt))?) }, },
+        "PRODUCT_CONCEPT_FEATURE_CATEGORY" => PartialEntity::ProductConceptFeatureCategory,
+        "PRODUCT_CONTEXT" => PartialEntity::ProductContext { discipline_type: (as_text(req(&p.attributes, 0, "PRODUCT_CONTEXT.discipline_type")?, "PRODUCT_CONTEXT.discipline_type", tt))?, },
+        "PRODUCT_DEFINITION" => PartialEntity::ProductDefinition { id: (as_text(req(&p.attributes, 0, "PRODUCT_DEFINITION.id")?, "PRODUCT_DEFINITION.id", tt))?, description: match req(&p.attributes, 1, "PRODUCT_DEFINITION.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_DEFINITION.description", tt))?) }, formation: ProductDefinitionFormationRef::ProductDefinitionFormation(ProductDefinitionFormationId(u32::MAX)), frame_of_reference: ProductDefinitionContextRef::DesignContext(DesignContextId(u32::MAX)), },
+        "PRODUCT_DEFINITION_CONTEXT" => PartialEntity::ProductDefinitionContext { life_cycle_stage: (as_text(req(&p.attributes, 0, "PRODUCT_DEFINITION_CONTEXT.life_cycle_stage")?, "PRODUCT_DEFINITION_CONTEXT.life_cycle_stage", tt))?, },
+        "PRODUCT_DEFINITION_EFFECTIVITY" => PartialEntity::ProductDefinitionEffectivity { usage: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(u32::MAX)), },
+        "PRODUCT_DEFINITION_FORMATION" => PartialEntity::ProductDefinitionFormation { id: (as_text(req(&p.attributes, 0, "PRODUCT_DEFINITION_FORMATION.id")?, "PRODUCT_DEFINITION_FORMATION.id", tt))?, description: match req(&p.attributes, 1, "PRODUCT_DEFINITION_FORMATION.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_DEFINITION_FORMATION.description", tt))?) }, of_product: ProductRef::Product(ProductId(u32::MAX)), },
+        "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE" => PartialEntity::ProductDefinitionFormationWithSpecifiedSource { make_or_buy: (match req(&p.attributes, 0, "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE.make_or_buy")? { Attribute::Enum(s) => Source::parse(s).ok_or_else(|| format!("PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE.make_or_buy: bad enum {s:?}")), o => Err(format!("PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE.make_or_buy: expected enum, got {o:?}")) })?, },
+        "PRODUCT_DEFINITION_OCCURRENCE" => PartialEntity::ProductDefinitionOccurrence { id: (as_text(req(&p.attributes, 0, "PRODUCT_DEFINITION_OCCURRENCE.id")?, "PRODUCT_DEFINITION_OCCURRENCE.id", tt))?, name: match req(&p.attributes, 1, "PRODUCT_DEFINITION_OCCURRENCE.name")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_DEFINITION_OCCURRENCE.name", tt))?) }, description: match req(&p.attributes, 2, "PRODUCT_DEFINITION_OCCURRENCE.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_DEFINITION_OCCURRENCE.description", tt))?) }, definition: None, quantity: None, },
+        "PRODUCT_DEFINITION_RELATIONSHIP" => PartialEntity::ProductDefinitionRelationship { id: (as_text(req(&p.attributes, 0, "PRODUCT_DEFINITION_RELATIONSHIP.id")?, "PRODUCT_DEFINITION_RELATIONSHIP.id", tt))?, name: (as_text(req(&p.attributes, 1, "PRODUCT_DEFINITION_RELATIONSHIP.name")?, "PRODUCT_DEFINITION_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 2, "PRODUCT_DEFINITION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_DEFINITION_RELATIONSHIP.description", tt))?) }, relating_product_definition: ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(GenericProductDefinitionReferenceId(u32::MAX)), related_product_definition: ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(GenericProductDefinitionReferenceId(u32::MAX)), },
+        "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP" => PartialEntity::ProductDefinitionRelationshipRelationship { id: (as_text(req(&p.attributes, 0, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.id")?, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.id", tt))?, name: (as_text(req(&p.attributes, 1, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.name")?, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 2, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP.description", tt))?) }, relating: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(u32::MAX)), related: ProductDefinitionRelationshipRef::AssemblyComponentUsage(AssemblyComponentUsageId(u32::MAX)), },
+        "PRODUCT_DEFINITION_SHAPE" => PartialEntity::ProductDefinitionShape,
+        "PRODUCT_DEFINITION_USAGE" => PartialEntity::ProductDefinitionUsage,
+        "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS" => PartialEntity::ProductDefinitionWithAssociatedDocuments { documentation_ids: Vec::new(), },
+        "PRODUCT_RELATED_PRODUCT_CATEGORY" => PartialEntity::ProductRelatedProductCategory { products: Vec::new(), },
+        "PROJECTED_ZONE_DEFINITION" => PartialEntity::ProjectedZoneDefinition { projection_end: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), projected_length: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
+        "PROPERTY_DEFINITION" => PartialEntity::PropertyDefinition { name: (as_text(req(&p.attributes, 0, "PROPERTY_DEFINITION.name")?, "PROPERTY_DEFINITION.name", tt))?, description: match req(&p.attributes, 1, "PROPERTY_DEFINITION.description")? { Attribute::Unset => None, other => Some((as_text(other, "PROPERTY_DEFINITION.description", tt))?) }, definition: CharacterizedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), },
+        "PROPERTY_DEFINITION_REPRESENTATION" => PartialEntity::PropertyDefinitionRepresentation { definition: RepresentedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
+        "QUALIFIED_REPRESENTATION_ITEM" => PartialEntity::QualifiedRepresentationItem { qualifiers: Vec::new(), },
+        "QUASI_UNIFORM_CURVE" => PartialEntity::QuasiUniformCurve,
+        "QUASI_UNIFORM_SURFACE" => PartialEntity::QuasiUniformSurface,
+        "RATIO_MEASURE_WITH_UNIT" => PartialEntity::RatioMeasureWithUnit,
+        "RATIO_UNIT" => PartialEntity::RatioUnit,
+        "RATIONAL_B_SPLINE_CURVE" => PartialEntity::RationalBSplineCurve { weights_data: (match req(&p.attributes, 0, "RATIONAL_B_SPLINE_CURVE.weights_data")? { Attribute::List(l) => l.iter().map(|e| as_real(e, "RATIONAL_B_SPLINE_CURVE.weights_data")).collect::<Result<Vec<_>, String>>(), o => Err(format!("RATIONAL_B_SPLINE_CURVE.weights_data: expected list, got {o:?}")) })?, },
+        "RATIONAL_B_SPLINE_SURFACE" => PartialEntity::RationalBSplineSurface { weights_data: (match req(&p.attributes, 0, "RATIONAL_B_SPLINE_SURFACE.weights_data")? { Attribute::List(l) => l.iter().map(|e| match e { Attribute::List(l) => l.iter().map(|e| as_real(e, "RATIONAL_B_SPLINE_SURFACE.weights_data")).collect::<Result<Vec<_>, String>>(), o => Err(format!("RATIONAL_B_SPLINE_SURFACE.weights_data: expected list, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("RATIONAL_B_SPLINE_SURFACE.weights_data: expected list, got {o:?}")) })?, },
+        "REAL_LITERAL" => PartialEntity::RealLiteral,
+        "REAL_REPRESENTATION_ITEM" => PartialEntity::RealRepresentationItem,
+        "REPOSITIONED_TESSELLATED_ITEM" => PartialEntity::RepositionedTessellatedItem { location: Axis2Placement3dRef::Axis2Placement3d(Axis2Placement3dId(u32::MAX)), },
+        "REPRESENTATION" => PartialEntity::Representation { name: (as_text(req(&p.attributes, 0, "REPRESENTATION.name")?, "REPRESENTATION.name", tt))?, items: Vec::new(), context_of_items: RepresentationContextRef::GeometricRepresentationContext(GeometricRepresentationContextId(u32::MAX)), },
+        "REPRESENTATION_CONTEXT" => PartialEntity::RepresentationContext { context_identifier: (as_text(req(&p.attributes, 0, "REPRESENTATION_CONTEXT.context_identifier")?, "REPRESENTATION_CONTEXT.context_identifier", tt))?, context_type: (as_text(req(&p.attributes, 1, "REPRESENTATION_CONTEXT.context_type")?, "REPRESENTATION_CONTEXT.context_type", tt))?, },
+        "REPRESENTATION_ITEM" => PartialEntity::RepresentationItem { name: (as_text(req(&p.attributes, 0, "REPRESENTATION_ITEM.name")?, "REPRESENTATION_ITEM.name", tt))?, },
+        "REPRESENTATION_MAP" => PartialEntity::RepresentationMap { mapping_origin: RepresentationItemRef::AdvancedFace(AdvancedFaceId(u32::MAX)), mapped_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
+        "REPRESENTATION_REFERENCE" => PartialEntity::RepresentationReference { id: (as_text(req(&p.attributes, 0, "REPRESENTATION_REFERENCE.id")?, "REPRESENTATION_REFERENCE.id", tt))?, context_of_items: RepresentationContextReferenceRef::RepresentationContextReference(RepresentationContextReferenceId(u32::MAX)), },
+        "REPRESENTATION_RELATIONSHIP" => PartialEntity::RepresentationRelationship { name: (as_text(req(&p.attributes, 0, "REPRESENTATION_RELATIONSHIP.name")?, "REPRESENTATION_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 1, "REPRESENTATION_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "REPRESENTATION_RELATIONSHIP.description", tt))?) }, rep_1: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), rep_2: RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
+        "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION" => PartialEntity::RepresentationRelationshipWithTransformation { transformation_operator: TransformationRef::FunctionallyDefinedTransformation(FunctionallyDefinedTransformationId(u32::MAX)), },
+        "ROUNDNESS_TOLERANCE" => PartialEntity::RoundnessTolerance,
+        "SEAM_CURVE" => PartialEntity::SeamCurve,
+        "SECURITY_CLASSIFICATION_ASSIGNMENT" => PartialEntity::SecurityClassificationAssignment { assigned_security_classification: SecurityClassificationRef::SecurityClassification(SecurityClassificationId(u32::MAX)), },
+        "SHAPE_ASPECT" => PartialEntity::ShapeAspect { name: (as_text(req(&p.attributes, 0, "SHAPE_ASPECT.name")?, "SHAPE_ASPECT.name", tt))?, description: match req(&p.attributes, 1, "SHAPE_ASPECT.description")? { Attribute::Unset => None, other => Some((as_text(other, "SHAPE_ASPECT.description", tt))?) }, of_shape: ProductDefinitionShapeRef::ProductDefinitionShape(ProductDefinitionShapeId(u32::MAX)), product_definitional: match req(&p.attributes, 3, "SHAPE_ASPECT.product_definitional")? { Attribute::Derived => None, other => Some((as_logical(other, "SHAPE_ASPECT.product_definitional"))?) }, },
+        "SHAPE_ASPECT_RELATIONSHIP" => PartialEntity::ShapeAspectRelationship { name: (as_text(req(&p.attributes, 0, "SHAPE_ASPECT_RELATIONSHIP.name")?, "SHAPE_ASPECT_RELATIONSHIP.name", tt))?, description: match req(&p.attributes, 1, "SHAPE_ASPECT_RELATIONSHIP.description")? { Attribute::Unset => None, other => Some((as_text(other, "SHAPE_ASPECT_RELATIONSHIP.description", tt))?) }, relating_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), },
+        "SHAPE_DEFINITION_REPRESENTATION" => PartialEntity::ShapeDefinitionRepresentation,
+        "SHAPE_DIMENSION_REPRESENTATION" => PartialEntity::ShapeDimensionRepresentation,
+        "SHAPE_REPRESENTATION" => PartialEntity::ShapeRepresentation,
+        "SHAPE_REPRESENTATION_RELATIONSHIP" => PartialEntity::ShapeRepresentationRelationship,
+        "SHAPE_REPRESENTATION_WITH_PARAMETERS" => PartialEntity::ShapeRepresentationWithParameters,
+        "SHELL_BASED_SURFACE_MODEL" => PartialEntity::ShellBasedSurfaceModel { sbsm_boundary: Vec::new(), },
+        "SI_UNIT" => PartialEntity::SiUnit { prefix: match req(&p.attributes, 0, "SI_UNIT.prefix")? { Attribute::Unset => None, other => Some((match other { Attribute::Enum(s) => SiPrefix::parse(s).ok_or_else(|| format!("SI_UNIT.prefix: bad enum {s:?}")), o => Err(format!("SI_UNIT.prefix: expected enum, got {o:?}")) })?) }, name: (match req(&p.attributes, 1, "SI_UNIT.name")? { Attribute::Enum(s) => SiUnitName::parse(s).ok_or_else(|| format!("SI_UNIT.name: bad enum {s:?}")), o => Err(format!("SI_UNIT.name: expected enum, got {o:?}")) })?, },
+        "SIMPLE_GENERIC_EXPRESSION" => PartialEntity::SimpleGenericExpression,
+        "SIMPLE_NUMERIC_EXPRESSION" => PartialEntity::SimpleNumericExpression,
+        "SOLID_ANGLE_UNIT" => PartialEntity::SolidAngleUnit,
+        "SOLID_MODEL" => PartialEntity::SolidModel,
+        "START_REQUEST" => PartialEntity::StartRequest { items: Vec::new(), },
+        "STATE_OBSERVED" => PartialEntity::StateObserved { name: (as_text(req(&p.attributes, 0, "STATE_OBSERVED.name")?, "STATE_OBSERVED.name", tt))?, description: match req(&p.attributes, 1, "STATE_OBSERVED.description")? { Attribute::Unset => None, other => Some((as_text(other, "STATE_OBSERVED.description", tt))?) }, },
+        "STATE_TYPE" => PartialEntity::StateType { name: (as_text(req(&p.attributes, 0, "STATE_TYPE.name")?, "STATE_TYPE.name", tt))?, description: match req(&p.attributes, 1, "STATE_TYPE.description")? { Attribute::Unset => None, other => Some((as_text(other, "STATE_TYPE.description", tt))?) }, },
+        "STRAIGHTNESS_TOLERANCE" => PartialEntity::StraightnessTolerance,
+        "STYLED_ITEM" => PartialEntity::StyledItem { styles: Vec::new(), item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
+        "SURFACE" => PartialEntity::Surface,
+        "SURFACE_CURVE" => PartialEntity::SurfaceCurve { curve_3d: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)), associated_geometry: Vec::new(), master_representation: (match req(&p.attributes, 2, "SURFACE_CURVE.master_representation")? { Attribute::Enum(s) => PreferredSurfaceCurveRepresentation::parse(s).ok_or_else(|| format!("SURFACE_CURVE.master_representation: bad enum {s:?}")), o => Err(format!("SURFACE_CURVE.master_representation: expected enum, got {o:?}")) })?, },
+        "SURFACE_PROFILE_TOLERANCE" => PartialEntity::SurfaceProfileTolerance,
+        "SURFACE_SIDE_STYLE" => PartialEntity::SurfaceSideStyle { name: (as_text(req(&p.attributes, 0, "SURFACE_SIDE_STYLE.name")?, "SURFACE_SIDE_STYLE.name", tt))?, styles: Vec::new(), },
+        "SURFACE_STYLE_BOUNDARY" => PartialEntity::SurfaceStyleBoundary { style_of_boundary: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), },
+        "SURFACE_STYLE_CONTROL_GRID" => PartialEntity::SurfaceStyleControlGrid { style_of_control_grid: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), },
+        "SURFACE_STYLE_FILL_AREA" => PartialEntity::SurfaceStyleFillArea { fill_area: FillAreaStyleRef::FillAreaStyle(FillAreaStyleId(u32::MAX)), },
+        "SURFACE_STYLE_PARAMETER_LINE" => PartialEntity::SurfaceStyleParameterLine { style_of_parameter_lines: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), direction_counts: (match req(&p.attributes, 1, "SURFACE_STYLE_PARAMETER_LINE.direction_counts")? { Attribute::List(l) => l.iter().map(|e| read_int_measure_value(e, "SURFACE_STYLE_PARAMETER_LINE.direction_counts", tt)).collect::<Result<Vec<_>, String>>(), o => Err(format!("SURFACE_STYLE_PARAMETER_LINE.direction_counts: expected list, got {o:?}")) })?, },
+        "SURFACE_STYLE_REFLECTANCE_AMBIENT" => PartialEntity::SurfaceStyleReflectanceAmbient { ambient_reflectance: (as_real(req(&p.attributes, 0, "SURFACE_STYLE_REFLECTANCE_AMBIENT.ambient_reflectance")?, "SURFACE_STYLE_REFLECTANCE_AMBIENT.ambient_reflectance"))?, },
+        "SURFACE_STYLE_RENDERING" => PartialEntity::SurfaceStyleRendering { rendering_method: (match req(&p.attributes, 0, "SURFACE_STYLE_RENDERING.rendering_method")? { Attribute::Enum(s) => ShadingSurfaceMethod::parse(s).ok_or_else(|| format!("SURFACE_STYLE_RENDERING.rendering_method: bad enum {s:?}")), o => Err(format!("SURFACE_STYLE_RENDERING.rendering_method: expected enum, got {o:?}")) })?, surface_colour: ColourRef::Colour(ColourId(u32::MAX)), },
+        "SURFACE_STYLE_RENDERING_WITH_PROPERTIES" => PartialEntity::SurfaceStyleRenderingWithProperties { properties: Vec::new(), },
+        "SURFACE_STYLE_SEGMENTATION_CURVE" => PartialEntity::SurfaceStyleSegmentationCurve { style_of_segmentation_curve: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), },
+        "SURFACE_STYLE_SILHOUETTE" => PartialEntity::SurfaceStyleSilhouette { style_of_silhouette: CurveOrRenderRef::CurveStyle(CurveStyleId(u32::MAX)), },
+        "SURFACE_STYLE_USAGE" => PartialEntity::SurfaceStyleUsage { side: (match req(&p.attributes, 0, "SURFACE_STYLE_USAGE.side")? { Attribute::Enum(s) => SurfaceSide::parse(s).ok_or_else(|| format!("SURFACE_STYLE_USAGE.side: bad enum {s:?}")), o => Err(format!("SURFACE_STYLE_USAGE.side: expected enum, got {o:?}")) })?, style: SurfaceSideStyleSelectRef::PreDefinedSurfaceSideStyle(PreDefinedSurfaceSideStyleId(u32::MAX)), },
+        "SYMBOL_REPRESENTATION" => PartialEntity::SymbolRepresentation,
+        "SYMBOL_STYLE" => PartialEntity::SymbolStyle { name: (as_text(req(&p.attributes, 0, "SYMBOL_STYLE.name")?, "SYMBOL_STYLE.name", tt))?, style_of_symbol: SymbolStyleSelectRef::SymbolColour(SymbolColourId(u32::MAX)), },
+        "TERMINATOR_SYMBOL" => PartialEntity::TerminatorSymbol { annotated_curve: AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(u32::MAX)), },
+        "TESSELLATED_GEOMETRIC_SET" => PartialEntity::TessellatedGeometricSet { children: Vec::new(), },
+        "TESSELLATED_ITEM" => PartialEntity::TessellatedItem,
+        "TESSELLATED_SHAPE_REPRESENTATION" => PartialEntity::TessellatedShapeRepresentation,
+        "TESSELLATED_STRUCTURED_ITEM" => PartialEntity::TessellatedStructuredItem,
+        "TEXT_LITERAL" => PartialEntity::TextLiteral { literal: (as_text(req(&p.attributes, 0, "TEXT_LITERAL.literal")?, "TEXT_LITERAL.literal", tt))?, placement: Axis2PlacementRef::Axis2Placement2d(Axis2Placement2dId(u32::MAX)), alignment: (as_text(req(&p.attributes, 2, "TEXT_LITERAL.alignment")?, "TEXT_LITERAL.alignment", tt))?, path: (match req(&p.attributes, 3, "TEXT_LITERAL.path")? { Attribute::Enum(s) => TextPath::parse(s).ok_or_else(|| format!("TEXT_LITERAL.path: bad enum {s:?}")), o => Err(format!("TEXT_LITERAL.path: expected enum, got {o:?}")) })?, font: FontSelectRef::DraughtingPreDefinedTextFont(DraughtingPreDefinedTextFontId(u32::MAX)), },
+        "TEXT_STYLE" => PartialEntity::TextStyle { name: (as_text(req(&p.attributes, 0, "TEXT_STYLE.name")?, "TEXT_STYLE.name", tt))?, character_appearance: CharacterStyleSelectRef::CharacterGlyphStyleOutline(CharacterGlyphStyleOutlineId(u32::MAX)), },
+        "TEXT_STYLE_WITH_BOX_CHARACTERISTICS" => PartialEntity::TextStyleWithBoxCharacteristics { characteristics: (match req(&p.attributes, 0, "TEXT_STYLE_WITH_BOX_CHARACTERISTICS.characteristics")? { Attribute::List(l) => l.iter().map(|e| read_measure_value(e, "TEXT_STYLE_WITH_BOX_CHARACTERISTICS.characteristics", tt)).collect::<Result<Vec<_>, String>>(), o => Err(format!("TEXT_STYLE_WITH_BOX_CHARACTERISTICS.characteristics: expected list, got {o:?}")) })?, },
+        "TEXTURE_STYLE_SPECIFICATION" => PartialEntity::TextureStyleSpecification,
+        "TEXTURE_STYLE_TESSELLATION_SPECIFICATION" => PartialEntity::TextureStyleTessellationSpecification,
+        "TIME_UNIT" => PartialEntity::TimeUnit,
+        "TOLERANCE_ZONE" => PartialEntity::ToleranceZone { defining_tolerance: Vec::new(), form: ToleranceZoneFormRef::ToleranceZoneForm(ToleranceZoneFormId(u32::MAX)), },
+        "TOLERANCE_ZONE_DEFINITION" => PartialEntity::ToleranceZoneDefinition { zone: ToleranceZoneRef::ToleranceZone(ToleranceZoneId(u32::MAX)), boundaries: Vec::new(), },
+        "TOLERANCE_ZONE_WITH_DATUM" => PartialEntity::ToleranceZoneWithDatum { datum_reference: DatumSystemRef::DatumSystem(DatumSystemId(u32::MAX)), },
+        "TOPOLOGICAL_REPRESENTATION_ITEM" => PartialEntity::TopologicalRepresentationItem,
+        "TOROIDAL_SURFACE" => PartialEntity::ToroidalSurface { major_radius: (as_real(req(&p.attributes, 0, "TOROIDAL_SURFACE.major_radius")?, "TOROIDAL_SURFACE.major_radius"))?, minor_radius: (as_real(req(&p.attributes, 1, "TOROIDAL_SURFACE.minor_radius")?, "TOROIDAL_SURFACE.minor_radius"))?, },
+        "TWO_DIRECTION_REPEAT_FACTOR" => PartialEntity::TwoDirectionRepeatFactor { second_repeat_factor: VectorRef::Vector(VectorId(u32::MAX)), },
+        "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE" => PartialEntity::UnequallyDisposedGeometricTolerance { displacement: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
+        "UNIFORM_CURVE" => PartialEntity::UniformCurve,
+        "UNIFORM_SURFACE" => PartialEntity::UniformSurface,
+        "VALUE_REPRESENTATION_ITEM" => PartialEntity::ValueRepresentationItem { value_component: (read_measure_value(req(&p.attributes, 0, "VALUE_REPRESENTATION_ITEM.value_component")?, "VALUE_REPRESENTATION_ITEM.value_component", tt))?, },
+        "VECTOR" => PartialEntity::Vector { orientation: DirectionRef::Direction(DirectionId(u32::MAX)), magnitude: (as_real(req(&p.attributes, 1, "VECTOR.magnitude")?, "VECTOR.magnitude"))?, },
+        "VERTEX" => PartialEntity::Vertex,
+        "VERTEX_POINT" => PartialEntity::VertexPoint { vertex_geometry: PointRef::ApllPoint(ApllPointId(u32::MAX)), },
+        "VIEW_VOLUME" => PartialEntity::ViewVolume { projection_type: (match req(&p.attributes, 0, "VIEW_VOLUME.projection_type")? { Attribute::Enum(s) => CentralOrParallel::parse(s).ok_or_else(|| format!("VIEW_VOLUME.projection_type: bad enum {s:?}")), o => Err(format!("VIEW_VOLUME.projection_type: expected enum, got {o:?}")) })?, projection_point: CartesianPointRef::ApllPoint(ApllPointId(u32::MAX)), view_plane_distance: (as_real(req(&p.attributes, 2, "VIEW_VOLUME.view_plane_distance")?, "VIEW_VOLUME.view_plane_distance"))?, front_plane_distance: (as_real(req(&p.attributes, 3, "VIEW_VOLUME.front_plane_distance")?, "VIEW_VOLUME.front_plane_distance"))?, front_plane_clipping: (Ok::<bool, String>(matches!(req(&p.attributes, 4, "VIEW_VOLUME.front_plane_clipping")?, Attribute::Enum(s) if s == "T")))?, back_plane_distance: (as_real(req(&p.attributes, 5, "VIEW_VOLUME.back_plane_distance")?, "VIEW_VOLUME.back_plane_distance"))?, back_plane_clipping: (Ok::<bool, String>(matches!(req(&p.attributes, 6, "VIEW_VOLUME.back_plane_clipping")?, Attribute::Enum(s) if s == "T")))?, view_volume_sides_clipping: (Ok::<bool, String>(matches!(req(&p.attributes, 7, "VIEW_VOLUME.view_volume_sides_clipping")?, Attribute::Enum(s) if s == "T")))?, view_window: PlanarBoxRef::PlanarBox(PlanarBoxId(u32::MAX)), },
         other => return Err(format!("unknown complex part: {other}")),
     }) }).collect::<Result<Vec<_>, String>>()
 }
 
 fn resolve_complex(
     model: &mut StepModel,
-    aid: ComplexUnitId,
+    aid: ComplexEntityId,
     parts: &[RawEntityPart],
     idmap: &IdMap,
     dedup: &mut TextDedup,
@@ -43279,10 +43279,10 @@ fn resolve_complex(
         texts: &mut model.texts,
         dedup,
     };
-    let bag = &mut model.complex_unit_arena.items[aid.0 as usize];
+    let bag = &mut model.complex_entity_arena.items[aid.0 as usize];
     for (slot, p) in bag.parts.iter_mut().zip(parts.iter()) {
         match slot {
-            UnitPart::Action { chosen_method, .. } => {
+            PartialEntity::Action { chosen_method, .. } => {
                 *chosen_method = {
                     let a = req(&p.attributes, 2, "ACTION.chosen_method")?;
                     ((|| -> Result<ActionMethodRef, String> {
@@ -43295,7 +43295,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ActionMethodRelationship {
+            PartialEntity::ActionMethodRelationship {
                 relating_method,
                 related_method,
                 ..
@@ -43339,7 +43339,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ActionRelationship {
+            PartialEntity::ActionRelationship {
                 relating_action,
                 related_action,
                 ..
@@ -43371,7 +43371,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ActionRequestAssignment {
+            PartialEntity::ActionRequestAssignment {
                 assigned_action_request,
                 ..
             } => {
@@ -43386,7 +43386,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ActionResource { usage, kind, .. } => {
+            PartialEntity::ActionResource { usage, kind, .. } => {
                 *usage = {
                     let a = req(&p.attributes, 2, "ACTION_RESOURCE.usage")?;
                     (match a {
@@ -43422,7 +43422,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ActionResourceRequirement {
+            PartialEntity::ActionResourceRequirement {
                 kind, operations, ..
             } => {
                 *kind = {
@@ -43443,7 +43443,7 @@ fn resolve_complex(
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<CharacterizedActionDefinitionRef, String> { Ok(CharacterizedActionDefinitionRef::from_any(idmap.get(as_ref_id(e, "ACTION_RESOURCE_REQUIREMENT.operations")?).ok_or_else(|| format!("ACTION_RESOURCE_REQUIREMENT.operations: dangling ref"))?).map_err(|e| format!("ACTION_RESOURCE_REQUIREMENT.operations: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("ACTION_RESOURCE_REQUIREMENT.operations: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::AnnotationFillAreaOccurrence {
+            PartialEntity::AnnotationFillAreaOccurrence {
                 fill_style_target, ..
             } => {
                 *fill_style_target = {
@@ -43457,7 +43457,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::AnnotationOccurrenceRelationship {
+            PartialEntity::AnnotationOccurrenceRelationship {
                 relating_annotation_occurrence,
                 related_annotation_occurrence,
                 ..
@@ -43483,7 +43483,9 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::AnnotationPlaceholderOccurrenceWithLeaderLine { leader_line, .. } => {
+            PartialEntity::AnnotationPlaceholderOccurrenceWithLeaderLine {
+                leader_line, ..
+            } => {
                 *leader_line = {
                     let a = req(
                         &p.attributes,
@@ -43493,13 +43495,13 @@ fn resolve_complex(
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<AnnotationPlaceholderLeaderLineRef, String> { Ok(AnnotationPlaceholderLeaderLineRef::from_any(idmap.get(as_ref_id(e, "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE.leader_line")?).ok_or_else(|| format!("ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE.leader_line: dangling ref"))?).map_err(|e| format!("ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE.leader_line: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE.leader_line: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::AnnotationPlane { elements, .. } => {
+            PartialEntity::AnnotationPlane { elements, .. } => {
                 *elements = {
                     let a = req(&p.attributes, 0, "ANNOTATION_PLANE.elements")?;
                     match a { Attribute::Unset => None, _ => Some((match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<AnnotationPlaneElementRef, String> { Ok(AnnotationPlaneElementRef::from_any(idmap.get(as_ref_id(e, "ANNOTATION_PLANE.elements")?).ok_or_else(|| format!("ANNOTATION_PLANE.elements: dangling ref"))?).map_err(|e| format!("ANNOTATION_PLANE.elements: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("ANNOTATION_PLANE.elements: expected ref list, got {o:?}")) })?) }
                 };
             }
-            UnitPart::ApplicationContextElement {
+            PartialEntity::ApplicationContextElement {
                 frame_of_reference, ..
             } => {
                 *frame_of_reference = {
@@ -43513,19 +43515,19 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::AppliedApprovalAssignment { items, .. } => {
+            PartialEntity::AppliedApprovalAssignment { items, .. } => {
                 *items = {
                     let a = req(&p.attributes, 0, "APPLIED_APPROVAL_ASSIGNMENT.items")?;
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<ApprovalItemRef, String> { Ok(ApprovalItemRef::from_any(idmap.get(as_ref_id(e, "APPLIED_APPROVAL_ASSIGNMENT.items")?).ok_or_else(|| format!("APPLIED_APPROVAL_ASSIGNMENT.items: dangling ref"))?).map_err(|e| format!("APPLIED_APPROVAL_ASSIGNMENT.items: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("APPLIED_APPROVAL_ASSIGNMENT.items: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::AppliedDateAndTimeAssignment { items, .. } => {
+            PartialEntity::AppliedDateAndTimeAssignment { items, .. } => {
                 *items = {
                     let a = req(&p.attributes, 0, "APPLIED_DATE_AND_TIME_ASSIGNMENT.items")?;
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<DateAndTimeItemRef, String> { Ok(DateAndTimeItemRef::from_any(idmap.get(as_ref_id(e, "APPLIED_DATE_AND_TIME_ASSIGNMENT.items")?).ok_or_else(|| format!("APPLIED_DATE_AND_TIME_ASSIGNMENT.items: dangling ref"))?).map_err(|e| format!("APPLIED_DATE_AND_TIME_ASSIGNMENT.items: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("APPLIED_DATE_AND_TIME_ASSIGNMENT.items: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::AppliedDocumentReference { items, .. } => {
+            PartialEntity::AppliedDocumentReference { items, .. } => {
                 *items = {
                     let a = req(&p.attributes, 0, "APPLIED_DOCUMENT_REFERENCE.items")?;
                     (match a {
@@ -43554,7 +43556,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::AppliedExternalIdentificationAssignment { items, .. } => {
+            PartialEntity::AppliedExternalIdentificationAssignment { items, .. } => {
                 *items = {
                     let a = req(
                         &p.attributes,
@@ -43564,7 +43566,7 @@ fn resolve_complex(
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<ExternalIdentificationItemRef, String> { Ok(ExternalIdentificationItemRef::from_any(idmap.get(as_ref_id(e, "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT.items")?).ok_or_else(|| format!("APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT.items: dangling ref"))?).map_err(|e| format!("APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT.items: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT.items: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::AppliedGroupAssignment { items, .. } => {
+            PartialEntity::AppliedGroupAssignment { items, .. } => {
                 *items = {
                     let a = req(&p.attributes, 0, "APPLIED_GROUP_ASSIGNMENT.items")?;
                     (match a {
@@ -43591,7 +43593,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::AppliedPersonAndOrganizationAssignment { items, .. } => {
+            PartialEntity::AppliedPersonAndOrganizationAssignment { items, .. } => {
                 *items = {
                     let a = req(
                         &p.attributes,
@@ -43601,7 +43603,7 @@ fn resolve_complex(
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<PersonAndOrganizationItemRef, String> { Ok(PersonAndOrganizationItemRef::from_any(idmap.get(as_ref_id(e, "APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT.items")?).ok_or_else(|| format!("APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT.items: dangling ref"))?).map_err(|e| format!("APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT.items: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT.items: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::AppliedPresentedItem { items, .. } => {
+            PartialEntity::AppliedPresentedItem { items, .. } => {
                 *items = {
                     let a = req(&p.attributes, 0, "APPLIED_PRESENTED_ITEM.items")?;
                     (match a {
@@ -43628,7 +43630,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::AppliedSecurityClassificationAssignment { items, .. } => {
+            PartialEntity::AppliedSecurityClassificationAssignment { items, .. } => {
                 *items = {
                     let a = req(
                         &p.attributes,
@@ -43638,7 +43640,7 @@ fn resolve_complex(
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<SecurityClassificationItemRef, String> { Ok(SecurityClassificationItemRef::from_any(idmap.get(as_ref_id(e, "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT.items")?).ok_or_else(|| format!("APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT.items: dangling ref"))?).map_err(|e| format!("APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT.items: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT.items: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::ApprovalAssignment {
+            PartialEntity::ApprovalAssignment {
                 assigned_approval, ..
             } => {
                 *assigned_approval = {
@@ -43655,7 +43657,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::AreaInSet { area, in_set, .. } => {
+            PartialEntity::AreaInSet { area, in_set, .. } => {
                 *area = {
                     let a = req(&p.attributes, 0, "AREA_IN_SET.area")?;
                     ((|| -> Result<PresentationAreaRef, String> {
@@ -43679,7 +43681,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::AscribableStateRelationship {
+            PartialEntity::AscribableStateRelationship {
                 relating_ascribable_state,
                 related_ascribable_state,
                 ..
@@ -43705,7 +43707,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::BSplineCurve {
+            PartialEntity::BSplineCurve {
                 control_points_list,
                 ..
             } => {
@@ -43714,7 +43716,7 @@ fn resolve_complex(
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<CartesianPointRef, String> { Ok(CartesianPointRef::from_any(idmap.get(as_ref_id(e, "B_SPLINE_CURVE.control_points_list")?).ok_or_else(|| format!("B_SPLINE_CURVE.control_points_list: dangling ref"))?).map_err(|e| format!("B_SPLINE_CURVE.control_points_list: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_CURVE.control_points_list: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::BSplineSurface {
+            PartialEntity::BSplineSurface {
                 control_points_list,
                 ..
             } => {
@@ -43723,7 +43725,7 @@ fn resolve_complex(
                     (match a { Attribute::List(l) => l.iter().map(|e| match e { Attribute::List(l) => l.iter().map(|e| (|| -> Result<CartesianPointRef, String> { Ok(CartesianPointRef::from_any(idmap.get(as_ref_id(e, "B_SPLINE_SURFACE.control_points_list")?).ok_or_else(|| format!("B_SPLINE_SURFACE.control_points_list: dangling ref"))?).map_err(|e| format!("B_SPLINE_SURFACE.control_points_list: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_SURFACE.control_points_list: expected ref list, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("B_SPLINE_SURFACE.control_points_list: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::BrepWithVoids { voids, .. } => {
+            PartialEntity::BrepWithVoids { voids, .. } => {
                 *voids = {
                     let a = req(&p.attributes, 0, "BREP_WITH_VOIDS.voids")?;
                     (match a {
@@ -43748,7 +43750,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::CameraModelD3 {
+            PartialEntity::CameraModelD3 {
                 view_reference_system,
                 perspective_of_volume,
                 ..
@@ -43780,7 +43782,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::CameraModelD3MultiClipping { shape_clipping, .. } => {
+            PartialEntity::CameraModelD3MultiClipping { shape_clipping, .. } => {
                 *shape_clipping = {
                     let a = req(
                         &p.attributes,
@@ -43790,7 +43792,7 @@ fn resolve_complex(
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<CameraModelD3MultiClippingIntersectionSelectRef, String> { Ok(CameraModelD3MultiClippingIntersectionSelectRef::from_any(idmap.get(as_ref_id(e, "CAMERA_MODEL_D3_MULTI_CLIPPING.shape_clipping")?).ok_or_else(|| format!("CAMERA_MODEL_D3_MULTI_CLIPPING.shape_clipping: dangling ref"))?).map_err(|e| format!("CAMERA_MODEL_D3_MULTI_CLIPPING.shape_clipping: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("CAMERA_MODEL_D3_MULTI_CLIPPING.shape_clipping: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::CcDesignApproval { items, .. } => {
+            PartialEntity::CcDesignApproval { items, .. } => {
                 *items = {
                     let a = req(&p.attributes, 0, "CC_DESIGN_APPROVAL.items")?;
                     (match a {
@@ -43815,13 +43817,13 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::CcDesignDateAndTimeAssignment { items, .. } => {
+            PartialEntity::CcDesignDateAndTimeAssignment { items, .. } => {
                 *items = {
                     let a = req(&p.attributes, 0, "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT.items")?;
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<DateTimeItemRef, String> { Ok(DateTimeItemRef::from_any(idmap.get(as_ref_id(e, "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT.items")?).ok_or_else(|| format!("CC_DESIGN_DATE_AND_TIME_ASSIGNMENT.items: dangling ref"))?).map_err(|e| format!("CC_DESIGN_DATE_AND_TIME_ASSIGNMENT.items: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("CC_DESIGN_DATE_AND_TIME_ASSIGNMENT.items: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::CcDesignPersonAndOrganizationAssignment { items, .. } => {
+            PartialEntity::CcDesignPersonAndOrganizationAssignment { items, .. } => {
                 *items = {
                     let a = req(
                         &p.attributes,
@@ -43831,13 +43833,13 @@ fn resolve_complex(
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<CcPersonOrganizationItemRef, String> { Ok(CcPersonOrganizationItemRef::from_any(idmap.get(as_ref_id(e, "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT.items")?).ok_or_else(|| format!("CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT.items: dangling ref"))?).map_err(|e| format!("CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT.items: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT.items: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::CcDesignSecurityClassification { items, .. } => {
+            PartialEntity::CcDesignSecurityClassification { items, .. } => {
                 *items = {
                     let a = req(&p.attributes, 0, "CC_DESIGN_SECURITY_CLASSIFICATION.items")?;
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<CcClassifiedItemRef, String> { Ok(CcClassifiedItemRef::from_any(idmap.get(as_ref_id(e, "CC_DESIGN_SECURITY_CLASSIFICATION.items")?).ok_or_else(|| format!("CC_DESIGN_SECURITY_CLASSIFICATION.items: dangling ref"))?).map_err(|e| format!("CC_DESIGN_SECURITY_CLASSIFICATION.items: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("CC_DESIGN_SECURITY_CLASSIFICATION.items: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::ChangeRequest { items, .. } => {
+            PartialEntity::ChangeRequest { items, .. } => {
                 *items = {
                     let a = req(&p.attributes, 0, "CHANGE_REQUEST.items")?;
                     (match a {
@@ -43862,7 +43864,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::CharacterGlyphStyleOutline { outline_style, .. } => {
+            PartialEntity::CharacterGlyphStyleOutline { outline_style, .. } => {
                 *outline_style = {
                     let a = req(
                         &p.attributes,
@@ -43883,7 +43885,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::CharacterGlyphStyleStroke { stroke_style, .. } => {
+            PartialEntity::CharacterGlyphStyleStroke { stroke_style, .. } => {
                 *stroke_style = {
                     let a = req(
                         &p.attributes,
@@ -43904,7 +43906,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::CharacterizedItemWithinRepresentation { item, rep, .. } => {
+            PartialEntity::CharacterizedItemWithinRepresentation { item, rep, .. } => {
                 *item = {
                     let a = req(
                         &p.attributes,
@@ -43940,7 +43942,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::CompositeCurve { segments, .. } => {
+            PartialEntity::CompositeCurve { segments, .. } => {
                 *segments = {
                     let a = req(&p.attributes, 0, "COMPOSITE_CURVE.segments")?;
                     (match a {
@@ -43965,7 +43967,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::CompositeCurveSegment { parent_curve, .. } => {
+            PartialEntity::CompositeCurveSegment { parent_curve, .. } => {
                 *parent_curve = {
                     let a = req(&p.attributes, 2, "COMPOSITE_CURVE_SEGMENT.parent_curve")?;
                     ((|| -> Result<CurveRef, String> {
@@ -43980,7 +43982,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::CompositeText { collected_text, .. } => {
+            PartialEntity::CompositeText { collected_text, .. } => {
                 *collected_text = {
                     let a = req(&p.attributes, 0, "COMPOSITE_TEXT.collected_text")?;
                     (match a {
@@ -44005,7 +44007,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::CompoundRepresentationItem { item_element, .. } => {
+            PartialEntity::CompoundRepresentationItem { item_element, .. } => {
                 *item_element = {
                     let a = req(
                         &p.attributes,
@@ -44017,7 +44019,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ConfigurationEffectivity { configuration, .. } => {
+            PartialEntity::ConfigurationEffectivity { configuration, .. } => {
                 *configuration = {
                     let a = req(&p.attributes, 0, "CONFIGURATION_EFFECTIVITY.configuration")?;
                     ((|| -> Result<ConfigurationDesignRef, String> {
@@ -44032,7 +44034,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ConfigurationItem { item_concept, .. } => {
+            PartialEntity::ConfigurationItem { item_concept, .. } => {
                 *item_concept = {
                     let a = req(&p.attributes, 3, "CONFIGURATION_ITEM.item_concept")?;
                     ((|| -> Result<ProductConceptRef, String> {
@@ -44047,13 +44049,13 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ConnectedFaceSet { cfs_faces, .. } => {
+            PartialEntity::ConnectedFaceSet { cfs_faces, .. } => {
                 *cfs_faces = {
                     let a = req(&p.attributes, 0, "CONNECTED_FACE_SET.cfs_faces")?;
                     match a { Attribute::Derived => None, _ => Some((match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<FaceRef, String> { Ok(FaceRef::from_any(idmap.get(as_ref_id(e, "CONNECTED_FACE_SET.cfs_faces")?).ok_or_else(|| format!("CONNECTED_FACE_SET.cfs_faces: dangling ref"))?).map_err(|e| format!("CONNECTED_FACE_SET.cfs_faces: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("CONNECTED_FACE_SET.cfs_faces: expected ref list, got {o:?}")) })?) }
                 };
             }
-            UnitPart::ContextDependentOverRidingStyledItem { style_context, .. } => {
+            PartialEntity::ContextDependentOverRidingStyledItem { style_context, .. } => {
                 *style_context = {
                     let a = req(
                         &p.attributes,
@@ -44063,7 +44065,7 @@ fn resolve_complex(
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<StyleContextSelectRef, String> { Ok(StyleContextSelectRef::from_any(idmap.get(as_ref_id(e, "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context")?).ok_or_else(|| format!("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context: dangling ref"))?).map_err(|e| format!("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::ConversionBasedUnit {
+            PartialEntity::ConversionBasedUnit {
                 conversion_factor, ..
             } => {
                 *conversion_factor = {
@@ -44080,7 +44082,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::CurveStyle {
+            PartialEntity::CurveStyle {
                 curve_font,
                 curve_width,
                 curve_colour,
@@ -44160,7 +44162,7 @@ fn resolve_complex(
                     }
                 };
             }
-            UnitPart::CurveStyleFont { pattern_list, .. } => {
+            PartialEntity::CurveStyleFont { pattern_list, .. } => {
                 *pattern_list = {
                     let a = req(&p.attributes, 1, "CURVE_STYLE_FONT.pattern_list")?;
                     (match a {
@@ -44185,7 +44187,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::CurveStyleFontAndScaling { curve_font, .. } => {
+            PartialEntity::CurveStyleFontAndScaling { curve_font, .. } => {
                 *curve_font = {
                     let a = req(&p.attributes, 1, "CURVE_STYLE_FONT_AND_SCALING.curve_font")?;
                     ((|| -> Result<CurveStyleFontSelectRef, String> {
@@ -44200,7 +44202,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::DateAndTime {
+            PartialEntity::DateAndTime {
                 date_component,
                 time_component,
                 ..
@@ -44232,7 +44234,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::DateAndTimeAssignment {
+            PartialEntity::DateAndTimeAssignment {
                 assigned_date_and_time,
                 role,
                 ..
@@ -44261,7 +44263,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::DatumReference {
+            PartialEntity::DatumReference {
                 referenced_datum, ..
             } => {
                 *referenced_datum = {
@@ -44278,7 +44280,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::DatumSystem { constituents, .. } => {
+            PartialEntity::DatumSystem { constituents, .. } => {
                 *constituents = {
                     let a = req(&p.attributes, 0, "DATUM_SYSTEM.constituents")?;
                     (match a {
@@ -44303,7 +44305,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::DerivedUnit { elements, .. } => {
+            PartialEntity::DerivedUnit { elements, .. } => {
                 *elements = {
                     let a = req(&p.attributes, 0, "DERIVED_UNIT.elements")?;
                     (match a {
@@ -44328,7 +44330,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::DimensionalSize { applies_to, .. } => {
+            PartialEntity::DimensionalSize { applies_to, .. } => {
                 *applies_to = {
                     let a = req(&p.attributes, 0, "DIMENSIONAL_SIZE.applies_to")?;
                     ((|| -> Result<ShapeAspectRef, String> {
@@ -44343,7 +44345,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::Document { kind, .. } => {
+            PartialEntity::Document { kind, .. } => {
                 *kind = {
                     let a = req(&p.attributes, 3, "DOCUMENT.kind")?;
                     ((|| -> Result<DocumentTypeRef, String> {
@@ -44356,7 +44358,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::DocumentProductAssociation {
+            PartialEntity::DocumentProductAssociation {
                 relating_document,
                 related_product,
                 ..
@@ -44396,7 +44398,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::DocumentReference {
+            PartialEntity::DocumentReference {
                 assigned_document, ..
             } => {
                 *assigned_document = {
@@ -44413,7 +44415,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::DraughtingCallout { contents, .. } => {
+            PartialEntity::DraughtingCallout { contents, .. } => {
                 *contents = {
                     let a = req(&p.attributes, 0, "DRAUGHTING_CALLOUT.contents")?;
                     (match a {
@@ -44438,7 +44440,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::DraughtingCalloutRelationship {
+            PartialEntity::DraughtingCalloutRelationship {
                 relating_draughting_callout,
                 related_draughting_callout,
                 ..
@@ -44464,7 +44466,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::DraughtingModelItemAssociationWithPlaceholder {
+            PartialEntity::DraughtingModelItemAssociationWithPlaceholder {
                 annotation_placeholder,
                 ..
             } => {
@@ -44479,7 +44481,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::Edge {
+            PartialEntity::Edge {
                 edge_start,
                 edge_end,
                 ..
@@ -44517,7 +44519,7 @@ fn resolve_complex(
                     }
                 };
             }
-            UnitPart::EdgeCurve { edge_geometry, .. } => {
+            PartialEntity::EdgeCurve { edge_geometry, .. } => {
                 *edge_geometry = {
                     let a = req(&p.attributes, 0, "EDGE_CURVE.edge_geometry")?;
                     ((|| -> Result<CurveRef, String> {
@@ -44530,7 +44532,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ElementarySurface { position, .. } => {
+            PartialEntity::ElementarySurface { position, .. } => {
                 *position = {
                     let a = req(&p.attributes, 0, "ELEMENTARY_SURFACE.position")?;
                     ((|| -> Result<Axis2Placement3dRef, String> {
@@ -44545,7 +44547,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ExternalIdentificationAssignment { source, .. } => {
+            PartialEntity::ExternalIdentificationAssignment { source, .. } => {
                 *source = {
                     let a = req(
                         &p.attributes,
@@ -44566,7 +44568,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ExternallyDefinedItem { source, .. } => {
+            PartialEntity::ExternallyDefinedItem { source, .. } => {
                 *source = {
                     let a = req(&p.attributes, 1, "EXTERNALLY_DEFINED_ITEM.source")?;
                     ((|| -> Result<ExternalSourceRef, String> {
@@ -44581,7 +44583,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::Face { bounds, .. } => {
+            PartialEntity::Face { bounds, .. } => {
                 *bounds = {
                     let a = req(&p.attributes, 0, "FACE.bounds")?;
                     (match a {
@@ -44602,7 +44604,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::FaceBound { bound, .. } => {
+            PartialEntity::FaceBound { bound, .. } => {
                 *bound = {
                     let a = req(&p.attributes, 0, "FACE_BOUND.bound")?;
                     ((|| -> Result<LoopRef, String> {
@@ -44615,7 +44617,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::FaceSurface { face_geometry, .. } => {
+            PartialEntity::FaceSurface { face_geometry, .. } => {
                 *face_geometry = {
                     let a = req(&p.attributes, 0, "FACE_SURFACE.face_geometry")?;
                     ((|| -> Result<SurfaceRef, String> {
@@ -44630,7 +44632,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::FillAreaStyle { fill_styles, .. } => {
+            PartialEntity::FillAreaStyle { fill_styles, .. } => {
                 *fill_styles = {
                     let a = req(&p.attributes, 1, "FILL_AREA_STYLE.fill_styles")?;
                     (match a {
@@ -44655,7 +44657,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::FillAreaStyleHatching {
+            PartialEntity::FillAreaStyleHatching {
                 hatch_line_appearance,
                 start_of_next_hatch_line,
                 point_of_reference_hatch_line,
@@ -44706,7 +44708,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::FillAreaStyleTileSymbolWithStyle { symbol, .. } => {
+            PartialEntity::FillAreaStyleTileSymbolWithStyle { symbol, .. } => {
                 *symbol = {
                     let a = req(
                         &p.attributes,
@@ -44718,7 +44720,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::FillAreaStyleTiles {
+            PartialEntity::FillAreaStyleTiles {
                 tiling_pattern,
                 tiles,
                 ..
@@ -44760,7 +44762,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::GeneralDatumReference {
+            PartialEntity::GeneralDatumReference {
                 base, modifiers, ..
             } => {
                 *base = {
@@ -44774,7 +44776,7 @@ fn resolve_complex(
                     match a { Attribute::Unset => None, _ => Some((match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<DatumReferenceModifierRef, String> { Ok(match e { Attribute::Typed { type_name, value } if type_name == "SIMPLE_DATUM_REFERENCE_MODIFIER" => DatumReferenceModifierRef::SimpleDatumReferenceModifier(match value.as_ref() { Attribute::Enum(s) => SimpleDatumReferenceModifier::parse(s).ok_or_else(|| format!("GENERAL_DATUM_REFERENCE.modifiers: bad enum SIMPLE_DATUM_REFERENCE_MODIFIER {s:?}"))?, o => return Err(format!("GENERAL_DATUM_REFERENCE.modifiers: enum SIMPLE_DATUM_REFERENCE_MODIFIER: {o:?}")) }), _ => DatumReferenceModifierRef::from_any(idmap.get(as_ref_id(e, "GENERAL_DATUM_REFERENCE.modifiers")?).ok_or_else(|| format!("GENERAL_DATUM_REFERENCE.modifiers: dangling ref"))?).map_err(|e| format!("GENERAL_DATUM_REFERENCE.modifiers: {e}"))? }) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("GENERAL_DATUM_REFERENCE.modifiers: expected ref list, got {o:?}")) })?) }
                 };
             }
-            UnitPart::GenericProductDefinitionReference { source, .. } => {
+            PartialEntity::GenericProductDefinitionReference { source, .. } => {
                 *source = {
                     let a = req(
                         &p.attributes,
@@ -44795,7 +44797,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::GeometricSet { elements, .. } => {
+            PartialEntity::GeometricSet { elements, .. } => {
                 *elements = {
                     let a = req(&p.attributes, 0, "GEOMETRIC_SET.elements")?;
                     (match a {
@@ -44820,7 +44822,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::GeometricTolerance {
+            PartialEntity::GeometricTolerance {
                 magnitude,
                 toleranced_shape_aspect,
                 ..
@@ -44863,7 +44865,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::GeometricToleranceWithDatumReference { datum_system, .. } => {
+            PartialEntity::GeometricToleranceWithDatumReference { datum_system, .. } => {
                 *datum_system = {
                     let a = req(
                         &p.attributes,
@@ -44873,7 +44875,7 @@ fn resolve_complex(
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<DatumSystemOrReferenceRef, String> { Ok(DatumSystemOrReferenceRef::from_any(idmap.get(as_ref_id(e, "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE.datum_system")?).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE.datum_system: dangling ref"))?).map_err(|e| format!("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE.datum_system: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE.datum_system: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::GeometricToleranceWithDefinedAreaUnit {
+            PartialEntity::GeometricToleranceWithDefinedAreaUnit {
                 second_unit_size, ..
             } => {
                 *second_unit_size = {
@@ -44885,7 +44887,7 @@ fn resolve_complex(
                     match a { Attribute::Unset => None, _ => Some(((|| -> Result<LengthOrPlaneAngleMeasureWithUnitSelectRef, String> { Ok(LengthOrPlaneAngleMeasureWithUnitSelectRef::from_any(idmap.get(as_ref_id(a, "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.second_unit_size")?).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.second_unit_size: dangling ref"))?).map_err(|e| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.second_unit_size: {e}"))?) })())?) }
                 };
             }
-            UnitPart::GeometricToleranceWithDefinedUnit { unit_size, .. } => {
+            PartialEntity::GeometricToleranceWithDefinedUnit { unit_size, .. } => {
                 *unit_size = {
                     let a = req(
                         &p.attributes,
@@ -44897,7 +44899,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::GeometricToleranceWithMaximumTolerance {
+            PartialEntity::GeometricToleranceWithMaximumTolerance {
                 maximum_upper_tolerance,
                 ..
             } => {
@@ -44912,7 +44914,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::GlobalUncertaintyAssignedContext { uncertainty, .. } => {
+            PartialEntity::GlobalUncertaintyAssignedContext { uncertainty, .. } => {
                 *uncertainty = {
                     let a = req(
                         &p.attributes,
@@ -44922,13 +44924,13 @@ fn resolve_complex(
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<UncertaintyMeasureWithUnitRef, String> { Ok(UncertaintyMeasureWithUnitRef::from_any(idmap.get(as_ref_id(e, "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty")?).ok_or_else(|| format!("GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty: dangling ref"))?).map_err(|e| format!("GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::GlobalUnitAssignedContext { units, .. } => {
+            PartialEntity::GlobalUnitAssignedContext { units, .. } => {
                 *units = {
                     let a = req(&p.attributes, 0, "GLOBAL_UNIT_ASSIGNED_CONTEXT.units")?;
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<UnitRef, String> { Ok(UnitRef::from_any(idmap.get(as_ref_id(e, "GLOBAL_UNIT_ASSIGNED_CONTEXT.units")?).ok_or_else(|| format!("GLOBAL_UNIT_ASSIGNED_CONTEXT.units: dangling ref"))?).map_err(|e| format!("GLOBAL_UNIT_ASSIGNED_CONTEXT.units: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("GLOBAL_UNIT_ASSIGNED_CONTEXT.units: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::GroupAssignment { assigned_group, .. } => {
+            PartialEntity::GroupAssignment { assigned_group, .. } => {
                 *assigned_group = {
                     let a = req(&p.attributes, 0, "GROUP_ASSIGNMENT.assigned_group")?;
                     ((|| -> Result<GroupRef, String> {
@@ -44943,7 +44945,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::IdentificationAssignment { role, .. } => {
+            PartialEntity::IdentificationAssignment { role, .. } => {
                 *role = {
                     let a = req(&p.attributes, 1, "IDENTIFICATION_ASSIGNMENT.role")?;
                     ((|| -> Result<IdentificationRoleRef, String> {
@@ -44958,7 +44960,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::Invisibility {
+            PartialEntity::Invisibility {
                 invisible_items, ..
             } => {
                 *invisible_items = {
@@ -44987,7 +44989,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::ItemDefinedTransformation {
+            PartialEntity::ItemDefinedTransformation {
                 transform_item_1,
                 transform_item_2,
                 ..
@@ -45041,7 +45043,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ItemIdentifiedRepresentationUsage {
+            PartialEntity::ItemIdentifiedRepresentationUsage {
                 definition,
                 used_representation,
                 identified_item,
@@ -45078,7 +45080,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ManifoldSolidBrep { outer, .. } => {
+            PartialEntity::ManifoldSolidBrep { outer, .. } => {
                 *outer = {
                     let a = req(&p.attributes, 0, "MANIFOLD_SOLID_BREP.outer")?;
                     ((|| -> Result<ClosedShellRef, String> {
@@ -45093,7 +45095,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::MappedItem {
+            PartialEntity::MappedItem {
                 mapping_source,
                 mapping_target,
                 ..
@@ -45125,7 +45127,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::MeasureWithUnit { unit_component, .. } => {
+            PartialEntity::MeasureWithUnit { unit_component, .. } => {
                 *unit_component = {
                     let a = req(&p.attributes, 1, "MEASURE_WITH_UNIT.unit_component")?;
                     ((|| -> Result<UnitRef, String> {
@@ -45140,7 +45142,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::NamedUnit { dimensions, .. } => {
+            PartialEntity::NamedUnit { dimensions, .. } => {
                 *dimensions = {
                     let a = req(&p.attributes, 0, "NAMED_UNIT.dimensions")?;
                     match a {
@@ -45160,7 +45162,7 @@ fn resolve_complex(
                     }
                 };
             }
-            UnitPart::OneDirectionRepeatFactor { repeat_factor, .. } => {
+            PartialEntity::OneDirectionRepeatFactor { repeat_factor, .. } => {
                 *repeat_factor = {
                     let a = req(
                         &p.attributes,
@@ -45181,13 +45183,13 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::OrganizationalAddress { organizations, .. } => {
+            PartialEntity::OrganizationalAddress { organizations, .. } => {
                 *organizations = {
                     let a = req(&p.attributes, 0, "ORGANIZATIONAL_ADDRESS.organizations")?;
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<OrganizationRef, String> { Ok(OrganizationRef::from_any(idmap.get(as_ref_id(e, "ORGANIZATIONAL_ADDRESS.organizations")?).ok_or_else(|| format!("ORGANIZATIONAL_ADDRESS.organizations: dangling ref"))?).map_err(|e| format!("ORGANIZATIONAL_ADDRESS.organizations: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("ORGANIZATIONAL_ADDRESS.organizations: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::OrientedClosedShell {
+            PartialEntity::OrientedClosedShell {
                 closed_shell_element,
                 ..
             } => {
@@ -45211,7 +45213,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::OrientedEdge { edge_element, .. } => {
+            PartialEntity::OrientedEdge { edge_element, .. } => {
                 *edge_element = {
                     let a = req(&p.attributes, 0, "ORIENTED_EDGE.edge_element")?;
                     ((|| -> Result<EdgeRef, String> {
@@ -45226,7 +45228,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::OverRidingStyledItem {
+            PartialEntity::OverRidingStyledItem {
                 over_ridden_style, ..
             } => {
                 *over_ridden_style = {
@@ -45249,7 +45251,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::Path { edge_list, .. } => {
+            PartialEntity::Path { edge_list, .. } => {
                 *edge_list = {
                     let a = req(&p.attributes, 0, "PATH.edge_list")?;
                     (match a {
@@ -45270,7 +45272,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::Pcurve {
+            PartialEntity::Pcurve {
                 basis_surface,
                 reference_to_curve,
                 ..
@@ -45300,7 +45302,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::PersonAndOrganizationAssignment {
+            PartialEntity::PersonAndOrganizationAssignment {
                 assigned_person_and_organization,
                 role,
                 ..
@@ -45329,7 +45331,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::PersonalAddress { people, .. } => {
+            PartialEntity::PersonalAddress { people, .. } => {
                 *people = {
                     let a = req(&p.attributes, 0, "PERSONAL_ADDRESS.people")?;
                     (match a {
@@ -45354,7 +45356,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::Placement { location, .. } => {
+            PartialEntity::Placement { location, .. } => {
                 *location = {
                     let a = req(&p.attributes, 0, "PLACEMENT.location")?;
                     ((|| -> Result<CartesianPointRef, String> {
@@ -45367,7 +45369,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::PlanarBox { placement, .. } => {
+            PartialEntity::PlanarBox { placement, .. } => {
                 *placement = {
                     let a = req(&p.attributes, 0, "PLANAR_BOX.placement")?;
                     ((|| -> Result<Axis2PlacementRef, String> {
@@ -45380,7 +45382,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::PointStyle {
+            PartialEntity::PointStyle {
                 marker,
                 marker_size,
                 marker_colour,
@@ -45453,7 +45455,7 @@ fn resolve_complex(
                     }
                 };
             }
-            UnitPart::PolyLoop { polygon, .. } => {
+            PartialEntity::PolyLoop { polygon, .. } => {
                 *polygon = {
                     let a = req(&p.attributes, 0, "POLY_LOOP.polygon")?;
                     (match a {
@@ -45474,13 +45476,13 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::PresentationStyleAssignment { styles, .. } => {
+            PartialEntity::PresentationStyleAssignment { styles, .. } => {
                 *styles = {
                     let a = req(&p.attributes, 0, "PRESENTATION_STYLE_ASSIGNMENT.styles")?;
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<PresentationStyleSelectRef, String> { Ok(match e { Attribute::Typed { type_name, value } if type_name == "NULL_STYLE" => PresentationStyleSelectRef::NullStyle(match value.as_ref() { Attribute::Enum(s) => NullStyle::parse(s).ok_or_else(|| format!("PRESENTATION_STYLE_ASSIGNMENT.styles: bad enum NULL_STYLE {s:?}"))?, o => return Err(format!("PRESENTATION_STYLE_ASSIGNMENT.styles: enum NULL_STYLE: {o:?}")) }), _ => PresentationStyleSelectRef::from_any(idmap.get(as_ref_id(e, "PRESENTATION_STYLE_ASSIGNMENT.styles")?).ok_or_else(|| format!("PRESENTATION_STYLE_ASSIGNMENT.styles: dangling ref"))?).map_err(|e| format!("PRESENTATION_STYLE_ASSIGNMENT.styles: {e}"))? }) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("PRESENTATION_STYLE_ASSIGNMENT.styles: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::PresentationStyleByContext { style_context, .. } => {
+            PartialEntity::PresentationStyleByContext { style_context, .. } => {
                 *style_context = {
                     let a = req(
                         &p.attributes,
@@ -45501,7 +45503,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::Product {
+            PartialEntity::Product {
                 frame_of_reference, ..
             } => {
                 *frame_of_reference = {
@@ -45528,7 +45530,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::ProductConcept { market_context, .. } => {
+            PartialEntity::ProductConcept { market_context, .. } => {
                 *market_context = {
                     let a = req(&p.attributes, 3, "PRODUCT_CONCEPT.market_context")?;
                     ((|| -> Result<ProductConceptContextRef, String> {
@@ -45543,7 +45545,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ProductDefinition {
+            PartialEntity::ProductDefinition {
                 formation,
                 frame_of_reference,
                 ..
@@ -45575,7 +45577,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ProductDefinitionEffectivity { usage, .. } => {
+            PartialEntity::ProductDefinitionEffectivity { usage, .. } => {
                 *usage = {
                     let a = req(&p.attributes, 0, "PRODUCT_DEFINITION_EFFECTIVITY.usage")?;
                     ((|| -> Result<ProductDefinitionRelationshipRef, String> {
@@ -45590,7 +45592,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ProductDefinitionFormation { of_product, .. } => {
+            PartialEntity::ProductDefinitionFormation { of_product, .. } => {
                 *of_product = {
                     let a = req(&p.attributes, 2, "PRODUCT_DEFINITION_FORMATION.of_product")?;
                     ((|| -> Result<ProductRef, String> {
@@ -45605,7 +45607,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ProductDefinitionOccurrence {
+            PartialEntity::ProductDefinitionOccurrence {
                 definition,
                 quantity,
                 ..
@@ -45633,7 +45635,7 @@ fn resolve_complex(
                     }
                 };
             }
-            UnitPart::ProductDefinitionRelationship {
+            PartialEntity::ProductDefinitionRelationship {
                 relating_product_definition,
                 related_product_definition,
                 ..
@@ -45659,7 +45661,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ProductDefinitionRelationshipRelationship {
+            PartialEntity::ProductDefinitionRelationshipRelationship {
                 relating, related, ..
             } => {
                 *relating = {
@@ -45683,7 +45685,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ProductDefinitionWithAssociatedDocuments {
+            PartialEntity::ProductDefinitionWithAssociatedDocuments {
                 documentation_ids, ..
             } => {
                 *documentation_ids = {
@@ -45695,7 +45697,7 @@ fn resolve_complex(
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<DocumentRef, String> { Ok(DocumentRef::from_any(idmap.get(as_ref_id(e, "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS.documentation_ids")?).ok_or_else(|| format!("PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS.documentation_ids: dangling ref"))?).map_err(|e| format!("PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS.documentation_ids: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS.documentation_ids: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::ProductRelatedProductCategory { products, .. } => {
+            PartialEntity::ProductRelatedProductCategory { products, .. } => {
                 *products = {
                     let a = req(
                         &p.attributes,
@@ -45705,7 +45707,7 @@ fn resolve_complex(
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<ProductRef, String> { Ok(ProductRef::from_any(idmap.get(as_ref_id(e, "PRODUCT_RELATED_PRODUCT_CATEGORY.products")?).ok_or_else(|| format!("PRODUCT_RELATED_PRODUCT_CATEGORY.products: dangling ref"))?).map_err(|e| format!("PRODUCT_RELATED_PRODUCT_CATEGORY.products: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("PRODUCT_RELATED_PRODUCT_CATEGORY.products: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::ProjectedZoneDefinition {
+            PartialEntity::ProjectedZoneDefinition {
                 projection_end,
                 projected_length,
                 ..
@@ -45745,7 +45747,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::PropertyDefinition { definition, .. } => {
+            PartialEntity::PropertyDefinition { definition, .. } => {
                 *definition = {
                     let a = req(&p.attributes, 2, "PROPERTY_DEFINITION.definition")?;
                     ((|| -> Result<CharacterizedDefinitionRef, String> {
@@ -45760,7 +45762,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::PropertyDefinitionRepresentation {
+            PartialEntity::PropertyDefinitionRepresentation {
                 definition,
                 used_representation,
                 ..
@@ -45786,13 +45788,13 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::QualifiedRepresentationItem { qualifiers, .. } => {
+            PartialEntity::QualifiedRepresentationItem { qualifiers, .. } => {
                 *qualifiers = {
                     let a = req(&p.attributes, 0, "QUALIFIED_REPRESENTATION_ITEM.qualifiers")?;
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<ValueQualifierRef, String> { Ok(ValueQualifierRef::from_any(idmap.get(as_ref_id(e, "QUALIFIED_REPRESENTATION_ITEM.qualifiers")?).ok_or_else(|| format!("QUALIFIED_REPRESENTATION_ITEM.qualifiers: dangling ref"))?).map_err(|e| format!("QUALIFIED_REPRESENTATION_ITEM.qualifiers: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("QUALIFIED_REPRESENTATION_ITEM.qualifiers: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::RepositionedTessellatedItem { location, .. } => {
+            PartialEntity::RepositionedTessellatedItem { location, .. } => {
                 *location = {
                     let a = req(&p.attributes, 0, "REPOSITIONED_TESSELLATED_ITEM.location")?;
                     ((|| -> Result<Axis2Placement3dRef, String> {
@@ -45807,7 +45809,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::Representation {
+            PartialEntity::Representation {
                 items,
                 context_of_items,
                 ..
@@ -45849,7 +45851,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::RepresentationMap {
+            PartialEntity::RepresentationMap {
                 mapping_origin,
                 mapped_representation,
                 ..
@@ -45883,7 +45885,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::RepresentationReference {
+            PartialEntity::RepresentationReference {
                 context_of_items, ..
             } => {
                 *context_of_items = {
@@ -45906,7 +45908,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::RepresentationRelationship { rep_1, rep_2, .. } => {
+            PartialEntity::RepresentationRelationship { rep_1, rep_2, .. } => {
                 *rep_1 = {
                     let a = req(&p.attributes, 2, "REPRESENTATION_RELATIONSHIP.rep_1")?;
                     ((|| -> Result<RepresentationOrRepresentationReferenceRef, String> {
@@ -45934,7 +45936,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::RepresentationRelationshipWithTransformation {
+            PartialEntity::RepresentationRelationshipWithTransformation {
                 transformation_operator,
                 ..
             } => {
@@ -45949,7 +45951,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::SecurityClassificationAssignment {
+            PartialEntity::SecurityClassificationAssignment {
                 assigned_security_classification,
                 ..
             } => {
@@ -45964,7 +45966,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ShapeAspect { of_shape, .. } => {
+            PartialEntity::ShapeAspect { of_shape, .. } => {
                 *of_shape = {
                     let a = req(&p.attributes, 2, "SHAPE_ASPECT.of_shape")?;
                     ((|| -> Result<ProductDefinitionShapeRef, String> {
@@ -45977,7 +45979,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ShapeAspectRelationship {
+            PartialEntity::ShapeAspectRelationship {
                 relating_shape_aspect,
                 related_shape_aspect,
                 ..
@@ -46003,13 +46005,13 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ShellBasedSurfaceModel { sbsm_boundary, .. } => {
+            PartialEntity::ShellBasedSurfaceModel { sbsm_boundary, .. } => {
                 *sbsm_boundary = {
                     let a = req(&p.attributes, 0, "SHELL_BASED_SURFACE_MODEL.sbsm_boundary")?;
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<ShellRef, String> { Ok(ShellRef::from_any(idmap.get(as_ref_id(e, "SHELL_BASED_SURFACE_MODEL.sbsm_boundary")?).ok_or_else(|| format!("SHELL_BASED_SURFACE_MODEL.sbsm_boundary: dangling ref"))?).map_err(|e| format!("SHELL_BASED_SURFACE_MODEL.sbsm_boundary: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("SHELL_BASED_SURFACE_MODEL.sbsm_boundary: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::StartRequest { items, .. } => {
+            PartialEntity::StartRequest { items, .. } => {
                 *items = {
                     let a = req(&p.attributes, 0, "START_REQUEST.items")?;
                     (match a {
@@ -46032,7 +46034,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::StyledItem { styles, item, .. } => {
+            PartialEntity::StyledItem { styles, item, .. } => {
                 *styles = {
                     let a = req(&p.attributes, 0, "STYLED_ITEM.styles")?;
                     (match a {
@@ -46064,7 +46066,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::SurfaceCurve {
+            PartialEntity::SurfaceCurve {
                 curve_3d,
                 associated_geometry,
                 ..
@@ -46085,7 +46087,7 @@ fn resolve_complex(
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<PcurveOrSurfaceRef, String> { Ok(PcurveOrSurfaceRef::from_any(idmap.get(as_ref_id(e, "SURFACE_CURVE.associated_geometry")?).ok_or_else(|| format!("SURFACE_CURVE.associated_geometry: dangling ref"))?).map_err(|e| format!("SURFACE_CURVE.associated_geometry: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("SURFACE_CURVE.associated_geometry: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::SurfaceSideStyle { styles, .. } => {
+            PartialEntity::SurfaceSideStyle { styles, .. } => {
                 *styles = {
                     let a = req(&p.attributes, 1, "SURFACE_SIDE_STYLE.styles")?;
                     (match a {
@@ -46110,7 +46112,7 @@ fn resolve_complex(
                     })?
                 };
             }
-            UnitPart::SurfaceStyleBoundary {
+            PartialEntity::SurfaceStyleBoundary {
                 style_of_boundary, ..
             } => {
                 *style_of_boundary = {
@@ -46129,7 +46131,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::SurfaceStyleControlGrid {
+            PartialEntity::SurfaceStyleControlGrid {
                 style_of_control_grid,
                 ..
             } => {
@@ -46144,7 +46146,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::SurfaceStyleFillArea { fill_area, .. } => {
+            PartialEntity::SurfaceStyleFillArea { fill_area, .. } => {
                 *fill_area = {
                     let a = req(&p.attributes, 0, "SURFACE_STYLE_FILL_AREA.fill_area")?;
                     ((|| -> Result<FillAreaStyleRef, String> {
@@ -46159,7 +46161,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::SurfaceStyleParameterLine {
+            PartialEntity::SurfaceStyleParameterLine {
                 style_of_parameter_lines,
                 ..
             } => {
@@ -46174,7 +46176,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::SurfaceStyleRendering { surface_colour, .. } => {
+            PartialEntity::SurfaceStyleRendering { surface_colour, .. } => {
                 *surface_colour = {
                     let a = req(&p.attributes, 1, "SURFACE_STYLE_RENDERING.surface_colour")?;
                     ((|| -> Result<ColourRef, String> {
@@ -46189,7 +46191,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::SurfaceStyleRenderingWithProperties { properties, .. } => {
+            PartialEntity::SurfaceStyleRenderingWithProperties { properties, .. } => {
                 *properties = {
                     let a = req(
                         &p.attributes,
@@ -46199,7 +46201,7 @@ fn resolve_complex(
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<RenderingPropertiesSelectRef, String> { Ok(RenderingPropertiesSelectRef::from_any(idmap.get(as_ref_id(e, "SURFACE_STYLE_RENDERING_WITH_PROPERTIES.properties")?).ok_or_else(|| format!("SURFACE_STYLE_RENDERING_WITH_PROPERTIES.properties: dangling ref"))?).map_err(|e| format!("SURFACE_STYLE_RENDERING_WITH_PROPERTIES.properties: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("SURFACE_STYLE_RENDERING_WITH_PROPERTIES.properties: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::SurfaceStyleSegmentationCurve {
+            PartialEntity::SurfaceStyleSegmentationCurve {
                 style_of_segmentation_curve,
                 ..
             } => {
@@ -46214,7 +46216,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::SurfaceStyleSilhouette {
+            PartialEntity::SurfaceStyleSilhouette {
                 style_of_silhouette,
                 ..
             } => {
@@ -46243,7 +46245,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::SurfaceStyleUsage { style, .. } => {
+            PartialEntity::SurfaceStyleUsage { style, .. } => {
                 *style = {
                     let a = req(&p.attributes, 1, "SURFACE_STYLE_USAGE.style")?;
                     ((|| -> Result<SurfaceSideStyleSelectRef, String> {
@@ -46258,7 +46260,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::SymbolStyle {
+            PartialEntity::SymbolStyle {
                 style_of_symbol, ..
             } => {
                 *style_of_symbol = {
@@ -46275,7 +46277,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::TerminatorSymbol {
+            PartialEntity::TerminatorSymbol {
                 annotated_curve, ..
             } => {
                 *annotated_curve = {
@@ -46292,13 +46294,13 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::TessellatedGeometricSet { children, .. } => {
+            PartialEntity::TessellatedGeometricSet { children, .. } => {
                 *children = {
                     let a = req(&p.attributes, 0, "TESSELLATED_GEOMETRIC_SET.children")?;
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<TessellatedItemRef, String> { Ok(TessellatedItemRef::from_any(idmap.get(as_ref_id(e, "TESSELLATED_GEOMETRIC_SET.children")?).ok_or_else(|| format!("TESSELLATED_GEOMETRIC_SET.children: dangling ref"))?).map_err(|e| format!("TESSELLATED_GEOMETRIC_SET.children: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("TESSELLATED_GEOMETRIC_SET.children: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::TextLiteral {
+            PartialEntity::TextLiteral {
                 placement, font, ..
             } => {
                 *placement = {
@@ -46324,7 +46326,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::TextStyle {
+            PartialEntity::TextStyle {
                 character_appearance,
                 ..
             } => {
@@ -46342,7 +46344,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ToleranceZone {
+            PartialEntity::ToleranceZone {
                 defining_tolerance,
                 form,
                 ..
@@ -46363,7 +46365,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ToleranceZoneDefinition {
+            PartialEntity::ToleranceZoneDefinition {
                 zone, boundaries, ..
             } => {
                 *zone = {
@@ -46384,7 +46386,7 @@ fn resolve_complex(
                     (match a { Attribute::List(l) => l.iter().map(|e| (|| -> Result<ShapeAspectRef, String> { Ok(ShapeAspectRef::from_any(idmap.get(as_ref_id(e, "TOLERANCE_ZONE_DEFINITION.boundaries")?).ok_or_else(|| format!("TOLERANCE_ZONE_DEFINITION.boundaries: dangling ref"))?).map_err(|e| format!("TOLERANCE_ZONE_DEFINITION.boundaries: {e}"))?) })()).collect::<Result<Vec<_>, String>>(), o => Err(format!("TOLERANCE_ZONE_DEFINITION.boundaries: expected ref list, got {o:?}")) })?
                 };
             }
-            UnitPart::ToleranceZoneWithDatum {
+            PartialEntity::ToleranceZoneWithDatum {
                 datum_reference, ..
             } => {
                 *datum_reference = {
@@ -46407,7 +46409,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::TwoDirectionRepeatFactor {
+            PartialEntity::TwoDirectionRepeatFactor {
                 second_repeat_factor,
                 ..
             } => {
@@ -46422,7 +46424,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::UnequallyDisposedGeometricTolerance { displacement, .. } => {
+            PartialEntity::UnequallyDisposedGeometricTolerance { displacement, .. } => {
                 *displacement = {
                     let a = req(
                         &p.attributes,
@@ -46434,7 +46436,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::Vector { orientation, .. } => {
+            PartialEntity::Vector { orientation, .. } => {
                 *orientation = {
                     let a = req(&p.attributes, 0, "VECTOR.orientation")?;
                     ((|| -> Result<DirectionRef, String> {
@@ -46447,7 +46449,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::VertexPoint {
+            PartialEntity::VertexPoint {
                 vertex_geometry, ..
             } => {
                 *vertex_geometry = {
@@ -46464,7 +46466,7 @@ fn resolve_complex(
                     })())?
                 };
             }
-            UnitPart::ViewVolume {
+            PartialEntity::ViewVolume {
                 projection_point,
                 view_window,
                 ..

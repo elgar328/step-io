@@ -410,10 +410,10 @@ pub(crate) fn polyline_to_nurbs(cx: Ctx<'_>, p: &m::Polyline) -> Option<NurbsCur
 /// complex is neither.
 pub(crate) fn complex_bspline_curve_to_nurbs(
     cx: Ctx<'_>,
-    parts: &[m::UnitPart],
+    parts: &[m::PartialEntity],
 ) -> Option<NurbsCurve> {
     let (degree, cp) = parts.iter().find_map(|p| match p {
-        m::UnitPart::BSplineCurve {
+        m::PartialEntity::BSplineCurve {
             degree,
             control_points_list,
             ..
@@ -421,7 +421,7 @@ pub(crate) fn complex_bspline_curve_to_nurbs(
         _ => None,
     })?;
     let explicit = parts.iter().find_map(|p| match p {
-        m::UnitPart::BSplineCurveWithKnots {
+        m::PartialEntity::BSplineCurveWithKnots {
             knots,
             knot_multiplicities,
             ..
@@ -433,16 +433,16 @@ pub(crate) fn complex_bspline_curve_to_nurbs(
         (k, m)
     } else {
         let family = parts.iter().find_map(|p| match p {
-            m::UnitPart::UniformCurve => Some(KnotFamily::Uniform),
-            m::UnitPart::QuasiUniformCurve => Some(KnotFamily::QuasiUniform),
-            m::UnitPart::BezierCurve => Some(KnotFamily::Bezier),
+            m::PartialEntity::UniformCurve => Some(KnotFamily::Uniform),
+            m::PartialEntity::QuasiUniformCurve => Some(KnotFamily::QuasiUniform),
+            m::PartialEntity::BezierCurve => Some(KnotFamily::Bezier),
             _ => None,
         })?;
         derived = family_knots(family, degree, cp.len())?;
         (&derived.0, &derived.1)
     };
     let weights = parts.iter().find_map(|p| match p {
-        m::UnitPart::RationalBSplineCurve { weights_data } => Some(weights_data.as_slice()),
+        m::PartialEntity::RationalBSplineCurve { weights_data } => Some(weights_data.as_slice()),
         _ => None,
     });
     nurbs_curve_from(cx, degree, cp, knots, mults, weights)
@@ -684,7 +684,7 @@ fn trimmed_basis_nurbs(cx: Ctx<'_>, r: &m::CurveRef) -> Option<NurbsCurve> {
             bspline_wk_to_nurbs(cx, cx.model.b_spline_curve_with_knots_arena.get(id.0))
         }
         m::CurveRef::Complex(id) => {
-            complex_bspline_curve_to_nurbs(cx, &cx.model.complex_unit_arena.get(id.0).parts)
+            complex_bspline_curve_to_nurbs(cx, &cx.model.complex_entity_arena.get(id.0).parts)
         }
         m::CurveRef::UniformCurve(id) => {
             let c = cx.model.uniform_curve_arena.get(id.0);
@@ -1784,10 +1784,10 @@ pub(crate) fn bspline_surf_wk_to_nurbs(
 /// uniform-family marker part. `None` if the complex is neither.
 pub(crate) fn complex_bspline_surface_to_nurbs(
     cx: Ctx<'_>,
-    parts: &[m::UnitPart],
+    parts: &[m::PartialEntity],
 ) -> Option<NurbsSurface> {
     let (u_degree, v_degree, cp) = parts.iter().find_map(|p| match p {
-        m::UnitPart::BSplineSurface {
+        m::PartialEntity::BSplineSurface {
             u_degree,
             v_degree,
             control_points_list,
@@ -1796,7 +1796,7 @@ pub(crate) fn complex_bspline_surface_to_nurbs(
         _ => None,
     })?;
     let explicit = parts.iter().find_map(|p| match p {
-        m::UnitPart::BSplineSurfaceWithKnots {
+        m::PartialEntity::BSplineSurfaceWithKnots {
             u_knots,
             u_multiplicities,
             v_knots,
@@ -1810,9 +1810,9 @@ pub(crate) fn complex_bspline_surface_to_nurbs(
         ((uk, um), (vk, vm))
     } else {
         let family = parts.iter().find_map(|p| match p {
-            m::UnitPart::UniformSurface => Some(KnotFamily::Uniform),
-            m::UnitPart::QuasiUniformSurface => Some(KnotFamily::QuasiUniform),
-            m::UnitPart::BezierSurface => Some(KnotFamily::Bezier),
+            m::PartialEntity::UniformSurface => Some(KnotFamily::Uniform),
+            m::PartialEntity::QuasiUniformSurface => Some(KnotFamily::QuasiUniform),
+            m::PartialEntity::BezierSurface => Some(KnotFamily::Bezier),
             _ => None,
         })?;
         let n_v = cp.first().map_or(0, Vec::len);
@@ -1823,7 +1823,7 @@ pub(crate) fn complex_bspline_surface_to_nurbs(
         ((&derived.0.0, &derived.0.1), (&derived.1.0, &derived.1.1))
     };
     let weights = parts.iter().find_map(|p| match p {
-        m::UnitPart::RationalBSplineSurface { weights_data } => Some(weights_data.as_slice()),
+        m::PartialEntity::RationalBSplineSurface { weights_data } => Some(weights_data.as_slice()),
         _ => None,
     });
     nurbs_surface_from(cx, (u_degree, v_degree), cp, u, v, weights)

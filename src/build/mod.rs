@@ -636,10 +636,10 @@ pub struct StepBuilder {
     author: Ap242Author,
     /// The geometric context of every part not placed in an assembly, and of
     /// the presentation; a placed part gets one of its own.
-    ctx: m::ComplexUnitId,
+    ctx: m::ComplexEntityId,
     /// The length uncertainty and the units every geometric context shares.
     uncertainty: m::UncertaintyMeasureWithUnitId,
-    units: [m::ComplexUnitId; 3],
+    units: [m::ComplexEntityId; 3],
     product_context: m::ProductContextId,
     pd_context: m::ProductDefinitionContextId,
     parts: Vec<PendingPart>,
@@ -695,28 +695,28 @@ impl StepBuilder {
             LengthUnit::Metre => None,
         };
         let mm = a.add_complex(vec![
-            m::UnitPart::LengthUnit,
-            m::UnitPart::NamedUnit { dimensions: None },
-            m::UnitPart::SiUnit {
+            m::PartialEntity::LengthUnit,
+            m::PartialEntity::NamedUnit { dimensions: None },
+            m::PartialEntity::SiUnit {
                 prefix: length_prefix,
                 name: m::SiUnitName::Metre,
             },
         ])?;
         let rad = a.add_complex(vec![
-            m::UnitPart::NamedUnit { dimensions: None },
-            m::UnitPart::PlaneAngleUnit,
-            m::UnitPart::SiUnit {
+            m::PartialEntity::NamedUnit { dimensions: None },
+            m::PartialEntity::PlaneAngleUnit,
+            m::PartialEntity::SiUnit {
                 prefix: None,
                 name: m::SiUnitName::Radian,
             },
         ])?;
         let sr = a.add_complex(vec![
-            m::UnitPart::NamedUnit { dimensions: None },
-            m::UnitPart::SiUnit {
+            m::PartialEntity::NamedUnit { dimensions: None },
+            m::PartialEntity::SiUnit {
                 prefix: None,
                 name: m::SiUnitName::Steradian,
             },
-            m::UnitPart::SolidAngleUnit,
+            m::PartialEntity::SolidAngleUnit,
         ])?;
         let length_measure = a.text("LENGTH_MEASURE");
         let uncertainty = a.add_uncertainty_measure_with_unit(
@@ -982,25 +982,25 @@ impl StepBuilder {
         } else {
             let no_name = self.author.text("");
             let id = self.author.add_complex(vec![
-                m::UnitPart::BoundedCurve,
-                m::UnitPart::BSplineCurve {
+                m::PartialEntity::BoundedCurve,
+                m::PartialEntity::BSplineCurve {
                     degree,
                     control_points_list: cps,
                     curve_form: m::BSplineCurveForm::Unspecified,
                     closed_curve: m::Logical::Unknown,
                     self_intersect: m::Logical::Unknown,
                 },
-                m::UnitPart::BSplineCurveWithKnots {
+                m::PartialEntity::BSplineCurveWithKnots {
                     knot_multiplicities,
                     knots,
                     knot_spec: m::KnotType::Unspecified,
                 },
-                m::UnitPart::Curve,
-                m::UnitPart::GeometricRepresentationItem,
-                m::UnitPart::RationalBSplineCurve {
+                m::PartialEntity::Curve,
+                m::PartialEntity::GeometricRepresentationItem,
+                m::PartialEntity::RationalBSplineCurve {
                     weights_data: c.weights.clone(),
                 },
-                m::UnitPart::RepresentationItem { name: no_name },
+                m::PartialEntity::RepresentationItem { name: no_name },
             ])?;
             Ok(m::CurveRef::Complex(id))
         }
@@ -1054,8 +1054,8 @@ impl StepBuilder {
         } else {
             let no_name = self.author.text("");
             let id = self.author.add_complex(vec![
-                m::UnitPart::BoundedSurface,
-                m::UnitPart::BSplineSurface {
+                m::PartialEntity::BoundedSurface,
+                m::PartialEntity::BSplineSurface {
                     u_degree,
                     v_degree,
                     control_points_list: cps,
@@ -1064,19 +1064,19 @@ impl StepBuilder {
                     v_closed: m::Logical::Unknown,
                     self_intersect: m::Logical::Unknown,
                 },
-                m::UnitPart::BSplineSurfaceWithKnots {
+                m::PartialEntity::BSplineSurfaceWithKnots {
                     u_multiplicities,
                     v_multiplicities,
                     u_knots,
                     v_knots,
                     knot_spec: m::KnotType::Unspecified,
                 },
-                m::UnitPart::GeometricRepresentationItem,
-                m::UnitPart::RationalBSplineSurface {
+                m::PartialEntity::GeometricRepresentationItem,
+                m::PartialEntity::RationalBSplineSurface {
                     weights_data: s.weights.clone(),
                 },
-                m::UnitPart::RepresentationItem { name: no_name },
-                m::UnitPart::Surface,
+                m::PartialEntity::RepresentationItem { name: no_name },
+                m::PartialEntity::Surface,
             ])?;
             Ok(m::SurfaceRef::Complex(id))
         }
@@ -1870,7 +1870,7 @@ fn bind_part(
     a: &mut Ap242Author,
     part: &PendingPart,
     children: impl Iterator<Item = m::Axis2Placement3dId>,
-    ctx: m::ComplexUnitId,
+    ctx: m::ComplexEntityId,
 ) -> Result<m::RepresentationOrRepresentationReferenceRef, AuthorError> {
     // The origin, then where each child is placed, then the shape.
     let mut items = vec![m::RepresentationItemRef::Axis2Placement3d(part.origin)];
@@ -1930,26 +1930,26 @@ fn bind_part(
 fn geometric_context(
     a: &mut Ap242Author,
     uncertainty: m::UncertaintyMeasureWithUnitId,
-    [length, angle, solid_angle]: [m::ComplexUnitId; 3],
-) -> Result<m::ComplexUnitId, AuthorError> {
+    [length, angle, solid_angle]: [m::ComplexEntityId; 3],
+) -> Result<m::ComplexEntityId, AuthorError> {
     let (no_identifier, context_type) = (a.text(""), a.text("3D"));
     a.add_complex(vec![
-        m::UnitPart::GeometricRepresentationContext {
+        m::PartialEntity::GeometricRepresentationContext {
             coordinate_space_dimension: 3,
         },
-        m::UnitPart::GlobalUncertaintyAssignedContext {
+        m::PartialEntity::GlobalUncertaintyAssignedContext {
             uncertainty: vec![
                 m::UncertaintyMeasureWithUnitRef::UncertaintyMeasureWithUnit(uncertainty),
             ],
         },
-        m::UnitPart::GlobalUnitAssignedContext {
+        m::PartialEntity::GlobalUnitAssignedContext {
             units: vec![
                 m::UnitRef::Complex(length),
                 m::UnitRef::Complex(angle),
                 m::UnitRef::Complex(solid_angle),
             ],
         },
-        m::UnitPart::RepresentationContext {
+        m::PartialEntity::RepresentationContext {
             context_identifier: no_identifier,
             context_type,
         },
@@ -1981,16 +1981,16 @@ fn bind_placements(
         )?;
         let no_name = a.text("");
         let rrwt = a.add_complex(vec![
-            m::UnitPart::RepresentationRelationship {
+            m::PartialEntity::RepresentationRelationship {
                 name: no_name,
                 description: None,
                 rep_1: part_reps[placement.child].clone(),
                 rep_2: part_reps[placement.parent].clone(),
             },
-            m::UnitPart::RepresentationRelationshipWithTransformation {
+            m::PartialEntity::RepresentationRelationshipWithTransformation {
                 transformation_operator: m::TransformationRef::ItemDefinedTransformation(idt),
             },
-            m::UnitPart::ShapeRepresentationRelationship,
+            m::PartialEntity::ShapeRepresentationRelationship,
         ])?;
         a.add_context_dependent_shape_representation(
             m::ShapeRepresentationRelationshipRef::Complex(rrwt),

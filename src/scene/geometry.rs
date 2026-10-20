@@ -777,7 +777,7 @@ impl<'m> Surface<'m> {
             // A rational B-spline surface arrives as a complex instance.
             m::SurfaceRef::Complex(i) => crate::scene::nurbs::complex_bspline_surface_to_nurbs(
                 cx,
-                &cx.model.complex_unit_arena.get(i.0).parts,
+                &cx.model.complex_entity_arena.get(i.0).parts,
             ),
             // A full revolution is closed in u, so a bounded profile gives the
             // whole surface (an unbounded LINE profile needs a face's bounds).
@@ -1135,7 +1135,7 @@ macro_rules! curve_impl {
         #[derive(Clone, Copy)]
         enum CurveImpl {
             $( $V(m::$id), )+
-            Complex(m::ComplexUnitId),
+            Complex(m::ComplexEntityId),
         }
 
         impl<'m> Curve<'m> {
@@ -1144,7 +1144,7 @@ macro_rules! curve_impl {
             pub fn key(&self) -> m::EntityKey {
                 match self.which {
                     $( CurveImpl::$V(i) => m::EntityKey::$V(i), )+
-                    CurveImpl::Complex(i) => m::EntityKey::ComplexUnit(i),
+                    CurveImpl::Complex(i) => m::EntityKey::ComplexEntity(i),
                 }
             }
 
@@ -1269,7 +1269,7 @@ impl<'m> Curve<'m> {
             // A rational B-spline arrives as a complex instance; dig its parts.
             CurveImpl::Complex(i) => crate::scene::nurbs::complex_bspline_curve_to_nurbs(
                 cx,
-                &cx.model.complex_unit_arena.get(i.0).parts,
+                &cx.model.complex_entity_arena.get(i.0).parts,
             ),
             // A trimmed line/circle/ellipse/parabola/hyperbola → a bounded
             // segment/arc/span.

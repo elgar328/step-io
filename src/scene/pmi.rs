@@ -236,7 +236,7 @@ macro_rules! leaf_tolerances {
         #[derive(Clone, Copy)]
         enum TolImpl {
             $( $ent(m::$id), )+
-            Complex(m::ComplexUnitId),
+            Complex(m::ComplexEntityId),
         }
 
         fn push_dedicated_tolerances<'m>(cx: Ctx<'m>, out: &mut Vec<Tolerance<'m>>) {
@@ -261,7 +261,7 @@ macro_rules! leaf_tolerances {
             pub fn key(&self) -> m::EntityKey {
                 match self.which {
                     $( TolImpl::$ent(i) => m::EntityKey::$ent(i), )+
-                    TolImpl::Complex(cuid) => m::EntityKey::ComplexUnit(cuid),
+                    TolImpl::Complex(cuid) => m::EntityKey::ComplexEntity(cuid),
                 }
             }
 
@@ -310,7 +310,7 @@ leaf_tolerances! {
 impl Scene<'_> {
     /// Every geometric tolerance in the model. Covers both standalone leaf
     /// entities (in their dedicated arenas) and complex multi-supertype
-    /// instances (any `ComplexUnit` carrying a `GEOMETRIC_TOLERANCE` facet).
+    /// instances (any `ComplexEntity` carrying a `GEOMETRIC_TOLERANCE` facet).
     pub fn all_tolerances(&self) -> impl Iterator<Item = Tolerance<'_>> + '_ {
         all_tolerances(self.ctx()).into_iter()
     }
@@ -321,16 +321,16 @@ impl Scene<'_> {
 fn all_tolerances(cx: Ctx<'_>) -> Vec<Tolerance<'_>> {
     let mut out: Vec<Tolerance<'_>> = Vec::new();
     push_dedicated_tolerances(cx, &mut out);
-    for i in cx.model.complex_unit_arena.indices() {
-        let cu = cx.model.complex_unit_arena.get(i);
+    for i in cx.model.complex_entity_arena.indices() {
+        let cu = cx.model.complex_entity_arena.get(i);
         if cu
             .parts
             .iter()
-            .any(|p| matches!(p, m::UnitPart::GeometricTolerance { .. }))
+            .any(|p| matches!(p, m::PartialEntity::GeometricTolerance { .. }))
         {
             out.push(Tolerance {
                 cx,
-                which: TolImpl::Complex(m::ComplexUnitId(i)),
+                which: TolImpl::Complex(m::ComplexEntityId(i)),
             });
         }
     }
@@ -368,9 +368,9 @@ impl<'m> Tolerance<'m> {
         let TolImpl::Complex(cuid) = self.which else {
             return None;
         };
-        let cu = self.cx.model.complex_unit_arena.get(cuid.0);
+        let cu = self.cx.model.complex_entity_arena.get(cuid.0);
         cu.parts.iter().find_map(|p| match p {
-            m::UnitPart::GeometricTolerance {
+            m::PartialEntity::GeometricTolerance {
                 name, magnitude, ..
             } => Some((self.cx.model.text(*name), magnitude.as_ref())),
             _ => None,
@@ -379,22 +379,22 @@ impl<'m> Tolerance<'m> {
 
     /// The characteristic of a complex tolerance, read from its leaf-subtype
     /// facet. Only the leaf markers that occur in the corpus exist as
-    /// `UnitPart` variants; a complex tolerance without a recognized one is
+    /// `PartialEntity` variants; a complex tolerance without a recognized one is
     /// surfaced as `Other`.
-    fn complex_kind(&self, cuid: m::ComplexUnitId) -> ToleranceKind {
-        let cu = self.cx.model.complex_unit_arena.get(cuid.0);
+    fn complex_kind(&self, cuid: m::ComplexEntityId) -> ToleranceKind {
+        let cu = self.cx.model.complex_entity_arena.get(cuid.0);
         for p in &cu.parts {
             let kind = match p {
-                m::UnitPart::PositionTolerance => ToleranceKind::Position,
-                m::UnitPart::FlatnessTolerance => ToleranceKind::Flatness,
-                m::UnitPart::StraightnessTolerance => ToleranceKind::Straightness,
-                m::UnitPart::RoundnessTolerance => ToleranceKind::Roundness,
-                m::UnitPart::CylindricityTolerance => ToleranceKind::Cylindricity,
-                m::UnitPart::LineProfileTolerance => ToleranceKind::LineProfile,
-                m::UnitPart::SurfaceProfileTolerance => ToleranceKind::SurfaceProfile,
-                m::UnitPart::ParallelismTolerance => ToleranceKind::Parallelism,
-                m::UnitPart::PerpendicularityTolerance => ToleranceKind::Perpendicularity,
-                m::UnitPart::CircularRunoutTolerance => ToleranceKind::CircularRunout,
+                m::PartialEntity::PositionTolerance => ToleranceKind::Position,
+                m::PartialEntity::FlatnessTolerance => ToleranceKind::Flatness,
+                m::PartialEntity::StraightnessTolerance => ToleranceKind::Straightness,
+                m::PartialEntity::RoundnessTolerance => ToleranceKind::Roundness,
+                m::PartialEntity::CylindricityTolerance => ToleranceKind::Cylindricity,
+                m::PartialEntity::LineProfileTolerance => ToleranceKind::LineProfile,
+                m::PartialEntity::SurfaceProfileTolerance => ToleranceKind::SurfaceProfile,
+                m::PartialEntity::ParallelismTolerance => ToleranceKind::Parallelism,
+                m::PartialEntity::PerpendicularityTolerance => ToleranceKind::Perpendicularity,
+                m::PartialEntity::CircularRunoutTolerance => ToleranceKind::CircularRunout,
                 _ => continue,
             };
             return kind;
@@ -579,12 +579,12 @@ impl<'m> Tolerance<'m> {
                 &model.total_runout_tolerance_arena.get(i.0).datum_system
             }
             TolImpl::Complex(cuid) => model
-                .complex_unit_arena
+                .complex_entity_arena
                 .get(cuid.0)
                 .parts
                 .iter()
                 .find_map(|p| match p {
-                    m::UnitPart::GeometricToleranceWithDatumReference { datum_system } => {
+                    m::PartialEntity::GeometricToleranceWithDatumReference { datum_system } => {
                         Some(datum_system.as_slice())
                     }
                     _ => None,
@@ -914,12 +914,12 @@ impl<'m> Tolerance<'m> {
         };
         self.cx
             .model
-            .complex_unit_arena
+            .complex_entity_arena
             .get(cuid.0)
             .parts
             .iter()
             .find_map(|p| match p {
-                m::UnitPart::GeometricTolerance {
+                m::PartialEntity::GeometricTolerance {
                     toleranced_shape_aspect,
                     ..
                 } => Some(toleranced_shape_aspect),

@@ -110,7 +110,7 @@ fn idents(fields: &[Field]) -> Vec<(String, &Field)> {
 /// The model's read access: the `Entity` / `EntityId` traits, `StepModel::all`,
 /// `get` and indexing, and the `entity!` macro implementing them per type.
 const ENTITY_ACCESS: &str = r#"
-/// An entity type of the model: a generated entity struct, or [`ComplexUnit`]
+/// An entity type of the model: a generated entity struct, or [`ComplexEntity`]
 /// for a complex instance. [`StepModel::all`] lists the entities of a type.
 /// The trait is sealed: only the model's own types implement it.
 pub trait Entity: sealed::SealedEntity {
@@ -422,7 +422,7 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
     if ir.has_part_bag {
         writeln!(
             s,
-            "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct ComplexUnitId(pub u32);"
+            "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct ComplexEntityId(pub u32);"
         )
         .unwrap();
     }
@@ -438,7 +438,7 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
         writeln!(s, "    {}({}Id),", se.rust, se.rust).unwrap();
     }
     if ir.has_part_bag {
-        writeln!(s, "    ComplexUnit(ComplexUnitId),").unwrap();
+        writeln!(s, "    ComplexEntity(ComplexEntityId),").unwrap();
     }
     writeln!(s, "}}\n").unwrap();
 
@@ -458,7 +458,7 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
     if ir.has_part_bag {
         writeln!(
             s,
-            "            EntityKey::ComplexUnit(i) => ({}, i.0),",
+            "            EntityKey::ComplexEntity(i) => ({}, i.0),",
             ir.simples.len()
         )
         .unwrap();
@@ -483,7 +483,7 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
         .unwrap();
     }
     if ir.has_part_bag {
-        writeln!(s, "            EntityKey::ComplexUnit(_) => None,").unwrap();
+        writeln!(s, "            EntityKey::ComplexEntity(_) => None,").unwrap();
     }
     writeln!(s, "        }}\n    }}\n}}\n").unwrap();
 
@@ -515,7 +515,9 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
     if ir.has_part_bag {
         writeln!(
             s,
-            "#[derive(Debug, Clone, PartialEq)]\npub enum UnitPart {{"
+            "/// One entity type's share of a [`ComplexEntity`] — Part 21's partial entity\n\
+             /// instance, such as `B_SPLINE_CURVE(...)` in a rational B-spline curve.\n\
+             #[derive(Debug, Clone, PartialEq)]\npub enum PartialEntity {{"
         )
         .unwrap();
         for p in &ir.parts {
@@ -536,7 +538,10 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
         writeln!(s, "}}\n").unwrap();
         writeln!(
             s,
-            "#[derive(Debug, Clone, PartialEq)]\npub struct ComplexUnit {{ pub parts: Vec<UnitPart> }}\n"
+            "/// A complex entity instance: one `#id` that combines several entity\n\
+             /// types, written as `( A(...) B(...) … )`, with one [`PartialEntity`] per\n\
+             /// type.\n\
+             #[derive(Debug, Clone, PartialEq)]\npub struct ComplexEntity {{ pub parts: Vec<PartialEntity> }}\n"
         )
         .unwrap();
     }
@@ -556,7 +561,11 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
         .unwrap();
     }
     if ir.has_part_bag {
-        writeln!(s, "    pub(crate) complex_unit_arena: Arena<ComplexUnit>,").unwrap();
+        writeln!(
+            s,
+            "    pub(crate) complex_entity_arena: Arena<ComplexEntity>,"
+        )
+        .unwrap();
     }
     writeln!(s, "}}").unwrap();
     s.push_str("impl StepModel {\n    /// The string `t` stands for (`\"\"` for a `Text` of another model).\n    pub fn text(&self, t: Text) -> &str { self.texts.get(t) }\n    /// Store `s` as a new `Text`.\n    pub(crate) fn add_text(&mut self, s: &str) -> Text { self.texts.push(s) }\n}\n");
@@ -575,7 +584,7 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
     if ir.has_part_bag {
         writeln!(
             s,
-            "entity!(ComplexUnit, ComplexUnitId, complex_unit_arena);"
+            "entity!(ComplexEntity, ComplexEntityId, complex_entity_arena);"
         )
         .unwrap();
     }
@@ -606,7 +615,7 @@ pub fn emit_walk(ir: &ModelIr) -> String {
     }
     if ir.has_part_bag {
         s.push_str(
-            "    for i in 0..model.complex_unit_arena.items.len() as u32 { f(EntityKey::ComplexUnit(ComplexUnitId(i))); }\n",
+            "    for i in 0..model.complex_entity_arena.items.len() as u32 { f(EntityKey::ComplexEntity(ComplexEntityId(i))); }\n",
         );
     }
     s.push_str("}\n");
@@ -640,7 +649,7 @@ pub fn emit_resolvers(ir: &ModelIr) -> String {
             writeln!(s, "    {variant}(&'m {target}),").unwrap();
         }
         if re.has_complex {
-            writeln!(s, "    Complex(&'m ComplexUnit),").unwrap();
+            writeln!(s, "    Complex(&'m ComplexEntity),").unwrap();
         }
         writeln!(s, "}}").unwrap();
         writeln!(s, "impl {r} {{").unwrap();
@@ -661,7 +670,7 @@ pub fn emit_resolvers(ir: &ModelIr) -> String {
         if re.has_complex {
             writeln!(
                 s,
-                "            {r}::Complex(i) => {r}View::Complex(model.complex_unit_arena.get(i.0)),"
+                "            {r}::Complex(i) => {r}View::Complex(model.complex_entity_arena.get(i.0)),"
             )
             .unwrap();
         }
@@ -681,7 +690,7 @@ pub fn emit_resolvers(ir: &ModelIr) -> String {
         if re.has_complex {
             writeln!(
                 s,
-                "            {r}::Complex(i) => EntityKey::ComplexUnit(*i),"
+                "            {r}::Complex(i) => EntityKey::ComplexEntity(*i),"
             )
             .unwrap();
         }
@@ -733,7 +742,7 @@ fn emit_ref_enum(s: &mut String, re: &RefEnum) {
         writeln!(s, "    {variant}({}),", scalar_rust_ty(sk)).unwrap();
     }
     if re.has_complex {
-        writeln!(s, "    Complex(ComplexUnitId),").unwrap();
+        writeln!(s, "    Complex(ComplexEntityId),").unwrap();
     }
     // An enum with no arms at all (all ref targets out of closure, e.g. excluded)
     // would be uninhabited and make its referrer unconstructible. Such referrers
@@ -765,7 +774,7 @@ fn emit_ref_enum(s: &mut String, re: &RefEnum) {
     if re.has_complex {
         writeln!(
             s,
-            "        EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),"
+            "        EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),"
         )
         .unwrap();
     }
@@ -1033,9 +1042,9 @@ fn read_int_measure_value(a: &Attribute, ctx: &str, tt: &mut TextIn<'_>) -> Resu
     s.push_str("        _ => Ok(()),\n    }\n}\n\n");
 
     if ir.has_part_bag {
-        s.push_str("pub fn build_complex_entity(model: &mut StepModel, parts: &[RawEntityPart], dedup: &mut TextDedup) -> Result<u32, String> {\n    let mut tt = TextIn { texts: &mut model.texts, dedup };\n    Ok(model.complex_unit_arena.push(ComplexUnit { parts: read_complex_parts_norefs(parts, &mut tt)? }))\n}\n\n");
-        s.push_str("pub fn complex_key_of(i: u32) -> Option<EntityKey> {\n    Some(EntityKey::ComplexUnit(ComplexUnitId(i)))\n}\n\n");
-        s.push_str("pub fn resolve_complex_entity(model: &mut StepModel, i: u32, parts: &[RawEntityPart], idmap: &IdMap, dedup: &mut TextDedup) -> Result<(), String> {\n    resolve_complex(model, ComplexUnitId(i), parts, idmap, dedup)\n}\n\n");
+        s.push_str("pub fn build_complex_entity(model: &mut StepModel, parts: &[RawEntityPart], dedup: &mut TextDedup) -> Result<u32, String> {\n    let mut tt = TextIn { texts: &mut model.texts, dedup };\n    Ok(model.complex_entity_arena.push(ComplexEntity { parts: read_complex_parts_norefs(parts, &mut tt)? }))\n}\n\n");
+        s.push_str("pub fn complex_key_of(i: u32) -> Option<EntityKey> {\n    Some(EntityKey::ComplexEntity(ComplexEntityId(i)))\n}\n\n");
+        s.push_str("pub fn resolve_complex_entity(model: &mut StepModel, i: u32, parts: &[RawEntityPart], idmap: &IdMap, dedup: &mut TextDedup) -> Result<(), String> {\n    resolve_complex(model, ComplexEntityId(i), parts, idmap, dedup)\n}\n\n");
     } else {
         s.push_str("pub fn build_complex_entity(_model: &mut StepModel, _parts: &[RawEntityPart], _dedup: &mut TextDedup) -> Result<u32, String> {\n    Err(\"no complex entities are modeled\".to_string())\n}\n\n");
         s.push_str("pub fn complex_key_of(_i: u32) -> Option<EntityKey> {\n    None\n}\n\n");
@@ -1055,7 +1064,7 @@ fn read_int_measure_value(a: &Attribute, ctx: &str, tt: &mut TextIn<'_>) -> Resu
         .unwrap();
     }
     if ir.has_part_bag {
-        s.push_str("    model.complex_unit_arena.retain_order(complex);\n");
+        s.push_str("    model.complex_entity_arena.retain_order(complex);\n");
     }
     s.push_str("}\n\n");
 
@@ -1069,7 +1078,7 @@ fn read_int_measure_value(a: &Attribute, ctx: &str, tt: &mut TextIn<'_>) -> Resu
         .unwrap();
     }
     if ir.has_part_bag {
-        s.push_str("    model.complex_unit_arena.items.shrink_to_fit();\n");
+        s.push_str("    model.complex_entity_arena.items.shrink_to_fit();\n");
     }
     s.push_str("}\n\n");
 
@@ -1141,7 +1150,7 @@ fn ref_placeholder(ir: &ModelIr, k: &Kind, optional: bool) -> String {
             if let Some((variant, target)) = re.simple_arms.first() {
                 format!("{}::{}({}Id(u32::MAX))", re.rust, variant, target)
             } else if re.has_complex {
-                format!("{}::Complex(ComplexUnitId(u32::MAX))", re.rust)
+                format!("{}::Complex(ComplexEntityId(u32::MAX))", re.rust)
             } else if let Some((variant, _, _)) = re.aggregate.first() {
                 // aggregate-only select (no single arm): empty-vec placeholder.
                 format!("{}::{}(Vec::new())", re.rust, variant)
@@ -1355,19 +1364,19 @@ fn resolve_ref_vec(ir: &ModelIr, inner: &Kind, a: &str, ctx: &str) -> String {
 fn emit_complex_read(s: &mut String, ir: &ModelIr) {
     // pass1: bind non-ref part attrs
     s.push_str(
-        "fn read_complex_parts_norefs(parts: &[RawEntityPart], tt: &mut TextIn<'_>) -> Result<Vec<UnitPart>, String> {\n",
+        "fn read_complex_parts_norefs(parts: &[RawEntityPart], tt: &mut TextIn<'_>) -> Result<Vec<PartialEntity>, String> {\n",
     );
     s.push_str(
-        "    parts.iter().map(|p| -> Result<UnitPart, String> { Ok(match p.name.as_str() {\n",
+        "    parts.iter().map(|p| -> Result<PartialEntity, String> { Ok(match p.name.as_str() {\n",
     );
     for p in &ir.parts {
         let kept: Vec<_> = idents(&p.fields).into_iter().collect();
         let nonderived: Vec<_> = kept.iter().filter(|(_, f)| !f.derived).collect();
         if nonderived.is_empty() {
-            writeln!(s, "        \"{}\" => UnitPart::{},", p.name, p.rust).unwrap();
+            writeln!(s, "        \"{}\" => PartialEntity::{},", p.name, p.rust).unwrap();
             continue;
         }
-        write!(s, "        \"{}\" => UnitPart::{} {{ ", p.name, p.rust).unwrap();
+        write!(s, "        \"{}\" => PartialEntity::{} {{ ", p.name, p.rust).unwrap();
         let mut idx = 0usize;
         for (id, f) in &kept {
             if f.derived {
@@ -1395,9 +1404,9 @@ fn emit_complex_read(s: &mut String, ir: &ModelIr) {
     );
 
     // pass2: patch ref part attrs
-    s.push_str("fn resolve_complex(model: &mut StepModel, aid: ComplexUnitId, parts: &[RawEntityPart], idmap: &IdMap, dedup: &mut TextDedup) -> Result<(), String> {\n");
+    s.push_str("fn resolve_complex(model: &mut StepModel, aid: ComplexEntityId, parts: &[RawEntityPart], idmap: &IdMap, dedup: &mut TextDedup) -> Result<(), String> {\n");
     s.push_str("    let tt = &mut TextIn { texts: &mut model.texts, dedup };\n");
-    s.push_str("    let bag = &mut model.complex_unit_arena.items[aid.0 as usize];\n");
+    s.push_str("    let bag = &mut model.complex_entity_arena.items[aid.0 as usize];\n");
     s.push_str("    for (slot, p) in bag.parts.iter_mut().zip(parts.iter()) {\n");
     s.push_str("        match slot {\n");
     for p in &ir.parts {
@@ -1418,7 +1427,7 @@ fn emit_complex_read(s: &mut String, ir: &ModelIr) {
             .collect();
         writeln!(
             s,
-            "            UnitPart::{} {{ {}, .. }} => {{",
+            "            PartialEntity::{} {{ {}, .. }} => {{",
             p.rust,
             binding.join(", ")
         )
@@ -1514,7 +1523,9 @@ const CHUNK: usize = 64 * 1024;
         .unwrap();
     }
     if ir.has_part_bag {
-        s.push_str("            complex_ids: vec![None; model.complex_unit_arena.items.len()],\n");
+        s.push_str(
+            "            complex_ids: vec![None; model.complex_entity_arena.items.len()],\n",
+        );
     }
     s.push_str("        }\n    }\n\n");
     s.push_str("    fn fresh(&mut self) -> u64 { let n = self.next; self.next += 1; n }\n\n");
@@ -1531,7 +1542,7 @@ const CHUNK: usize = 64 * 1024;
         .unwrap();
     }
     if ir.has_part_bag {
-        s.push_str("        EntityKey::ComplexUnit(i) => self.complex_ids[i.0 as usize],\n");
+        s.push_str("        EntityKey::ComplexEntity(i) => self.complex_ids[i.0 as usize],\n");
     }
     s.push_str("    } }\n\n");
     s.push_str("    fn set_id(&mut self, any: EntityKey, n: u64) { match any {\n");
@@ -1546,7 +1557,7 @@ const CHUNK: usize = 64 * 1024;
     }
     if ir.has_part_bag {
         s.push_str(
-            "        EntityKey::ComplexUnit(i) => self.complex_ids[i.0 as usize] = Some(n),\n",
+            "        EntityKey::ComplexEntity(i) => self.complex_ids[i.0 as usize] = Some(n),\n",
         );
     }
     s.push_str("    } }\n\n");
@@ -1665,7 +1676,7 @@ fn emit_deps_of(s: &mut String, ir: &ModelIr) {
     }
     if ir.has_part_bag {
         s.push_str(
-            "        EntityKey::ComplexUnit(id) => { let cu = model.complex_unit_arena.get(id.0); for part in &cu.parts { match part {\n",
+            "        EntityKey::ComplexEntity(id) => { let cu = model.complex_entity_arena.get(id.0); for part in &cu.parts { match part {\n",
         );
         for p in &ir.parts {
             let kept = idents(&p.fields);
@@ -1686,7 +1697,7 @@ fn emit_deps_of(s: &mut String, ir: &ModelIr) {
             }
             writeln!(
                 s,
-                "            UnitPart::{} {{ {}, .. }} => {{ {} }},",
+                "            PartialEntity::{} {{ {}, .. }} => {{ {} }},",
                 p.rust,
                 binders.join(", "),
                 stmts
@@ -1736,7 +1747,7 @@ fn emit_render_one(s: &mut String, ir: &ModelIr) {
     }
     if ir.has_part_bag {
         s.push_str(
-            "        EntityKey::ComplexUnit(id) => { let cu = self.model.complex_unit_arena.get(id.0); let n = self.get_id(any).expect(\"id assigned\"); let mut part_txt: Vec<String> = Vec::with_capacity(cu.parts.len()); for part in &cu.parts { part_txt.push(match part {\n",
+            "        EntityKey::ComplexEntity(id) => { let cu = self.model.complex_entity_arena.get(id.0); let n = self.get_id(any).expect(\"id assigned\"); let mut part_txt: Vec<String> = Vec::with_capacity(cu.parts.len()); for part in &cu.parts { part_txt.push(match part {\n",
         );
         for p in &ir.parts {
             let kept = idents(&p.fields);
@@ -1744,7 +1755,7 @@ fn emit_render_one(s: &mut String, ir: &ModelIr) {
             if kept.is_empty() {
                 writeln!(
                     s,
-                    "                UnitPart::{} => \"{}()\".to_string(),",
+                    "                PartialEntity::{} => \"{}()\".to_string(),",
                     p.rust, p.name
                 )
                 .unwrap();
@@ -1753,7 +1764,7 @@ fn emit_render_one(s: &mut String, ir: &ModelIr) {
             let binders: Vec<String> = nonderived.iter().map(|(id, _)| id.clone()).collect();
             write!(
                 s,
-                "                UnitPart::{} {{ {} }} => {{",
+                "                PartialEntity::{} {{ {} }} => {{",
                 p.rust,
                 if binders.is_empty() {
                     ".. ".to_string()
@@ -2042,7 +2053,7 @@ fn emit_ref_deps(s: &mut String, re: &RefEnum) {
     if re.has_complex {
         writeln!(
             s,
-            "        {}::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),",
+            "        {}::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),",
             re.rust
         )
         .unwrap();
@@ -2087,14 +2098,14 @@ fn emit_writer_primitives(s: &mut String, ir: &ModelIr) {
     }
     if ir.has_part_bag {
         // complex = no single keyword; rendered from its parts.
-        s.push_str("        EntityKey::ComplexUnit(_) => \"\",\n");
+        s.push_str("        EntityKey::ComplexEntity(_) => \"\",\n");
     }
     s.push_str("    } }\n\n");
 
     // all_ids: every node, arena order (the former emit_all roots block).
     s.push_str("    pub(crate) fn all_ids(&self) -> Vec<EntityKey> {\n        let mut roots: Vec<EntityKey> = Vec::new();\n");
     if ir.has_part_bag {
-        s.push_str("        for i in 0..self.model.complex_unit_arena.items.len() as u32 { roots.push(EntityKey::ComplexUnit(ComplexUnitId(i))); }\n");
+        s.push_str("        for i in 0..self.model.complex_entity_arena.items.len() as u32 { roots.push(EntityKey::ComplexEntity(ComplexEntityId(i))); }\n");
     }
     for se in &ir.simples {
         writeln!(
@@ -3030,14 +3041,14 @@ impl Ap242Author {
     /// supertype-chain completeness, connectivity, ONEOF exclusivity), then
     /// every reference field is checked; parts are stored in Part 21 order
     /// (alphabetical).
-    pub fn add_complex(&mut self, mut parts: Vec<UnitPart>) -> Result<ComplexUnitId, AuthorError> {
+    pub fn add_complex(&mut self, mut parts: Vec<PartialEntity>) -> Result<ComplexEntityId, AuthorError> {
         let names: Vec<&'static str> = parts.iter().map(part_name).collect();
         complex_rule(&names)?;
         for p in &parts {
-            check_unit_part(&self.model, p)?;
+            check_partial_entity(&self.model, p)?;
         }
         parts.sort_by(|a, b| part_name(a).cmp(part_name(b)));
-        Ok(ComplexUnitId(self.model.complex_unit_arena.push(ComplexUnit { parts })))
+        Ok(ComplexEntityId(self.model.complex_entity_arena.push(ComplexEntity { parts })))
     }
 "#,
         );
@@ -3087,7 +3098,7 @@ fn self_ref_capable(ir: &ModelIr, se: &SimpleEnt) -> bool {
 
 /// The complex-assembler support items for `author.rs`: `part_name`, the
 /// `PART_INFO` / `ONEOF_GROUPS` static tables, the name-set rule
-/// `complex_rule`, and the per-part reference check `check_unit_part`.
+/// `complex_rule`, and the per-part reference check `check_partial_entity`.
 fn emit_author_complex(
     ir: &ModelIr,
     legal: &std::collections::BTreeSet<String>,
@@ -3095,17 +3106,17 @@ fn emit_author_complex(
     schema: &crate::schema::Schema,
     s: &mut String,
 ) {
-    // part_name: UnitPart variant -> UPPER STEP keyword (mirrors the model's
+    // part_name: PartialEntity variant -> UPPER STEP keyword (mirrors the model's
     // unit-vs-struct variant shape: unit iff no non-derived fields).
-    s.push_str("fn part_name(p: &UnitPart) -> &'static str {\n    match p {\n");
+    s.push_str("fn part_name(p: &PartialEntity) -> &'static str {\n    match p {\n");
     for p in &ir.parts {
         let unit = idents(&p.fields).iter().all(|(_, f)| f.derived);
         if unit {
-            writeln!(s, "        UnitPart::{} => \"{}\",", p.rust, p.name).unwrap();
+            writeln!(s, "        PartialEntity::{} => \"{}\",", p.rust, p.name).unwrap();
         } else {
             writeln!(
                 s,
-                "        UnitPart::{} {{ .. }} => \"{}\",",
+                "        PartialEntity::{} {{ .. }} => \"{}\",",
                 p.rust, p.name
             )
             .unwrap();
@@ -3273,7 +3284,7 @@ pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
 
     // Per-part reference checks: one arm per part with reference fields.
     s.push_str(
-        "fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {\n    match p {\n",
+        "fn check_partial_entity(model: &StepModel, p: &PartialEntity) -> Result<(), AuthorError> {\n    match p {\n",
     );
     for p in &ir.parts {
         let mut binds = Vec::new();
@@ -3313,7 +3324,7 @@ pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
         }
         writeln!(
             s,
-            "        UnitPart::{} {{ {}, .. }} => {{\n{body}        }}",
+            "        PartialEntity::{} {{ {}, .. }} => {{\n{body}        }}",
             p.rust,
             binds.join(", ")
         )
@@ -3392,7 +3403,7 @@ fn emit_author_ref_checks(
             let target = target.to_uppercase();
             writeln!(
                 s,
-                "        {r}::Complex(i) => {{ let Some(c) = model.complex_unit_arena.items.get(i.0 as usize) else {{ return Err(AuthorError::DanglingRef {{ entity: \"COMPLEX\" }}); }}; if !c.parts.iter().any(|p| [{fits}].contains(&part_name(p))) {{ return Err(AuthorError::InvalidComplex {{ reason: \"not a {target}\" }}); }} }}"
+                "        {r}::Complex(i) => {{ let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {{ return Err(AuthorError::DanglingRef {{ entity: \"COMPLEX\" }}); }}; if !c.parts.iter().any(|p| [{fits}].contains(&part_name(p))) {{ return Err(AuthorError::InvalidComplex {{ reason: \"not a {target}\" }}); }} }}"
             )
             .unwrap();
         }

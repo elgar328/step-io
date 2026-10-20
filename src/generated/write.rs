@@ -2268,7 +2268,7 @@ impl<'a> Writer<'a> {
             view_volume_ids: vec![None; model.view_volume_arena.items.len()],
             volume_unit_ids: vec![None; model.volume_unit_arena.items.len()],
             wire_shell_ids: vec![None; model.wire_shell_arena.items.len()],
-            complex_ids: vec![None; model.complex_unit_arena.items.len()],
+            complex_ids: vec![None; model.complex_entity_arena.items.len()],
         }
     }
 
@@ -3175,7 +3175,7 @@ impl<'a> Writer<'a> {
             EntityKey::ViewVolume(i) => self.view_volume_ids[i.0 as usize],
             EntityKey::VolumeUnit(i) => self.volume_unit_ids[i.0 as usize],
             EntityKey::WireShell(i) => self.wire_shell_ids[i.0 as usize],
-            EntityKey::ComplexUnit(i) => self.complex_ids[i.0 as usize],
+            EntityKey::ComplexEntity(i) => self.complex_ids[i.0 as usize],
         }
     }
 
@@ -4263,7 +4263,7 @@ impl<'a> Writer<'a> {
             EntityKey::ViewVolume(i) => self.view_volume_ids[i.0 as usize] = Some(n),
             EntityKey::VolumeUnit(i) => self.volume_unit_ids[i.0 as usize] = Some(n),
             EntityKey::WireShell(i) => self.wire_shell_ids[i.0 as usize] = Some(n),
-            EntityKey::ComplexUnit(i) => self.complex_ids[i.0 as usize] = Some(n),
+            EntityKey::ComplexEntity(i) => self.complex_ids[i.0 as usize] = Some(n),
         }
     }
 
@@ -4279,7 +4279,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_action_method(r: &ActionMethodRef, out: &mut Vec<EntityKey>) {
         match r {
             ActionMethodRef::ActionMethod(i) => out.push(EntityKey::ActionMethod(*i)),
-            ActionMethodRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ActionMethodRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -4293,7 +4293,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_action(r: &ActionRef, out: &mut Vec<EntityKey>) {
         match r {
             ActionRef::Action(i) => out.push(EntityKey::Action(*i)),
-            ActionRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ActionRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -4311,7 +4311,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_action_resource(r: &ActionResourceRef, out: &mut Vec<EntityKey>) {
         match r {
             ActionResourceRef::ActionResource(i) => out.push(EntityKey::ActionResource(*i)),
-            ActionResourceRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ActionResourceRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -4354,7 +4354,7 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::AnnotationCurveOccurrence(*i))
             }
             AnnotationCurveOccurrenceRef::LeaderCurve(i) => out.push(EntityKey::LeaderCurve(*i)),
-            AnnotationCurveOccurrenceRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            AnnotationCurveOccurrenceRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -4442,7 +4442,7 @@ impl<'a> Writer<'a> {
             AnnotationOccurrenceRef::TessellatedAnnotationOccurrence(i) => {
                 out.push(EntityKey::TessellatedAnnotationOccurrence(*i))
             }
-            AnnotationOccurrenceRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            AnnotationOccurrenceRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -4515,7 +4515,9 @@ impl<'a> Writer<'a> {
             AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrenceWithLeaderLine(
                 i,
             ) => out.push(EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)),
-            AnnotationPlaceholderOccurrenceRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            AnnotationPlaceholderOccurrenceRef::Complex(i) => {
+                out.push(EntityKey::ComplexEntity(*i))
+            }
         }
     }
 
@@ -4633,7 +4635,7 @@ impl<'a> Writer<'a> {
             AnnotationPlaneElementRef::TessellatedAnnotationOccurrence(i) => {
                 out.push(EntityKey::TessellatedAnnotationOccurrence(*i))
             }
-            AnnotationPlaneElementRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            AnnotationPlaneElementRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -4677,7 +4679,7 @@ impl<'a> Writer<'a> {
             AnnotationRepresentationSelectRef::SymbolRepresentation(i) => {
                 out.push(EntityKey::SymbolRepresentation(*i))
             }
-            AnnotationRepresentationSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            AnnotationRepresentationSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -4709,7 +4711,7 @@ impl<'a> Writer<'a> {
             AnnotationSymbolOccurrenceItemRef::DefinedSymbol(i) => {
                 out.push(EntityKey::DefinedSymbol(*i))
             }
-            AnnotationSymbolOccurrenceItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            AnnotationSymbolOccurrenceItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -4744,7 +4746,7 @@ impl<'a> Writer<'a> {
             AnnotationSymbolOccurrenceRef::TerminatorSymbol(i) => {
                 out.push(EntityKey::TerminatorSymbol(*i))
             }
-            AnnotationSymbolOccurrenceRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            AnnotationSymbolOccurrenceRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -4792,7 +4794,7 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::DefinedCharacterGlyph(*i))
             }
             AnnotationTextOccurrenceItemRef::TextLiteral(i) => out.push(EntityKey::TextLiteral(*i)),
-            AnnotationTextOccurrenceItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            AnnotationTextOccurrenceItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -5979,7 +5981,7 @@ impl<'a> Writer<'a> {
             ApprovalItemRef::VertexPoint(i) => out.push(EntityKey::VertexPoint(*i)),
             ApprovalItemRef::VertexShell(i) => out.push(EntityKey::VertexShell(*i)),
             ApprovalItemRef::WireShell(i) => out.push(EntityKey::WireShell(*i)),
-            ApprovalItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ApprovalItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -6093,7 +6095,7 @@ impl<'a> Writer<'a> {
             }
             ApprovedItemRef::StartRequest(i) => out.push(EntityKey::StartRequest(*i)),
             ApprovedItemRef::StartWork(i) => out.push(EntityKey::StartWork(*i)),
-            ApprovedItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ApprovedItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -6237,7 +6239,7 @@ impl<'a> Writer<'a> {
             CcClassifiedItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 out.push(EntityKey::ProductDefinitionFormationWithSpecifiedSource(*i))
             }
-            CcClassifiedItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            CcClassifiedItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -6314,7 +6316,7 @@ impl<'a> Writer<'a> {
             }
             CcPersonOrganizationItemRef::StartRequest(i) => out.push(EntityKey::StartRequest(*i)),
             CcPersonOrganizationItemRef::StartWork(i) => out.push(EntityKey::StartWork(*i)),
-            CcPersonOrganizationItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            CcPersonOrganizationItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -6356,7 +6358,7 @@ impl<'a> Writer<'a> {
             ChangeRequestItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 out.push(EntityKey::ProductDefinitionFormationWithSpecifiedSource(*i))
             }
-            ChangeRequestItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ChangeRequestItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -6388,7 +6390,7 @@ impl<'a> Writer<'a> {
             CharacterStyleSelectRef::TextStyleForDefinedFont(i) => {
                 out.push(EntityKey::TextStyleForDefinedFont(*i))
             }
-            CharacterStyleSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            CharacterStyleSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -6430,7 +6432,7 @@ impl<'a> Writer<'a> {
             CharacterizedActionDefinitionRef::ActionRelationship(i) => {
                 out.push(EntityKey::ActionRelationship(*i))
             }
-            CharacterizedActionDefinitionRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            CharacterizedActionDefinitionRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -6864,7 +6866,7 @@ impl<'a> Writer<'a> {
             CharacterizedDefinitionRef::UnequallyDisposedGeometricTolerance(i) => {
                 out.push(EntityKey::UnequallyDisposedGeometricTolerance(*i))
             }
-            CharacterizedDefinitionRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            CharacterizedDefinitionRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -6902,7 +6904,9 @@ impl<'a> Writer<'a> {
             CharacterizedResourceDefinitionRef::ActionResourceRequirement(i) => {
                 out.push(EntityKey::ActionResourceRequirement(*i))
             }
-            CharacterizedResourceDefinitionRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            CharacterizedResourceDefinitionRef::Complex(i) => {
+                out.push(EntityKey::ComplexEntity(*i))
+            }
         }
     }
 
@@ -6922,7 +6926,7 @@ impl<'a> Writer<'a> {
         match r {
             ClosedShellRef::ClosedShell(i) => out.push(EntityKey::ClosedShell(*i)),
             ClosedShellRef::OrientedClosedShell(i) => out.push(EntityKey::OrientedClosedShell(*i)),
-            ClosedShellRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ClosedShellRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -6952,7 +6956,7 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::DraughtingPreDefinedColour(*i))
             }
             ColourRef::PreDefinedColour(i) => out.push(EntityKey::PreDefinedColour(*i)),
-            ColourRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ColourRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -6972,7 +6976,7 @@ impl<'a> Writer<'a> {
             CompositeCurveSegmentRef::CompositeCurveSegment(i) => {
                 out.push(EntityKey::CompositeCurveSegment(*i))
             }
-            CompositeCurveSegmentRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            CompositeCurveSegmentRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -7748,7 +7752,7 @@ impl<'a> Writer<'a> {
             CompoundItemDefinitionRef::VertexPoint(i) => out.push(EntityKey::VertexPoint(*i)),
             CompoundItemDefinitionRef::VertexShell(i) => out.push(EntityKey::VertexShell(*i)),
             CompoundItemDefinitionRef::WireShell(i) => out.push(EntityKey::WireShell(*i)),
-            CompoundItemDefinitionRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            CompoundItemDefinitionRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
             CompoundItemDefinitionRef::ListRepresentationItem(vs) => {
                 for e in vs {
                     Self::deps_ref_representation_item(e, out);
@@ -7805,7 +7809,7 @@ impl<'a> Writer<'a> {
             ConfigurationDesignItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
                 out.push(EntityKey::ProductDefinitionWithAssociatedDocuments(*i))
             }
-            ConfigurationDesignItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ConfigurationDesignItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -7841,7 +7845,7 @@ impl<'a> Writer<'a> {
             ConfigurationItemRef::ConfigurationItem(i) => {
                 out.push(EntityKey::ConfigurationItem(*i))
             }
-            ConfigurationItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ConfigurationItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -7873,7 +7877,7 @@ impl<'a> Writer<'a> {
             ConnectedFaceSetRef::OrientedClosedShell(i) => {
                 out.push(EntityKey::OrientedClosedShell(*i))
             }
-            ConnectedFaceSetRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ConnectedFaceSetRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -7909,7 +7913,7 @@ impl<'a> Writer<'a> {
         ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentation(i) => out.push(EntityKey::ShapeRepresentation(*i)),
         ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentationWithParameters(i) => out.push(EntityKey::ShapeRepresentationWithParameters(*i)),
         ConstructiveGeometryRepresentationOrShapeRepresentationRef::TessellatedShapeRepresentation(i) => out.push(EntityKey::TessellatedShapeRepresentation(*i)),
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+        ConstructiveGeometryRepresentationOrShapeRepresentationRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
     }
     }
 
@@ -8009,7 +8013,9 @@ impl<'a> Writer<'a> {
             CurveFontOrScaledCurveFontSelectRef::PreDefinedCurveFont(i) => {
                 out.push(EntityKey::PreDefinedCurveFont(*i))
             }
-            CurveFontOrScaledCurveFontSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            CurveFontOrScaledCurveFontSelectRef::Complex(i) => {
+                out.push(EntityKey::ComplexEntity(*i))
+            }
         }
     }
 
@@ -8159,7 +8165,9 @@ impl<'a> Writer<'a> {
             CurveOrAnnotationCurveOccurrenceRef::UniformCurve(i) => {
                 out.push(EntityKey::UniformCurve(*i))
             }
-            CurveOrAnnotationCurveOccurrenceRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            CurveOrAnnotationCurveOccurrenceRef::Complex(i) => {
+                out.push(EntityKey::ComplexEntity(*i))
+            }
         }
     }
 
@@ -8269,7 +8277,7 @@ impl<'a> Writer<'a> {
             CurveOrCurveSetRef::SurfaceCurve(i) => out.push(EntityKey::SurfaceCurve(*i)),
             CurveOrCurveSetRef::TrimmedCurve(i) => out.push(EntityKey::TrimmedCurve(*i)),
             CurveOrCurveSetRef::UniformCurve(i) => out.push(EntityKey::UniformCurve(*i)),
-            CurveOrCurveSetRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            CurveOrCurveSetRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -8293,7 +8301,7 @@ impl<'a> Writer<'a> {
             CurveOrRenderRef::CurveStyleRendering(i) => {
                 out.push(EntityKey::CurveStyleRendering(*i))
             }
-            CurveOrRenderRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            CurveOrRenderRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -8377,7 +8385,7 @@ impl<'a> Writer<'a> {
             CurveRef::SurfaceCurve(i) => out.push(EntityKey::SurfaceCurve(*i)),
             CurveRef::TrimmedCurve(i) => out.push(EntityKey::TrimmedCurve(*i)),
             CurveRef::UniformCurve(i) => out.push(EntityKey::UniformCurve(*i)),
-            CurveRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            CurveRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -8397,7 +8405,7 @@ impl<'a> Writer<'a> {
             CurveStyleFontPatternRef::CurveStyleFontPattern(i) => {
                 out.push(EntityKey::CurveStyleFontPattern(*i))
             }
-            CurveStyleFontPatternRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            CurveStyleFontPatternRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -8433,7 +8441,7 @@ impl<'a> Writer<'a> {
             CurveStyleFontSelectRef::PreDefinedCurveFont(i) => {
                 out.push(EntityKey::PreDefinedCurveFont(*i))
             }
-            CurveStyleFontSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            CurveStyleFontSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -8449,7 +8457,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_curve_style(r: &CurveStyleRef, out: &mut Vec<EntityKey>) {
         match r {
             CurveStyleRef::CurveStyle(i) => out.push(EntityKey::CurveStyle(*i)),
-            CurveStyleRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            CurveStyleRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -8837,7 +8845,7 @@ impl<'a> Writer<'a> {
             DateAndTimeItemRef::VersionedActionRequest(i) => {
                 out.push(EntityKey::VersionedActionRequest(*i))
             }
-            DateAndTimeItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DateAndTimeItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -8853,7 +8861,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_date_and_time(r: &DateAndTimeRef, out: &mut Vec<EntityKey>) {
         match r {
             DateAndTimeRef::DateAndTime(i) => out.push(EntityKey::DateAndTime(*i)),
-            DateAndTimeRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DateAndTimeRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -8871,7 +8879,7 @@ impl<'a> Writer<'a> {
         match r {
             DateRef::CalendarDate(i) => out.push(EntityKey::CalendarDate(*i)),
             DateRef::Date(i) => out.push(EntityKey::Date(*i)),
-            DateRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DateRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -8927,7 +8935,7 @@ impl<'a> Writer<'a> {
             }
             DateTimeItemRef::StartRequest(i) => out.push(EntityKey::StartRequest(*i)),
             DateTimeItemRef::StartWork(i) => out.push(EntityKey::StartWork(*i)),
-            DateTimeItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DateTimeItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -8969,7 +8977,7 @@ impl<'a> Writer<'a> {
             DateTimeSelectRef::Date(i) => out.push(EntityKey::Date(*i)),
             DateTimeSelectRef::DateAndTime(i) => out.push(EntityKey::DateAndTime(*i)),
             DateTimeSelectRef::LocalTime(i) => out.push(EntityKey::LocalTime(*i)),
-            DateTimeSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DateTimeSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -8998,7 +9006,7 @@ impl<'a> Writer<'a> {
             DatumOrCommonDatumRef::DatumReferenceElement(i) => {
                 out.push(EntityKey::DatumReferenceElement(*i))
             }
-            DatumOrCommonDatumRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DatumOrCommonDatumRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
             DatumOrCommonDatumRef::CommonDatumList(vs) => {
                 for e in vs {
                     Self::deps_ref_datum_reference_element(e, out);
@@ -9021,7 +9029,7 @@ impl<'a> Writer<'a> {
         match r {
             DatumRef::CommonDatum(i) => out.push(EntityKey::CommonDatum(*i)),
             DatumRef::Datum(i) => out.push(EntityKey::Datum(*i)),
-            DatumRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DatumRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -9098,7 +9106,7 @@ impl<'a> Writer<'a> {
         match r {
             DatumSystemOrReferenceRef::DatumReference(i) => out.push(EntityKey::DatumReference(*i)),
             DatumSystemOrReferenceRef::DatumSystem(i) => out.push(EntityKey::DatumSystem(*i)),
-            DatumSystemOrReferenceRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DatumSystemOrReferenceRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -9114,7 +9122,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_datum_system(r: &DatumSystemRef, out: &mut Vec<EntityKey>) {
         match r {
             DatumSystemRef::DatumSystem(i) => out.push(EntityKey::DatumSystem(*i)),
-            DatumSystemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DatumSystemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -9140,7 +9148,7 @@ impl<'a> Writer<'a> {
             DefinedGlyphSelectRef::PreDefinedCharacterGlyph(i) => {
                 out.push(EntityKey::PreDefinedCharacterGlyph(*i))
             }
-            DefinedGlyphSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DefinedGlyphSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -9178,7 +9186,7 @@ impl<'a> Writer<'a> {
             DefinedSymbolSelectRef::PreDefinedTerminatorSymbol(i) => {
                 out.push(EntityKey::PreDefinedTerminatorSymbol(*i))
             }
-            DefinedSymbolSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DefinedSymbolSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -9201,7 +9209,7 @@ impl<'a> Writer<'a> {
             DefinitionalRepresentationRef::DefinitionalRepresentation(i) => {
                 out.push(EntityKey::DefinitionalRepresentation(*i))
             }
-            DefinitionalRepresentationRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DefinitionalRepresentationRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -9421,7 +9429,7 @@ impl<'a> Writer<'a> {
             DerivedPropertySelectRef::UnequallyDisposedGeometricTolerance(i) => {
                 out.push(EntityKey::UnequallyDisposedGeometricTolerance(*i))
             }
-            DerivedPropertySelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DerivedPropertySelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -9546,7 +9554,7 @@ impl<'a> Writer<'a> {
         DescriptionAttributeSelectRef::ShapeRepresentationWithParameters(i) => out.push(EntityKey::ShapeRepresentationWithParameters(*i)),
         DescriptionAttributeSelectRef::SymbolRepresentation(i) => out.push(EntityKey::SymbolRepresentation(*i)),
         DescriptionAttributeSelectRef::TessellatedShapeRepresentation(i) => out.push(EntityKey::TessellatedShapeRepresentation(*i)),
-        DescriptionAttributeSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+        DescriptionAttributeSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
     }
     }
 
@@ -9609,7 +9617,7 @@ impl<'a> Writer<'a> {
             DimensionalCharacteristicRef::DirectedDimensionalLocation(i) => {
                 out.push(EntityKey::DirectedDimensionalLocation(*i))
             }
-            DimensionalCharacteristicRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DimensionalCharacteristicRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -9641,7 +9649,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_direction(r: &DirectionRef, out: &mut Vec<EntityKey>) {
         match r {
             DirectionRef::Direction(i) => out.push(EntityKey::Direction(*i)),
-            DirectionRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DirectionRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -9659,7 +9667,7 @@ impl<'a> Writer<'a> {
         match r {
             DocumentRef::Document(i) => out.push(EntityKey::Document(*i)),
             DocumentRef::DocumentFile(i) => out.push(EntityKey::DocumentFile(*i)),
-            DocumentRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DocumentRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -11127,7 +11135,7 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::VertexPoint(i) => out.push(EntityKey::VertexPoint(*i)),
             DocumentReferenceItemRef::VertexShell(i) => out.push(EntityKey::VertexShell(*i)),
             DocumentReferenceItemRef::WireShell(i) => out.push(EntityKey::WireShell(*i)),
-            DocumentReferenceItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DocumentReferenceItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -11216,7 +11224,7 @@ impl<'a> Writer<'a> {
             DraughtingCalloutElementRef::TessellatedAnnotationOccurrence(i) => {
                 out.push(EntityKey::TessellatedAnnotationOccurrence(*i))
             }
-            DraughtingCalloutElementRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DraughtingCalloutElementRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -11242,7 +11250,7 @@ impl<'a> Writer<'a> {
             DraughtingCalloutRef::LeaderDirectedCallout(i) => {
                 out.push(EntityKey::LeaderDirectedCallout(*i))
             }
-            DraughtingCalloutRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DraughtingCalloutRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -11290,7 +11298,7 @@ impl<'a> Writer<'a> {
         DraughtingModelItemAssociationSelectRef::LeaderTerminator(i) => out.push(EntityKey::LeaderTerminator(*i)),
         DraughtingModelItemAssociationSelectRef::TerminatorSymbol(i) => out.push(EntityKey::TerminatorSymbol(*i)),
         DraughtingModelItemAssociationSelectRef::TessellatedAnnotationOccurrence(i) => out.push(EntityKey::TessellatedAnnotationOccurrence(*i)),
-        DraughtingModelItemAssociationSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+        DraughtingModelItemAssociationSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
     }
     }
 
@@ -11674,7 +11682,7 @@ impl<'a> Writer<'a> {
             DraughtingModelItemDefinitionRef::UnequallyDisposedGeometricTolerance(i) => {
                 out.push(EntityKey::UnequallyDisposedGeometricTolerance(*i))
             }
-            DraughtingModelItemDefinitionRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            DraughtingModelItemDefinitionRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -11694,7 +11702,7 @@ impl<'a> Writer<'a> {
             EdgeRef::Edge(i) => out.push(EntityKey::Edge(*i)),
             EdgeRef::EdgeCurve(i) => out.push(EntityKey::EdgeCurve(*i)),
             EdgeRef::OrientedEdge(i) => out.push(EntityKey::OrientedEdge(*i)),
-            EdgeRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            EdgeRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -12175,7 +12183,7 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::VertexShell(i) => out.push(EntityKey::VertexShell(*i)),
         ExternalIdentificationItemRef::VolumeUnit(i) => out.push(EntityKey::VolumeUnit(*i)),
         ExternalIdentificationItemRef::WireShell(i) => out.push(EntityKey::WireShell(*i)),
-        ExternalIdentificationItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+        ExternalIdentificationItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
     }
     }
 
@@ -12193,7 +12201,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_external_source(r: &ExternalSourceRef, out: &mut Vec<EntityKey>) {
         match r {
             ExternalSourceRef::ExternalSource(i) => out.push(EntityKey::ExternalSource(*i)),
-            ExternalSourceRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ExternalSourceRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -12213,7 +12221,7 @@ impl<'a> Writer<'a> {
         match r {
             FaceBoundRef::FaceBound(i) => out.push(EntityKey::FaceBound(*i)),
             FaceBoundRef::FaceOuterBound(i) => out.push(EntityKey::FaceOuterBound(*i)),
-            FaceBoundRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            FaceBoundRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -12323,7 +12331,7 @@ impl<'a> Writer<'a> {
             FaceOrSurfaceRef::SweptSurface(i) => out.push(EntityKey::SweptSurface(*i)),
             FaceOrSurfaceRef::ToroidalSurface(i) => out.push(EntityKey::ToroidalSurface(*i)),
             FaceOrSurfaceRef::UniformSurface(i) => out.push(EntityKey::UniformSurface(*i)),
-            FaceOrSurfaceRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            FaceOrSurfaceRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -12345,7 +12353,7 @@ impl<'a> Writer<'a> {
             FaceRef::AdvancedFace(i) => out.push(EntityKey::AdvancedFace(*i)),
             FaceRef::Face(i) => out.push(EntityKey::Face(*i)),
             FaceRef::FaceSurface(i) => out.push(EntityKey::FaceSurface(*i)),
-            FaceRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            FaceRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -12365,7 +12373,7 @@ impl<'a> Writer<'a> {
         match r {
             FaceSurfaceRef::AdvancedFace(i) => out.push(EntityKey::AdvancedFace(*i)),
             FaceSurfaceRef::FaceSurface(i) => out.push(EntityKey::FaceSurface(*i)),
-            FaceSurfaceRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            FaceSurfaceRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -12383,7 +12391,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_fill_area_style(r: &FillAreaStyleRef, out: &mut Vec<EntityKey>) {
         match r {
             FillAreaStyleRef::FillAreaStyle(i) => out.push(EntityKey::FillAreaStyle(*i)),
-            FillAreaStyleRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            FillAreaStyleRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -12433,7 +12441,7 @@ impl<'a> Writer<'a> {
             FillAreaStyleTileShapeSelectRef::PreDefinedTile(i) => {
                 out.push(EntityKey::PreDefinedTile(*i))
             }
-            FillAreaStyleTileShapeSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            FillAreaStyleTileShapeSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -12489,7 +12497,7 @@ impl<'a> Writer<'a> {
             FillStyleSelectRef::TextureStyleTessellationSpecification(i) => {
                 out.push(EntityKey::TextureStyleTessellationSpecification(*i))
             }
-            FillStyleSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            FillStyleSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -12521,7 +12529,7 @@ impl<'a> Writer<'a> {
             }
             FontSelectRef::PreDefinedTextFont(i) => out.push(EntityKey::PreDefinedTextFont(*i)),
             FontSelectRef::TextFont(i) => out.push(EntityKey::TextFont(*i)),
-            FontSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            FontSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -12539,7 +12547,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_general_property(r: &GeneralPropertyRef, out: &mut Vec<EntityKey>) {
         match r {
             GeneralPropertyRef::GeneralProperty(i) => out.push(EntityKey::GeneralProperty(*i)),
-            GeneralPropertyRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            GeneralPropertyRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -12725,7 +12733,9 @@ impl<'a> Writer<'a> {
             GeometricItemSpecificUsageSelectRef::ToleranceZoneWithDatum(i) => {
                 out.push(EntityKey::ToleranceZoneWithDatum(*i))
             }
-            GeometricItemSpecificUsageSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            GeometricItemSpecificUsageSelectRef::Complex(i) => {
+                out.push(EntityKey::ComplexEntity(*i))
+            }
         }
     }
 
@@ -13269,7 +13279,7 @@ impl<'a> Writer<'a> {
             GeometricModelItemRef::UniformSurface(i) => out.push(EntityKey::UniformSurface(*i)),
             GeometricModelItemRef::Vector(i) => out.push(EntityKey::Vector(*i)),
             GeometricModelItemRef::VertexPoint(i) => out.push(EntityKey::VertexPoint(*i)),
-            GeometricModelItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            GeometricModelItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -13517,7 +13527,7 @@ impl<'a> Writer<'a> {
             GeometricSetSelectRef::TrimmedCurve(i) => out.push(EntityKey::TrimmedCurve(*i)),
             GeometricSetSelectRef::UniformCurve(i) => out.push(EntityKey::UniformCurve(*i)),
             GeometricSetSelectRef::UniformSurface(i) => out.push(EntityKey::UniformSurface(*i)),
-            GeometricSetSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            GeometricSetSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -13669,7 +13679,7 @@ impl<'a> Writer<'a> {
             GeometricToleranceRef::UnequallyDisposedGeometricTolerance(i) => {
                 out.push(EntityKey::UnequallyDisposedGeometricTolerance(*i))
             }
-            GeometricToleranceRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            GeometricToleranceRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -13838,7 +13848,7 @@ impl<'a> Writer<'a> {
             GeometricToleranceTargetRef::ToleranceZoneWithDatum(i) => {
                 out.push(EntityKey::ToleranceZoneWithDatum(*i))
             }
-            GeometricToleranceTargetRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            GeometricToleranceTargetRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -13858,7 +13868,7 @@ impl<'a> Writer<'a> {
             GroupRef::ProductConceptFeatureCategory(i) => {
                 out.push(EntityKey::ProductConceptFeatureCategory(*i))
             }
-            GroupRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            GroupRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -15298,7 +15308,7 @@ impl<'a> Writer<'a> {
             GroupableItemRef::VertexShell(i) => out.push(EntityKey::VertexShell(*i)),
             GroupableItemRef::VolumeUnit(i) => out.push(EntityKey::VolumeUnit(*i)),
             GroupableItemRef::WireShell(i) => out.push(EntityKey::WireShell(*i)),
-            GroupableItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            GroupableItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -15885,7 +15895,7 @@ impl<'a> Writer<'a> {
             IdAttributeSelectRef::VertexPoint(i) => out.push(EntityKey::VertexPoint(*i)),
             IdAttributeSelectRef::VertexShell(i) => out.push(EntityKey::VertexShell(*i)),
             IdAttributeSelectRef::WireShell(i) => out.push(EntityKey::WireShell(*i)),
-            IdAttributeSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            IdAttributeSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -16129,7 +16139,7 @@ impl<'a> Writer<'a> {
             InvisibleItemRef::TessellatedShapeRepresentation(i) => {
                 out.push(EntityKey::TessellatedShapeRepresentation(*i))
             }
-            InvisibleItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            InvisibleItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -16152,7 +16162,7 @@ impl<'a> Writer<'a> {
             ItemDefinedTransformationRef::ItemDefinedTransformation(i) => {
                 out.push(EntityKey::ItemDefinedTransformation(*i))
             }
-            ItemDefinedTransformationRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ItemDefinedTransformationRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -16318,7 +16328,7 @@ impl<'a> Writer<'a> {
         ItemIdentifiedRepresentationUsageDefinitionRef::ToleranceZoneWithDatum(i) => out.push(EntityKey::ToleranceZoneWithDatum(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::TotalRunoutTolerance(i) => out.push(EntityKey::TotalRunoutTolerance(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::UnequallyDisposedGeometricTolerance(i) => out.push(EntityKey::UnequallyDisposedGeometricTolerance(*i)),
-        ItemIdentifiedRepresentationUsageDefinitionRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
     }
     }
 
@@ -16636,7 +16646,7 @@ impl<'a> Writer<'a> {
         ItemIdentifiedRepresentationUsageSelectRef::VertexPoint(i) => out.push(EntityKey::VertexPoint(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::VertexShell(i) => out.push(EntityKey::VertexShell(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::WireShell(i) => out.push(EntityKey::WireShell(*i)),
-        ItemIdentifiedRepresentationUsageSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::ListRepresentationItem(vs) => { for e in vs { Self::deps_ref_representation_item(e, out); } },
         ItemIdentifiedRepresentationUsageSelectRef::SetRepresentationItem(vs) => { for e in vs { Self::deps_ref_representation_item(e, out); } },
     }
@@ -17332,7 +17342,7 @@ impl<'a> Writer<'a> {
             LayeredItemRef::VertexPoint(i) => out.push(EntityKey::VertexPoint(*i)),
             LayeredItemRef::VertexShell(i) => out.push(EntityKey::VertexShell(*i)),
             LayeredItemRef::WireShell(i) => out.push(EntityKey::WireShell(*i)),
-            LayeredItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            LayeredItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -17352,7 +17362,7 @@ impl<'a> Writer<'a> {
             LengthMeasureWithUnitRef::LengthMeasureWithUnit(i) => {
                 out.push(EntityKey::LengthMeasureWithUnit(*i))
             }
-            LengthMeasureWithUnitRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            LengthMeasureWithUnitRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -17385,7 +17395,7 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::PlaneAngleMeasureWithUnit(*i))
             }
             LengthOrPlaneAngleMeasureWithUnitSelectRef::Complex(i) => {
-                out.push(EntityKey::ComplexUnit(*i))
+                out.push(EntityKey::ComplexEntity(*i))
             }
         }
     }
@@ -17420,7 +17430,7 @@ impl<'a> Writer<'a> {
             LoopRef::Loop(i) => out.push(EntityKey::Loop(*i)),
             LoopRef::PolyLoop(i) => out.push(EntityKey::PolyLoop(*i)),
             LoopRef::VertexLoop(i) => out.push(EntityKey::VertexLoop(*i)),
-            LoopRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            LoopRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -17444,7 +17454,7 @@ impl<'a> Writer<'a> {
             ManifoldSolidBrepRef::ManifoldSolidBrep(i) => {
                 out.push(EntityKey::ManifoldSolidBrep(*i))
             }
-            ManifoldSolidBrepRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ManifoldSolidBrepRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -17467,7 +17477,7 @@ impl<'a> Writer<'a> {
             MarkerSelectRef::PreDefinedPointMarkerSymbol(i) => {
                 out.push(EntityKey::PreDefinedPointMarkerSymbol(*i))
             }
-            MarkerSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            MarkerSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
             MarkerSelectRef::MarkerType(_) => {}
         }
     }
@@ -17522,7 +17532,7 @@ impl<'a> Writer<'a> {
             MeasureWithUnitRef::UncertaintyMeasureWithUnit(i) => {
                 out.push(EntityKey::UncertaintyMeasureWithUnit(*i))
             }
-            MeasureWithUnitRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            MeasureWithUnitRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -17564,7 +17574,7 @@ impl<'a> Writer<'a> {
         MechanicalDesignAndDraughtingRelationshipSelectRef::ShapeRepresentation(i) => out.push(EntityKey::ShapeRepresentation(*i)),
         MechanicalDesignAndDraughtingRelationshipSelectRef::ShapeRepresentationWithParameters(i) => out.push(EntityKey::ShapeRepresentationWithParameters(*i)),
         MechanicalDesignAndDraughtingRelationshipSelectRef::TessellatedShapeRepresentation(i) => out.push(EntityKey::TessellatedShapeRepresentation(*i)),
-        MechanicalDesignAndDraughtingRelationshipSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+        MechanicalDesignAndDraughtingRelationshipSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
     }
     }
 
@@ -17680,7 +17690,7 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::ShapeDefinitionRepresentation(*i))
             }
             NameAttributeSelectRef::VolumeUnit(i) => out.push(EntityKey::VolumeUnit(*i)),
-            NameAttributeSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            NameAttributeSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -17726,7 +17736,7 @@ impl<'a> Writer<'a> {
             NamedUnitRef::SiUnit(i) => out.push(EntityKey::SiUnit(*i)),
             NamedUnitRef::SolidAngleUnit(i) => out.push(EntityKey::SolidAngleUnit(*i)),
             NamedUnitRef::TimeUnit(i) => out.push(EntityKey::TimeUnit(*i)),
-            NamedUnitRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            NamedUnitRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -17769,7 +17779,7 @@ impl<'a> Writer<'a> {
             OneDirectionRepeatFactorRef::TwoDirectionRepeatFactor(i) => {
                 out.push(EntityKey::TwoDirectionRepeatFactor(*i))
             }
-            OneDirectionRepeatFactorRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            OneDirectionRepeatFactorRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -17819,7 +17829,7 @@ impl<'a> Writer<'a> {
             OrientedClosedShellRef::OrientedClosedShell(i) => {
                 out.push(EntityKey::OrientedClosedShell(*i))
             }
-            OrientedClosedShellRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            OrientedClosedShellRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -17835,7 +17845,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_oriented_edge(r: &OrientedEdgeRef, out: &mut Vec<EntityKey>) {
         match r {
             OrientedEdgeRef::OrientedEdge(i) => out.push(EntityKey::OrientedEdge(*i)),
-            OrientedEdgeRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            OrientedEdgeRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -17945,7 +17955,7 @@ impl<'a> Writer<'a> {
             PcurveOrSurfaceRef::SweptSurface(i) => out.push(EntityKey::SweptSurface(*i)),
             PcurveOrSurfaceRef::ToroidalSurface(i) => out.push(EntityKey::ToroidalSurface(*i)),
             PcurveOrSurfaceRef::UniformSurface(i) => out.push(EntityKey::UniformSurface(*i)),
-            PcurveOrSurfaceRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            PcurveOrSurfaceRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18112,7 +18122,7 @@ impl<'a> Writer<'a> {
         PersonAndOrganizationItemRef::SymbolRepresentation(i) => out.push(EntityKey::SymbolRepresentation(*i)),
         PersonAndOrganizationItemRef::TessellatedShapeRepresentation(i) => out.push(EntityKey::TessellatedShapeRepresentation(*i)),
         PersonAndOrganizationItemRef::VersionedActionRequest(i) => out.push(EntityKey::VersionedActionRequest(*i)),
-        PersonAndOrganizationItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+        PersonAndOrganizationItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
     }
     }
 
@@ -18202,7 +18212,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_planar_box(r: &PlanarBoxRef, out: &mut Vec<EntityKey>) {
         match r {
             PlanarBoxRef::PlanarBox(i) => out.push(EntityKey::PlanarBox(*i)),
-            PlanarBoxRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            PlanarBoxRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18222,7 +18232,7 @@ impl<'a> Writer<'a> {
         match r {
             PlaneOrPlanarBoxRef::PlanarBox(i) => out.push(EntityKey::PlanarBox(*i)),
             PlaneOrPlanarBoxRef::Plane(i) => out.push(EntityKey::Plane(*i)),
-            PlaneOrPlanarBoxRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            PlaneOrPlanarBoxRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18246,7 +18256,7 @@ impl<'a> Writer<'a> {
             PointRef::ApllPointWithSurface(i) => out.push(EntityKey::ApllPointWithSurface(*i)),
             PointRef::CartesianPoint(i) => out.push(EntityKey::CartesianPoint(*i)),
             PointRef::Point(i) => out.push(EntityKey::Point(*i)),
-            PointRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            PointRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18264,7 +18274,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_presentation_area(r: &PresentationAreaRef, out: &mut Vec<EntityKey>) {
         match r {
             PresentationAreaRef::PresentationArea(i) => out.push(EntityKey::PresentationArea(*i)),
-            PresentationAreaRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            PresentationAreaRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18308,7 +18318,9 @@ impl<'a> Writer<'a> {
             PresentationRepresentationSelectRef::PresentationView(i) => {
                 out.push(EntityKey::PresentationView(*i))
             }
-            PresentationRepresentationSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            PresentationRepresentationSelectRef::Complex(i) => {
+                out.push(EntityKey::ComplexEntity(*i))
+            }
         }
     }
 
@@ -18326,7 +18338,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_presentation_set(r: &PresentationSetRef, out: &mut Vec<EntityKey>) {
         match r {
             PresentationSetRef::PresentationSet(i) => out.push(EntityKey::PresentationSet(*i)),
-            PresentationSetRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            PresentationSetRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18362,7 +18374,9 @@ impl<'a> Writer<'a> {
             PresentationSizeAssignmentSelectRef::PresentationView(i) => {
                 out.push(EntityKey::PresentationView(*i))
             }
-            PresentationSizeAssignmentSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            PresentationSizeAssignmentSelectRef::Complex(i) => {
+                out.push(EntityKey::ComplexEntity(*i))
+            }
         }
     }
 
@@ -18391,7 +18405,7 @@ impl<'a> Writer<'a> {
             PresentationStyleAssignmentRef::PresentationStyleByContext(i) => {
                 out.push(EntityKey::PresentationStyleByContext(*i))
             }
-            PresentationStyleAssignmentRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            PresentationStyleAssignmentRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18465,7 +18479,7 @@ impl<'a> Writer<'a> {
             PresentationStyleSelectRef::TextureStyleTessellationSpecification(i) => {
                 out.push(EntityKey::TextureStyleTessellationSpecification(*i))
             }
-            PresentationStyleSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            PresentationStyleSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
             PresentationStyleSelectRef::NullStyle(_) => {}
         }
     }
@@ -18490,7 +18504,7 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::AppliedPresentedItem(*i))
             }
             PresentedItemRef::PresentedItem(i) => out.push(EntityKey::PresentedItem(*i)),
-            PresentedItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            PresentedItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18588,7 +18602,7 @@ impl<'a> Writer<'a> {
             PresentedItemSelectRef::ProductDefinitionWithAssociatedDocuments(i) => {
                 out.push(EntityKey::ProductDefinitionWithAssociatedDocuments(*i))
             }
-            PresentedItemSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            PresentedItemSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18612,7 +18626,7 @@ impl<'a> Writer<'a> {
             ProductCategoryRef::ProductRelatedProductCategory(i) => {
                 out.push(EntityKey::ProductRelatedProductCategory(*i))
             }
-            ProductCategoryRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ProductCategoryRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18646,7 +18660,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_product_concept(r: &ProductConceptRef, out: &mut Vec<EntityKey>) {
         match r {
             ProductConceptRef::ProductConcept(i) => out.push(EntityKey::ProductConcept(*i)),
-            ProductConceptRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ProductConceptRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18668,7 +18682,7 @@ impl<'a> Writer<'a> {
         match r {
             ProductContextRef::MechanicalContext(i) => out.push(EntityKey::MechanicalContext(*i)),
             ProductContextRef::ProductContext(i) => out.push(EntityKey::ProductContext(*i)),
-            ProductContextRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ProductContextRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18695,7 +18709,7 @@ impl<'a> Writer<'a> {
             ProductDefinitionContextRef::ProductDefinitionContext(i) => {
                 out.push(EntityKey::ProductDefinitionContext(*i))
             }
-            ProductDefinitionContextRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ProductDefinitionContextRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18746,7 +18760,7 @@ impl<'a> Writer<'a> {
             ProductDefinitionFormationRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 out.push(EntityKey::ProductDefinitionFormationWithSpecifiedSource(*i))
             }
-            ProductDefinitionFormationRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ProductDefinitionFormationRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18790,7 +18804,7 @@ impl<'a> Writer<'a> {
             ProductDefinitionOrReferenceRef::ProductDefinitionWithAssociatedDocuments(i) => {
                 out.push(EntityKey::ProductDefinitionWithAssociatedDocuments(*i))
             }
-            ProductDefinitionOrReferenceRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ProductDefinitionOrReferenceRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18816,7 +18830,7 @@ impl<'a> Writer<'a> {
             ProductDefinitionRef::ProductDefinitionWithAssociatedDocuments(i) => {
                 out.push(EntityKey::ProductDefinitionWithAssociatedDocuments(*i))
             }
-            ProductDefinitionRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ProductDefinitionRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18866,7 +18880,7 @@ impl<'a> Writer<'a> {
             ProductDefinitionRelationshipRef::ProductDefinitionUsage(i) => {
                 out.push(EntityKey::ProductDefinitionUsage(*i))
             }
-            ProductDefinitionRelationshipRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ProductDefinitionRelationshipRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18886,7 +18900,7 @@ impl<'a> Writer<'a> {
             ProductDefinitionShapeRef::ProductDefinitionShape(i) => {
                 out.push(EntityKey::ProductDefinitionShape(*i))
             }
-            ProductDefinitionShapeRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ProductDefinitionShapeRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18935,7 +18949,7 @@ impl<'a> Writer<'a> {
             ProductOrFormationOrDefinitionRef::ProductDefinitionWithAssociatedDocuments(i) => {
                 out.push(EntityKey::ProductDefinitionWithAssociatedDocuments(*i))
             }
-            ProductOrFormationOrDefinitionRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ProductOrFormationOrDefinitionRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18949,7 +18963,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_product(r: &ProductRef, out: &mut Vec<EntityKey>) {
         match r {
             ProductRef::Product(i) => out.push(EntityKey::Product(*i)),
-            ProductRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ProductRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -18975,7 +18989,7 @@ impl<'a> Writer<'a> {
             PropertyDefinitionRef::PropertyDefinition(i) => {
                 out.push(EntityKey::PropertyDefinition(*i))
             }
-            PropertyDefinitionRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            PropertyDefinitionRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -19004,7 +19018,7 @@ impl<'a> Writer<'a> {
             RenderingPropertiesSelectRef::SurfaceStyleTransparent(i) => {
                 out.push(EntityKey::SurfaceStyleTransparent(*i))
             }
-            RenderingPropertiesSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            RenderingPropertiesSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -19048,7 +19062,7 @@ impl<'a> Writer<'a> {
             RepresentationContextRef::RepresentationContext(i) => {
                 out.push(EntityKey::RepresentationContext(*i))
             }
-            RepresentationContextRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            RepresentationContextRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -19802,7 +19816,7 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::VertexPoint(i) => out.push(EntityKey::VertexPoint(*i)),
             RepresentationItemRef::VertexShell(i) => out.push(EntityKey::VertexShell(*i)),
             RepresentationItemRef::WireShell(i) => out.push(EntityKey::WireShell(*i)),
-            RepresentationItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            RepresentationItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -19826,7 +19840,7 @@ impl<'a> Writer<'a> {
             RepresentationMapRef::RepresentationMap(i) => {
                 out.push(EntityKey::RepresentationMap(*i))
             }
-            RepresentationMapRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            RepresentationMapRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -19886,7 +19900,7 @@ impl<'a> Writer<'a> {
         RepresentationOrRepresentationReferenceRef::ShapeRepresentationWithParameters(i) => out.push(EntityKey::ShapeRepresentationWithParameters(*i)),
         RepresentationOrRepresentationReferenceRef::SymbolRepresentation(i) => out.push(EntityKey::SymbolRepresentation(*i)),
         RepresentationOrRepresentationReferenceRef::TessellatedShapeRepresentation(i) => out.push(EntityKey::TessellatedShapeRepresentation(*i)),
-        RepresentationOrRepresentationReferenceRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+        RepresentationOrRepresentationReferenceRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
     }
     }
 
@@ -20012,7 +20026,7 @@ impl<'a> Writer<'a> {
             RepresentationRef::TessellatedShapeRepresentation(i) => {
                 out.push(EntityKey::TessellatedShapeRepresentation(*i))
             }
-            RepresentationRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            RepresentationRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -20204,7 +20218,7 @@ impl<'a> Writer<'a> {
             RepresentedDefinitionRef::ToleranceZoneWithDatum(i) => {
                 out.push(EntityKey::ToleranceZoneWithDatum(*i))
             }
-            RepresentedDefinitionRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            RepresentedDefinitionRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -20315,7 +20329,7 @@ impl<'a> Writer<'a> {
             }
             RoleSelectRef::StartRequest(i) => out.push(EntityKey::StartRequest(*i)),
             RoleSelectRef::StartWork(i) => out.push(EntityKey::StartWork(*i)),
-            RoleSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            RoleSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -20436,7 +20450,7 @@ impl<'a> Writer<'a> {
         SecurityClassificationItemRef::SymbolRepresentation(i) => out.push(EntityKey::SymbolRepresentation(*i)),
         SecurityClassificationItemRef::TessellatedShapeRepresentation(i) => out.push(EntityKey::TessellatedShapeRepresentation(*i)),
         SecurityClassificationItemRef::VersionedActionRequest(i) => out.push(EntityKey::VersionedActionRequest(*i)),
-        SecurityClassificationItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+        SecurityClassificationItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
     }
     }
 
@@ -20583,7 +20597,7 @@ impl<'a> Writer<'a> {
             ShapeAspectRef::ToleranceZoneWithDatum(i) => {
                 out.push(EntityKey::ToleranceZoneWithDatum(*i))
             }
-            ShapeAspectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ShapeAspectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -20606,7 +20620,7 @@ impl<'a> Writer<'a> {
             ShapeDimensionRepresentationRef::ShapeDimensionRepresentation(i) => {
                 out.push(EntityKey::ShapeDimensionRepresentation(*i))
             }
-            ShapeDimensionRepresentationRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ShapeDimensionRepresentationRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -20670,7 +20684,7 @@ impl<'a> Writer<'a> {
             ShapeModelRef::TessellatedShapeRepresentation(i) => {
                 out.push(EntityKey::TessellatedShapeRepresentation(*i))
             }
-            ShapeModelRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ShapeModelRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -20696,7 +20710,9 @@ impl<'a> Writer<'a> {
             ShapeRepresentationRelationshipRef::ShapeRepresentationRelationship(i) => {
                 out.push(EntityKey::ShapeRepresentationRelationship(*i))
             }
-            ShapeRepresentationRelationshipRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ShapeRepresentationRelationshipRef::Complex(i) => {
+                out.push(EntityKey::ComplexEntity(*i))
+            }
         }
     }
 
@@ -20724,7 +20740,7 @@ impl<'a> Writer<'a> {
             ShellRef::OrientedClosedShell(i) => out.push(EntityKey::OrientedClosedShell(*i)),
             ShellRef::VertexShell(i) => out.push(EntityKey::VertexShell(*i)),
             ShellRef::WireShell(i) => out.push(EntityKey::WireShell(*i)),
-            ShellRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ShellRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -20774,7 +20790,7 @@ impl<'a> Writer<'a> {
             SizeSelectRef::UncertaintyMeasureWithUnit(i) => {
                 out.push(EntityKey::UncertaintyMeasureWithUnit(*i))
             }
-            SizeSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            SizeSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
             SizeSelectRef::DescriptiveMeasure(_) => {}
             SizeSelectRef::PositiveLengthMeasure(_) => {}
         }
@@ -20802,7 +20818,7 @@ impl<'a> Writer<'a> {
             StartRequestItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 out.push(EntityKey::ProductDefinitionFormationWithSpecifiedSource(*i))
             }
-            StartRequestItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            StartRequestItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -20820,7 +20836,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_state_observed(r: &StateObservedRef, out: &mut Vec<EntityKey>) {
         match r {
             StateObservedRef::StateObserved(i) => out.push(EntityKey::StateObserved(*i)),
-            StateObservedRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            StateObservedRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -20836,7 +20852,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_state_type(r: &StateTypeRef, out: &mut Vec<EntityKey>) {
         match r {
             StateTypeRef::StateType(i) => out.push(EntityKey::StateType(*i)),
-            StateTypeRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            StateTypeRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -21749,7 +21765,7 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::VertexPoint(i) => out.push(EntityKey::VertexPoint(*i)),
             StyleContextSelectRef::VertexShell(i) => out.push(EntityKey::VertexShell(*i)),
             StyleContextSelectRef::WireShell(i) => out.push(EntityKey::WireShell(*i)),
-            StyleContextSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            StyleContextSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -21843,7 +21859,7 @@ impl<'a> Writer<'a> {
             StyledItemRef::TessellatedAnnotationOccurrence(i) => {
                 out.push(EntityKey::TessellatedAnnotationOccurrence(*i))
             }
-            StyledItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            StyledItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -22556,7 +22572,7 @@ impl<'a> Writer<'a> {
             StyledItemTargetRef::VertexPoint(i) => out.push(EntityKey::VertexPoint(*i)),
             StyledItemTargetRef::VertexShell(i) => out.push(EntityKey::VertexShell(*i)),
             StyledItemTargetRef::WireShell(i) => out.push(EntityKey::WireShell(*i)),
-            StyledItemTargetRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            StyledItemTargetRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -22580,7 +22596,7 @@ impl<'a> Writer<'a> {
             SupportedItemRef::Action(i) => out.push(EntityKey::Action(*i)),
             SupportedItemRef::ActionDirective(i) => out.push(EntityKey::ActionDirective(*i)),
             SupportedItemRef::ActionMethod(i) => out.push(EntityKey::ActionMethod(*i)),
-            SupportedItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            SupportedItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -22672,7 +22688,7 @@ impl<'a> Writer<'a> {
             SurfaceRef::SweptSurface(i) => out.push(EntityKey::SweptSurface(*i)),
             SurfaceRef::ToroidalSurface(i) => out.push(EntityKey::ToroidalSurface(*i)),
             SurfaceRef::UniformSurface(i) => out.push(EntityKey::UniformSurface(*i)),
-            SurfaceRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            SurfaceRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -22717,7 +22733,7 @@ impl<'a> Writer<'a> {
             SurfaceSideStyleSelectRef::SurfaceSideStyle(i) => {
                 out.push(EntityKey::SurfaceSideStyle(*i))
             }
-            SurfaceSideStyleSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            SurfaceSideStyleSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -22782,7 +22798,7 @@ impl<'a> Writer<'a> {
             SurfaceStyleElementSelectRef::SurfaceStyleSilhouette(i) => {
                 out.push(EntityKey::SurfaceStyleSilhouette(*i))
             }
-            SurfaceStyleElementSelectRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            SurfaceStyleElementSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -22886,7 +22902,7 @@ impl<'a> Writer<'a> {
             TessellatedItemRef::TessellatedSurfaceSet(i) => {
                 out.push(EntityKey::TessellatedSurfaceSet(*i))
             }
-            TessellatedItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            TessellatedItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -22921,7 +22937,7 @@ impl<'a> Writer<'a> {
             TessellatedStructuredItemRef::TessellatedStructuredItem(i) => {
                 out.push(EntityKey::TessellatedStructuredItem(*i))
             }
-            TessellatedStructuredItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            TessellatedStructuredItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -22959,7 +22975,7 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::DefinedCharacterGlyph(*i))
             }
             TextOrCharacterRef::TextLiteral(i) => out.push(EntityKey::TextLiteral(*i)),
-            TextOrCharacterRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            TextOrCharacterRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -23046,7 +23062,7 @@ impl<'a> Writer<'a> {
             ToleranceZoneRef::ToleranceZoneWithDatum(i) => {
                 out.push(EntityKey::ToleranceZoneWithDatum(*i))
             }
-            ToleranceZoneRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ToleranceZoneRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -23258,7 +23274,7 @@ impl<'a> Writer<'a> {
             ToleranceZoneTargetRef::UnequallyDisposedGeometricTolerance(i) => {
                 out.push(EntityKey::UnequallyDisposedGeometricTolerance(*i))
             }
-            ToleranceZoneTargetRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ToleranceZoneTargetRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -23290,7 +23306,7 @@ impl<'a> Writer<'a> {
             TransformationRef::ItemDefinedTransformation(i) => {
                 out.push(EntityKey::ItemDefinedTransformation(*i))
             }
-            TransformationRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            TransformationRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
             TransformationRef::ListItemDefinedTransformation(vs) => {
                 for e in vs {
                     Self::deps_ref_item_defined_transformation(e, out);
@@ -23349,7 +23365,7 @@ impl<'a> Writer<'a> {
             TwoDirectionRepeatFactorRef::TwoDirectionRepeatFactor(i) => {
                 out.push(EntityKey::TwoDirectionRepeatFactor(*i))
             }
-            TwoDirectionRepeatFactorRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            TwoDirectionRepeatFactorRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -23416,7 +23432,7 @@ impl<'a> Writer<'a> {
             UnitRef::SolidAngleUnit(i) => out.push(EntityKey::SolidAngleUnit(*i)),
             UnitRef::TimeUnit(i) => out.push(EntityKey::TimeUnit(*i)),
             UnitRef::VolumeUnit(i) => out.push(EntityKey::VolumeUnit(*i)),
-            UnitRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            UnitRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -23460,7 +23476,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_vector(r: &VectorRef, out: &mut Vec<EntityKey>) {
         match r {
             VectorRef::Vector(i) => out.push(EntityKey::Vector(*i)),
-            VectorRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            VectorRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -23508,7 +23524,7 @@ impl<'a> Writer<'a> {
         match r {
             VertexRef::Vertex(i) => out.push(EntityKey::Vertex(*i)),
             VertexRef::VertexPoint(i) => out.push(EntityKey::VertexPoint(*i)),
-            VertexRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            VertexRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -23524,7 +23540,7 @@ impl<'a> Writer<'a> {
     fn deps_ref_view_volume(r: &ViewVolumeRef, out: &mut Vec<EntityKey>) {
         match r {
             ViewVolumeRef::ViewVolume(i) => out.push(EntityKey::ViewVolume(*i)),
-            ViewVolumeRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            ViewVolumeRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -23548,7 +23564,7 @@ impl<'a> Writer<'a> {
             WorkItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 out.push(EntityKey::ProductDefinitionFormationWithSpecifiedSource(*i))
             }
-            WorkItemRef::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),
+            WorkItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -25953,14 +25969,14 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_loop(e, out);
                 }
             }
-            EntityKey::ComplexUnit(id) => {
-                let cu = model.complex_unit_arena.get(id.0);
+            EntityKey::ComplexEntity(id) => {
+                let cu = model.complex_entity_arena.get(id.0);
                 for part in &cu.parts {
                     match part {
-                        UnitPart::Action { chosen_method, .. } => {
+                        PartialEntity::Action { chosen_method, .. } => {
                             Self::deps_ref_action_method(chosen_method, out);
                         }
-                        UnitPart::ActionMethodRelationship {
+                        PartialEntity::ActionMethodRelationship {
                             relating_method,
                             related_method,
                             ..
@@ -25968,7 +25984,7 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_action_method(relating_method, out);
                             Self::deps_ref_action_method(related_method, out);
                         }
-                        UnitPart::ActionRelationship {
+                        PartialEntity::ActionRelationship {
                             relating_action,
                             related_action,
                             ..
@@ -25976,19 +25992,19 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_action(relating_action, out);
                             Self::deps_ref_action(related_action, out);
                         }
-                        UnitPart::ActionRequestAssignment {
+                        PartialEntity::ActionRequestAssignment {
                             assigned_action_request,
                             ..
                         } => {
                             Self::deps_ref_versioned_action_request(assigned_action_request, out);
                         }
-                        UnitPart::ActionResource { usage, kind, .. } => {
+                        PartialEntity::ActionResource { usage, kind, .. } => {
                             for e in usage {
                                 Self::deps_ref_supported_item(e, out);
                             }
                             Self::deps_ref_action_resource_type(kind, out);
                         }
-                        UnitPart::ActionResourceRequirement {
+                        PartialEntity::ActionResourceRequirement {
                             kind, operations, ..
                         } => {
                             Self::deps_ref_resource_requirement_type(kind, out);
@@ -25996,12 +26012,12 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_characterized_action_definition(e, out);
                             }
                         }
-                        UnitPart::AnnotationFillAreaOccurrence {
+                        PartialEntity::AnnotationFillAreaOccurrence {
                             fill_style_target, ..
                         } => {
                             Self::deps_ref_point(fill_style_target, out);
                         }
-                        UnitPart::AnnotationOccurrenceRelationship {
+                        PartialEntity::AnnotationOccurrenceRelationship {
                             relating_annotation_occurrence,
                             related_annotation_occurrence,
                             ..
@@ -26015,7 +26031,7 @@ impl<'a> Writer<'a> {
                                 out,
                             );
                         }
-                        UnitPart::AnnotationPlaceholderOccurrenceWithLeaderLine {
+                        PartialEntity::AnnotationPlaceholderOccurrenceWithLeaderLine {
                             leader_line,
                             ..
                         } => {
@@ -26023,68 +26039,72 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_annotation_placeholder_leader_line(e, out);
                             }
                         }
-                        UnitPart::AnnotationPlane { elements, .. } => {
+                        PartialEntity::AnnotationPlane { elements, .. } => {
                             if let Some(v) = elements {
                                 for e in v {
                                     Self::deps_ref_annotation_plane_element(e, out);
                                 }
                             }
                         }
-                        UnitPart::ApplicationContextElement {
+                        PartialEntity::ApplicationContextElement {
                             frame_of_reference, ..
                         } => {
                             Self::deps_ref_application_context(frame_of_reference, out);
                         }
-                        UnitPart::AppliedApprovalAssignment { items, .. } => {
+                        PartialEntity::AppliedApprovalAssignment { items, .. } => {
                             for e in items {
                                 Self::deps_ref_approval_item(e, out);
                             }
                         }
-                        UnitPart::AppliedDateAndTimeAssignment { items, .. } => {
+                        PartialEntity::AppliedDateAndTimeAssignment { items, .. } => {
                             for e in items {
                                 Self::deps_ref_date_and_time_item(e, out);
                             }
                         }
-                        UnitPart::AppliedDocumentReference { items, .. } => {
+                        PartialEntity::AppliedDocumentReference { items, .. } => {
                             for e in items {
                                 Self::deps_ref_document_reference_item(e, out);
                             }
                         }
-                        UnitPart::AppliedExternalIdentificationAssignment { items, .. } => {
+                        PartialEntity::AppliedExternalIdentificationAssignment {
+                            items, ..
+                        } => {
                             for e in items {
                                 Self::deps_ref_external_identification_item(e, out);
                             }
                         }
-                        UnitPart::AppliedGroupAssignment { items, .. } => {
+                        PartialEntity::AppliedGroupAssignment { items, .. } => {
                             for e in items {
                                 Self::deps_ref_groupable_item(e, out);
                             }
                         }
-                        UnitPart::AppliedPersonAndOrganizationAssignment { items, .. } => {
+                        PartialEntity::AppliedPersonAndOrganizationAssignment { items, .. } => {
                             for e in items {
                                 Self::deps_ref_person_and_organization_item(e, out);
                             }
                         }
-                        UnitPart::AppliedPresentedItem { items, .. } => {
+                        PartialEntity::AppliedPresentedItem { items, .. } => {
                             for e in items {
                                 Self::deps_ref_presented_item_select(e, out);
                             }
                         }
-                        UnitPart::AppliedSecurityClassificationAssignment { items, .. } => {
+                        PartialEntity::AppliedSecurityClassificationAssignment {
+                            items, ..
+                        } => {
                             for e in items {
                                 Self::deps_ref_security_classification_item(e, out);
                             }
                         }
-                        UnitPart::ApprovalAssignment {
+                        PartialEntity::ApprovalAssignment {
                             assigned_approval, ..
                         } => {
                             Self::deps_ref_approval(assigned_approval, out);
                         }
-                        UnitPart::AreaInSet { area, in_set, .. } => {
+                        PartialEntity::AreaInSet { area, in_set, .. } => {
                             Self::deps_ref_presentation_area(area, out);
                             Self::deps_ref_presentation_set(in_set, out);
                         }
-                        UnitPart::AscribableStateRelationship {
+                        PartialEntity::AscribableStateRelationship {
                             relating_ascribable_state,
                             related_ascribable_state,
                             ..
@@ -26092,7 +26112,7 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_ascribable_state(relating_ascribable_state, out);
                             Self::deps_ref_ascribable_state(related_ascribable_state, out);
                         }
-                        UnitPart::BSplineCurve {
+                        PartialEntity::BSplineCurve {
                             control_points_list,
                             ..
                         } => {
@@ -26100,7 +26120,7 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_cartesian_point(e, out);
                             }
                         }
-                        UnitPart::BSplineSurface {
+                        PartialEntity::BSplineSurface {
                             control_points_list,
                             ..
                         } => {
@@ -26110,12 +26130,12 @@ impl<'a> Writer<'a> {
                                 }
                             }
                         }
-                        UnitPart::BrepWithVoids { voids, .. } => {
+                        PartialEntity::BrepWithVoids { voids, .. } => {
                             for e in voids {
                                 Self::deps_ref_oriented_closed_shell(e, out);
                             }
                         }
-                        UnitPart::CameraModelD3 {
+                        PartialEntity::CameraModelD3 {
                             view_reference_system,
                             perspective_of_volume,
                             ..
@@ -26123,90 +26143,95 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_axis2_placement3d(view_reference_system, out);
                             Self::deps_ref_view_volume(perspective_of_volume, out);
                         }
-                        UnitPart::CameraModelD3MultiClipping { shape_clipping, .. } => {
+                        PartialEntity::CameraModelD3MultiClipping { shape_clipping, .. } => {
                             for e in shape_clipping {
                                 Self::deps_ref_camera_model_d3_multi_clipping_intersection_select(
                                     e, out,
                                 );
                             }
                         }
-                        UnitPart::CcDesignApproval { items, .. } => {
+                        PartialEntity::CcDesignApproval { items, .. } => {
                             for e in items {
                                 Self::deps_ref_approved_item(e, out);
                             }
                         }
-                        UnitPart::CcDesignDateAndTimeAssignment { items, .. } => {
+                        PartialEntity::CcDesignDateAndTimeAssignment { items, .. } => {
                             for e in items {
                                 Self::deps_ref_date_time_item(e, out);
                             }
                         }
-                        UnitPart::CcDesignPersonAndOrganizationAssignment { items, .. } => {
+                        PartialEntity::CcDesignPersonAndOrganizationAssignment {
+                            items, ..
+                        } => {
                             for e in items {
                                 Self::deps_ref_cc_person_organization_item(e, out);
                             }
                         }
-                        UnitPart::CcDesignSecurityClassification { items, .. } => {
+                        PartialEntity::CcDesignSecurityClassification { items, .. } => {
                             for e in items {
                                 Self::deps_ref_cc_classified_item(e, out);
                             }
                         }
-                        UnitPart::ChangeRequest { items, .. } => {
+                        PartialEntity::ChangeRequest { items, .. } => {
                             for e in items {
                                 Self::deps_ref_change_request_item(e, out);
                             }
                         }
-                        UnitPart::CharacterGlyphStyleOutline { outline_style, .. } => {
+                        PartialEntity::CharacterGlyphStyleOutline { outline_style, .. } => {
                             Self::deps_ref_curve_style(outline_style, out);
                         }
-                        UnitPart::CharacterGlyphStyleStroke { stroke_style, .. } => {
+                        PartialEntity::CharacterGlyphStyleStroke { stroke_style, .. } => {
                             Self::deps_ref_curve_style(stroke_style, out);
                         }
-                        UnitPart::CharacterizedItemWithinRepresentation { item, rep, .. } => {
+                        PartialEntity::CharacterizedItemWithinRepresentation {
+                            item, rep, ..
+                        } => {
                             Self::deps_ref_representation_item(item, out);
                             Self::deps_ref_representation(rep, out);
                         }
-                        UnitPart::CompositeCurve { segments, .. } => {
+                        PartialEntity::CompositeCurve { segments, .. } => {
                             for e in segments {
                                 Self::deps_ref_composite_curve_segment(e, out);
                             }
                         }
-                        UnitPart::CompositeCurveSegment { parent_curve, .. } => {
+                        PartialEntity::CompositeCurveSegment { parent_curve, .. } => {
                             Self::deps_ref_curve(parent_curve, out);
                         }
-                        UnitPart::CompositeText { collected_text, .. } => {
+                        PartialEntity::CompositeText { collected_text, .. } => {
                             for e in collected_text {
                                 Self::deps_ref_text_or_character(e, out);
                             }
                         }
-                        UnitPart::CompoundRepresentationItem { item_element, .. } => {
+                        PartialEntity::CompoundRepresentationItem { item_element, .. } => {
                             Self::deps_ref_compound_item_definition(item_element, out);
                         }
-                        UnitPart::ConfigurationEffectivity { configuration, .. } => {
+                        PartialEntity::ConfigurationEffectivity { configuration, .. } => {
                             Self::deps_ref_configuration_design(configuration, out);
                         }
-                        UnitPart::ConfigurationItem { item_concept, .. } => {
+                        PartialEntity::ConfigurationItem { item_concept, .. } => {
                             Self::deps_ref_product_concept(item_concept, out);
                         }
-                        UnitPart::ConnectedFaceSet { cfs_faces, .. } => {
+                        PartialEntity::ConnectedFaceSet { cfs_faces, .. } => {
                             if let Some(v) = cfs_faces {
                                 for e in v {
                                     Self::deps_ref_face(e, out);
                                 }
                             }
                         }
-                        UnitPart::ContextDependentOverRidingStyledItem {
-                            style_context, ..
+                        PartialEntity::ContextDependentOverRidingStyledItem {
+                            style_context,
+                            ..
                         } => {
                             for e in style_context {
                                 Self::deps_ref_style_context_select(e, out);
                             }
                         }
-                        UnitPart::ConversionBasedUnit {
+                        PartialEntity::ConversionBasedUnit {
                             conversion_factor, ..
                         } => {
                             Self::deps_ref_measure_with_unit(conversion_factor, out);
                         }
-                        UnitPart::CurveStyle {
+                        PartialEntity::CurveStyle {
                             curve_font,
                             curve_width,
                             curve_colour,
@@ -26222,15 +26247,15 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_colour(r, out);
                             }
                         }
-                        UnitPart::CurveStyleFont { pattern_list, .. } => {
+                        PartialEntity::CurveStyleFont { pattern_list, .. } => {
                             for e in pattern_list {
                                 Self::deps_ref_curve_style_font_pattern(e, out);
                             }
                         }
-                        UnitPart::CurveStyleFontAndScaling { curve_font, .. } => {
+                        PartialEntity::CurveStyleFontAndScaling { curve_font, .. } => {
                             Self::deps_ref_curve_style_font_select(curve_font, out);
                         }
-                        UnitPart::DateAndTime {
+                        PartialEntity::DateAndTime {
                             date_component,
                             time_component,
                             ..
@@ -26238,7 +26263,7 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_date(date_component, out);
                             Self::deps_ref_local_time(time_component, out);
                         }
-                        UnitPart::DateAndTimeAssignment {
+                        PartialEntity::DateAndTimeAssignment {
                             assigned_date_and_time,
                             role,
                             ..
@@ -26246,28 +26271,28 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_date_and_time(assigned_date_and_time, out);
                             Self::deps_ref_date_time_role(role, out);
                         }
-                        UnitPart::DatumReference {
+                        PartialEntity::DatumReference {
                             referenced_datum, ..
                         } => {
                             Self::deps_ref_datum(referenced_datum, out);
                         }
-                        UnitPart::DatumSystem { constituents, .. } => {
+                        PartialEntity::DatumSystem { constituents, .. } => {
                             for e in constituents {
                                 Self::deps_ref_datum_reference_compartment(e, out);
                             }
                         }
-                        UnitPart::DerivedUnit { elements, .. } => {
+                        PartialEntity::DerivedUnit { elements, .. } => {
                             for e in elements {
                                 Self::deps_ref_derived_unit_element(e, out);
                             }
                         }
-                        UnitPart::DimensionalSize { applies_to, .. } => {
+                        PartialEntity::DimensionalSize { applies_to, .. } => {
                             Self::deps_ref_shape_aspect(applies_to, out);
                         }
-                        UnitPart::Document { kind, .. } => {
+                        PartialEntity::Document { kind, .. } => {
                             Self::deps_ref_document_type(kind, out);
                         }
-                        UnitPart::DocumentProductAssociation {
+                        PartialEntity::DocumentProductAssociation {
                             relating_document,
                             related_product,
                             ..
@@ -26275,17 +26300,17 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_document(relating_document, out);
                             Self::deps_ref_product_or_formation_or_definition(related_product, out);
                         }
-                        UnitPart::DocumentReference {
+                        PartialEntity::DocumentReference {
                             assigned_document, ..
                         } => {
                             Self::deps_ref_document(assigned_document, out);
                         }
-                        UnitPart::DraughtingCallout { contents, .. } => {
+                        PartialEntity::DraughtingCallout { contents, .. } => {
                             for e in contents {
                                 Self::deps_ref_draughting_callout_element(e, out);
                             }
                         }
-                        UnitPart::DraughtingCalloutRelationship {
+                        PartialEntity::DraughtingCalloutRelationship {
                             relating_draughting_callout,
                             related_draughting_callout,
                             ..
@@ -26293,7 +26318,7 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_draughting_callout(relating_draughting_callout, out);
                             Self::deps_ref_draughting_callout(related_draughting_callout, out);
                         }
-                        UnitPart::DraughtingModelItemAssociationWithPlaceholder {
+                        PartialEntity::DraughtingModelItemAssociationWithPlaceholder {
                             annotation_placeholder,
                             ..
                         } => {
@@ -26302,7 +26327,7 @@ impl<'a> Writer<'a> {
                                 out,
                             );
                         }
-                        UnitPart::Edge {
+                        PartialEntity::Edge {
                             edge_start,
                             edge_end,
                             ..
@@ -26314,35 +26339,35 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_vertex(r, out);
                             }
                         }
-                        UnitPart::EdgeCurve { edge_geometry, .. } => {
+                        PartialEntity::EdgeCurve { edge_geometry, .. } => {
                             Self::deps_ref_curve(edge_geometry, out);
                         }
-                        UnitPart::ElementarySurface { position, .. } => {
+                        PartialEntity::ElementarySurface { position, .. } => {
                             Self::deps_ref_axis2_placement3d(position, out);
                         }
-                        UnitPart::ExternalIdentificationAssignment { source, .. } => {
+                        PartialEntity::ExternalIdentificationAssignment { source, .. } => {
                             Self::deps_ref_external_source(source, out);
                         }
-                        UnitPart::ExternallyDefinedItem { source, .. } => {
+                        PartialEntity::ExternallyDefinedItem { source, .. } => {
                             Self::deps_ref_external_source(source, out);
                         }
-                        UnitPart::Face { bounds, .. } => {
+                        PartialEntity::Face { bounds, .. } => {
                             for e in bounds {
                                 Self::deps_ref_face_bound(e, out);
                             }
                         }
-                        UnitPart::FaceBound { bound, .. } => {
+                        PartialEntity::FaceBound { bound, .. } => {
                             Self::deps_ref_loop(bound, out);
                         }
-                        UnitPart::FaceSurface { face_geometry, .. } => {
+                        PartialEntity::FaceSurface { face_geometry, .. } => {
                             Self::deps_ref_surface(face_geometry, out);
                         }
-                        UnitPart::FillAreaStyle { fill_styles, .. } => {
+                        PartialEntity::FillAreaStyle { fill_styles, .. } => {
                             for e in fill_styles {
                                 Self::deps_ref_fill_style_select(e, out);
                             }
                         }
-                        UnitPart::FillAreaStyleHatching {
+                        PartialEntity::FillAreaStyleHatching {
                             hatch_line_appearance,
                             start_of_next_hatch_line,
                             point_of_reference_hatch_line,
@@ -26357,10 +26382,10 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_cartesian_point(point_of_reference_hatch_line, out);
                             Self::deps_ref_cartesian_point(pattern_start, out);
                         }
-                        UnitPart::FillAreaStyleTileSymbolWithStyle { symbol, .. } => {
+                        PartialEntity::FillAreaStyleTileSymbolWithStyle { symbol, .. } => {
                             Self::deps_ref_annotation_symbol_occurrence(symbol, out);
                         }
-                        UnitPart::FillAreaStyleTiles {
+                        PartialEntity::FillAreaStyleTiles {
                             tiling_pattern,
                             tiles,
                             ..
@@ -26370,7 +26395,7 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_fill_area_style_tile_shape_select(e, out);
                             }
                         }
-                        UnitPart::GeneralDatumReference {
+                        PartialEntity::GeneralDatumReference {
                             base, modifiers, ..
                         } => {
                             Self::deps_ref_datum_or_common_datum(base, out);
@@ -26380,15 +26405,15 @@ impl<'a> Writer<'a> {
                                 }
                             }
                         }
-                        UnitPart::GenericProductDefinitionReference { source, .. } => {
+                        PartialEntity::GenericProductDefinitionReference { source, .. } => {
                             Self::deps_ref_external_source(source, out);
                         }
-                        UnitPart::GeometricSet { elements, .. } => {
+                        PartialEntity::GeometricSet { elements, .. } => {
                             for e in elements {
                                 Self::deps_ref_geometric_set_select(e, out);
                             }
                         }
-                        UnitPart::GeometricTolerance {
+                        PartialEntity::GeometricTolerance {
                             magnitude,
                             toleranced_shape_aspect,
                             ..
@@ -26398,12 +26423,15 @@ impl<'a> Writer<'a> {
                             }
                             Self::deps_ref_geometric_tolerance_target(toleranced_shape_aspect, out);
                         }
-                        UnitPart::GeometricToleranceWithDatumReference { datum_system, .. } => {
+                        PartialEntity::GeometricToleranceWithDatumReference {
+                            datum_system,
+                            ..
+                        } => {
                             for e in datum_system {
                                 Self::deps_ref_datum_system_or_reference(e, out);
                             }
                         }
-                        UnitPart::GeometricToleranceWithDefinedAreaUnit {
+                        PartialEntity::GeometricToleranceWithDefinedAreaUnit {
                             second_unit_size,
                             ..
                         } => {
@@ -26413,41 +26441,41 @@ impl<'a> Writer<'a> {
                                 );
                             }
                         }
-                        UnitPart::GeometricToleranceWithDefinedUnit { unit_size, .. } => {
+                        PartialEntity::GeometricToleranceWithDefinedUnit { unit_size, .. } => {
                             Self::deps_ref_length_or_plane_angle_measure_with_unit_select(
                                 unit_size, out,
                             );
                         }
-                        UnitPart::GeometricToleranceWithMaximumTolerance {
+                        PartialEntity::GeometricToleranceWithMaximumTolerance {
                             maximum_upper_tolerance,
                             ..
                         } => {
                             Self::deps_ref_length_measure_with_unit(maximum_upper_tolerance, out);
                         }
-                        UnitPart::GlobalUncertaintyAssignedContext { uncertainty, .. } => {
+                        PartialEntity::GlobalUncertaintyAssignedContext { uncertainty, .. } => {
                             for e in uncertainty {
                                 Self::deps_ref_uncertainty_measure_with_unit(e, out);
                             }
                         }
-                        UnitPart::GlobalUnitAssignedContext { units, .. } => {
+                        PartialEntity::GlobalUnitAssignedContext { units, .. } => {
                             for e in units {
                                 Self::deps_ref_unit(e, out);
                             }
                         }
-                        UnitPart::GroupAssignment { assigned_group, .. } => {
+                        PartialEntity::GroupAssignment { assigned_group, .. } => {
                             Self::deps_ref_group(assigned_group, out);
                         }
-                        UnitPart::IdentificationAssignment { role, .. } => {
+                        PartialEntity::IdentificationAssignment { role, .. } => {
                             Self::deps_ref_identification_role(role, out);
                         }
-                        UnitPart::Invisibility {
+                        PartialEntity::Invisibility {
                             invisible_items, ..
                         } => {
                             for e in invisible_items {
                                 Self::deps_ref_invisible_item(e, out);
                             }
                         }
-                        UnitPart::ItemDefinedTransformation {
+                        PartialEntity::ItemDefinedTransformation {
                             transform_item_1,
                             transform_item_2,
                             ..
@@ -26455,7 +26483,7 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_representation_item(transform_item_1, out);
                             Self::deps_ref_representation_item(transform_item_2, out);
                         }
-                        UnitPart::ItemIdentifiedRepresentationUsage {
+                        PartialEntity::ItemIdentifiedRepresentationUsage {
                             definition,
                             used_representation,
                             identified_item,
@@ -26470,10 +26498,10 @@ impl<'a> Writer<'a> {
                                 out,
                             );
                         }
-                        UnitPart::ManifoldSolidBrep { outer, .. } => {
+                        PartialEntity::ManifoldSolidBrep { outer, .. } => {
                             Self::deps_ref_closed_shell(outer, out);
                         }
-                        UnitPart::MappedItem {
+                        PartialEntity::MappedItem {
                             mapping_source,
                             mapping_target,
                             ..
@@ -26481,42 +26509,42 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_representation_map(mapping_source, out);
                             Self::deps_ref_representation_item(mapping_target, out);
                         }
-                        UnitPart::MeasureWithUnit { unit_component, .. } => {
+                        PartialEntity::MeasureWithUnit { unit_component, .. } => {
                             Self::deps_ref_unit(unit_component, out);
                         }
-                        UnitPart::NamedUnit { dimensions, .. } => {
+                        PartialEntity::NamedUnit { dimensions, .. } => {
                             if let Some(r) = dimensions {
                                 Self::deps_ref_dimensional_exponents(r, out);
                             }
                         }
-                        UnitPart::OneDirectionRepeatFactor { repeat_factor, .. } => {
+                        PartialEntity::OneDirectionRepeatFactor { repeat_factor, .. } => {
                             Self::deps_ref_vector(repeat_factor, out);
                         }
-                        UnitPart::OrganizationalAddress { organizations, .. } => {
+                        PartialEntity::OrganizationalAddress { organizations, .. } => {
                             for e in organizations {
                                 Self::deps_ref_organization(e, out);
                             }
                         }
-                        UnitPart::OrientedClosedShell {
+                        PartialEntity::OrientedClosedShell {
                             closed_shell_element,
                             ..
                         } => {
                             Self::deps_ref_closed_shell(closed_shell_element, out);
                         }
-                        UnitPart::OrientedEdge { edge_element, .. } => {
+                        PartialEntity::OrientedEdge { edge_element, .. } => {
                             Self::deps_ref_edge(edge_element, out);
                         }
-                        UnitPart::OverRidingStyledItem {
+                        PartialEntity::OverRidingStyledItem {
                             over_ridden_style, ..
                         } => {
                             Self::deps_ref_styled_item(over_ridden_style, out);
                         }
-                        UnitPart::Path { edge_list, .. } => {
+                        PartialEntity::Path { edge_list, .. } => {
                             for e in edge_list {
                                 Self::deps_ref_oriented_edge(e, out);
                             }
                         }
-                        UnitPart::Pcurve {
+                        PartialEntity::Pcurve {
                             basis_surface,
                             reference_to_curve,
                             ..
@@ -26524,7 +26552,7 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_surface(basis_surface, out);
                             Self::deps_ref_definitional_representation(reference_to_curve, out);
                         }
-                        UnitPart::PersonAndOrganizationAssignment {
+                        PartialEntity::PersonAndOrganizationAssignment {
                             assigned_person_and_organization,
                             role,
                             ..
@@ -26535,18 +26563,18 @@ impl<'a> Writer<'a> {
                             );
                             Self::deps_ref_person_and_organization_role(role, out);
                         }
-                        UnitPart::PersonalAddress { people, .. } => {
+                        PartialEntity::PersonalAddress { people, .. } => {
                             for e in people {
                                 Self::deps_ref_person(e, out);
                             }
                         }
-                        UnitPart::Placement { location, .. } => {
+                        PartialEntity::Placement { location, .. } => {
                             Self::deps_ref_cartesian_point(location, out);
                         }
-                        UnitPart::PlanarBox { placement, .. } => {
+                        PartialEntity::PlanarBox { placement, .. } => {
                             Self::deps_ref_axis2_placement(placement, out);
                         }
-                        UnitPart::PointStyle {
+                        PartialEntity::PointStyle {
                             marker,
                             marker_size,
                             marker_colour,
@@ -26562,30 +26590,30 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_colour(r, out);
                             }
                         }
-                        UnitPart::PolyLoop { polygon, .. } => {
+                        PartialEntity::PolyLoop { polygon, .. } => {
                             for e in polygon {
                                 Self::deps_ref_cartesian_point(e, out);
                             }
                         }
-                        UnitPart::PresentationStyleAssignment { styles, .. } => {
+                        PartialEntity::PresentationStyleAssignment { styles, .. } => {
                             for e in styles {
                                 Self::deps_ref_presentation_style_select(e, out);
                             }
                         }
-                        UnitPart::PresentationStyleByContext { style_context, .. } => {
+                        PartialEntity::PresentationStyleByContext { style_context, .. } => {
                             Self::deps_ref_style_context_select(style_context, out);
                         }
-                        UnitPart::Product {
+                        PartialEntity::Product {
                             frame_of_reference, ..
                         } => {
                             for e in frame_of_reference {
                                 Self::deps_ref_product_context(e, out);
                             }
                         }
-                        UnitPart::ProductConcept { market_context, .. } => {
+                        PartialEntity::ProductConcept { market_context, .. } => {
                             Self::deps_ref_product_concept_context(market_context, out);
                         }
-                        UnitPart::ProductDefinition {
+                        PartialEntity::ProductDefinition {
                             formation,
                             frame_of_reference,
                             ..
@@ -26593,13 +26621,13 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_product_definition_formation(formation, out);
                             Self::deps_ref_product_definition_context(frame_of_reference, out);
                         }
-                        UnitPart::ProductDefinitionEffectivity { usage, .. } => {
+                        PartialEntity::ProductDefinitionEffectivity { usage, .. } => {
                             Self::deps_ref_product_definition_relationship(usage, out);
                         }
-                        UnitPart::ProductDefinitionFormation { of_product, .. } => {
+                        PartialEntity::ProductDefinitionFormation { of_product, .. } => {
                             Self::deps_ref_product(of_product, out);
                         }
-                        UnitPart::ProductDefinitionOccurrence {
+                        PartialEntity::ProductDefinitionOccurrence {
                             definition,
                             quantity,
                             ..
@@ -26611,7 +26639,7 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_measure_with_unit(r, out);
                             }
                         }
-                        UnitPart::ProductDefinitionRelationship {
+                        PartialEntity::ProductDefinitionRelationship {
                             relating_product_definition,
                             related_product_definition,
                             ..
@@ -26625,7 +26653,7 @@ impl<'a> Writer<'a> {
                                 out,
                             );
                         }
-                        UnitPart::ProductDefinitionRelationshipRelationship {
+                        PartialEntity::ProductDefinitionRelationshipRelationship {
                             relating,
                             related,
                             ..
@@ -26633,7 +26661,7 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_product_definition_relationship(relating, out);
                             Self::deps_ref_product_definition_relationship(related, out);
                         }
-                        UnitPart::ProductDefinitionWithAssociatedDocuments {
+                        PartialEntity::ProductDefinitionWithAssociatedDocuments {
                             documentation_ids,
                             ..
                         } => {
@@ -26641,12 +26669,12 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_document(e, out);
                             }
                         }
-                        UnitPart::ProductRelatedProductCategory { products, .. } => {
+                        PartialEntity::ProductRelatedProductCategory { products, .. } => {
                             for e in products {
                                 Self::deps_ref_product(e, out);
                             }
                         }
-                        UnitPart::ProjectedZoneDefinition {
+                        PartialEntity::ProjectedZoneDefinition {
                             projection_end,
                             projected_length,
                             ..
@@ -26654,10 +26682,10 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_shape_aspect(projection_end, out);
                             Self::deps_ref_length_measure_with_unit(projected_length, out);
                         }
-                        UnitPart::PropertyDefinition { definition, .. } => {
+                        PartialEntity::PropertyDefinition { definition, .. } => {
                             Self::deps_ref_characterized_definition(definition, out);
                         }
-                        UnitPart::PropertyDefinitionRepresentation {
+                        PartialEntity::PropertyDefinitionRepresentation {
                             definition,
                             used_representation,
                             ..
@@ -26665,15 +26693,15 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_represented_definition(definition, out);
                             Self::deps_ref_representation(used_representation, out);
                         }
-                        UnitPart::QualifiedRepresentationItem { qualifiers, .. } => {
+                        PartialEntity::QualifiedRepresentationItem { qualifiers, .. } => {
                             for e in qualifiers {
                                 Self::deps_ref_value_qualifier(e, out);
                             }
                         }
-                        UnitPart::RepositionedTessellatedItem { location, .. } => {
+                        PartialEntity::RepositionedTessellatedItem { location, .. } => {
                             Self::deps_ref_axis2_placement3d(location, out);
                         }
-                        UnitPart::Representation {
+                        PartialEntity::Representation {
                             items,
                             context_of_items,
                             ..
@@ -26683,7 +26711,7 @@ impl<'a> Writer<'a> {
                             }
                             Self::deps_ref_representation_context(context_of_items, out);
                         }
-                        UnitPart::RepresentationMap {
+                        PartialEntity::RepresentationMap {
                             mapping_origin,
                             mapped_representation,
                             ..
@@ -26691,22 +26719,22 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_representation_item(mapping_origin, out);
                             Self::deps_ref_representation(mapped_representation, out);
                         }
-                        UnitPart::RepresentationReference {
+                        PartialEntity::RepresentationReference {
                             context_of_items, ..
                         } => {
                             Self::deps_ref_representation_context_reference(context_of_items, out);
                         }
-                        UnitPart::RepresentationRelationship { rep_1, rep_2, .. } => {
+                        PartialEntity::RepresentationRelationship { rep_1, rep_2, .. } => {
                             Self::deps_ref_representation_or_representation_reference(rep_1, out);
                             Self::deps_ref_representation_or_representation_reference(rep_2, out);
                         }
-                        UnitPart::RepresentationRelationshipWithTransformation {
+                        PartialEntity::RepresentationRelationshipWithTransformation {
                             transformation_operator,
                             ..
                         } => {
                             Self::deps_ref_transformation(transformation_operator, out);
                         }
-                        UnitPart::SecurityClassificationAssignment {
+                        PartialEntity::SecurityClassificationAssignment {
                             assigned_security_classification,
                             ..
                         } => {
@@ -26715,10 +26743,10 @@ impl<'a> Writer<'a> {
                                 out,
                             );
                         }
-                        UnitPart::ShapeAspect { of_shape, .. } => {
+                        PartialEntity::ShapeAspect { of_shape, .. } => {
                             Self::deps_ref_product_definition_shape(of_shape, out);
                         }
-                        UnitPart::ShapeAspectRelationship {
+                        PartialEntity::ShapeAspectRelationship {
                             relating_shape_aspect,
                             related_shape_aspect,
                             ..
@@ -26726,23 +26754,23 @@ impl<'a> Writer<'a> {
                             Self::deps_ref_shape_aspect(relating_shape_aspect, out);
                             Self::deps_ref_shape_aspect(related_shape_aspect, out);
                         }
-                        UnitPart::ShellBasedSurfaceModel { sbsm_boundary, .. } => {
+                        PartialEntity::ShellBasedSurfaceModel { sbsm_boundary, .. } => {
                             for e in sbsm_boundary {
                                 Self::deps_ref_shell(e, out);
                             }
                         }
-                        UnitPart::StartRequest { items, .. } => {
+                        PartialEntity::StartRequest { items, .. } => {
                             for e in items {
                                 Self::deps_ref_start_request_item(e, out);
                             }
                         }
-                        UnitPart::StyledItem { styles, item, .. } => {
+                        PartialEntity::StyledItem { styles, item, .. } => {
                             for e in styles {
                                 Self::deps_ref_presentation_style_assignment(e, out);
                             }
                             Self::deps_ref_styled_item_target(item, out);
                         }
-                        UnitPart::SurfaceCurve {
+                        PartialEntity::SurfaceCurve {
                             curve_3d,
                             associated_geometry,
                             ..
@@ -26752,82 +26780,84 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_pcurve_or_surface(e, out);
                             }
                         }
-                        UnitPart::SurfaceSideStyle { styles, .. } => {
+                        PartialEntity::SurfaceSideStyle { styles, .. } => {
                             for e in styles {
                                 Self::deps_ref_surface_style_element_select(e, out);
                             }
                         }
-                        UnitPart::SurfaceStyleBoundary {
+                        PartialEntity::SurfaceStyleBoundary {
                             style_of_boundary, ..
                         } => {
                             Self::deps_ref_curve_or_render(style_of_boundary, out);
                         }
-                        UnitPart::SurfaceStyleControlGrid {
+                        PartialEntity::SurfaceStyleControlGrid {
                             style_of_control_grid,
                             ..
                         } => {
                             Self::deps_ref_curve_or_render(style_of_control_grid, out);
                         }
-                        UnitPart::SurfaceStyleFillArea { fill_area, .. } => {
+                        PartialEntity::SurfaceStyleFillArea { fill_area, .. } => {
                             Self::deps_ref_fill_area_style(fill_area, out);
                         }
-                        UnitPart::SurfaceStyleParameterLine {
+                        PartialEntity::SurfaceStyleParameterLine {
                             style_of_parameter_lines,
                             ..
                         } => {
                             Self::deps_ref_curve_or_render(style_of_parameter_lines, out);
                         }
-                        UnitPart::SurfaceStyleRendering { surface_colour, .. } => {
+                        PartialEntity::SurfaceStyleRendering { surface_colour, .. } => {
                             Self::deps_ref_colour(surface_colour, out);
                         }
-                        UnitPart::SurfaceStyleRenderingWithProperties { properties, .. } => {
+                        PartialEntity::SurfaceStyleRenderingWithProperties {
+                            properties, ..
+                        } => {
                             for e in properties {
                                 Self::deps_ref_rendering_properties_select(e, out);
                             }
                         }
-                        UnitPart::SurfaceStyleSegmentationCurve {
+                        PartialEntity::SurfaceStyleSegmentationCurve {
                             style_of_segmentation_curve,
                             ..
                         } => {
                             Self::deps_ref_curve_or_render(style_of_segmentation_curve, out);
                         }
-                        UnitPart::SurfaceStyleSilhouette {
+                        PartialEntity::SurfaceStyleSilhouette {
                             style_of_silhouette,
                             ..
                         } => {
                             Self::deps_ref_curve_or_render(style_of_silhouette, out);
                         }
-                        UnitPart::SurfaceStyleUsage { style, .. } => {
+                        PartialEntity::SurfaceStyleUsage { style, .. } => {
                             Self::deps_ref_surface_side_style_select(style, out);
                         }
-                        UnitPart::SymbolStyle {
+                        PartialEntity::SymbolStyle {
                             style_of_symbol, ..
                         } => {
                             Self::deps_ref_symbol_style_select(style_of_symbol, out);
                         }
-                        UnitPart::TerminatorSymbol {
+                        PartialEntity::TerminatorSymbol {
                             annotated_curve, ..
                         } => {
                             Self::deps_ref_annotation_curve_occurrence(annotated_curve, out);
                         }
-                        UnitPart::TessellatedGeometricSet { children, .. } => {
+                        PartialEntity::TessellatedGeometricSet { children, .. } => {
                             for e in children {
                                 Self::deps_ref_tessellated_item(e, out);
                             }
                         }
-                        UnitPart::TextLiteral {
+                        PartialEntity::TextLiteral {
                             placement, font, ..
                         } => {
                             Self::deps_ref_axis2_placement(placement, out);
                             Self::deps_ref_font_select(font, out);
                         }
-                        UnitPart::TextStyle {
+                        PartialEntity::TextStyle {
                             character_appearance,
                             ..
                         } => {
                             Self::deps_ref_character_style_select(character_appearance, out);
                         }
-                        UnitPart::ToleranceZone {
+                        PartialEntity::ToleranceZone {
                             defining_tolerance,
                             form,
                             ..
@@ -26837,7 +26867,7 @@ impl<'a> Writer<'a> {
                             }
                             Self::deps_ref_tolerance_zone_form(form, out);
                         }
-                        UnitPart::ToleranceZoneDefinition {
+                        PartialEntity::ToleranceZoneDefinition {
                             zone, boundaries, ..
                         } => {
                             Self::deps_ref_tolerance_zone(zone, out);
@@ -26845,29 +26875,31 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_shape_aspect(e, out);
                             }
                         }
-                        UnitPart::ToleranceZoneWithDatum {
+                        PartialEntity::ToleranceZoneWithDatum {
                             datum_reference, ..
                         } => {
                             Self::deps_ref_datum_system(datum_reference, out);
                         }
-                        UnitPart::TwoDirectionRepeatFactor {
+                        PartialEntity::TwoDirectionRepeatFactor {
                             second_repeat_factor,
                             ..
                         } => {
                             Self::deps_ref_vector(second_repeat_factor, out);
                         }
-                        UnitPart::UnequallyDisposedGeometricTolerance { displacement, .. } => {
+                        PartialEntity::UnequallyDisposedGeometricTolerance {
+                            displacement, ..
+                        } => {
                             Self::deps_ref_length_measure_with_unit(displacement, out);
                         }
-                        UnitPart::Vector { orientation, .. } => {
+                        PartialEntity::Vector { orientation, .. } => {
                             Self::deps_ref_direction(orientation, out);
                         }
-                        UnitPart::VertexPoint {
+                        PartialEntity::VertexPoint {
                             vertex_geometry, ..
                         } => {
                             Self::deps_ref_point(vertex_geometry, out);
                         }
-                        UnitPart::ViewVolume {
+                        PartialEntity::ViewVolume {
                             projection_point,
                             view_window,
                             ..
@@ -35323,353 +35355,353 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
-            EntityKey::ComplexUnit(id) => {
-                let cu = self.model.complex_unit_arena.get(id.0);
+            EntityKey::ComplexEntity(id) => {
+                let cu = self.model.complex_entity_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
                 let mut part_txt: Vec<String> = Vec::with_capacity(cu.parts.len());
                 for part in &cu.parts {
                     part_txt.push(match part {
-                UnitPart::Action { name, description, chosen_method, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_action_method(chosen_method))]; format!("ACTION({})", a.join(",")) },
-                UnitPart::ActionMethod { name, description, consequence, purpose, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, step_str(self.model.text(*consequence)), step_str(self.model.text(*purpose))]; format!("ACTION_METHOD({})", a.join(",")) },
-                UnitPart::ActionMethodRelationship { name, description, relating_method, related_method, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_action_method(relating_method)), format!("#{}", self.id_of_ref_action_method(related_method))]; format!("ACTION_METHOD_RELATIONSHIP({})", a.join(",")) },
-                UnitPart::ActionRelationship { name, description, relating_action, related_action, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_action(relating_action)), format!("#{}", self.id_of_ref_action(related_action))]; format!("ACTION_RELATIONSHIP({})", a.join(",")) },
-                UnitPart::ActionRequestAssignment { assigned_action_request, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_versioned_action_request(assigned_action_request))]; format!("ACTION_REQUEST_ASSIGNMENT({})", a.join(",")) },
-                UnitPart::ActionResource { name, description, usage, kind, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("({})", usage.iter().map(|e| format!("#{}", self.id_of_ref_supported_item(e))).collect::<Vec<_>>().join(",")), format!("#{}", self.id_of_ref_action_resource_type(kind))]; format!("ACTION_RESOURCE({})", a.join(",")) },
-                UnitPart::ActionResourceRequirement { name, description, kind, operations, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), step_str(self.model.text(*description)), format!("#{}", self.id_of_ref_resource_requirement_type(kind)), format!("({})", operations.iter().map(|e| format!("#{}", self.id_of_ref_characterized_action_definition(e))).collect::<Vec<_>>().join(","))]; format!("ACTION_RESOURCE_REQUIREMENT({})", a.join(",")) },
-                UnitPart::Address { internal_location, street_number, street, postal_box, town, region, postal_code, country, facsimile_number, telephone_number, electronic_mail_address, telex_number, .. } => { let a: Vec<String> = vec![match internal_location { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match street_number { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match street { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match postal_box { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match town { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match region { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match postal_code { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match country { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match facsimile_number { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match telephone_number { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match electronic_mail_address { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match telex_number { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("ADDRESS({})", a.join(",")) },
-                UnitPart::AdvancedBrepShapeRepresentation => "ADVANCED_BREP_SHAPE_REPRESENTATION()".to_string(),
-                UnitPart::AdvancedFace => "ADVANCED_FACE()".to_string(),
-                UnitPart::AnnotationCurveOccurrence => "ANNOTATION_CURVE_OCCURRENCE()".to_string(),
-                UnitPart::AnnotationFillAreaOccurrence { fill_style_target, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_point(fill_style_target))]; format!("ANNOTATION_FILL_AREA_OCCURRENCE({})", a.join(",")) },
-                UnitPart::AnnotationOccurrence => "ANNOTATION_OCCURRENCE()".to_string(),
-                UnitPart::AnnotationOccurrenceAssociativity => "ANNOTATION_OCCURRENCE_ASSOCIATIVITY()".to_string(),
-                UnitPart::AnnotationOccurrenceRelationship { name, description, relating_annotation_occurrence, related_annotation_occurrence, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), step_str(self.model.text(*description)), format!("#{}", self.id_of_ref_annotation_occurrence(relating_annotation_occurrence)), format!("#{}", self.id_of_ref_annotation_occurrence(related_annotation_occurrence))]; format!("ANNOTATION_OCCURRENCE_RELATIONSHIP({})", a.join(",")) },
-                UnitPart::AnnotationPlaceholderOccurrence { role, line_spacing, .. } => { let a: Vec<String> = vec![role.token().to_string(), real(*line_spacing)]; format!("ANNOTATION_PLACEHOLDER_OCCURRENCE({})", a.join(",")) },
-                UnitPart::AnnotationPlaceholderOccurrenceWithLeaderLine { leader_line, .. } => { let a: Vec<String> = vec![format!("({})", leader_line.iter().map(|e| format!("#{}", self.id_of_ref_annotation_placeholder_leader_line(e))).collect::<Vec<_>>().join(","))]; format!("ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE({})", a.join(",")) },
-                UnitPart::AnnotationPlane { elements, .. } => { let a: Vec<String> = vec![match elements { Some(v) => format!("({})", v.iter().map(|e| format!("#{}", self.id_of_ref_annotation_plane_element(e))).collect::<Vec<_>>().join(",")), None => "$".to_string() }]; format!("ANNOTATION_PLANE({})", a.join(",")) },
-                UnitPart::AnnotationSymbol => "ANNOTATION_SYMBOL()".to_string(),
-                UnitPart::AnnotationSymbolOccurrence => "ANNOTATION_SYMBOL_OCCURRENCE()".to_string(),
-                UnitPart::AnnotationText => "ANNOTATION_TEXT()".to_string(),
-                UnitPart::AnnotationTextCharacter { alignment, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*alignment))]; format!("ANNOTATION_TEXT_CHARACTER({})", a.join(",")) },
-                UnitPart::AnnotationTextOccurrence => "ANNOTATION_TEXT_OCCURRENCE()".to_string(),
-                UnitPart::ApplicationContextElement { name, frame_of_reference, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("#{}", self.id_of_ref_application_context(frame_of_reference))]; format!("APPLICATION_CONTEXT_ELEMENT({})", a.join(",")) },
-                UnitPart::AppliedApprovalAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_approval_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_APPROVAL_ASSIGNMENT({})", a.join(",")) },
-                UnitPart::AppliedDateAndTimeAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_date_and_time_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_DATE_AND_TIME_ASSIGNMENT({})", a.join(",")) },
-                UnitPart::AppliedDocumentReference { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_document_reference_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_DOCUMENT_REFERENCE({})", a.join(",")) },
-                UnitPart::AppliedExternalIdentificationAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_external_identification_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT({})", a.join(",")) },
-                UnitPart::AppliedGroupAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_groupable_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_GROUP_ASSIGNMENT({})", a.join(",")) },
-                UnitPart::AppliedPersonAndOrganizationAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_person_and_organization_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT({})", a.join(",")) },
-                UnitPart::AppliedPresentedItem { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_presented_item_select(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_PRESENTED_ITEM({})", a.join(",")) },
-                UnitPart::AppliedSecurityClassificationAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_security_classification_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT({})", a.join(",")) },
-                UnitPart::ApprovalAssignment { assigned_approval, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_approval(assigned_approval))]; format!("APPROVAL_ASSIGNMENT({})", a.join(",")) },
-                UnitPart::AreaInSet { area, in_set, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_presentation_area(area)), format!("#{}", self.id_of_ref_presentation_set(in_set))]; format!("AREA_IN_SET({})", a.join(",")) },
-                UnitPart::AscribableStateRelationship { name, description, relating_ascribable_state, related_ascribable_state, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_ascribable_state(relating_ascribable_state)), format!("#{}", self.id_of_ref_ascribable_state(related_ascribable_state))]; format!("ASCRIBABLE_STATE_RELATIONSHIP({})", a.join(",")) },
-                UnitPart::AssemblyComponentUsage { reference_designator, .. } => { let a: Vec<String> = vec![match reference_designator { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("ASSEMBLY_COMPONENT_USAGE({})", a.join(",")) },
-                UnitPart::BSplineCurve { degree, control_points_list, curve_form, closed_curve, self_intersect, .. } => { let a: Vec<String> = vec![format!("{}", degree), format!("({})", control_points_list.iter().map(|e| format!("#{}", self.id_of_ref_cartesian_point(e))).collect::<Vec<_>>().join(",")), curve_form.token().to_string(), closed_curve.token().to_string(), self_intersect.token().to_string()]; format!("B_SPLINE_CURVE({})", a.join(",")) },
-                UnitPart::BSplineCurveWithKnots { knot_multiplicities, knots, knot_spec, .. } => { let a: Vec<String> = vec![format!("({})", knot_multiplicities.iter().map(|e| format!("{e}")).collect::<Vec<_>>().join(",")), format!("({})", knots.iter().map(|e| real(*e)).collect::<Vec<_>>().join(",")), knot_spec.token().to_string()]; format!("B_SPLINE_CURVE_WITH_KNOTS({})", a.join(",")) },
-                UnitPart::BSplineSurface { u_degree, v_degree, control_points_list, surface_form, u_closed, v_closed, self_intersect, .. } => { let a: Vec<String> = vec![format!("{}", u_degree), format!("{}", v_degree), format!("({})", control_points_list.iter().map(|e| { let row: Vec<String> = e.iter().map(|e| format!("#{}", self.id_of_ref_cartesian_point(e))).collect(); format!("({})", row.join(",")) }).collect::<Vec<_>>().join(",")), surface_form.token().to_string(), u_closed.token().to_string(), v_closed.token().to_string(), self_intersect.token().to_string()]; format!("B_SPLINE_SURFACE({})", a.join(",")) },
-                UnitPart::BSplineSurfaceWithKnots { u_multiplicities, v_multiplicities, u_knots, v_knots, knot_spec, .. } => { let a: Vec<String> = vec![format!("({})", u_multiplicities.iter().map(|e| format!("{e}")).collect::<Vec<_>>().join(",")), format!("({})", v_multiplicities.iter().map(|e| format!("{e}")).collect::<Vec<_>>().join(",")), format!("({})", u_knots.iter().map(|e| real(*e)).collect::<Vec<_>>().join(",")), format!("({})", v_knots.iter().map(|e| real(*e)).collect::<Vec<_>>().join(",")), knot_spec.token().to_string()]; format!("B_SPLINE_SURFACE_WITH_KNOTS({})", a.join(",")) },
-                UnitPart::BezierCurve => "BEZIER_CURVE()".to_string(),
-                UnitPart::BezierSurface => "BEZIER_SURFACE()".to_string(),
-                UnitPart::BoundedCurve => "BOUNDED_CURVE()".to_string(),
-                UnitPart::BoundedPcurve => "BOUNDED_PCURVE()".to_string(),
-                UnitPart::BoundedSurface => "BOUNDED_SURFACE()".to_string(),
-                UnitPart::BoundedSurfaceCurve => "BOUNDED_SURFACE_CURVE()".to_string(),
-                UnitPart::BrepWithVoids { voids, .. } => { let a: Vec<String> = vec![format!("({})", voids.iter().map(|e| format!("#{}", self.id_of_ref_oriented_closed_shell(e))).collect::<Vec<_>>().join(","))]; format!("BREP_WITH_VOIDS({})", a.join(",")) },
-                UnitPart::CameraImage => "CAMERA_IMAGE()".to_string(),
-                UnitPart::CameraImage3dWithScale => "CAMERA_IMAGE_3D_WITH_SCALE()".to_string(),
-                UnitPart::CameraModel => "CAMERA_MODEL()".to_string(),
-                UnitPart::CameraModelD3 { view_reference_system, perspective_of_volume, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement3d(view_reference_system)), format!("#{}", self.id_of_ref_view_volume(perspective_of_volume))]; format!("CAMERA_MODEL_D3({})", a.join(",")) },
-                UnitPart::CameraModelD3MultiClipping { shape_clipping, .. } => { let a: Vec<String> = vec![format!("({})", shape_clipping.iter().map(|e| format!("#{}", self.id_of_ref_camera_model_d3_multi_clipping_intersection_select(e))).collect::<Vec<_>>().join(","))]; format!("CAMERA_MODEL_D3_MULTI_CLIPPING({})", a.join(",")) },
-                UnitPart::CameraModelD3WithHlhsr { hidden_line_surface_removal, .. } => { let a: Vec<String> = vec![(if *hidden_line_surface_removal { ".T." } else { ".F." }).to_string()]; format!("CAMERA_MODEL_D3_WITH_HLHSR({})", a.join(",")) },
-                UnitPart::CameraUsage => "CAMERA_USAGE()".to_string(),
-                UnitPart::CcDesignApproval { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_approved_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_APPROVAL({})", a.join(",")) },
-                UnitPart::CcDesignDateAndTimeAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_date_time_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_DATE_AND_TIME_ASSIGNMENT({})", a.join(",")) },
-                UnitPart::CcDesignPersonAndOrganizationAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_cc_person_organization_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT({})", a.join(",")) },
-                UnitPart::CcDesignSecurityClassification { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_cc_classified_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_SECURITY_CLASSIFICATION({})", a.join(",")) },
-                UnitPart::ChangeRequest { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_change_request_item(e))).collect::<Vec<_>>().join(","))]; format!("CHANGE_REQUEST({})", a.join(",")) },
-                UnitPart::CharacterGlyphStyleOutline { outline_style, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_style(outline_style))]; format!("CHARACTER_GLYPH_STYLE_OUTLINE({})", a.join(",")) },
-                UnitPart::CharacterGlyphStyleStroke { stroke_style, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_style(stroke_style))]; format!("CHARACTER_GLYPH_STYLE_STROKE({})", a.join(",")) },
-                UnitPart::CharacterizedItemWithinRepresentation { item, rep, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_representation_item(item)), format!("#{}", self.id_of_ref_representation(rep))]; format!("CHARACTERIZED_ITEM_WITHIN_REPRESENTATION({})", a.join(",")) },
-                UnitPart::CharacterizedObject { name, description, .. } => { let a: Vec<String> = vec![match name { Some(x) => step_str(self.model.text(*x)), None => "*".to_string() }, match description { Some(x) => step_str(self.model.text(*x)), None => "*".to_string() }]; format!("CHARACTERIZED_OBJECT({})", a.join(",")) },
-                UnitPart::CharacterizedRepresentation => "CHARACTERIZED_REPRESENTATION()".to_string(),
-                UnitPart::CircularRunoutTolerance => "CIRCULAR_RUNOUT_TOLERANCE()".to_string(),
-                UnitPart::ClosedShell => "CLOSED_SHELL()".to_string(),
-                UnitPart::Colour => "COLOUR()".to_string(),
-                UnitPart::ColourRgb { red, green, blue, .. } => { let a: Vec<String> = vec![real(*red), real(*green), real(*blue)]; format!("COLOUR_RGB({})", a.join(",")) },
-                UnitPart::ColourSpecification { name, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name))]; format!("COLOUR_SPECIFICATION({})", a.join(",")) },
-                UnitPart::CommonDatum => "COMMON_DATUM()".to_string(),
-                UnitPart::CompositeCurve { segments, self_intersect, .. } => { let a: Vec<String> = vec![format!("({})", segments.iter().map(|e| format!("#{}", self.id_of_ref_composite_curve_segment(e))).collect::<Vec<_>>().join(",")), self_intersect.token().to_string()]; format!("COMPOSITE_CURVE({})", a.join(",")) },
-                UnitPart::CompositeCurveSegment { transition, same_sense, parent_curve, .. } => { let a: Vec<String> = vec![transition.token().to_string(), (if *same_sense { ".T." } else { ".F." }).to_string(), format!("#{}", self.id_of_ref_curve(parent_curve))]; format!("COMPOSITE_CURVE_SEGMENT({})", a.join(",")) },
-                UnitPart::CompositeGroupShapeAspect => "COMPOSITE_GROUP_SHAPE_ASPECT()".to_string(),
-                UnitPart::CompositeShapeAspect => "COMPOSITE_SHAPE_ASPECT()".to_string(),
-                UnitPart::CompositeText { collected_text, .. } => { let a: Vec<String> = vec![format!("({})", collected_text.iter().map(|e| format!("#{}", self.id_of_ref_text_or_character(e))).collect::<Vec<_>>().join(","))]; format!("COMPOSITE_TEXT({})", a.join(",")) },
-                UnitPart::CompoundRepresentationItem { item_element, .. } => { let a: Vec<String> = vec![match item_element { CompoundItemDefinitionRef::ListRepresentationItem(vs) => format!("LIST_REPRESENTATION_ITEM(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_representation_item(e))).collect::<Vec<_>>().join(",")), CompoundItemDefinitionRef::SetRepresentationItem(vs) => format!("SET_REPRESENTATION_ITEM(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_representation_item(e))).collect::<Vec<_>>().join(",")), other => format!("#{}", self.id_of_ref_compound_item_definition(other)) }]; format!("COMPOUND_REPRESENTATION_ITEM({})", a.join(",")) },
-                UnitPart::ConfigurationEffectivity { configuration, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_configuration_design(configuration))]; format!("CONFIGURATION_EFFECTIVITY({})", a.join(",")) },
-                UnitPart::ConfigurationItem { id, name, description, item_concept, purpose, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_concept(item_concept)), match purpose { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("CONFIGURATION_ITEM({})", a.join(",")) },
-                UnitPart::ConnectedFaceSet { cfs_faces, .. } => { let a: Vec<String> = vec![match cfs_faces { Some(v) => format!("({})", v.iter().map(|e| format!("#{}", self.id_of_ref_face(e))).collect::<Vec<_>>().join(",")), None => "*".to_string() }]; format!("CONNECTED_FACE_SET({})", a.join(",")) },
-                UnitPart::ConstructiveGeometryRepresentationRelationship => "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP()".to_string(),
-                UnitPart::ContextDependentOverRidingStyledItem { style_context, .. } => { let a: Vec<String> = vec![format!("({})", style_context.iter().map(|e| format!("#{}", self.id_of_ref_style_context_select(e))).collect::<Vec<_>>().join(","))]; format!("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM({})", a.join(",")) },
-                UnitPart::ContextDependentUnit { name, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name))]; format!("CONTEXT_DEPENDENT_UNIT({})", a.join(",")) },
-                UnitPart::ConversionBasedUnit { name, conversion_factor, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("#{}", self.id_of_ref_measure_with_unit(conversion_factor))]; format!("CONVERSION_BASED_UNIT({})", a.join(",")) },
-                UnitPart::Curve => "CURVE()".to_string(),
-                UnitPart::CurveStyle { name, curve_font, curve_width, curve_colour, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match curve_font { Some(r) => format!("#{}", self.id_of_ref_curve_font_or_scaled_curve_font_select(r)), None => "$".to_string() }, match curve_width { Some(r) => match r { SizeSelectRef::DescriptiveMeasure(x) => format!("DESCRIPTIVE_MEASURE({})", step_str(self.model.text(*x))), SizeSelectRef::PositiveLengthMeasure(x) => format!("POSITIVE_LENGTH_MEASURE({})", real(*x)), other => format!("#{}", self.id_of_ref_size_select(other)) }, None => "$".to_string() }, match curve_colour { Some(r) => format!("#{}", self.id_of_ref_colour(r)), None => "$".to_string() }]; format!("CURVE_STYLE({})", a.join(",")) },
-                UnitPart::CurveStyleFont { name, pattern_list, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("({})", pattern_list.iter().map(|e| format!("#{}", self.id_of_ref_curve_style_font_pattern(e))).collect::<Vec<_>>().join(","))]; format!("CURVE_STYLE_FONT({})", a.join(",")) },
-                UnitPart::CurveStyleFontAndScaling { name, curve_font, curve_font_scaling, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("#{}", self.id_of_ref_curve_style_font_select(curve_font)), real(*curve_font_scaling)]; format!("CURVE_STYLE_FONT_AND_SCALING({})", a.join(",")) },
-                UnitPart::CurveStyleFontPattern { visible_segment_length, invisible_segment_length, .. } => { let a: Vec<String> = vec![real(*visible_segment_length), real(*invisible_segment_length)]; format!("CURVE_STYLE_FONT_PATTERN({})", a.join(",")) },
-                UnitPart::CylindricityTolerance => "CYLINDRICITY_TOLERANCE()".to_string(),
-                UnitPart::Date { year_component, .. } => { let a: Vec<String> = vec![format!("{}", year_component)]; format!("DATE({})", a.join(",")) },
-                UnitPart::DateAndTime { date_component, time_component, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_date(date_component)), format!("#{}", self.id_of_ref_local_time(time_component))]; format!("DATE_AND_TIME({})", a.join(",")) },
-                UnitPart::DateAndTimeAssignment { assigned_date_and_time, role, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_date_and_time(assigned_date_and_time)), format!("#{}", self.id_of_ref_date_time_role(role))]; format!("DATE_AND_TIME_ASSIGNMENT({})", a.join(",")) },
-                UnitPart::Datum { identification, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*identification))]; format!("DATUM({})", a.join(",")) },
-                UnitPart::DatumFeature => "DATUM_FEATURE()".to_string(),
-                UnitPart::DatumReference { precedence, referenced_datum, .. } => { let a: Vec<String> = vec![format!("{}", precedence), format!("#{}", self.id_of_ref_datum(referenced_datum))]; format!("DATUM_REFERENCE({})", a.join(",")) },
-                UnitPart::DatumSystem { constituents, .. } => { let a: Vec<String> = vec![format!("({})", constituents.iter().map(|e| format!("#{}", self.id_of_ref_datum_reference_compartment(e))).collect::<Vec<_>>().join(","))]; format!("DATUM_SYSTEM({})", a.join(",")) },
-                UnitPart::DatumTarget { target_id, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*target_id))]; format!("DATUM_TARGET({})", a.join(",")) },
-                UnitPart::DefaultModelGeometricView => "DEFAULT_MODEL_GEOMETRIC_VIEW()".to_string(),
-                UnitPart::DefinitionalRepresentation => "DEFINITIONAL_REPRESENTATION()".to_string(),
-                UnitPart::DefinitionalRepresentationRelationship => "DEFINITIONAL_REPRESENTATION_RELATIONSHIP()".to_string(),
-                UnitPart::DefinitionalRepresentationRelationshipWithSameContext => "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT()".to_string(),
-                UnitPart::DegenerateToroidalSurface { select_outer, .. } => { let a: Vec<String> = vec![(if *select_outer { ".T." } else { ".F." }).to_string()]; format!("DEGENERATE_TOROIDAL_SURFACE({})", a.join(",")) },
-                UnitPart::DerivedUnit { elements, .. } => { let a: Vec<String> = vec![format!("({})", elements.iter().map(|e| format!("#{}", self.id_of_ref_derived_unit_element(e))).collect::<Vec<_>>().join(","))]; format!("DERIVED_UNIT({})", a.join(",")) },
-                UnitPart::DesignContext => "DESIGN_CONTEXT()".to_string(),
-                UnitPart::DimensionalSize { applies_to, name, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_shape_aspect(applies_to)), step_str(self.model.text(*name))]; format!("DIMENSIONAL_SIZE({})", a.join(",")) },
-                UnitPart::Direction { direction_ratios, .. } => { let a: Vec<String> = vec![format!("({})", direction_ratios.iter().map(|e| real(*e)).collect::<Vec<_>>().join(","))]; format!("DIRECTION({})", a.join(",")) },
-                UnitPart::Document { id, name, description, kind, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_document_type(kind))]; format!("DOCUMENT({})", a.join(",")) },
-                UnitPart::DocumentFile => "DOCUMENT_FILE()".to_string(),
-                UnitPart::DocumentProductAssociation { name, description, relating_document, related_product, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_document(relating_document)), format!("#{}", self.id_of_ref_product_or_formation_or_definition(related_product))]; format!("DOCUMENT_PRODUCT_ASSOCIATION({})", a.join(",")) },
-                UnitPart::DocumentProductEquivalence => "DOCUMENT_PRODUCT_EQUIVALENCE()".to_string(),
-                UnitPart::DocumentReference { assigned_document, source, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_document(assigned_document)), step_str(self.model.text(*source))]; format!("DOCUMENT_REFERENCE({})", a.join(",")) },
-                UnitPart::DraughtingAnnotationOccurrence => "DRAUGHTING_ANNOTATION_OCCURRENCE()".to_string(),
-                UnitPart::DraughtingCallout { contents, .. } => { let a: Vec<String> = vec![format!("({})", contents.iter().map(|e| format!("#{}", self.id_of_ref_draughting_callout_element(e))).collect::<Vec<_>>().join(","))]; format!("DRAUGHTING_CALLOUT({})", a.join(",")) },
-                UnitPart::DraughtingCalloutRelationship { name, description, relating_draughting_callout, related_draughting_callout, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), step_str(self.model.text(*description)), format!("#{}", self.id_of_ref_draughting_callout(relating_draughting_callout)), format!("#{}", self.id_of_ref_draughting_callout(related_draughting_callout))]; format!("DRAUGHTING_CALLOUT_RELATIONSHIP({})", a.join(",")) },
-                UnitPart::DraughtingModel => "DRAUGHTING_MODEL()".to_string(),
-                UnitPart::DraughtingModelItemAssociation => "DRAUGHTING_MODEL_ITEM_ASSOCIATION()".to_string(),
-                UnitPart::DraughtingModelItemAssociationWithPlaceholder { annotation_placeholder, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_annotation_placeholder_occurrence(annotation_placeholder))]; format!("DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER({})", a.join(",")) },
-                UnitPart::DraughtingPreDefinedColour => "DRAUGHTING_PRE_DEFINED_COLOUR()".to_string(),
-                UnitPart::DraughtingPreDefinedCurveFont => "DRAUGHTING_PRE_DEFINED_CURVE_FONT()".to_string(),
-                UnitPart::DraughtingPreDefinedTextFont => "DRAUGHTING_PRE_DEFINED_TEXT_FONT()".to_string(),
-                UnitPart::Edge { edge_start, edge_end, .. } => { let a: Vec<String> = vec![match edge_start { Some(r) => format!("#{}", self.id_of_ref_vertex(r)), None => "*".to_string() }, match edge_end { Some(r) => format!("#{}", self.id_of_ref_vertex(r)), None => "*".to_string() }]; format!("EDGE({})", a.join(",")) },
-                UnitPart::EdgeCurve { edge_geometry, same_sense, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve(edge_geometry)), (if *same_sense { ".T." } else { ".F." }).to_string()]; format!("EDGE_CURVE({})", a.join(",")) },
-                UnitPart::EdgeLoop => "EDGE_LOOP()".to_string(),
-                UnitPart::Effectivity { id, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id))]; format!("EFFECTIVITY({})", a.join(",")) },
-                UnitPart::ElementarySurface { position, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement3d(position))]; format!("ELEMENTARY_SURFACE({})", a.join(",")) },
-                UnitPart::Expression => "EXPRESSION()".to_string(),
-                UnitPart::ExternalIdentificationAssignment { source, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_external_source(source))]; format!("EXTERNAL_IDENTIFICATION_ASSIGNMENT({})", a.join(",")) },
-                UnitPart::ExternalSource { source_id, .. } => { let a: Vec<String> = vec![string_select(self.model, source_id)]; format!("EXTERNAL_SOURCE({})", a.join(",")) },
-                UnitPart::ExternallyDefinedCharacterGlyph => "EXTERNALLY_DEFINED_CHARACTER_GLYPH()".to_string(),
-                UnitPart::ExternallyDefinedCurveFont => "EXTERNALLY_DEFINED_CURVE_FONT()".to_string(),
-                UnitPart::ExternallyDefinedHatchStyle => "EXTERNALLY_DEFINED_HATCH_STYLE()".to_string(),
-                UnitPart::ExternallyDefinedItem { item_id, source, .. } => { let a: Vec<String> = vec![string_select(self.model, item_id), format!("#{}", self.id_of_ref_external_source(source))]; format!("EXTERNALLY_DEFINED_ITEM({})", a.join(",")) },
-                UnitPart::ExternallyDefinedStyle => "EXTERNALLY_DEFINED_STYLE()".to_string(),
-                UnitPart::ExternallyDefinedSymbol => "EXTERNALLY_DEFINED_SYMBOL()".to_string(),
-                UnitPart::ExternallyDefinedTextFont => "EXTERNALLY_DEFINED_TEXT_FONT()".to_string(),
-                UnitPart::ExternallyDefinedTile => "EXTERNALLY_DEFINED_TILE()".to_string(),
-                UnitPart::ExternallyDefinedTileStyle => "EXTERNALLY_DEFINED_TILE_STYLE()".to_string(),
-                UnitPart::Face { bounds, .. } => { let a: Vec<String> = vec![format!("({})", bounds.iter().map(|e| format!("#{}", self.id_of_ref_face_bound(e))).collect::<Vec<_>>().join(","))]; format!("FACE({})", a.join(",")) },
-                UnitPart::FaceBound { bound, orientation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_loop(bound)), (if *orientation { ".T." } else { ".F." }).to_string()]; format!("FACE_BOUND({})", a.join(",")) },
-                UnitPart::FaceOuterBound => "FACE_OUTER_BOUND()".to_string(),
-                UnitPart::FaceSurface { face_geometry, same_sense, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_surface(face_geometry)), (if *same_sense { ".T." } else { ".F." }).to_string()]; format!("FACE_SURFACE({})", a.join(",")) },
-                UnitPart::FillAreaStyle { name, fill_styles, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("({})", fill_styles.iter().map(|e| format!("#{}", self.id_of_ref_fill_style_select(e))).collect::<Vec<_>>().join(","))]; format!("FILL_AREA_STYLE({})", a.join(",")) },
-                UnitPart::FillAreaStyleHatching { hatch_line_appearance, start_of_next_hatch_line, point_of_reference_hatch_line, pattern_start, hatch_line_angle, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_style(hatch_line_appearance)), format!("#{}", self.id_of_ref_one_direction_repeat_factor(start_of_next_hatch_line)), format!("#{}", self.id_of_ref_cartesian_point(point_of_reference_hatch_line)), format!("#{}", self.id_of_ref_cartesian_point(pattern_start)), real(*hatch_line_angle)]; format!("FILL_AREA_STYLE_HATCHING({})", a.join(",")) },
-                UnitPart::FillAreaStyleTileSymbolWithStyle { symbol, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_annotation_symbol_occurrence(symbol))]; format!("FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE({})", a.join(",")) },
-                UnitPart::FillAreaStyleTiles { tiling_pattern, tiles, tiling_scale, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_two_direction_repeat_factor(tiling_pattern)), format!("({})", tiles.iter().map(|e| format!("#{}", self.id_of_ref_fill_area_style_tile_shape_select(e))).collect::<Vec<_>>().join(",")), real(*tiling_scale)]; format!("FILL_AREA_STYLE_TILES({})", a.join(",")) },
-                UnitPart::FlatnessTolerance => "FLATNESS_TOLERANCE()".to_string(),
-                UnitPart::FoundedItem => "FOUNDED_ITEM()".to_string(),
-                UnitPart::FunctionallyDefinedTransformation { name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("FUNCTIONALLY_DEFINED_TRANSFORMATION({})", a.join(",")) },
-                UnitPart::GeneralDatumReference { base, modifiers, .. } => { let a: Vec<String> = vec![match base { DatumOrCommonDatumRef::CommonDatumList(vs) => format!("COMMON_DATUM_LIST(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_datum_reference_element(e))).collect::<Vec<_>>().join(",")), other => format!("#{}", self.id_of_ref_datum_or_common_datum(other)) }, match modifiers { Some(v) => format!("({})", v.iter().map(|e| match e { DatumReferenceModifierRef::SimpleDatumReferenceModifier(e) => format!("SIMPLE_DATUM_REFERENCE_MODIFIER({})", e.token()), other => format!("#{}", self.id_of_ref_datum_reference_modifier(other)) }).collect::<Vec<_>>().join(",")), None => "$".to_string() }]; format!("GENERAL_DATUM_REFERENCE({})", a.join(",")) },
-                UnitPart::GeneralProperty { id, name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("GENERAL_PROPERTY({})", a.join(",")) },
-                UnitPart::GenericExpression => "GENERIC_EXPRESSION()".to_string(),
-                UnitPart::GenericLiteral => "GENERIC_LITERAL()".to_string(),
-                UnitPart::GenericProductDefinitionReference { source, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_external_source(source))]; format!("GENERIC_PRODUCT_DEFINITION_REFERENCE({})", a.join(",")) },
-                UnitPart::GeometricCurveSet => "GEOMETRIC_CURVE_SET()".to_string(),
-                UnitPart::GeometricItemSpecificUsage => "GEOMETRIC_ITEM_SPECIFIC_USAGE()".to_string(),
-                UnitPart::GeometricRepresentationContext { coordinate_space_dimension, .. } => { let a: Vec<String> = vec![format!("{}", coordinate_space_dimension)]; format!("GEOMETRIC_REPRESENTATION_CONTEXT({})", a.join(",")) },
-                UnitPart::GeometricRepresentationItem => "GEOMETRIC_REPRESENTATION_ITEM()".to_string(),
-                UnitPart::GeometricSet { elements, .. } => { let a: Vec<String> = vec![format!("({})", elements.iter().map(|e| format!("#{}", self.id_of_ref_geometric_set_select(e))).collect::<Vec<_>>().join(","))]; format!("GEOMETRIC_SET({})", a.join(",")) },
-                UnitPart::GeometricTolerance { name, description, magnitude, toleranced_shape_aspect, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match magnitude { Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)), None => "$".to_string() }, format!("#{}", self.id_of_ref_geometric_tolerance_target(toleranced_shape_aspect))]; format!("GEOMETRIC_TOLERANCE({})", a.join(",")) },
-                UnitPart::GeometricToleranceWithDatumReference { datum_system, .. } => { let a: Vec<String> = vec![format!("({})", datum_system.iter().map(|e| format!("#{}", self.id_of_ref_datum_system_or_reference(e))).collect::<Vec<_>>().join(","))]; format!("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE({})", a.join(",")) },
-                UnitPart::GeometricToleranceWithDefinedAreaUnit { area_type, second_unit_size, .. } => { let a: Vec<String> = vec![area_type.token().to_string(), match second_unit_size { Some(r) => format!("#{}", self.id_of_ref_length_or_plane_angle_measure_with_unit_select(r)), None => "$".to_string() }]; format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT({})", a.join(",")) },
-                UnitPart::GeometricToleranceWithDefinedUnit { unit_size, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_length_or_plane_angle_measure_with_unit_select(unit_size))]; format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT({})", a.join(",")) },
-                UnitPart::GeometricToleranceWithMaximumTolerance { maximum_upper_tolerance, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_length_measure_with_unit(maximum_upper_tolerance))]; format!("GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE({})", a.join(",")) },
-                UnitPart::GeometricToleranceWithModifiers { modifiers, .. } => { let a: Vec<String> = vec![format!("({})", modifiers.iter().map(|e| e.token().to_string()).collect::<Vec<_>>().join(","))]; format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS({})", a.join(",")) },
-                UnitPart::GeometricallyBoundedSurfaceShapeRepresentation => "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION()".to_string(),
-                UnitPart::GeometricallyBoundedWireframeShapeRepresentation => "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION()".to_string(),
-                UnitPart::GlobalUncertaintyAssignedContext { uncertainty, .. } => { let a: Vec<String> = vec![format!("({})", uncertainty.iter().map(|e| format!("#{}", self.id_of_ref_uncertainty_measure_with_unit(e))).collect::<Vec<_>>().join(","))]; format!("GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT({})", a.join(",")) },
-                UnitPart::GlobalUnitAssignedContext { units, .. } => { let a: Vec<String> = vec![format!("({})", units.iter().map(|e| format!("#{}", self.id_of_ref_unit(e))).collect::<Vec<_>>().join(","))]; format!("GLOBAL_UNIT_ASSIGNED_CONTEXT({})", a.join(",")) },
-                UnitPart::Group { name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("GROUP({})", a.join(",")) },
-                UnitPart::GroupAssignment { assigned_group, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_group(assigned_group))]; format!("GROUP_ASSIGNMENT({})", a.join(",")) },
-                UnitPart::IdentificationAssignment { assigned_id, role, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*assigned_id)), format!("#{}", self.id_of_ref_identification_role(role))]; format!("IDENTIFICATION_ASSIGNMENT({})", a.join(",")) },
-                UnitPart::IntLiteral => "INT_LITERAL()".to_string(),
-                UnitPart::IntegerRepresentationItem => "INTEGER_REPRESENTATION_ITEM()".to_string(),
-                UnitPart::IntersectionCurve => "INTERSECTION_CURVE()".to_string(),
-                UnitPart::Invisibility { invisible_items, .. } => { let a: Vec<String> = vec![format!("({})", invisible_items.iter().map(|e| format!("#{}", self.id_of_ref_invisible_item(e))).collect::<Vec<_>>().join(","))]; format!("INVISIBILITY({})", a.join(",")) },
-                UnitPart::ItemDefinedTransformation { name, description, transform_item_1, transform_item_2, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_representation_item(transform_item_1)), format!("#{}", self.id_of_ref_representation_item(transform_item_2))]; format!("ITEM_DEFINED_TRANSFORMATION({})", a.join(",")) },
-                UnitPart::ItemIdentifiedRepresentationUsage { name, description, definition, used_representation, identified_item, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_item_identified_representation_usage_definition(definition)), format!("#{}", self.id_of_ref_representation(used_representation)), match identified_item { ItemIdentifiedRepresentationUsageSelectRef::ListRepresentationItem(vs) => format!("LIST_REPRESENTATION_ITEM(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_representation_item(e))).collect::<Vec<_>>().join(",")), ItemIdentifiedRepresentationUsageSelectRef::SetRepresentationItem(vs) => format!("SET_REPRESENTATION_ITEM(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_representation_item(e))).collect::<Vec<_>>().join(",")), other => format!("#{}", self.id_of_ref_item_identified_representation_usage_select(other)) }]; format!("ITEM_IDENTIFIED_REPRESENTATION_USAGE({})", a.join(",")) },
-                UnitPart::LeaderCurve => "LEADER_CURVE()".to_string(),
-                UnitPart::LeaderDirectedCallout => "LEADER_DIRECTED_CALLOUT()".to_string(),
-                UnitPart::LeaderTerminator => "LEADER_TERMINATOR()".to_string(),
-                UnitPart::LengthMeasureWithUnit => "LENGTH_MEASURE_WITH_UNIT()".to_string(),
-                UnitPart::LengthUnit => "LENGTH_UNIT()".to_string(),
-                UnitPart::LineProfileTolerance => "LINE_PROFILE_TOLERANCE()".to_string(),
-                UnitPart::LiteralNumber { the_value, .. } => { let a: Vec<String> = vec![real(*the_value)]; format!("LITERAL_NUMBER({})", a.join(",")) },
-                UnitPart::Loop => "LOOP()".to_string(),
-                UnitPart::ManifoldSolidBrep { outer, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_closed_shell(outer))]; format!("MANIFOLD_SOLID_BREP({})", a.join(",")) },
-                UnitPart::ManifoldSurfaceShapeRepresentation => "MANIFOLD_SURFACE_SHAPE_REPRESENTATION()".to_string(),
-                UnitPart::MappedItem { mapping_source, mapping_target, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_representation_map(mapping_source)), format!("#{}", self.id_of_ref_representation_item(mapping_target))]; format!("MAPPED_ITEM({})", a.join(",")) },
-                UnitPart::MassUnit => "MASS_UNIT()".to_string(),
-                UnitPart::MeasureRepresentationItem => "MEASURE_REPRESENTATION_ITEM()".to_string(),
-                UnitPart::MeasureWithUnit { value_component, unit_component, .. } => { let a: Vec<String> = vec![measure(self.model, value_component), format!("#{}", self.id_of_ref_unit(unit_component))]; format!("MEASURE_WITH_UNIT({})", a.join(",")) },
-                UnitPart::MechanicalContext => "MECHANICAL_CONTEXT()".to_string(),
-                UnitPart::MechanicalDesignAndDraughtingRelationship => "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP()".to_string(),
-                UnitPart::ModelGeometricView => "MODEL_GEOMETRIC_VIEW()".to_string(),
-                UnitPart::ModifiedGeometricTolerance { modifier, .. } => { let a: Vec<String> = vec![modifier.token().to_string()]; format!("MODIFIED_GEOMETRIC_TOLERANCE({})", a.join(",")) },
-                UnitPart::NamedUnit { dimensions, .. } => { let a: Vec<String> = vec![match dimensions { Some(r) => format!("#{}", self.id_of_ref_dimensional_exponents(r)), None => "*".to_string() }]; format!("NAMED_UNIT({})", a.join(",")) },
-                UnitPart::NextAssemblyUsageOccurrence => "NEXT_ASSEMBLY_USAGE_OCCURRENCE()".to_string(),
-                UnitPart::NumericExpression => "NUMERIC_EXPRESSION()".to_string(),
-                UnitPart::OneDirectionRepeatFactor { repeat_factor, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_vector(repeat_factor))]; format!("ONE_DIRECTION_REPEAT_FACTOR({})", a.join(",")) },
-                UnitPart::OpenShell => "OPEN_SHELL()".to_string(),
-                UnitPart::OrganizationalAddress { organizations, description, .. } => { let a: Vec<String> = vec![format!("({})", organizations.iter().map(|e| format!("#{}", self.id_of_ref_organization(e))).collect::<Vec<_>>().join(",")), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("ORGANIZATIONAL_ADDRESS({})", a.join(",")) },
-                UnitPart::OrientedClosedShell { closed_shell_element, orientation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_closed_shell(closed_shell_element)), (if *orientation { ".T." } else { ".F." }).to_string()]; format!("ORIENTED_CLOSED_SHELL({})", a.join(",")) },
-                UnitPart::OrientedEdge { edge_element, orientation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_edge(edge_element)), (if *orientation { ".T." } else { ".F." }).to_string()]; format!("ORIENTED_EDGE({})", a.join(",")) },
-                UnitPart::OverRidingStyledItem { over_ridden_style, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_styled_item(over_ridden_style))]; format!("OVER_RIDING_STYLED_ITEM({})", a.join(",")) },
-                UnitPart::ParallelismTolerance => "PARALLELISM_TOLERANCE()".to_string(),
-                UnitPart::ParametricRepresentationContext => "PARAMETRIC_REPRESENTATION_CONTEXT()".to_string(),
-                UnitPart::Path { edge_list, .. } => { let a: Vec<String> = vec![format!("({})", edge_list.iter().map(|e| format!("#{}", self.id_of_ref_oriented_edge(e))).collect::<Vec<_>>().join(","))]; format!("PATH({})", a.join(",")) },
-                UnitPart::Pcurve { basis_surface, reference_to_curve, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_surface(basis_surface)), format!("#{}", self.id_of_ref_definitional_representation(reference_to_curve))]; format!("PCURVE({})", a.join(",")) },
-                UnitPart::PerpendicularityTolerance => "PERPENDICULARITY_TOLERANCE()".to_string(),
-                UnitPart::PersonAndOrganizationAddress => "PERSON_AND_ORGANIZATION_ADDRESS()".to_string(),
-                UnitPart::PersonAndOrganizationAssignment { assigned_person_and_organization, role, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_person_and_organization(assigned_person_and_organization)), format!("#{}", self.id_of_ref_person_and_organization_role(role))]; format!("PERSON_AND_ORGANIZATION_ASSIGNMENT({})", a.join(",")) },
-                UnitPart::PersonalAddress { people, description, .. } => { let a: Vec<String> = vec![format!("({})", people.iter().map(|e| format!("#{}", self.id_of_ref_person(e))).collect::<Vec<_>>().join(",")), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("PERSONAL_ADDRESS({})", a.join(",")) },
-                UnitPart::PlacedDatumTargetFeature => "PLACED_DATUM_TARGET_FEATURE()".to_string(),
-                UnitPart::Placement { location, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_cartesian_point(location))]; format!("PLACEMENT({})", a.join(",")) },
-                UnitPart::PlanarBox { placement, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement(placement))]; format!("PLANAR_BOX({})", a.join(",")) },
-                UnitPart::PlanarExtent { size_in_x, size_in_y, .. } => { let a: Vec<String> = vec![real(*size_in_x), real(*size_in_y)]; format!("PLANAR_EXTENT({})", a.join(",")) },
-                UnitPart::PlaneAngleMeasureWithUnit => "PLANE_ANGLE_MEASURE_WITH_UNIT()".to_string(),
-                UnitPart::PlaneAngleUnit => "PLANE_ANGLE_UNIT()".to_string(),
-                UnitPart::Point => "POINT()".to_string(),
-                UnitPart::PointStyle { name, marker, marker_size, marker_colour, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match marker { Some(r) => match r { MarkerSelectRef::MarkerType(e) => format!("MARKER_TYPE({})", e.token()), other => format!("#{}", self.id_of_ref_marker_select(other)) }, None => "$".to_string() }, match marker_size { Some(r) => match r { SizeSelectRef::DescriptiveMeasure(x) => format!("DESCRIPTIVE_MEASURE({})", step_str(self.model.text(*x))), SizeSelectRef::PositiveLengthMeasure(x) => format!("POSITIVE_LENGTH_MEASURE({})", real(*x)), other => format!("#{}", self.id_of_ref_size_select(other)) }, None => "$".to_string() }, match marker_colour { Some(r) => format!("#{}", self.id_of_ref_colour(r)), None => "$".to_string() }]; format!("POINT_STYLE({})", a.join(",")) },
-                UnitPart::PolyLoop { polygon, .. } => { let a: Vec<String> = vec![format!("({})", polygon.iter().map(|e| format!("#{}", self.id_of_ref_cartesian_point(e))).collect::<Vec<_>>().join(","))]; format!("POLY_LOOP({})", a.join(",")) },
-                UnitPart::PositionTolerance => "POSITION_TOLERANCE()".to_string(),
-                UnitPart::PreDefinedCharacterGlyph => "PRE_DEFINED_CHARACTER_GLYPH()".to_string(),
-                UnitPart::PreDefinedColour => "PRE_DEFINED_COLOUR()".to_string(),
-                UnitPart::PreDefinedCurveFont => "PRE_DEFINED_CURVE_FONT()".to_string(),
-                UnitPart::PreDefinedItem { name, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name))]; format!("PRE_DEFINED_ITEM({})", a.join(",")) },
-                UnitPart::PreDefinedMarker => "PRE_DEFINED_MARKER()".to_string(),
-                UnitPart::PreDefinedPointMarkerSymbol => "PRE_DEFINED_POINT_MARKER_SYMBOL()".to_string(),
-                UnitPart::PreDefinedPresentationStyle => "PRE_DEFINED_PRESENTATION_STYLE()".to_string(),
-                UnitPart::PreDefinedSurfaceSideStyle => "PRE_DEFINED_SURFACE_SIDE_STYLE()".to_string(),
-                UnitPart::PreDefinedSymbol => "PRE_DEFINED_SYMBOL()".to_string(),
-                UnitPart::PreDefinedTerminatorSymbol => "PRE_DEFINED_TERMINATOR_SYMBOL()".to_string(),
-                UnitPart::PreDefinedTextFont => "PRE_DEFINED_TEXT_FONT()".to_string(),
-                UnitPart::PreDefinedTile => "PRE_DEFINED_TILE()".to_string(),
-                UnitPart::PresentationArea => "PRESENTATION_AREA()".to_string(),
-                UnitPart::PresentationRepresentation => "PRESENTATION_REPRESENTATION()".to_string(),
-                UnitPart::PresentationSet => "PRESENTATION_SET()".to_string(),
-                UnitPart::PresentationStyleAssignment { styles, .. } => { let a: Vec<String> = vec![format!("({})", styles.iter().map(|e| match e { PresentationStyleSelectRef::NullStyle(e) => format!("NULL_STYLE({})", e.token()), other => format!("#{}", self.id_of_ref_presentation_style_select(other)) }).collect::<Vec<_>>().join(","))]; format!("PRESENTATION_STYLE_ASSIGNMENT({})", a.join(",")) },
-                UnitPart::PresentationStyleByContext { style_context, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_style_context_select(style_context))]; format!("PRESENTATION_STYLE_BY_CONTEXT({})", a.join(",")) },
-                UnitPart::PresentationView => "PRESENTATION_VIEW()".to_string(),
-                UnitPart::PresentedItem => "PRESENTED_ITEM()".to_string(),
-                UnitPart::Product { id, name, description, frame_of_reference, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("({})", frame_of_reference.iter().map(|e| format!("#{}", self.id_of_ref_product_context(e))).collect::<Vec<_>>().join(","))]; format!("PRODUCT({})", a.join(",")) },
-                UnitPart::ProductCategory { name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("PRODUCT_CATEGORY({})", a.join(",")) },
-                UnitPart::ProductConcept { id, name, description, market_context, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_concept_context(market_context))]; format!("PRODUCT_CONCEPT({})", a.join(",")) },
-                UnitPart::ProductConceptFeature { id, name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("PRODUCT_CONCEPT_FEATURE({})", a.join(",")) },
-                UnitPart::ProductConceptFeatureCategory => "PRODUCT_CONCEPT_FEATURE_CATEGORY()".to_string(),
-                UnitPart::ProductContext { discipline_type, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*discipline_type))]; format!("PRODUCT_CONTEXT({})", a.join(",")) },
-                UnitPart::ProductDefinition { id, description, formation, frame_of_reference, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_definition_formation(formation)), format!("#{}", self.id_of_ref_product_definition_context(frame_of_reference))]; format!("PRODUCT_DEFINITION({})", a.join(",")) },
-                UnitPart::ProductDefinitionContext { life_cycle_stage, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*life_cycle_stage))]; format!("PRODUCT_DEFINITION_CONTEXT({})", a.join(",")) },
-                UnitPart::ProductDefinitionEffectivity { usage, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_product_definition_relationship(usage))]; format!("PRODUCT_DEFINITION_EFFECTIVITY({})", a.join(",")) },
-                UnitPart::ProductDefinitionFormation { id, description, of_product, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_product(of_product))]; format!("PRODUCT_DEFINITION_FORMATION({})", a.join(",")) },
-                UnitPart::ProductDefinitionFormationWithSpecifiedSource { make_or_buy, .. } => { let a: Vec<String> = vec![make_or_buy.token().to_string()]; format!("PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE({})", a.join(",")) },
-                UnitPart::ProductDefinitionOccurrence { id, name, description, definition, quantity, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), match name { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match definition { Some(r) => format!("#{}", self.id_of_ref_product_definition_or_reference(r)), None => "$".to_string() }, match quantity { Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)), None => "$".to_string() }]; format!("PRODUCT_DEFINITION_OCCURRENCE({})", a.join(",")) },
-                UnitPart::ProductDefinitionRelationship { id, name, description, relating_product_definition, related_product_definition, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_definition_or_reference(relating_product_definition)), format!("#{}", self.id_of_ref_product_definition_or_reference(related_product_definition))]; format!("PRODUCT_DEFINITION_RELATIONSHIP({})", a.join(",")) },
-                UnitPart::ProductDefinitionRelationshipRelationship { id, name, description, relating, related, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_definition_relationship(relating)), format!("#{}", self.id_of_ref_product_definition_relationship(related))]; format!("PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP({})", a.join(",")) },
-                UnitPart::ProductDefinitionShape => "PRODUCT_DEFINITION_SHAPE()".to_string(),
-                UnitPart::ProductDefinitionUsage => "PRODUCT_DEFINITION_USAGE()".to_string(),
-                UnitPart::ProductDefinitionWithAssociatedDocuments { documentation_ids, .. } => { let a: Vec<String> = vec![format!("({})", documentation_ids.iter().map(|e| format!("#{}", self.id_of_ref_document(e))).collect::<Vec<_>>().join(","))]; format!("PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS({})", a.join(",")) },
-                UnitPart::ProductRelatedProductCategory { products, .. } => { let a: Vec<String> = vec![format!("({})", products.iter().map(|e| format!("#{}", self.id_of_ref_product(e))).collect::<Vec<_>>().join(","))]; format!("PRODUCT_RELATED_PRODUCT_CATEGORY({})", a.join(",")) },
-                UnitPart::ProjectedZoneDefinition { projection_end, projected_length, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_shape_aspect(projection_end)), format!("#{}", self.id_of_ref_length_measure_with_unit(projected_length))]; format!("PROJECTED_ZONE_DEFINITION({})", a.join(",")) },
-                UnitPart::PropertyDefinition { name, description, definition, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_characterized_definition(definition))]; format!("PROPERTY_DEFINITION({})", a.join(",")) },
-                UnitPart::PropertyDefinitionRepresentation { definition, used_representation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_represented_definition(definition)), format!("#{}", self.id_of_ref_representation(used_representation))]; format!("PROPERTY_DEFINITION_REPRESENTATION({})", a.join(",")) },
-                UnitPart::QualifiedRepresentationItem { qualifiers, .. } => { let a: Vec<String> = vec![format!("({})", qualifiers.iter().map(|e| format!("#{}", self.id_of_ref_value_qualifier(e))).collect::<Vec<_>>().join(","))]; format!("QUALIFIED_REPRESENTATION_ITEM({})", a.join(",")) },
-                UnitPart::QuasiUniformCurve => "QUASI_UNIFORM_CURVE()".to_string(),
-                UnitPart::QuasiUniformSurface => "QUASI_UNIFORM_SURFACE()".to_string(),
-                UnitPart::RatioMeasureWithUnit => "RATIO_MEASURE_WITH_UNIT()".to_string(),
-                UnitPart::RatioUnit => "RATIO_UNIT()".to_string(),
-                UnitPart::RationalBSplineCurve { weights_data, .. } => { let a: Vec<String> = vec![format!("({})", weights_data.iter().map(|e| real(*e)).collect::<Vec<_>>().join(","))]; format!("RATIONAL_B_SPLINE_CURVE({})", a.join(",")) },
-                UnitPart::RationalBSplineSurface { weights_data, .. } => { let a: Vec<String> = vec![format!("({})", weights_data.iter().map(|e| { let row: Vec<String> = e.iter().map(|e| real(*e)).collect(); format!("({})", row.join(",")) }).collect::<Vec<_>>().join(","))]; format!("RATIONAL_B_SPLINE_SURFACE({})", a.join(",")) },
-                UnitPart::RealLiteral => "REAL_LITERAL()".to_string(),
-                UnitPart::RealRepresentationItem => "REAL_REPRESENTATION_ITEM()".to_string(),
-                UnitPart::RepositionedTessellatedItem { location, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement3d(location))]; format!("REPOSITIONED_TESSELLATED_ITEM({})", a.join(",")) },
-                UnitPart::Representation { name, items, context_of_items, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_representation_item(e))).collect::<Vec<_>>().join(",")), format!("#{}", self.id_of_ref_representation_context(context_of_items))]; format!("REPRESENTATION({})", a.join(",")) },
-                UnitPart::RepresentationContext { context_identifier, context_type, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*context_identifier)), step_str(self.model.text(*context_type))]; format!("REPRESENTATION_CONTEXT({})", a.join(",")) },
-                UnitPart::RepresentationItem { name, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name))]; format!("REPRESENTATION_ITEM({})", a.join(",")) },
-                UnitPart::RepresentationMap { mapping_origin, mapped_representation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_representation_item(mapping_origin)), format!("#{}", self.id_of_ref_representation(mapped_representation))]; format!("REPRESENTATION_MAP({})", a.join(",")) },
-                UnitPart::RepresentationReference { id, context_of_items, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), format!("#{}", self.id_of_ref_representation_context_reference(context_of_items))]; format!("REPRESENTATION_REFERENCE({})", a.join(",")) },
-                UnitPart::RepresentationRelationship { name, description, rep_1, rep_2, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_representation_or_representation_reference(rep_1)), format!("#{}", self.id_of_ref_representation_or_representation_reference(rep_2))]; format!("REPRESENTATION_RELATIONSHIP({})", a.join(",")) },
-                UnitPart::RepresentationRelationshipWithTransformation { transformation_operator, .. } => { let a: Vec<String> = vec![match transformation_operator { TransformationRef::ListItemDefinedTransformation(vs) => format!("LIST_ITEM_DEFINED_TRANSFORMATION(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_item_defined_transformation(e))).collect::<Vec<_>>().join(",")), TransformationRef::SetItemDefinedTransformation(vs) => format!("SET_ITEM_DEFINED_TRANSFORMATION(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_item_defined_transformation(e))).collect::<Vec<_>>().join(",")), other => format!("#{}", self.id_of_ref_transformation(other)) }]; format!("REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION({})", a.join(",")) },
-                UnitPart::RoundnessTolerance => "ROUNDNESS_TOLERANCE()".to_string(),
-                UnitPart::SeamCurve => "SEAM_CURVE()".to_string(),
-                UnitPart::SecurityClassificationAssignment { assigned_security_classification, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_security_classification(assigned_security_classification))]; format!("SECURITY_CLASSIFICATION_ASSIGNMENT({})", a.join(",")) },
-                UnitPart::ShapeAspect { name, description, of_shape, product_definitional, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_definition_shape(of_shape)), match product_definitional { Some(x) => x.token().to_string(), None => "*".to_string() }]; format!("SHAPE_ASPECT({})", a.join(",")) },
-                UnitPart::ShapeAspectRelationship { name, description, relating_shape_aspect, related_shape_aspect, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_shape_aspect(relating_shape_aspect)), format!("#{}", self.id_of_ref_shape_aspect(related_shape_aspect))]; format!("SHAPE_ASPECT_RELATIONSHIP({})", a.join(",")) },
-                UnitPart::ShapeDefinitionRepresentation => "SHAPE_DEFINITION_REPRESENTATION()".to_string(),
-                UnitPart::ShapeDimensionRepresentation => "SHAPE_DIMENSION_REPRESENTATION()".to_string(),
-                UnitPart::ShapeRepresentation => "SHAPE_REPRESENTATION()".to_string(),
-                UnitPart::ShapeRepresentationRelationship => "SHAPE_REPRESENTATION_RELATIONSHIP()".to_string(),
-                UnitPart::ShapeRepresentationWithParameters => "SHAPE_REPRESENTATION_WITH_PARAMETERS()".to_string(),
-                UnitPart::ShellBasedSurfaceModel { sbsm_boundary, .. } => { let a: Vec<String> = vec![format!("({})", sbsm_boundary.iter().map(|e| format!("#{}", self.id_of_ref_shell(e))).collect::<Vec<_>>().join(","))]; format!("SHELL_BASED_SURFACE_MODEL({})", a.join(",")) },
-                UnitPart::SiUnit { prefix, name, .. } => { let a: Vec<String> = vec![match prefix { Some(x) => x.token().to_string(), None => "$".to_string() }, name.token().to_string()]; format!("SI_UNIT({})", a.join(",")) },
-                UnitPart::SimpleGenericExpression => "SIMPLE_GENERIC_EXPRESSION()".to_string(),
-                UnitPart::SimpleNumericExpression => "SIMPLE_NUMERIC_EXPRESSION()".to_string(),
-                UnitPart::SolidAngleUnit => "SOLID_ANGLE_UNIT()".to_string(),
-                UnitPart::SolidModel => "SOLID_MODEL()".to_string(),
-                UnitPart::StartRequest { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_start_request_item(e))).collect::<Vec<_>>().join(","))]; format!("START_REQUEST({})", a.join(",")) },
-                UnitPart::StateObserved { name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("STATE_OBSERVED({})", a.join(",")) },
-                UnitPart::StateType { name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("STATE_TYPE({})", a.join(",")) },
-                UnitPart::StraightnessTolerance => "STRAIGHTNESS_TOLERANCE()".to_string(),
-                UnitPart::StyledItem { styles, item, .. } => { let a: Vec<String> = vec![format!("({})", styles.iter().map(|e| format!("#{}", self.id_of_ref_presentation_style_assignment(e))).collect::<Vec<_>>().join(",")), format!("#{}", self.id_of_ref_styled_item_target(item))]; format!("STYLED_ITEM({})", a.join(",")) },
-                UnitPart::Surface => "SURFACE()".to_string(),
-                UnitPart::SurfaceCurve { curve_3d, associated_geometry, master_representation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve(curve_3d)), format!("({})", associated_geometry.iter().map(|e| format!("#{}", self.id_of_ref_pcurve_or_surface(e))).collect::<Vec<_>>().join(",")), master_representation.token().to_string()]; format!("SURFACE_CURVE({})", a.join(",")) },
-                UnitPart::SurfaceProfileTolerance => "SURFACE_PROFILE_TOLERANCE()".to_string(),
-                UnitPart::SurfaceSideStyle { name, styles, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("({})", styles.iter().map(|e| format!("#{}", self.id_of_ref_surface_style_element_select(e))).collect::<Vec<_>>().join(","))]; format!("SURFACE_SIDE_STYLE({})", a.join(",")) },
-                UnitPart::SurfaceStyleBoundary { style_of_boundary, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_render(style_of_boundary))]; format!("SURFACE_STYLE_BOUNDARY({})", a.join(",")) },
-                UnitPart::SurfaceStyleControlGrid { style_of_control_grid, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_render(style_of_control_grid))]; format!("SURFACE_STYLE_CONTROL_GRID({})", a.join(",")) },
-                UnitPart::SurfaceStyleFillArea { fill_area, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_fill_area_style(fill_area))]; format!("SURFACE_STYLE_FILL_AREA({})", a.join(",")) },
-                UnitPart::SurfaceStyleParameterLine { style_of_parameter_lines, direction_counts, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_render(style_of_parameter_lines)), format!("({})", direction_counts.iter().map(|e| int_measure(self.model, e)).collect::<Vec<_>>().join(","))]; format!("SURFACE_STYLE_PARAMETER_LINE({})", a.join(",")) },
-                UnitPart::SurfaceStyleReflectanceAmbient { ambient_reflectance, .. } => { let a: Vec<String> = vec![real(*ambient_reflectance)]; format!("SURFACE_STYLE_REFLECTANCE_AMBIENT({})", a.join(",")) },
-                UnitPart::SurfaceStyleRendering { rendering_method, surface_colour, .. } => { let a: Vec<String> = vec![rendering_method.token().to_string(), format!("#{}", self.id_of_ref_colour(surface_colour))]; format!("SURFACE_STYLE_RENDERING({})", a.join(",")) },
-                UnitPart::SurfaceStyleRenderingWithProperties { properties, .. } => { let a: Vec<String> = vec![format!("({})", properties.iter().map(|e| format!("#{}", self.id_of_ref_rendering_properties_select(e))).collect::<Vec<_>>().join(","))]; format!("SURFACE_STYLE_RENDERING_WITH_PROPERTIES({})", a.join(",")) },
-                UnitPart::SurfaceStyleSegmentationCurve { style_of_segmentation_curve, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_render(style_of_segmentation_curve))]; format!("SURFACE_STYLE_SEGMENTATION_CURVE({})", a.join(",")) },
-                UnitPart::SurfaceStyleSilhouette { style_of_silhouette, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_render(style_of_silhouette))]; format!("SURFACE_STYLE_SILHOUETTE({})", a.join(",")) },
-                UnitPart::SurfaceStyleUsage { side, style, .. } => { let a: Vec<String> = vec![side.token().to_string(), format!("#{}", self.id_of_ref_surface_side_style_select(style))]; format!("SURFACE_STYLE_USAGE({})", a.join(",")) },
-                UnitPart::SymbolRepresentation => "SYMBOL_REPRESENTATION()".to_string(),
-                UnitPart::SymbolStyle { name, style_of_symbol, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("#{}", self.id_of_ref_symbol_style_select(style_of_symbol))]; format!("SYMBOL_STYLE({})", a.join(",")) },
-                UnitPart::TerminatorSymbol { annotated_curve, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_annotation_curve_occurrence(annotated_curve))]; format!("TERMINATOR_SYMBOL({})", a.join(",")) },
-                UnitPart::TessellatedGeometricSet { children, .. } => { let a: Vec<String> = vec![format!("({})", children.iter().map(|e| format!("#{}", self.id_of_ref_tessellated_item(e))).collect::<Vec<_>>().join(","))]; format!("TESSELLATED_GEOMETRIC_SET({})", a.join(",")) },
-                UnitPart::TessellatedItem => "TESSELLATED_ITEM()".to_string(),
-                UnitPart::TessellatedShapeRepresentation => "TESSELLATED_SHAPE_REPRESENTATION()".to_string(),
-                UnitPart::TessellatedStructuredItem => "TESSELLATED_STRUCTURED_ITEM()".to_string(),
-                UnitPart::TextLiteral { literal, placement, alignment, path, font, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*literal)), format!("#{}", self.id_of_ref_axis2_placement(placement)), step_str(self.model.text(*alignment)), path.token().to_string(), format!("#{}", self.id_of_ref_font_select(font))]; format!("TEXT_LITERAL({})", a.join(",")) },
-                UnitPart::TextStyle { name, character_appearance, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("#{}", self.id_of_ref_character_style_select(character_appearance))]; format!("TEXT_STYLE({})", a.join(",")) },
-                UnitPart::TextStyleWithBoxCharacteristics { characteristics, .. } => { let a: Vec<String> = vec![format!("({})", characteristics.iter().map(|e| measure(self.model, e)).collect::<Vec<_>>().join(","))]; format!("TEXT_STYLE_WITH_BOX_CHARACTERISTICS({})", a.join(",")) },
-                UnitPart::TextureStyleSpecification => "TEXTURE_STYLE_SPECIFICATION()".to_string(),
-                UnitPart::TextureStyleTessellationSpecification => "TEXTURE_STYLE_TESSELLATION_SPECIFICATION()".to_string(),
-                UnitPart::TimeUnit => "TIME_UNIT()".to_string(),
-                UnitPart::ToleranceZone { defining_tolerance, form, .. } => { let a: Vec<String> = vec![format!("({})", defining_tolerance.iter().map(|e| format!("#{}", self.id_of_ref_tolerance_zone_target(e))).collect::<Vec<_>>().join(",")), format!("#{}", self.id_of_ref_tolerance_zone_form(form))]; format!("TOLERANCE_ZONE({})", a.join(",")) },
-                UnitPart::ToleranceZoneDefinition { zone, boundaries, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_tolerance_zone(zone)), format!("({})", boundaries.iter().map(|e| format!("#{}", self.id_of_ref_shape_aspect(e))).collect::<Vec<_>>().join(","))]; format!("TOLERANCE_ZONE_DEFINITION({})", a.join(",")) },
-                UnitPart::ToleranceZoneWithDatum { datum_reference, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_datum_system(datum_reference))]; format!("TOLERANCE_ZONE_WITH_DATUM({})", a.join(",")) },
-                UnitPart::TopologicalRepresentationItem => "TOPOLOGICAL_REPRESENTATION_ITEM()".to_string(),
-                UnitPart::ToroidalSurface { major_radius, minor_radius, .. } => { let a: Vec<String> = vec![real(*major_radius), real(*minor_radius)]; format!("TOROIDAL_SURFACE({})", a.join(",")) },
-                UnitPart::TwoDirectionRepeatFactor { second_repeat_factor, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_vector(second_repeat_factor))]; format!("TWO_DIRECTION_REPEAT_FACTOR({})", a.join(",")) },
-                UnitPart::UnequallyDisposedGeometricTolerance { displacement, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_length_measure_with_unit(displacement))]; format!("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE({})", a.join(",")) },
-                UnitPart::UniformCurve => "UNIFORM_CURVE()".to_string(),
-                UnitPart::UniformSurface => "UNIFORM_SURFACE()".to_string(),
-                UnitPart::ValueRepresentationItem { value_component, .. } => { let a: Vec<String> = vec![measure(self.model, value_component)]; format!("VALUE_REPRESENTATION_ITEM({})", a.join(",")) },
-                UnitPart::Vector { orientation, magnitude, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_direction(orientation)), real(*magnitude)]; format!("VECTOR({})", a.join(",")) },
-                UnitPart::Vertex => "VERTEX()".to_string(),
-                UnitPart::VertexPoint { vertex_geometry, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_point(vertex_geometry))]; format!("VERTEX_POINT({})", a.join(",")) },
-                UnitPart::ViewVolume { projection_type, projection_point, view_plane_distance, front_plane_distance, front_plane_clipping, back_plane_distance, back_plane_clipping, view_volume_sides_clipping, view_window, .. } => { let a: Vec<String> = vec![projection_type.token().to_string(), format!("#{}", self.id_of_ref_cartesian_point(projection_point)), real(*view_plane_distance), real(*front_plane_distance), (if *front_plane_clipping { ".T." } else { ".F." }).to_string(), real(*back_plane_distance), (if *back_plane_clipping { ".T." } else { ".F." }).to_string(), (if *view_volume_sides_clipping { ".T." } else { ".F." }).to_string(), format!("#{}", self.id_of_ref_planar_box(view_window))]; format!("VIEW_VOLUME({})", a.join(",")) },
+                PartialEntity::Action { name, description, chosen_method, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_action_method(chosen_method))]; format!("ACTION({})", a.join(",")) },
+                PartialEntity::ActionMethod { name, description, consequence, purpose, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, step_str(self.model.text(*consequence)), step_str(self.model.text(*purpose))]; format!("ACTION_METHOD({})", a.join(",")) },
+                PartialEntity::ActionMethodRelationship { name, description, relating_method, related_method, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_action_method(relating_method)), format!("#{}", self.id_of_ref_action_method(related_method))]; format!("ACTION_METHOD_RELATIONSHIP({})", a.join(",")) },
+                PartialEntity::ActionRelationship { name, description, relating_action, related_action, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_action(relating_action)), format!("#{}", self.id_of_ref_action(related_action))]; format!("ACTION_RELATIONSHIP({})", a.join(",")) },
+                PartialEntity::ActionRequestAssignment { assigned_action_request, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_versioned_action_request(assigned_action_request))]; format!("ACTION_REQUEST_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::ActionResource { name, description, usage, kind, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("({})", usage.iter().map(|e| format!("#{}", self.id_of_ref_supported_item(e))).collect::<Vec<_>>().join(",")), format!("#{}", self.id_of_ref_action_resource_type(kind))]; format!("ACTION_RESOURCE({})", a.join(",")) },
+                PartialEntity::ActionResourceRequirement { name, description, kind, operations, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), step_str(self.model.text(*description)), format!("#{}", self.id_of_ref_resource_requirement_type(kind)), format!("({})", operations.iter().map(|e| format!("#{}", self.id_of_ref_characterized_action_definition(e))).collect::<Vec<_>>().join(","))]; format!("ACTION_RESOURCE_REQUIREMENT({})", a.join(",")) },
+                PartialEntity::Address { internal_location, street_number, street, postal_box, town, region, postal_code, country, facsimile_number, telephone_number, electronic_mail_address, telex_number, .. } => { let a: Vec<String> = vec![match internal_location { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match street_number { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match street { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match postal_box { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match town { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match region { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match postal_code { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match country { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match facsimile_number { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match telephone_number { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match electronic_mail_address { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match telex_number { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("ADDRESS({})", a.join(",")) },
+                PartialEntity::AdvancedBrepShapeRepresentation => "ADVANCED_BREP_SHAPE_REPRESENTATION()".to_string(),
+                PartialEntity::AdvancedFace => "ADVANCED_FACE()".to_string(),
+                PartialEntity::AnnotationCurveOccurrence => "ANNOTATION_CURVE_OCCURRENCE()".to_string(),
+                PartialEntity::AnnotationFillAreaOccurrence { fill_style_target, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_point(fill_style_target))]; format!("ANNOTATION_FILL_AREA_OCCURRENCE({})", a.join(",")) },
+                PartialEntity::AnnotationOccurrence => "ANNOTATION_OCCURRENCE()".to_string(),
+                PartialEntity::AnnotationOccurrenceAssociativity => "ANNOTATION_OCCURRENCE_ASSOCIATIVITY()".to_string(),
+                PartialEntity::AnnotationOccurrenceRelationship { name, description, relating_annotation_occurrence, related_annotation_occurrence, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), step_str(self.model.text(*description)), format!("#{}", self.id_of_ref_annotation_occurrence(relating_annotation_occurrence)), format!("#{}", self.id_of_ref_annotation_occurrence(related_annotation_occurrence))]; format!("ANNOTATION_OCCURRENCE_RELATIONSHIP({})", a.join(",")) },
+                PartialEntity::AnnotationPlaceholderOccurrence { role, line_spacing, .. } => { let a: Vec<String> = vec![role.token().to_string(), real(*line_spacing)]; format!("ANNOTATION_PLACEHOLDER_OCCURRENCE({})", a.join(",")) },
+                PartialEntity::AnnotationPlaceholderOccurrenceWithLeaderLine { leader_line, .. } => { let a: Vec<String> = vec![format!("({})", leader_line.iter().map(|e| format!("#{}", self.id_of_ref_annotation_placeholder_leader_line(e))).collect::<Vec<_>>().join(","))]; format!("ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE({})", a.join(",")) },
+                PartialEntity::AnnotationPlane { elements, .. } => { let a: Vec<String> = vec![match elements { Some(v) => format!("({})", v.iter().map(|e| format!("#{}", self.id_of_ref_annotation_plane_element(e))).collect::<Vec<_>>().join(",")), None => "$".to_string() }]; format!("ANNOTATION_PLANE({})", a.join(",")) },
+                PartialEntity::AnnotationSymbol => "ANNOTATION_SYMBOL()".to_string(),
+                PartialEntity::AnnotationSymbolOccurrence => "ANNOTATION_SYMBOL_OCCURRENCE()".to_string(),
+                PartialEntity::AnnotationText => "ANNOTATION_TEXT()".to_string(),
+                PartialEntity::AnnotationTextCharacter { alignment, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*alignment))]; format!("ANNOTATION_TEXT_CHARACTER({})", a.join(",")) },
+                PartialEntity::AnnotationTextOccurrence => "ANNOTATION_TEXT_OCCURRENCE()".to_string(),
+                PartialEntity::ApplicationContextElement { name, frame_of_reference, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("#{}", self.id_of_ref_application_context(frame_of_reference))]; format!("APPLICATION_CONTEXT_ELEMENT({})", a.join(",")) },
+                PartialEntity::AppliedApprovalAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_approval_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_APPROVAL_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::AppliedDateAndTimeAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_date_and_time_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_DATE_AND_TIME_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::AppliedDocumentReference { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_document_reference_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_DOCUMENT_REFERENCE({})", a.join(",")) },
+                PartialEntity::AppliedExternalIdentificationAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_external_identification_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::AppliedGroupAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_groupable_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_GROUP_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::AppliedPersonAndOrganizationAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_person_and_organization_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::AppliedPresentedItem { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_presented_item_select(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_PRESENTED_ITEM({})", a.join(",")) },
+                PartialEntity::AppliedSecurityClassificationAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_security_classification_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::ApprovalAssignment { assigned_approval, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_approval(assigned_approval))]; format!("APPROVAL_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::AreaInSet { area, in_set, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_presentation_area(area)), format!("#{}", self.id_of_ref_presentation_set(in_set))]; format!("AREA_IN_SET({})", a.join(",")) },
+                PartialEntity::AscribableStateRelationship { name, description, relating_ascribable_state, related_ascribable_state, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_ascribable_state(relating_ascribable_state)), format!("#{}", self.id_of_ref_ascribable_state(related_ascribable_state))]; format!("ASCRIBABLE_STATE_RELATIONSHIP({})", a.join(",")) },
+                PartialEntity::AssemblyComponentUsage { reference_designator, .. } => { let a: Vec<String> = vec![match reference_designator { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("ASSEMBLY_COMPONENT_USAGE({})", a.join(",")) },
+                PartialEntity::BSplineCurve { degree, control_points_list, curve_form, closed_curve, self_intersect, .. } => { let a: Vec<String> = vec![format!("{}", degree), format!("({})", control_points_list.iter().map(|e| format!("#{}", self.id_of_ref_cartesian_point(e))).collect::<Vec<_>>().join(",")), curve_form.token().to_string(), closed_curve.token().to_string(), self_intersect.token().to_string()]; format!("B_SPLINE_CURVE({})", a.join(",")) },
+                PartialEntity::BSplineCurveWithKnots { knot_multiplicities, knots, knot_spec, .. } => { let a: Vec<String> = vec![format!("({})", knot_multiplicities.iter().map(|e| format!("{e}")).collect::<Vec<_>>().join(",")), format!("({})", knots.iter().map(|e| real(*e)).collect::<Vec<_>>().join(",")), knot_spec.token().to_string()]; format!("B_SPLINE_CURVE_WITH_KNOTS({})", a.join(",")) },
+                PartialEntity::BSplineSurface { u_degree, v_degree, control_points_list, surface_form, u_closed, v_closed, self_intersect, .. } => { let a: Vec<String> = vec![format!("{}", u_degree), format!("{}", v_degree), format!("({})", control_points_list.iter().map(|e| { let row: Vec<String> = e.iter().map(|e| format!("#{}", self.id_of_ref_cartesian_point(e))).collect(); format!("({})", row.join(",")) }).collect::<Vec<_>>().join(",")), surface_form.token().to_string(), u_closed.token().to_string(), v_closed.token().to_string(), self_intersect.token().to_string()]; format!("B_SPLINE_SURFACE({})", a.join(",")) },
+                PartialEntity::BSplineSurfaceWithKnots { u_multiplicities, v_multiplicities, u_knots, v_knots, knot_spec, .. } => { let a: Vec<String> = vec![format!("({})", u_multiplicities.iter().map(|e| format!("{e}")).collect::<Vec<_>>().join(",")), format!("({})", v_multiplicities.iter().map(|e| format!("{e}")).collect::<Vec<_>>().join(",")), format!("({})", u_knots.iter().map(|e| real(*e)).collect::<Vec<_>>().join(",")), format!("({})", v_knots.iter().map(|e| real(*e)).collect::<Vec<_>>().join(",")), knot_spec.token().to_string()]; format!("B_SPLINE_SURFACE_WITH_KNOTS({})", a.join(",")) },
+                PartialEntity::BezierCurve => "BEZIER_CURVE()".to_string(),
+                PartialEntity::BezierSurface => "BEZIER_SURFACE()".to_string(),
+                PartialEntity::BoundedCurve => "BOUNDED_CURVE()".to_string(),
+                PartialEntity::BoundedPcurve => "BOUNDED_PCURVE()".to_string(),
+                PartialEntity::BoundedSurface => "BOUNDED_SURFACE()".to_string(),
+                PartialEntity::BoundedSurfaceCurve => "BOUNDED_SURFACE_CURVE()".to_string(),
+                PartialEntity::BrepWithVoids { voids, .. } => { let a: Vec<String> = vec![format!("({})", voids.iter().map(|e| format!("#{}", self.id_of_ref_oriented_closed_shell(e))).collect::<Vec<_>>().join(","))]; format!("BREP_WITH_VOIDS({})", a.join(",")) },
+                PartialEntity::CameraImage => "CAMERA_IMAGE()".to_string(),
+                PartialEntity::CameraImage3dWithScale => "CAMERA_IMAGE_3D_WITH_SCALE()".to_string(),
+                PartialEntity::CameraModel => "CAMERA_MODEL()".to_string(),
+                PartialEntity::CameraModelD3 { view_reference_system, perspective_of_volume, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement3d(view_reference_system)), format!("#{}", self.id_of_ref_view_volume(perspective_of_volume))]; format!("CAMERA_MODEL_D3({})", a.join(",")) },
+                PartialEntity::CameraModelD3MultiClipping { shape_clipping, .. } => { let a: Vec<String> = vec![format!("({})", shape_clipping.iter().map(|e| format!("#{}", self.id_of_ref_camera_model_d3_multi_clipping_intersection_select(e))).collect::<Vec<_>>().join(","))]; format!("CAMERA_MODEL_D3_MULTI_CLIPPING({})", a.join(",")) },
+                PartialEntity::CameraModelD3WithHlhsr { hidden_line_surface_removal, .. } => { let a: Vec<String> = vec![(if *hidden_line_surface_removal { ".T." } else { ".F." }).to_string()]; format!("CAMERA_MODEL_D3_WITH_HLHSR({})", a.join(",")) },
+                PartialEntity::CameraUsage => "CAMERA_USAGE()".to_string(),
+                PartialEntity::CcDesignApproval { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_approved_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_APPROVAL({})", a.join(",")) },
+                PartialEntity::CcDesignDateAndTimeAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_date_time_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_DATE_AND_TIME_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::CcDesignPersonAndOrganizationAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_cc_person_organization_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::CcDesignSecurityClassification { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_cc_classified_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_SECURITY_CLASSIFICATION({})", a.join(",")) },
+                PartialEntity::ChangeRequest { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_change_request_item(e))).collect::<Vec<_>>().join(","))]; format!("CHANGE_REQUEST({})", a.join(",")) },
+                PartialEntity::CharacterGlyphStyleOutline { outline_style, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_style(outline_style))]; format!("CHARACTER_GLYPH_STYLE_OUTLINE({})", a.join(",")) },
+                PartialEntity::CharacterGlyphStyleStroke { stroke_style, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_style(stroke_style))]; format!("CHARACTER_GLYPH_STYLE_STROKE({})", a.join(",")) },
+                PartialEntity::CharacterizedItemWithinRepresentation { item, rep, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_representation_item(item)), format!("#{}", self.id_of_ref_representation(rep))]; format!("CHARACTERIZED_ITEM_WITHIN_REPRESENTATION({})", a.join(",")) },
+                PartialEntity::CharacterizedObject { name, description, .. } => { let a: Vec<String> = vec![match name { Some(x) => step_str(self.model.text(*x)), None => "*".to_string() }, match description { Some(x) => step_str(self.model.text(*x)), None => "*".to_string() }]; format!("CHARACTERIZED_OBJECT({})", a.join(",")) },
+                PartialEntity::CharacterizedRepresentation => "CHARACTERIZED_REPRESENTATION()".to_string(),
+                PartialEntity::CircularRunoutTolerance => "CIRCULAR_RUNOUT_TOLERANCE()".to_string(),
+                PartialEntity::ClosedShell => "CLOSED_SHELL()".to_string(),
+                PartialEntity::Colour => "COLOUR()".to_string(),
+                PartialEntity::ColourRgb { red, green, blue, .. } => { let a: Vec<String> = vec![real(*red), real(*green), real(*blue)]; format!("COLOUR_RGB({})", a.join(",")) },
+                PartialEntity::ColourSpecification { name, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name))]; format!("COLOUR_SPECIFICATION({})", a.join(",")) },
+                PartialEntity::CommonDatum => "COMMON_DATUM()".to_string(),
+                PartialEntity::CompositeCurve { segments, self_intersect, .. } => { let a: Vec<String> = vec![format!("({})", segments.iter().map(|e| format!("#{}", self.id_of_ref_composite_curve_segment(e))).collect::<Vec<_>>().join(",")), self_intersect.token().to_string()]; format!("COMPOSITE_CURVE({})", a.join(",")) },
+                PartialEntity::CompositeCurveSegment { transition, same_sense, parent_curve, .. } => { let a: Vec<String> = vec![transition.token().to_string(), (if *same_sense { ".T." } else { ".F." }).to_string(), format!("#{}", self.id_of_ref_curve(parent_curve))]; format!("COMPOSITE_CURVE_SEGMENT({})", a.join(",")) },
+                PartialEntity::CompositeGroupShapeAspect => "COMPOSITE_GROUP_SHAPE_ASPECT()".to_string(),
+                PartialEntity::CompositeShapeAspect => "COMPOSITE_SHAPE_ASPECT()".to_string(),
+                PartialEntity::CompositeText { collected_text, .. } => { let a: Vec<String> = vec![format!("({})", collected_text.iter().map(|e| format!("#{}", self.id_of_ref_text_or_character(e))).collect::<Vec<_>>().join(","))]; format!("COMPOSITE_TEXT({})", a.join(",")) },
+                PartialEntity::CompoundRepresentationItem { item_element, .. } => { let a: Vec<String> = vec![match item_element { CompoundItemDefinitionRef::ListRepresentationItem(vs) => format!("LIST_REPRESENTATION_ITEM(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_representation_item(e))).collect::<Vec<_>>().join(",")), CompoundItemDefinitionRef::SetRepresentationItem(vs) => format!("SET_REPRESENTATION_ITEM(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_representation_item(e))).collect::<Vec<_>>().join(",")), other => format!("#{}", self.id_of_ref_compound_item_definition(other)) }]; format!("COMPOUND_REPRESENTATION_ITEM({})", a.join(",")) },
+                PartialEntity::ConfigurationEffectivity { configuration, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_configuration_design(configuration))]; format!("CONFIGURATION_EFFECTIVITY({})", a.join(",")) },
+                PartialEntity::ConfigurationItem { id, name, description, item_concept, purpose, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_concept(item_concept)), match purpose { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("CONFIGURATION_ITEM({})", a.join(",")) },
+                PartialEntity::ConnectedFaceSet { cfs_faces, .. } => { let a: Vec<String> = vec![match cfs_faces { Some(v) => format!("({})", v.iter().map(|e| format!("#{}", self.id_of_ref_face(e))).collect::<Vec<_>>().join(",")), None => "*".to_string() }]; format!("CONNECTED_FACE_SET({})", a.join(",")) },
+                PartialEntity::ConstructiveGeometryRepresentationRelationship => "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP()".to_string(),
+                PartialEntity::ContextDependentOverRidingStyledItem { style_context, .. } => { let a: Vec<String> = vec![format!("({})", style_context.iter().map(|e| format!("#{}", self.id_of_ref_style_context_select(e))).collect::<Vec<_>>().join(","))]; format!("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM({})", a.join(",")) },
+                PartialEntity::ContextDependentUnit { name, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name))]; format!("CONTEXT_DEPENDENT_UNIT({})", a.join(",")) },
+                PartialEntity::ConversionBasedUnit { name, conversion_factor, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("#{}", self.id_of_ref_measure_with_unit(conversion_factor))]; format!("CONVERSION_BASED_UNIT({})", a.join(",")) },
+                PartialEntity::Curve => "CURVE()".to_string(),
+                PartialEntity::CurveStyle { name, curve_font, curve_width, curve_colour, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match curve_font { Some(r) => format!("#{}", self.id_of_ref_curve_font_or_scaled_curve_font_select(r)), None => "$".to_string() }, match curve_width { Some(r) => match r { SizeSelectRef::DescriptiveMeasure(x) => format!("DESCRIPTIVE_MEASURE({})", step_str(self.model.text(*x))), SizeSelectRef::PositiveLengthMeasure(x) => format!("POSITIVE_LENGTH_MEASURE({})", real(*x)), other => format!("#{}", self.id_of_ref_size_select(other)) }, None => "$".to_string() }, match curve_colour { Some(r) => format!("#{}", self.id_of_ref_colour(r)), None => "$".to_string() }]; format!("CURVE_STYLE({})", a.join(",")) },
+                PartialEntity::CurveStyleFont { name, pattern_list, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("({})", pattern_list.iter().map(|e| format!("#{}", self.id_of_ref_curve_style_font_pattern(e))).collect::<Vec<_>>().join(","))]; format!("CURVE_STYLE_FONT({})", a.join(",")) },
+                PartialEntity::CurveStyleFontAndScaling { name, curve_font, curve_font_scaling, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("#{}", self.id_of_ref_curve_style_font_select(curve_font)), real(*curve_font_scaling)]; format!("CURVE_STYLE_FONT_AND_SCALING({})", a.join(",")) },
+                PartialEntity::CurveStyleFontPattern { visible_segment_length, invisible_segment_length, .. } => { let a: Vec<String> = vec![real(*visible_segment_length), real(*invisible_segment_length)]; format!("CURVE_STYLE_FONT_PATTERN({})", a.join(",")) },
+                PartialEntity::CylindricityTolerance => "CYLINDRICITY_TOLERANCE()".to_string(),
+                PartialEntity::Date { year_component, .. } => { let a: Vec<String> = vec![format!("{}", year_component)]; format!("DATE({})", a.join(",")) },
+                PartialEntity::DateAndTime { date_component, time_component, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_date(date_component)), format!("#{}", self.id_of_ref_local_time(time_component))]; format!("DATE_AND_TIME({})", a.join(",")) },
+                PartialEntity::DateAndTimeAssignment { assigned_date_and_time, role, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_date_and_time(assigned_date_and_time)), format!("#{}", self.id_of_ref_date_time_role(role))]; format!("DATE_AND_TIME_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::Datum { identification, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*identification))]; format!("DATUM({})", a.join(",")) },
+                PartialEntity::DatumFeature => "DATUM_FEATURE()".to_string(),
+                PartialEntity::DatumReference { precedence, referenced_datum, .. } => { let a: Vec<String> = vec![format!("{}", precedence), format!("#{}", self.id_of_ref_datum(referenced_datum))]; format!("DATUM_REFERENCE({})", a.join(",")) },
+                PartialEntity::DatumSystem { constituents, .. } => { let a: Vec<String> = vec![format!("({})", constituents.iter().map(|e| format!("#{}", self.id_of_ref_datum_reference_compartment(e))).collect::<Vec<_>>().join(","))]; format!("DATUM_SYSTEM({})", a.join(",")) },
+                PartialEntity::DatumTarget { target_id, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*target_id))]; format!("DATUM_TARGET({})", a.join(",")) },
+                PartialEntity::DefaultModelGeometricView => "DEFAULT_MODEL_GEOMETRIC_VIEW()".to_string(),
+                PartialEntity::DefinitionalRepresentation => "DEFINITIONAL_REPRESENTATION()".to_string(),
+                PartialEntity::DefinitionalRepresentationRelationship => "DEFINITIONAL_REPRESENTATION_RELATIONSHIP()".to_string(),
+                PartialEntity::DefinitionalRepresentationRelationshipWithSameContext => "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT()".to_string(),
+                PartialEntity::DegenerateToroidalSurface { select_outer, .. } => { let a: Vec<String> = vec![(if *select_outer { ".T." } else { ".F." }).to_string()]; format!("DEGENERATE_TOROIDAL_SURFACE({})", a.join(",")) },
+                PartialEntity::DerivedUnit { elements, .. } => { let a: Vec<String> = vec![format!("({})", elements.iter().map(|e| format!("#{}", self.id_of_ref_derived_unit_element(e))).collect::<Vec<_>>().join(","))]; format!("DERIVED_UNIT({})", a.join(",")) },
+                PartialEntity::DesignContext => "DESIGN_CONTEXT()".to_string(),
+                PartialEntity::DimensionalSize { applies_to, name, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_shape_aspect(applies_to)), step_str(self.model.text(*name))]; format!("DIMENSIONAL_SIZE({})", a.join(",")) },
+                PartialEntity::Direction { direction_ratios, .. } => { let a: Vec<String> = vec![format!("({})", direction_ratios.iter().map(|e| real(*e)).collect::<Vec<_>>().join(","))]; format!("DIRECTION({})", a.join(",")) },
+                PartialEntity::Document { id, name, description, kind, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_document_type(kind))]; format!("DOCUMENT({})", a.join(",")) },
+                PartialEntity::DocumentFile => "DOCUMENT_FILE()".to_string(),
+                PartialEntity::DocumentProductAssociation { name, description, relating_document, related_product, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_document(relating_document)), format!("#{}", self.id_of_ref_product_or_formation_or_definition(related_product))]; format!("DOCUMENT_PRODUCT_ASSOCIATION({})", a.join(",")) },
+                PartialEntity::DocumentProductEquivalence => "DOCUMENT_PRODUCT_EQUIVALENCE()".to_string(),
+                PartialEntity::DocumentReference { assigned_document, source, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_document(assigned_document)), step_str(self.model.text(*source))]; format!("DOCUMENT_REFERENCE({})", a.join(",")) },
+                PartialEntity::DraughtingAnnotationOccurrence => "DRAUGHTING_ANNOTATION_OCCURRENCE()".to_string(),
+                PartialEntity::DraughtingCallout { contents, .. } => { let a: Vec<String> = vec![format!("({})", contents.iter().map(|e| format!("#{}", self.id_of_ref_draughting_callout_element(e))).collect::<Vec<_>>().join(","))]; format!("DRAUGHTING_CALLOUT({})", a.join(",")) },
+                PartialEntity::DraughtingCalloutRelationship { name, description, relating_draughting_callout, related_draughting_callout, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), step_str(self.model.text(*description)), format!("#{}", self.id_of_ref_draughting_callout(relating_draughting_callout)), format!("#{}", self.id_of_ref_draughting_callout(related_draughting_callout))]; format!("DRAUGHTING_CALLOUT_RELATIONSHIP({})", a.join(",")) },
+                PartialEntity::DraughtingModel => "DRAUGHTING_MODEL()".to_string(),
+                PartialEntity::DraughtingModelItemAssociation => "DRAUGHTING_MODEL_ITEM_ASSOCIATION()".to_string(),
+                PartialEntity::DraughtingModelItemAssociationWithPlaceholder { annotation_placeholder, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_annotation_placeholder_occurrence(annotation_placeholder))]; format!("DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER({})", a.join(",")) },
+                PartialEntity::DraughtingPreDefinedColour => "DRAUGHTING_PRE_DEFINED_COLOUR()".to_string(),
+                PartialEntity::DraughtingPreDefinedCurveFont => "DRAUGHTING_PRE_DEFINED_CURVE_FONT()".to_string(),
+                PartialEntity::DraughtingPreDefinedTextFont => "DRAUGHTING_PRE_DEFINED_TEXT_FONT()".to_string(),
+                PartialEntity::Edge { edge_start, edge_end, .. } => { let a: Vec<String> = vec![match edge_start { Some(r) => format!("#{}", self.id_of_ref_vertex(r)), None => "*".to_string() }, match edge_end { Some(r) => format!("#{}", self.id_of_ref_vertex(r)), None => "*".to_string() }]; format!("EDGE({})", a.join(",")) },
+                PartialEntity::EdgeCurve { edge_geometry, same_sense, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve(edge_geometry)), (if *same_sense { ".T." } else { ".F." }).to_string()]; format!("EDGE_CURVE({})", a.join(",")) },
+                PartialEntity::EdgeLoop => "EDGE_LOOP()".to_string(),
+                PartialEntity::Effectivity { id, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id))]; format!("EFFECTIVITY({})", a.join(",")) },
+                PartialEntity::ElementarySurface { position, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement3d(position))]; format!("ELEMENTARY_SURFACE({})", a.join(",")) },
+                PartialEntity::Expression => "EXPRESSION()".to_string(),
+                PartialEntity::ExternalIdentificationAssignment { source, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_external_source(source))]; format!("EXTERNAL_IDENTIFICATION_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::ExternalSource { source_id, .. } => { let a: Vec<String> = vec![string_select(self.model, source_id)]; format!("EXTERNAL_SOURCE({})", a.join(",")) },
+                PartialEntity::ExternallyDefinedCharacterGlyph => "EXTERNALLY_DEFINED_CHARACTER_GLYPH()".to_string(),
+                PartialEntity::ExternallyDefinedCurveFont => "EXTERNALLY_DEFINED_CURVE_FONT()".to_string(),
+                PartialEntity::ExternallyDefinedHatchStyle => "EXTERNALLY_DEFINED_HATCH_STYLE()".to_string(),
+                PartialEntity::ExternallyDefinedItem { item_id, source, .. } => { let a: Vec<String> = vec![string_select(self.model, item_id), format!("#{}", self.id_of_ref_external_source(source))]; format!("EXTERNALLY_DEFINED_ITEM({})", a.join(",")) },
+                PartialEntity::ExternallyDefinedStyle => "EXTERNALLY_DEFINED_STYLE()".to_string(),
+                PartialEntity::ExternallyDefinedSymbol => "EXTERNALLY_DEFINED_SYMBOL()".to_string(),
+                PartialEntity::ExternallyDefinedTextFont => "EXTERNALLY_DEFINED_TEXT_FONT()".to_string(),
+                PartialEntity::ExternallyDefinedTile => "EXTERNALLY_DEFINED_TILE()".to_string(),
+                PartialEntity::ExternallyDefinedTileStyle => "EXTERNALLY_DEFINED_TILE_STYLE()".to_string(),
+                PartialEntity::Face { bounds, .. } => { let a: Vec<String> = vec![format!("({})", bounds.iter().map(|e| format!("#{}", self.id_of_ref_face_bound(e))).collect::<Vec<_>>().join(","))]; format!("FACE({})", a.join(",")) },
+                PartialEntity::FaceBound { bound, orientation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_loop(bound)), (if *orientation { ".T." } else { ".F." }).to_string()]; format!("FACE_BOUND({})", a.join(",")) },
+                PartialEntity::FaceOuterBound => "FACE_OUTER_BOUND()".to_string(),
+                PartialEntity::FaceSurface { face_geometry, same_sense, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_surface(face_geometry)), (if *same_sense { ".T." } else { ".F." }).to_string()]; format!("FACE_SURFACE({})", a.join(",")) },
+                PartialEntity::FillAreaStyle { name, fill_styles, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("({})", fill_styles.iter().map(|e| format!("#{}", self.id_of_ref_fill_style_select(e))).collect::<Vec<_>>().join(","))]; format!("FILL_AREA_STYLE({})", a.join(",")) },
+                PartialEntity::FillAreaStyleHatching { hatch_line_appearance, start_of_next_hatch_line, point_of_reference_hatch_line, pattern_start, hatch_line_angle, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_style(hatch_line_appearance)), format!("#{}", self.id_of_ref_one_direction_repeat_factor(start_of_next_hatch_line)), format!("#{}", self.id_of_ref_cartesian_point(point_of_reference_hatch_line)), format!("#{}", self.id_of_ref_cartesian_point(pattern_start)), real(*hatch_line_angle)]; format!("FILL_AREA_STYLE_HATCHING({})", a.join(",")) },
+                PartialEntity::FillAreaStyleTileSymbolWithStyle { symbol, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_annotation_symbol_occurrence(symbol))]; format!("FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE({})", a.join(",")) },
+                PartialEntity::FillAreaStyleTiles { tiling_pattern, tiles, tiling_scale, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_two_direction_repeat_factor(tiling_pattern)), format!("({})", tiles.iter().map(|e| format!("#{}", self.id_of_ref_fill_area_style_tile_shape_select(e))).collect::<Vec<_>>().join(",")), real(*tiling_scale)]; format!("FILL_AREA_STYLE_TILES({})", a.join(",")) },
+                PartialEntity::FlatnessTolerance => "FLATNESS_TOLERANCE()".to_string(),
+                PartialEntity::FoundedItem => "FOUNDED_ITEM()".to_string(),
+                PartialEntity::FunctionallyDefinedTransformation { name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("FUNCTIONALLY_DEFINED_TRANSFORMATION({})", a.join(",")) },
+                PartialEntity::GeneralDatumReference { base, modifiers, .. } => { let a: Vec<String> = vec![match base { DatumOrCommonDatumRef::CommonDatumList(vs) => format!("COMMON_DATUM_LIST(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_datum_reference_element(e))).collect::<Vec<_>>().join(",")), other => format!("#{}", self.id_of_ref_datum_or_common_datum(other)) }, match modifiers { Some(v) => format!("({})", v.iter().map(|e| match e { DatumReferenceModifierRef::SimpleDatumReferenceModifier(e) => format!("SIMPLE_DATUM_REFERENCE_MODIFIER({})", e.token()), other => format!("#{}", self.id_of_ref_datum_reference_modifier(other)) }).collect::<Vec<_>>().join(",")), None => "$".to_string() }]; format!("GENERAL_DATUM_REFERENCE({})", a.join(",")) },
+                PartialEntity::GeneralProperty { id, name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("GENERAL_PROPERTY({})", a.join(",")) },
+                PartialEntity::GenericExpression => "GENERIC_EXPRESSION()".to_string(),
+                PartialEntity::GenericLiteral => "GENERIC_LITERAL()".to_string(),
+                PartialEntity::GenericProductDefinitionReference { source, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_external_source(source))]; format!("GENERIC_PRODUCT_DEFINITION_REFERENCE({})", a.join(",")) },
+                PartialEntity::GeometricCurveSet => "GEOMETRIC_CURVE_SET()".to_string(),
+                PartialEntity::GeometricItemSpecificUsage => "GEOMETRIC_ITEM_SPECIFIC_USAGE()".to_string(),
+                PartialEntity::GeometricRepresentationContext { coordinate_space_dimension, .. } => { let a: Vec<String> = vec![format!("{}", coordinate_space_dimension)]; format!("GEOMETRIC_REPRESENTATION_CONTEXT({})", a.join(",")) },
+                PartialEntity::GeometricRepresentationItem => "GEOMETRIC_REPRESENTATION_ITEM()".to_string(),
+                PartialEntity::GeometricSet { elements, .. } => { let a: Vec<String> = vec![format!("({})", elements.iter().map(|e| format!("#{}", self.id_of_ref_geometric_set_select(e))).collect::<Vec<_>>().join(","))]; format!("GEOMETRIC_SET({})", a.join(",")) },
+                PartialEntity::GeometricTolerance { name, description, magnitude, toleranced_shape_aspect, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match magnitude { Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)), None => "$".to_string() }, format!("#{}", self.id_of_ref_geometric_tolerance_target(toleranced_shape_aspect))]; format!("GEOMETRIC_TOLERANCE({})", a.join(",")) },
+                PartialEntity::GeometricToleranceWithDatumReference { datum_system, .. } => { let a: Vec<String> = vec![format!("({})", datum_system.iter().map(|e| format!("#{}", self.id_of_ref_datum_system_or_reference(e))).collect::<Vec<_>>().join(","))]; format!("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE({})", a.join(",")) },
+                PartialEntity::GeometricToleranceWithDefinedAreaUnit { area_type, second_unit_size, .. } => { let a: Vec<String> = vec![area_type.token().to_string(), match second_unit_size { Some(r) => format!("#{}", self.id_of_ref_length_or_plane_angle_measure_with_unit_select(r)), None => "$".to_string() }]; format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT({})", a.join(",")) },
+                PartialEntity::GeometricToleranceWithDefinedUnit { unit_size, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_length_or_plane_angle_measure_with_unit_select(unit_size))]; format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT({})", a.join(",")) },
+                PartialEntity::GeometricToleranceWithMaximumTolerance { maximum_upper_tolerance, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_length_measure_with_unit(maximum_upper_tolerance))]; format!("GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE({})", a.join(",")) },
+                PartialEntity::GeometricToleranceWithModifiers { modifiers, .. } => { let a: Vec<String> = vec![format!("({})", modifiers.iter().map(|e| e.token().to_string()).collect::<Vec<_>>().join(","))]; format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS({})", a.join(",")) },
+                PartialEntity::GeometricallyBoundedSurfaceShapeRepresentation => "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION()".to_string(),
+                PartialEntity::GeometricallyBoundedWireframeShapeRepresentation => "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION()".to_string(),
+                PartialEntity::GlobalUncertaintyAssignedContext { uncertainty, .. } => { let a: Vec<String> = vec![format!("({})", uncertainty.iter().map(|e| format!("#{}", self.id_of_ref_uncertainty_measure_with_unit(e))).collect::<Vec<_>>().join(","))]; format!("GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT({})", a.join(",")) },
+                PartialEntity::GlobalUnitAssignedContext { units, .. } => { let a: Vec<String> = vec![format!("({})", units.iter().map(|e| format!("#{}", self.id_of_ref_unit(e))).collect::<Vec<_>>().join(","))]; format!("GLOBAL_UNIT_ASSIGNED_CONTEXT({})", a.join(",")) },
+                PartialEntity::Group { name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("GROUP({})", a.join(",")) },
+                PartialEntity::GroupAssignment { assigned_group, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_group(assigned_group))]; format!("GROUP_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::IdentificationAssignment { assigned_id, role, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*assigned_id)), format!("#{}", self.id_of_ref_identification_role(role))]; format!("IDENTIFICATION_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::IntLiteral => "INT_LITERAL()".to_string(),
+                PartialEntity::IntegerRepresentationItem => "INTEGER_REPRESENTATION_ITEM()".to_string(),
+                PartialEntity::IntersectionCurve => "INTERSECTION_CURVE()".to_string(),
+                PartialEntity::Invisibility { invisible_items, .. } => { let a: Vec<String> = vec![format!("({})", invisible_items.iter().map(|e| format!("#{}", self.id_of_ref_invisible_item(e))).collect::<Vec<_>>().join(","))]; format!("INVISIBILITY({})", a.join(",")) },
+                PartialEntity::ItemDefinedTransformation { name, description, transform_item_1, transform_item_2, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_representation_item(transform_item_1)), format!("#{}", self.id_of_ref_representation_item(transform_item_2))]; format!("ITEM_DEFINED_TRANSFORMATION({})", a.join(",")) },
+                PartialEntity::ItemIdentifiedRepresentationUsage { name, description, definition, used_representation, identified_item, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_item_identified_representation_usage_definition(definition)), format!("#{}", self.id_of_ref_representation(used_representation)), match identified_item { ItemIdentifiedRepresentationUsageSelectRef::ListRepresentationItem(vs) => format!("LIST_REPRESENTATION_ITEM(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_representation_item(e))).collect::<Vec<_>>().join(",")), ItemIdentifiedRepresentationUsageSelectRef::SetRepresentationItem(vs) => format!("SET_REPRESENTATION_ITEM(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_representation_item(e))).collect::<Vec<_>>().join(",")), other => format!("#{}", self.id_of_ref_item_identified_representation_usage_select(other)) }]; format!("ITEM_IDENTIFIED_REPRESENTATION_USAGE({})", a.join(",")) },
+                PartialEntity::LeaderCurve => "LEADER_CURVE()".to_string(),
+                PartialEntity::LeaderDirectedCallout => "LEADER_DIRECTED_CALLOUT()".to_string(),
+                PartialEntity::LeaderTerminator => "LEADER_TERMINATOR()".to_string(),
+                PartialEntity::LengthMeasureWithUnit => "LENGTH_MEASURE_WITH_UNIT()".to_string(),
+                PartialEntity::LengthUnit => "LENGTH_UNIT()".to_string(),
+                PartialEntity::LineProfileTolerance => "LINE_PROFILE_TOLERANCE()".to_string(),
+                PartialEntity::LiteralNumber { the_value, .. } => { let a: Vec<String> = vec![real(*the_value)]; format!("LITERAL_NUMBER({})", a.join(",")) },
+                PartialEntity::Loop => "LOOP()".to_string(),
+                PartialEntity::ManifoldSolidBrep { outer, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_closed_shell(outer))]; format!("MANIFOLD_SOLID_BREP({})", a.join(",")) },
+                PartialEntity::ManifoldSurfaceShapeRepresentation => "MANIFOLD_SURFACE_SHAPE_REPRESENTATION()".to_string(),
+                PartialEntity::MappedItem { mapping_source, mapping_target, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_representation_map(mapping_source)), format!("#{}", self.id_of_ref_representation_item(mapping_target))]; format!("MAPPED_ITEM({})", a.join(",")) },
+                PartialEntity::MassUnit => "MASS_UNIT()".to_string(),
+                PartialEntity::MeasureRepresentationItem => "MEASURE_REPRESENTATION_ITEM()".to_string(),
+                PartialEntity::MeasureWithUnit { value_component, unit_component, .. } => { let a: Vec<String> = vec![measure(self.model, value_component), format!("#{}", self.id_of_ref_unit(unit_component))]; format!("MEASURE_WITH_UNIT({})", a.join(",")) },
+                PartialEntity::MechanicalContext => "MECHANICAL_CONTEXT()".to_string(),
+                PartialEntity::MechanicalDesignAndDraughtingRelationship => "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP()".to_string(),
+                PartialEntity::ModelGeometricView => "MODEL_GEOMETRIC_VIEW()".to_string(),
+                PartialEntity::ModifiedGeometricTolerance { modifier, .. } => { let a: Vec<String> = vec![modifier.token().to_string()]; format!("MODIFIED_GEOMETRIC_TOLERANCE({})", a.join(",")) },
+                PartialEntity::NamedUnit { dimensions, .. } => { let a: Vec<String> = vec![match dimensions { Some(r) => format!("#{}", self.id_of_ref_dimensional_exponents(r)), None => "*".to_string() }]; format!("NAMED_UNIT({})", a.join(",")) },
+                PartialEntity::NextAssemblyUsageOccurrence => "NEXT_ASSEMBLY_USAGE_OCCURRENCE()".to_string(),
+                PartialEntity::NumericExpression => "NUMERIC_EXPRESSION()".to_string(),
+                PartialEntity::OneDirectionRepeatFactor { repeat_factor, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_vector(repeat_factor))]; format!("ONE_DIRECTION_REPEAT_FACTOR({})", a.join(",")) },
+                PartialEntity::OpenShell => "OPEN_SHELL()".to_string(),
+                PartialEntity::OrganizationalAddress { organizations, description, .. } => { let a: Vec<String> = vec![format!("({})", organizations.iter().map(|e| format!("#{}", self.id_of_ref_organization(e))).collect::<Vec<_>>().join(",")), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("ORGANIZATIONAL_ADDRESS({})", a.join(",")) },
+                PartialEntity::OrientedClosedShell { closed_shell_element, orientation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_closed_shell(closed_shell_element)), (if *orientation { ".T." } else { ".F." }).to_string()]; format!("ORIENTED_CLOSED_SHELL({})", a.join(",")) },
+                PartialEntity::OrientedEdge { edge_element, orientation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_edge(edge_element)), (if *orientation { ".T." } else { ".F." }).to_string()]; format!("ORIENTED_EDGE({})", a.join(",")) },
+                PartialEntity::OverRidingStyledItem { over_ridden_style, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_styled_item(over_ridden_style))]; format!("OVER_RIDING_STYLED_ITEM({})", a.join(",")) },
+                PartialEntity::ParallelismTolerance => "PARALLELISM_TOLERANCE()".to_string(),
+                PartialEntity::ParametricRepresentationContext => "PARAMETRIC_REPRESENTATION_CONTEXT()".to_string(),
+                PartialEntity::Path { edge_list, .. } => { let a: Vec<String> = vec![format!("({})", edge_list.iter().map(|e| format!("#{}", self.id_of_ref_oriented_edge(e))).collect::<Vec<_>>().join(","))]; format!("PATH({})", a.join(",")) },
+                PartialEntity::Pcurve { basis_surface, reference_to_curve, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_surface(basis_surface)), format!("#{}", self.id_of_ref_definitional_representation(reference_to_curve))]; format!("PCURVE({})", a.join(",")) },
+                PartialEntity::PerpendicularityTolerance => "PERPENDICULARITY_TOLERANCE()".to_string(),
+                PartialEntity::PersonAndOrganizationAddress => "PERSON_AND_ORGANIZATION_ADDRESS()".to_string(),
+                PartialEntity::PersonAndOrganizationAssignment { assigned_person_and_organization, role, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_person_and_organization(assigned_person_and_organization)), format!("#{}", self.id_of_ref_person_and_organization_role(role))]; format!("PERSON_AND_ORGANIZATION_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::PersonalAddress { people, description, .. } => { let a: Vec<String> = vec![format!("({})", people.iter().map(|e| format!("#{}", self.id_of_ref_person(e))).collect::<Vec<_>>().join(",")), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("PERSONAL_ADDRESS({})", a.join(",")) },
+                PartialEntity::PlacedDatumTargetFeature => "PLACED_DATUM_TARGET_FEATURE()".to_string(),
+                PartialEntity::Placement { location, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_cartesian_point(location))]; format!("PLACEMENT({})", a.join(",")) },
+                PartialEntity::PlanarBox { placement, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement(placement))]; format!("PLANAR_BOX({})", a.join(",")) },
+                PartialEntity::PlanarExtent { size_in_x, size_in_y, .. } => { let a: Vec<String> = vec![real(*size_in_x), real(*size_in_y)]; format!("PLANAR_EXTENT({})", a.join(",")) },
+                PartialEntity::PlaneAngleMeasureWithUnit => "PLANE_ANGLE_MEASURE_WITH_UNIT()".to_string(),
+                PartialEntity::PlaneAngleUnit => "PLANE_ANGLE_UNIT()".to_string(),
+                PartialEntity::Point => "POINT()".to_string(),
+                PartialEntity::PointStyle { name, marker, marker_size, marker_colour, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match marker { Some(r) => match r { MarkerSelectRef::MarkerType(e) => format!("MARKER_TYPE({})", e.token()), other => format!("#{}", self.id_of_ref_marker_select(other)) }, None => "$".to_string() }, match marker_size { Some(r) => match r { SizeSelectRef::DescriptiveMeasure(x) => format!("DESCRIPTIVE_MEASURE({})", step_str(self.model.text(*x))), SizeSelectRef::PositiveLengthMeasure(x) => format!("POSITIVE_LENGTH_MEASURE({})", real(*x)), other => format!("#{}", self.id_of_ref_size_select(other)) }, None => "$".to_string() }, match marker_colour { Some(r) => format!("#{}", self.id_of_ref_colour(r)), None => "$".to_string() }]; format!("POINT_STYLE({})", a.join(",")) },
+                PartialEntity::PolyLoop { polygon, .. } => { let a: Vec<String> = vec![format!("({})", polygon.iter().map(|e| format!("#{}", self.id_of_ref_cartesian_point(e))).collect::<Vec<_>>().join(","))]; format!("POLY_LOOP({})", a.join(",")) },
+                PartialEntity::PositionTolerance => "POSITION_TOLERANCE()".to_string(),
+                PartialEntity::PreDefinedCharacterGlyph => "PRE_DEFINED_CHARACTER_GLYPH()".to_string(),
+                PartialEntity::PreDefinedColour => "PRE_DEFINED_COLOUR()".to_string(),
+                PartialEntity::PreDefinedCurveFont => "PRE_DEFINED_CURVE_FONT()".to_string(),
+                PartialEntity::PreDefinedItem { name, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name))]; format!("PRE_DEFINED_ITEM({})", a.join(",")) },
+                PartialEntity::PreDefinedMarker => "PRE_DEFINED_MARKER()".to_string(),
+                PartialEntity::PreDefinedPointMarkerSymbol => "PRE_DEFINED_POINT_MARKER_SYMBOL()".to_string(),
+                PartialEntity::PreDefinedPresentationStyle => "PRE_DEFINED_PRESENTATION_STYLE()".to_string(),
+                PartialEntity::PreDefinedSurfaceSideStyle => "PRE_DEFINED_SURFACE_SIDE_STYLE()".to_string(),
+                PartialEntity::PreDefinedSymbol => "PRE_DEFINED_SYMBOL()".to_string(),
+                PartialEntity::PreDefinedTerminatorSymbol => "PRE_DEFINED_TERMINATOR_SYMBOL()".to_string(),
+                PartialEntity::PreDefinedTextFont => "PRE_DEFINED_TEXT_FONT()".to_string(),
+                PartialEntity::PreDefinedTile => "PRE_DEFINED_TILE()".to_string(),
+                PartialEntity::PresentationArea => "PRESENTATION_AREA()".to_string(),
+                PartialEntity::PresentationRepresentation => "PRESENTATION_REPRESENTATION()".to_string(),
+                PartialEntity::PresentationSet => "PRESENTATION_SET()".to_string(),
+                PartialEntity::PresentationStyleAssignment { styles, .. } => { let a: Vec<String> = vec![format!("({})", styles.iter().map(|e| match e { PresentationStyleSelectRef::NullStyle(e) => format!("NULL_STYLE({})", e.token()), other => format!("#{}", self.id_of_ref_presentation_style_select(other)) }).collect::<Vec<_>>().join(","))]; format!("PRESENTATION_STYLE_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::PresentationStyleByContext { style_context, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_style_context_select(style_context))]; format!("PRESENTATION_STYLE_BY_CONTEXT({})", a.join(",")) },
+                PartialEntity::PresentationView => "PRESENTATION_VIEW()".to_string(),
+                PartialEntity::PresentedItem => "PRESENTED_ITEM()".to_string(),
+                PartialEntity::Product { id, name, description, frame_of_reference, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("({})", frame_of_reference.iter().map(|e| format!("#{}", self.id_of_ref_product_context(e))).collect::<Vec<_>>().join(","))]; format!("PRODUCT({})", a.join(",")) },
+                PartialEntity::ProductCategory { name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("PRODUCT_CATEGORY({})", a.join(",")) },
+                PartialEntity::ProductConcept { id, name, description, market_context, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_concept_context(market_context))]; format!("PRODUCT_CONCEPT({})", a.join(",")) },
+                PartialEntity::ProductConceptFeature { id, name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("PRODUCT_CONCEPT_FEATURE({})", a.join(",")) },
+                PartialEntity::ProductConceptFeatureCategory => "PRODUCT_CONCEPT_FEATURE_CATEGORY()".to_string(),
+                PartialEntity::ProductContext { discipline_type, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*discipline_type))]; format!("PRODUCT_CONTEXT({})", a.join(",")) },
+                PartialEntity::ProductDefinition { id, description, formation, frame_of_reference, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_definition_formation(formation)), format!("#{}", self.id_of_ref_product_definition_context(frame_of_reference))]; format!("PRODUCT_DEFINITION({})", a.join(",")) },
+                PartialEntity::ProductDefinitionContext { life_cycle_stage, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*life_cycle_stage))]; format!("PRODUCT_DEFINITION_CONTEXT({})", a.join(",")) },
+                PartialEntity::ProductDefinitionEffectivity { usage, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_product_definition_relationship(usage))]; format!("PRODUCT_DEFINITION_EFFECTIVITY({})", a.join(",")) },
+                PartialEntity::ProductDefinitionFormation { id, description, of_product, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_product(of_product))]; format!("PRODUCT_DEFINITION_FORMATION({})", a.join(",")) },
+                PartialEntity::ProductDefinitionFormationWithSpecifiedSource { make_or_buy, .. } => { let a: Vec<String> = vec![make_or_buy.token().to_string()]; format!("PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE({})", a.join(",")) },
+                PartialEntity::ProductDefinitionOccurrence { id, name, description, definition, quantity, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), match name { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match definition { Some(r) => format!("#{}", self.id_of_ref_product_definition_or_reference(r)), None => "$".to_string() }, match quantity { Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)), None => "$".to_string() }]; format!("PRODUCT_DEFINITION_OCCURRENCE({})", a.join(",")) },
+                PartialEntity::ProductDefinitionRelationship { id, name, description, relating_product_definition, related_product_definition, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_definition_or_reference(relating_product_definition)), format!("#{}", self.id_of_ref_product_definition_or_reference(related_product_definition))]; format!("PRODUCT_DEFINITION_RELATIONSHIP({})", a.join(",")) },
+                PartialEntity::ProductDefinitionRelationshipRelationship { id, name, description, relating, related, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_definition_relationship(relating)), format!("#{}", self.id_of_ref_product_definition_relationship(related))]; format!("PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP({})", a.join(",")) },
+                PartialEntity::ProductDefinitionShape => "PRODUCT_DEFINITION_SHAPE()".to_string(),
+                PartialEntity::ProductDefinitionUsage => "PRODUCT_DEFINITION_USAGE()".to_string(),
+                PartialEntity::ProductDefinitionWithAssociatedDocuments { documentation_ids, .. } => { let a: Vec<String> = vec![format!("({})", documentation_ids.iter().map(|e| format!("#{}", self.id_of_ref_document(e))).collect::<Vec<_>>().join(","))]; format!("PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS({})", a.join(",")) },
+                PartialEntity::ProductRelatedProductCategory { products, .. } => { let a: Vec<String> = vec![format!("({})", products.iter().map(|e| format!("#{}", self.id_of_ref_product(e))).collect::<Vec<_>>().join(","))]; format!("PRODUCT_RELATED_PRODUCT_CATEGORY({})", a.join(",")) },
+                PartialEntity::ProjectedZoneDefinition { projection_end, projected_length, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_shape_aspect(projection_end)), format!("#{}", self.id_of_ref_length_measure_with_unit(projected_length))]; format!("PROJECTED_ZONE_DEFINITION({})", a.join(",")) },
+                PartialEntity::PropertyDefinition { name, description, definition, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_characterized_definition(definition))]; format!("PROPERTY_DEFINITION({})", a.join(",")) },
+                PartialEntity::PropertyDefinitionRepresentation { definition, used_representation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_represented_definition(definition)), format!("#{}", self.id_of_ref_representation(used_representation))]; format!("PROPERTY_DEFINITION_REPRESENTATION({})", a.join(",")) },
+                PartialEntity::QualifiedRepresentationItem { qualifiers, .. } => { let a: Vec<String> = vec![format!("({})", qualifiers.iter().map(|e| format!("#{}", self.id_of_ref_value_qualifier(e))).collect::<Vec<_>>().join(","))]; format!("QUALIFIED_REPRESENTATION_ITEM({})", a.join(",")) },
+                PartialEntity::QuasiUniformCurve => "QUASI_UNIFORM_CURVE()".to_string(),
+                PartialEntity::QuasiUniformSurface => "QUASI_UNIFORM_SURFACE()".to_string(),
+                PartialEntity::RatioMeasureWithUnit => "RATIO_MEASURE_WITH_UNIT()".to_string(),
+                PartialEntity::RatioUnit => "RATIO_UNIT()".to_string(),
+                PartialEntity::RationalBSplineCurve { weights_data, .. } => { let a: Vec<String> = vec![format!("({})", weights_data.iter().map(|e| real(*e)).collect::<Vec<_>>().join(","))]; format!("RATIONAL_B_SPLINE_CURVE({})", a.join(",")) },
+                PartialEntity::RationalBSplineSurface { weights_data, .. } => { let a: Vec<String> = vec![format!("({})", weights_data.iter().map(|e| { let row: Vec<String> = e.iter().map(|e| real(*e)).collect(); format!("({})", row.join(",")) }).collect::<Vec<_>>().join(","))]; format!("RATIONAL_B_SPLINE_SURFACE({})", a.join(",")) },
+                PartialEntity::RealLiteral => "REAL_LITERAL()".to_string(),
+                PartialEntity::RealRepresentationItem => "REAL_REPRESENTATION_ITEM()".to_string(),
+                PartialEntity::RepositionedTessellatedItem { location, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement3d(location))]; format!("REPOSITIONED_TESSELLATED_ITEM({})", a.join(",")) },
+                PartialEntity::Representation { name, items, context_of_items, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_representation_item(e))).collect::<Vec<_>>().join(",")), format!("#{}", self.id_of_ref_representation_context(context_of_items))]; format!("REPRESENTATION({})", a.join(",")) },
+                PartialEntity::RepresentationContext { context_identifier, context_type, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*context_identifier)), step_str(self.model.text(*context_type))]; format!("REPRESENTATION_CONTEXT({})", a.join(",")) },
+                PartialEntity::RepresentationItem { name, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name))]; format!("REPRESENTATION_ITEM({})", a.join(",")) },
+                PartialEntity::RepresentationMap { mapping_origin, mapped_representation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_representation_item(mapping_origin)), format!("#{}", self.id_of_ref_representation(mapped_representation))]; format!("REPRESENTATION_MAP({})", a.join(",")) },
+                PartialEntity::RepresentationReference { id, context_of_items, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), format!("#{}", self.id_of_ref_representation_context_reference(context_of_items))]; format!("REPRESENTATION_REFERENCE({})", a.join(",")) },
+                PartialEntity::RepresentationRelationship { name, description, rep_1, rep_2, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_representation_or_representation_reference(rep_1)), format!("#{}", self.id_of_ref_representation_or_representation_reference(rep_2))]; format!("REPRESENTATION_RELATIONSHIP({})", a.join(",")) },
+                PartialEntity::RepresentationRelationshipWithTransformation { transformation_operator, .. } => { let a: Vec<String> = vec![match transformation_operator { TransformationRef::ListItemDefinedTransformation(vs) => format!("LIST_ITEM_DEFINED_TRANSFORMATION(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_item_defined_transformation(e))).collect::<Vec<_>>().join(",")), TransformationRef::SetItemDefinedTransformation(vs) => format!("SET_ITEM_DEFINED_TRANSFORMATION(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_item_defined_transformation(e))).collect::<Vec<_>>().join(",")), other => format!("#{}", self.id_of_ref_transformation(other)) }]; format!("REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION({})", a.join(",")) },
+                PartialEntity::RoundnessTolerance => "ROUNDNESS_TOLERANCE()".to_string(),
+                PartialEntity::SeamCurve => "SEAM_CURVE()".to_string(),
+                PartialEntity::SecurityClassificationAssignment { assigned_security_classification, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_security_classification(assigned_security_classification))]; format!("SECURITY_CLASSIFICATION_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::ShapeAspect { name, description, of_shape, product_definitional, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_definition_shape(of_shape)), match product_definitional { Some(x) => x.token().to_string(), None => "*".to_string() }]; format!("SHAPE_ASPECT({})", a.join(",")) },
+                PartialEntity::ShapeAspectRelationship { name, description, relating_shape_aspect, related_shape_aspect, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_shape_aspect(relating_shape_aspect)), format!("#{}", self.id_of_ref_shape_aspect(related_shape_aspect))]; format!("SHAPE_ASPECT_RELATIONSHIP({})", a.join(",")) },
+                PartialEntity::ShapeDefinitionRepresentation => "SHAPE_DEFINITION_REPRESENTATION()".to_string(),
+                PartialEntity::ShapeDimensionRepresentation => "SHAPE_DIMENSION_REPRESENTATION()".to_string(),
+                PartialEntity::ShapeRepresentation => "SHAPE_REPRESENTATION()".to_string(),
+                PartialEntity::ShapeRepresentationRelationship => "SHAPE_REPRESENTATION_RELATIONSHIP()".to_string(),
+                PartialEntity::ShapeRepresentationWithParameters => "SHAPE_REPRESENTATION_WITH_PARAMETERS()".to_string(),
+                PartialEntity::ShellBasedSurfaceModel { sbsm_boundary, .. } => { let a: Vec<String> = vec![format!("({})", sbsm_boundary.iter().map(|e| format!("#{}", self.id_of_ref_shell(e))).collect::<Vec<_>>().join(","))]; format!("SHELL_BASED_SURFACE_MODEL({})", a.join(",")) },
+                PartialEntity::SiUnit { prefix, name, .. } => { let a: Vec<String> = vec![match prefix { Some(x) => x.token().to_string(), None => "$".to_string() }, name.token().to_string()]; format!("SI_UNIT({})", a.join(",")) },
+                PartialEntity::SimpleGenericExpression => "SIMPLE_GENERIC_EXPRESSION()".to_string(),
+                PartialEntity::SimpleNumericExpression => "SIMPLE_NUMERIC_EXPRESSION()".to_string(),
+                PartialEntity::SolidAngleUnit => "SOLID_ANGLE_UNIT()".to_string(),
+                PartialEntity::SolidModel => "SOLID_MODEL()".to_string(),
+                PartialEntity::StartRequest { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_start_request_item(e))).collect::<Vec<_>>().join(","))]; format!("START_REQUEST({})", a.join(",")) },
+                PartialEntity::StateObserved { name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("STATE_OBSERVED({})", a.join(",")) },
+                PartialEntity::StateType { name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("STATE_TYPE({})", a.join(",")) },
+                PartialEntity::StraightnessTolerance => "STRAIGHTNESS_TOLERANCE()".to_string(),
+                PartialEntity::StyledItem { styles, item, .. } => { let a: Vec<String> = vec![format!("({})", styles.iter().map(|e| format!("#{}", self.id_of_ref_presentation_style_assignment(e))).collect::<Vec<_>>().join(",")), format!("#{}", self.id_of_ref_styled_item_target(item))]; format!("STYLED_ITEM({})", a.join(",")) },
+                PartialEntity::Surface => "SURFACE()".to_string(),
+                PartialEntity::SurfaceCurve { curve_3d, associated_geometry, master_representation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve(curve_3d)), format!("({})", associated_geometry.iter().map(|e| format!("#{}", self.id_of_ref_pcurve_or_surface(e))).collect::<Vec<_>>().join(",")), master_representation.token().to_string()]; format!("SURFACE_CURVE({})", a.join(",")) },
+                PartialEntity::SurfaceProfileTolerance => "SURFACE_PROFILE_TOLERANCE()".to_string(),
+                PartialEntity::SurfaceSideStyle { name, styles, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("({})", styles.iter().map(|e| format!("#{}", self.id_of_ref_surface_style_element_select(e))).collect::<Vec<_>>().join(","))]; format!("SURFACE_SIDE_STYLE({})", a.join(",")) },
+                PartialEntity::SurfaceStyleBoundary { style_of_boundary, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_render(style_of_boundary))]; format!("SURFACE_STYLE_BOUNDARY({})", a.join(",")) },
+                PartialEntity::SurfaceStyleControlGrid { style_of_control_grid, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_render(style_of_control_grid))]; format!("SURFACE_STYLE_CONTROL_GRID({})", a.join(",")) },
+                PartialEntity::SurfaceStyleFillArea { fill_area, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_fill_area_style(fill_area))]; format!("SURFACE_STYLE_FILL_AREA({})", a.join(",")) },
+                PartialEntity::SurfaceStyleParameterLine { style_of_parameter_lines, direction_counts, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_render(style_of_parameter_lines)), format!("({})", direction_counts.iter().map(|e| int_measure(self.model, e)).collect::<Vec<_>>().join(","))]; format!("SURFACE_STYLE_PARAMETER_LINE({})", a.join(",")) },
+                PartialEntity::SurfaceStyleReflectanceAmbient { ambient_reflectance, .. } => { let a: Vec<String> = vec![real(*ambient_reflectance)]; format!("SURFACE_STYLE_REFLECTANCE_AMBIENT({})", a.join(",")) },
+                PartialEntity::SurfaceStyleRendering { rendering_method, surface_colour, .. } => { let a: Vec<String> = vec![rendering_method.token().to_string(), format!("#{}", self.id_of_ref_colour(surface_colour))]; format!("SURFACE_STYLE_RENDERING({})", a.join(",")) },
+                PartialEntity::SurfaceStyleRenderingWithProperties { properties, .. } => { let a: Vec<String> = vec![format!("({})", properties.iter().map(|e| format!("#{}", self.id_of_ref_rendering_properties_select(e))).collect::<Vec<_>>().join(","))]; format!("SURFACE_STYLE_RENDERING_WITH_PROPERTIES({})", a.join(",")) },
+                PartialEntity::SurfaceStyleSegmentationCurve { style_of_segmentation_curve, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_render(style_of_segmentation_curve))]; format!("SURFACE_STYLE_SEGMENTATION_CURVE({})", a.join(",")) },
+                PartialEntity::SurfaceStyleSilhouette { style_of_silhouette, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_render(style_of_silhouette))]; format!("SURFACE_STYLE_SILHOUETTE({})", a.join(",")) },
+                PartialEntity::SurfaceStyleUsage { side, style, .. } => { let a: Vec<String> = vec![side.token().to_string(), format!("#{}", self.id_of_ref_surface_side_style_select(style))]; format!("SURFACE_STYLE_USAGE({})", a.join(",")) },
+                PartialEntity::SymbolRepresentation => "SYMBOL_REPRESENTATION()".to_string(),
+                PartialEntity::SymbolStyle { name, style_of_symbol, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("#{}", self.id_of_ref_symbol_style_select(style_of_symbol))]; format!("SYMBOL_STYLE({})", a.join(",")) },
+                PartialEntity::TerminatorSymbol { annotated_curve, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_annotation_curve_occurrence(annotated_curve))]; format!("TERMINATOR_SYMBOL({})", a.join(",")) },
+                PartialEntity::TessellatedGeometricSet { children, .. } => { let a: Vec<String> = vec![format!("({})", children.iter().map(|e| format!("#{}", self.id_of_ref_tessellated_item(e))).collect::<Vec<_>>().join(","))]; format!("TESSELLATED_GEOMETRIC_SET({})", a.join(",")) },
+                PartialEntity::TessellatedItem => "TESSELLATED_ITEM()".to_string(),
+                PartialEntity::TessellatedShapeRepresentation => "TESSELLATED_SHAPE_REPRESENTATION()".to_string(),
+                PartialEntity::TessellatedStructuredItem => "TESSELLATED_STRUCTURED_ITEM()".to_string(),
+                PartialEntity::TextLiteral { literal, placement, alignment, path, font, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*literal)), format!("#{}", self.id_of_ref_axis2_placement(placement)), step_str(self.model.text(*alignment)), path.token().to_string(), format!("#{}", self.id_of_ref_font_select(font))]; format!("TEXT_LITERAL({})", a.join(",")) },
+                PartialEntity::TextStyle { name, character_appearance, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("#{}", self.id_of_ref_character_style_select(character_appearance))]; format!("TEXT_STYLE({})", a.join(",")) },
+                PartialEntity::TextStyleWithBoxCharacteristics { characteristics, .. } => { let a: Vec<String> = vec![format!("({})", characteristics.iter().map(|e| measure(self.model, e)).collect::<Vec<_>>().join(","))]; format!("TEXT_STYLE_WITH_BOX_CHARACTERISTICS({})", a.join(",")) },
+                PartialEntity::TextureStyleSpecification => "TEXTURE_STYLE_SPECIFICATION()".to_string(),
+                PartialEntity::TextureStyleTessellationSpecification => "TEXTURE_STYLE_TESSELLATION_SPECIFICATION()".to_string(),
+                PartialEntity::TimeUnit => "TIME_UNIT()".to_string(),
+                PartialEntity::ToleranceZone { defining_tolerance, form, .. } => { let a: Vec<String> = vec![format!("({})", defining_tolerance.iter().map(|e| format!("#{}", self.id_of_ref_tolerance_zone_target(e))).collect::<Vec<_>>().join(",")), format!("#{}", self.id_of_ref_tolerance_zone_form(form))]; format!("TOLERANCE_ZONE({})", a.join(",")) },
+                PartialEntity::ToleranceZoneDefinition { zone, boundaries, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_tolerance_zone(zone)), format!("({})", boundaries.iter().map(|e| format!("#{}", self.id_of_ref_shape_aspect(e))).collect::<Vec<_>>().join(","))]; format!("TOLERANCE_ZONE_DEFINITION({})", a.join(",")) },
+                PartialEntity::ToleranceZoneWithDatum { datum_reference, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_datum_system(datum_reference))]; format!("TOLERANCE_ZONE_WITH_DATUM({})", a.join(",")) },
+                PartialEntity::TopologicalRepresentationItem => "TOPOLOGICAL_REPRESENTATION_ITEM()".to_string(),
+                PartialEntity::ToroidalSurface { major_radius, minor_radius, .. } => { let a: Vec<String> = vec![real(*major_radius), real(*minor_radius)]; format!("TOROIDAL_SURFACE({})", a.join(",")) },
+                PartialEntity::TwoDirectionRepeatFactor { second_repeat_factor, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_vector(second_repeat_factor))]; format!("TWO_DIRECTION_REPEAT_FACTOR({})", a.join(",")) },
+                PartialEntity::UnequallyDisposedGeometricTolerance { displacement, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_length_measure_with_unit(displacement))]; format!("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE({})", a.join(",")) },
+                PartialEntity::UniformCurve => "UNIFORM_CURVE()".to_string(),
+                PartialEntity::UniformSurface => "UNIFORM_SURFACE()".to_string(),
+                PartialEntity::ValueRepresentationItem { value_component, .. } => { let a: Vec<String> = vec![measure(self.model, value_component)]; format!("VALUE_REPRESENTATION_ITEM({})", a.join(",")) },
+                PartialEntity::Vector { orientation, magnitude, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_direction(orientation)), real(*magnitude)]; format!("VECTOR({})", a.join(",")) },
+                PartialEntity::Vertex => "VERTEX()".to_string(),
+                PartialEntity::VertexPoint { vertex_geometry, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_point(vertex_geometry))]; format!("VERTEX_POINT({})", a.join(",")) },
+                PartialEntity::ViewVolume { projection_type, projection_point, view_plane_distance, front_plane_distance, front_plane_clipping, back_plane_distance, back_plane_clipping, view_volume_sides_clipping, view_window, .. } => { let a: Vec<String> = vec![projection_type.token().to_string(), format!("#{}", self.id_of_ref_cartesian_point(projection_point)), real(*view_plane_distance), real(*front_plane_distance), (if *front_plane_clipping { ".T." } else { ".F." }).to_string(), real(*back_plane_distance), (if *back_plane_clipping { ".T." } else { ".F." }).to_string(), (if *view_volume_sides_clipping { ".T." } else { ".F." }).to_string(), format!("#{}", self.id_of_ref_planar_box(view_window))]; format!("VIEW_VOLUME({})", a.join(",")) },
             });
                 }
                 format!("#{n} = ( {} );\n", part_txt.join(" "))
@@ -36266,14 +36298,14 @@ impl<'a> Writer<'a> {
             EntityKey::ViewVolume(_) => "VIEW_VOLUME",
             EntityKey::VolumeUnit(_) => "VOLUME_UNIT",
             EntityKey::WireShell(_) => "WIRE_SHELL",
-            EntityKey::ComplexUnit(_) => "",
+            EntityKey::ComplexEntity(_) => "",
         }
     }
 
     pub(crate) fn all_ids(&self) -> Vec<EntityKey> {
         let mut roots: Vec<EntityKey> = Vec::new();
-        for i in 0..self.model.complex_unit_arena.items.len() as u32 {
-            roots.push(EntityKey::ComplexUnit(ComplexUnitId(i)));
+        for i in 0..self.model.complex_entity_arena.items.len() as u32 {
+            roots.push(EntityKey::ComplexEntity(ComplexEntityId(i)));
         }
         for i in 0..self.model.action_arena.items.len() as u32 {
             roots.push(EntityKey::Action(ActionId(i)));

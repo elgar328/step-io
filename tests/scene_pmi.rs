@@ -531,7 +531,7 @@ fn reads_dimension_value() {
 
 // Three geometric tolerances sharing the product/aspect/unit scaffold: a
 // standalone FLATNESS_TOLERANCE (dedicated arena), a complex position tolerance
-// (multi-supertype ComplexUnit), and a magnitude-less STRAIGHTNESS_TOLERANCE.
+// (multi-supertype ComplexEntity), and a magnitude-less STRAIGHTNESS_TOLERANCE.
 // Each tolerance is a root (nothing references it), so settling keeps it.
 const TOL: &str = "\
 #1=APPLICATION_CONTEXT('test');\n\

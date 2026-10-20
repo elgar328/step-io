@@ -57,7 +57,7 @@ pub(crate) fn units_of(model: &StepModel) -> Units {
     let unit_refs: &[m::UnitRef] = ctx
         .and_then(|cu| {
             cu.parts.iter().find_map(|p| match p {
-                m::UnitPart::GlobalUnitAssignedContext { units } => Some(units.as_slice()),
+                m::PartialEntity::GlobalUnitAssignedContext { units } => Some(units.as_slice()),
                 _ => None,
             })
         })
@@ -83,7 +83,7 @@ pub(crate) fn units_of(model: &StepModel) -> Units {
     out.precision = ctx
         .and_then(|cu| {
             cu.parts.iter().find_map(|p| match p {
-                m::UnitPart::GlobalUncertaintyAssignedContext { uncertainty } => {
+                m::PartialEntity::GlobalUncertaintyAssignedContext { uncertainty } => {
                     Some(uncertainty.as_slice())
                 }
                 _ => None,
@@ -105,11 +105,11 @@ pub(crate) fn units_of(model: &StepModel) -> Units {
 
 /// The first complex instance carrying a `GLOBAL_UNIT_ASSIGNED_CONTEXT` facet —
 /// the model's unit context (it also carries the uncertainty facet).
-fn find_unit_context(model: &StepModel) -> Option<&m::ComplexUnit> {
-    model.complex_unit_arena.items.iter().find(|cu| {
+fn find_unit_context(model: &StepModel) -> Option<&m::ComplexEntity> {
+    model.complex_entity_arena.items.iter().find(|cu| {
         cu.parts
             .iter()
-            .any(|p| matches!(p, m::UnitPart::GlobalUnitAssignedContext { .. }))
+            .any(|p| matches!(p, m::PartialEntity::GlobalUnitAssignedContext { .. }))
     })
 }
 
@@ -126,10 +126,10 @@ fn classify_unit(model: &StepModel, ur: &m::UnitRef) -> Option<(UnitKind, Unit)>
             classify_cbu(model, model.text(cbu.name), &cbu.conversion_factor)
         }
         m::UnitRef::Complex(cuid) => {
-            let cu = model.complex_unit_arena.get(cuid.0);
+            let cu = model.complex_entity_arena.get(cuid.0);
             cu.parts.iter().find_map(|p| match p {
-                m::UnitPart::SiUnit { prefix, name } => Some(classify_si(*prefix, *name)),
-                m::UnitPart::ConversionBasedUnit {
+                m::PartialEntity::SiUnit { prefix, name } => Some(classify_si(*prefix, *name)),
+                m::PartialEntity::ConversionBasedUnit {
                     name,
                     conversion_factor,
                 } => classify_cbu(model, model.text(*name), conversion_factor),

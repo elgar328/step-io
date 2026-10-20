@@ -117,25 +117,25 @@ fn complex_instances_round_trip_with_zero_drops() {
         .collect();
     let curve = a
         .add_complex(vec![
-            m::UnitPart::BoundedCurve,
-            m::UnitPart::BSplineCurve {
+            m::PartialEntity::BoundedCurve,
+            m::PartialEntity::BSplineCurve {
                 degree: 2,
                 control_points_list: cps,
                 curve_form: m::BSplineCurveForm::Unspecified,
                 closed_curve: m::Logical::False,
                 self_intersect: m::Logical::False,
             },
-            m::UnitPart::BSplineCurveWithKnots {
+            m::PartialEntity::BSplineCurveWithKnots {
                 knot_multiplicities: vec![3, 3],
                 knots: vec![0.0, 1.0],
                 knot_spec: m::KnotType::Unspecified,
             },
-            m::UnitPart::Curve,
-            m::UnitPart::GeometricRepresentationItem,
-            m::UnitPart::RationalBSplineCurve {
+            m::PartialEntity::Curve,
+            m::PartialEntity::GeometricRepresentationItem,
+            m::PartialEntity::RationalBSplineCurve {
                 weights_data: vec![1.0, 2.0, 1.0],
             },
-            m::UnitPart::RepresentationItem { name: empty },
+            m::PartialEntity::RepresentationItem { name: empty },
         ])
         .expect("rational b-spline curve complex");
 
@@ -154,9 +154,9 @@ fn complex_instances_round_trip_with_zero_drops() {
     // Unit complex (millimetre) referenced by a context complex.
     let mm = a
         .add_complex(vec![
-            m::UnitPart::LengthUnit,
-            m::UnitPart::NamedUnit { dimensions: None },
-            m::UnitPart::SiUnit {
+            m::PartialEntity::LengthUnit,
+            m::PartialEntity::NamedUnit { dimensions: None },
+            m::PartialEntity::SiUnit {
                 prefix: Some(m::SiPrefix::Milli),
                 name: m::SiUnitName::Metre,
             },
@@ -164,13 +164,13 @@ fn complex_instances_round_trip_with_zero_drops() {
         .expect("si length unit complex");
     let ctx = a
         .add_complex(vec![
-            m::UnitPart::GeometricRepresentationContext {
+            m::PartialEntity::GeometricRepresentationContext {
                 coordinate_space_dimension: 3,
             },
-            m::UnitPart::GlobalUnitAssignedContext {
+            m::PartialEntity::GlobalUnitAssignedContext {
                 units: vec![m::UnitRef::Complex(mm)],
             },
-            m::UnitPart::RepresentationContext {
+            m::PartialEntity::RepresentationContext {
                 context_identifier: ctx,
                 context_type: three_d,
             },
@@ -187,7 +187,7 @@ fn complex_instances_round_trip_with_zero_drops() {
     let text = common::text(&a.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
-    assert_eq!(model.all::<step_io::model::ComplexUnit>().len(), 3);
+    assert_eq!(model.all::<step_io::model::ComplexEntity>().len(), 3);
     assert_eq!(model.all::<step_io::model::TrimmedCurve>().len(), 1);
 }
 
@@ -198,7 +198,7 @@ fn invalid_complex_part_sets_are_rejected() {
 
     // Missing supertype part: SI_UNIT alone (NAMED_UNIT chain absent).
     let err = a
-        .add_complex(vec![m::UnitPart::SiUnit {
+        .add_complex(vec![m::PartialEntity::SiUnit {
             prefix: None,
             name: m::SiUnitName::Metre,
         }])
@@ -213,13 +213,13 @@ fn invalid_complex_part_sets_are_rejected() {
     // Disjoint hierarchies: a unit part bag mixed with curve parts.
     let err = a
         .add_complex(vec![
-            m::UnitPart::BoundedCurve,
-            m::UnitPart::Curve,
-            m::UnitPart::GeometricRepresentationItem,
-            m::UnitPart::RepresentationItem { name: empty },
-            m::UnitPart::LengthUnit,
-            m::UnitPart::NamedUnit { dimensions: None },
-            m::UnitPart::SiUnit {
+            m::PartialEntity::BoundedCurve,
+            m::PartialEntity::Curve,
+            m::PartialEntity::GeometricRepresentationItem,
+            m::PartialEntity::RepresentationItem { name: empty },
+            m::PartialEntity::LengthUnit,
+            m::PartialEntity::NamedUnit { dimensions: None },
+            m::PartialEntity::SiUnit {
                 prefix: None,
                 name: m::SiUnitName::Metre,
             },
@@ -236,23 +236,23 @@ fn invalid_complex_part_sets_are_rejected() {
     // exclusive branches of b_spline_curve's ONEOF.
     let err = a
         .add_complex(vec![
-            m::UnitPart::BezierCurve,
-            m::UnitPart::BoundedCurve,
-            m::UnitPart::BSplineCurve {
+            m::PartialEntity::BezierCurve,
+            m::PartialEntity::BoundedCurve,
+            m::PartialEntity::BSplineCurve {
                 degree: 1,
                 control_points_list: vec![],
                 curve_form: m::BSplineCurveForm::Unspecified,
                 closed_curve: m::Logical::False,
                 self_intersect: m::Logical::False,
             },
-            m::UnitPart::BSplineCurveWithKnots {
+            m::PartialEntity::BSplineCurveWithKnots {
                 knot_multiplicities: vec![],
                 knots: vec![],
                 knot_spec: m::KnotType::Unspecified,
             },
-            m::UnitPart::Curve,
-            m::UnitPart::GeometricRepresentationItem,
-            m::UnitPart::RepresentationItem { name: empty },
+            m::PartialEntity::Curve,
+            m::PartialEntity::GeometricRepresentationItem,
+            m::PartialEntity::RepresentationItem { name: empty },
         ])
         .expect_err("oneof conflict must be rejected");
     assert!(matches!(
@@ -265,7 +265,7 @@ fn invalid_complex_part_sets_are_rejected() {
     // A part outside AP242 (ed3 leader-line PMI).
     let err = a
         .add_complex(vec![
-            m::UnitPart::AnnotationPlaceholderOccurrenceWithLeaderLine {
+            m::PartialEntity::AnnotationPlaceholderOccurrenceWithLeaderLine {
                 leader_line: vec![],
             },
         ])
@@ -280,13 +280,13 @@ fn invalid_complex_part_sets_are_rejected() {
     // A dangling reference inside an otherwise valid part bag.
     let err = a
         .add_complex(vec![
-            m::UnitPart::LengthUnit,
-            m::UnitPart::NamedUnit {
+            m::PartialEntity::LengthUnit,
+            m::PartialEntity::NamedUnit {
                 dimensions: Some(m::DimensionalExponentsRef::DimensionalExponents(
                     m::DimensionalExponentsId(9),
                 )),
             },
-            m::UnitPart::SiUnit {
+            m::PartialEntity::SiUnit {
                 prefix: None,
                 name: m::SiUnitName::Metre,
             },
@@ -483,11 +483,11 @@ fn aggregate_cardinality_is_enforced() {
     // is SET [1:?].
     let err = a
         .add_complex(vec![
-            m::UnitPart::GeometricRepresentationContext {
+            m::PartialEntity::GeometricRepresentationContext {
                 coordinate_space_dimension: 3,
             },
-            m::UnitPart::GlobalUnitAssignedContext { units: vec![] },
-            m::UnitPart::RepresentationContext {
+            m::PartialEntity::GlobalUnitAssignedContext { units: vec![] },
+            m::PartialEntity::RepresentationContext {
                 context_identifier: empty,
                 context_type: three_d,
             },
@@ -508,9 +508,9 @@ fn complex_instance_of_the_wrong_type_is_rejected() {
     let mut a = Ap242Author::new();
     let mm = a
         .add_complex(vec![
-            m::UnitPart::LengthUnit,
-            m::UnitPart::NamedUnit { dimensions: None },
-            m::UnitPart::SiUnit {
+            m::PartialEntity::LengthUnit,
+            m::PartialEntity::NamedUnit { dimensions: None },
+            m::PartialEntity::SiUnit {
                 prefix: Some(m::SiPrefix::Milli),
                 name: m::SiUnitName::Metre,
             },

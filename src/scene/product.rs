@@ -1377,9 +1377,9 @@ fn idt_of_cdsr<'m>(
     let m::ShapeRepresentationRelationshipRef::Complex(cuid) = rr else {
         return None;
     };
-    let parts = &cx.model.complex_unit_arena.get(cuid.0).parts;
+    let parts = &cx.model.complex_entity_arena.get(cuid.0).parts;
     let op = parts.iter().find_map(|p| match p {
-        m::UnitPart::RepresentationRelationshipWithTransformation {
+        m::PartialEntity::RepresentationRelationshipWithTransformation {
             transformation_operator,
         } => Some(transformation_operator),
         _ => None,
@@ -1388,7 +1388,7 @@ fn idt_of_cdsr<'m>(
         return None;
     };
     let reps = parts.iter().find_map(|p| match p {
-        m::UnitPart::RepresentationRelationship { rep_1, rep_2, .. } => {
+        m::PartialEntity::RepresentationRelationship { rep_1, rep_2, .. } => {
             Some((rep_1.entity_key(), rep_2.entity_key()))
         }
         _ => None,
