@@ -38,7 +38,7 @@ fn deep_nesting_is_graceful_not_stack_overflow() {
 fn normal_nesting_still_parses() {
     let body = "#1=CARTESIAN_POINT('',(0.,0.,0.));\n";
     let (_m, report) = read(doc(body).as_bytes()).expect("normal depth parses");
-    assert_eq!(report.validated, 1);
+    assert_eq!(report.entities_kept, 1);
 }
 
 /// Errors are structured (not flattened to a String): a caller can match the
@@ -100,11 +100,11 @@ fn max_u64_id_does_not_overflow_or_corrupt() {
 #1=DIRECTION('',(1.,0.,0.));\n";
     let (_m, report) = read(doc(body).as_bytes()).expect("parses without panic");
     assert_eq!(
-        report.validated + report.dropped.len(),
-        report.n_in + report.n_synth,
+        report.entities_kept + report.dropped.len(),
+        report.entities_read + report.entities_added,
         "accounting invariant"
     );
-    assert_eq!(report.validated, 2, "both entities kept (no overwrite)");
+    assert_eq!(report.entities_kept, 2, "both entities kept (no overwrite)");
     assert_eq!(report.dropped.len(), 0);
 }
 

@@ -62,13 +62,13 @@ pub(crate) fn normalize_entity(ent: &mut RawEntity, norm: &mut Vec<&'static str>
                 };
                 if needs_default {
                     *a = Attribute::Enum("NORMAL_SHADING".to_string());
-                    norm.push("entity: surface_style_rendering.rendering_method<-default");
+                    norm.push("missing or non-standard rendering method set to NORMAL_SHADING");
                 }
             }
             if let Some(a @ Attribute::Unset) = attributes.get_mut(1) {
                 *a = Attribute::EntityRef(0);
                 synth = Some(Synth::Colour { slot: 1 });
-                norm.push("entity: surface_style_rendering.surface_colour<-COLOUR()");
+                norm.push("missing surface colour set to an unspecified COLOUR");
             }
         }
         // a styles member (attr 0, SET OF
@@ -86,7 +86,7 @@ pub(crate) fn normalize_entity(ent: &mut RawEntity, norm: &mut Vec<&'static str>
                             type_name: "NULL_STYLE".to_string(),
                             value: Box::new(val),
                         };
-                        norm.push("entity: psa.styles bare-null-style->typed");
+                        norm.push("bare null style written as NULL_STYLE");
                     }
                 }
             }

@@ -245,6 +245,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `InvalidBinary`; both used to be `UnexpectedCharacter`.
 - The `step_io::Result` alias is removed; write
   `Result<T, step_io::Error>`.
+- `Report`'s counts are `entities_read`, `entities_added` and
+  `entities_kept` (were `n_in`, `n_synth` and `validated`), and
+  `DropReason::key` is `DropReason::detail`. `DropKind` and `DropReason`
+  implement `Display` (`cascade: via-dangling`).
 - A file whose `FILE_SCHEMA` names no schema reads as `ApFamily::Other`; it
   used to read as AP214, the default `ApFamily` had. `ApFamily` has no
   default now, and `ApFamily`, `Stage` and `SchemaId` are
@@ -260,9 +264,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `Graph` that `parse()` returns takes about 40% less
   memory, 300 MB instead of 480 MB for the same file, as its attribute lists
   are allocated at their exact length.
-- `Report::norm` lists the notes in the order of the entities in the file;
-  it used to list the entity-specific fixes first and the generic ones after,
-  each in id order.
+- `Report::normalized` (was `norm`) lists each note with the id of the
+  entity it fixed, in the order of the entities in the file; it used to list
+  the notes alone, the entity-specific fixes first and the generic ones
+  after, each in id order. The entity-specific notes read as sentences like
+  the others (`missing surface colour set to an unspecified COLOUR`).
 - `Report::dropped` is sorted by entity id.
 - An entity dropped because it references an entity that normalization
   dropped now carries that entity's reason in its cascade label, such as

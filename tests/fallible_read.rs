@@ -24,8 +24,8 @@ fn read_body(body: &str) -> Report {
     let src = format!("{HEADER}{body}{FOOTER}");
     let (_model, report) = read(src.as_bytes()).expect("source parses");
     assert_eq!(
-        report.validated + report.dropped.len(),
-        report.n_in + report.n_synth,
+        report.entities_kept + report.dropped.len(),
+        report.entities_read + report.entities_added,
         "accounting invariant: validated + dropped == n_in + n_synth"
     );
     report
@@ -46,7 +46,7 @@ fn off_kind_scalar_drops_only_offender() {
         read_body("#1=CARTESIAN_POINT('',(0.,0.,0.));\n#2=CARTESIAN_POINT('',('x','y','z'));\n");
     assert_eq!(dropped_kind(&r, 2), Some(&DropKind::Unclassified));
     assert!(dropped_kind(&r, 1).is_none(), "valid #1 must survive");
-    assert!(r.validated >= 1);
+    assert!(r.entities_kept >= 1);
 }
 
 /// Short arity: `#2` is missing its `coordinates` slot. Dropped Unclassified.
@@ -99,7 +99,7 @@ fn wrong_type_ref_drops_only_offender() {
 fn valid_body_keeps_all() {
     let r = read_body("#1=CARTESIAN_POINT('',(0.,0.,0.));\n#2=DIRECTION('',(1.,0.,0.));\n");
     assert_eq!(r.dropped.len(), 0);
-    assert_eq!(r.validated, 2);
+    assert_eq!(r.entities_kept, 2);
     assert!(r.parse_warnings.is_empty(), "{:?}", r.parse_warnings);
 }
 
@@ -108,7 +108,7 @@ fn valid_body_keeps_all() {
 #[test]
 fn parser_repairs_are_reported() {
     let r = read_body("#1=CARTESIAN_POINT('NAUO8\\Redondeo1',(0.,0.,0.));\n");
-    assert_eq!(r.validated, 1, "the entity is kept");
+    assert_eq!(r.entities_kept, 1, "the entity is kept");
     assert!(
         matches!(
             r.parse_warnings[..],
@@ -164,11 +164,16 @@ fn id_layout_does_not_change_the_read() {
                     .iter()
                     .position(|i| i == id)
                     .expect("dropped id is in the body");
-                (slot, format!("{:?}: {}", d.kind, d.key))
+                (slot, format!("{:?}: {}", d.kind, d.detail))
             })
             .collect();
         drops.sort();
-        seen.push((r.n_in, r.validated, drops, common::text(&model)));
+        seen.push((
+            r.entities_read,
+            r.entities_kept,
+            drops,
+            common::text(&model),
+        ));
     }
     let (n_in, validated, drops, _) = &seen[0];
     assert_eq!((*n_in, *validated), (8, 5), "drops: {drops:?}");
@@ -200,7 +205,7 @@ fn file_order_does_not_change_the_read() {
     let read_lines = |lines: &[&str]| {
         let src = format!("{HEADER}{}\n{FOOTER}", lines.join("\n"));
         let (model, mut r) = read(src.as_bytes()).expect("source parses");
-        r.norm.sort_unstable();
+        r.normalized.sort_unstable();
         (common::text(&model), format!("{r:?}"))
     };
     let mut reversed = lines;
@@ -212,7 +217,7 @@ fn file_order_does_not_change_the_read() {
 
 /// A rendering with no colour gets a bare `COLOUR()`, which stays in the model
 /// even when the rendering itself is dropped later. Two such renderings
-/// written in either order read the same.
+/// written in either order read the same, but for the order of the notes.
 #[test]
 fn synthetic_colour_is_kept_and_numbered_by_its_creator() {
     let renderings = [
@@ -221,14 +226,17 @@ fn synthetic_colour_is_kept_and_numbered_by_its_creator() {
     ];
     let read_lines = |lines: &[&str]| {
         let src = format!("{HEADER}{}\n{FOOTER}", lines.join("\n"));
-        let (model, r) = read(src.as_bytes()).expect("source parses");
+        let (model, mut r) = read(src.as_bytes()).expect("source parses");
+        r.normalized.sort_unstable();
         (common::text(&model), r)
     };
     let (text, r) = read_lines(&renderings);
-    assert_eq!((r.n_in, r.n_synth), (2, 2));
+    assert_eq!((r.entities_read, r.entities_added), (2, 2));
     assert_eq!(dropped_kind(&r, 10), Some(&DropKind::Cascade));
-    assert_eq!(r.validated, 3, "#20 and both colours: {:?}", r.dropped);
+    assert_eq!(r.entities_kept, 3, "#20 and both colours: {:?}", r.dropped);
     assert_eq!(text.matches("COLOUR()").count(), 2, "{text}");
+    let colour_note = "missing surface colour set to an unspecified COLOUR";
+    assert_eq!(r.normalized, [(10, colour_note), (20, colour_note)]);
     let (text_rev, r_rev) = read_lines(&[renderings[1], renderings[0]]);
     assert_eq!(text_rev, text);
     assert_eq!(format!("{r_rev:?}"), format!("{r:?}"));
@@ -250,7 +258,7 @@ fn normalization_drops_name_their_reason_in_cascades() {
         r.dropped
             .iter()
             .find(|(i, _)| *i == id)
-            .map(|(_, d)| d.key.as_str())
+            .map(|(_, d)| d.detail.as_str())
     };
     assert_eq!(dropped_kind(&r, 1), Some(&DropKind::NonstandardValue));
     assert_eq!(key(3), Some("via-required reference is missing"));
@@ -290,7 +298,7 @@ fn read_failures_reach_their_referrers() {
     );
     assert_eq!(dropped_kind(&r, 1), Some(&DropKind::Unclassified));
     assert!(dropped_kind(&r, 2).is_some(), "{:?}", r.dropped);
-    assert_eq!(r.validated, 2, "{:?}", r.dropped);
+    assert_eq!(r.entities_kept, 2, "{:?}", r.dropped);
 }
 
 /// A repeated id is an error, reported at the repeat that comes first in the
@@ -346,9 +354,9 @@ fn coordinates_past_the_bound_drop_the_point() {
         r.dropped
             .iter()
             .find(|(i, _)| *i == id)
-            .map(|(_, d)| d.key.as_str())
+            .map(|(_, d)| d.detail.as_str())
     };
     assert_eq!(key(1), Some("list has more values than its type allows"));
     assert_eq!(dropped_kind(&r, 2), Some(&DropKind::Cascade));
-    assert_eq!(r.validated, 1, "{:?}", r.dropped);
+    assert_eq!(r.entities_kept, 1, "{:?}", r.dropped);
 }

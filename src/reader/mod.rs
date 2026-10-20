@@ -33,58 +33,83 @@ use refs::RefStore;
 use table::{EntityTable, IdMap, Labels, Member, NONE, Row, first_duplicate, sort_rows};
 
 /// Why an entity was dropped before it could enter the model.
-/// `NonstandardValue` = one of the entity's own attribute *values* is nonstandard
-/// and could not be normalized (a required reference is missing, an integer field
-/// holds a fractional value). `NonstandardReference` = one of its *reference*
-/// slots points at a target the schema does not admit. `Unimplemented` = the
-/// entity type is outside the generated closure (not yet modeled, or an
-/// unknown/non-schema name). `Cascade` = a referrer whose target was
-/// dropped/dangling. `Unclassified` = the generated read could not consume the
-/// entity's own attributes (off-kind scalar, bad enum token, short arity, …) and
-/// no policy layer (normalize / `drop_pass`) classified it — a frontier signal:
-/// investigate and absorb via normalize or `nonstd_ref`.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[non_exhaustive]
 pub enum DropKind {
+    /// One of the entity's own values is nonstandard and has no standard
+    /// rewrite: a required reference is missing, an integer field holds a
+    /// fractional value, a list is longer than its type allows.
     NonstandardValue,
+    /// The entity type is not one step-io reads: not yet supported, or not a
+    /// schema entity at all.
     Unimplemented,
+    /// One of its references points at an entity of a type the schema does
+    /// not allow there.
     NonstandardReference,
+    /// It references an entity that was dropped, or an id the file does not
+    /// define.
     Cascade,
+    /// Its own values could not be read (a value of the wrong kind, an
+    /// unknown enumeration value, too few attributes) for a reason none of
+    /// the other kinds names.
     Unclassified,
 }
 
-/// A drop reason: kind + a human label (`<TYPE>` / `<ENT>: '<slot>' references
-/// <TYPE>` / a slot-rule name / `via-<root>`). Aggregated as instance counts per
-/// reason.
+/// `nonstandard value`, `unimplemented`, `nonstandard reference`, `cascade`
+/// or `unclassified`.
+impl std::fmt::Display for DropKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Self::NonstandardValue => "nonstandard value",
+            Self::Unimplemented => "unimplemented",
+            Self::NonstandardReference => "nonstandard reference",
+            Self::Cascade => "cascade",
+            Self::Unclassified => "unclassified",
+        })
+    }
+}
+
+/// Why an entity was dropped: its [`DropKind`] and the detail.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[non_exhaustive]
 pub struct DropReason {
     pub kind: DropKind,
-    pub key: String,
+    /// What the kind is about: the entity type (`Unimplemented`); the rule a
+    /// value breaks (`NonstandardValue`); `<ENTITY>: '<attribute>' references
+    /// <TYPE>` (`NonstandardReference`); `via-` and the reason of the entity
+    /// the cascade starts from, or `via-dangling` for an id the file does not
+    /// define (`Cascade`); what could not be read (`Unclassified`).
+    pub detail: String,
 }
 
-/// Input-to-model provenance. Every input entity plus every synthetic entity
-/// added by normalization is either kept (`validated`) or dropped with a reason
-/// (`drops`): `validated + sum(drops) == n_in + n_synth`. `norm` = rewrite (fix)
-/// notes from normalization; `parse_warnings` = what the parser repaired
-/// before that. The source header (including the identified schema)
-/// lives on the model: [`StepModel::header`].
+/// `kind: detail`, as in `cascade: via-dangling`.
+impl std::fmt::Display for DropReason {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}: {}", self.kind, self.detail)
+    }
+}
+
+/// What reading did with the file's entities. Every entity read, and every
+/// entity reading added, is either kept or dropped with a reason:
+/// `entities_kept + dropped.len() == entities_read + entities_added`. The
+/// source header, with the identified schema, is on the model:
+/// [`StepModel::header`].
 #[derive(Clone, Debug, Default)]
 #[non_exhaustive]
 pub struct Report {
-    /// Input entity count (data section, before normalization).
-    pub n_in: usize,
-    /// Synthetic entities added by per-entity normalization (add-only).
-    pub n_synth: usize,
-    /// Kept entity count (entities that entered the model).
-    pub validated: usize,
-    /// Dropped entities, per-entity: input id + reason (nonstandard-value +
-    /// unimplemented + cascade + nonstandard-reference), in id order.
-    /// `dropped.len()` is the total drop count.
+    /// The entities in the file's DATA section.
+    pub entities_read: usize,
+    /// Entities reading added to give a fixed entity a value it lacked (a
+    /// bare `COLOUR` for a missing surface colour).
+    pub entities_added: usize,
+    /// The entities that entered the model.
+    pub entities_kept: usize,
+    /// The entities dropped, by id and reason, in id order.
     pub dropped: Vec<(u64, DropReason)>,
-    /// Non-standard rewrite notes (entities fixed in place), in the order the
-    /// entities appear in the file.
-    pub norm: Vec<&'static str>,
+    /// What was rewritten to the standard form, by entity id and note
+    /// (`missing required text set to empty`), in file order. The entity may
+    /// still be dropped for another reason.
+    pub normalized: Vec<(u64, &'static str)>,
     /// What the parser repaired or skipped on the way in (blank attribute
     /// slots, an undecodable string escape, …) — fixed at the syntax level,
     /// before normalization. Each prints as a one-line message.
@@ -118,7 +143,9 @@ struct Scan {
     rows: Vec<Row>,
     refs: RefStore,
     labels: Labels,
-    norm: Vec<&'static str>,
+    norm: Vec<(u64, &'static str)>,
+    /// The notes of the entity being normalized, before they get its id.
+    notes: Vec<&'static str>,
     build_fail: Vec<(u64, String)>,
     synthetic: Vec<Synthetic>,
     max_id: Option<u64>,
@@ -143,13 +170,16 @@ impl Scan {
         };
         // A synthetic entity is added before the generic rules run: it stays
         // in the model even if they then drop the entity that references it.
-        let synth = entity_normalize::normalize_entity(&mut ent, &mut self.norm).map(|s| {
+        let synth = entity_normalize::normalize_entity(&mut ent, &mut self.notes).map(|s| {
             let Synth::Colour { slot } = s;
             let k = to_u32(self.synthetic.len());
             self.add_colour(id);
             (slot, k)
         });
-        if let Err(reason) = generic_normalize::normalize_entity(&mut ent, &mut self.norm) {
+        let generic = generic_normalize::normalize_entity(&mut ent, &mut self.notes);
+        self.norm
+            .extend(self.notes.drain(..).map(|note| (id, note)));
+        if let Err(reason) = generic {
             row.member = Member::Rejected;
             row.label = self.labels.intern(reason);
             self.rows.push(row);
@@ -287,7 +317,7 @@ struct Scanned {
     table: EntityTable,
     refs: RefStore,
     labels: Labels,
-    norm: Vec<&'static str>,
+    norm: Vec<(u64, &'static str)>,
     build_fail: Vec<(u64, String)>,
     n_in: usize,
     n_synth: usize,
@@ -391,7 +421,7 @@ fn drop_pass(
                     row.id,
                     DropReason {
                         kind: DropKind::Unimplemented,
-                        key: labels.get(row.label).to_string(),
+                        detail: labels.get(row.label).to_string(),
                     },
                 ));
             }
@@ -417,13 +447,13 @@ fn drop_pass(
             if let Some(target) = missing {
                 keep[pos] = false;
                 let root = target.and_then(|p| root_of.get(&p).copied());
-                let key = format!("via-{}", root.map_or("dangling", |l| labels.get(l)));
+                let detail = format!("via-{}", root.map_or("dangling", |l| labels.get(l)));
                 let root = root.unwrap_or_else(|| labels.intern("dangling"));
                 dropped.push((
                     row.id,
                     DropReason {
                         kind: DropKind::Cascade,
-                        key,
+                        detail,
                     },
                 ));
                 root_of.insert(pos, root);
@@ -443,7 +473,7 @@ fn drop_pass(
                     row.id,
                     DropReason {
                         kind: DropKind::NonstandardReference,
-                        key: reason,
+                        detail: reason,
                     },
                 ));
                 removed = true;
@@ -520,27 +550,22 @@ fn resolve(
     fails
 }
 
-/// Read a STEP file into the schema-faithful model, returning a provenance
-/// `Report`.
+/// Read a STEP file into the schema-faithful model, with a [`Report`] of what
+/// was kept, rewritten to the standard form, or dropped and why.
 ///
 /// `input` is read a chunk at a time (no need to wrap it in a `BufReader`;
 /// pass `&mut r` to keep `r`), and the file one entity at a time: each is
 /// normalized and built into the model as it is parsed, keeping only its
 /// references for later. Each entity reads as UTF-8 or ISO 8859-1 as
-/// [`parse`](crate::parser::parse) describes.
-/// The generated read is per-entity fallible: an entity whose own attributes
-/// the strict reader cannot consume is dropped (reason recorded), never
-/// panicking. A read failure pre-drops that entity in the next `drop_pass`,
-/// so its referrers cascade through the same engine. The loop is bounded and
-/// converges in ≤2 real iterations (own-attr readability is
-/// graph-independent, so all failures surface in the first round; the second
-/// `drop_pass` cascades them to a clean set).
+/// [`parse`](crate::parser::parse) describes. An entity that cannot enter the
+/// model is dropped with its reason, and so is every entity that references
+/// it; the rest of the file reads as usual.
 ///
 /// # Errors
-/// Returns a [`Error`] only if the file does not parse, or [`Error::Io`] if
-/// `input` fails. A parsed file never fails the read: a malformed entity is
-/// dropped with a reason in [`Report::dropped`] (the generated read is
-/// structurally panic-free).
+/// [`Error::Io`] if `input` fails, and another [`Error`] if the file does not
+/// parse as Part 21 or is too large to index ([`Error::TooLarge`]). A file
+/// that parses is read: a malformed entity is dropped, with its reason in
+/// [`Report::dropped`].
 pub fn read(input: impl Read) -> Result<(StepModel, Report), Error> {
     // Row positions and arena indices are 32-bit, `NONE` reserved.
     read_at_most(input, NONE as usize)
@@ -642,7 +667,7 @@ fn read_at_most(input: impl Read, limit: usize) -> Result<(StepModel, Report), E
                 row.id,
                 DropReason {
                     kind: DropKind::NonstandardValue,
-                    key: labels.get(row.label).to_string(),
+                    detail: labels.get(row.label).to_string(),
                 },
             ));
         }
@@ -652,7 +677,7 @@ fn read_at_most(input: impl Read, limit: usize) -> Result<(StepModel, Report), E
             id,
             DropReason {
                 kind: DropKind::Unclassified,
-                key: r,
+                detail: r,
             },
         ));
     }
@@ -661,11 +686,11 @@ fn read_at_most(input: impl Read, limit: usize) -> Result<(StepModel, Report), E
     Ok((
         model,
         Report {
-            n_in,
-            n_synth,
-            validated,
+            entities_read: n_in,
+            entities_added: n_synth,
+            entities_kept: validated,
             dropped,
-            norm,
+            normalized: norm,
             parse_warnings,
         },
     ))
