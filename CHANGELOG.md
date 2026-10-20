@@ -73,6 +73,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `is_visible()`.
 - `FeatureGeometry::Mesh` and `FeatureGeometry::GeometricSet` give a feature's
   display mesh or geometric set, which used to come back as `Other`.
+- `EntityKey::keyword()` gives the STEP keyword of the entity type a key
+  names, such as `ADVANCED_FACE`, or `None` for a complex instance.
 - `Bound::vertex()` gives the vertex of a `VERTEX_LOOP` boundary, such as a
   cone's apex, which has no edges.
 - `Curve::curve_3d()` reaches the 3D curve of a `SURFACE_CURVE`,

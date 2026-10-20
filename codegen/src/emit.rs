@@ -455,6 +455,28 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
         )
         .unwrap();
     }
+    writeln!(s, "        }}\n    }}\n").unwrap();
+
+    // EntityKey::keyword: the STEP name of the key's entity type.
+    writeln!(
+        s,
+        "    /// The STEP keyword of the entity type this key names\n    \
+         /// (`ADVANCED_FACE`); `None` for a complex instance, which joins several.\n    \
+         #[must_use]\n    \
+         pub fn keyword(self) -> Option<&'static str> {{\n        match self {{"
+    )
+    .unwrap();
+    for se in &ir.simples {
+        writeln!(
+            s,
+            "            EntityKey::{}(_) => Some(\"{}\"),",
+            se.rust, se.name
+        )
+        .unwrap();
+    }
+    if ir.has_part_bag {
+        writeln!(s, "            EntityKey::ComplexUnit(_) => None,").unwrap();
+    }
     writeln!(s, "        }}\n    }}\n}}\n").unwrap();
 
     // Ref enums.

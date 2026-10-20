@@ -52,3 +52,19 @@ fn reads_entities_by_type_and_by_id() {
     // An id out of range is `None` for `get` (and a panic for indexing).
     assert!(model.get(step_io::model::LineId(1)).is_none());
 }
+
+/// A key names its entity type's STEP keyword; a complex instance has none.
+#[test]
+fn entity_keys_name_their_keyword() {
+    use step_io::EntityKey;
+    use step_io::model::{AdvancedFaceId, ComplexUnitId, ShellBasedSurfaceModelId};
+    assert_eq!(
+        EntityKey::AdvancedFace(AdvancedFaceId(0)).keyword(),
+        Some("ADVANCED_FACE")
+    );
+    assert_eq!(
+        EntityKey::ShellBasedSurfaceModel(ShellBasedSurfaceModelId(3)).keyword(),
+        Some("SHELL_BASED_SURFACE_MODEL")
+    );
+    assert_eq!(EntityKey::ComplexUnit(ComplexUnitId(0)).keyword(), None);
+}

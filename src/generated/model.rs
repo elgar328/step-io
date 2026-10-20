@@ -3325,6 +3325,668 @@ impl EntityKey {
             EntityKey::ComplexUnit(i) => (501, i.0),
         }
     }
+
+    /// The STEP keyword of the entity type this key names
+    /// (`ADVANCED_FACE`); `None` for a complex instance, which joins several.
+    #[must_use]
+    pub fn keyword(self) -> Option<&'static str> {
+        match self {
+            EntityKey::Action(_) => Some("ACTION"),
+            EntityKey::ActionAssignment(_) => Some("ACTION_ASSIGNMENT"),
+            EntityKey::ActionDirective(_) => Some("ACTION_DIRECTIVE"),
+            EntityKey::ActionMethod(_) => Some("ACTION_METHOD"),
+            EntityKey::ActionMethodRelationship(_) => Some("ACTION_METHOD_RELATIONSHIP"),
+            EntityKey::ActionProperty(_) => Some("ACTION_PROPERTY"),
+            EntityKey::ActionRelationship(_) => Some("ACTION_RELATIONSHIP"),
+            EntityKey::ActionRequestAssignment(_) => Some("ACTION_REQUEST_ASSIGNMENT"),
+            EntityKey::ActionRequestSolution(_) => Some("ACTION_REQUEST_SOLUTION"),
+            EntityKey::ActionResource(_) => Some("ACTION_RESOURCE"),
+            EntityKey::ActionResourceRelationship(_) => Some("ACTION_RESOURCE_RELATIONSHIP"),
+            EntityKey::ActionResourceRequirement(_) => Some("ACTION_RESOURCE_REQUIREMENT"),
+            EntityKey::ActionResourceType(_) => Some("ACTION_RESOURCE_TYPE"),
+            EntityKey::Address(_) => Some("ADDRESS"),
+            EntityKey::AdvancedBrepShapeRepresentation(_) => {
+                Some("ADVANCED_BREP_SHAPE_REPRESENTATION")
+            }
+            EntityKey::AdvancedFace(_) => Some("ADVANCED_FACE"),
+            EntityKey::AllAroundShapeAspect(_) => Some("ALL_AROUND_SHAPE_ASPECT"),
+            EntityKey::AngularLocation(_) => Some("ANGULAR_LOCATION"),
+            EntityKey::AngularSize(_) => Some("ANGULAR_SIZE"),
+            EntityKey::AngularityTolerance(_) => Some("ANGULARITY_TOLERANCE"),
+            EntityKey::AnnotationCurveOccurrence(_) => Some("ANNOTATION_CURVE_OCCURRENCE"),
+            EntityKey::AnnotationFillAreaOccurrence(_) => Some("ANNOTATION_FILL_AREA_OCCURRENCE"),
+            EntityKey::AnnotationOccurrence(_) => Some("ANNOTATION_OCCURRENCE"),
+            EntityKey::AnnotationOccurrenceAssociativity(_) => {
+                Some("ANNOTATION_OCCURRENCE_ASSOCIATIVITY")
+            }
+            EntityKey::AnnotationOccurrenceRelationship(_) => {
+                Some("ANNOTATION_OCCURRENCE_RELATIONSHIP")
+            }
+            EntityKey::AnnotationPlaceholderLeaderLine(_) => {
+                Some("ANNOTATION_PLACEHOLDER_LEADER_LINE")
+            }
+            EntityKey::AnnotationPlaceholderOccurrence(_) => {
+                Some("ANNOTATION_PLACEHOLDER_OCCURRENCE")
+            }
+            EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(_) => {
+                Some("ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE")
+            }
+            EntityKey::AnnotationPlane(_) => Some("ANNOTATION_PLANE"),
+            EntityKey::AnnotationSymbol(_) => Some("ANNOTATION_SYMBOL"),
+            EntityKey::AnnotationSymbolOccurrence(_) => Some("ANNOTATION_SYMBOL_OCCURRENCE"),
+            EntityKey::AnnotationText(_) => Some("ANNOTATION_TEXT"),
+            EntityKey::AnnotationTextCharacter(_) => Some("ANNOTATION_TEXT_CHARACTER"),
+            EntityKey::AnnotationTextOccurrence(_) => Some("ANNOTATION_TEXT_OCCURRENCE"),
+            EntityKey::AnnotationToAnnotationLeaderLine(_) => {
+                Some("ANNOTATION_TO_ANNOTATION_LEADER_LINE")
+            }
+            EntityKey::AnnotationToModelLeaderLine(_) => Some("ANNOTATION_TO_MODEL_LEADER_LINE"),
+            EntityKey::ApllPoint(_) => Some("APLL_POINT"),
+            EntityKey::ApllPointWithSurface(_) => Some("APLL_POINT_WITH_SURFACE"),
+            EntityKey::ApplicationContext(_) => Some("APPLICATION_CONTEXT"),
+            EntityKey::ApplicationContextElement(_) => Some("APPLICATION_CONTEXT_ELEMENT"),
+            EntityKey::ApplicationProtocolDefinition(_) => Some("APPLICATION_PROTOCOL_DEFINITION"),
+            EntityKey::AppliedApprovalAssignment(_) => Some("APPLIED_APPROVAL_ASSIGNMENT"),
+            EntityKey::AppliedDateAndTimeAssignment(_) => Some("APPLIED_DATE_AND_TIME_ASSIGNMENT"),
+            EntityKey::AppliedDocumentReference(_) => Some("APPLIED_DOCUMENT_REFERENCE"),
+            EntityKey::AppliedExternalIdentificationAssignment(_) => {
+                Some("APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT")
+            }
+            EntityKey::AppliedGroupAssignment(_) => Some("APPLIED_GROUP_ASSIGNMENT"),
+            EntityKey::AppliedPersonAndOrganizationAssignment(_) => {
+                Some("APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT")
+            }
+            EntityKey::AppliedPresentedItem(_) => Some("APPLIED_PRESENTED_ITEM"),
+            EntityKey::AppliedSecurityClassificationAssignment(_) => {
+                Some("APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT")
+            }
+            EntityKey::Approval(_) => Some("APPROVAL"),
+            EntityKey::ApprovalAssignment(_) => Some("APPROVAL_ASSIGNMENT"),
+            EntityKey::ApprovalDateTime(_) => Some("APPROVAL_DATE_TIME"),
+            EntityKey::ApprovalPersonOrganization(_) => Some("APPROVAL_PERSON_ORGANIZATION"),
+            EntityKey::ApprovalRole(_) => Some("APPROVAL_ROLE"),
+            EntityKey::ApprovalStatus(_) => Some("APPROVAL_STATUS"),
+            EntityKey::ApproximationTolerance(_) => Some("APPROXIMATION_TOLERANCE"),
+            EntityKey::ApproximationToleranceDeviation(_) => {
+                Some("APPROXIMATION_TOLERANCE_DEVIATION")
+            }
+            EntityKey::ApproximationToleranceParameter(_) => {
+                Some("APPROXIMATION_TOLERANCE_PARAMETER")
+            }
+            EntityKey::AreaInSet(_) => Some("AREA_IN_SET"),
+            EntityKey::AreaUnit(_) => Some("AREA_UNIT"),
+            EntityKey::AscribableState(_) => Some("ASCRIBABLE_STATE"),
+            EntityKey::AscribableStateRelationship(_) => Some("ASCRIBABLE_STATE_RELATIONSHIP"),
+            EntityKey::AssemblyComponentUsage(_) => Some("ASSEMBLY_COMPONENT_USAGE"),
+            EntityKey::AuxiliaryLeaderLine(_) => Some("AUXILIARY_LEADER_LINE"),
+            EntityKey::Axis1Placement(_) => Some("AXIS1_PLACEMENT"),
+            EntityKey::Axis2Placement2d(_) => Some("AXIS2_PLACEMENT_2D"),
+            EntityKey::Axis2Placement3d(_) => Some("AXIS2_PLACEMENT_3D"),
+            EntityKey::BSplineCurve(_) => Some("B_SPLINE_CURVE"),
+            EntityKey::BSplineCurveWithKnots(_) => Some("B_SPLINE_CURVE_WITH_KNOTS"),
+            EntityKey::BSplineSurface(_) => Some("B_SPLINE_SURFACE"),
+            EntityKey::BSplineSurfaceWithKnots(_) => Some("B_SPLINE_SURFACE_WITH_KNOTS"),
+            EntityKey::BezierCurve(_) => Some("BEZIER_CURVE"),
+            EntityKey::BezierSurface(_) => Some("BEZIER_SURFACE"),
+            EntityKey::BoundedCurve(_) => Some("BOUNDED_CURVE"),
+            EntityKey::BoundedPcurve(_) => Some("BOUNDED_PCURVE"),
+            EntityKey::BoundedSurface(_) => Some("BOUNDED_SURFACE"),
+            EntityKey::BoundedSurfaceCurve(_) => Some("BOUNDED_SURFACE_CURVE"),
+            EntityKey::BrepWithVoids(_) => Some("BREP_WITH_VOIDS"),
+            EntityKey::CalendarDate(_) => Some("CALENDAR_DATE"),
+            EntityKey::CameraImage(_) => Some("CAMERA_IMAGE"),
+            EntityKey::CameraImage3dWithScale(_) => Some("CAMERA_IMAGE_3D_WITH_SCALE"),
+            EntityKey::CameraModel(_) => Some("CAMERA_MODEL"),
+            EntityKey::CameraModelD3(_) => Some("CAMERA_MODEL_D3"),
+            EntityKey::CameraModelD3MultiClipping(_) => Some("CAMERA_MODEL_D3_MULTI_CLIPPING"),
+            EntityKey::CameraModelD3WithHlhsr(_) => Some("CAMERA_MODEL_D3_WITH_HLHSR"),
+            EntityKey::CameraUsage(_) => Some("CAMERA_USAGE"),
+            EntityKey::CartesianPoint(_) => Some("CARTESIAN_POINT"),
+            EntityKey::CcDesignApproval(_) => Some("CC_DESIGN_APPROVAL"),
+            EntityKey::CcDesignDateAndTimeAssignment(_) => {
+                Some("CC_DESIGN_DATE_AND_TIME_ASSIGNMENT")
+            }
+            EntityKey::CcDesignPersonAndOrganizationAssignment(_) => {
+                Some("CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT")
+            }
+            EntityKey::CcDesignSecurityClassification(_) => {
+                Some("CC_DESIGN_SECURITY_CLASSIFICATION")
+            }
+            EntityKey::CentreOfSymmetry(_) => Some("CENTRE_OF_SYMMETRY"),
+            EntityKey::Certification(_) => Some("CERTIFICATION"),
+            EntityKey::CertificationType(_) => Some("CERTIFICATION_TYPE"),
+            EntityKey::Change(_) => Some("CHANGE"),
+            EntityKey::ChangeRequest(_) => Some("CHANGE_REQUEST"),
+            EntityKey::CharacterGlyphStyleOutline(_) => Some("CHARACTER_GLYPH_STYLE_OUTLINE"),
+            EntityKey::CharacterGlyphStyleStroke(_) => Some("CHARACTER_GLYPH_STYLE_STROKE"),
+            EntityKey::CharacterizedItemWithinRepresentation(_) => {
+                Some("CHARACTERIZED_ITEM_WITHIN_REPRESENTATION")
+            }
+            EntityKey::CharacterizedObject(_) => Some("CHARACTERIZED_OBJECT"),
+            EntityKey::CharacterizedRepresentation(_) => Some("CHARACTERIZED_REPRESENTATION"),
+            EntityKey::Circle(_) => Some("CIRCLE"),
+            EntityKey::CircularRunoutTolerance(_) => Some("CIRCULAR_RUNOUT_TOLERANCE"),
+            EntityKey::ClosedShell(_) => Some("CLOSED_SHELL"),
+            EntityKey::CoaxialityTolerance(_) => Some("COAXIALITY_TOLERANCE"),
+            EntityKey::Colour(_) => Some("COLOUR"),
+            EntityKey::ColourRgb(_) => Some("COLOUR_RGB"),
+            EntityKey::ColourSpecification(_) => Some("COLOUR_SPECIFICATION"),
+            EntityKey::CommonDatum(_) => Some("COMMON_DATUM"),
+            EntityKey::ComplexTriangulatedFace(_) => Some("COMPLEX_TRIANGULATED_FACE"),
+            EntityKey::ComplexTriangulatedSurfaceSet(_) => Some("COMPLEX_TRIANGULATED_SURFACE_SET"),
+            EntityKey::CompositeCurve(_) => Some("COMPOSITE_CURVE"),
+            EntityKey::CompositeCurveSegment(_) => Some("COMPOSITE_CURVE_SEGMENT"),
+            EntityKey::CompositeGroupShapeAspect(_) => Some("COMPOSITE_GROUP_SHAPE_ASPECT"),
+            EntityKey::CompositeShapeAspect(_) => Some("COMPOSITE_SHAPE_ASPECT"),
+            EntityKey::CompositeText(_) => Some("COMPOSITE_TEXT"),
+            EntityKey::CompoundRepresentationItem(_) => Some("COMPOUND_REPRESENTATION_ITEM"),
+            EntityKey::ConcentricityTolerance(_) => Some("CONCENTRICITY_TOLERANCE"),
+            EntityKey::ConfigurationDesign(_) => Some("CONFIGURATION_DESIGN"),
+            EntityKey::ConfigurationEffectivity(_) => Some("CONFIGURATION_EFFECTIVITY"),
+            EntityKey::ConfigurationItem(_) => Some("CONFIGURATION_ITEM"),
+            EntityKey::Conic(_) => Some("CONIC"),
+            EntityKey::ConicalSurface(_) => Some("CONICAL_SURFACE"),
+            EntityKey::ConnectedFaceSet(_) => Some("CONNECTED_FACE_SET"),
+            EntityKey::ConstructiveGeometryRepresentation(_) => {
+                Some("CONSTRUCTIVE_GEOMETRY_REPRESENTATION")
+            }
+            EntityKey::ConstructiveGeometryRepresentationRelationship(_) => {
+                Some("CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP")
+            }
+            EntityKey::ContextDependentOverRidingStyledItem(_) => {
+                Some("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM")
+            }
+            EntityKey::ContextDependentShapeRepresentation(_) => {
+                Some("CONTEXT_DEPENDENT_SHAPE_REPRESENTATION")
+            }
+            EntityKey::ContextDependentUnit(_) => Some("CONTEXT_DEPENDENT_UNIT"),
+            EntityKey::ContinuousShapeAspect(_) => Some("CONTINUOUS_SHAPE_ASPECT"),
+            EntityKey::Contract(_) => Some("CONTRACT"),
+            EntityKey::ContractType(_) => Some("CONTRACT_TYPE"),
+            EntityKey::ConversionBasedUnit(_) => Some("CONVERSION_BASED_UNIT"),
+            EntityKey::CoordinatedUniversalTimeOffset(_) => {
+                Some("COORDINATED_UNIVERSAL_TIME_OFFSET")
+            }
+            EntityKey::CoordinatesList(_) => Some("COORDINATES_LIST"),
+            EntityKey::Curve(_) => Some("CURVE"),
+            EntityKey::CurveStyle(_) => Some("CURVE_STYLE"),
+            EntityKey::CurveStyleFont(_) => Some("CURVE_STYLE_FONT"),
+            EntityKey::CurveStyleFontAndScaling(_) => Some("CURVE_STYLE_FONT_AND_SCALING"),
+            EntityKey::CurveStyleFontPattern(_) => Some("CURVE_STYLE_FONT_PATTERN"),
+            EntityKey::CurveStyleRendering(_) => Some("CURVE_STYLE_RENDERING"),
+            EntityKey::CylindricalSurface(_) => Some("CYLINDRICAL_SURFACE"),
+            EntityKey::CylindricityTolerance(_) => Some("CYLINDRICITY_TOLERANCE"),
+            EntityKey::Date(_) => Some("DATE"),
+            EntityKey::DateAndTime(_) => Some("DATE_AND_TIME"),
+            EntityKey::DateAndTimeAssignment(_) => Some("DATE_AND_TIME_ASSIGNMENT"),
+            EntityKey::DateRole(_) => Some("DATE_ROLE"),
+            EntityKey::DateTimeRole(_) => Some("DATE_TIME_ROLE"),
+            EntityKey::Datum(_) => Some("DATUM"),
+            EntityKey::DatumFeature(_) => Some("DATUM_FEATURE"),
+            EntityKey::DatumReference(_) => Some("DATUM_REFERENCE"),
+            EntityKey::DatumReferenceCompartment(_) => Some("DATUM_REFERENCE_COMPARTMENT"),
+            EntityKey::DatumReferenceElement(_) => Some("DATUM_REFERENCE_ELEMENT"),
+            EntityKey::DatumReferenceModifierWithValue(_) => {
+                Some("DATUM_REFERENCE_MODIFIER_WITH_VALUE")
+            }
+            EntityKey::DatumSystem(_) => Some("DATUM_SYSTEM"),
+            EntityKey::DatumTarget(_) => Some("DATUM_TARGET"),
+            EntityKey::DefaultModelGeometricView(_) => Some("DEFAULT_MODEL_GEOMETRIC_VIEW"),
+            EntityKey::DefinedCharacterGlyph(_) => Some("DEFINED_CHARACTER_GLYPH"),
+            EntityKey::DefinedSymbol(_) => Some("DEFINED_SYMBOL"),
+            EntityKey::DefinitionalRepresentation(_) => Some("DEFINITIONAL_REPRESENTATION"),
+            EntityKey::DefinitionalRepresentationRelationship(_) => {
+                Some("DEFINITIONAL_REPRESENTATION_RELATIONSHIP")
+            }
+            EntityKey::DefinitionalRepresentationRelationshipWithSameContext(_) => {
+                Some("DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT")
+            }
+            EntityKey::DegenerateToroidalSurface(_) => Some("DEGENERATE_TOROIDAL_SURFACE"),
+            EntityKey::DerivedShapeAspect(_) => Some("DERIVED_SHAPE_ASPECT"),
+            EntityKey::DerivedUnit(_) => Some("DERIVED_UNIT"),
+            EntityKey::DerivedUnitElement(_) => Some("DERIVED_UNIT_ELEMENT"),
+            EntityKey::DescriptionAttribute(_) => Some("DESCRIPTION_ATTRIBUTE"),
+            EntityKey::DescriptiveRepresentationItem(_) => Some("DESCRIPTIVE_REPRESENTATION_ITEM"),
+            EntityKey::DesignContext(_) => Some("DESIGN_CONTEXT"),
+            EntityKey::DimensionalCharacteristicRepresentation(_) => {
+                Some("DIMENSIONAL_CHARACTERISTIC_REPRESENTATION")
+            }
+            EntityKey::DimensionalExponents(_) => Some("DIMENSIONAL_EXPONENTS"),
+            EntityKey::DimensionalLocation(_) => Some("DIMENSIONAL_LOCATION"),
+            EntityKey::DimensionalLocationWithPath(_) => Some("DIMENSIONAL_LOCATION_WITH_PATH"),
+            EntityKey::DimensionalSize(_) => Some("DIMENSIONAL_SIZE"),
+            EntityKey::DimensionalSizeWithDatumFeature(_) => {
+                Some("DIMENSIONAL_SIZE_WITH_DATUM_FEATURE")
+            }
+            EntityKey::DimensionalSizeWithPath(_) => Some("DIMENSIONAL_SIZE_WITH_PATH"),
+            EntityKey::DirectedDimensionalLocation(_) => Some("DIRECTED_DIMENSIONAL_LOCATION"),
+            EntityKey::Direction(_) => Some("DIRECTION"),
+            EntityKey::Document(_) => Some("DOCUMENT"),
+            EntityKey::DocumentFile(_) => Some("DOCUMENT_FILE"),
+            EntityKey::DocumentProductAssociation(_) => Some("DOCUMENT_PRODUCT_ASSOCIATION"),
+            EntityKey::DocumentProductEquivalence(_) => Some("DOCUMENT_PRODUCT_EQUIVALENCE"),
+            EntityKey::DocumentReference(_) => Some("DOCUMENT_REFERENCE"),
+            EntityKey::DocumentRepresentationType(_) => Some("DOCUMENT_REPRESENTATION_TYPE"),
+            EntityKey::DocumentType(_) => Some("DOCUMENT_TYPE"),
+            EntityKey::DraughtingAnnotationOccurrence(_) => {
+                Some("DRAUGHTING_ANNOTATION_OCCURRENCE")
+            }
+            EntityKey::DraughtingCallout(_) => Some("DRAUGHTING_CALLOUT"),
+            EntityKey::DraughtingCalloutRelationship(_) => Some("DRAUGHTING_CALLOUT_RELATIONSHIP"),
+            EntityKey::DraughtingModel(_) => Some("DRAUGHTING_MODEL"),
+            EntityKey::DraughtingModelItemAssociation(_) => {
+                Some("DRAUGHTING_MODEL_ITEM_ASSOCIATION")
+            }
+            EntityKey::DraughtingModelItemAssociationWithPlaceholder(_) => {
+                Some("DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER")
+            }
+            EntityKey::DraughtingPreDefinedColour(_) => Some("DRAUGHTING_PRE_DEFINED_COLOUR"),
+            EntityKey::DraughtingPreDefinedCurveFont(_) => {
+                Some("DRAUGHTING_PRE_DEFINED_CURVE_FONT")
+            }
+            EntityKey::DraughtingPreDefinedTextFont(_) => Some("DRAUGHTING_PRE_DEFINED_TEXT_FONT"),
+            EntityKey::Edge(_) => Some("EDGE"),
+            EntityKey::EdgeCurve(_) => Some("EDGE_CURVE"),
+            EntityKey::EdgeLoop(_) => Some("EDGE_LOOP"),
+            EntityKey::Effectivity(_) => Some("EFFECTIVITY"),
+            EntityKey::ElementarySurface(_) => Some("ELEMENTARY_SURFACE"),
+            EntityKey::Ellipse(_) => Some("ELLIPSE"),
+            EntityKey::Expression(_) => Some("EXPRESSION"),
+            EntityKey::ExternalIdentificationAssignment(_) => {
+                Some("EXTERNAL_IDENTIFICATION_ASSIGNMENT")
+            }
+            EntityKey::ExternalSource(_) => Some("EXTERNAL_SOURCE"),
+            EntityKey::ExternallyDefinedCharacterGlyph(_) => {
+                Some("EXTERNALLY_DEFINED_CHARACTER_GLYPH")
+            }
+            EntityKey::ExternallyDefinedCurveFont(_) => Some("EXTERNALLY_DEFINED_CURVE_FONT"),
+            EntityKey::ExternallyDefinedHatchStyle(_) => Some("EXTERNALLY_DEFINED_HATCH_STYLE"),
+            EntityKey::ExternallyDefinedItem(_) => Some("EXTERNALLY_DEFINED_ITEM"),
+            EntityKey::ExternallyDefinedStyle(_) => Some("EXTERNALLY_DEFINED_STYLE"),
+            EntityKey::ExternallyDefinedSymbol(_) => Some("EXTERNALLY_DEFINED_SYMBOL"),
+            EntityKey::ExternallyDefinedTextFont(_) => Some("EXTERNALLY_DEFINED_TEXT_FONT"),
+            EntityKey::ExternallyDefinedTile(_) => Some("EXTERNALLY_DEFINED_TILE"),
+            EntityKey::ExternallyDefinedTileStyle(_) => Some("EXTERNALLY_DEFINED_TILE_STYLE"),
+            EntityKey::Face(_) => Some("FACE"),
+            EntityKey::FaceBound(_) => Some("FACE_BOUND"),
+            EntityKey::FaceOuterBound(_) => Some("FACE_OUTER_BOUND"),
+            EntityKey::FaceSurface(_) => Some("FACE_SURFACE"),
+            EntityKey::FeatureForDatumTargetRelationship(_) => {
+                Some("FEATURE_FOR_DATUM_TARGET_RELATIONSHIP")
+            }
+            EntityKey::FillAreaStyle(_) => Some("FILL_AREA_STYLE"),
+            EntityKey::FillAreaStyleColour(_) => Some("FILL_AREA_STYLE_COLOUR"),
+            EntityKey::FillAreaStyleHatching(_) => Some("FILL_AREA_STYLE_HATCHING"),
+            EntityKey::FillAreaStyleTileColouredRegion(_) => {
+                Some("FILL_AREA_STYLE_TILE_COLOURED_REGION")
+            }
+            EntityKey::FillAreaStyleTileCurveWithStyle(_) => {
+                Some("FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE")
+            }
+            EntityKey::FillAreaStyleTileSymbolWithStyle(_) => {
+                Some("FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE")
+            }
+            EntityKey::FillAreaStyleTiles(_) => Some("FILL_AREA_STYLE_TILES"),
+            EntityKey::FlatnessTolerance(_) => Some("FLATNESS_TOLERANCE"),
+            EntityKey::FoundedItem(_) => Some("FOUNDED_ITEM"),
+            EntityKey::FunctionallyDefinedTransformation(_) => {
+                Some("FUNCTIONALLY_DEFINED_TRANSFORMATION")
+            }
+            EntityKey::GeneralDatumReference(_) => Some("GENERAL_DATUM_REFERENCE"),
+            EntityKey::GeneralProperty(_) => Some("GENERAL_PROPERTY"),
+            EntityKey::GeneralPropertyAssociation(_) => Some("GENERAL_PROPERTY_ASSOCIATION"),
+            EntityKey::GenericExpression(_) => Some("GENERIC_EXPRESSION"),
+            EntityKey::GenericLiteral(_) => Some("GENERIC_LITERAL"),
+            EntityKey::GenericProductDefinitionReference(_) => {
+                Some("GENERIC_PRODUCT_DEFINITION_REFERENCE")
+            }
+            EntityKey::GeometricCurveSet(_) => Some("GEOMETRIC_CURVE_SET"),
+            EntityKey::GeometricItemSpecificUsage(_) => Some("GEOMETRIC_ITEM_SPECIFIC_USAGE"),
+            EntityKey::GeometricRepresentationContext(_) => {
+                Some("GEOMETRIC_REPRESENTATION_CONTEXT")
+            }
+            EntityKey::GeometricRepresentationItem(_) => Some("GEOMETRIC_REPRESENTATION_ITEM"),
+            EntityKey::GeometricSet(_) => Some("GEOMETRIC_SET"),
+            EntityKey::GeometricTolerance(_) => Some("GEOMETRIC_TOLERANCE"),
+            EntityKey::GeometricToleranceRelationship(_) => {
+                Some("GEOMETRIC_TOLERANCE_RELATIONSHIP")
+            }
+            EntityKey::GeometricToleranceWithDatumReference(_) => {
+                Some("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE")
+            }
+            EntityKey::GeometricToleranceWithDefinedAreaUnit(_) => {
+                Some("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT")
+            }
+            EntityKey::GeometricToleranceWithDefinedUnit(_) => {
+                Some("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT")
+            }
+            EntityKey::GeometricToleranceWithMaximumTolerance(_) => {
+                Some("GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE")
+            }
+            EntityKey::GeometricToleranceWithModifiers(_) => {
+                Some("GEOMETRIC_TOLERANCE_WITH_MODIFIERS")
+            }
+            EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(_) => {
+                Some("GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION")
+            }
+            EntityKey::GeometricallyBoundedWireframeShapeRepresentation(_) => {
+                Some("GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION")
+            }
+            EntityKey::GlobalUncertaintyAssignedContext(_) => {
+                Some("GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT")
+            }
+            EntityKey::GlobalUnitAssignedContext(_) => Some("GLOBAL_UNIT_ASSIGNED_CONTEXT"),
+            EntityKey::Group(_) => Some("GROUP"),
+            EntityKey::GroupAssignment(_) => Some("GROUP_ASSIGNMENT"),
+            EntityKey::Hyperbola(_) => Some("HYPERBOLA"),
+            EntityKey::IdAttribute(_) => Some("ID_ATTRIBUTE"),
+            EntityKey::IdentificationAssignment(_) => Some("IDENTIFICATION_ASSIGNMENT"),
+            EntityKey::IdentificationRole(_) => Some("IDENTIFICATION_ROLE"),
+            EntityKey::IntLiteral(_) => Some("INT_LITERAL"),
+            EntityKey::IntegerRepresentationItem(_) => Some("INTEGER_REPRESENTATION_ITEM"),
+            EntityKey::IntersectionCurve(_) => Some("INTERSECTION_CURVE"),
+            EntityKey::Invisibility(_) => Some("INVISIBILITY"),
+            EntityKey::ItemDefinedTransformation(_) => Some("ITEM_DEFINED_TRANSFORMATION"),
+            EntityKey::ItemIdentifiedRepresentationUsage(_) => {
+                Some("ITEM_IDENTIFIED_REPRESENTATION_USAGE")
+            }
+            EntityKey::LeaderCurve(_) => Some("LEADER_CURVE"),
+            EntityKey::LeaderDirectedCallout(_) => Some("LEADER_DIRECTED_CALLOUT"),
+            EntityKey::LeaderTerminator(_) => Some("LEADER_TERMINATOR"),
+            EntityKey::LengthMeasureWithUnit(_) => Some("LENGTH_MEASURE_WITH_UNIT"),
+            EntityKey::LengthUnit(_) => Some("LENGTH_UNIT"),
+            EntityKey::LimitsAndFits(_) => Some("LIMITS_AND_FITS"),
+            EntityKey::Line(_) => Some("LINE"),
+            EntityKey::LineProfileTolerance(_) => Some("LINE_PROFILE_TOLERANCE"),
+            EntityKey::LiteralNumber(_) => Some("LITERAL_NUMBER"),
+            EntityKey::LocalTime(_) => Some("LOCAL_TIME"),
+            EntityKey::Loop(_) => Some("LOOP"),
+            EntityKey::MakeFromUsageOption(_) => Some("MAKE_FROM_USAGE_OPTION"),
+            EntityKey::ManifoldSolidBrep(_) => Some("MANIFOLD_SOLID_BREP"),
+            EntityKey::ManifoldSurfaceShapeRepresentation(_) => {
+                Some("MANIFOLD_SURFACE_SHAPE_REPRESENTATION")
+            }
+            EntityKey::MappedItem(_) => Some("MAPPED_ITEM"),
+            EntityKey::MassMeasureWithUnit(_) => Some("MASS_MEASURE_WITH_UNIT"),
+            EntityKey::MassUnit(_) => Some("MASS_UNIT"),
+            EntityKey::MeasureQualification(_) => Some("MEASURE_QUALIFICATION"),
+            EntityKey::MeasureRepresentationItem(_) => Some("MEASURE_REPRESENTATION_ITEM"),
+            EntityKey::MeasureWithUnit(_) => Some("MEASURE_WITH_UNIT"),
+            EntityKey::MechanicalContext(_) => Some("MECHANICAL_CONTEXT"),
+            EntityKey::MechanicalDesignAndDraughtingRelationship(_) => {
+                Some("MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP")
+            }
+            EntityKey::MechanicalDesignGeometricPresentationRepresentation(_) => {
+                Some("MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION")
+            }
+            EntityKey::MechanicalDesignPresentationRepresentationWithDraughting(_) => {
+                Some("MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING")
+            }
+            EntityKey::MechanicalDesignShadedPresentationRepresentation(_) => {
+                Some("MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION")
+            }
+            EntityKey::ModelGeometricView(_) => Some("MODEL_GEOMETRIC_VIEW"),
+            EntityKey::ModifiedGeometricTolerance(_) => Some("MODIFIED_GEOMETRIC_TOLERANCE"),
+            EntityKey::NameAttribute(_) => Some("NAME_ATTRIBUTE"),
+            EntityKey::NamedUnit(_) => Some("NAMED_UNIT"),
+            EntityKey::NextAssemblyUsageOccurrence(_) => Some("NEXT_ASSEMBLY_USAGE_OCCURRENCE"),
+            EntityKey::NumericExpression(_) => Some("NUMERIC_EXPRESSION"),
+            EntityKey::ObjectRole(_) => Some("OBJECT_ROLE"),
+            EntityKey::OffsetSurface(_) => Some("OFFSET_SURFACE"),
+            EntityKey::OneDirectionRepeatFactor(_) => Some("ONE_DIRECTION_REPEAT_FACTOR"),
+            EntityKey::OpenShell(_) => Some("OPEN_SHELL"),
+            EntityKey::Organization(_) => Some("ORGANIZATION"),
+            EntityKey::OrganizationRelationship(_) => Some("ORGANIZATION_RELATIONSHIP"),
+            EntityKey::OrganizationRole(_) => Some("ORGANIZATION_ROLE"),
+            EntityKey::OrganizationType(_) => Some("ORGANIZATION_TYPE"),
+            EntityKey::OrganizationTypeRole(_) => Some("ORGANIZATION_TYPE_ROLE"),
+            EntityKey::OrganizationalAddress(_) => Some("ORGANIZATIONAL_ADDRESS"),
+            EntityKey::OrganizationalProject(_) => Some("ORGANIZATIONAL_PROJECT"),
+            EntityKey::OrganizationalProjectRelationship(_) => {
+                Some("ORGANIZATIONAL_PROJECT_RELATIONSHIP")
+            }
+            EntityKey::OrganizationalProjectRole(_) => Some("ORGANIZATIONAL_PROJECT_ROLE"),
+            EntityKey::OrientedClosedShell(_) => Some("ORIENTED_CLOSED_SHELL"),
+            EntityKey::OrientedEdge(_) => Some("ORIENTED_EDGE"),
+            EntityKey::OverRidingStyledItem(_) => Some("OVER_RIDING_STYLED_ITEM"),
+            EntityKey::Parabola(_) => Some("PARABOLA"),
+            EntityKey::ParallelismTolerance(_) => Some("PARALLELISM_TOLERANCE"),
+            EntityKey::ParametricRepresentationContext(_) => {
+                Some("PARAMETRIC_REPRESENTATION_CONTEXT")
+            }
+            EntityKey::Path(_) => Some("PATH"),
+            EntityKey::Pcurve(_) => Some("PCURVE"),
+            EntityKey::PerpendicularityTolerance(_) => Some("PERPENDICULARITY_TOLERANCE"),
+            EntityKey::Person(_) => Some("PERSON"),
+            EntityKey::PersonAndOrganization(_) => Some("PERSON_AND_ORGANIZATION"),
+            EntityKey::PersonAndOrganizationAddress(_) => Some("PERSON_AND_ORGANIZATION_ADDRESS"),
+            EntityKey::PersonAndOrganizationAssignment(_) => {
+                Some("PERSON_AND_ORGANIZATION_ASSIGNMENT")
+            }
+            EntityKey::PersonAndOrganizationRole(_) => Some("PERSON_AND_ORGANIZATION_ROLE"),
+            EntityKey::PersonalAddress(_) => Some("PERSONAL_ADDRESS"),
+            EntityKey::PlacedDatumTargetFeature(_) => Some("PLACED_DATUM_TARGET_FEATURE"),
+            EntityKey::Placement(_) => Some("PLACEMENT"),
+            EntityKey::PlanarBox(_) => Some("PLANAR_BOX"),
+            EntityKey::PlanarExtent(_) => Some("PLANAR_EXTENT"),
+            EntityKey::Plane(_) => Some("PLANE"),
+            EntityKey::PlaneAngleMeasureWithUnit(_) => Some("PLANE_ANGLE_MEASURE_WITH_UNIT"),
+            EntityKey::PlaneAngleUnit(_) => Some("PLANE_ANGLE_UNIT"),
+            EntityKey::PlusMinusTolerance(_) => Some("PLUS_MINUS_TOLERANCE"),
+            EntityKey::Point(_) => Some("POINT"),
+            EntityKey::PointStyle(_) => Some("POINT_STYLE"),
+            EntityKey::PolyLoop(_) => Some("POLY_LOOP"),
+            EntityKey::Polyline(_) => Some("POLYLINE"),
+            EntityKey::PositionTolerance(_) => Some("POSITION_TOLERANCE"),
+            EntityKey::PreDefinedCharacterGlyph(_) => Some("PRE_DEFINED_CHARACTER_GLYPH"),
+            EntityKey::PreDefinedColour(_) => Some("PRE_DEFINED_COLOUR"),
+            EntityKey::PreDefinedCurveFont(_) => Some("PRE_DEFINED_CURVE_FONT"),
+            EntityKey::PreDefinedItem(_) => Some("PRE_DEFINED_ITEM"),
+            EntityKey::PreDefinedMarker(_) => Some("PRE_DEFINED_MARKER"),
+            EntityKey::PreDefinedPointMarkerSymbol(_) => Some("PRE_DEFINED_POINT_MARKER_SYMBOL"),
+            EntityKey::PreDefinedPresentationStyle(_) => Some("PRE_DEFINED_PRESENTATION_STYLE"),
+            EntityKey::PreDefinedSurfaceSideStyle(_) => Some("PRE_DEFINED_SURFACE_SIDE_STYLE"),
+            EntityKey::PreDefinedSymbol(_) => Some("PRE_DEFINED_SYMBOL"),
+            EntityKey::PreDefinedTerminatorSymbol(_) => Some("PRE_DEFINED_TERMINATOR_SYMBOL"),
+            EntityKey::PreDefinedTextFont(_) => Some("PRE_DEFINED_TEXT_FONT"),
+            EntityKey::PreDefinedTile(_) => Some("PRE_DEFINED_TILE"),
+            EntityKey::PrecisionQualifier(_) => Some("PRECISION_QUALIFIER"),
+            EntityKey::PresentationArea(_) => Some("PRESENTATION_AREA"),
+            EntityKey::PresentationLayerAssignment(_) => Some("PRESENTATION_LAYER_ASSIGNMENT"),
+            EntityKey::PresentationRepresentation(_) => Some("PRESENTATION_REPRESENTATION"),
+            EntityKey::PresentationSet(_) => Some("PRESENTATION_SET"),
+            EntityKey::PresentationSize(_) => Some("PRESENTATION_SIZE"),
+            EntityKey::PresentationStyleAssignment(_) => Some("PRESENTATION_STYLE_ASSIGNMENT"),
+            EntityKey::PresentationStyleByContext(_) => Some("PRESENTATION_STYLE_BY_CONTEXT"),
+            EntityKey::PresentationView(_) => Some("PRESENTATION_VIEW"),
+            EntityKey::PresentedItem(_) => Some("PRESENTED_ITEM"),
+            EntityKey::PresentedItemRepresentation(_) => Some("PRESENTED_ITEM_REPRESENTATION"),
+            EntityKey::Product(_) => Some("PRODUCT"),
+            EntityKey::ProductCategory(_) => Some("PRODUCT_CATEGORY"),
+            EntityKey::ProductCategoryRelationship(_) => Some("PRODUCT_CATEGORY_RELATIONSHIP"),
+            EntityKey::ProductConcept(_) => Some("PRODUCT_CONCEPT"),
+            EntityKey::ProductConceptContext(_) => Some("PRODUCT_CONCEPT_CONTEXT"),
+            EntityKey::ProductConceptFeature(_) => Some("PRODUCT_CONCEPT_FEATURE"),
+            EntityKey::ProductConceptFeatureCategory(_) => Some("PRODUCT_CONCEPT_FEATURE_CATEGORY"),
+            EntityKey::ProductContext(_) => Some("PRODUCT_CONTEXT"),
+            EntityKey::ProductDefinition(_) => Some("PRODUCT_DEFINITION"),
+            EntityKey::ProductDefinitionContext(_) => Some("PRODUCT_DEFINITION_CONTEXT"),
+            EntityKey::ProductDefinitionContextAssociation(_) => {
+                Some("PRODUCT_DEFINITION_CONTEXT_ASSOCIATION")
+            }
+            EntityKey::ProductDefinitionContextRole(_) => Some("PRODUCT_DEFINITION_CONTEXT_ROLE"),
+            EntityKey::ProductDefinitionEffectivity(_) => Some("PRODUCT_DEFINITION_EFFECTIVITY"),
+            EntityKey::ProductDefinitionFormation(_) => Some("PRODUCT_DEFINITION_FORMATION"),
+            EntityKey::ProductDefinitionFormationWithSpecifiedSource(_) => {
+                Some("PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE")
+            }
+            EntityKey::ProductDefinitionOccurrence(_) => Some("PRODUCT_DEFINITION_OCCURRENCE"),
+            EntityKey::ProductDefinitionRelationship(_) => Some("PRODUCT_DEFINITION_RELATIONSHIP"),
+            EntityKey::ProductDefinitionRelationshipRelationship(_) => {
+                Some("PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP")
+            }
+            EntityKey::ProductDefinitionShape(_) => Some("PRODUCT_DEFINITION_SHAPE"),
+            EntityKey::ProductDefinitionSubstitute(_) => Some("PRODUCT_DEFINITION_SUBSTITUTE"),
+            EntityKey::ProductDefinitionUsage(_) => Some("PRODUCT_DEFINITION_USAGE"),
+            EntityKey::ProductDefinitionWithAssociatedDocuments(_) => {
+                Some("PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS")
+            }
+            EntityKey::ProductRelatedProductCategory(_) => Some("PRODUCT_RELATED_PRODUCT_CATEGORY"),
+            EntityKey::ProjectedZoneDefinition(_) => Some("PROJECTED_ZONE_DEFINITION"),
+            EntityKey::PropertyDefinition(_) => Some("PROPERTY_DEFINITION"),
+            EntityKey::PropertyDefinitionRelationship(_) => {
+                Some("PROPERTY_DEFINITION_RELATIONSHIP")
+            }
+            EntityKey::PropertyDefinitionRepresentation(_) => {
+                Some("PROPERTY_DEFINITION_REPRESENTATION")
+            }
+            EntityKey::QualifiedRepresentationItem(_) => Some("QUALIFIED_REPRESENTATION_ITEM"),
+            EntityKey::QuasiUniformCurve(_) => Some("QUASI_UNIFORM_CURVE"),
+            EntityKey::QuasiUniformSurface(_) => Some("QUASI_UNIFORM_SURFACE"),
+            EntityKey::RatioMeasureWithUnit(_) => Some("RATIO_MEASURE_WITH_UNIT"),
+            EntityKey::RatioUnit(_) => Some("RATIO_UNIT"),
+            EntityKey::RationalBSplineCurve(_) => Some("RATIONAL_B_SPLINE_CURVE"),
+            EntityKey::RationalBSplineSurface(_) => Some("RATIONAL_B_SPLINE_SURFACE"),
+            EntityKey::RealLiteral(_) => Some("REAL_LITERAL"),
+            EntityKey::RealRepresentationItem(_) => Some("REAL_REPRESENTATION_ITEM"),
+            EntityKey::RepositionedTessellatedItem(_) => Some("REPOSITIONED_TESSELLATED_ITEM"),
+            EntityKey::Representation(_) => Some("REPRESENTATION"),
+            EntityKey::RepresentationContext(_) => Some("REPRESENTATION_CONTEXT"),
+            EntityKey::RepresentationContextReference(_) => {
+                Some("REPRESENTATION_CONTEXT_REFERENCE")
+            }
+            EntityKey::RepresentationItem(_) => Some("REPRESENTATION_ITEM"),
+            EntityKey::RepresentationMap(_) => Some("REPRESENTATION_MAP"),
+            EntityKey::RepresentationReference(_) => Some("REPRESENTATION_REFERENCE"),
+            EntityKey::RepresentationRelationship(_) => Some("REPRESENTATION_RELATIONSHIP"),
+            EntityKey::RepresentationRelationshipWithTransformation(_) => {
+                Some("REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION")
+            }
+            EntityKey::ResourceProperty(_) => Some("RESOURCE_PROPERTY"),
+            EntityKey::ResourceRequirementType(_) => Some("RESOURCE_REQUIREMENT_TYPE"),
+            EntityKey::RoleAssociation(_) => Some("ROLE_ASSOCIATION"),
+            EntityKey::RoundnessTolerance(_) => Some("ROUNDNESS_TOLERANCE"),
+            EntityKey::SeamCurve(_) => Some("SEAM_CURVE"),
+            EntityKey::SecurityClassification(_) => Some("SECURITY_CLASSIFICATION"),
+            EntityKey::SecurityClassificationAssignment(_) => {
+                Some("SECURITY_CLASSIFICATION_ASSIGNMENT")
+            }
+            EntityKey::SecurityClassificationLevel(_) => Some("SECURITY_CLASSIFICATION_LEVEL"),
+            EntityKey::ShapeAspect(_) => Some("SHAPE_ASPECT"),
+            EntityKey::ShapeAspectAssociativity(_) => Some("SHAPE_ASPECT_ASSOCIATIVITY"),
+            EntityKey::ShapeAspectDerivingRelationship(_) => {
+                Some("SHAPE_ASPECT_DERIVING_RELATIONSHIP")
+            }
+            EntityKey::ShapeAspectRelationship(_) => Some("SHAPE_ASPECT_RELATIONSHIP"),
+            EntityKey::ShapeDefinitionRepresentation(_) => Some("SHAPE_DEFINITION_REPRESENTATION"),
+            EntityKey::ShapeDimensionRepresentation(_) => Some("SHAPE_DIMENSION_REPRESENTATION"),
+            EntityKey::ShapeRepresentation(_) => Some("SHAPE_REPRESENTATION"),
+            EntityKey::ShapeRepresentationRelationship(_) => {
+                Some("SHAPE_REPRESENTATION_RELATIONSHIP")
+            }
+            EntityKey::ShapeRepresentationWithParameters(_) => {
+                Some("SHAPE_REPRESENTATION_WITH_PARAMETERS")
+            }
+            EntityKey::ShellBasedSurfaceModel(_) => Some("SHELL_BASED_SURFACE_MODEL"),
+            EntityKey::SiUnit(_) => Some("SI_UNIT"),
+            EntityKey::SimpleGenericExpression(_) => Some("SIMPLE_GENERIC_EXPRESSION"),
+            EntityKey::SimpleNumericExpression(_) => Some("SIMPLE_NUMERIC_EXPRESSION"),
+            EntityKey::SolidAngleUnit(_) => Some("SOLID_ANGLE_UNIT"),
+            EntityKey::SolidModel(_) => Some("SOLID_MODEL"),
+            EntityKey::SphericalSurface(_) => Some("SPHERICAL_SURFACE"),
+            EntityKey::StartRequest(_) => Some("START_REQUEST"),
+            EntityKey::StartWork(_) => Some("START_WORK"),
+            EntityKey::StateObserved(_) => Some("STATE_OBSERVED"),
+            EntityKey::StateType(_) => Some("STATE_TYPE"),
+            EntityKey::StraightnessTolerance(_) => Some("STRAIGHTNESS_TOLERANCE"),
+            EntityKey::StyledItem(_) => Some("STYLED_ITEM"),
+            EntityKey::Surface(_) => Some("SURFACE"),
+            EntityKey::SurfaceCurve(_) => Some("SURFACE_CURVE"),
+            EntityKey::SurfaceOfLinearExtrusion(_) => Some("SURFACE_OF_LINEAR_EXTRUSION"),
+            EntityKey::SurfaceOfRevolution(_) => Some("SURFACE_OF_REVOLUTION"),
+            EntityKey::SurfaceProfileTolerance(_) => Some("SURFACE_PROFILE_TOLERANCE"),
+            EntityKey::SurfaceRenderingProperties(_) => Some("SURFACE_RENDERING_PROPERTIES"),
+            EntityKey::SurfaceSideStyle(_) => Some("SURFACE_SIDE_STYLE"),
+            EntityKey::SurfaceStyleBoundary(_) => Some("SURFACE_STYLE_BOUNDARY"),
+            EntityKey::SurfaceStyleControlGrid(_) => Some("SURFACE_STYLE_CONTROL_GRID"),
+            EntityKey::SurfaceStyleFillArea(_) => Some("SURFACE_STYLE_FILL_AREA"),
+            EntityKey::SurfaceStyleParameterLine(_) => Some("SURFACE_STYLE_PARAMETER_LINE"),
+            EntityKey::SurfaceStyleReflectanceAmbient(_) => {
+                Some("SURFACE_STYLE_REFLECTANCE_AMBIENT")
+            }
+            EntityKey::SurfaceStyleRendering(_) => Some("SURFACE_STYLE_RENDERING"),
+            EntityKey::SurfaceStyleRenderingWithProperties(_) => {
+                Some("SURFACE_STYLE_RENDERING_WITH_PROPERTIES")
+            }
+            EntityKey::SurfaceStyleSegmentationCurve(_) => Some("SURFACE_STYLE_SEGMENTATION_CURVE"),
+            EntityKey::SurfaceStyleSilhouette(_) => Some("SURFACE_STYLE_SILHOUETTE"),
+            EntityKey::SurfaceStyleTransparent(_) => Some("SURFACE_STYLE_TRANSPARENT"),
+            EntityKey::SurfaceStyleUsage(_) => Some("SURFACE_STYLE_USAGE"),
+            EntityKey::SweptSurface(_) => Some("SWEPT_SURFACE"),
+            EntityKey::SymbolColour(_) => Some("SYMBOL_COLOUR"),
+            EntityKey::SymbolRepresentation(_) => Some("SYMBOL_REPRESENTATION"),
+            EntityKey::SymbolStyle(_) => Some("SYMBOL_STYLE"),
+            EntityKey::SymbolTarget(_) => Some("SYMBOL_TARGET"),
+            EntityKey::SymmetryTolerance(_) => Some("SYMMETRY_TOLERANCE"),
+            EntityKey::TerminatorSymbol(_) => Some("TERMINATOR_SYMBOL"),
+            EntityKey::TessellatedAnnotationOccurrence(_) => {
+                Some("TESSELLATED_ANNOTATION_OCCURRENCE")
+            }
+            EntityKey::TessellatedCurveSet(_) => Some("TESSELLATED_CURVE_SET"),
+            EntityKey::TessellatedFace(_) => Some("TESSELLATED_FACE"),
+            EntityKey::TessellatedGeometricSet(_) => Some("TESSELLATED_GEOMETRIC_SET"),
+            EntityKey::TessellatedItem(_) => Some("TESSELLATED_ITEM"),
+            EntityKey::TessellatedShapeRepresentation(_) => {
+                Some("TESSELLATED_SHAPE_REPRESENTATION")
+            }
+            EntityKey::TessellatedShell(_) => Some("TESSELLATED_SHELL"),
+            EntityKey::TessellatedSolid(_) => Some("TESSELLATED_SOLID"),
+            EntityKey::TessellatedStructuredItem(_) => Some("TESSELLATED_STRUCTURED_ITEM"),
+            EntityKey::TessellatedSurfaceSet(_) => Some("TESSELLATED_SURFACE_SET"),
+            EntityKey::TextFont(_) => Some("TEXT_FONT"),
+            EntityKey::TextLiteral(_) => Some("TEXT_LITERAL"),
+            EntityKey::TextStyle(_) => Some("TEXT_STYLE"),
+            EntityKey::TextStyleForDefinedFont(_) => Some("TEXT_STYLE_FOR_DEFINED_FONT"),
+            EntityKey::TextStyleWithBoxCharacteristics(_) => {
+                Some("TEXT_STYLE_WITH_BOX_CHARACTERISTICS")
+            }
+            EntityKey::TextureStyleSpecification(_) => Some("TEXTURE_STYLE_SPECIFICATION"),
+            EntityKey::TextureStyleTessellationSpecification(_) => {
+                Some("TEXTURE_STYLE_TESSELLATION_SPECIFICATION")
+            }
+            EntityKey::TimeUnit(_) => Some("TIME_UNIT"),
+            EntityKey::ToleranceValue(_) => Some("TOLERANCE_VALUE"),
+            EntityKey::ToleranceZone(_) => Some("TOLERANCE_ZONE"),
+            EntityKey::ToleranceZoneDefinition(_) => Some("TOLERANCE_ZONE_DEFINITION"),
+            EntityKey::ToleranceZoneForm(_) => Some("TOLERANCE_ZONE_FORM"),
+            EntityKey::ToleranceZoneWithDatum(_) => Some("TOLERANCE_ZONE_WITH_DATUM"),
+            EntityKey::TopologicalRepresentationItem(_) => Some("TOPOLOGICAL_REPRESENTATION_ITEM"),
+            EntityKey::ToroidalSurface(_) => Some("TOROIDAL_SURFACE"),
+            EntityKey::TotalRunoutTolerance(_) => Some("TOTAL_RUNOUT_TOLERANCE"),
+            EntityKey::TrimmedCurve(_) => Some("TRIMMED_CURVE"),
+            EntityKey::TwoDirectionRepeatFactor(_) => Some("TWO_DIRECTION_REPEAT_FACTOR"),
+            EntityKey::TypeQualifier(_) => Some("TYPE_QUALIFIER"),
+            EntityKey::UncertaintyMeasureWithUnit(_) => Some("UNCERTAINTY_MEASURE_WITH_UNIT"),
+            EntityKey::UncertaintyQualifier(_) => Some("UNCERTAINTY_QUALIFIER"),
+            EntityKey::UnequallyDisposedGeometricTolerance(_) => {
+                Some("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE")
+            }
+            EntityKey::UniformCurve(_) => Some("UNIFORM_CURVE"),
+            EntityKey::UniformSurface(_) => Some("UNIFORM_SURFACE"),
+            EntityKey::ValueFormatTypeQualifier(_) => Some("VALUE_FORMAT_TYPE_QUALIFIER"),
+            EntityKey::ValueRepresentationItem(_) => Some("VALUE_REPRESENTATION_ITEM"),
+            EntityKey::Vector(_) => Some("VECTOR"),
+            EntityKey::VersionedActionRequest(_) => Some("VERSIONED_ACTION_REQUEST"),
+            EntityKey::Vertex(_) => Some("VERTEX"),
+            EntityKey::VertexLoop(_) => Some("VERTEX_LOOP"),
+            EntityKey::VertexPoint(_) => Some("VERTEX_POINT"),
+            EntityKey::VertexShell(_) => Some("VERTEX_SHELL"),
+            EntityKey::ViewVolume(_) => Some("VIEW_VOLUME"),
+            EntityKey::VolumeUnit(_) => Some("VOLUME_UNIT"),
+            EntityKey::WireShell(_) => Some("WIRE_SHELL"),
+            EntityKey::ComplexUnit(_) => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
