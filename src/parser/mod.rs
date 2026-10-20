@@ -15,7 +15,7 @@ pub(crate) mod schema;
 pub(crate) mod string;
 
 pub use entity::{Attribute, Graph, RawEntity, RawEntityPart};
-pub use lexer::{Span, TokenKind};
+pub use lexer::Span;
 pub use p21::{MAX_NESTING_DEPTH, parse};
 pub use schema::NonEmptyStringList;
 

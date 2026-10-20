@@ -218,7 +218,3 @@ pub use parser::entity::{Error, ParseWarning};
 pub use parser::lexer::{LexError, LexErrorKind};
 pub use parser::schema::{ApFamily, SchemaId, Stage};
 pub use refgraph::RefGraph;
-
-/// Crate-wide result alias: the only fallible public entry point ([`read`])
-/// fails with [`Error`].
-pub type Result<T> = std::result::Result<T, Error>;

@@ -173,11 +173,14 @@ impl Graph {
     }
 }
 
-/// Parse error kinds specific to the Part 21 parser.
+/// Why [`read`](crate::read) or [`parse`](crate::parser::parse) could not
+/// read a file.
 ///
-/// Lexer errors are wrapped in [`Error::Lex`]; the remaining variants
-/// describe structural problems detected during parsing.
-#[derive(Debug, Clone, PartialEq)]
+/// Lexer errors are wrapped in [`Error::Lex`] and a failing input in
+/// [`Error::Io`]; the remaining variants describe structural problems detected
+/// during parsing. Each prints as a one-line message that includes the wrapped
+/// error's, so [`source`](std::error::Error::source) is always `None`.
+#[derive(Debug)]
 #[non_exhaustive]
 pub enum Error {
     /// A lexical error bubbled up from the tokenizer.
@@ -187,7 +190,10 @@ pub enum Error {
     /// A token was found where a different kind was expected.
     UnexpectedToken {
         expected: &'static str,
-        found: super::lexer::TokenKind,
+        /// The token found, about as written: `FOO`, `')'`, `#12`, `.T.`, a
+        /// string in quotes (cut at 40 characters); a real number as its
+        /// value.
+        found: String,
         span: Span,
     },
     /// Two entities share the same `#N` identifier: the first repeat in the
@@ -208,11 +214,8 @@ pub enum Error {
     /// entities, and as many reference and text slots.
     /// `span` is the entity where reading stopped.
     TooLarge { span: Span },
-    /// Reading the input failed.
-    Io {
-        kind: std::io::ErrorKind,
-        message: String,
-    },
+    /// Reading the input failed, with the input's own error.
+    Io(std::io::Error),
 }
 
 impl From<LexError> for Error {
@@ -237,7 +240,7 @@ impl std::fmt::Display for Error {
                 span,
             } => write!(
                 f,
-                "parse error at line {}, column {}: expected {expected}, found {found:?}",
+                "parse error at line {}, column {}: expected {expected}, found {found}",
                 span.line, span.column,
             ),
             Self::DuplicateEntityId {
@@ -271,19 +274,12 @@ impl std::fmt::Display for Error {
                 "read error at line {}, column {}: the file is too large to read",
                 span.line, span.column,
             ),
-            Self::Io { message, .. } => write!(f, "read error: {message}"),
+            Self::Io(e) => write!(f, "read error: {e}"),
         }
     }
 }
 
-impl std::error::Error for Error {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Lex(inner) => Some(inner),
-            _ => None,
-        }
-    }
-}
+impl std::error::Error for Error {}
 
 #[cfg(test)]
 mod tests {
@@ -350,7 +346,7 @@ mod tests {
             snippet: "@".into(),
         };
         let parse_err = Error::from(lex_err.clone());
-        assert_eq!(parse_err, Error::Lex(lex_err));
+        assert!(matches!(parse_err, Error::Lex(e) if e == lex_err));
     }
 
     #[test]

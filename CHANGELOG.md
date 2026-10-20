@@ -174,7 +174,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `&[u8]`, … — instead of the whole file as bytes, and read it a chunk at a
   time, so the file is never held in memory: pass `File::open(path)?`
   instead of `&std::fs::read(path)?`, and `text.as_bytes()` for text already
-  in memory. A failing input is the new `Error::Io`.
+  in memory. A failing input is the new `Error::Io`, which holds the
+  input's `std::io::Error`.
 - `read()` streams the file instead of holding all of it as raw entities
   until the model is built, and takes less than half as long: a 110 MB file
   of one million entities now reads in 0.7 s instead of 1.7 s, and the
@@ -203,13 +204,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reads the rest of its text correctly instead of reading all of it as
   ISO 8859-1.
 - The `parser` module keeps what reading a raw file needs: `parse`, `Graph`
-  and its entity types, the `Span` and `TokenKind` that errors carry,
+  and its entity types, the `Span` that errors carry,
   `MAX_NESTING_DEPTH` and `NonEmptyStringList`. `Error`, `LexError`,
   `LexErrorKind`, `ParseWarning`, `SchemaId`, `ApFamily` and `Stage` are at
   the crate root only. `parse_bytes` (use `parse`), `Parser`, `Lexer`,
   `tokenize`, `Token`, `Span::slice` and the `entity`, `lexer`, `p21` and
-  `schema` submodules are no longer public, and `TokenKind` no longer
-  implements `logos::Logos`.
+  `schema` submodules are no longer public, nor is `TokenKind`.
 - Each public item has one path. The generated model is `step_io::model`
   (was `step_io::generated::model`, and `generated::resolve` for the
   `…RefView` types). The `reader`, `emit`, `header`, `refgraph` and
@@ -233,6 +233,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   32-bit targets.
 - `Error::DuplicateEntityId` gives the `line` of the repeat and the
   `first_line` of the entity it repeats instead of a `span`.
+- `Error` no longer implements `Clone` and `PartialEq`, as `Error::Io` holds
+  an `std::io::Error`; match on its variants instead. Its message includes
+  a wrapped lexical or input error's, and `source()` is `None`, so an error
+  chain prints each message once.
+- `Error::UnexpectedToken` names the token `found` as a `String`, about as
+  written in the file (`FOO`, `')'`, `#12`), instead of a `TokenKind`, and
+  the message quotes a punctuation mark it expected (`expected ';'`).
+- `LexError` and `LexErrorKind` are `#[non_exhaustive]`. A string the file
+  never closes is `UnterminatedString` and a malformed binary literal
+  `InvalidBinary`; both used to be `UnexpectedCharacter`.
+- The `step_io::Result` alias is removed; write
+  `Result<T, step_io::Error>`.
 - Section markers (`HEADER`, `DATA`, `ENDSEC`, …) ignore ASCII case only, so
   `ENDſEC` no longer reads as `ENDSEC`.
 - The `Graph` that `parse()` returns takes about 40% less

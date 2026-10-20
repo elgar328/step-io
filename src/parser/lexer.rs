@@ -27,16 +27,16 @@ pub(crate) struct Token {
 }
 
 /// Lexical error categories.
-///
-/// `UnexpectedCharacter` (a token that does not match any rule) and
-/// `InvalidNumber` (a numeric/ref literal that is out of range or non-finite —
-/// classified from the offending snippet) are produced by the lexer. The
-/// remaining variants are declared for forward compatibility.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum LexErrorKind {
+    /// A character that starts no token.
     UnexpectedCharacter,
+    /// A string whose closing `'` never comes, as in a file cut short.
     UnterminatedString,
+    /// A number or entity id out of range, or a real that is not finite.
     InvalidNumber,
+    /// A binary literal that is not `"` + a digit `0`–`3` + hex digits + `"`.
     InvalidBinary,
 }
 
@@ -54,6 +54,7 @@ impl LexErrorKind {
 /// Self-contained lexical error including the offending span and a short
 /// snippet of the source text.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct LexError {
     pub kind: LexErrorKind,
     pub span: Span,
@@ -204,10 +205,7 @@ impl<R: Read> Lexer<R> {
                     self.buf.clear();
                     (self.end, self.scan, self.checked) = (0, 0, 0);
                     self.eof = true;
-                    return Err(Error::Io {
-                        kind: e.kind(),
-                        message: e.to_string(),
-                    });
+                    return Err(Error::Io(e));
                 }
             }
         }
@@ -474,12 +472,18 @@ impl<R: Read> Lexer<R> {
             line,
             column,
         };
-        // A number out of range / non-finite is an InvalidNumber; a character
-        // no rule matches, an UnexpectedCharacter.
+        // A number out of range / non-finite is an InvalidNumber. Where no
+        // rule matches, a quote that opens no token is a string or binary
+        // literal that never closes or is malformed (the string rule takes any
+        // byte but `'`); any other character is an UnexpectedCharacter.
         let kind = match raw.ok().map(|raw| self.token_kind(raw, range.clone())) {
             Some(Some(kind)) => return Ok(Token { kind, span }),
             Some(None) => LexErrorKind::InvalidNumber,
-            None => LexErrorKind::UnexpectedCharacter,
+            None => match self.buf[range.start] {
+                b'\'' => LexErrorKind::UnterminatedString,
+                b'"' => LexErrorKind::InvalidBinary,
+                _ => LexErrorKind::UnexpectedCharacter,
+            },
         };
         let snippet = truncate_to_chars(&self.text(range), 40);
         Err(Error::Lex(LexError {
@@ -514,7 +518,7 @@ fn truncate_to_chars(s: &str, max_chars: usize) -> String {
 ///
 /// Variants cover every lexical construct defined in ISO 10303-21.
 #[derive(Debug, Clone, PartialEq)]
-pub enum TokenKind {
+pub(crate) enum TokenKind {
     IsoStart,
     IsoEnd,
     Header,
@@ -553,6 +557,39 @@ pub enum TokenKind {
     /// currently discards these (ed.3 sections are skip-only — see
     /// [`crate::parser::ParseWarning::Ed3SectionDiscarded`]).
     AnchorRef(String),
+}
+
+impl TokenKind {
+    /// The token about as written, for an error message: a real number as
+    /// its value, a string cut at 40 characters.
+    pub(crate) fn as_written(&self) -> String {
+        let fixed = match self {
+            Self::IsoStart => "ISO-10303-21",
+            Self::IsoEnd => "END-ISO-10303-21",
+            Self::Header => "HEADER",
+            Self::Data => "DATA",
+            Self::EndSec => "ENDSEC",
+            Self::LParen => "'('",
+            Self::RParen => "')'",
+            Self::Comma => "','",
+            Self::Semicolon => "';'",
+            Self::Equals => "'='",
+            Self::Asterisk => "'*'",
+            Self::Dollar => "'$'",
+            Self::Real(v) => return format!("{v:?}"),
+            Self::Integer(v) => return v.to_string(),
+            Self::String(s) => {
+                let cut = truncate_to_chars(s, 40);
+                let more = if cut.len() < s.len() { "…" } else { "" };
+                return format!("'{cut}{more}'");
+            }
+            Self::EntityRef(id) => return format!("#{id}"),
+            Self::Enum(e) => return format!(".{e}."),
+            Self::Binary(b) => return format!("\"{b}\""),
+            Self::Keyword(k) | Self::AnchorRef(k) => return k.clone(),
+        };
+        fixed.to_owned()
+    }
 }
 
 /// The rules the source's bytes are matched against, one per [`TokenKind`];
@@ -620,16 +657,17 @@ mod tests {
         Lexer::new(src.as_bytes())
     }
 
+    /// A lexical error, which is all the in-memory inputs here can fail with.
+    fn lex_error(e: Error) -> LexError {
+        match e {
+            Error::Lex(e) => e,
+            other => panic!("{other:?}"),
+        }
+    }
+
     /// Every token of `src`, or its first lexical error.
     fn tokenize(src: &str) -> Result<Vec<Token>, LexError> {
-        lexer(src)
-            .map(|t| {
-                t.map_err(|e| match e {
-                    Error::Lex(e) => e,
-                    other => panic!("{other:?}"),
-                })
-            })
-            .collect()
+        lexer(src).map(|t| t.map_err(lex_error)).collect()
     }
 
     fn first_token(src: &str) -> TokenKind {
@@ -640,8 +678,8 @@ mod tests {
             .kind
     }
 
-    fn kinds(src: &str) -> impl Iterator<Item = Result<TokenKind, Error>> + '_ {
-        lexer(src).map(|t| t.map(|t| t.kind))
+    fn kinds(src: &str) -> impl Iterator<Item = Result<TokenKind, LexError>> + '_ {
+        lexer(src).map(|t| t.map(|t| t.kind).map_err(lex_error))
     }
 
     #[test]
@@ -995,23 +1033,24 @@ mod tests {
     #[test]
     fn peek_returns_same_token_twice() {
         let mut lex = lexer("HEADER ; DATA");
-        let first = lex.peek().cloned();
-        let second = lex.peek().cloned();
+        let first = lex.peek().and_then(|t| t.as_ref().ok()).cloned();
+        let second = lex.peek().and_then(|t| t.as_ref().ok()).cloned();
         assert_eq!(first, second);
         assert!(matches!(
             first,
-            Some(Ok(Token {
+            Some(Token {
                 kind: TokenKind::Header,
                 ..
-            }))
+            })
         ));
     }
 
     #[test]
     fn peek_then_next_returns_buffered_token() {
         let mut lex = lexer("HEADER ; DATA");
-        let peeked = lex.peek().cloned();
-        let next = lex.next();
+        let peeked = lex.peek().and_then(|t| t.as_ref().ok()).cloned();
+        let next = lex.next().and_then(Result::ok);
+        assert!(peeked.is_some());
         assert_eq!(peeked, next);
     }
 
@@ -1042,7 +1081,7 @@ mod tests {
                 ..
             }))
         ));
-        assert_eq!(lex.next(), None);
+        assert!(lex.next().is_none());
     }
 
     #[test]
@@ -1081,13 +1120,18 @@ mod tests {
     #[test]
     fn tokenize_reports_unterminated_string_as_error() {
         // A lone `'` with no closing quote should fail to lex.
-        let err = tokenize("'abc").expect_err("unterminated string must error");
-        // In this stage logos maps the failed match to UnexpectedCharacter.
-        // A later stage may refine this to UnterminatedString.
-        assert!(matches!(
-            err.kind,
-            LexErrorKind::UnexpectedCharacter | LexErrorKind::UnterminatedString
-        ));
+        let err = tokenize("#1 = X('abc);").expect_err("unterminated string must error");
+        assert_eq!(err.kind, LexErrorKind::UnterminatedString);
+        assert_eq!((err.span.line, err.span.column), (1, 8));
+        assert!(err.to_string().contains("unterminated string literal"));
+    }
+
+    #[test]
+    fn tokenize_reports_a_malformed_binary() {
+        for src in ["\"4F\"", "\"0FG\"", "\"0F"] {
+            let err = tokenize(src).expect_err("a malformed binary must error");
+            assert_eq!(err.kind, LexErrorKind::InvalidBinary, "{src}");
+        }
     }
 
     #[test]
@@ -1258,20 +1302,21 @@ mod tests {
                 Err(std::io::Error::other("disk gone"))
             }
         }
-        let io_error = Some(Err(Error::Io {
-            kind: std::io::ErrorKind::Other,
-            message: "disk gone".into(),
-        }));
+        let disk_gone = |t: Option<Result<Token, Error>>| matches!(t, Some(Err(Error::Io(e))) if e.to_string() == "disk gone");
         let mut lexer = Lexer::new(Broken);
-        assert_eq!(lexer.next(), io_error);
-        assert_eq!(lexer.next(), None);
+        assert!(disk_gone(lexer.next()));
+        assert!(lexer.next().is_none());
         // What was read before the failure lexes; what is left of the record
         // it broke off in does not.
         let mut lexer = Lexer::new(b"#1=X(1);#2=Y(".chain(Broken));
-        let kinds: Vec<_> = lexer.by_ref().take(7).map(|t| t.map(|t| t.kind)).collect();
+        let kinds: Vec<_> = lexer
+            .by_ref()
+            .take(7)
+            .map(|t| t.map(|t| t.kind).map_err(|e| e.to_string()))
+            .collect();
         assert_eq!(kinds.last(), Some(&Ok(TokenKind::Semicolon)));
-        assert_eq!(lexer.next(), io_error);
-        assert_eq!(lexer.next(), None);
+        assert!(disk_gone(lexer.next()));
+        assert!(lexer.next().is_none());
     }
 
     #[test]

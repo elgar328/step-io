@@ -171,7 +171,7 @@ impl<R: Read> Parser<R> {
             let tok = result?;
             return Err(Error::UnexpectedToken {
                 expected: "end of file",
-                found: tok.kind,
+                found: tok.kind.as_written(),
                 span: tok.span,
             });
         }
@@ -266,7 +266,7 @@ impl<R: Read> Parser<R> {
                 other => {
                     return Err(Error::UnexpectedToken {
                         expected: "HEADER entity name",
-                        found: other,
+                        found: other.as_written(),
                         span: tok.span,
                     });
                 }
@@ -394,7 +394,7 @@ impl<R: Read> Parser<R> {
                 let tok = self.next_token()?;
                 Err(Error::UnexpectedToken {
                     expected: "entity type name or '('",
-                    found: tok.kind,
+                    found: tok.kind.as_written(),
                     span: tok.span,
                 })
             }
@@ -420,7 +420,7 @@ impl<R: Read> Parser<R> {
             let tok = self.next_token()?;
             return Err(Error::UnexpectedToken {
                 expected: "entity type name",
-                found: tok.kind,
+                found: tok.kind.as_written(),
                 span: tok.span,
             });
         }
@@ -444,7 +444,7 @@ impl<R: Read> Parser<R> {
                     let tok = self.next_token()?;
                     return Err(Error::UnexpectedToken {
                         expected: "entity type name or ')'",
-                        found: tok.kind,
+                        found: tok.kind.as_written(),
                         span: tok.span,
                     });
                 }
@@ -632,10 +632,16 @@ impl<R: Read> Parser<R> {
 
     /// Peek at the next token's kind without consuming it.
     fn peek_kind(&mut self) -> Result<&TokenKind, Error> {
+        // A peeked error is taken rather than copied: the parse stops at it.
+        if matches!(self.lexer.peek(), Some(Err(_))) {
+            let Some(Err(err)) = self.lexer.next() else {
+                unreachable!("an error was peeked");
+            };
+            return Err(err);
+        }
         match self.lexer.peek() {
             Some(Ok(tok)) => Ok(&tok.kind),
-            Some(Err(err)) => Err(err.clone()),
-            None => Err(Error::UnexpectedEof {
+            _ => Err(Error::UnexpectedEof {
                 expected: "any token",
             }),
         }
@@ -652,7 +658,7 @@ impl<R: Read> Parser<R> {
         } else {
             Err(Error::UnexpectedToken {
                 expected,
-                found: tok.kind,
+                found: tok.kind.as_written(),
                 span: tok.span,
             })
         }
@@ -674,23 +680,23 @@ impl<R: Read> Parser<R> {
     /// Expect and consume a semicolon.
     fn expect_semicolon(&mut self) -> Result<Span, Error> {
         Ok(self
-            .expect(|k| matches!(k, TokenKind::Semicolon), ";")?
+            .expect(|k| matches!(k, TokenKind::Semicolon), "';'")?
             .span)
     }
 
     /// Expect and consume a left parenthesis.
     fn expect_lparen(&mut self) -> Result<Span, Error> {
-        Ok(self.expect(|k| matches!(k, TokenKind::LParen), "(")?.span)
+        Ok(self.expect(|k| matches!(k, TokenKind::LParen), "'('")?.span)
     }
 
     /// Expect and consume a right parenthesis.
     fn expect_rparen(&mut self) -> Result<Span, Error> {
-        Ok(self.expect(|k| matches!(k, TokenKind::RParen), ")")?.span)
+        Ok(self.expect(|k| matches!(k, TokenKind::RParen), "')'")?.span)
     }
 
     /// Expect and consume an equals sign.
     fn expect_equals(&mut self) -> Result<Span, Error> {
-        Ok(self.expect(|k| matches!(k, TokenKind::Equals), "=")?.span)
+        Ok(self.expect(|k| matches!(k, TokenKind::Equals), "'='")?.span)
     }
 }
 
@@ -742,7 +748,13 @@ mod tests {
     fn parser_expect_semicolon_wrong_token() {
         let mut parser = Parser::new("(".as_bytes());
         let err = parser.expect_semicolon().unwrap_err();
-        assert!(matches!(err, Error::UnexpectedToken { expected: ";", .. }));
+        assert!(matches!(
+            err,
+            Error::UnexpectedToken {
+                expected: "';'",
+                ..
+            }
+        ));
     }
 
     // --- parse_parameter helpers ---
