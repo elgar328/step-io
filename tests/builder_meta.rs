@@ -187,3 +187,35 @@ fn shared_person_across_parts_and_roles() {
     assert!(roles.contains(&"creator".to_owned()));
     assert!(roles.contains(&"design_owner".to_owned()));
 }
+
+/// A part's own entities, from `part_ids`, take what the builder does not
+/// cover: a property added through `author()` reads back on the part.
+#[test]
+fn part_ids_extend_a_part_through_the_author() {
+    use step_io::model as m;
+
+    let mut b = StepBuilder::new();
+    let wheel = b.part("wheel");
+    let ids = b.part_ids(wheel);
+    b.author()
+        .add_property_definition(
+            "mass",
+            Some("as weighed"),
+            m::CharacterizedDefinitionRef::ProductDefinition(ids.definition),
+        )
+        .expect("property");
+
+    let text = common::text(&b.finish());
+    let (model, report) = read(text.as_bytes()).expect("re-read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    let scene = model.scene();
+    let def = scene
+        .all_product_definitions()
+        .next()
+        .expect("the wheel's definition");
+    let properties: Vec<_> = model
+        .all::<m::PropertyDefinition>()
+        .filter(|(_, p)| p.definition.entity_key() == def.key() && model.text(p.name) == "mass")
+        .collect();
+    assert_eq!(properties.len(), 1);
+}

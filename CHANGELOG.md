@@ -75,6 +75,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   display mesh or geometric set, which used to come back as `Other`.
 - `EntityKey::keyword()` gives the STEP keyword of the entity type a key
   names, such as `ADVANCED_FACE`, or `None` for a complex instance.
+- `StepBuilder::part_ids()` gives the `PRODUCT`, version, `PRODUCT_DEFINITION`
+  and `PRODUCT_DEFINITION_SHAPE` the builder made for a part (`PartIds`), to
+  attach what the builder does not cover through `author()`, such as a
+  property or a shape aspect.
 - The `Ap242Author` constructors, and `add_complex` for the parts of a complex
   instance, check the size of a list nested in an aggregate as they check
   the aggregate's: a row of B-spline control points or weights, a triangle

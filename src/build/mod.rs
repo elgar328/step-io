@@ -34,7 +34,9 @@
 //!
 //! Anything the builder does not cover is still reachable:
 //! [`author`](StepBuilder::author) hands out the underlying [`Ap242Author`],
-//! and ids cross freely between the two levels.
+//! and ids cross freely between the two levels;
+//! [`part_ids`](StepBuilder::part_ids) gives a part's own entities to attach
+//! more to.
 //!
 //! The minimal flow — a planar part handed over from a kernel:
 //!
@@ -570,6 +572,23 @@ pub struct Vertex(usize);
 /// of range) or silently targets the wrong part (in range).
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Part(usize);
+
+/// The entities [`StepBuilder::part`] made for a part, from
+/// [`StepBuilder::part_ids`] — what to point at when extending the part
+/// through [`StepBuilder::author`]: a property or document on its definition
+/// or version, a shape aspect on its shape.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct PartIds {
+    /// The `PRODUCT`.
+    pub product: m::ProductId,
+    /// The `PRODUCT_DEFINITION_FORMATION` — the part's version.
+    pub version: m::ProductDefinitionFormationId,
+    /// The `PRODUCT_DEFINITION`.
+    pub definition: m::ProductDefinitionId,
+    /// The `PRODUCT_DEFINITION_SHAPE`.
+    pub shape: m::ProductDefinitionShapeId,
+}
 
 /// A part's product chain plus the shape items collected for it; the shape
 /// representation itself is materialized in [`StepBuilder::finish`] because
@@ -1472,6 +1491,20 @@ impl StepBuilder {
     /// [`finish`](Self::finish).
     pub fn part(&mut self, name: &str) -> Part {
         self.part_with(name, &PartOptions::default())
+    }
+
+    /// The ids of the entities [`part`](Self::part) made for `part`. The
+    /// part's shape representation is not among them: [`finish`](Self::finish)
+    /// makes it, from the items the part collected.
+    #[must_use]
+    pub fn part_ids(&self, part: Part) -> PartIds {
+        let p = &self.parts[part.0];
+        PartIds {
+            product: p.product,
+            version: p.formation,
+            definition: p.definition,
+            shape: p.shape,
+        }
     }
 
     /// [`part`](Self::part) with metadata overrides: part number, version
