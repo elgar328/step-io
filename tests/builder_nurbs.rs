@@ -438,6 +438,39 @@ fn parabola_and_hyperbola_edges_round_trip() {
 }
 
 #[test]
+fn a_parabola_with_a_negative_focal_distance_keeps_its_sense() {
+    // F = -2: the parameter grows while y falls, so an edge from u = -1 to
+    // u = 2 runs with the curve.
+    let at = frame([1.0, 2.0, 3.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]);
+    let flipped_at = |u: f64| [1.0 - 2.0 * u * u, 2.0 - 4.0 * u, 3.0];
+    let mut b = StepBuilder::new().expect("builder");
+    let part = b.part("flipped").expect("part");
+    let v0 = b.vertex(flipped_at(-1.0)).expect("v0");
+    let v1 = b.vertex(flipped_at(2.0)).expect("v1");
+    let edge = b
+        .edge(v0, v1, CurveInput::Parabola(at, -2.0))
+        .expect("edge");
+    let face = b
+        .face(
+            SurfaceInput::Plane(at),
+            Orientation::Forward,
+            vec![FaceBoundInput::outer(vec![(edge, Orientation::Forward)])],
+        )
+        .expect("face");
+    b.solid(part, "flipped", vec![face]).expect("solid");
+    let mut out = Vec::new();
+    step_io::write(&b.finish().expect("finish"), &mut out).expect("write");
+
+    let (model, _report) = read(&out[..]).expect("read");
+    let scene = model.scene();
+    let edge = scene.all_edges().next().expect("the edge");
+    assert!(edge.same_sense());
+    let n = edge.to_nurbs().expect("converts");
+    assert!(close(n.control_points[0], flipped_at(-1.0)));
+    assert!(close(n.control_points[2], flipped_at(2.0)));
+}
+
+#[test]
 fn degenerate_parabolas_and_hyperbolas_are_rejected() {
     let at = frame([0.0; 3], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]);
     let mut b = StepBuilder::new().expect("builder");

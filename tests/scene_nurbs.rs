@@ -1271,3 +1271,49 @@ fn open_conics_alone_or_closed_do_not_convert() {
         scene.warnings()
     );
 }
+
+#[test]
+fn trimmed_hyperbolas_and_flipped_parabolas_convert_exactly() {
+    // A hyperbola trimmed by parameter alone: the standard's u, which Open
+    // CASCADE shares for a hyperbola.
+    let defs = format!(
+        "{OPEN_CONIC_FRAME}#9=TRIMMED_CURVE('',#6,(PARAMETER_VALUE(-1.)),(PARAMETER_VALUE(2.)),.T.,.PARAMETER.);\n"
+    );
+    let src = one_edge(&defs);
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let n = scene
+        .all_edges()
+        .next()
+        .unwrap()
+        .curve()
+        .to_nurbs()
+        .expect("converts");
+    assert_eq!(n.control_points.len(), 7, "three pieces of width 1");
+    let pts = quadratic_pieces(&n, 50);
+    assert!(approx(&pts[0], &hyperbola_at(-1.0)));
+    assert!(approx(pts.last().unwrap(), &hyperbola_at(2.0)));
+
+    // A negative focal distance opens the parabola along -x: C + F(u² x + 2u y)
+    // with F = -2.
+    let flipped_at = |u: f64| [1.0 - 2.0 * u * u, 2.0 - 4.0 * u, 3.0];
+    let defs = format!(
+        "{OPEN_CONIC_FRAME}#8=PARABOLA('',#4,-2.);\n#9=SURFACE_CURVE('',#8,(#101),.CURVE_3D.);\n"
+    );
+    let src = edge_between(&defs, flipped_at(-1.0), flipped_at(2.0), true);
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let n = scene
+        .all_edges()
+        .next()
+        .unwrap()
+        .to_nurbs()
+        .expect("converts");
+    // C + F(u0·u1 x + (u0+u1) y) with u0 = -1, u1 = 2.
+    let (u0, u1) = (-1.0, 2.0);
+    let middle = [1.0 - 2.0 * (u0 * u1), 2.0 - 2.0 * (u0 + u1), 3.0];
+    assert!(approx(
+        &cp_flat(&n),
+        &[flipped_at(-1.0), middle, flipped_at(2.0)].concat()
+    ));
+}
