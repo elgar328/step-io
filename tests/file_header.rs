@@ -16,7 +16,7 @@ fn read_fills_model_header() {
          ENDSEC;\nDATA;\n#1=APPLICATION_CONTEXT('');\nENDSEC;\nEND-ISO-10303-21;\n";
     let (model, _report) = read(src.as_bytes()).expect("read ok");
     let h = model.header();
-    assert_eq!(h.description, "a wheel model");
+    assert_eq!(h.descriptions, ["a wheel model"]);
     assert_eq!(h.file_name, "wheel.step");
     assert_eq!(h.time_stamp, "2026-07-05T12:00:00");
     assert_eq!(h.authors, ["Alice", "Bob"]);
@@ -41,7 +41,7 @@ fn write_round_trips_header() {
     let out = common::text(&model);
     let (m2, _report2) = read(out.as_bytes()).expect("re-read ok");
     let h = m2.header();
-    assert_eq!(h.description, "a wheel model");
+    assert_eq!(h.descriptions, ["a wheel model"]);
     assert_eq!(h.file_name, "wheel.step");
     assert_eq!(h.time_stamp, "2026-07-05T12:00:00");
     assert_eq!(h.authors, ["Alice"]);

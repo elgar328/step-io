@@ -30,7 +30,7 @@
 //! and [`security`](StepBuilder::security) attach PLM records to a part's
 //! version, with people as shared
 //! [`person_and_org`](StepBuilder::person_and_org) handles.
-//! [`header`](StepBuilder::header) fills the Part 21 file header.
+//! [`header_mut`](StepBuilder::header_mut) fills the Part 21 file header.
 //!
 //! Anything the builder does not cover is still reachable:
 //! [`author`](StepBuilder::author) hands out the underlying [`Ap242Author`],
@@ -76,7 +76,7 @@
 //!
 //! ```no_run
 //! use step_io::build::{
-//!     ApprovalInput, Frame, HeaderInput, MeshInput, MeshNormalsInput, PersonOrg, StyleTarget,
+//!     ApprovalInput, Frame, MeshInput, MeshNormalsInput, PersonOrg, StyleTarget,
 //! };
 //! use step_io::scene::Rgb;
 //!
@@ -84,12 +84,10 @@
 //! # let kernel = Kernel { mesh_points: vec![], mesh_triangles: vec![] };
 //! # fn faces(_b: &mut step_io::StepBuilder) -> Vec<step_io::model::AdvancedFaceId> { vec![] }
 //! let mut b = step_io::StepBuilder::new();
-//! b.header(&HeaderInput {
-//!     file_name: Some("car.step".into()),
-//!     organizations: vec!["ACME".into()],
-//!     originating_system: Some("MyKernel 2.1".into()),
-//!     ..Default::default() // timestamp auto-stamped
-//! });
+//! let header = b.header_mut(); // time stamp and preprocessor already set
+//! header.file_name = "car.step".into();
+//! header.organizations = vec!["ACME".into()];
+//! header.originating_system = "MyKernel 2.1".into();
 //!
 //! let car = b.part("car");
 //! let wheel = b.part("wheel");
@@ -142,26 +140,6 @@ use crate::generated::author::{Ap242Author, AuthorError};
 use crate::generated::model as m;
 use crate::header::FileHeader;
 use crate::scene::{NurbsCurve, NurbsSurface, Rgb};
-
-/// Part 21 HEADER fields for [`StepBuilder::header`]. Everything defaults
-/// to empty except the pieces the builder supplies itself: the timestamp
-/// (current UTC time unless overridden) and the preprocessor stamp
-/// (always `step-io <version>`).
-#[derive(Debug, Clone, Default)]
-pub struct HeaderInput {
-    /// `FILE_NAME.name` — the customary file name.
-    pub file_name: Option<String>,
-    /// `FILE_DESCRIPTION` entry.
-    pub description: Option<String>,
-    pub authors: Vec<String>,
-    pub organizations: Vec<String>,
-    /// `FILE_NAME.originating_system` — the exporting kernel/application.
-    pub originating_system: Option<String>,
-    pub authorisation: Option<String>,
-    /// `None` = stamp the current UTC time; `Some` = used verbatim (fix it
-    /// for reproducible output, or `""` to leave the field blank).
-    pub timestamp: Option<String>,
-}
 
 /// Days-from-civil inverse (Howard Hinnant's algorithm): unix seconds to a
 /// `YYYY-MM-DDThh:mm:ssZ` UTC stamp.
@@ -658,7 +636,7 @@ pub struct StepBuilder {
     vertices: Vec<(m::VertexPointId, [f64; 3])>,
     styles: Vec<m::StyledItemId>,
     hidden: Vec<m::InvisibleItemRef>,
-    header: HeaderInput,
+    header: FileHeader,
 }
 
 impl Default for StepBuilder {
@@ -758,17 +736,31 @@ impl StepBuilder {
             vertices: Vec::new(),
             styles: Vec::new(),
             hidden: Vec::new(),
-            header: HeaderInput::default(),
+            header: FileHeader {
+                time_stamp: now_iso_utc(),
+                preprocessor_version: concat!("step-io ", env!("CARGO_PKG_VERSION")).to_owned(),
+                ..FileHeader::default()
+            },
         })
     }
 
-    /// Set the Part 21 HEADER fields (file name, description, authors,
-    /// organizations, originating system, authorisation, timestamp) applied
-    /// on [`finish`](Self::finish). May be called any time before `finish`;
-    /// the last call wins. Without it the header carries only the automatic
-    /// timestamp and preprocessor stamp.
-    pub fn header(&mut self, h: &HeaderInput) {
-        self.header = h.clone();
+    /// The Part 21 HEADER the finished model will carry: as the builder
+    /// starts it, the time it was made (UTC) and the preprocessor stamp
+    /// `step-io <version>`, the rest empty.
+    #[must_use]
+    pub fn header(&self) -> &FileHeader {
+        &self.header
+    }
+
+    /// The HEADER to fill: file name, descriptions, authors, organizations,
+    /// originating system, authorisation. Set `time_stamp` to a fixed value
+    /// for reproducible output, or to `""` to leave it blank. A header read
+    /// from another file can go in whole (`*b.header_mut() =
+    /// model.header().clone()`), its preprocessor stamp with it.
+    /// [`finish`](Self::finish) stamps `FILE_SCHEMA` with the AP242 identity
+    /// whatever `schema` holds.
+    pub fn header_mut(&mut self) -> &mut FileHeader {
+        &mut self.header
     }
 
     /// Escape hatch to the strict low-level layer — the write-side
@@ -1873,21 +1865,8 @@ impl StepBuilder {
                 m::RepresentationContextRef::Complex(self.ctx),
             )?;
         }
-        let h = &self.header;
-        let file_header = FileHeader {
-            description: h.description.clone().unwrap_or_default(),
-            file_name: h.file_name.clone().unwrap_or_default(),
-            time_stamp: h.timestamp.clone().unwrap_or_else(now_iso_utc),
-            authors: h.authors.clone(),
-            organizations: h.organizations.clone(),
-            preprocessor_version: concat!("step-io ", env!("CARGO_PKG_VERSION")).to_owned(),
-            originating_system: h.originating_system.clone().unwrap_or_default(),
-            authorisation: h.authorisation.clone().unwrap_or_default(),
-            // The authoring layer stamps the AP242 schema identity in
-            // `finish_with_header`; whatever is set here is overwritten.
-            schema: crate::parser::SchemaId::default(),
-        };
-        Ok(self.author.finish_with_header(&file_header))
+        // `finish_with_header` stamps the AP242 schema identity.
+        Ok(self.author.finish_with_header(&self.header))
     }
 }
 

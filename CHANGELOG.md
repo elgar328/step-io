@@ -295,6 +295,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Result`: nothing they are given can break a rule, so they could fail only
   through a bug in step-io, and panic then. Drop the `?` or `.unwrap()`, as
   in `let part = b.part("wheel");`. `StepBuilder` implements `Default`.
+- `StepBuilder` holds the file header as a `FileHeader` from the start,
+  stamped with the time and `step-io <version>`; read it with `header()` and
+  fill it through `header_mut()`. `HeaderInput` and `StepBuilder::header(&…)`
+  are removed: write `b.header_mut().file_name = "wheel.step".into();` for
+  `b.header(&HeaderInput { file_name: Some("wheel.step".into()), .. })`, and
+  `time_stamp = String::new()` for a blank stamp. A header read from another
+  file can be passed in whole.
+- `FileHeader::descriptions` keeps each `FILE_DESCRIPTION` entry, as
+  `authors` and `organizations` do; `description` used to join them into
+  one string. `FileHeader` is `#[non_exhaustive]`.
 - `StepBuilder::hide_layer()` refuses a layer id this builder does not hold
   with `AuthorError::DanglingRef`, and so returns a `Result`; `finish()` used
   to find it.

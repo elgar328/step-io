@@ -133,10 +133,10 @@ fn header_text(header: &FileHeader) -> String {
             .join(",")
     };
     format!(
-        "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(({desc}),'2;1');\n\
+        "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION({desc},'2;1');\n\
          FILE_NAME({name},{stamp},{authors},{orgs},{pre},{orig},{auth});\n\
          FILE_SCHEMA(({schema}));\nENDSEC;\nDATA;\n",
-        desc = header_str(&header.description),
+        desc = header_list(&header.descriptions),
         name = header_str(&header.file_name),
         stamp = header_str(&header.time_stamp),
         authors = header_list(&header.authors),

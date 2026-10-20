@@ -6,21 +6,24 @@
 //! originating CAD system; `FILE_SCHEMA` names the schema. [`FileHeader`]
 //! models all three and lives on the [`StepModel`]: reading surfaces the
 //! source file's header as [`StepModel::header`], and authoring fills it
-//! through [`StepBuilder::header`](crate::StepBuilder::header) for the
-//! written file.
+//! through [`StepBuilder::header_mut`](crate::StepBuilder::header_mut) for
+//! the written file.
 
 use crate::generated::model::StepModel;
 use crate::parser::{Attribute, RawEntity, SchemaId};
 
 /// The Part 21 HEADER section (`FILE_DESCRIPTION` + `FILE_NAME` +
-/// `FILE_SCHEMA`). Reading decodes it from the source file; the builder
-/// fills it from user input plus its automatic timestamp and preprocessor
-/// stamp. The default is the customary all-empty header.
+/// `FILE_SCHEMA`). Reading decodes it from the source file; a
+/// [`StepBuilder`](crate::StepBuilder) starts one with its timestamp and
+/// preprocessor stamp for the caller to fill
+/// ([`header_mut`](crate::StepBuilder::header_mut)). The default is the
+/// customary all-empty header.
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct FileHeader {
-    /// `FILE_DESCRIPTION.description`; multiple entries read as one joined
-    /// string.
-    pub description: String,
+    /// `FILE_DESCRIPTION.description`, one entry per string; empty renders
+    /// as the customary `('')`.
+    pub descriptions: Vec<String>,
     /// `FILE_NAME.name`.
     pub file_name: String,
     /// `FILE_NAME.time_stamp`.
@@ -81,11 +84,7 @@ pub(crate) fn from_raw(raw: &[RawEntity], schema: SchemaId) -> FileHeader {
                 h.originating_system = attr_str(at(5));
                 h.authorisation = attr_str(at(6));
             }
-            "FILE_DESCRIPTION" => {
-                // The description list customarily holds one entry; join any
-                // extras rather than dropping them.
-                h.description = attr_list(at(0)).join(", ");
-            }
+            "FILE_DESCRIPTION" => h.descriptions = attr_list(at(0)),
             _ => {}
         }
     }
