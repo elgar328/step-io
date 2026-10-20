@@ -111,6 +111,7 @@ fn discriminant(g: &FeatureGeometry) -> &'static str {
         FeatureGeometry::Solid(_) => "Solid",
         FeatureGeometry::Curve(_) => "Curve",
         FeatureGeometry::Other(_) => "Other",
+        _ => "unknown",
     }
 }
 

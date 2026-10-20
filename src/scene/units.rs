@@ -13,6 +13,7 @@ use crate::scene::Scene;
 /// The model's unit context. Fields are `None` when the model carries no such
 /// unit (or no unit context at all).
 #[derive(Clone, Debug, Default)]
+#[non_exhaustive]
 pub struct Units {
     pub length: Option<Unit>,
     pub angle: Option<Unit>,
@@ -23,6 +24,7 @@ pub struct Units {
 /// A single unit: a display name and the factor to multiply a value by to reach
 /// the SI base unit (metre for length, radian for angle).
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct Unit {
     pub name: String,
     pub to_si: f64,

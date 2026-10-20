@@ -137,6 +137,49 @@ pub use product::{
 };
 pub use units::{Unit, Units};
 
+// A handle prints as its type and entity key: the context it carries holds the
+// whole model.
+macro_rules! debug_by_key {
+    ($($handle:ident),+ $(,)?) => {
+        $(
+            impl std::fmt::Debug for $handle<'_> {
+                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    f.debug_tuple(stringify!($handle)).field(&self.key()).finish()
+                }
+            }
+        )+
+    };
+}
+
+debug_by_key!(
+    Approval,
+    Approver,
+    Bound,
+    Contributor,
+    Curve,
+    Datum,
+    Dimension,
+    Document,
+    Edge,
+    Face,
+    Feature,
+    MappedInstance,
+    Mesh,
+    MeshGroup,
+    Occurrence,
+    Person,
+    Point,
+    Product,
+    ProductDef,
+    SecurityClassification,
+    Shell,
+    Solid,
+    Surface,
+    Tolerance,
+    Version,
+    Vertex,
+);
+
 /// A `Copy` reference bundle handed to every handle: the model, the lazy reverse
 /// index, and the scene's warning log. All borrows share one lifetime (the scene
 /// borrow), so handles stay single-lifetime.

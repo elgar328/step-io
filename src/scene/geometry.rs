@@ -501,6 +501,7 @@ pub struct Surface<'m> {
 /// The concrete surface geometry. Common kinds are typed; everything else is
 /// `Other(keyword)` (the surface still exists — it is surfaced, not dropped).
 #[derive(Clone, Copy, Debug)]
+#[non_exhaustive]
 pub enum SurfaceKind<'m> {
     Plane(&'m m::Plane),
     Cylindrical(&'m m::CylindricalSurface),
@@ -828,6 +829,7 @@ pub struct Curve<'m> {
 /// The concrete curve geometry. Common kinds are typed; everything else is
 /// `Other(keyword)`.
 #[derive(Clone, Copy, Debug)]
+#[non_exhaustive]
 pub enum CurveKind<'m> {
     Line(&'m m::Line),
     Circle(&'m m::Circle),

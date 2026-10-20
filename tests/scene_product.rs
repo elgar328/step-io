@@ -374,7 +374,7 @@ fn reads_version_and_contributors() {
         .all_product_definitions()
         .next()
         .expect("a definition");
-    assert_eq!(def.version(), Some("RevB"));
+    assert_eq!(def.version().map(|v| v.id()), Some("RevB"));
 
     let contributors: Vec<_> = def.contributors().collect();
     assert_eq!(contributors.len(), 1, "one contributor");
@@ -488,7 +488,7 @@ fn reads_product_versions() {
     for v in &versions {
         let defs: Vec<_> = v.definitions().collect();
         assert_eq!(defs.len(), 1, "one definition per version");
-        assert_eq!(defs[0].version(), Some(v.id()));
+        assert_eq!(defs[0].version().map(|v| v.id()), Some(v.id()));
     }
 
     assert!(
@@ -523,7 +523,7 @@ fn describe_target(t: &Target<'_>) -> String {
     match t {
         Target::Product(p) => format!("prod:{}", p.name()),
         Target::Version(v) => format!("ver:{}", v.id()),
-        Target::Definition(d) => format!("def:{}", d.version().unwrap_or("?")),
+        Target::Definition(d) => format!("def:{}", d.version().map_or("?", |v| v.id())),
     }
 }
 
@@ -670,8 +670,6 @@ fn reads_documents() {
 
 #[test]
 fn reads_approval_date() {
-    use step_io::scene::ApprovalDate;
-
     let src = format!("{HEADER}{APPROVAL}{FOOTER}");
     let (model, _rep) = read(src.as_bytes()).expect("read");
     let scene = model.scene();
@@ -681,15 +679,10 @@ fn reads_approval_date() {
         .next()
         .expect("a definition");
     let a = def.approvals().next().expect("an approval");
+    let date = a.date().expect("a date");
     assert_eq!(
-        a.date(),
-        Some(ApprovalDate {
-            year: Some(2024),
-            month: Some(3),
-            day: Some(15),
-            hour: Some(14),
-            minute: Some(30),
-        }),
+        (date.year, date.month, date.day, date.hour, date.minute),
+        (Some(2024), Some(3), Some(15), Some(14), Some(30)),
     );
     assert!(
         scene.warnings().is_empty(),

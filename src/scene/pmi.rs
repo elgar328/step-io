@@ -177,6 +177,7 @@ impl<'m> Dimension<'m> {
 
 /// The GD&T characteristic a [`Tolerance`] specifies (its control-frame symbol).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ToleranceKind {
     /// `POSITION_TOLERANCE`.
     Position,
@@ -713,6 +714,7 @@ macro_rules! feature_family {
         /// The concrete kind of a [`Feature`] — which `SHAPE_ASPECT`-family
         /// entity backs it, without matching on [`Feature::key`]'s `EntityKey`.
         #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+        #[non_exhaustive]
         pub enum FeatureKind {
             $( $rent, )+
             $( $aent, )+
@@ -922,6 +924,8 @@ impl<'m> Tolerance<'m> {
 /// A concrete geometry item a [`Feature`] designates (via
 /// `GEOMETRIC_ITEM_SPECIFIC_USAGE`). The common cases resolve to a typed handle;
 /// anything else is surfaced as `Other` carrying its key rather than dropped.
+#[derive(Clone, Copy, Debug)]
+#[non_exhaustive]
 pub enum FeatureGeometry<'m> {
     /// An `ADVANCED_FACE` or `FACE_SURFACE`.
     Face(Face<'m>),

@@ -6,7 +6,7 @@
 mod common;
 
 use step_io::build::{ApprovalInput, DateTimeInput, DocumentInput, PartOptions, PersonOrg};
-use step_io::{StepBuilder, read};
+use step_io::{EntityKey, StepBuilder, read};
 
 #[test]
 #[allow(clippy::too_many_lines)]
@@ -83,7 +83,13 @@ fn full_metadata_round_trips_and_reads_back() {
     assert_eq!(versions[0].description(), Some("second revision"));
     let defs: Vec<_> = product.definitions().collect();
     assert_eq!(defs.len(), 1);
-    assert_eq!(defs[0].version(), Some("B"));
+    let version = defs[0].version().expect("the definition's version");
+    assert_eq!(version.key(), versions[0].key());
+    assert_eq!(version.id(), "B");
+    assert_eq!(
+        version.product().expect("the version's product").key(),
+        product.key()
+    );
     assert_eq!(defs[0].description(), Some("design view"));
 
     // Contributor.
@@ -107,6 +113,24 @@ fn full_metadata_round_trips_and_reads_back() {
         Some("Doe")
     );
     assert_eq!(approvers[0].organization(), Some("ACME"));
+
+    // Every handle has a key, and prints as its type and key.
+    assert!(matches!(
+        contributors[0].key(),
+        EntityKey::CcDesignPersonAndOrganizationAssignment(_)
+            | EntityKey::AppliedPersonAndOrganizationAssignment(_)
+    ));
+    let EntityKey::ApprovalPersonOrganization(id) = approvers[0].key() else {
+        panic!("an APPROVAL_PERSON_ORGANIZATION")
+    };
+    assert_eq!(
+        format!("{:?}", approvers[0]),
+        format!("Approver(ApprovalPersonOrganization({id:?}))")
+    );
+    assert_eq!(
+        format!("{product:?}"),
+        format!("Product({:?})", product.key())
+    );
     let date = approvals[0].date().expect("approval date");
     assert_eq!(
         (date.year, date.month, date.day, date.hour, date.minute),

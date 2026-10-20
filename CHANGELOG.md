@@ -44,6 +44,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   through an `ORIENTED_CLOSED_SHELL` with `.F.`, as Open CASCADE writes every
   cavity, while other writers keep `.T.`. A face of a shell points the way
   its own orientation and the shell's give together.
+- `Contributor::key()` and `Approver::key()`, so every scene handle has a
+  key, and every handle implements `Debug`, printing its type and key.
+  `FeatureGeometry` and `Target` implement `Debug` as well, and
+  `FeatureGeometry` is `Clone` and `Copy`.
+- `Version::product()` reaches the product a version belongs to.
 
 ### Changed
 
@@ -65,6 +70,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `MappedInstance::{solids, mapped_children}`, `Tolerance::datums`,
   `Dimension::features` and `Feature::geometry`. The order is the same; add
   `.collect::<Vec<_>>()` where a list is needed.
+- `ProductDef::version()` returns the `Version` handle instead of its id
+  string; call `.id()` on it for the label.
+- `CurveKind`, `SurfaceKind`, `FeatureKind`, `ToleranceKind`,
+  `FeatureGeometry`, `Units`, `Unit` and `ApprovalDate` are
+  `#[non_exhaustive]`, so later kinds and fields can be added without a
+  breaking release. A `match` on one of the enums needs a wildcard arm, and
+  the structs are read field by field rather than built or compared as a
+  literal.
 - `StepBuilder::face` takes an `Orientation` instead of the `same_sense`
   boolean, and `FaceBoundInput` holds an `Orientation` in each edge pair and
   in its `orientation` field instead of a boolean. The file written is

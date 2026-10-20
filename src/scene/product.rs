@@ -252,6 +252,28 @@ impl<'m> Version<'m> {
         self.fields().0
     }
 
+    /// The product this is a version of (`of_product`); `None` for a complex
+    /// product.
+    pub fn product(&self) -> Option<Product<'m>> {
+        let model = self.cx.model;
+        let of_product = match self.which {
+            FormImpl::Plain(i) => &model.product_definition_formation_arena.get(i.0).of_product,
+            FormImpl::WithSource(i) => {
+                &model
+                    .product_definition_formation_with_specified_source_arena
+                    .get(i.0)
+                    .of_product
+            }
+        };
+        match of_product {
+            m::ProductRef::Product(id) => Some(Product {
+                cx: self.cx,
+                id: *id,
+            }),
+            m::ProductRef::Complex(_) => None,
+        }
+    }
+
     /// The version description, if any.
     pub fn description(&self) -> Option<&'m str> {
         self.fields().1
@@ -474,25 +496,17 @@ impl<'m> ProductDef<'m> {
         pmi::datums_of(self.cx, self.key()).into_iter()
     }
 
-    /// The version identifier of this part — its `PRODUCT_DEFINITION_FORMATION.id`.
-    pub fn version(&self) -> Option<&'m str> {
-        let model = self.cx.model;
-        match self.core().formation {
-            m::ProductDefinitionFormationRef::ProductDefinitionFormation(i) => {
-                Some(model.text(model.product_definition_formation_arena.get(i.0).id))
-            }
+    /// The version this part is a definition of — its
+    /// `PRODUCT_DEFINITION_FORMATION`. `None` for a complex formation.
+    pub fn version(&self) -> Option<Version<'m>> {
+        let which = match self.core().formation {
+            m::ProductDefinitionFormationRef::ProductDefinitionFormation(i) => FormImpl::Plain(*i),
             m::ProductDefinitionFormationRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
-                Some(
-                    model.text(
-                        model
-                            .product_definition_formation_with_specified_source_arena
-                            .get(i.0)
-                            .id,
-                    ),
-                )
+                FormImpl::WithSource(*i)
             }
-            m::ProductDefinitionFormationRef::Complex(_) => None,
-        }
+            m::ProductDefinitionFormationRef::Complex(_) => return None,
+        };
+        Some(Version { cx: self.cx, which })
     }
 
     /// The people / organizations involved with this part and their roles
@@ -619,7 +633,7 @@ fn scope_of(k: m::EntityKey) -> Scope {
 /// full detail behind [`Scope`]. Unlike [`Contributor::assigned_scope`] (which
 /// answers *which level*), this names *which entity*, so multiple targets at the
 /// same level stay distinct.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum Target<'m> {
     Product(Product<'m>),
     Version(Version<'m>),
@@ -834,6 +848,17 @@ pub struct Contributor<'m> {
 }
 
 impl<'m> Contributor<'m> {
+    /// This assignment's global identity (a `Copy` key for maps /
+    /// deduplication): the person-and-organization assignment entity.
+    pub fn key(&self) -> m::EntityKey {
+        match self.which {
+            ContributorImpl::CcDesign(i) => {
+                m::EntityKey::CcDesignPersonAndOrganizationAssignment(i)
+            }
+            ContributorImpl::Applied(i) => m::EntityKey::AppliedPersonAndOrganizationAssignment(i),
+        }
+    }
+
     /// Which level of the product structure this assignment attaches to.
     pub fn assigned_scope(&self) -> Scope {
         self.scope
@@ -1622,6 +1647,7 @@ impl<'m> Approval<'m> {
 /// from the source stay `None`; seconds and time-zone are intentionally out of
 /// scope for now.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct ApprovalDate {
     pub year: Option<i64>,
     pub month: Option<i64>,
@@ -1688,6 +1714,12 @@ pub struct Approver<'m> {
 }
 
 impl<'m> Approver<'m> {
+    /// This approver's global identity (a `Copy` key for maps /
+    /// deduplication): the `APPROVAL_PERSON_ORGANIZATION`.
+    pub fn key(&self) -> m::EntityKey {
+        m::EntityKey::ApprovalPersonOrganization(self.id)
+    }
+
     fn raw(&self) -> &'m m::ApprovalPersonOrganization {
         self.cx
             .model
