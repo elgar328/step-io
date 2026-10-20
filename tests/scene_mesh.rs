@@ -2,8 +2,9 @@
 //! positions, triangles expanded from strips/fans, normals, and the link back
 //! to the precise b-rep face.
 
-use step_io::read;
+use step_io::model::ClosedShellId;
 use step_io::scene::MeshNormals;
+use step_io::{EntityKey, Orientation, read};
 
 fn approx3(a: [f64; 3], b: [f64; 3]) -> bool {
     a.iter().zip(b).all(|(x, y)| (x - y).abs() < 1e-12)
@@ -154,6 +155,43 @@ fn mesh_groups_bundle_faces_and_reach_the_solid() {
         .expect("picked");
     assert!(picked.group().is_none());
 
+    assert!(
+        scene.warnings().is_empty(),
+        "warnings: {:?}",
+        scene.warnings()
+    );
+}
+
+/// A solid whose outer shell is wrapped in an `ORIENTED_CLOSED_SHELL(.F.)`:
+/// the solid uses the shell reversed, and a mesh linked to the closed shell
+/// still reaches the solid back through the wrapper.
+#[test]
+fn a_reversed_outer_shell_reaches_its_solid_and_reports_its_use() {
+    let wrapped = MESHES.replace(
+        "#50=MANIFOLD_SOLID_BREP('the part',#49);",
+        "#51=ORIENTED_CLOSED_SHELL('',*,#49,.F.);\n#50=MANIFOLD_SOLID_BREP('the part',#51);",
+    );
+    let src = format!("{HEADER}{wrapped}{FOOTER}");
+    let (model, report) = read(src.as_bytes()).expect("read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    let scene = model.scene();
+
+    let solid = scene.all_solids().next().expect("the solid");
+    let (shell, shell_use) = solid.outer().expect("the outer shell");
+    assert_eq!(shell_use, Orientation::Reversed);
+    assert_eq!(shell.key(), EntityKey::ClosedShell(ClosedShellId(0)));
+    let faces: Vec<_> = shell.faces().map(|f| f.name()).collect();
+    assert_eq!(faces, ["brep face"]);
+    assert_eq!(solid.faces().count(), 1);
+    assert_eq!(solid.voids().count(), 0);
+    let face = solid.faces().next().expect("the face");
+    assert_eq!(face.solid().expect("owner solid").key(), solid.key());
+
+    let c = scene
+        .all_mesh_groups()
+        .find(|g| g.name() == "group C")
+        .expect("C");
+    assert_eq!(c.solid().expect("owner solid").key(), solid.key());
     assert!(
         scene.warnings().is_empty(),
         "warnings: {:?}",

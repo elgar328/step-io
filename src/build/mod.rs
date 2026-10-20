@@ -563,11 +563,14 @@ pub enum VoidShellNormals {
     /// empty hole. This is the same rule the outer shell follows, the
     /// validator- and mass-property-friendly orientation, and what most
     /// kernels emit for a cavity (a reversed shell). Kept as authored,
-    /// written as `ORIENTED_CLOSED_SHELL(..., .T.)`. The right choice when unsure.
+    /// written as `ORIENTED_CLOSED_SHELL(..., .T.)`, which
+    /// [`Solid::voids`](crate::scene::Solid::voids) reads back as
+    /// [`Orientation::Forward`]. The right choice when unsure.
     AwayFromMaterial,
     /// Normals point into the solid material — a cavity wound like an ordinary
     /// outward-facing solid box dropped into the hole. step-io reverses it,
-    /// written as `ORIENTED_CLOSED_SHELL(..., .F.)`.
+    /// written as `ORIENTED_CLOSED_SHELL(..., .F.)`, read back as
+    /// [`Orientation::Reversed`].
     TowardMaterial,
 }
 

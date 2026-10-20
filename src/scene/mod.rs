@@ -14,8 +14,9 @@
 //! (`solid.faces()`, `face.surface()`, `occurrence.definition()`, …).
 //! Coverage spans:
 //!
-//! - **b-rep geometry** — `Solid → Face → Surface` and `Face → Bound → Edge →
-//!   Curve / Vertex → Point`. Surfaces and curves report their analytic kind
+//! - **b-rep geometry** — `Solid → Shell → Face → Surface` and `Face → Bound →
+//!   Edge → Curve / Vertex → Point`; a shell and an edge come with the way
+//!   their solid or loop uses them ([`Orientation`](crate::Orientation)). Surfaces and curves report their analytic kind
 //!   ([`SurfaceKind`], [`CurveKind`]); a shape outside the handled set is
 //!   `Other`, carrying its STEP keyword.
 //! - **NURBS views** — `to_nurbs()` on a [`Curve`], [`Edge`], [`Surface`] or
@@ -121,7 +122,7 @@ use crate::RefGraph;
 use crate::StepModel;
 
 pub use geometry::{
-    Bound, Curve, CurveKind, Edge, Face, Point, Solid, Surface, SurfaceKind, Vertex,
+    Bound, Curve, CurveKind, Edge, Face, Point, Shell, Solid, Surface, SurfaceKind, Vertex,
 };
 pub use mesh::{Mesh, MeshGroup, MeshNormals};
 pub use nurbs::{NurbsCurve, NurbsSurface};

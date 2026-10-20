@@ -10,9 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `Orientation` (`Forward` or `Reversed`) says which way a face, a face's
-  boundary loop, or an edge in a loop is used. Reading and authoring both use
-  it, so an orientation read from a file can be passed straight to
-  `StepBuilder`.
+  boundary loop, an edge in a loop, or a shell in a solid is used. Reading
+  and authoring both use it, so an orientation read from a file can be
+  passed straight to `StepBuilder`.
 - `Report::parse_warnings` lists what the parser repaired or skipped while
   reading, such as a blank attribute or an undecodable string escape. `read()`
   used to discard these.
@@ -38,10 +38,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   whether the edge runs with the curve's parameter, found from the vertices;
   a zero focal distance, a semi-axis not positive, or vertices at the same
   parameter are refused with `AuthorError::InvalidInput`.
+- `Shell` is a closed shell of a solid. `Solid::outer()` gives the outer
+  shell and `Solid::voids()` each cavity's shell, both with the
+  `Orientation` the solid uses the shell in: `Reversed` when it is reached
+  through an `ORIENTED_CLOSED_SHELL` with `.F.`, as Open CASCADE writes every
+  cavity, while other writers keep `.T.`. A face of a shell points the way
+  its own orientation and the shell's give together.
 
 ### Changed
 
 - A hyperbola's `CurveKind` is `Hyperbola` instead of `Other("HYPERBOLA")`.
+- `Solid::voids()` returns an iterator of `(Shell, Orientation)` pairs, one
+  per cavity, instead of a `Vec` of face lists. It used to drop the
+  orientation, so a cavity's faces could not be told to point into the
+  hole. Use `shell.faces()` for the faces.
 - `StepBuilder::face` takes an `Orientation` instead of the `same_sense`
   boolean, and `FaceBoundInput` holds an `Orientation` in each edge pair and
   in its `orientation` field instead of a boolean. The file written is
@@ -226,6 +236,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   which Part 21 has no spelling for, so the file could not be read back.
 - The `Ap242Author` `add_*_cyclic` constructors check aggregate sizes, as
   the other constructors do; an empty `SET [1:?]` used to pass.
+- `MeshGroup::solid()` finds the solid of a tessellated shell linked to a
+  closed shell that the solid reaches through an `ORIENTED_CLOSED_SHELL`, a
+  cavity included, as `Face::solid()` does. It used to find only an outer
+  shell referenced directly.
 
 ## [0.2.5] - 2026-10-03
 

@@ -123,6 +123,12 @@ impl<'m> Solid<'m> {
         }
     }
 
+    /// The solid whose outer shell or void is the closed shell `cs`.
+    pub(crate) fn of_closed_shell(cx: Ctx<'m>, cs: m::ClosedShellId) -> Option<Self> {
+        let which = closed_shell_to_solid(cx.ref_graph(), cs)?;
+        Some(Solid { cx, which })
+    }
+
     /// (`name`, `outer` shell) — `MANIFOLD_SOLID_BREP` and `BREP_WITH_VOIDS`
     /// share this layout.
     fn name_and_outer(&self) -> (&'m str, &'m m::ClosedShellRef) {
@@ -173,45 +179,86 @@ impl<'m> Solid<'m> {
         crate::scene::presentation::is_visible(self.cx, self.key())
     }
 
-    /// Faces of the solid's outer shell.
-    pub fn faces(&self) -> impl Iterator<Item = Face<'m>> + 'm {
+    /// The solid's outer shell and the way the solid uses it: `Reversed` when
+    /// the shell is reached through an `ORIENTED_CLOSED_SHELL` with `.F.`
+    /// (wrappers compose). `None` for a shell this layer cannot resolve (a
+    /// complex instance, reported in [`Scene::warnings`]).
+    pub fn outer(&self) -> Option<(Shell<'m>, Orientation)> {
         let cx = self.cx;
-        resolve_closed_shell(cx.model, self.name_and_outer().1)
-            .into_iter()
-            .flat_map(|shell| shell.cfs_faces.iter())
-            .filter_map(move |fr| Face::from_ref(cx, fr))
+        let (id, orientation) = resolve_closed_shell(cx, self.name_and_outer().1)?;
+        Some((Shell { cx, id }, orientation))
     }
 
-    /// Faces of each internal void shell — one inner `Vec` per cavity of a
-    /// `BREP_WITH_VOIDS`. Empty for a plain `MANIFOLD_SOLID_BREP`.
-    pub fn voids(&self) -> Vec<Vec<Face<'m>>> {
+    /// Faces of the solid's outer shell — [`outer`](Self::outer)'s faces. A
+    /// face points the way its own [`orientation`](Face::orientation) and the
+    /// shell's orientation in [`outer`](Self::outer) give together.
+    pub fn faces(&self) -> impl Iterator<Item = Face<'m>> + 'm {
+        self.outer()
+            .into_iter()
+            .flat_map(|(shell, _)| shell.faces())
+    }
+
+    /// The internal void shells of a `BREP_WITH_VOIDS`, one per cavity, each
+    /// with the way the solid uses it. Writers differ: Open CASCADE writes a
+    /// cavity's faces as an ordinary outward shell and reverses it with
+    /// `.F.` (`Reversed` here); others write the faces already pointing into
+    /// the hole and keep `.T.` (`Forward`). A face of a cavity points the way
+    /// its own [`orientation`](Face::orientation) and the shell's orientation
+    /// give together. Empty for a plain `MANIFOLD_SOLID_BREP`.
+    pub fn voids(&self) -> impl Iterator<Item = (Shell<'m>, Orientation)> + 'm {
         let cx = self.cx;
-        let SolidImpl::WithVoids(id) = self.which else {
-            return Vec::new();
+        let voids: &'m [m::OrientedClosedShellRef] = match self.which {
+            SolidImpl::WithVoids(id) => &cx.model.brep_with_voids_arena.get(id.0).voids,
+            SolidImpl::Manifold(_) => &[],
         };
+        voids.iter().filter_map(move |ocs| {
+            let m::OrientedClosedShellRef::OrientedClosedShell(o) = ocs else {
+                cx.warn("BREP_WITH_VOIDS: void shell is a complex instance".to_owned());
+                return None;
+            };
+            let (id, orientation) =
+                resolve_oriented_closed_shell(cx, cx.model.oriented_closed_shell_arena.get(o.0))?;
+            Some((Shell { cx, id }, orientation))
+        })
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Shell
+// ---------------------------------------------------------------------------
+
+/// A closed shell (`CLOSED_SHELL`) bounding a [`Solid`] — its outer boundary
+/// or a cavity. How the solid uses the shell (forward or reversed) comes with
+/// it from [`Solid::outer`] and [`Solid::voids`], as an edge's direction in a
+/// loop comes with it from [`Bound::oriented_edges`].
+#[derive(Clone, Copy)]
+pub struct Shell<'m> {
+    cx: Ctx<'m>,
+    id: m::ClosedShellId,
+}
+
+impl<'m> Shell<'m> {
+    /// This shell's global identity (a `Copy` key for maps / deduplication;
+    /// the `CLOSED_SHELL`, however it is wrapped).
+    pub fn key(&self) -> m::EntityKey {
+        m::EntityKey::ClosedShell(self.id)
+    }
+
+    pub fn name(&self) -> &'m str {
+        let model = self.cx.model;
+        model.text(model.closed_shell_arena.get(self.id.0).name)
+    }
+
+    /// The faces of this shell, as stored (each with its own
+    /// [`orientation`](Face::orientation)).
+    pub fn faces(&self) -> impl Iterator<Item = Face<'m>> + use<'m> {
+        let cx = self.cx;
         cx.model
-            .brep_with_voids_arena
-            .get(id.0)
-            .voids
+            .closed_shell_arena
+            .get(self.id.0)
+            .cfs_faces
             .iter()
-            .map(|ocs| {
-                let shell = match ocs {
-                    m::OrientedClosedShellRef::OrientedClosedShell(o) => resolve_closed_shell(
-                        cx.model,
-                        &cx.model
-                            .oriented_closed_shell_arena
-                            .get(o.0)
-                            .closed_shell_element,
-                    ),
-                    m::OrientedClosedShellRef::Complex(_) => None,
-                };
-                shell
-                    .into_iter()
-                    .flat_map(|s| s.cfs_faces.iter())
-                    .filter_map(|fr| Face::from_ref(cx, fr))
-                    .collect()
-            })
-            .collect()
+            .filter_map(move |fr| Face::from_ref(cx, fr))
     }
 }
 
@@ -1128,46 +1175,75 @@ impl<'m> Point<'m> {
 // Reference resolvers (hand-written for the spike)
 // ---------------------------------------------------------------------------
 
-/// The solid whose shell is this closed shell — a `MANIFOLD_SOLID_BREP` or a
-/// `BREP_WITH_VOIDS`, directly or through an `ORIENTED_CLOSED_SHELL` wrapper
-/// (the wrapper is how a `BREP_WITH_VOIDS` cavity references its shell). Reverse
-/// over [`RefGraph`].
+/// The solid whose outer shell or void is the closed shell `cs` — directly
+/// or through `ORIENTED_CLOSED_SHELL` wrappers.
 fn closed_shell_to_solid(rg: &RefGraph, cs: m::ClosedShellId) -> Option<SolidImpl> {
-    for &r in rg.referrers(m::EntityKey::ClosedShell(cs)) {
-        match r {
-            m::EntityKey::ManifoldSolidBrep(msb) => return Some(SolidImpl::Manifold(msb)),
-            m::EntityKey::BrepWithVoids(bwv) => return Some(SolidImpl::WithVoids(bwv)),
-            m::EntityKey::OrientedClosedShell(ocs) => {
-                for &r2 in rg.referrers(m::EntityKey::OrientedClosedShell(ocs)) {
-                    match r2 {
-                        m::EntityKey::ManifoldSolidBrep(msb) => {
-                            return Some(SolidImpl::Manifold(msb));
-                        }
-                        m::EntityKey::BrepWithVoids(bwv) => return Some(SolidImpl::WithVoids(bwv)),
-                        _ => {}
-                    }
+    let mut level = vec![m::EntityKey::ClosedShell(cs)];
+    for _ in 0..=SHELL_WRAP_DEPTH {
+        let mut wrappers = Vec::new();
+        for &key in &level {
+            for &r in rg.referrers(key) {
+                match r {
+                    m::EntityKey::ManifoldSolidBrep(msb) => return Some(SolidImpl::Manifold(msb)),
+                    m::EntityKey::BrepWithVoids(bwv) => return Some(SolidImpl::WithVoids(bwv)),
+                    m::EntityKey::OrientedClosedShell(_) => wrappers.push(r),
+                    _ => {}
                 }
             }
-            _ => {}
         }
+        if wrappers.is_empty() {
+            break;
+        }
+        level = wrappers;
     }
     None
 }
 
-/// Resolve a `ClosedShellRef` to the underlying closed shell, following an
-/// `OrientedClosedShell` indirection. `Complex` shells are not resolved.
-fn resolve_closed_shell<'m>(
-    model: &'m StepModel,
+/// How deep `ORIENTED_CLOSED_SHELL` wrappers are followed.
+const SHELL_WRAP_DEPTH: usize = 8;
+
+/// Resolve a `ClosedShellRef` to the underlying closed shell and the
+/// orientation its `ORIENTED_CLOSED_SHELL` wrappers compose to. `Complex`
+/// shells are not resolved (warned).
+fn resolve_closed_shell(
+    cx: Ctx<'_>,
     r: &m::ClosedShellRef,
-) -> Option<&'m m::ClosedShell> {
+) -> Option<(m::ClosedShellId, Orientation)> {
     match r {
-        m::ClosedShellRef::ClosedShell(i) => Some(model.closed_shell_arena.get(i.0)),
+        m::ClosedShellRef::ClosedShell(i) => Some((*i, Orientation::Forward)),
         m::ClosedShellRef::OrientedClosedShell(i) => {
-            let oc = model.oriented_closed_shell_arena.get(i.0);
-            resolve_closed_shell(model, &oc.closed_shell_element)
+            resolve_oriented_closed_shell(cx, cx.model.oriented_closed_shell_arena.get(i.0))
         }
-        m::ClosedShellRef::Complex(_) => None,
+        m::ClosedShellRef::Complex(_) => {
+            cx.warn("closed shell is a complex instance".to_owned());
+            None
+        }
     }
+}
+
+/// [`resolve_closed_shell`] from an `ORIENTED_CLOSED_SHELL`.
+fn resolve_oriented_closed_shell<'m>(
+    cx: Ctx<'m>,
+    mut oc: &'m m::OrientedClosedShell,
+) -> Option<(m::ClosedShellId, Orientation)> {
+    let mut forward = true;
+    for _ in 0..SHELL_WRAP_DEPTH {
+        forward ^= !oc.orientation;
+        match &oc.closed_shell_element {
+            m::ClosedShellRef::ClosedShell(i) => {
+                return Some((*i, Orientation::from_flag(forward)));
+            }
+            m::ClosedShellRef::OrientedClosedShell(i) => {
+                oc = cx.model.oriented_closed_shell_arena.get(i.0);
+            }
+            m::ClosedShellRef::Complex(_) => {
+                cx.warn("closed shell is a complex instance".to_owned());
+                return None;
+            }
+        }
+    }
+    cx.warn("ORIENTED_CLOSED_SHELL nesting too deep to resolve".to_owned());
+    None
 }
 
 /// Resolve a `LoopRef` to an `EdgeLoop` (only edge loops carry edges).

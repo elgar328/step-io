@@ -505,17 +505,24 @@ fn void_solid_round_trips_and_reads_back() {
     let solid = solids[0];
     assert!(matches!(solid.key(), EntityKey::BrepWithVoids(_)));
 
-    // Outer shell = 6 faces; one cavity, also 6 faces.
+    // Outer shell = 6 faces, used as it is; one cavity, also 6 faces, which the
+    // solid uses reversed (the `.F.` written above).
     assert_eq!(solid.faces().count(), 6);
-    let voids = solid.voids();
+    let (outer, outer_use) = solid.outer().expect("the outer shell");
+    assert_eq!(outer_use, Orientation::Forward);
+    assert_eq!(outer.faces().count(), 6);
+    let voids: Vec<_> = solid.voids().collect();
     assert_eq!(voids.len(), 1);
-    assert_eq!(voids[0].len(), 6);
+    let (cavity, cavity_use) = voids[0];
+    assert_eq!(cavity_use, Orientation::Reversed);
+    assert_eq!(cavity.faces().count(), 6);
+    assert_ne!(cavity.key(), outer.key());
 
     // Every face round-trips back to this solid.
     for face in solid.faces() {
         assert_eq!(face.solid().expect("owning solid").key(), solid.key());
     }
-    for face in &voids[0] {
+    for face in cavity.faces() {
         assert_eq!(face.solid().expect("owning solid").key(), solid.key());
     }
 
@@ -570,9 +577,11 @@ fn void_shell_away_from_material_emits_t() {
     let scene = model.scene();
     let solid = scene.all_solids().next().expect("the void solid");
     assert!(matches!(solid.key(), EntityKey::BrepWithVoids(_)));
-    let voids = solid.voids();
+    let voids: Vec<_> = solid.voids().collect();
     assert_eq!(voids.len(), 1);
-    assert_eq!(voids[0].len(), 6);
+    let (cavity, cavity_use) = voids[0];
+    assert_eq!(cavity_use, Orientation::Forward, "kept as authored");
+    assert_eq!(cavity.faces().count(), 6);
 }
 
 #[test]

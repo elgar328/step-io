@@ -365,7 +365,7 @@ impl<'m> MeshGroup<'m> {
     /// The precise b-rep solid this group tessellates, where the file links
     /// one: a tessellated solid links it directly (`geometric_link`); a
     /// tessellated shell links the closed shell (`topological_link`), reached
-    /// back through the solid that owns it.
+    /// back through the solid it bounds — as its outer shell or a cavity.
     pub fn solid(&self) -> Option<Solid<'m>> {
         let cx = self.cx;
         match self.which {
@@ -394,26 +394,7 @@ impl<'m> MeshGroup<'m> {
                 let m::ConnectedFaceSetRef::ClosedShell(shell_id) = link else {
                     return None;
                 };
-                let rg = cx.ref_graph();
-                let outer_is = |outer: &m::ClosedShellRef| matches!(outer, m::ClosedShellRef::ClosedShell(s) if s == shell_id);
-                for r in rg.referrers(m::EntityKey::ClosedShell(*shell_id)) {
-                    match r {
-                        m::EntityKey::ManifoldSolidBrep(sid) => {
-                            let brep = cx.model.manifold_solid_brep_arena.get(sid.0);
-                            if outer_is(&brep.outer) {
-                                return Some(Solid::from_id(cx, *sid));
-                            }
-                        }
-                        m::EntityKey::BrepWithVoids(sid) => {
-                            let brep = cx.model.brep_with_voids_arena.get(sid.0);
-                            if outer_is(&brep.outer) {
-                                return Some(Solid::from_void_id(cx, *sid));
-                            }
-                        }
-                        _ => {}
-                    }
-                }
-                None
+                Solid::of_closed_shell(cx, *shell_id)
             }
         }
     }
