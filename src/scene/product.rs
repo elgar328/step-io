@@ -150,7 +150,7 @@ impl<'m> Product<'m> {
             }
             targets.push(fr);
             for &pr in rg.referrers(fr) {
-                if matches!(pr, m::EntityKey::ProductDefinition(_)) {
+                if ProductDef::from_key(self.cx, pr).is_some() {
                     targets.push(pr);
                 }
             }
@@ -170,10 +170,15 @@ impl<'m> Product<'m> {
         approvals_of(self.cx, &self.metadata_targets()).into_iter()
     }
 
-    /// The documents referenced anywhere in this product's tree.
+    /// The documents referenced anywhere in this product's tree, and those a
+    /// `..._WITH_ASSOCIATED_DOCUMENTS` definition of it lists itself.
     pub fn documents(&self) -> impl Iterator<Item = Document<'m>> + 'm {
         let this = self.about();
-        documents_of(this.cx, &this.metadata_targets()).into_iter()
+        let mut out = documents_of(this.cx, &this.metadata_targets());
+        for def in this.definitions() {
+            def.push_listed_documents(&mut out);
+        }
+        out.into_iter()
     }
 
     /// The security classifications assigned anywhere in this product's tree.
@@ -545,9 +550,6 @@ impl<'m> ProductDef<'m> {
         Some(Version { cx: self.cx, which })
     }
 
-    /// The people / organizations involved with this part and their roles
-    /// (creator, design owner, supplier, …), from the person-and-organization
-    /// assignments targeting this definition, its product, or its formation.
     /// The identities a management assignment (person/org, approval, document)
     /// may target for this part: the definition, its product, and its formation.
     /// Ordered broadest-first (product, then formation, then definition) so the
@@ -592,30 +594,37 @@ impl<'m> ProductDef<'m> {
     pub fn documents(&self) -> impl Iterator<Item = Document<'m>> + 'm {
         let this = self.about();
         let mut out = documents_of(this.cx, &this.metadata_targets());
-        if let PdImpl::WithDocs(i) = this.which {
-            let raw = this
-                .cx
-                .model
-                .product_definition_with_associated_documents_arena
-                .get(i.0);
-            let scope = scope_of(this.key());
-            for dref in &raw.documentation_ids {
-                let which = match dref {
-                    m::DocumentRef::Document(i) => DocImpl::Document(*i),
-                    m::DocumentRef::DocumentFile(i) => DocImpl::DocumentFile(*i),
-                    m::DocumentRef::Complex(_) => continue,
-                };
-                let doc = Document {
-                    cx: this.cx,
-                    which,
-                    scope,
-                };
-                if !out.iter().any(|d| d.key() == doc.key()) {
-                    out.push(doc);
-                }
+        this.push_listed_documents(&mut out);
+        out.into_iter()
+    }
+
+    /// Add to `out` the documents a `..._WITH_ASSOCIATED_DOCUMENTS` definition
+    /// lists in its own `documentation_ids`, skipping those already there.
+    fn push_listed_documents(&self, out: &mut Vec<Document<'m>>) {
+        let PdImpl::WithDocs(i) = self.which else {
+            return;
+        };
+        let raw = self
+            .cx
+            .model
+            .product_definition_with_associated_documents_arena
+            .get(i.0);
+        let scope = scope_of(self.key());
+        for dref in &raw.documentation_ids {
+            let which = match dref {
+                m::DocumentRef::Document(i) => DocImpl::Document(*i),
+                m::DocumentRef::DocumentFile(i) => DocImpl::DocumentFile(*i),
+                m::DocumentRef::Complex(_) => continue,
+            };
+            let doc = Document {
+                cx: self.cx,
+                which,
+                scope,
+            };
+            if !out.iter().any(|d| d.key() == doc.key()) {
+                out.push(doc);
             }
         }
-        out.into_iter()
     }
 
     /// The security classifications assigned to this part — its confidentiality

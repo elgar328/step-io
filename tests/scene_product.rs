@@ -204,6 +204,46 @@ fn documented_part_used_in_an_assembly_is_not_a_root() {
     assert_eq!(roots[0].product().unwrap().name(), "Assembly");
 }
 
+/// Metadata on a documented part's definition reaches the product too, as it
+/// does for a plain definition, and so do the documents it lists itself.
+#[test]
+fn product_metadata_reaches_a_documented_definition() {
+    let src = format!(
+        "{HEADER}{}\
+#50=PERSON('p1','Doe','John',$,$,$);\n\
+#51=ORGANIZATION('o1','ACME',$);\n\
+#52=PERSON_AND_ORGANIZATION(#50,#51);\n\
+#53=PERSON_AND_ORGANIZATION_ROLE('creator');\n\
+#54=CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT(#52,#53,(#22));\n\
+#55=APPROVAL_STATUS('approved');\n\
+#56=APPROVAL(#55,'final');\n\
+#57=CC_DESIGN_APPROVAL(#56,(#22));\n\
+#58=DOCUMENT_TYPE('drawing');\n\
+#59=DOCUMENT('DOC-1','spec sheet','',#58);\n\
+{FOOTER}",
+        WITH_DOCS_PART.replace(",#21,#3,());", ",#21,#3,(#59));")
+    );
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let product = scene.all_products().next().expect("the product");
+
+    let roles: Vec<_> = product
+        .contributors()
+        .map(|c| c.role().to_owned())
+        .collect();
+    assert_eq!(roles, ["creator"]);
+    let statuses: Vec<_> = product.approvals().map(|a| a.status().to_owned()).collect();
+    assert_eq!(statuses, ["approved"]);
+    let documents: Vec<_> = product.documents().map(|d| d.id().to_owned()).collect();
+    assert_eq!(documents, ["DOC-1"]);
+
+    // The definition sees the same.
+    let def = def_for_product(&scene, "Part");
+    assert_eq!(def.contributors().count(), 1);
+    assert_eq!(def.approvals().count(), 1);
+    assert_eq!(def.documents().count(), 1);
+}
+
 #[test]
 fn reads_occurrence_placement_transform() {
     let src = format!("{HEADER}{ASSEMBLY}{FOOTER}");

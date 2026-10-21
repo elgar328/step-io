@@ -371,6 +371,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS` that an assembly uses as a
   component; it only checked plain `PRODUCT_DEFINITION` components, so such a
   part showed both under its assembly and as a root of its own.
+- `Product::contributors()`, `approvals()`, `documents()` and
+  `security_classifications()` reach metadata on a
+  `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS` definition, and
+  `documents()` the documents such a definition lists itself; they used to
+  see only plain definitions'. The same methods on a `ProductDef` already
+  did.
 - `Feature::geometry()` returns a `FACE_SURFACE` as a `Face` and a
   `BREP_WITH_VOIDS` as a `Solid`, and `Mesh::face()` reaches a linked
   `FACE_SURFACE`. They used to give `Other` and `None`.
