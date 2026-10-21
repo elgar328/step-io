@@ -758,3 +758,216 @@ fn bspline_surface_with_a_huge_multiplicity_is_refused() {
         "warnings: {warnings:?}"
     );
 }
+
+/// A point of a NURBS surface, by Cox–de Boor in homogeneous coordinates.
+fn surface_point(n: &NurbsSurface, u: f64, v: f64) -> [f64; 3] {
+    fn basis(knots: &[f64], degree: usize, t: f64) -> Vec<f64> {
+        let mut b: Vec<f64> = knots
+            .windows(2)
+            .map(|k| f64::from(u8::from(k[0] <= t && t < k[1])))
+            .collect();
+        for p in 1..=degree {
+            for i in 0..knots.len() - 1 - p {
+                let left = knots[i + p] - knots[i];
+                let right = knots[i + p + 1] - knots[i + 1];
+                let a = if left > 0.0 {
+                    (t - knots[i]) / left * b[i]
+                } else {
+                    0.0
+                };
+                let c = if right > 0.0 {
+                    (knots[i + p + 1] - t) / right * b[i + 1]
+                } else {
+                    0.0
+                };
+                b[i] = a + c;
+            }
+        }
+        b.truncate(knots.len() - degree - 1);
+        b
+    }
+    let (bu, bv) = (
+        basis(&n.knots_u, n.degree_u, u),
+        basis(&n.knots_v, n.degree_v, v),
+    );
+    let mut sum = [0.0; 4];
+    for (i, row) in n.control_points.iter().enumerate() {
+        for (j, p) in row.iter().enumerate() {
+            let w = bu[i] * bv[j] * n.weights[i][j];
+            for k in 0..3 {
+                sum[k] += w * p[k];
+            }
+            sum[3] += w;
+        }
+    }
+    [sum[0] / sum[3], sum[1] / sum[3], sum[2] / sum[3]]
+}
+
+/// Points spread over the open parameter ranges of `n`, as (u, v, point).
+fn surface_samples(n: &NurbsSurface) -> Vec<(f64, f64, [f64; 3])> {
+    let span = |k: &[f64]| (k[0], k[k.len() - 1]);
+    let ((u0, u1), (v0, v1)) = (span(&n.knots_u), span(&n.knots_v));
+    let mut out = Vec::new();
+    for i in 0..17 {
+        for j in 0..23 {
+            let u = u0 + (u1 - u0) * (f64::from(i) + 0.5) / 17.0;
+            let v = v0 + (v1 - v0) * (f64::from(j) + 0.5) / 23.0;
+            out.push((u, v, surface_point(n, u, v)));
+        }
+    }
+    out
+}
+
+/// The direction of `S_u × S_v` at (u, v), by central differences.
+fn surface_normal(n: &NurbsSurface, u: f64, v: f64) -> [f64; 3] {
+    let step = 1e-6;
+    let diff = |a: [f64; 3], b: [f64; 3]| [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+    let su = diff(surface_point(n, u + step, v), surface_point(n, u - step, v));
+    let sv = diff(surface_point(n, u, v + step), surface_point(n, u, v - step));
+    let cross = [
+        su[1] * sv[2] - su[2] * sv[1],
+        su[2] * sv[0] - su[0] * sv[2],
+        su[0] * sv[1] - su[1] * sv[0],
+    ];
+    let len = dot(cross, cross).sqrt();
+    cross.map(|c| c / len)
+}
+
+/// The unit direction away from the axis at the surface point (u, v).
+fn outward(n: &NurbsSurface, u: f64, v: f64) -> [f64; 3] {
+    let point = surface_point(n, u, v);
+    let len = point[0].hypot(point[1]);
+    [point[0] / len, point[1] / len, 0.0]
+}
+
+fn dot(a: [f64; 3], b: [f64; 3]) -> f64 {
+    a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+}
+
+/// Distance from `p` to the axis (`z`) and its height, in the standard frame.
+fn radius_height(p: [f64; 3]) -> (f64, f64) {
+    (p[0].hypot(p[1]), p[2])
+}
+
+// Degenerate tori on the standard frame: major 1, minor 2 (outer lobe and
+// inner spindle), and major = minor 2 (a horn torus).
+const DEGENERATE_TORI: &str = "\
+#1=CARTESIAN_POINT('',(0.,0.,0.));\n\
+#2=CARTESIAN_POINT('',(1.,0.,0.));\n\
+#3=DIRECTION('',(0.,0.,1.));\n\
+#4=DIRECTION('',(1.,0.,0.));\n\
+#5=AXIS2_PLACEMENT_3D('',#1,#3,#4);\n\
+#10=DEGENERATE_TOROIDAL_SURFACE('apple',#5,1.0,2.0,.T.);\n\
+#11=DEGENERATE_TOROIDAL_SURFACE('lemon',#5,1.0,2.0,.F.);\n\
+#12=DEGENERATE_TOROIDAL_SURFACE('horn',#5,2.0,2.0,.T.);\n\
+#13=DEGENERATE_TOROIDAL_SURFACE('no spindle',#5,2.0,2.0,.F.);\n\
+#20=VECTOR('',#4,1.0);\n\
+#21=LINE('',#1,#20);\n\
+#22=VERTEX_POINT('',#1);\n\
+#23=VERTEX_POINT('',#2);\n\
+#24=EDGE_CURVE('',#22,#23,#21,.T.);\n\
+#25=ORIENTED_EDGE('',*,*,#24,.T.);\n\
+#26=EDGE_LOOP('',(#25));\n\
+#27=FACE_OUTER_BOUND('',#26,.T.);\n\
+#30=ADVANCED_FACE('',(#27),#10,.T.);\n\
+#31=ADVANCED_FACE('',(#27),#11,.T.);\n\
+#32=ADVANCED_FACE('',(#27),#12,.T.);\n\
+#33=ADVANCED_FACE('',(#27),#13,.T.);\n\
+#40=CLOSED_SHELL('',(#30,#31,#32,#33));\n\
+#41=MANIFOLD_SOLID_BREP('',#40);\n";
+
+fn degenerate_torus<'m>(scene: &'m Scene<'m>, name: &str) -> Surface<'m> {
+    find(
+        scene,
+        |s| matches!(s.kind(), SurfaceKind::DegenerateToroidal(t) if scene.model().text(t.name) == name),
+    )
+}
+
+/// The outer lobe of a degenerate torus: the tube circle between its two
+/// crossings of the axis, through the outer equator.
+#[test]
+fn a_degenerate_torus_selecting_the_outer_lobe_becomes_the_apple() {
+    let src = format!("{HEADER}{DEGENERATE_TORI}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let n = degenerate_torus(&scene, "apple").to_nurbs().expect("apple");
+
+    // Both ends of the profile meet the axis, at height ±√3.
+    let h = 3.0_f64.sqrt();
+    let last = n.control_points[0].len() - 1;
+    for row in &n.control_points {
+        assert!(approx(&row[0], &[0., 0., -h]), "{:?}", row[0]);
+        assert!(approx(&row[last], &[0., 0., h]), "{:?}", row[last]);
+    }
+    // Every point lies on the tube circle about radius 1, on the near side.
+    for (_, _, p) in surface_samples(&n) {
+        let (rho, z) = radius_height(p);
+        assert!(((rho - 1.0).hypot(z) - 2.0).abs() < 1e-9, "{p:?}");
+    }
+    // Halfway along the profile is the outer equator, radius 3.
+    let mid = n.knots_v[n.knots_v.len() - 1] / 2.0;
+    assert!(approx(&surface_point(&n, 0.0, mid), &[3., 0., 0.]));
+    // The torus's own normal there points away from the axis.
+    let (normal, out) = (surface_normal(&n, 0.1, mid), outward(&n, 0.1, mid));
+    assert!(dot(normal, out) > 1.0 - 1e-9, "{normal:?}");
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
+/// The inner spindle: the rest of the tube circle, on the far side of the
+/// axis, with its equator at radius `minor − major`.
+#[test]
+fn a_degenerate_torus_selecting_the_inner_part_becomes_the_lemon() {
+    let src = format!("{HEADER}{DEGENERATE_TORI}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let n = degenerate_torus(&scene, "lemon").to_nurbs().expect("lemon");
+
+    let h = 3.0_f64.sqrt();
+    let last = n.control_points[0].len() - 1;
+    for row in &n.control_points {
+        assert!(approx(&row[0], &[0., 0., h]), "{:?}", row[0]);
+        assert!(approx(&row[last], &[0., 0., -h]), "{:?}", row[last]);
+    }
+    for (_, _, p) in surface_samples(&n) {
+        let (rho, z) = radius_height(p);
+        assert!(((rho + 1.0).hypot(z) - 2.0).abs() < 1e-9, "{p:?}");
+    }
+    // The profile's middle is across the axis from u = 0, at radius 1.
+    let mid = n.knots_v[n.knots_v.len() - 1] / 2.0;
+    assert!(approx(&surface_point(&n, 0.0, mid), &[-1., 0., 0.]));
+    // The torus's own normal there, `(major + minor·cos v)·(cos v, sin v)`
+    // with both factors negative at v = π, points towards the axis.
+    let (normal, out) = (surface_normal(&n, 0.1, mid), outward(&n, 0.1, mid));
+    assert!(dot(normal, out) < -1.0 + 1e-9, "{normal:?}");
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
+/// A tube that only touches the axis is whole as its outer lobe, and has no
+/// inner spindle.
+#[test]
+fn a_horn_torus_is_the_whole_tube() {
+    let src = format!("{HEADER}{DEGENERATE_TORI}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let n = degenerate_torus(&scene, "horn").to_nurbs().expect("horn");
+
+    // The profile is a closed circle, starting and ending on the axis.
+    let last = n.control_points[0].len() - 1;
+    assert!(approx(&n.control_points[0][0], &[0., 0., 0.]));
+    assert!(approx(&n.control_points[0][last], &[0., 0., 0.]));
+    for (_, _, p) in surface_samples(&n) {
+        let (rho, z) = radius_height(p);
+        assert!(((rho - 2.0).hypot(z) - 2.0).abs() < 1e-9, "{p:?}");
+    }
+    let mid = n.knots_v[n.knots_v.len() - 1] / 2.0;
+    assert!(approx(&surface_point(&n, 0.0, mid), &[4., 0., 0.]));
+
+    assert!(degenerate_torus(&scene, "no spindle").to_nurbs().is_none());
+    let warnings = scene.warnings();
+    assert!(
+        warnings
+            .iter()
+            .any(|w| w.message.contains("no inner spindle")),
+        "{warnings:?}"
+    );
+}

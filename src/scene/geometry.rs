@@ -598,8 +598,9 @@ impl<'m> Face<'m> {
     }
 
     /// The NURBS ([`NurbsSurface`](crate::scene::NurbsSurface)) form of this
-    /// face's geometry. A closed analytic surface (sphere, torus, B-spline) is
-    /// returned whole via [`Surface::to_nurbs`]. An *unbounded* surface (plane,
+    /// face's geometry. A closed analytic surface (sphere, torus, degenerate
+    /// torus, B-spline) is returned whole via [`Surface::to_nurbs`]. An
+    /// *unbounded* surface (plane,
     /// cylinder, cone, linear extrusion) is sized to the control points of its
     /// boundary edges' NURBS forms and to the vertices of its vertex loops — a
     /// guaranteed cover of the boundary; a cone bounded at one level reaches
@@ -734,6 +735,9 @@ pub enum SurfaceKind<'m> {
     Conical(&'m m::ConicalSurface),
     Spherical(&'m m::SphericalSurface),
     Toroidal(&'m m::ToroidalSurface),
+    /// A torus whose minor radius exceeds its major one: `select_outer`
+    /// picks the outer lobe (the "apple") or the inner spindle (the "lemon").
+    DegenerateToroidal(&'m m::DegenerateToroidalSurface),
     BSpline(&'m m::BSplineSurface),
     BSplineWithKnots(&'m m::BSplineSurfaceWithKnots),
     LinearExtrusion(&'m m::SurfaceOfLinearExtrusion),
@@ -753,7 +757,8 @@ impl<'m> Surface<'m> {
 
     /// The rational-B-spline ([`NurbsSurface`](crate::scene::NurbsSurface))
     /// form of this surface, if the kind is supported. Only *closed* analytic
-    /// surfaces convert as-is — a full sphere or torus. Open surfaces (plane,
+    /// surfaces convert as-is — a full sphere or torus, or the part of a
+    /// degenerate torus its `select_outer` picks. Open surfaces (plane,
     /// cylinder, cone) are unbounded and need a face's bounds, so they return
     /// `None` here — use [`Face::to_nurbs`] instead, which has the bounds. A
     /// B-spline whose degree is outside 1–25 or whose knot multiplicities do
@@ -767,6 +772,12 @@ impl<'m> Surface<'m> {
             }
             m::SurfaceRef::ToroidalSurface(i) => {
                 crate::scene::nurbs::torus_to_nurbs(cx, cx.model.toroidal_surface_arena.get(i.0))
+            }
+            m::SurfaceRef::DegenerateToroidalSurface(i) => {
+                crate::scene::nurbs::degenerate_torus_to_nurbs(
+                    cx,
+                    cx.model.degenerate_toroidal_surface_arena.get(i.0),
+                )
             }
             m::SurfaceRef::BSplineSurfaceWithKnots(i) => {
                 crate::scene::nurbs::bspline_surf_wk_to_nurbs(
@@ -845,8 +856,8 @@ impl<'m> Surface<'m> {
                 SurfaceKind::Bezier(model.bezier_surface_arena.get(i.0))
             }
             m::SurfaceRef::BoundedSurface(_) => SurfaceKind::Other("BOUNDED_SURFACE"),
-            m::SurfaceRef::DegenerateToroidalSurface(_) => {
-                SurfaceKind::Other("DEGENERATE_TOROIDAL_SURFACE")
+            m::SurfaceRef::DegenerateToroidalSurface(i) => {
+                SurfaceKind::DegenerateToroidal(model.degenerate_toroidal_surface_arena.get(i.0))
             }
             m::SurfaceRef::ElementarySurface(_) => SurfaceKind::Other("ELEMENTARY_SURFACE"),
             m::SurfaceRef::OffsetSurface(_) => SurfaceKind::Other("OFFSET_SURFACE"),

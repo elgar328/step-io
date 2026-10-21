@@ -1712,6 +1712,43 @@ pub(crate) fn torus_to_nurbs(cx: Ctx<'_>, t: &m::ToroidalSurface) -> Option<Nurb
     ))
 }
 
+/// The part of a degenerate torus its `select_outer` picks, on the torus's
+/// own parametrization with the profile angle narrowed: the tube circle
+/// crosses the axis where `cos v = −major / minor`, the outer lobe lies
+/// between the two crossings through `v = 0`, the inner spindle through
+/// `v = π` (on the far side of the axis, where the radius term is negative).
+/// A tube that does not reach the axis has the whole circle as its outer lobe
+/// and no spindle.
+pub(crate) fn degenerate_torus_to_nurbs(
+    cx: Ctx<'_>,
+    t: &m::DegenerateToroidalSurface,
+) -> Option<NurbsSurface> {
+    let Some(frame @ (center, x, _, z)) = frame_of_3dref(cx, &t.position) else {
+        cx.warn("DEGENERATE_TOROIDAL_SURFACE.to_nurbs: degenerate placement".to_owned());
+        return None;
+    };
+    let (big, r) = (t.major_radius, t.minor_radius);
+    let crossing = (-big / r).clamp(-1.0, 1.0).acos();
+    if crossing.is_nan() {
+        cx.warn("DEGENERATE_TOROIDAL_SURFACE.to_nurbs: degenerate radii".to_owned());
+        return None;
+    }
+    let (start, sweep) = if t.select_outer {
+        (-crossing, 2.0 * crossing)
+    } else {
+        (crossing, 2.0 * (std::f64::consts::PI - crossing))
+    };
+    if sweep <= 0.0 {
+        cx.warn(
+            "DEGENERATE_TOROIDAL_SURFACE.to_nurbs: no inner spindle (minor radius not above major)"
+                .to_owned(),
+        );
+        return None;
+    }
+    let profile = arc_nurbs(add(center, scale(x, big)), x, z, r, r, start, sweep);
+    Some(revolve_curve(&profile, frame))
+}
+
 /// Pass a B-spline surface with an explicit knot vector straight through,
 /// expanding both knot vectors and defaulting weights to `1.0`.
 /// Assemble a B-spline surface from its raw pieces — shared by the standalone

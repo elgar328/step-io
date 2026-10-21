@@ -33,6 +33,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   trim given as a point is followed rather than its parameter: writers
   disagree on a parabola's parameter, Open CASCADE writing `2F·u` where the
   standard has `u`.
+- `to_nurbs()` converts a `DEGENERATE_TOROIDAL_SURFACE` exactly, a torus
+  whose tube crosses its axis: the part its `select_outer` picks, the outer
+  lobe (`.T.`) or the inner spindle (`.F.`), on the torus's own
+  parametrization, so a face's `same_sense` keeps its meaning.
 - `CurveInput::Parabola` and `CurveInput::Hyperbola` let `StepBuilder::edge`
   write an edge along a parabola or a hyperbola branch. Its `same_sense` says
   whether the edge runs with the curve's parameter, found from the vertices;
@@ -95,6 +99,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - A hyperbola's `CurveKind` is `Hyperbola` instead of `Other("HYPERBOLA")`.
+- A degenerate torus's `SurfaceKind` is `DegenerateToroidal` instead of
+  `Other("DEGENERATE_TOROIDAL_SURFACE")`.
 - `Solid::voids()` returns an iterator of `(Shell, Orientation)` pairs, one
   per cavity, instead of a `Vec` of face lists. It used to drop the
   orientation, so a cavity's faces could not be told to point into the
