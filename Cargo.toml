@@ -3,7 +3,7 @@ members = [".", "codegen"]
 
 [package]
 name = "step-io"
-version = "0.2.6-dev"
+version = "0.3.0"
 edition = "2024"
 rust-version = "1.85"
 description = "Lean STEP (ISO 10303) I/O for 3D CAD applications — reads every mainstream AP, writes only modern AP242."

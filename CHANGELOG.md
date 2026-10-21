@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-21
+
 0.3.0 reshapes the public API: each item has one path, the model is read-only
 outside the crate, reading and writing stream, and many scene and builder
 methods take or return different types. Changed and Removed below say what to
@@ -524,7 +526,8 @@ write instead.
   coverage matrix ([`docs/entities.md`](docs/entities.md)) lists exactly what is
   read and written.
 
-[Unreleased]: https://github.com/elgar328/step-io/compare/v0.2.5...HEAD
+[Unreleased]: https://github.com/elgar328/step-io/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/elgar328/step-io/compare/v0.2.5...v0.3.0
 [0.2.5]: https://github.com/elgar328/step-io/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/elgar328/step-io/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/elgar328/step-io/compare/v0.2.2...v0.2.3
