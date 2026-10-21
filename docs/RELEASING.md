@@ -33,15 +33,17 @@ throughout.
      ```
 
 2. **Finalize the version**
-   - Remove the `-dev` suffix from `version` in `Cargo.toml`
-     (`X.Y.Z-dev` → `X.Y.Z`).
+   - Set `version` in `Cargo.toml` to the `X.Y.Z` chosen in step 0. The `-dev`
+     version names the next patch, so a patch release only drops the suffix
+     (`0.2.6-dev` → `0.2.6`), and a minor one changes the number as well
+     (`0.2.6-dev` → `0.3.0`).
 
 3. **Sync the generated code**
-   - The `src/generated/` tree is committed, so the published crate must match
-     the schema it was generated from:
+   - The `src/generated/` tree and `docs/entities.md` are committed, so the
+     published crate must match the schema they were generated from:
      ```sh
      cd codegen && cargo run
-     cd .. && git diff --stat src/generated   # must be empty
+     cd .. && git diff --stat src/generated docs/entities.md   # must be empty
      ```
 
 4. **Run checks** (same gates as CI)

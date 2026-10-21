@@ -12,8 +12,9 @@ repository = "https://github.com/elgar328/step-io"
 readme = "README.md"
 keywords = ["step", "iso10303", "cad", "geometry", "parser"]
 categories = ["parser-implementations", "science", "encoding"]
-# schema/ is codegen input (not read at build time); .github/ is dev CI.
-exclude = ["schema/", ".github/"]
+# schema/ is codegen input (not read at build time); .github/ is dev CI;
+# docs/RELEASING.md is for maintainers.
+exclude = ["schema/", ".github/", "docs/RELEASING.md"]
 
 [dependencies]
 logos = "0.16"
