@@ -971,3 +971,149 @@ fn a_horn_torus_is_the_whole_tube() {
         "{warnings:?}"
     );
 }
+
+// Offsets of the surfaces above: of the B-spline (no exact form), of the
+// sphere (radius 2) out by 1.5 and in past its centre, and of the torus
+// (major 5, minor 1) out by 1 and out past the axis.
+const OFFSETS: &str = "\
+#50=OFFSET_SURFACE('bspline',#17,0.5,.F.);\n\
+#51=OFFSET_SURFACE('sphere out',#10,1.5,.F.);\n\
+#52=OFFSET_SURFACE('sphere past centre',#10,-3.0,.F.);\n\
+#53=OFFSET_SURFACE('torus out',#11,1.0,.F.);\n\
+#54=OFFSET_SURFACE('torus past axis',#11,5.0,.F.);\n\
+#60=ADVANCED_FACE('',(#27),#50,.T.);\n\
+#61=ADVANCED_FACE('',(#27),#51,.T.);\n\
+#62=ADVANCED_FACE('',(#27),#52,.T.);\n\
+#63=ADVANCED_FACE('',(#27),#53,.T.);\n\
+#64=ADVANCED_FACE('',(#27),#54,.T.);\n\
+#65=CLOSED_SHELL('',(#60,#61,#62,#63,#64));\n\
+#66=MANIFOLD_SOLID_BREP('',#65);\n";
+
+fn offset<'m>(scene: &'m Scene<'m>, name: &str) -> Surface<'m> {
+    find(
+        scene,
+        |s| matches!(s.kind(), SurfaceKind::Offset(o) if scene.model().text(o.name) == name),
+    )
+}
+
+/// An offset reaches its basis as a handle; over a free-form surface it has
+/// no exact NURBS of its own.
+#[test]
+fn an_offset_surface_gives_its_basis() {
+    let src = format!("{HEADER}{SURFACES}{OFFSETS}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let surface = offset(&scene, "bspline");
+
+    let SurfaceKind::Offset(o) = surface.kind() else {
+        panic!("an offset")
+    };
+    assert!((o.distance - 0.5).abs() < 1e-12);
+    let basis = surface.basis_surface().expect("the basis");
+    assert!(matches!(basis.kind(), SurfaceKind::BSplineWithKnots(_)));
+    assert!(basis.to_nurbs().is_some());
+    assert!(surface.to_nurbs().is_none());
+    assert!(basis.basis_surface().is_none());
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
+/// An offset sphere or torus is the same kind of surface with the radius
+/// moved; one turned inside out or crossing itself is not converted.
+#[test]
+fn an_offset_sphere_or_torus_converts_whole() {
+    let src = format!("{HEADER}{SURFACES}{OFFSETS}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+
+    let sphere = offset(&scene, "sphere out").to_nurbs().expect("sphere");
+    for (u, v, p) in surface_samples(&sphere) {
+        let r = dot(p, p).sqrt();
+        assert!((r - 3.5).abs() < 1e-9, "{p:?}");
+        // Still pointing away from the centre, as the basis does.
+        let normal = surface_normal(&sphere, u, v);
+        assert!(dot(normal, p) / r > 1.0 - 1e-6, "{normal:?} at {p:?}");
+    }
+    let torus = offset(&scene, "torus out").to_nurbs().expect("torus");
+    for (_, _, p) in surface_samples(&torus) {
+        let (rho, z) = radius_height(p);
+        assert!(((rho - 5.0).hypot(z) - 2.0).abs() < 1e-9, "{p:?}");
+    }
+
+    assert!(offset(&scene, "sphere past centre").to_nurbs().is_none());
+    assert!(offset(&scene, "torus past axis").to_nurbs().is_none());
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
+/// The cylinder face above, its radius-2 surface written as an offset of a
+/// radius-1 cylinder: the face converts to the same patch. Offset inward past
+/// the axis instead, it is not converted.
+#[test]
+fn an_offset_cylinder_face_becomes_ruled_patch() {
+    let as_offset = |d: &str| {
+        CYL_FACE.replace(
+            "#7=CYLINDRICAL_SURFACE('',#6,2.0);",
+            &format!("#7=OFFSET_SURFACE('',#30,{d},.F.);\n#30=CYLINDRICAL_SURFACE('',#6,1.0);"),
+        )
+    };
+    let plain = format!("{HEADER}{CYL_FACE}{FOOTER}");
+    let (plain, _rep) = read(plain.as_bytes()).expect("read");
+    let expected = plain.scene().all_faces().next().expect("face").to_nurbs();
+
+    let src = format!("{HEADER}{}{FOOTER}", as_offset("1.0"));
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let face = find_face(&scene, |s| matches!(s.kind(), SurfaceKind::Offset(_)));
+    let n = face.to_nurbs().expect("offset cylinder face");
+    assert_eq!(Some(&n), expected.as_ref());
+    for (u, v, p) in surface_samples(&n) {
+        let (rho, _) = radius_height(p);
+        assert!((rho - 2.0).abs() < 1e-9, "{p:?}");
+        assert!(dot(surface_normal(&n, u, v), outward(&n, u, v)) > 1.0 - 1e-6);
+    }
+
+    let src = format!("{HEADER}{}{FOOTER}", as_offset("-3.0"));
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let face = find_face(&scene, |s| matches!(s.kind(), SurfaceKind::Offset(_)));
+    assert!(face.to_nurbs().is_none());
+}
+
+/// An offset cone is a cone on the same placement, its radius grown by
+/// `d / cos(semi_angle)` — the angle read in the file's unit. The 45° cone
+/// face above, written as an offset of a cone through the origin.
+#[test]
+fn an_offset_cone_face_follows_the_angle_unit() {
+    let in_degrees = CONE_FACE.replace(
+        "#7=CONICAL_SURFACE('',#6,1.0,0.7853981633974483);",
+        "#7=OFFSET_SURFACE('',#30,0.7071067811865476,.F.);\n#30=CONICAL_SURFACE('',#6,0.,45.);",
+    );
+    let src = format!("{HEADER}{in_degrees}{DEGREE_UNITS}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+
+    let face = find_face(&scene, |s| matches!(s.kind(), SurfaceKind::Offset(_)));
+    let n = face.to_nurbs().expect("offset cone face");
+    assert!(approx(&n.control_points[0][0], &[1., 0., 0.]));
+    assert!(approx(&n.control_points[0][1], &[2., 0., 1.]));
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
+/// The unit-square plane face above, on a plane one below written as an
+/// offset of it: the same patch.
+#[test]
+fn an_offset_plane_face_becomes_bounded_patch() {
+    let as_offset = PLANE_FACE.replace(
+        "#8=PLANE('',#7);",
+        "#8=OFFSET_SURFACE('',#33,1.,.F.);\n#33=PLANE('',#34);\n\
+         #34=AXIS2_PLACEMENT_3D('',#35,#5,#6);\n#35=CARTESIAN_POINT('',(0.,0.,-1.));",
+    );
+    let src = format!("{HEADER}{as_offset}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+
+    let face = find_face(&scene, |s| matches!(s.kind(), SurfaceKind::Offset(_)));
+    let n = face.to_nurbs().expect("offset plane face");
+    assert!(approx(&n.control_points[0][0], &[0., 0., 0.]));
+    assert!(approx(&n.control_points[1][1], &[1., 1., 0.]));
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}

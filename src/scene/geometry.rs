@@ -599,13 +599,14 @@ impl<'m> Face<'m> {
 
     /// The NURBS ([`NurbsSurface`](crate::scene::NurbsSurface)) form of this
     /// face's geometry. A closed analytic surface (sphere, torus, degenerate
-    /// torus, B-spline) is returned whole via [`Surface::to_nurbs`]. An
-    /// *unbounded* surface (plane,
-    /// cylinder, cone, linear extrusion) is sized to the control points of its
-    /// boundary edges' NURBS forms and to the vertices of its vertex loops — a
-    /// guaranteed cover of the boundary; a cone bounded at one level reaches
-    /// its apex — and is the untrimmed base patch (the edge loops trim it
-    /// separately).
+    /// torus, an offset of a sphere or torus, B-spline) is returned whole via
+    /// [`Surface::to_nurbs`]. An *unbounded* surface (plane, cylinder, cone,
+    /// linear extrusion, an offset of a plane, cylinder or cone — see
+    /// [`Surface::to_nurbs`] for which offsets convert) is sized to the
+    /// control points of its boundary edges' NURBS forms and to the vertices
+    /// of its vertex loops — a guaranteed cover of the boundary; a cone
+    /// bounded at one level reaches its apex — and is the untrimmed base patch
+    /// (the edge loops trim it separately).
     /// `None` if the kind is unsupported or the bounds are degenerate, or for a
     /// B-spline whose degree is outside 1–25 or whose knot multiplicities do
     /// not match its control points.
@@ -617,7 +618,7 @@ impl<'m> Face<'m> {
         let cx = this.cx;
         let pts = this.boundary_points();
         match this.surface().kind() {
-            SurfaceKind::Plane(p) => crate::scene::nurbs::plane_patch(cx, p, &pts),
+            SurfaceKind::Plane(p) => crate::scene::nurbs::plane_patch(cx, &p.position, 0.0, &pts),
             SurfaceKind::Cylindrical(c) => {
                 crate::scene::nurbs::cylinder_cone_patch(cx, &c.position, c.radius, 0.0, &pts)
             }
@@ -644,6 +645,7 @@ impl<'m> Face<'m> {
                 let seg = crate::scene::nurbs::revolved_line_segment(cx, line, frame, &pts)?;
                 Some(crate::scene::nurbs::revolve_curve(&seg, frame))
             }
+            SurfaceKind::Offset(o) => crate::scene::nurbs::offset_patch(cx, o, &pts),
             _ => None,
         }
     }
@@ -738,6 +740,9 @@ pub enum SurfaceKind<'m> {
     /// A torus whose minor radius exceeds its major one: `select_outer`
     /// picks the outer lobe (the "apple") or the inner spindle (the "lemon").
     DegenerateToroidal(&'m m::DegenerateToroidalSurface),
+    /// A surface at a constant `distance` along the normal of its basis
+    /// surface, which [`Surface::basis_surface`] gives as a handle.
+    Offset(&'m m::OffsetSurface),
     BSpline(&'m m::BSplineSurface),
     BSplineWithKnots(&'m m::BSplineSurfaceWithKnots),
     LinearExtrusion(&'m m::SurfaceOfLinearExtrusion),
@@ -757,12 +762,20 @@ impl<'m> Surface<'m> {
 
     /// The rational-B-spline ([`NurbsSurface`](crate::scene::NurbsSurface))
     /// form of this surface, if the kind is supported. Only *closed* analytic
-    /// surfaces convert as-is — a full sphere or torus, or the part of a
-    /// degenerate torus its `select_outer` picks. Open surfaces (plane,
-    /// cylinder, cone) are unbounded and need a face's bounds, so they return
-    /// `None` here — use [`Face::to_nurbs`] instead, which has the bounds. A
-    /// B-spline whose degree is outside 1–25 or whose knot multiplicities do
-    /// not match its control points is `None` too.
+    /// surfaces convert as-is — a full sphere or torus, the part of a
+    /// degenerate torus its `select_outer` picks, or an offset of a sphere or
+    /// torus. Open surfaces (plane, cylinder, cone, and their offsets) are
+    /// unbounded and need a face's bounds, so they return `None` here — use
+    /// [`Face::to_nurbs`] instead, which has the bounds. A B-spline whose
+    /// degree is outside 1–25 or whose knot multiplicities do not match its
+    /// control points is `None` too.
+    ///
+    /// An offset converts only over a plane, cylinder, cone, sphere or torus,
+    /// and only where it keeps the surface's sense: not past a cylinder's axis or
+    /// a sphere's centre, not with a torus tube shrunk past its centre circle
+    /// or grown past the axis, not through a cone's apex. An offset of a
+    /// free-form surface has no exact rational form; build it from
+    /// [`basis_surface`](Self::basis_surface) and the distance.
     pub fn to_nurbs(&self) -> Option<crate::scene::nurbs::NurbsSurface> {
         let this = self.about();
         let cx = this.cx;
@@ -778,6 +791,9 @@ impl<'m> Surface<'m> {
                     cx,
                     cx.model.degenerate_toroidal_surface_arena.get(i.0),
                 )
+            }
+            m::SurfaceRef::OffsetSurface(i) => {
+                crate::scene::nurbs::offset_to_nurbs(cx, cx.model.offset_surface_arena.get(i.0))
             }
             m::SurfaceRef::BSplineSurfaceWithKnots(i) => {
                 crate::scene::nurbs::bspline_surf_wk_to_nurbs(
@@ -830,6 +846,19 @@ impl<'m> Surface<'m> {
         }
     }
 
+    /// The surface an `OFFSET_SURFACE` is offset from (its `basis_surface`);
+    /// `None` for any other surface. The distance is on
+    /// [`SurfaceKind::Offset`].
+    pub fn basis_surface(&self) -> Option<Surface<'m>> {
+        let m::SurfaceRef::OffsetSurface(i) = self.r else {
+            return None;
+        };
+        Some(Surface {
+            cx: self.cx,
+            r: &self.cx.model.offset_surface_arena.get(i.0).basis_surface,
+        })
+    }
+
     pub fn kind(&self) -> SurfaceKind<'m> {
         let model = self.cx.model;
         match self.r {
@@ -860,7 +889,9 @@ impl<'m> Surface<'m> {
                 SurfaceKind::DegenerateToroidal(model.degenerate_toroidal_surface_arena.get(i.0))
             }
             m::SurfaceRef::ElementarySurface(_) => SurfaceKind::Other("ELEMENTARY_SURFACE"),
-            m::SurfaceRef::OffsetSurface(_) => SurfaceKind::Other("OFFSET_SURFACE"),
+            m::SurfaceRef::OffsetSurface(i) => {
+                SurfaceKind::Offset(model.offset_surface_arena.get(i.0))
+            }
             m::SurfaceRef::QuasiUniformSurface(i) => {
                 SurfaceKind::QuasiUniform(model.quasi_uniform_surface_arena.get(i.0))
             }

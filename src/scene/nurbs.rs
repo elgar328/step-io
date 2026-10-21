@@ -1664,11 +1664,15 @@ pub(crate) fn revolve_curve(profile: &NurbsCurve, frame: Frame) -> NurbsSurface 
 }
 
 pub(crate) fn sphere_to_nurbs(cx: Ctx<'_>, s: &m::SphericalSurface) -> Option<NurbsSurface> {
-    let Some((center, x, y, z)) = frame_of_3dref(cx, &s.position) else {
+    let Some(frame) = frame_of_3dref(cx, &s.position) else {
         cx.warn("SPHERICAL_SURFACE.to_nurbs: degenerate placement".to_owned());
         return None;
     };
-    let r = s.radius;
+    Some(sphere_nurbs(frame, s.radius))
+}
+
+/// A whole sphere of radius `r` about the frame's centre.
+fn sphere_nurbs((center, x, y, z): Frame, r: f64) -> NurbsSurface {
     let w = std::f64::consts::FRAC_1_SQRT_2;
     // A 180° meridian (south pole → +x equator → north pole), two 90° arcs.
     let profile = [
@@ -1679,16 +1683,20 @@ pub(crate) fn sphere_to_nurbs(cx: Ctx<'_>, s: &m::SphericalSurface) -> Option<Nu
         (0.0, r, 1.0),
     ];
     let knots_v = vec![0., 0., 0., 1., 1., 2., 2., 2.];
-    Some(revolve_nurbs(center, x, y, z, &profile, knots_v))
+    revolve_nurbs(center, x, y, z, &profile, knots_v)
 }
 
 pub(crate) fn torus_to_nurbs(cx: Ctx<'_>, t: &m::ToroidalSurface) -> Option<NurbsSurface> {
-    let Some((center, x, y, z)) = frame_of_3dref(cx, &t.position) else {
+    let Some(frame) = frame_of_3dref(cx, &t.position) else {
         cx.warn("TOROIDAL_SURFACE.to_nurbs: degenerate placement".to_owned());
         return None;
     };
-    let big = t.major_radius;
-    let r = t.minor_radius;
+    Some(torus_nurbs(frame, t.major_radius, t.minor_radius))
+}
+
+/// A whole torus about the frame's axis: tube radius `r` around the circle of
+/// radius `big`.
+fn torus_nurbs((center, x, y, z): Frame, big: f64, r: f64) -> NurbsSurface {
     let w = std::f64::consts::FRAC_1_SQRT_2;
     // The full tube circle in the (rho, h) half-plane, centred at (major, 0).
     let profile = [
@@ -1702,14 +1710,7 @@ pub(crate) fn torus_to_nurbs(cx: Ctx<'_>, t: &m::ToroidalSurface) -> Option<Nurb
         (big + r, -r, w),
         (big + r, 0.0, 1.0),
     ];
-    Some(revolve_nurbs(
-        center,
-        x,
-        y,
-        z,
-        &profile,
-        CIRCLE_KNOTS.to_vec(),
-    ))
+    revolve_nurbs(center, x, y, z, &profile, CIRCLE_KNOTS.to_vec())
 }
 
 /// The part of a degenerate torus its `select_outer` picks, on the torus's
@@ -1866,19 +1867,96 @@ pub(crate) fn complex_bspline_surface_to_nurbs(
     nurbs_surface_from(cx, (u_degree, v_degree), cp, u, v, weights)
 }
 
-// --- bounded patches from a face ---
+// --- offset surfaces ---
 
-/// A finite bilinear patch of a `PLANE`, sized to the parameter-space bounding
-/// box of the face's edge vertices. The result is the *untrimmed* base surface
-/// over that box — the face's edge loops trim it separately. `points` are the
-/// face's edge-vertex world coordinates; assumes straight edges (the box is
-/// taken from vertices, so a curved edge could under-cover).
-pub(crate) fn plane_patch(
+/// A closed offset surface whole: an offset of a sphere or a torus that keeps
+/// the surface's sense (see [`offset_patch`] for the open ones). `None` for
+/// any other basis.
+pub(crate) fn offset_to_nurbs(cx: Ctx<'_>, o: &m::OffsetSurface) -> Option<NurbsSurface> {
+    let d = o.distance;
+    match &o.basis_surface {
+        m::SurfaceRef::SphericalSurface(i) => {
+            let s = cx.model.spherical_surface_arena.get(i.0);
+            let r = s.radius + d;
+            if r <= 0.0 {
+                return None;
+            }
+            Some(sphere_nurbs(offset_frame(cx, &s.position)?, r))
+        }
+        m::SurfaceRef::ToroidalSurface(i) => {
+            let t = cx.model.toroidal_surface_arena.get(i.0);
+            let (big, r) = (t.major_radius, t.minor_radius + d);
+            // A tube grown past the axis crosses itself.
+            if r <= 0.0 || r > big * (1.0 + 1e-9) {
+                return None;
+            }
+            Some(torus_nurbs(offset_frame(cx, &t.position)?, big, r))
+        }
+        _ => None,
+    }
+}
+
+fn offset_frame(cx: Ctx<'_>, position: &m::Axis2Placement3dRef) -> Option<Frame> {
+    let frame = frame_of_3dref(cx, position);
+    if frame.is_none() {
+        cx.warn("OFFSET_SURFACE.to_nurbs: degenerate basis placement".to_owned());
+    }
+    frame
+}
+
+/// An open offset surface bounded by a face, as [`plane_patch`] and
+/// [`cylinder_cone_patch`] bound their basis: an offset of a plane, a
+/// cylinder or a cone that keeps the surface's sense. The offset of a
+/// cylinder or cone is the same kind of surface on the same placement — its
+/// radius `r + d`, or `r + d / cos(semi_angle)` for a cone, the same semi-
+/// angle. `None` for any other basis.
+pub(crate) fn offset_patch(
     cx: Ctx<'_>,
-    plane: &m::Plane,
+    o: &m::OffsetSurface,
     points: &[[f64; 3]],
 ) -> Option<NurbsSurface> {
-    let (origin, x, y, _) = frame_of_3dref(cx, &plane.position)?;
+    let d = o.distance;
+    match &o.basis_surface {
+        m::SurfaceRef::Plane(i) => {
+            plane_patch(cx, &cx.model.plane_arena.get(i.0).position, d, points)
+        }
+        m::SurfaceRef::CylindricalSurface(i) => {
+            let c = cx.model.cylindrical_surface_arena.get(i.0);
+            let r = c.radius + d;
+            if r <= 0.0 {
+                return None;
+            }
+            cylinder_cone_patch(cx, &c.position, r, 0.0, points)
+        }
+        m::SurfaceRef::ConicalSurface(i) => {
+            let c = cx.model.conical_surface_arena.get(i.0);
+            let cos = (c.semi_angle * cx.angle_to_radians()).cos();
+            // Past this the offset runs through the apex.
+            if c.radius + d * cos < 0.0 {
+                return None;
+            }
+            cylinder_cone_patch(cx, &c.position, c.radius + d / cos, c.semi_angle, points)
+        }
+        _ => None,
+    }
+}
+
+// --- bounded patches from a face ---
+
+/// A finite bilinear patch of a `PLANE` at `position`, moved `offset` along
+/// its normal, sized to the parameter-space bounding box of the face's edge
+/// vertices. The result is the *untrimmed* base surface over that box — the
+/// face's edge loops trim it separately. `points` are the face's edge-vertex
+/// world coordinates; assumes straight edges (the box is taken from vertices,
+/// so a curved edge could under-cover).
+pub(crate) fn plane_patch(
+    cx: Ctx<'_>,
+    position: &m::Axis2Placement3dRef,
+    offset: f64,
+    points: &[[f64; 3]],
+) -> Option<NurbsSurface> {
+    let (origin, x, y, z) = frame_of_3dref(cx, position)?;
+    let origin = add(origin, scale(z, offset));
     if points.is_empty() {
         return None;
     }

@@ -37,6 +37,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   whose tube crosses its axis: the part its `select_outer` picks, the outer
   lobe (`.T.`) or the inner spindle (`.F.`), on the torus's own
   parametrization, so a face's `same_sense` keeps its meaning.
+- `to_nurbs()` converts an `OFFSET_SURFACE` exactly when its basis is a
+  plane, cylinder, cone, sphere or torus: the offset is the same kind of
+  surface, a plane moved along its normal or the others with their radius
+  changed, and a face on one converts as a face on that surface would. An offset that would turn the surface inside out, or a torus
+  tube grown past the axis, is not converted, nor is an offset of a
+  free-form surface, which has no exact rational form.
+- `Surface::basis_surface()` gives the surface an `OFFSET_SURFACE` is offset
+  from, so a kernel can build the offset from it and the distance.
 - `CurveInput::Parabola` and `CurveInput::Hyperbola` let `StepBuilder::edge`
   write an edge along a parabola or a hyperbola branch. Its `same_sense` says
   whether the edge runs with the curve's parameter, found from the vertices;
@@ -101,6 +109,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A hyperbola's `CurveKind` is `Hyperbola` instead of `Other("HYPERBOLA")`.
 - A degenerate torus's `SurfaceKind` is `DegenerateToroidal` instead of
   `Other("DEGENERATE_TOROIDAL_SURFACE")`.
+- An offset surface's `SurfaceKind` is `Offset` instead of
+  `Other("OFFSET_SURFACE")`.
 - `Solid::voids()` returns an iterator of `(Shell, Orientation)` pairs, one
   per cavity, instead of a `Vec` of face lists. It used to drop the
   orientation, so a cavity's faces could not be told to point into the
