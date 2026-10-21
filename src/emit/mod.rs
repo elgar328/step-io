@@ -4,9 +4,9 @@
 //! [`io::Write`]. The `DATA` section comes from the generated writer; the
 //! `HEADER` section, `FILE_SCHEMA` included, comes from the model's own
 //! [`FileHeader`] ([`StepModel::header`]). Conformance is the authoring
-//! layer's job: [`crate::Ap242Author`] admits only AP242 entities and stamps
-//! the AP242 schema identity on the header, so an authored model writes out
-//! as a valid AP242 file.
+//! layer's job: [`crate::Ap242Author`] admits only AP242 entities, checked
+//! against the schema as they enter, and stamps the AP242 schema identity on
+//! the header, so an authored model writes out as an AP242 file.
 
 use std::io;
 
@@ -68,8 +68,8 @@ pub fn write(model: &StepModel, mut out: impl io::Write) -> io::Result<()> {
 /// Dump the model as step-io's **Universal** union — every entity, verbatim,
 /// under the non-standard `STEPIO_UNIVERSAL` marker (`FILE_SCHEMA` and
 /// APD/`application_context` are set to it, keeping the dump internally
-/// consistent). Not a STEP output — the round-trip oracle for the external
-/// verification harness; the write path is [`write()`].
+/// consistent). Not a STEP output — an internal round-trip oracle; the write
+/// path is [`write()`].
 ///
 /// # Errors
 /// The first error writing to `out`, as for [`write()`].

@@ -553,9 +553,9 @@ pub(crate) enum TokenKind {
     /// Identifier / entity type name.
     Keyword(String),
     /// P21 edition 3 anchor reference (`<name>` or `<url#name>`). The
-    /// whole bracketed form is captured as a single token; the parser
-    /// currently discards these (ed.3 sections are skip-only — see
-    /// [`crate::parser::ParseWarning::Ed3SectionDiscarded`]).
+    /// whole bracketed form is captured as a single token. The parser reads
+    /// it in the `ANCHOR` and `REFERENCE` sections, into the `Graph`'s
+    /// `anchors` and `external_references`.
     AnchorRef(String),
 }
 

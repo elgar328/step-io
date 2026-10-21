@@ -110,7 +110,8 @@ pub struct Graph {
 #[non_exhaustive]
 pub enum ParseWarning {
     /// A HEADER entity is missing its terminating `;`. The next keyword
-    /// is treated as the start of the next entity; the IR shows no trace.
+    /// is treated as the start of the next entity; the parsed header shows no
+    /// trace.
     MissingHeaderSemicolon {
         entity_name: String,
         span: super::lexer::Span,

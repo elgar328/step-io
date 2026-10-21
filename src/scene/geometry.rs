@@ -477,7 +477,8 @@ enum FaceImpl {
     Surface(m::FaceSurfaceId),
 }
 
-/// A bounded face of a solid (`ADVANCED_FACE` / `FACE_SURFACE`) — a surface
+/// A bounded face of a solid or surface model (`ADVANCED_FACE` /
+/// `FACE_SURFACE`) — a surface
 /// trimmed by boundary loops, with an orientation.
 #[derive(Clone, Copy)]
 pub struct Face<'m> {
@@ -598,11 +599,13 @@ impl<'m> Face<'m> {
     }
 
     /// The NURBS ([`NurbsSurface`](crate::scene::NurbsSurface)) form of this
-    /// face's geometry. A closed analytic surface (sphere, torus, degenerate
-    /// torus, an offset of a sphere or torus, B-spline) is returned whole via
+    /// face's geometry. A surface that converts on its own (B-spline, sphere,
+    /// torus, degenerate torus, an offset of a sphere or torus, a surface of
+    /// revolution over a bounded profile) is returned whole via
     /// [`Surface::to_nurbs`]. An *unbounded* surface (plane, cylinder, cone,
-    /// linear extrusion, an offset of a plane, cylinder or cone — see
-    /// [`Surface::to_nurbs`] for which offsets convert) is sized to the
+    /// linear extrusion, a surface of revolution over a line, an offset of a
+    /// plane, cylinder or cone — see [`Surface::to_nurbs`] for which offsets
+    /// convert) is sized to the
     /// control points of its boundary edges' NURBS forms and to the vertices
     /// of its vertex loops — a guaranteed cover of the boundary; a cone
     /// bounded at one level reaches its apex — and is the untrimmed base patch
@@ -761,12 +764,15 @@ impl<'m> Surface<'m> {
     }
 
     /// The rational-B-spline ([`NurbsSurface`](crate::scene::NurbsSurface))
-    /// form of this surface, if the kind is supported. Only *closed* analytic
-    /// surfaces convert as-is — a full sphere or torus, the part of a
-    /// degenerate torus its `select_outer` picks, or an offset of a sphere or
-    /// torus. Open surfaces (plane, cylinder, cone, and their offsets) are
-    /// unbounded and need a face's bounds, so they return `None` here — use
-    /// [`Face::to_nurbs`] instead, which has the bounds. A B-spline whose
+    /// form of this surface, if the kind is supported and needs no bounds: a
+    /// B-spline surface (with knots, rational, uniform, quasi-uniform,
+    /// Bézier), a full sphere or torus, the part of a degenerate torus its
+    /// `select_outer` picks, an offset of a sphere or torus, or a full
+    /// revolution of a bounded profile. Open surfaces
+    /// (plane, cylinder, cone, linear extrusion, a revolved line, and offsets
+    /// of the first three) are unbounded and need a face's bounds, so they
+    /// return `None` here — use [`Face::to_nurbs`] instead, which has the
+    /// bounds. A B-spline whose
     /// degree is outside 1–25 or whose knot multiplicities do not match its
     /// control points is `None` too.
     ///
@@ -1285,8 +1291,10 @@ impl<'m> Curve<'m> {
     }
 
     /// The rational-B-spline ([`NurbsCurve`](crate::scene::NurbsCurve))
-    /// form of this curve, if the kind is supported (circle, ellipse, B-spline
-    /// with knots). Returns the *full* analytic curve — trimming applied by an
+    /// form of this curve, if the kind is supported: a circle, an ellipse, the
+    /// B-spline family (with knots, rational, uniform, quasi-uniform, Bézier),
+    /// a polyline, a trimmed or composite curve, or the 3D curve of a curve on
+    /// a surface. Returns the *full* analytic curve — trimming applied by an
     /// edge that uses this curve is **not** reflected here. `None` for a curve
     /// that needs bounds it alone lacks — an unbounded line, parabola or
     /// hyperbola; use [`Edge::to_nurbs`] there, or trim it — and for a B-spline
@@ -1515,7 +1523,6 @@ impl<'m> Point<'m> {
         m::EntityKey::CartesianPoint(self.id)
     }
 
-    /// The point's coordinates (`x, y[, z]`).
     /// The coordinates as a 3-vector, missing components padded with `0.0` —
     /// the form every consumer wants (see [`Point::coords`] for the raw slice).
     pub fn xyz(&self) -> [f64; 3] {
@@ -1527,6 +1534,7 @@ impl<'m> Point<'m> {
         ]
     }
 
+    /// The point's coordinates as written (`x, y[, z]`).
     pub fn coords(&self) -> &'m [f64] {
         &self
             .cx

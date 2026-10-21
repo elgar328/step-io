@@ -20485,7 +20485,8 @@ pub struct StepModel {
     pub(crate) complex_entity_arena: Arena<ComplexEntity>,
 }
 impl StepModel {
-    /// The string `t` stands for (`""` for a `Text` of another model).
+    /// The string `t` stands for. A `Text` of another model gives an
+    /// unrelated string, or `""` past the end of this model's text table.
     pub fn text(&self, t: Text) -> &str {
         self.texts.get(t)
     }

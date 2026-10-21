@@ -382,8 +382,8 @@ fn nonstd_ref(
 /// Decide which entities enter the model, recording WHY each other one is
 /// dropped. An entity survives iff it is a closure type, all its transitive
 /// refs stay kept, and no ref slot holds a type the slot does not admit
-/// (fixpoint). Returns the kept flags (by table position) and how many are
-/// set.
+/// (fixpoint). Returns the kept flags (by table position), how many are set,
+/// and the drops this pass recorded.
 ///
 /// `known_bad` = entities the generated read already failed on (own-attr);
 /// they are pre-dropped roots here so their referrers cascade. Their drop

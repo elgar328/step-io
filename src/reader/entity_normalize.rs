@@ -6,13 +6,13 @@
 //! derived-slot reset); `entity_normalize`
 //! (this file) applies PER-ENTITY fixups that cannot be a generic rule — a
 //! specific entity's required field is `$`/mis-encoded and must become a specific
-//! standard value, a synthetic default ref, a factor-based identification, etc.
+//! standard value or a synthetic default ref.
 //!
 //! Runs BEFORE `generic_normalize` (so a per-entity fixup of a required ref
 //! pre-empts the generic required-reference-missing drop) and BEFORE the
 //! generated read, on each raw entity as it is read — the strict generated read
-//! only ever sees standard data. Each fixup records a note into `norm`,
-//! surfaced like the generic `NormCase` notes.
+//! only ever sees standard data. Each fixup records a note, surfaced in
+//! `Report::normalized` like the generic rules' notes.
 
 use crate::parser::{Attribute, RawEntity};
 

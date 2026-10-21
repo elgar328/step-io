@@ -482,9 +482,9 @@ fn line_trim_point(
     })
 }
 
-/// The angle of a conic trim, derived geometrically from a `CARTESIAN_POINT` on
-/// the curve (unit-independent). `ParameterValue` trims are angle-unit dependent
-/// and unsupported here (→ `None`).
+/// The angle of a conic trim: from a `CARTESIAN_POINT` on the curve
+/// (unit-independent), or from a `PARAMETER_VALUE` scaled by `factor` to
+/// radians, the one `master` prefers first.
 fn conic_trim_angle(
     cx: Ctx<'_>,
     trim: &[m::TrimmingSelectRef],
@@ -1750,8 +1750,6 @@ pub(crate) fn degenerate_torus_to_nurbs(
     Some(revolve_curve(&profile, frame))
 }
 
-/// Pass a B-spline surface with an explicit knot vector straight through,
-/// expanding both knot vectors and defaulting weights to `1.0`.
 /// Assemble a B-spline surface from its raw pieces — shared by the standalone
 /// `B_SPLINE_SURFACE_WITH_KNOTS` and the complex (rational) form. `weights` is
 /// `None` for a non-rational surface (all `1.0`). `u`/`v` are each
@@ -1944,11 +1942,11 @@ pub(crate) fn offset_patch(
 // --- bounded patches from a face ---
 
 /// A finite bilinear patch of a `PLANE` at `position`, moved `offset` along
-/// its normal, sized to the parameter-space bounding box of the face's edge
-/// vertices. The result is the *untrimmed* base surface over that box — the
-/// face's edge loops trim it separately. `points` are the face's edge-vertex
-/// world coordinates; assumes straight edges (the box is taken from vertices,
-/// so a curved edge could under-cover).
+/// its normal, sized to the parameter-space bounding box of the face's
+/// boundary points. The result is the *untrimmed* base surface over that box
+/// — the face's edge loops trim it separately. `points` are the face's
+/// boundary points in world coordinates — its edges' NURBS control points and
+/// its vertex loops' vertices — so the box covers the face.
 pub(crate) fn plane_patch(
     cx: Ctx<'_>,
     position: &m::Axis2Placement3dRef,
@@ -1989,7 +1987,7 @@ pub(crate) fn plane_patch(
 
 /// A cylinder or cone bounded by a face into a finite ruled patch: the full
 /// circle (rational quadratic, u) swept linearly (v) between two axial levels,
-/// taken from the axial span of the face's edge vertices. `semi_angle`, in the
+/// taken from the axial span of the face's boundary points. `semi_angle`, in the
 /// model's plane-angle unit, is `0.0` for a cylinder; for a cone the radius
 /// grows `radius + v·tan(semi_angle)`.
 ///
@@ -2062,7 +2060,7 @@ pub(crate) fn cylinder_cone_patch(
 /// A `SURFACE_OF_LINEAR_EXTRUSION` bounded by a face into a finite ruled patch:
 /// the profile curve (u, already converted to NURBS) swept linearly (v) along
 /// the extrusion direction between two levels taken from the span of the face's
-/// edge vertices. Only the vector's *direction* is used — its magnitude is a
+/// boundary points. Only the vector's *direction* is used — its magnitude is a
 /// parameter scale, not an extrusion length (the surface is formally unbounded).
 ///
 /// The v-span is widened by the profile's own span along the direction (the
@@ -2116,7 +2114,7 @@ pub(crate) fn extrude_patch(
 
 /// A `LINE` profile of a surface of revolution, bounded by the face into a
 /// finite degree-1 segment (which [`revolve_curve`] then sweeps). Height and
-/// radius are rotation-invariant, so each edge vertex pins the line parameter:
+/// radius are rotation-invariant, so each boundary point pins the line parameter:
 /// via its height along the axis for a slanted line (exact), or via the radius
 /// equation for a line (nearly) perpendicular to the axis — all real roots are
 /// taken, a safe over-cover. The line vector's magnitude is a parameter scale,

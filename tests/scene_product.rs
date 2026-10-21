@@ -395,7 +395,7 @@ fn warns_when_placement_reps_match_no_shape_definition() {
 }
 
 // A part version (formation id "RevB") with a person/organization assignment
-// (John Doe / ACME, role "creator") on the formation — the corpus-dominant
+// (John Doe / ACME, role "creator") on the formation — the most common form in real files
 // target for such assignments.
 const META: &str = "\
 #1=APPLICATION_CONTEXT('test');\n\

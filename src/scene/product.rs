@@ -461,7 +461,8 @@ impl<'m> ProductDef<'m> {
     /// The b-rep solids of this definition's shape — the bridge into the geometry
     /// handles. Reverse: a `PRODUCT_DEFINITION_SHAPE` referencing this definition →
     /// a `SHAPE_DEFINITION_REPRESENTATION` referencing that shape → forward through
-    /// its representation's items to each `MANIFOLD_SOLID_BREP`. When the geometry
+    /// its representation's items to each `MANIFOLD_SOLID_BREP` or
+    /// `BREP_WITH_VOIDS`. When the geometry
     /// lives in a separate representation bridged by a plain
     /// `SHAPE_REPRESENTATION_RELATIONSHIP` (the common AP242 assembly layout), the
     /// equivalence bridge is followed to collect those solids too.

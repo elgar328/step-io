@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# codegen support boundary — hand-curated frontier (NOT corpus-automated).
+# codegen support boundary — hand-curated frontier (NOT derived automatically from sample files).
 #
 # cover:   seed entities. Each list is the entry point for a transitive schema
 #          closure (seed + parents + every entity reachable via attr ty: Ref /

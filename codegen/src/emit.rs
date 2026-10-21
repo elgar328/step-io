@@ -568,7 +568,7 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
         .unwrap();
     }
     writeln!(s, "}}").unwrap();
-    s.push_str("impl StepModel {\n    /// The string `t` stands for (`\"\"` for a `Text` of another model).\n    pub fn text(&self, t: Text) -> &str { self.texts.get(t) }\n    /// Store `s` as a new `Text`.\n    pub(crate) fn add_text(&mut self, s: &str) -> Text { self.texts.push(s) }\n}\n");
+    s.push_str("impl StepModel {\n    /// The string `t` stands for. A `Text` of another model gives an\n    /// unrelated string, or `\"\"` past the end of this model's text table.\n    pub fn text(&self, t: Text) -> &str { self.texts.get(t) }\n    /// Store `s` as a new `Text`.\n    pub(crate) fn add_text(&mut self, s: &str) -> Text { self.texts.push(s) }\n}\n");
 
     // Read access by entity type and by id.
     s.push_str(ENTITY_ACCESS);
@@ -2228,7 +2228,7 @@ fn render_part_attr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, id:
 // ===========================================================================
 // normalize.rs — strict-input normalization (slot-kind general rules).
 // Runs on each raw entity BEFORE the strict read: rewrites non-standard values
-// to standard (record a NormCase note), or — when not normalizable (required
+// to standard (record a normalization note), or — when not normalizable (required
 // ref = `$`) — drops the entity (its referrers cascade-drop via the drop pass).
 // The model/read stay strict; nothing here bends them.
 // ===========================================================================
@@ -2825,8 +2825,8 @@ pub fn emit_author(
     // Error type.
     s.push_str(
         r#"/// An authoring-time rejection: the input cannot be part of a strict AP242
-/// model. These fire while an adapter is being developed; a correct adapter
-/// never triggers them.
+/// model: a real that is not finite, an input that breaks a rule of the
+/// standard, a reference to an entity that is missing or of the wrong type, …
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum AuthorError {
@@ -3026,7 +3026,7 @@ impl Ap242Author {
     // Self-referencing (cyclic) variants: for entities whose ref fields can
     // target their own type, a closure-based constructor hands out the id the
     // entity will get before it exists, then validates after the push and
-    // rolls back on error. The corpus-real case is
+    // rolls back on error. The case seen in real files is
     // DIMENSIONAL_SIZE_WITH_DATUM_FEATURE.applies_to referencing itself.
     let mut cyclic_checks = String::new();
     let mut cyclic = 0usize;

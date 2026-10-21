@@ -108,7 +108,7 @@ fn complex_instances_round_trip_with_zero_drops() {
     let empty = a.text("");
     let ctx = a.text("ctx");
 
-    // Rational B-spline curve — the most frequent corpus complex (7 parts).
+    // Rational B-spline curve — the most frequent complex in real files (7 parts).
     let cps: Vec<m::CartesianPointRef> = [[0.0, 0.0, 0.0], [1.0, 1.0, 0.0], [2.0, 0.0, 0.0]]
         .iter()
         .map(|c| {

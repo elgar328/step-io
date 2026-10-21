@@ -204,7 +204,8 @@ impl<R: Read> Parser<R> {
 
     /// Parse an ANCHOR or REFERENCE section into `external_references` /
     /// `anchors`; SIGNATURE (and any line shape we don't recognise) falls back
-    /// to a discard + `Ed3SectionDiscarded` warning so the parse never fails.
+    /// to a discard + `Ed3SectionDiscarded` warning, so a line the parser
+    /// cannot read does not fail the parse.
     /// Without `keep_ed3`, every section is reported discarded.
     fn parse_or_skip_ed3_section(
         &mut self,
@@ -263,7 +264,7 @@ impl<R: Read> Parser<R> {
     ///
     /// HEADER entities are "uninstantiated": they have no `#N =` prefix, just
     /// `KEYWORD(...);`. The section must contain at least `FILE_DESCRIPTION`,
-    /// `FILE_NAME`, and `FILE_SCHEMA` in order.
+    /// `FILE_NAME`, and `FILE_SCHEMA`.
     fn parse_header_section(&mut self) -> Result<(Vec<RawEntity>, SchemaId), Error> {
         let mut header = Vec::new();
         let mut schema_raw = Vec::new();
@@ -530,7 +531,6 @@ impl<R: Read> Parser<R> {
         }
     }
 
-    /// Parse a single Part 21 parameter value.
     /// Parse one parameter, guarding nesting depth. The recursive cases (nested
     /// list, typed value) re-enter through this wrapper, so `depth` tracks the
     /// current nesting; exceeding [`MAX_NESTING_DEPTH`] is a graceful error rather

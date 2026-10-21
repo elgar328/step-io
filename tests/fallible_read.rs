@@ -17,16 +17,17 @@ const FOOTER: &str = "ENDSEC;\nEND-ISO-10303-21;\n";
 
 /// Read a DATA body wrapped in a standard header/footer, asserting the read does
 /// not fail (parse ok) and the provenance accounting invariant holds:
-/// `validated + dropped == n_in + n_synth` (every input/synthetic entity is
-/// either kept or dropped exactly once — this exercises the read-failure feedback
-/// path that the clean corpus never touches).
+/// `entities_kept + dropped.len() == entities_read + entities_added` (every
+/// input/synthetic entity is either kept or dropped exactly once — this
+/// exercises the read-failure feedback path that well-formed files never
+/// touch).
 fn read_body(body: &str) -> Report {
     let src = format!("{HEADER}{body}{FOOTER}");
     let (_model, report) = read(src.as_bytes()).expect("source parses");
     assert_eq!(
         report.entities_kept + report.dropped.len(),
         report.entities_read + report.entities_added,
-        "accounting invariant: validated + dropped == n_in + n_synth"
+        "accounting invariant: entities_kept + dropped == entities_read + entities_added"
     );
     report
 }

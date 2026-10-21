@@ -99,9 +99,10 @@
 //!
 //! The write side is strict by construction. Its foundation is [`Ap242Author`],
 //! a generated low-level layer with one constructor per AP242 entity (exposed
-//! as [`StepBuilder::author`]); every argument is validated at insertion, so
-//! the output always conforms to the AP242 edition 2 schema — there is no loss
-//! report to check afterwards.
+//! as [`StepBuilder::author`]); every argument is validated at insertion
+//! against the AP242 edition 2 schema — its types, aggregate sizes, references
+//! and rules for combining types, though not its `WHERE` rules — so there is
+//! no loss report to check afterwards.
 //!
 //! [`StepBuilder`] is the convenience layer on top, covering what exports
 //! touch most: parts and b-rep topology (vertex → edge → face → solid, over
@@ -210,8 +211,8 @@ pub use header::FileHeader;
 pub use orientation::Orientation;
 pub use reader::{DropKind, DropReason, Report, read};
 
-// Internal round-trip oracle — kept callable for the external verification
-// harness, but not part of the supported API surface.
+// Internal round-trip oracle — kept callable for testing a read model end to
+// end, but not part of the supported API surface.
 #[doc(hidden)]
 pub use emit::dump_universal;
 pub use parser::entity::{Error, ParseWarning};

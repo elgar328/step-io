@@ -1,9 +1,10 @@
 //! PMI — the product and manufacturing information annotating a shape.
 //!
-//! Model-wide slices so far: **dimensions** ([`Scene::all_dimensions`]),
-//! **geometric tolerances** ([`Scene::all_tolerances`]), and **datums**
-//! ([`Scene::all_datums`]). A dimension carries a [`kind`](Dimension::kind) and a
-//! nominal [`value`](Dimension::value); a tolerance its
+//! Model-wide slices: **dimensions** ([`Scene::all_dimensions`]),
+//! **geometric tolerances** ([`Scene::all_tolerances`]), **datums**
+//! ([`Scene::all_datums`]), and **features** ([`Scene::all_features`]). A
+//! dimension carries a [`kind`](Dimension::kind) and a nominal
+//! [`value`](Dimension::value); a tolerance its
 //! [`kind`](Tolerance::kind), [`magnitude`](Tolerance::magnitude), and
 //! referenced [`datums`](Tolerance::datums). Both point at the shape
 //! [`Feature`] they apply to ([`Dimension::features`] /
@@ -378,7 +379,7 @@ impl<'m> Tolerance<'m> {
     }
 
     /// The characteristic of a complex tolerance, read from its leaf-subtype
-    /// facet. Only the leaf markers that occur in the corpus exist as
+    /// facet. Only the leaf markers that occur in real files exist as
     /// `PartialEntity` variants; a complex tolerance without a recognized one is
     /// surfaced as `Other`.
     fn complex_kind(&self, cuid: m::ComplexEntityId) -> ToleranceKind {
@@ -441,7 +442,8 @@ enum DatumImpl {
 impl Scene<'_> {
     /// Every datum in the model — `DATUM`s and `COMMON_DATUM`s (the reference
     /// features that carry an identifying letter). The physical `DATUM_FEATURE`
-    /// a datum is established from is a different entity, reached later.
+    /// a datum is established from is a different entity, reached through
+    /// [`Datum::datum_feature`].
     pub fn all_datums(&self) -> impl Iterator<Item = Datum<'_>> + '_ {
         all_datums(self.ctx()).into_iter()
     }
@@ -704,7 +706,7 @@ pub struct Feature<'m> {
 // portion of the part's shape (a feature) and are what `Scene::all_features` lists;
 // `aspects` are also SHAPE_ASPECTs in the schema but are datum callouts, datum
 // reference structures, tolerance zones, views, or dimensions — reached via
-// their own queries or the raw model. Corpus-checked: no dimension / tolerance
+// their own queries or the raw model. Checked on real files: no dimension / tolerance
 // ever targets an `aspects` type, so this split drops no real feature.
 macro_rules! feature_family {
     (
@@ -956,10 +958,11 @@ pub enum FeatureGeometry<'m> {
 
 impl<'m> Feature<'m> {
     /// The concrete geometry this feature designates — the faces / edges / points
-    /// / solids linked to it by `GEOMETRIC_ITEM_SPECIFIC_USAGE` (GISU).
+    /// / solids / curves / meshes / geometric sets linked to it by
+    /// `GEOMETRIC_ITEM_SPECIFIC_USAGE` (GISU).
     ///
     /// A feature may designate several items (one per GISU). Items outside the
-    /// typed set (tessellated faces, geometric sets, …) come back as
+    /// typed set (a tessellated geometric set, a placement, …) come back as
     /// [`FeatureGeometry::Other`] with their key. Only GISUs whose `definition`
     /// points directly at this feature are followed; indirect links through a
     /// shape-aspect relationship are not yet resolved.

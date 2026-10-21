@@ -111,8 +111,8 @@ impl std::fmt::Display for SchemaId {
 
 /// Identify the [`SchemaId`] from the raw `FILE_SCHEMA` string list.
 ///
-/// The schema-version token is parsed generically and mapped via the catalog
-/// (`internal/SCHEMA_IDENTIFIER_CATALOG.md`); names without a usable token
+/// The schema-version token is parsed generically and mapped via the catalog;
+/// names without a usable token
 /// fall back to family recognition. The raw text is always preserved.
 #[must_use]
 pub(crate) fn identify_schema(file_schema: &[String]) -> SchemaId {
@@ -320,7 +320,7 @@ mod tests {
 
     #[test]
     fn ap242_trailing_dot_and_no_space() {
-        // Real FreeCAD output: trailing `.` after name, no space after `{`.
+        // Open CASCADE output: trailing `.` after name, no space after `{`.
         let s = id("AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF. {1 0 10303 442 1 1 4 }");
         assert_eq!(
             (s.family, s.edition, s.stage),
@@ -347,7 +347,7 @@ mod tests {
             (e2.family, e2.edition, e2.stage),
             (ApFamily::Ap203, Some(2), Stage::Is)
         );
-        // PART variant: AP203 long form carrying part `203` instead of `403` (seen in corpus).
+        // PART variant: AP203 long form carrying part `203` instead of `403` (seen in real files).
         let p203 = id(
             "AP203_CONFIGURATION_CONTROLLED_3D_DESIGN_OF_MECHANICAL_PARTS_AND_ASSEMBLIES_MIM_LF { 1 0 10303 203 3 1 4 }",
         );

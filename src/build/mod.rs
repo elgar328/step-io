@@ -488,8 +488,8 @@ pub struct DocumentInput {
 }
 
 /// Normals for a [`MeshInput`], mirroring what the read side exposes: none,
-/// one for the whole mesh, or one per vertex (row count must match the
-/// point count — a mismatch is the caller's responsibility).
+/// one for the whole mesh, or one per vertex (as many rows as points;
+/// [`StepBuilder::mesh`] refuses a mismatch).
 #[derive(Debug, Clone, Default)]
 pub enum MeshNormalsInput {
     #[default]
@@ -1324,7 +1324,7 @@ impl StepBuilder {
         })
     }
 
-    /// Add a face over an analytic surface, bounded by the given loops;
+    /// Add a face over a surface (analytic or NURBS), bounded by the given loops;
     /// `orientation` says whether the face's normal is its surface's normal
     /// ([`Forward`](Orientation::Forward)) or against it.
     ///

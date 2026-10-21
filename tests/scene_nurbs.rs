@@ -339,7 +339,7 @@ fn unsupported_curve_returns_none() {
 
 // The uniform-knot family — subtypes that store no knots (a standard rule
 // derives them) — plus a polyline, each anchored as an EDGE_CURVE. #90 is the
-// corpus form of a rational quasi-uniform complex instance (no WITH_KNOTS
+// form real files give a rational quasi-uniform complex instance (no WITH_KNOTS
 // part; the QUASI_UNIFORM_CURVE marker implies the knots).
 const UNIFORM_FAMILY: &str = "\
 #1=CARTESIAN_POINT('',(0.,0.,0.));\n\
@@ -442,7 +442,7 @@ fn complex_quasi_uniform_marker_implies_knots() {
     let (model, _rep) = read(src.as_bytes()).expect("read");
     let scene = model.scene();
 
-    // The corpus form: rational + QUASI_UNIFORM_CURVE marker, no WITH_KNOTS.
+    // The form real files use: rational + QUASI_UNIFORM_CURVE marker, no WITH_KNOTS.
     let complex = find(&scene, |c| matches!(c.kind(), CurveKind::Other("COMPLEX")));
     let n = complex.to_nurbs().expect("complex quasi-uniform → nurbs");
     assert_eq!(n.degree, 3);
@@ -554,8 +554,8 @@ fn trimmed_bspline_bases_extract_exact_segments() {
     );
 }
 
-// A trimmed B-spline with empty trim lists (a corpus-observed nonstandard
-// form) — no usable trim, so the conversion refuses with a warning.
+// A trimmed B-spline with empty trim lists (a nonstandard form seen in
+// real files) — no usable trim, so the conversion refuses with a warning.
 const TRIMMED_EMPTY: &str = "\
 #1=CARTESIAN_POINT('',(0.,0.,0.));\n\
 #2=CARTESIAN_POINT('',(1.,1.,0.));\n\

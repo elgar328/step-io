@@ -7,8 +7,8 @@
 use super::model::*;
 
 /// An authoring-time rejection: the input cannot be part of a strict AP242
-/// model. These fire while an adapter is being developed; a correct adapter
-/// never triggers them.
+/// model: a real that is not finite, an input that breaks a rule of the
+/// standard, a reference to an entity that is missing or of the wrong type, …
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum AuthorError {

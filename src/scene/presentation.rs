@@ -277,7 +277,7 @@ pub(crate) fn transparency_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<f64> 
 // Layer and visibility
 // ---------------------------------------------------------------------------
 //
-// Corpus: a shape usually reaches a layer / invisibility through its STYLED_ITEM
+// In real files a shape usually reaches a layer / invisibility through its STYLED_ITEM
 // (88% / 97%), not directly. So both queries consider `target`'s "presentation
 // delegates" = the target itself plus the styled items that reference it.
 
@@ -348,7 +348,7 @@ pub(crate) fn is_visible(cx: Ctx<'_>, target: m::EntityKey) -> bool {
 // Curve style (an edge's / curve's colour, width, and line font)
 // ---------------------------------------------------------------------------
 //
-// Corpus: curve styles apply to standalone curves (LINE / TRIMMED_CURVE / CIRCLE)
+// In real files curve styles apply to standalone curves (LINE / TRIMMED_CURVE / CIRCLE)
 // — reached via the `Curve` handle — and to b-rep EDGE_CURVEs, reached via the
 // `Edge` handle.
 
