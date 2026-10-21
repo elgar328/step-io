@@ -161,9 +161,10 @@ dependencies = [
 
 [[package]]
 name = "step-io"
-version = "0.2.5"
+version = "0.3.0"
 dependencies = [
  "logos",
+ "memchr",
 ]
 
 [[package]]

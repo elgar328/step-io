@@ -23,9 +23,13 @@ pub struct Field {
     pub derivable: bool,
     /// Outer aggregation cardinality (schema `SET [n:m]`): minimum element
     /// count and optional maximum. `(0, None)` for scalars and unbounded
-    /// aggregations. Nested inner-list bounds are not carried.
+    /// aggregations.
     pub min: u32,
     pub max: Option<u32>,
+    /// The bounds of each aggregation nested inside the outer one, outermost
+    /// first (`LIST [2:?] OF LIST [2:?] OF …` → `[(2, None)]`); `(0, None)`
+    /// for an unbounded level.
+    pub nested: Vec<(u32, Option<u32>)>,
 }
 
 /// A simple entity that gets its own arena + typed id.
@@ -70,6 +74,9 @@ pub struct RefEnum {
     pub scalar_arms: Vec<(String, Kind, String)>,
     /// True when the target can resolve to a complex part-bag instance.
     pub has_complex: bool,
+    /// The complex parts (UPPER names) that make a complex instance one of
+    /// the target's types: a complex fits the reference when it has one.
+    pub complex_parts: Vec<String>,
 }
 
 /// A generated Rust enum from an EXPRESS ENUM.
@@ -404,6 +411,7 @@ impl ModelIr {
             let leaves = subtypes_in_closure(schema, res, closure, &children, target);
             let mut simple_arms: Vec<(String, String)> = Vec::new();
             let mut has_complex = false;
+            let mut fitting_parts: Vec<String> = Vec::new();
             for leaf in &leaves {
                 // dual-appearance: a leaf can be BOTH a simple arm (standalone
                 // `#1=FOO(..)`) and resolve to a complex (`#2=(.. FOO(..) ..)`),
@@ -413,6 +421,7 @@ impl ModelIr {
                 }
                 if complex_parts.contains(leaf) {
                     has_complex = true;
+                    fitting_parts.push(leaf.to_uppercase());
                 }
             }
             simple_arms.sort();
@@ -435,6 +444,7 @@ impl ModelIr {
                         .collect(),
                     scalar_arms: scalar_arms(res, target),
                     has_complex,
+                    complex_parts: fitting_parts,
                 },
             );
         }
@@ -542,8 +552,17 @@ fn make_field(
     // entry makes it conditionally `*` (kept as Option). The latter only
     // applies when not already a hard drop.
     let hard = dset.contains(&a.name);
-    let (min, max) =
-        crate::schema::agg_bounds(crate::schema::strip_optional(&a.ty).1).unwrap_or((0, None));
+    let ty = crate::schema::strip_optional(&a.ty).1;
+    let (min, max) = crate::schema::agg_bounds(ty).unwrap_or((0, None));
+    let mut nested = Vec::new();
+    let mut level = crate::schema::agg_inner(ty);
+    while let Some(inner) = level {
+        let Some(bounds) = crate::schema::agg_bounds(inner) else {
+            break;
+        };
+        nested.push(bounds);
+        level = crate::schema::agg_inner(inner);
+    }
     Field {
         name: a.name.clone(),
         kind,
@@ -552,6 +571,7 @@ fn make_field(
         derivable: !hard && derivable.contains(&a.name),
         min,
         max,
+        nested,
     }
 }
 

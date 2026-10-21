@@ -1,9 +1,11 @@
 //! Layer and visibility authoring: `layer()` / `hide()` / `hide_layer()`
 //! read back through the Scene's `layer()` and `is_visible()`.
 
-use step_io::build::Rgb;
+mod common;
+
 use step_io::build::{CurveInput, FaceBoundInput, Frame, StyleTarget, SurfaceInput};
-use step_io::{StepBuilder, read};
+use step_io::scene::Rgb;
+use step_io::{Orientation, StepBuilder, read};
 
 fn frame(origin: [f64; 3], axis: [f64; 3], ref_dir: [f64; 3]) -> Frame {
     Frame {
@@ -18,8 +20,8 @@ fn three_face_plate(
     b: &mut StepBuilder,
     part: step_io::build::Part,
 ) -> (
-    Vec<step_io::generated::model::AdvancedFaceId>,
-    step_io::generated::model::ManifoldSolidBrepId,
+    Vec<step_io::model::AdvancedFaceId>,
+    step_io::model::ManifoldSolidBrepId,
 ) {
     let mut faces = Vec::new();
     for i in 0..3 {
@@ -33,11 +35,11 @@ fn three_face_plate(
         faces.push(
             b.face(
                 SurfaceInput::Plane(frame([base, 0.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0])),
-                true,
+                Orientation::Forward,
                 vec![FaceBoundInput::outer(vec![
-                    (e0, true),
-                    (e1, true),
-                    (e2, true),
+                    (e0, Orientation::Forward),
+                    (e1, Orientation::Forward),
+                    (e2, Orientation::Forward),
                 ])],
             )
             .expect("face"),
@@ -49,8 +51,8 @@ fn three_face_plate(
 
 #[test]
 fn layers_round_trip() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("plate").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("plate");
     let (faces, solid) = three_face_plate(&mut b, part);
 
     b.layer(
@@ -61,7 +63,7 @@ fn layers_round_trip() {
     b.layer("BODY", vec![StyleTarget::Solid(solid)])
         .expect("solid layer");
 
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
@@ -74,8 +76,8 @@ fn layers_round_trip() {
 
 #[test]
 fn hide_solid_keeps_color_and_face_visibility() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("plate").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("plate");
     let (_faces, solid) = three_face_plate(&mut b, part);
 
     let red = Rgb {
@@ -87,10 +89,10 @@ fn hide_solid_keeps_color_and_face_visibility() {
         .expect("style");
     b.hide(StyleTarget::Solid(solid)).expect("hide");
 
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
-    assert_eq!(model.invisibility_arena.items.len(), 1);
+    assert_eq!(model.all::<step_io::model::Invisibility>().len(), 1);
 
     let scene = model.scene();
     let solids: Vec<_> = scene.all_solids().collect();
@@ -105,8 +107,8 @@ fn hide_solid_keeps_color_and_face_visibility() {
 
 #[test]
 fn hide_layer_hides_its_members() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("plate").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("plate");
     let (faces, _solid) = three_face_plate(&mut b, part);
 
     let l1 = b
@@ -115,9 +117,9 @@ fn hide_layer_hides_its_members() {
             vec![StyleTarget::Face(faces[0]), StyleTarget::Face(faces[1])],
         )
         .expect("layer");
-    b.hide_layer(l1);
+    b.hide_layer(l1).expect("hide layer");
 
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish());
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
 
@@ -125,4 +127,21 @@ fn hide_layer_hides_its_members() {
     let solids: Vec<_> = scene.all_solids().collect();
     let visible: Vec<bool> = solids[0].faces().map(|f| f.is_visible()).collect();
     assert_eq!(visible, [false, false, true]);
+}
+
+/// A layer id this builder does not hold is refused when it is hidden, not
+/// later at `finish`.
+#[test]
+fn hiding_an_unknown_layer_is_refused_at_once() {
+    let mut b = StepBuilder::new();
+    let err = b
+        .hide_layer(step_io::model::PresentationLayerAssignmentId(7))
+        .expect_err("no such layer");
+    assert_eq!(
+        err,
+        step_io::AuthorError::DanglingRef {
+            entity: "PRESENTATION_LAYER_ASSIGNMENT"
+        }
+    );
+    let _ = b.finish();
 }

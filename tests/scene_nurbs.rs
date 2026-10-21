@@ -4,7 +4,7 @@
 //! `EDGE_CURVE`s (there is no standalone curve enumerator).
 
 use step_io::read;
-use step_io::scene::geometry::{Curve, CurveKind};
+use step_io::scene::{Curve, CurveKind};
 use step_io::scene::{NurbsCurve, Scene};
 
 const HEADER: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\n\
@@ -339,7 +339,7 @@ fn unsupported_curve_returns_none() {
 
 // The uniform-knot family — subtypes that store no knots (a standard rule
 // derives them) — plus a polyline, each anchored as an EDGE_CURVE. #90 is the
-// corpus form of a rational quasi-uniform complex instance (no WITH_KNOTS
+// form real files give a rational quasi-uniform complex instance (no WITH_KNOTS
 // part; the QUASI_UNIFORM_CURVE marker implies the knots).
 const UNIFORM_FAMILY: &str = "\
 #1=CARTESIAN_POINT('',(0.,0.,0.));\n\
@@ -411,7 +411,7 @@ fn uniform_family_curves_derive_their_knots() {
     ));
     assert_eq!(converted[0].control_points.len(), 5);
     assert_eq!(scene.warnings().len(), 1, "one bezier violation warning");
-    assert!(scene.warnings()[0].contains("knot family"));
+    assert!(scene.warnings()[0].message.contains("knot family"));
 }
 
 #[test]
@@ -442,7 +442,7 @@ fn complex_quasi_uniform_marker_implies_knots() {
     let (model, _rep) = read(src.as_bytes()).expect("read");
     let scene = model.scene();
 
-    // The corpus form: rational + QUASI_UNIFORM_CURVE marker, no WITH_KNOTS.
+    // The form real files use: rational + QUASI_UNIFORM_CURVE marker, no WITH_KNOTS.
     let complex = find(&scene, |c| matches!(c.kind(), CurveKind::Other("COMPLEX")));
     let n = complex.to_nurbs().expect("complex quasi-uniform → nurbs");
     assert_eq!(n.degree, 3);
@@ -554,8 +554,8 @@ fn trimmed_bspline_bases_extract_exact_segments() {
     );
 }
 
-// A trimmed B-spline with empty trim lists (a corpus-observed nonstandard
-// form) — no usable trim, so the conversion refuses with a warning.
+// A trimmed B-spline with empty trim lists (a nonstandard form seen in
+// real files) — no usable trim, so the conversion refuses with a warning.
 const TRIMMED_EMPTY: &str = "\
 #1=CARTESIAN_POINT('',(0.,0.,0.));\n\
 #2=CARTESIAN_POINT('',(1.,1.,0.));\n\
@@ -585,7 +585,7 @@ fn trimmed_bspline_with_empty_trims_warns() {
     let trimmed = find(&scene, |c| matches!(c.kind(), CurveKind::Trimmed(_)));
     assert!(trimmed.to_nurbs().is_none());
     assert_eq!(scene.warnings().len(), 1);
-    assert!(scene.warnings()[0].contains("no usable trim"));
+    assert!(scene.warnings()[0].message.contains("no usable trim"));
 }
 
 // Composite curves: a line chain, a mixed arc+line chain (degree elevation),
@@ -661,7 +661,7 @@ fn composite_curves_join_into_one_nurbs() {
     let joined: Vec<&NurbsCurve> = composites.iter().flatten().collect();
     assert_eq!(joined.len(), 3, "the disjoint chain refuses");
     assert_eq!(scene.warnings().len(), 1);
-    assert!(scene.warnings()[0].contains("do not join"));
+    assert!(scene.warnings()[0].message.contains("do not join"));
 
     // Two line chains (one with a reversed .F. segment) meet at (1,0,0) and
     // end at (1,1,0): degree 1, knots over two unit intervals.
@@ -880,4 +880,456 @@ fn edges_convert_to_bounded_nurbs() {
         "warnings: {:?}",
         scene.warnings()
     );
+}
+
+// One edge over the curve `#9` that `defs` defines, anchored in a solid.
+fn one_edge(defs: &str) -> String {
+    format!(
+        "{HEADER}{defs}\
+#90=CARTESIAN_POINT('',(0.,0.,0.));\n\
+#91=CARTESIAN_POINT('',(1.,0.,0.));\n\
+#92=VERTEX_POINT('',#90);\n\
+#93=VERTEX_POINT('',#91);\n\
+#94=EDGE_CURVE('',#92,#93,#9,.T.);\n\
+#95=ORIENTED_EDGE('',*,*,#94,.T.);\n\
+#96=EDGE_LOOP('',(#95));\n\
+#97=FACE_OUTER_BOUND('',#96,.T.);\n\
+#98=DIRECTION('',(0.,0.,1.));\n\
+#99=DIRECTION('',(1.,0.,0.));\n\
+#100=AXIS2_PLACEMENT_3D('',#90,#98,#99);\n\
+#101=PLANE('',#100);\n\
+#102=ADVANCED_FACE('',(#97),#101,.T.);\n\
+#103=CLOSED_SHELL('',(#102));\n\
+#104=MANIFOLD_SOLID_BREP('',#103);\n{FOOTER}"
+    )
+}
+
+// Neither the edge nor its curve converts, and the scene says why.
+fn refused(defs: &str, why: &str) {
+    let src = one_edge(defs);
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let edge = scene.all_edges().next().expect("the edge");
+    assert!(edge.to_nurbs().is_none());
+    assert!(edge.curve().to_nurbs().is_none());
+    let warnings = scene.warnings();
+    assert!(
+        warnings.iter().any(|w| w.message.contains(why)),
+        "warnings: {warnings:?}"
+    );
+}
+
+const THREE_POINTS: &str = "\
+#1=CARTESIAN_POINT('',(0.,0.,0.));\n\
+#2=CARTESIAN_POINT('',(1.,1.,0.));\n\
+#3=CARTESIAN_POINT('',(2.,0.,0.));\n";
+
+#[test]
+fn bspline_of_degree_zero_is_refused() {
+    refused(
+        &format!(
+            "{THREE_POINTS}#9=B_SPLINE_CURVE_WITH_KNOTS('',0,(#1,#2,#3),.UNSPECIFIED.,.F.,.F.,(1,1,2),(0.,1.,2.),.UNSPECIFIED.);\n"
+        ),
+        "degree out of range",
+    );
+}
+
+#[test]
+fn bspline_without_control_points_is_refused() {
+    refused(
+        "#9=B_SPLINE_CURVE_WITH_KNOTS('',1,(),.UNSPECIFIED.,.F.,.F.,(1,1),(0.,1.),.UNSPECIFIED.);\n",
+        "too few control points",
+    );
+}
+
+#[test]
+fn bspline_with_a_huge_multiplicity_is_refused() {
+    refused(
+        &format!(
+            "{THREE_POINTS}#9=B_SPLINE_CURVE_WITH_KNOTS('',1,(#1,#2,#3),.UNSPECIFIED.,.F.,.F.,(1000000000000000,1,2),(0.,1.,2.),.UNSPECIFIED.);\n"
+        ),
+        "inconsistent weight/knot count",
+    );
+}
+
+#[test]
+fn bspline_above_degree_25_is_refused() {
+    // Degree 30 with consistent counts: only the degree bound refuses it.
+    let points: Vec<String> = (1..=31)
+        .map(|i| format!("#{}=CARTESIAN_POINT('',({i}.,0.,0.));\n", 200 + i))
+        .collect();
+    let ids: Vec<String> = (1..=31).map(|i| format!("#{}", 200 + i)).collect();
+    refused(
+        &format!(
+            "{}#9=B_SPLINE_CURVE_WITH_KNOTS('',30,({}),.UNSPECIFIED.,.F.,.F.,(31,31),(0.,1.),.UNSPECIFIED.);\n",
+            points.concat(),
+            ids.join(",")
+        ),
+        "degree out of range",
+    );
+}
+
+#[test]
+fn bspline_trimmed_off_its_domain_is_refused() {
+    refused(
+        &format!(
+            "{THREE_POINTS}#8=B_SPLINE_CURVE_WITH_KNOTS('',1,(#1,#2,#3),.UNSPECIFIED.,.F.,.F.,(2,1,2),(0.,1.,2.),.UNSPECIFIED.);\n\
+#9=TRIMMED_CURVE('',#8,(PARAMETER_VALUE(0.5)),(PARAMETER_VALUE(5.)),.T.,.PARAMETER.);\n"
+        ),
+        "no usable trim",
+    );
+}
+
+// A unit circle `#8` trimmed into `#9` by two radian parameters (the file
+// has no angle unit).
+fn trimmed_circle(t1: &str, t2: &str, sense: &str) -> String {
+    format!(
+        "#4=CARTESIAN_POINT('',(0.,0.,0.));\n\
+#5=DIRECTION('',(0.,0.,1.));\n\
+#6=DIRECTION('',(1.,0.,0.));\n\
+#7=AXIS2_PLACEMENT_3D('',#4,#5,#6);\n\
+#8=CIRCLE('',#7,1.0);\n\
+#9=TRIMMED_CURVE('',#8,(PARAMETER_VALUE({t1})),(PARAMETER_VALUE({t2})),{sense},.PARAMETER.);\n"
+    )
+}
+
+fn trimmed_circle_nurbs(t1: &str, t2: &str, sense: &str) -> NurbsCurve {
+    let src = one_edge(&trimmed_circle(t1, t2, sense));
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let curve = scene.all_edges().next().expect("the edge").curve();
+    let arc = curve.to_nurbs().expect("an arc");
+    assert!(
+        scene.warnings().is_empty(),
+        "warnings: {:?}",
+        scene.warnings()
+    );
+    arc
+}
+
+#[test]
+fn conic_trims_beyond_a_turn_wind_within_one() {
+    // 1e17 rad: within one turn of 0, not 1.6e16 turns.
+    let arc = trimmed_circle_nurbs("0.", "1.E17", ".T.");
+    assert!(arc.control_points.len() <= 9);
+    assert!(arc.control_points.iter().flatten().all(|v| v.is_finite()));
+
+    // 3π the way it winds: the half turn π.
+    let arc = trimmed_circle_nurbs("0.", "9.42477796076938", ".T.");
+    assert_eq!(arc.control_points.len(), 5);
+    assert!(approx(&arc.control_points[4], &[-1., 0., 0.]));
+
+    // Just over a full turn (a rounding residue): the whole circle, not a sliver.
+    let arc = trimmed_circle_nurbs("0.", "6.2831853072", ".T.");
+    assert_eq!(arc.control_points.len(), 9);
+    assert!(approx(&arc.control_points[0], &arc.control_points[8]));
+}
+
+#[test]
+fn conic_trims_whose_span_overflows_are_refused() {
+    refused(
+        &trimmed_circle("-1.E308", "1.E308", ".T."),
+        "non-finite conic trim angle",
+    );
+}
+
+// A parabola (focal distance 2) and a hyperbola (semi-axes 3 and 1.5) in the
+// frame at (1,2,3). The parabola `#9` is an edge's curve directly; the
+// hyperbola sits under a `SURFACE_CURVE` on the plane there, the shape Open
+// CASCADE writes conics in.
+const CONICS: &str = "\
+#1=CARTESIAN_POINT('',(1.,2.,3.));\n\
+#2=DIRECTION('',(0.,0.,1.));\n\
+#3=DIRECTION('',(1.,0.,0.));\n\
+#4=AXIS2_PLACEMENT_3D('',#1,#2,#3);\n\
+#5=PLANE('',#4);\n\
+#7=HYPERBOLA('',#4,3.,1.5);\n\
+#9=PARABOLA('',#4,2.);\n\
+#10=SURFACE_CURVE('',#7,(#5),.CURVE_3D.);\n\
+#11=CARTESIAN_POINT('',(4.,2.,3.));\n\
+#12=CARTESIAN_POINT('',(6.,5.,3.));\n\
+#13=VERTEX_POINT('',#11);\n\
+#14=VERTEX_POINT('',#12);\n\
+#15=EDGE_CURVE('',#13,#14,#10,.T.);\n\
+#16=ORIENTED_EDGE('',*,*,#15,.T.);\n\
+#17=EDGE_LOOP('',(#16));\n\
+#18=FACE_OUTER_BOUND('',#17,.T.);\n\
+#19=ADVANCED_FACE('',(#18),#5,.T.);\n\
+#20=CLOSED_SHELL('',(#19));\n\
+#21=MANIFOLD_SOLID_BREP('',#20);\n";
+
+#[test]
+fn parabolas_and_hyperbolas_are_read_and_typed() {
+    let src = one_edge(CONICS);
+    let (model, report) = read(src.as_bytes()).expect("read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    let scene = model.scene();
+
+    let kinds: Vec<String> = scene
+        .all_edges()
+        .map(|e| match e.curve().kind() {
+            CurveKind::Parabola(p) => format!("parabola {}", p.focal_dist),
+            CurveKind::SurfaceCurve(sc) => match &sc.curve_3d {
+                step_io::model::CurveRef::Hyperbola(id) => {
+                    let h = &model[*id];
+                    format!("hyperbola {} {}", h.semi_axis, h.semi_imag_axis)
+                }
+                other => format!("{other:?}"),
+            },
+            other => format!("{other:?}"),
+        })
+        .collect();
+    assert_eq!(kinds, ["hyperbola 3 1.5", "parabola 2"]);
+    assert_eq!(model.all::<step_io::model::Hyperbola>().len(), 1);
+}
+
+#[test]
+fn parabolas_and_hyperbolas_are_written_back() {
+    let src = one_edge(CONICS);
+    let (model, _) = read(src.as_bytes()).expect("read");
+    let mut out = Vec::new();
+    step_io::write(&model, &mut out).expect("write");
+    let text = String::from_utf8(out).expect("ascii");
+    assert!(text.contains("PARABOLA('',"), "{text}");
+    assert!(text.contains("HYPERBOLA('',"), "{text}");
+
+    let (again, report) = read(text.as_bytes()).expect("re-read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    assert_eq!(again.all::<step_io::model::Parabola>().len(), 1);
+    assert_eq!(again.all::<step_io::model::Hyperbola>().len(), 1);
+}
+
+// The parabola `C + F(u² x + 2u y)` with F = 2 in the frame at (1,2,3) and the
+// hyperbola `C + 3 cosh(u) x + 1.5 sinh(u) y` there, for the conversions.
+const OPEN_CONIC_FRAME: &str = "\
+#1=CARTESIAN_POINT('',(1.,2.,3.));\n\
+#2=DIRECTION('',(0.,0.,1.));\n\
+#3=DIRECTION('',(1.,0.,0.));\n\
+#4=AXIS2_PLACEMENT_3D('',#1,#2,#3);\n\
+#5=PARABOLA('',#4,2.);\n\
+#6=HYPERBOLA('',#4,3.,1.5);\n";
+
+// One edge from `from` to `to` over the curve `#9` that `defs` defines.
+fn edge_between(defs: &str, from: [f64; 3], to: [f64; 3], same_sense: bool) -> String {
+    let p = |v: [f64; 3]| format!("({:?},{:?},{:?})", v[0], v[1], v[2]);
+    let sense = if same_sense { ".T." } else { ".F." };
+    format!(
+        "{HEADER}{defs}\
+#90=CARTESIAN_POINT('',{});\n\
+#91=CARTESIAN_POINT('',{});\n\
+#92=VERTEX_POINT('',#90);\n\
+#93=VERTEX_POINT('',#91);\n\
+#94=EDGE_CURVE('',#92,#93,#9,{sense});\n\
+#95=ORIENTED_EDGE('',*,*,#94,.T.);\n\
+#96=EDGE_LOOP('',(#95));\n\
+#97=FACE_OUTER_BOUND('',#96,.T.);\n\
+#100=AXIS2_PLACEMENT_3D('',#1,#2,#3);\n\
+#101=PLANE('',#100);\n\
+#102=ADVANCED_FACE('',(#97),#101,.T.);\n\
+#103=CLOSED_SHELL('',(#102));\n\
+#104=MANIFOLD_SOLID_BREP('',#103);\n{FOOTER}",
+        p(from),
+        p(to)
+    )
+}
+
+// Points along a degree-2 NURBS whose interior knots are all double — the
+// conic arcs `to_nurbs` makes — as rational quadratic Bézier pieces.
+fn quadratic_pieces(curve: &NurbsCurve, per_piece: usize) -> Vec<[f64; 3]> {
+    assert_eq!(curve.degree, 2);
+    let mut out = Vec::new();
+    for piece in 0..(curve.control_points.len() - 1) / 2 {
+        let points = &curve.control_points[2 * piece..=2 * piece + 2];
+        let weights = &curve.weights[2 * piece..=2 * piece + 2];
+        for step in 0..=per_piece {
+            #[allow(clippy::cast_precision_loss)]
+            let t = step as f64 / per_piece as f64;
+            let basis = [(1.0 - t) * (1.0 - t), 2.0 * t * (1.0 - t), t * t];
+            let den: f64 = (0..3).map(|j| basis[j] * weights[j]).sum();
+            out.push(std::array::from_fn(|axis| {
+                (0..3)
+                    .map(|j| basis[j] * weights[j] * points[j][axis])
+                    .sum::<f64>()
+                    / den
+            }));
+        }
+    }
+    out
+}
+
+fn parabola_at(u: f64) -> [f64; 3] {
+    [1.0 + 2.0 * u * u, 2.0 + 4.0 * u, 3.0]
+}
+
+fn hyperbola_at(u: f64) -> [f64; 3] {
+    [1.0 + 3.0 * u.cosh(), 2.0 + 1.5 * u.sinh(), 3.0]
+}
+
+#[test]
+fn parabola_edges_convert_exactly() {
+    let defs = format!("{OPEN_CONIC_FRAME}#9=SURFACE_CURVE('',#5,(#101),.CURVE_3D.);\n");
+    for (from, to, same_sense) in [(-1.0, 2.0, true), (2.0, -1.0, false)] {
+        let src = edge_between(&defs, parabola_at(from), parabola_at(to), same_sense);
+        let (model, _rep) = read(src.as_bytes()).expect("read");
+        let scene = model.scene();
+        let edge = scene.all_edges().next().expect("the edge");
+        let n = edge.to_nurbs().expect("a parabola edge converts");
+        // The quadratic Bézier from λ(from) to λ(to) through the tangents'
+        // crossing, C + F(u0·u1 x + (u0+u1) y).
+        let middle = [1.0 + 2.0 * from * to, 2.0 + 2.0 * (from + to), 3.0];
+        assert!(approx(
+            &cp_flat(&n),
+            &[parabola_at(from), middle, parabola_at(to)].concat()
+        ));
+        assert_eq!(n.weights, vec![1.0; 3]);
+        assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+    }
+}
+
+#[test]
+fn hyperbola_edges_convert_exactly() {
+    let defs = format!("{OPEN_CONIC_FRAME}#9=SURFACE_CURVE('',#6,(#101),.CURVE_3D.);\n");
+    let (from, to) = (-0.5, 2.5);
+    let src = edge_between(&defs, hyperbola_at(from), hyperbola_at(to), true);
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let n = scene
+        .all_edges()
+        .next()
+        .expect("the edge")
+        .to_nurbs()
+        .expect("converts");
+    // Three pieces of width 1, each weight cosh(1/2).
+    assert_eq!(n.control_points.len(), 7);
+    let pts = quadratic_pieces(&n, 50);
+    assert!(approx(&pts[0], &hyperbola_at(from)));
+    assert!(approx(pts.last().unwrap(), &hyperbola_at(to)));
+    for p in pts {
+        let (lx, ly) = ((p[0] - 1.0) / 3.0, (p[1] - 2.0) / 1.5);
+        assert!(lx > 0.0, "on the x branch");
+        assert!((lx * lx - ly * ly - 1.0).abs() < 1e-12 * (lx * lx + ly * ly));
+    }
+}
+
+#[test]
+fn trimmed_parabolas_follow_their_points() {
+    // As Open CASCADE writes them: each trim a point plus its own parameter
+    // `2F·u` (here -4 and 6 for u = -1 and 1.5), parameter preferred. The
+    // points place the segment.
+    let defs = format!(
+        "{OPEN_CONIC_FRAME}#7=CARTESIAN_POINT('',(3.,-2.,3.));\n\
+#8=CARTESIAN_POINT('',(5.5,8.,3.));\n\
+#9=TRIMMED_CURVE('',#5,(#7,PARAMETER_VALUE(-4.)),(#8,PARAMETER_VALUE(6.)),.T.,.PARAMETER.);\n"
+    );
+    let src = one_edge(&defs);
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let n = scene
+        .all_edges()
+        .next()
+        .unwrap()
+        .curve()
+        .to_nurbs()
+        .expect("converts");
+    assert!(approx(&n.control_points[0], &parabola_at(-1.0)));
+    assert!(approx(&n.control_points[2], &parabola_at(1.5)));
+
+    // A trim by parameter alone is read as the standard's u.
+    let defs = format!(
+        "{OPEN_CONIC_FRAME}#9=TRIMMED_CURVE('',#5,(PARAMETER_VALUE(-1.)),(PARAMETER_VALUE(1.5)),.T.,.PARAMETER.);\n"
+    );
+    let src = one_edge(&defs);
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let n = scene
+        .all_edges()
+        .next()
+        .unwrap()
+        .curve()
+        .to_nurbs()
+        .expect("converts");
+    assert!(approx(&n.control_points[0], &parabola_at(-1.0)));
+    assert!(approx(&n.control_points[2], &parabola_at(1.5)));
+}
+
+#[test]
+fn open_conics_alone_or_closed_do_not_convert() {
+    // The whole curve is unbounded, like a line.
+    let defs = format!("{OPEN_CONIC_FRAME}#9=PARABOLA('',#4,2.);\n");
+    let src = edge_between(&defs, parabola_at(1.0), parabola_at(1.0), true);
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let edge = scene.all_edges().next().unwrap();
+    assert!(edge.curve().to_nurbs().is_none());
+    assert!(edge.to_nurbs().is_none(), "a closed edge on an open curve");
+    assert!(
+        scene
+            .warnings()
+            .iter()
+            .any(|w| w.message.contains("closed edge on a parabola")),
+        "{:?}",
+        scene.warnings()
+    );
+}
+
+#[test]
+fn trimmed_hyperbolas_and_flipped_parabolas_convert_exactly() {
+    // A hyperbola trimmed by parameter alone: the standard's u, which Open
+    // CASCADE shares for a hyperbola.
+    let defs = format!(
+        "{OPEN_CONIC_FRAME}#9=TRIMMED_CURVE('',#6,(PARAMETER_VALUE(-1.)),(PARAMETER_VALUE(2.)),.T.,.PARAMETER.);\n"
+    );
+    let src = one_edge(&defs);
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let n = scene
+        .all_edges()
+        .next()
+        .unwrap()
+        .curve()
+        .to_nurbs()
+        .expect("converts");
+    assert_eq!(n.control_points.len(), 7, "three pieces of width 1");
+    let pts = quadratic_pieces(&n, 50);
+    assert!(approx(&pts[0], &hyperbola_at(-1.0)));
+    assert!(approx(pts.last().unwrap(), &hyperbola_at(2.0)));
+
+    // A negative focal distance opens the parabola along -x: C + F(u² x + 2u y)
+    // with F = -2.
+    let flipped_at = |u: f64| [1.0 - 2.0 * u * u, 2.0 - 4.0 * u, 3.0];
+    let defs = format!(
+        "{OPEN_CONIC_FRAME}#8=PARABOLA('',#4,-2.);\n#9=SURFACE_CURVE('',#8,(#101),.CURVE_3D.);\n"
+    );
+    let src = edge_between(&defs, flipped_at(-1.0), flipped_at(2.0), true);
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let n = scene
+        .all_edges()
+        .next()
+        .unwrap()
+        .to_nurbs()
+        .expect("converts");
+    // C + F(u0·u1 x + (u0+u1) y) with u0 = -1, u1 = 2.
+    let (u0, u1) = (-1.0, 2.0);
+    let middle = [1.0 - 2.0 * (u0 * u1), 2.0 - 2.0 * (u0 + u1), 3.0];
+    assert!(approx(
+        &cp_flat(&n),
+        &[flipped_at(-1.0), middle, flipped_at(2.0)].concat()
+    ));
+}
+
+#[test]
+fn a_surface_curve_leads_to_its_3d_curve() {
+    let defs = format!("{OPEN_CONIC_FRAME}#9=SURFACE_CURVE('',#5,(#101),.CURVE_3D.);\n");
+    let src = edge_between(&defs, parabola_at(-1.0), parabola_at(2.0), true);
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let curve = scene.all_edges().next().expect("the edge").curve();
+    assert!(matches!(curve.kind(), CurveKind::SurfaceCurve(_)));
+    let basis = curve.curve_3d().expect("a surface curve has a 3D curve");
+    let CurveKind::Parabola(p) = basis.kind() else {
+        panic!("the PARABOLA, got {:?}", basis.kind())
+    };
+    assert_eq!(p.focal_dist, 2.0);
+    assert!(basis.curve_3d().is_none(), "a parabola is not on a surface");
 }

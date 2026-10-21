@@ -21,14 +21,22 @@ impl Scene<'_> {
     /// the precise b-rep solid where the file provides one).
     pub fn all_mesh_groups(&self) -> impl Iterator<Item = MeshGroup<'_>> + '_ {
         let cx = self.ctx();
-        let solids = (0..cx.model.tessellated_solid_arena.items.len()).map(move |i| MeshGroup {
-            cx,
-            which: GroupImpl::Solid(m::TessellatedSolidId(i)),
-        });
-        let shells = (0..cx.model.tessellated_shell_arena.items.len()).map(move |i| MeshGroup {
-            cx,
-            which: GroupImpl::Shell(m::TessellatedShellId(i)),
-        });
+        let solids = cx
+            .model
+            .tessellated_solid_arena
+            .indices()
+            .map(move |i| MeshGroup {
+                cx,
+                which: GroupImpl::Solid(m::TessellatedSolidId(i)),
+            });
+        let shells = cx
+            .model
+            .tessellated_shell_arena
+            .indices()
+            .map(move |i| MeshGroup {
+                cx,
+                which: GroupImpl::Shell(m::TessellatedShellId(i)),
+            });
         solids.chain(shells)
     }
 
@@ -36,19 +44,30 @@ impl Scene<'_> {
     /// `COMPLEX_TRIANGULATED_SURFACE_SET` and plain `TESSELLATED_FACE`).
     pub fn all_meshes(&self) -> impl Iterator<Item = Mesh<'_>> + '_ {
         let cx = self.ctx();
-        let faces = (0..cx.model.complex_triangulated_face_arena.items.len()).map(move |i| Mesh {
-            cx,
-            which: MeshImpl::ComplexFace(m::ComplexTriangulatedFaceId(i)),
-        });
-        let sets =
-            (0..cx.model.complex_triangulated_surface_set_arena.items.len()).map(move |i| Mesh {
+        let faces = cx
+            .model
+            .complex_triangulated_face_arena
+            .indices()
+            .map(move |i| Mesh {
+                cx,
+                which: MeshImpl::ComplexFace(m::ComplexTriangulatedFaceId(i)),
+            });
+        let sets = cx
+            .model
+            .complex_triangulated_surface_set_arena
+            .indices()
+            .map(move |i| Mesh {
                 cx,
                 which: MeshImpl::ComplexSurfaceSet(m::ComplexTriangulatedSurfaceSetId(i)),
             });
-        let plain = (0..cx.model.tessellated_face_arena.items.len()).map(move |i| Mesh {
-            cx,
-            which: MeshImpl::PlainFace(m::TessellatedFaceId(i)),
-        });
+        let plain = cx
+            .model
+            .tessellated_face_arena
+            .indices()
+            .map(move |i| Mesh {
+                cx,
+                which: MeshImpl::PlainFace(m::TessellatedFaceId(i)),
+            });
         faces.chain(sets).chain(plain)
     }
 }
@@ -82,7 +101,7 @@ pub enum MeshNormals {
 type MeshParts<'m> = (
     &'m str,
     &'m m::CoordinatesListRef,
-    &'m [Vec<f64>],
+    &'m [m::Reals3],
     &'m [i64],
     &'m [Vec<i64>],
     &'m [Vec<i64>],
@@ -102,7 +121,7 @@ impl<'m> Mesh<'m> {
             MeshImpl::ComplexFace(i) => {
                 let f = self.cx.model.complex_triangulated_face_arena.get(i.0);
                 (
-                    &f.name,
+                    self.cx.model.text(f.name),
                     &f.coordinates,
                     &f.normals,
                     &f.pnindex,
@@ -117,7 +136,7 @@ impl<'m> Mesh<'m> {
                     .complex_triangulated_surface_set_arena
                     .get(i.0);
                 (
-                    &s.name,
+                    self.cx.model.text(s.name),
                     &s.coordinates,
                     &s.normals,
                     &s.pnindex,
@@ -127,7 +146,14 @@ impl<'m> Mesh<'m> {
             }
             MeshImpl::PlainFace(i) => {
                 let f = self.cx.model.tessellated_face_arena.get(i.0);
-                (&f.name, &f.coordinates, &f.normals, &[], &[], &[])
+                (
+                    self.cx.model.text(f.name),
+                    &f.coordinates,
+                    &f.normals,
+                    &[],
+                    &[],
+                    &[],
+                )
             }
         }
     }
@@ -143,6 +169,44 @@ impl<'m> Mesh<'m> {
             MeshImpl::ComplexSurfaceSet(i) => m::EntityKey::ComplexTriangulatedSurfaceSet(i),
             MeshImpl::PlainFace(i) => m::EntityKey::TessellatedFace(i),
         }
+    }
+
+    /// The colour styled onto this mesh, if any.
+    pub fn color(&self) -> Option<crate::scene::presentation::Rgb> {
+        let this = self.about();
+        crate::scene::presentation::colour_of(this.cx, this.key())
+    }
+
+    /// The transparency styled onto this mesh (`0.0` opaque … `1.0` fully
+    /// transparent), if any.
+    pub fn transparency(&self) -> Option<f64> {
+        let this = self.about();
+        crate::scene::presentation::transparency_of(this.cx, this.key())
+    }
+
+    /// The name of the presentation layer this mesh belongs to, if any.
+    pub fn layer(&self) -> Option<&'m str> {
+        crate::scene::presentation::layer_of(self.cx, self.key())
+    }
+
+    /// Whether this mesh is visible — `false` if an `INVISIBILITY` hides it
+    /// (via its styled item or its layer). Defaults to visible.
+    pub fn is_visible(&self) -> bool {
+        crate::scene::presentation::is_visible(self.cx, self.key())
+    }
+
+    /// A mesh reached as a `GEOMETRIC_ITEM_SPECIFIC_USAGE` identified item (used
+    /// by `pmi` feature geometry); `None` for an item that is not a mesh.
+    pub(crate) fn from_model_item(cx: Ctx<'m>, r: &m::GeometricModelItemRef) -> Option<Self> {
+        let which = match r {
+            m::GeometricModelItemRef::ComplexTriangulatedFace(i) => MeshImpl::ComplexFace(*i),
+            m::GeometricModelItemRef::ComplexTriangulatedSurfaceSet(i) => {
+                MeshImpl::ComplexSurfaceSet(*i)
+            }
+            m::GeometricModelItemRef::TessellatedFace(i) => MeshImpl::PlainFace(*i),
+            _ => return None,
+        };
+        Some(Mesh { cx, which })
     }
 
     /// The vertex positions, `pnindex` resolved: entry `n` is the position of
@@ -176,9 +240,10 @@ impl<'m> Mesh<'m> {
     /// triangle with a warning. A plain `TESSELLATED_FACE` stores no
     /// triangles, so its list is empty.
     pub fn triangles(&self) -> Vec<[usize; 3]> {
-        let (_, _, _, _, strips, fans) = self.parts();
-        let n = self.points().len();
-        let cx = self.cx;
+        let this = self.about();
+        let (_, _, _, _, strips, fans) = this.parts();
+        let n = this.points().len();
+        let cx = this.cx;
         let mut out = Vec::new();
         let mut push = |a: i64, b: i64, c: i64| {
             let tri: Option<Vec<usize>> = [a, b, c]
@@ -225,15 +290,16 @@ impl<'m> Mesh<'m> {
     /// The normals, as stored: none, one for the whole mesh, or one per
     /// vertex. Any other count is malformed and reported as a warning.
     pub fn normals(&self) -> MeshNormals {
-        let (_, _, normals, ..) = self.parts();
+        let this = self.about();
+        let (_, _, normals, ..) = this.parts();
         match normals.len() {
             0 => MeshNormals::None,
             1 => MeshNormals::Uniform(row3(&normals[0])),
-            k if k == self.points().len() => {
+            k if k == this.points().len() => {
                 MeshNormals::PerVertex(normals.iter().map(|row| row3(row)).collect())
             }
             _ => {
-                self.cx
+                this.cx
                     .warn("MESH.normals: count is neither 1 nor per-vertex".to_owned());
                 MeshNormals::None
             }
@@ -262,6 +328,7 @@ impl<'m> Mesh<'m> {
         }?;
         match link {
             m::FaceOrSurfaceRef::AdvancedFace(id) => Some(Face::from_advanced_face(self.cx, *id)),
+            m::FaceOrSurfaceRef::FaceSurface(id) => Some(Face::from_face_surface(self.cx, *id)),
             _ => None,
         }
     }
@@ -296,8 +363,14 @@ impl<'m> MeshGroup<'m> {
 
     pub fn name(&self) -> &'m str {
         match self.which {
-            GroupImpl::Solid(i) => &self.cx.model.tessellated_solid_arena.get(i.0).name,
-            GroupImpl::Shell(i) => &self.cx.model.tessellated_shell_arena.get(i.0).name,
+            GroupImpl::Solid(i) => self
+                .cx
+                .model
+                .text(self.cx.model.tessellated_solid_arena.get(i.0).name),
+            GroupImpl::Shell(i) => self
+                .cx
+                .model
+                .text(self.cx.model.tessellated_shell_arena.get(i.0).name),
         }
     }
 
@@ -309,30 +382,49 @@ impl<'m> MeshGroup<'m> {
         }
     }
 
+    /// The colour styled onto this mesh group, if any.
+    pub fn color(&self) -> Option<crate::scene::presentation::Rgb> {
+        let this = self.about();
+        crate::scene::presentation::colour_of(this.cx, this.key())
+    }
+
+    /// The transparency styled onto this mesh group (`0.0` opaque … `1.0` fully
+    /// transparent), if any.
+    pub fn transparency(&self) -> Option<f64> {
+        let this = self.about();
+        crate::scene::presentation::transparency_of(this.cx, this.key())
+    }
+
+    /// The name of the presentation layer this mesh group belongs to, if any.
+    pub fn layer(&self) -> Option<&'m str> {
+        crate::scene::presentation::layer_of(self.cx, self.key())
+    }
+
+    /// Whether this mesh group is visible — `false` if an `INVISIBILITY` hides it
+    /// (via its styled item or its layer). Defaults to visible.
+    pub fn is_visible(&self) -> bool {
+        crate::scene::presentation::is_visible(self.cx, self.key())
+    }
+
     /// The mesh faces bundled in this group.
-    pub fn meshes(&self) -> Vec<Mesh<'m>> {
+    pub fn meshes(&self) -> impl Iterator<Item = Mesh<'m>> + 'm {
         let cx = self.cx;
-        self.items()
-            .iter()
-            .filter_map(|it| {
-                let which = match it {
-                    m::TessellatedStructuredItemRef::ComplexTriangulatedFace(id) => {
-                        MeshImpl::ComplexFace(*id)
-                    }
-                    m::TessellatedStructuredItemRef::TessellatedFace(id) => {
-                        MeshImpl::PlainFace(*id)
-                    }
-                    _ => return None,
-                };
-                Some(Mesh { cx, which })
-            })
-            .collect()
+        self.items().iter().filter_map(move |it| {
+            let which = match it {
+                m::TessellatedStructuredItemRef::ComplexTriangulatedFace(id) => {
+                    MeshImpl::ComplexFace(*id)
+                }
+                m::TessellatedStructuredItemRef::TessellatedFace(id) => MeshImpl::PlainFace(*id),
+                _ => return None,
+            };
+            Some(Mesh { cx, which })
+        })
     }
 
     /// The precise b-rep solid this group tessellates, where the file links
     /// one: a tessellated solid links it directly (`geometric_link`); a
     /// tessellated shell links the closed shell (`topological_link`), reached
-    /// back through the solid that owns it.
+    /// back through the solid it bounds — as its outer shell or a cavity.
     pub fn solid(&self) -> Option<Solid<'m>> {
         let cx = self.cx;
         match self.which {
@@ -361,26 +453,7 @@ impl<'m> MeshGroup<'m> {
                 let m::ConnectedFaceSetRef::ClosedShell(shell_id) = link else {
                     return None;
                 };
-                let rg = cx.ref_graph();
-                let outer_is = |outer: &m::ClosedShellRef| matches!(outer, m::ClosedShellRef::ClosedShell(s) if s == shell_id);
-                for r in rg.referrers(m::EntityKey::ClosedShell(*shell_id)) {
-                    match r {
-                        m::EntityKey::ManifoldSolidBrep(sid) => {
-                            let brep = cx.model.manifold_solid_brep_arena.get(sid.0);
-                            if outer_is(&brep.outer) {
-                                return Some(Solid::from_id(cx, *sid));
-                            }
-                        }
-                        m::EntityKey::BrepWithVoids(sid) => {
-                            let brep = cx.model.brep_with_voids_arena.get(sid.0);
-                            if outer_is(&brep.outer) {
-                                return Some(Solid::from_void_id(cx, *sid));
-                            }
-                        }
-                        _ => {}
-                    }
-                }
-                None
+                Solid::of_closed_shell(cx, *shell_id)
             }
         }
     }
@@ -403,3 +476,5 @@ impl<'m> Mesh<'m> {
         None
     }
 }
+
+about_by_key!(Mesh, MeshGroup);

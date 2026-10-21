@@ -2,14 +2,16 @@
 //! skeleton (contexts, SI units, product chains, shape anchors) and its
 //! output navigates cleanly through the read-side `Scene`.
 
+mod common;
+
 use step_io::{StepBuilder, read};
 
 #[test]
 fn builder_skeleton_round_trips_and_reads_back() {
-    let mut b = StepBuilder::new().expect("builder");
-    b.part("wheel").expect("wheel");
-    b.part("axle").expect("axle");
-    let text = b.finish().expect("finish");
+    let mut b = StepBuilder::new();
+    b.part("wheel");
+    b.part("axle");
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -29,25 +31,37 @@ fn builder_skeleton_round_trips_and_reads_back() {
 
     // Skeleton entities present: header stamping targets and the per-part
     // shape chain.
-    assert_eq!(model.application_context_arena.items.len(), 1);
-    assert_eq!(model.application_protocol_definition_arena.items.len(), 1);
-    assert_eq!(model.shape_definition_representation_arena.items.len(), 2);
-    assert_eq!(model.shape_representation_arena.items.len(), 2);
-    assert_eq!(model.product_related_product_category_arena.items.len(), 1);
+    assert_eq!(model.all::<step_io::model::ApplicationContext>().len(), 1);
+    assert_eq!(
+        model
+            .all::<step_io::model::ApplicationProtocolDefinition>()
+            .len(),
+        1
+    );
+    assert_eq!(
+        model
+            .all::<step_io::model::ShapeDefinitionRepresentation>()
+            .len(),
+        2
+    );
+    assert_eq!(model.all::<step_io::model::ShapeRepresentation>().len(), 2);
+    assert_eq!(
+        model
+            .all::<step_io::model::ProductRelatedProductCategory>()
+            .len(),
+        1
+    );
 }
 
 #[test]
 fn builder_with_no_parts_still_emits_a_valid_file() {
-    let b = StepBuilder::new().expect("builder");
-    let text = b.finish().expect("finish");
+    let b = StepBuilder::new();
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
-    assert!(
-        model.product_arena.items.is_empty(),
-        "products: {:?}",
-        model.product_arena.items
-    );
+    let products: Vec<_> = model.all::<step_io::model::Product>().collect();
+    assert!(products.is_empty(), "products: {products:?}");
     // The unit context survives as a root: units still readable.
     assert!(model.scene().units().length.is_some());
 }
@@ -61,8 +75,8 @@ fn metre_units_and_custom_uncertainty_round_trip() {
         uncertainty: 1e-5,
     })
     .expect("builder");
-    b.part("hull").expect("part");
-    let text = b.finish().expect("finish");
+    b.part("hull");
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);

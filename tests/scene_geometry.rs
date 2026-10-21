@@ -4,8 +4,8 @@
 //! reference-resolvable (read does not enforce topological closure), so this is a
 //! deliberately minimal solid: one planar face, one outer bound, one edge.
 
-use step_io::read;
-use step_io::scene::geometry::{CurveKind, SurfaceKind};
+use step_io::scene::{CurveKind, SurfaceKind};
+use step_io::{Orientation, read};
 
 const HEADER: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\n\
 FILE_NAME('','',(''),(''),'','','');\n\
@@ -184,9 +184,9 @@ fn reads_visibility() {
     assert!(only_face_visible(&format!("{HEADER}{BREP}{FOOTER}")));
 }
 
-// A curve style (colour + width + line font) on the edge's underlying LINE #18 —
-// curve styles apply to curve geometry (reached via `edge.curve()`), not the
-// topological EDGE_CURVE.
+// A curve style (colour + width + line font) on the edge's underlying LINE #18,
+// reached through `edge.curve()`. Files style the EDGE_CURVE itself as often;
+// see `reads_edge_and_point_styles`.
 const CURVE_STYLE: &str = "\
 #30=REPRESENTATION_CONTEXT('','3D');\n\
 #31=COLOUR_RGB('',0.1,0.2,0.3);\n\
@@ -224,6 +224,55 @@ fn reads_curve_style() {
     let s2 = m2.scene();
     let c2 = s2.all_edges().next().expect("an edge").curve();
     assert!(c2.color().is_none() && c2.width().is_none() && c2.line_font().is_none());
+}
+
+// A curve style on the topological EDGE_CURVE #21 and a point style on its
+// start point #10.
+const EDGE_POINT_STYLE: &str = "\
+#30=REPRESENTATION_CONTEXT('','3D');\n\
+#31=COLOUR_RGB('',0.1,0.2,0.3);\n\
+#32=DRAUGHTING_PRE_DEFINED_CURVE_FONT('dashed');\n\
+#33=CURVE_STYLE('cs',#32,POSITIVE_LENGTH_MEASURE(0.25),#31);\n\
+#34=PRESENTATION_STYLE_ASSIGNMENT((#33));\n\
+#35=STYLED_ITEM('',(#34),#21);\n\
+#40=COLOUR_RGB('',0.9,0.8,0.7);\n\
+#41=POINT_STYLE('ps',$,$,#40);\n\
+#42=PRESENTATION_STYLE_ASSIGNMENT((#41));\n\
+#43=STYLED_ITEM('',(#42),#10);\n\
+#44=PRESENTATION_LAYER_ASSIGNMENT('marks','',(#10));\n\
+#36=MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION('',(#35,#43),#30);\n";
+
+#[test]
+fn reads_edge_and_point_styles() {
+    let src = format!("{HEADER}{BREP}{EDGE_POINT_STYLE}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+
+    let edge = scene.all_edges().next().expect("an edge");
+    let c = edge.color().expect("the edge is coloured");
+    assert!(
+        (c.red - 0.1).abs() < 1e-9 && (c.blue - 0.3).abs() < 1e-9,
+        "{c:?}"
+    );
+    assert_eq!(edge.width(), Some(0.25));
+    assert_eq!(edge.line_font(), Some("dashed"));
+    assert!(
+        edge.curve().color().is_none(),
+        "the LINE itself is unstyled"
+    );
+    assert!(edge.is_visible() && edge.layer().is_none());
+
+    let point = edge
+        .start()
+        .and_then(|v| v.point())
+        .expect("the start point");
+    let pc = point.color().expect("the point's marker colour");
+    assert!(
+        (pc.red - 0.9).abs() < 1e-9 && (pc.blue - 0.7).abs() < 1e-9,
+        "{pc:?}"
+    );
+    assert_eq!(point.layer(), Some("marks"));
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
 }
 
 #[test]
@@ -396,14 +445,14 @@ fn bounds_expose_the_orientation_layers() {
     let bound = face.bounds().next().expect("bound");
 
     // The whole-loop flag (.F. here) and the outer/inner distinction.
-    assert!(!bound.orientation());
+    assert_eq!(bound.orientation(), Orientation::Reversed);
     assert!(!bound.is_outer());
 
     // Per-edge orientation is preserved in loop order (edge identity via key).
     let oriented: Vec<_> = bound.oriented_edges().collect();
     assert_eq!(oriented.len(), 2);
-    assert!(oriented[0].1, "first oriented edge is forward");
-    assert!(!oriented[1].1, "second oriented edge is reversed");
+    assert_eq!(oriented[0].1, Orientation::Forward, "first oriented edge");
+    assert_eq!(oriented[1].1, Orientation::Reversed, "second oriented edge");
 
     // edges() is the same walk without the flag.
     let plain: Vec<_> = bound.edges().map(|e| e.key()).collect();

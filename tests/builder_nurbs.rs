@@ -3,10 +3,12 @@
 //! read side's `to_nurbs()`. Non-rational data lands as plain
 //! `B_SPLINE_*_WITH_KNOTS`; rational data as the multi-part complex.
 
+mod common;
+
 use step_io::build::{CurveInput, FaceBoundInput, Frame, SurfaceInput};
-use step_io::build::{NurbsCurve, NurbsSurface};
-use step_io::scene::geometry::{CurveKind, SurfaceKind};
-use step_io::{StepBuilder, read};
+use step_io::scene::{CurveKind, SurfaceKind};
+use step_io::scene::{NurbsCurve, NurbsSurface};
+use step_io::{Orientation, StepBuilder, read};
 
 fn frame(origin: [f64; 3], axis: [f64; 3], ref_dir: [f64; 3]) -> Frame {
     Frame {
@@ -35,8 +37,8 @@ fn bilinear_top(weight: f64) -> NurbsSurface {
 /// The cube from the b-rep test, with the top face over `top_patch` and one
 /// bottom edge as a degree-1 NURBS line. Returns the emitted text.
 fn nurbs_cube(top_patch: NurbsSurface, nurbs_edge: &NurbsCurve) -> String {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("cube").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("cube");
 
     let mut v = Vec::new();
     for z in 0..2 {
@@ -75,8 +77,8 @@ fn nurbs_cube(top_patch: NurbsSurface, nurbs_edge: &NurbsCurve) -> String {
     }
     let edge = |a_ix: usize, b_ix: usize| {
         e.get(&(a_ix, b_ix))
-            .map(|id| (*id, true))
-            .or_else(|| e.get(&(b_ix, a_ix)).map(|id| (*id, false)))
+            .map(|id| (*id, Orientation::Forward))
+            .or_else(|| e.get(&(b_ix, a_ix)).map(|id| (*id, Orientation::Reversed)))
             .expect("edge exists")
     };
 
@@ -110,7 +112,7 @@ fn nurbs_cube(top_patch: NurbsSurface, nurbs_edge: &NurbsCurve) -> String {
         faces.push(
             b.face(
                 SurfaceInput::Plane(f),
-                true,
+                Orientation::Forward,
                 vec![FaceBoundInput::outer(edges)],
             )
             .expect("face"),
@@ -124,13 +126,13 @@ fn nurbs_cube(top_patch: NurbsSurface, nurbs_edge: &NurbsCurve) -> String {
     faces.push(
         b.face(
             SurfaceInput::Nurbs(top_patch),
-            true,
+            Orientation::Forward,
             vec![FaceBoundInput::outer(edges)],
         )
         .expect("nurbs face"),
     );
     b.solid(part, "cube body", faces).expect("solid");
-    b.finish().expect("finish")
+    common::text(&b.finish())
 }
 
 fn nurbs_line() -> NurbsCurve {
@@ -169,7 +171,7 @@ fn non_rational_nurbs_round_trips_identically() {
     let mut nurbs_edges = 0;
     for face in &faces {
         for bound in face.bounds() {
-            for (edge, _forward) in bound.oriented_edges() {
+            for (edge, _orientation) in bound.oriented_edges() {
                 if matches!(edge.curve().kind(), CurveKind::BSplineWithKnots(_)) {
                     nurbs_edges += 1;
                     assert_eq!(edge.curve().to_nurbs(), Some(line.clone()));
@@ -191,7 +193,7 @@ fn rational_nurbs_surface_round_trips_via_complex() {
 
     // Baseline complexes: 3 unit complexes + 1 context complex + 1 rational
     // surface complex.
-    assert_eq!(model.complex_unit_arena.items.len(), 5);
+    assert_eq!(model.all::<step_io::model::ComplexEntity>().len(), 5);
 
     let scene = model.scene();
     let solids: Vec<_> = scene.all_solids().collect();
@@ -214,8 +216,8 @@ fn rational_nurbs_curve_round_trips_via_complex() {
         knots: vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
     };
 
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("pie").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("pie");
     let center = b.vertex([0.0, 0.0, 0.0]).expect("center");
     let start = b.vertex([1.0, 0.0, 0.0]).expect("start");
     let end = b.vertex([0.0, 1.0, 0.0]).expect("end");
@@ -227,16 +229,16 @@ fn rational_nurbs_curve_round_trips_via_complex() {
     let face = b
         .face(
             SurfaceInput::Plane(frame([0.0; 3], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0])),
-            true,
+            Orientation::Forward,
             vec![FaceBoundInput::outer(vec![
-                (spoke_in, true),
-                (rim, true),
-                (spoke_out, true),
+                (spoke_in, Orientation::Forward),
+                (rim, Orientation::Forward),
+                (spoke_out, Orientation::Forward),
             ])],
         )
         .expect("pie face");
     b.solid(part, "pie", vec![face]).expect("solid");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -246,7 +248,7 @@ fn rational_nurbs_curve_round_trips_via_complex() {
     let faces: Vec<_> = solids[0].faces().collect();
     let mut rational_edges = 0;
     for bound in faces[0].bounds() {
-        for (edge, _forward) in bound.oriented_edges() {
+        for (edge, _orientation) in bound.oriented_edges() {
             if edge.curve().to_nurbs() == Some(arc.clone()) {
                 rational_edges += 1;
             }
@@ -257,8 +259,8 @@ fn rational_nurbs_curve_round_trips_via_complex() {
 
 #[test]
 fn analytic_surface_kinds_round_trip() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("shapes").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("shapes");
     let z = [0.0, 0.0, 1.0];
     let x = [1.0, 0.0, 0.0];
 
@@ -276,14 +278,14 @@ fn analytic_surface_kinds_round_trip() {
         faces.push(
             b.face(
                 surface,
-                true,
-                vec![FaceBoundInput::outer(vec![(rim, true)])],
+                Orientation::Forward,
+                vec![FaceBoundInput::outer(vec![(rim, Orientation::Forward)])],
             )
             .expect("face"),
         );
     }
     b.solid(part, "shapes", faces).expect("solid");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -300,4 +302,194 @@ fn analytic_surface_kinds_round_trip() {
         })
         .collect();
     assert_eq!(kinds, [true, true, true]);
+}
+
+#[test]
+fn nurbs_that_break_the_standard_are_rejected() {
+    let mut b = StepBuilder::new();
+    let v0 = b.vertex([0.0, 0.0, 0.0]).expect("v0");
+    let v1 = b.vertex([1.0, 0.0, 0.0]).expect("v1");
+    let line = nurbs_line();
+    let broken = [
+        (
+            "degree below 1",
+            NurbsCurve {
+                degree: 0,
+                knots: vec![0.0, 1.0, 2.0],
+                ..line.clone()
+            },
+        ),
+        (
+            "knot count",
+            NurbsCurve {
+                knots: vec![0.0, 0.0, 1.0],
+                ..line.clone()
+            },
+        ),
+        (
+            "knots decrease",
+            NurbsCurve {
+                knots: vec![0.0, 1.0, 0.0, 1.0],
+                ..line.clone()
+            },
+        ),
+        (
+            "repeated more often",
+            NurbsCurve {
+                knots: vec![0.0, 0.0, 0.0, 1.0],
+                ..line.clone()
+            },
+        ),
+        (
+            "weight not positive",
+            NurbsCurve {
+                weights: vec![1.0, 0.0],
+                ..line.clone()
+            },
+        ),
+        (
+            "weights do not match",
+            NurbsCurve {
+                weights: vec![1.0],
+                ..line.clone()
+            },
+        ),
+    ];
+    for (why, curve) in broken {
+        let err = b
+            .edge(v0, v1, CurveInput::Nurbs(curve.clone()))
+            .expect_err("a B-spline that breaks the standard");
+        assert!(
+            matches!(err, step_io::AuthorError::InvalidInput { reason } if reason.contains(why)),
+            "{curve:?}: {err}"
+        );
+    }
+
+    let mut ragged = bilinear_top(1.0);
+    ragged.control_points[1].pop();
+    let mut decreasing = bilinear_top(1.0);
+    decreasing.knots_v = vec![0.0, 1.0, 0.0, 1.0];
+    for surface in [ragged, decreasing] {
+        let err = b
+            .face(SurfaceInput::Nurbs(surface), Orientation::Forward, vec![])
+            .expect_err("a B-spline surface that breaks the standard");
+        assert!(matches!(err, step_io::AuthorError::InvalidInput { .. }));
+    }
+}
+
+#[test]
+fn parabola_and_hyperbola_edges_round_trip() {
+    // F = 2 and semi-axes 3, 1.5, in the frame at (1,2,3).
+    let at = frame([1.0, 2.0, 3.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]);
+    let parabola_at = |u: f64| [1.0 + 2.0 * u * u, 2.0 + 4.0 * u, 3.0];
+    let hyperbola_at = |u: f64| [1.0 + 3.0 * u.cosh(), 2.0 + 1.5 * u.sinh(), 3.0];
+
+    let mut b = StepBuilder::new();
+    let part = b.part("conics");
+    let ends = [
+        (parabola_at(-1.0), parabola_at(2.0)),
+        (parabola_at(2.0), parabola_at(-1.0)),
+        (hyperbola_at(-0.5), hyperbola_at(1.5)),
+    ];
+    let mut edges = Vec::new();
+    for (i, (from, to)) in ends.into_iter().enumerate() {
+        let (v0, v1) = (b.vertex(from).expect("v0"), b.vertex(to).expect("v1"));
+        let curve = if i < 2 {
+            CurveInput::Parabola(at, 2.0)
+        } else {
+            CurveInput::Hyperbola(at, 3.0, 1.5)
+        };
+        edges.push(b.edge(v0, v1, curve).expect("edge"));
+    }
+    // Something to anchor the edges: a face over the plane they lie in.
+    let face = b
+        .face(
+            SurfaceInput::Plane(at),
+            Orientation::Forward,
+            vec![FaceBoundInput::outer(
+                edges.iter().map(|&e| (e, Orientation::Forward)).collect(),
+            )],
+        )
+        .expect("face");
+    b.solid(part, "conics", vec![face]).expect("solid");
+    let mut out = Vec::new();
+    step_io::write(&b.finish(), &mut out).expect("write");
+
+    let (model, report) = read(&out[..]).expect("read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    let scene = model.scene();
+    let read_back: Vec<_> = scene.all_edges().collect();
+    assert_eq!(read_back.len(), 3);
+    // The second parabola edge runs against the parameter.
+    let senses: Vec<bool> = read_back
+        .iter()
+        .map(step_io::scene::Edge::same_sense)
+        .collect();
+    assert_eq!(senses, [true, false, true]);
+    for (edge, (from, to)) in read_back.iter().zip(ends) {
+        let n = edge.to_nurbs().expect("converts");
+        let (first, last) = (n.control_points[0], *n.control_points.last().unwrap());
+        assert!(close(first, from) && close(last, to), "{first:?} {last:?}");
+        assert!(matches!(
+            edge.curve().kind(),
+            CurveKind::Parabola(_) | CurveKind::Hyperbola(_)
+        ));
+    }
+}
+
+#[test]
+fn a_parabola_with_a_negative_focal_distance_keeps_its_sense() {
+    // F = -2: the parameter grows while y falls, so an edge from u = -1 to
+    // u = 2 runs with the curve.
+    let at = frame([1.0, 2.0, 3.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]);
+    let flipped_at = |u: f64| [1.0 - 2.0 * u * u, 2.0 - 4.0 * u, 3.0];
+    let mut b = StepBuilder::new();
+    let part = b.part("flipped");
+    let v0 = b.vertex(flipped_at(-1.0)).expect("v0");
+    let v1 = b.vertex(flipped_at(2.0)).expect("v1");
+    let edge = b
+        .edge(v0, v1, CurveInput::Parabola(at, -2.0))
+        .expect("edge");
+    let face = b
+        .face(
+            SurfaceInput::Plane(at),
+            Orientation::Forward,
+            vec![FaceBoundInput::outer(vec![(edge, Orientation::Forward)])],
+        )
+        .expect("face");
+    b.solid(part, "flipped", vec![face]).expect("solid");
+    let mut out = Vec::new();
+    step_io::write(&b.finish(), &mut out).expect("write");
+
+    let (model, _report) = read(&out[..]).expect("read");
+    let scene = model.scene();
+    let edge = scene.all_edges().next().expect("the edge");
+    assert!(edge.same_sense());
+    let n = edge.to_nurbs().expect("converts");
+    assert!(close(n.control_points[0], flipped_at(-1.0)));
+    assert!(close(n.control_points[2], flipped_at(2.0)));
+}
+
+#[test]
+fn degenerate_parabolas_and_hyperbolas_are_rejected() {
+    let at = frame([0.0; 3], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]);
+    let mut b = StepBuilder::new();
+    let v0 = b.vertex([1.0, 2.0, 0.0]).expect("v0");
+    let v1 = b.vertex([1.0, -2.0, 0.0]).expect("v1");
+    // A zero focal distance, a zero semi-axis, and an edge without a span.
+    for (curve, to) in [
+        (CurveInput::Parabola(at, 0.0), v1),
+        (CurveInput::Hyperbola(at, 0.0, 1.0), v1),
+        (CurveInput::Parabola(at, 1.0), v0),
+    ] {
+        let err = b.edge(v0, to, curve).expect_err("degenerate");
+        assert!(
+            matches!(err, step_io::AuthorError::InvalidInput { .. }),
+            "{err}"
+        );
+    }
+}
+
+fn close(a: [f64; 3], b: [f64; 3]) -> bool {
+    a.iter().zip(b).all(|(x, y)| (x - y).abs() < 1e-9)
 }

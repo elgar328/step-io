@@ -25,12 +25,8 @@ fn read_reports_ap242_ed2() {
     assert_eq!(schema.edition, Some(2));
     assert_eq!(schema.stage, Stage::Is);
     assert_eq!(schema.to_string(), "AP242 ed2 (IS)");
-    // Raw FILE_SCHEMA preserved verbatim for byte-exact round-trip.
-    assert!(
-        schema
-            .raw()
-            .is_some_and(|r| r.as_slice()[0].contains("442 3 1 4"))
-    );
+    // The FILE_SCHEMA names are kept as written.
+    assert!(schema.raw[0].contains("442 3 1 4"));
 }
 
 #[test]
@@ -50,4 +46,14 @@ fn read_reports_unrecognized_schema() {
     let schema = &model.header().schema;
     assert_eq!(schema.family, ApFamily::Other);
     assert!(!schema.is_recognized());
+    assert_eq!(schema.to_string(), "SOME_PRIVATE_SCHEMA");
+}
+
+#[test]
+fn read_reports_no_schema_for_an_empty_file_schema() {
+    let src = doc_with_schema("");
+    let (model, _report) = read(src.as_bytes()).expect("read ok");
+    let schema = &model.header().schema;
+    assert_eq!(schema.family, ApFamily::Other);
+    assert_eq!(schema.to_string(), "unrecognized schema");
 }

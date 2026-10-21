@@ -1,5 +1,5 @@
 //! `codegen/coverage.toml` model — the hand-curated codegen support boundary
-//! (NOT corpus-automated). This is codegen POLICY (how far the generator
+//! (NOT derived automatically from sample files). This is codegen POLICY (how far the generator
 //! reaches), kept separate from the `schema/*.toml` schema data.
 //!
 //! - `cover`:   closure seed lists (per domain key); flattened into one seed set.

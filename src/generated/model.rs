@@ -2,10 +2,11 @@
 // Schema-faithful model + generic 2-pass read + topo write.
 
 //! The schema-faithful model — [`StepModel`], one arena per entity type.
+//! Public as `step_io::model`, whose docs describe it.
 
 #[derive(Debug)]
-pub struct Arena<T> {
-    pub items: Vec<T>,
+pub(crate) struct Arena<T> {
+    pub(crate) items: Vec<T>,
 }
 impl<T> Default for Arena<T> {
     fn default() -> Self {
@@ -13,13 +14,50 @@ impl<T> Default for Arena<T> {
     }
 }
 impl<T> Arena<T> {
-    pub fn push(&mut self, v: T) -> usize {
-        let i = self.items.len();
+    /// Append an item and return its index. An arena holds at most
+    /// `u32::MAX` items (the reader rejects larger files).
+    pub(crate) fn push(&mut self, v: T) -> u32 {
+        let i = self.items.len() as u32;
         self.items.push(v);
         i
     }
-    pub fn get(&self, i: usize) -> &T {
-        &self.items[i]
+    pub(crate) fn get(&self, i: u32) -> &T {
+        &self.items[i as usize]
+    }
+    /// The indices of the items, in order.
+    pub(crate) fn indices(&self) -> std::ops::Range<u32> {
+        0..self.items.len() as u32
+    }
+    /// Keep the items at the distinct indices `order`, in that order, and drop
+    /// the rest. Permutes in place, without a second copy of the items.
+    pub(crate) fn retain_order(&mut self, order: &[u32]) {
+        let n = self.items.len();
+        if order.iter().enumerate().all(|(p, &i)| i as usize == p) {
+            self.items.truncate(order.len());
+            return;
+        }
+        // src[p] = the index whose item ends up at p; the dropped ones fill the tail.
+        let mut kept = vec![false; n];
+        for &i in order {
+            kept[i as usize] = true;
+        }
+        let mut src: Vec<u32> = Vec::with_capacity(n);
+        src.extend_from_slice(order);
+        src.extend((0..n as u32).filter(|&i| !kept[i as usize]));
+        drop(kept);
+        for start in 0..n {
+            let mut j = start;
+            loop {
+                let from = src[j] as usize;
+                src[j] = j as u32;
+                if from == start {
+                    break;
+                }
+                self.items.swap(j, from);
+                j = from;
+            }
+        }
+        self.items.truncate(order.len());
     }
 }
 
@@ -31,7 +69,7 @@ pub enum Logical {
     Unknown,
 }
 impl Logical {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "T" => Self::True,
             "F" => Self::False,
@@ -39,12 +77,181 @@ impl Logical {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::True => ".T.",
             Self::False => ".F.",
             Self::Unknown => ".U.",
         }
+    }
+}
+
+/// A list of at most three reals held inline — a point's coordinates, a
+/// direction's ratios, a mesh vertex — read as a slice (`&[f64]`).
+#[derive(Clone, Copy, Default)]
+pub struct Reals3 {
+    len: u8,
+    values: [f64; 3],
+}
+impl Reals3 {
+    /// The values, or `None` for more than three.
+    pub fn from_slice(v: &[f64]) -> Option<Self> {
+        if v.len() > 3 {
+            return None;
+        }
+        let mut r = Self::default();
+        r.values[..v.len()].copy_from_slice(v);
+        r.len = v.len() as u8;
+        Some(r)
+    }
+    /// Collect read values; an error from one, or a fourth value, stops it.
+    pub(crate) fn try_collect(
+        values: impl Iterator<Item = Result<f64, String>>,
+        ctx: &str,
+    ) -> Result<Self, String> {
+        let mut r = Self::default();
+        for v in values {
+            let v = v?;
+            let Some(slot) = r.values.get_mut(usize::from(r.len)) else {
+                return Err(format!("{ctx}: more than three values"));
+            };
+            *slot = v;
+            r.len += 1;
+        }
+        Ok(r)
+    }
+}
+impl std::ops::Deref for Reals3 {
+    type Target = [f64];
+    fn deref(&self) -> &[f64] {
+        &self.values[..usize::from(self.len)]
+    }
+}
+impl PartialEq for Reals3 {
+    fn eq(&self, other: &Self) -> bool {
+        **self == **other
+    }
+}
+impl std::fmt::Debug for Reals3 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        (**self).fmt(f)
+    }
+}
+impl From<[f64; 1]> for Reals3 {
+    fn from(v: [f64; 1]) -> Self {
+        Self {
+            len: 1,
+            values: [v[0], 0.0, 0.0],
+        }
+    }
+}
+impl From<[f64; 2]> for Reals3 {
+    fn from(v: [f64; 2]) -> Self {
+        Self {
+            len: 2,
+            values: [v[0], v[1], 0.0],
+        }
+    }
+}
+impl From<[f64; 3]> for Reals3 {
+    fn from(v: [f64; 3]) -> Self {
+        Self { len: 3, values: v }
+    }
+}
+
+/// A string held by a [`StepModel`]: its index in the model's text table.
+/// Read it with [`StepModel::text`]; it means nothing in another model. The
+/// reader and the authoring layer store each distinct string once, so within
+/// a model equal strings are the same `Text`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Text(std::num::NonZeroU32);
+
+/// The strings of a model, back to back in one buffer.
+#[derive(Debug, Default)]
+pub(crate) struct Texts {
+    buf: String,
+    spans: Vec<(u32, u32)>,
+}
+impl Texts {
+    pub(crate) fn get(&self, t: Text) -> &str {
+        let span = self.spans.get(t.0.get() as usize - 1);
+        span.and_then(|&(at, n)| self.buf.get(at as usize..at as usize + n as usize))
+            .unwrap_or("")
+    }
+    /// Append `s` as a new `Text` (no deduplication).
+    pub(crate) fn push(&mut self, s: &str) -> Text {
+        let at = self.buf.len() as u32;
+        self.buf.push_str(s);
+        self.spans.push((at, s.len() as u32));
+        Text(
+            std::num::NonZeroU32::new(self.spans.len() as u32).unwrap_or(std::num::NonZeroU32::MIN),
+        )
+    }
+    /// Whether the table has outgrown its 32-bit positions.
+    pub(crate) fn overflowed(&self) -> bool {
+        self.buf.len() > u32::MAX as usize || self.spans.len() >= u32::MAX as usize
+    }
+    pub(crate) fn shrink(&mut self) {
+        self.buf.shrink_to_fit();
+        self.spans.shrink_to_fit();
+    }
+}
+
+/// A `Hasher` for keys that are already hashes.
+#[derive(Default)]
+pub(crate) struct Prehashed(u64);
+impl std::hash::Hasher for Prehashed {
+    fn finish(&self) -> u64 {
+        self.0
+    }
+    fn write(&mut self, bytes: &[u8]) {
+        for &b in bytes {
+            self.0 = self.0.rotate_left(8) ^ u64::from(b);
+        }
+    }
+    fn write_u64(&mut self, v: u64) {
+        self.0 = v;
+    }
+}
+
+/// Stores each distinct string of a model once, while it is read or
+/// authored. Holds only hashes; the strings stay in the model's `Texts`.
+#[derive(Default)]
+pub(crate) struct TextDedup {
+    by_hash: std::collections::HashMap<u64, Text, std::hash::BuildHasherDefault<Prehashed>>,
+    /// Strings whose hash another string already has.
+    collided: std::collections::HashMap<u64, Vec<Text>, std::hash::BuildHasherDefault<Prehashed>>,
+    last: Option<Text>,
+}
+impl TextDedup {
+    pub(crate) fn intern(&mut self, texts: &mut Texts, s: &str) -> Text {
+        if let Some(t) = self.last.filter(|&t| texts.get(t) == s) {
+            return t;
+        }
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        std::hash::Hash::hash(s, &mut hasher);
+        let h = std::hash::Hasher::finish(&hasher);
+        let t = match self.by_hash.get(&h) {
+            None => {
+                let t = texts.push(s);
+                self.by_hash.insert(h, t);
+                t
+            }
+            Some(&t) if texts.get(t) == s => t,
+            Some(_) => {
+                let list = self.collided.entry(h).or_default();
+                match list.iter().copied().find(|&t| texts.get(t) == s) {
+                    Some(t) => t,
+                    None => {
+                        let t = texts.push(s);
+                        list.push(t);
+                        t
+                    }
+                }
+            }
+        };
+        self.last = Some(t);
+        t
     }
 }
 
@@ -66,7 +273,7 @@ impl MeasureScalar {
 }
 #[derive(Debug, Clone, PartialEq)]
 pub struct MeasureValue {
-    pub type_name: Option<String>,
+    pub type_name: Option<Text>,
     pub value: MeasureScalar,
 }
 
@@ -74,8 +281,8 @@ pub struct MeasureValue {
 /// = typed member `TYPE('s')`; `None` = bare string.
 #[derive(Debug, Clone, PartialEq)]
 pub struct StringSelectValue {
-    pub type_name: Option<String>,
-    pub value: String,
+    pub type_name: Option<Text>,
+    pub value: Text,
 }
 
 /// select-of-named-integers (e.g. SELECT(u_direction_count, v_direction_count)):
@@ -83,7 +290,7 @@ pub struct StringSelectValue {
 /// valued so counts are not widened to reals.
 #[derive(Debug, Clone, PartialEq)]
 pub struct IntMeasureValue {
-    pub type_name: Option<String>,
+    pub type_name: Option<Text>,
     pub value: i64,
 }
 
@@ -94,7 +301,7 @@ pub enum AheadOrBehind {
     Behind,
 }
 impl AheadOrBehind {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "AHEAD" => Self::Ahead,
             "EXACT" => Self::Exact,
@@ -102,7 +309,7 @@ impl AheadOrBehind {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Ahead => ".AHEAD.",
             Self::Exact => ".EXACT.",
@@ -118,7 +325,7 @@ pub enum AngleRelator {
     Small,
 }
 impl AngleRelator {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "EQUAL" => Self::Equal,
             "LARGE" => Self::Large,
@@ -126,7 +333,7 @@ impl AngleRelator {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Equal => ".EQUAL.",
             Self::Large => ".LARGE.",
@@ -141,14 +348,14 @@ pub enum AnnotationPlaceholderOccurrenceRole {
     GpsData,
 }
 impl AnnotationPlaceholderOccurrenceRole {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "ANNOTATION_TEXT" => Self::AnnotationText,
             "GPS_DATA" => Self::GpsData,
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::AnnotationText => ".ANNOTATION_TEXT.",
             Self::GpsData => ".GPS_DATA.",
@@ -162,14 +369,14 @@ pub enum ApproximationMethod {
     ChordalLength,
 }
 impl ApproximationMethod {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "CHORDAL_DEVIATION" => Self::ChordalDeviation,
             "CHORDAL_LENGTH" => Self::ChordalLength,
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::ChordalDeviation => ".CHORDAL_DEVIATION.",
             Self::ChordalLength => ".CHORDAL_LENGTH.",
@@ -186,7 +393,7 @@ pub enum AreaUnitType {
     Square,
 }
 impl AreaUnitType {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "CIRCULAR" => Self::Circular,
             "CYLINDRICAL" => Self::Cylindrical,
@@ -196,7 +403,7 @@ impl AreaUnitType {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Circular => ".CIRCULAR.",
             Self::Cylindrical => ".CYLINDRICAL.",
@@ -217,7 +424,7 @@ pub enum BSplineCurveForm {
     Unspecified,
 }
 impl BSplineCurveForm {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "POLYLINE_FORM" => Self::PolylineForm,
             "CIRCULAR_ARC" => Self::CircularArc,
@@ -228,7 +435,7 @@ impl BSplineCurveForm {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::PolylineForm => ".POLYLINE_FORM.",
             Self::CircularArc => ".CIRCULAR_ARC.",
@@ -255,7 +462,7 @@ pub enum BSplineSurfaceForm {
     Unspecified,
 }
 impl BSplineSurfaceForm {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "PLANE_SURF" => Self::PlaneSurf,
             "CYLINDRICAL_SURF" => Self::CylindricalSurf,
@@ -271,7 +478,7 @@ impl BSplineSurfaceForm {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::PlaneSurf => ".PLANE_SURF.",
             Self::CylindricalSurf => ".CYLINDRICAL_SURF.",
@@ -294,14 +501,14 @@ pub enum CentralOrParallel {
     Parallel,
 }
 impl CentralOrParallel {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "CENTRAL" => Self::Central,
             "PARALLEL" => Self::Parallel,
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Central => ".CENTRAL.",
             Self::Parallel => ".PARALLEL.",
@@ -317,7 +524,7 @@ pub enum DatumReferenceModifierType {
     Spherical,
 }
 impl DatumReferenceModifierType {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "CIRCULAR_OR_CYLINDRICAL" => Self::CircularOrCylindrical,
             "DISTANCE" => Self::Distance,
@@ -326,7 +533,7 @@ impl DatumReferenceModifierType {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::CircularOrCylindrical => ".CIRCULAR_OR_CYLINDRICAL.",
             Self::Distance => ".DISTANCE.",
@@ -347,7 +554,7 @@ pub enum DesApllPointSymbol {
     Triangle,
 }
 impl DesApllPointSymbol {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "CIRCLE" => Self::Circle,
             "DOT" => Self::Dot,
@@ -359,7 +566,7 @@ impl DesApllPointSymbol {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Circle => ".CIRCLE.",
             Self::Dot => ".DOT.",
@@ -410,7 +617,7 @@ pub enum GeometricToleranceModifier {
     ValleyDepth,
 }
 impl GeometricToleranceModifier {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "ANY_CROSS_SECTION" => Self::AnyCrossSection,
             "ASSOCIATED_LEAST_SQUARE_FEATURE" => Self::AssociatedLeastSquareFeature,
@@ -461,7 +668,7 @@ impl GeometricToleranceModifier {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::AnyCrossSection => ".ANY_CROSS_SECTION.",
             Self::AssociatedLeastSquareFeature => ".ASSOCIATED_LEAST_SQUARE_FEATURE.",
@@ -523,7 +730,7 @@ pub enum KnotType {
     Unspecified,
 }
 impl KnotType {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "UNIFORM_KNOTS" => Self::UniformKnots,
             "QUASI_UNIFORM_KNOTS" => Self::QuasiUniformKnots,
@@ -532,7 +739,7 @@ impl KnotType {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::UniformKnots => ".UNIFORM_KNOTS.",
             Self::QuasiUniformKnots => ".QUASI_UNIFORM_KNOTS.",
@@ -549,7 +756,7 @@ pub enum LimitCondition {
     RegardlessOfFeatureSize,
 }
 impl LimitCondition {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "MAXIMUM_MATERIAL_CONDITION" => Self::MaximumMaterialCondition,
             "LEAST_MATERIAL_CONDITION" => Self::LeastMaterialCondition,
@@ -557,7 +764,7 @@ impl LimitCondition {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::MaximumMaterialCondition => ".MAXIMUM_MATERIAL_CONDITION.",
             Self::LeastMaterialCondition => ".LEAST_MATERIAL_CONDITION.",
@@ -577,7 +784,7 @@ pub enum MarkerType {
     Triangle,
 }
 impl MarkerType {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "DOT" => Self::Dot,
             "X" => Self::X,
@@ -589,7 +796,7 @@ impl MarkerType {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Dot => ".DOT.",
             Self::X => ".X.",
@@ -607,13 +814,13 @@ pub enum NullStyle {
     Null,
 }
 impl NullStyle {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "NULL" => Self::Null,
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Null => ".NULL.",
         }
@@ -627,7 +834,7 @@ pub enum PreferredSurfaceCurveRepresentation {
     PcurveS2,
 }
 impl PreferredSurfaceCurveRepresentation {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "CURVE_3D" => Self::Curve3d,
             "PCURVE_S1" => Self::PcurveS1,
@@ -635,7 +842,7 @@ impl PreferredSurfaceCurveRepresentation {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Curve3d => ".CURVE_3D.",
             Self::PcurveS1 => ".PCURVE_S1.",
@@ -650,14 +857,14 @@ pub enum ProductOrPresentationSpace {
     PresentationAreaSpace,
 }
 impl ProductOrPresentationSpace {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "PRODUCT_SHAPE_SPACE" => Self::ProductShapeSpace,
             "PRESENTATION_AREA_SPACE" => Self::PresentationAreaSpace,
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::ProductShapeSpace => ".PRODUCT_SHAPE_SPACE.",
             Self::PresentationAreaSpace => ".PRESENTATION_AREA_SPACE.",
@@ -671,14 +878,14 @@ pub enum ShadingCurveMethod {
     LinearColour,
 }
 impl ShadingCurveMethod {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "CONSTANT_COLOUR" => Self::ConstantColour,
             "LINEAR_COLOUR" => Self::LinearColour,
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::ConstantColour => ".CONSTANT_COLOUR.",
             Self::LinearColour => ".LINEAR_COLOUR.",
@@ -694,7 +901,7 @@ pub enum ShadingSurfaceMethod {
     NormalShading,
 }
 impl ShadingSurfaceMethod {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "CONSTANT_SHADING" => Self::ConstantShading,
             "COLOUR_SHADING" => Self::ColourShading,
@@ -703,7 +910,7 @@ impl ShadingSurfaceMethod {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::ConstantShading => ".CONSTANT_SHADING.",
             Self::ColourShading => ".COLOUR_SHADING.",
@@ -733,7 +940,7 @@ pub enum SiPrefix {
     Atto,
 }
 impl SiPrefix {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "EXA" => Self::Exa,
             "PETA" => Self::Peta,
@@ -754,7 +961,7 @@ impl SiPrefix {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Exa => ".EXA.",
             Self::Peta => ".PETA.",
@@ -808,7 +1015,7 @@ pub enum SiUnitName {
     Sievert,
 }
 impl SiUnitName {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "METRE" => Self::Metre,
             "GRAM" => Self::Gram,
@@ -841,7 +1048,7 @@ impl SiUnitName {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Metre => ".METRE.",
             Self::Gram => ".GRAM.",
@@ -901,7 +1108,7 @@ pub enum SimpleDatumReferenceModifier {
     Translation,
 }
 impl SimpleDatumReferenceModifier {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "ANY_CROSS_SECTION" => Self::AnyCrossSection,
             "ANY_LONGITUDINAL_SECTION" => Self::AnyLongitudinalSection,
@@ -928,7 +1135,7 @@ impl SimpleDatumReferenceModifier {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::AnyCrossSection => ".ANY_CROSS_SECTION.",
             Self::AnyLongitudinalSection => ".ANY_LONGITUDINAL_SECTION.",
@@ -963,7 +1170,7 @@ pub enum Source {
     NotKnown,
 }
 impl Source {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "MADE" => Self::Made,
             "BOUGHT" => Self::Bought,
@@ -971,7 +1178,7 @@ impl Source {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Made => ".MADE.",
             Self::Bought => ".BOUGHT.",
@@ -987,7 +1194,7 @@ pub enum SurfaceSide {
     Both,
 }
 impl SurfaceSide {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "POSITIVE" => Self::Positive,
             "NEGATIVE" => Self::Negative,
@@ -995,7 +1202,7 @@ impl SurfaceSide {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Positive => ".POSITIVE.",
             Self::Negative => ".NEGATIVE.",
@@ -1012,7 +1219,7 @@ pub enum TextPath {
     Down,
 }
 impl TextPath {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "LEFT" => Self::Left,
             "RIGHT" => Self::Right,
@@ -1021,7 +1228,7 @@ impl TextPath {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Left => ".LEFT.",
             Self::Right => ".RIGHT.",
@@ -1039,7 +1246,7 @@ pub enum TransitionCode {
     ContSameGradientSameCurvature,
 }
 impl TransitionCode {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "DISCONTINUOUS" => Self::Discontinuous,
             "CONTINUOUS" => Self::Continuous,
@@ -1048,7 +1255,7 @@ impl TransitionCode {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Discontinuous => ".DISCONTINUOUS.",
             Self::Continuous => ".CONTINUOUS.",
@@ -1065,7 +1272,7 @@ pub enum TrimmingPreference {
     Unspecified,
 }
 impl TrimmingPreference {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "CARTESIAN" => Self::Cartesian,
             "PARAMETER" => Self::Parameter,
@@ -1073,7 +1280,7 @@ impl TrimmingPreference {
             _ => return None,
         })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self {
             Self::Cartesian => ".CARTESIAN.",
             Self::Parameter => ".PARAMETER.",
@@ -1083,1007 +1290,1009 @@ impl TrimmingPreference {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionId(pub usize);
+pub struct ActionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionAssignmentId(pub usize);
+pub struct ActionAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionDirectiveId(pub usize);
+pub struct ActionDirectiveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionMethodId(pub usize);
+pub struct ActionMethodId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionMethodRelationshipId(pub usize);
+pub struct ActionMethodRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionPropertyId(pub usize);
+pub struct ActionPropertyId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionRelationshipId(pub usize);
+pub struct ActionRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionRequestAssignmentId(pub usize);
+pub struct ActionRequestAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionRequestSolutionId(pub usize);
+pub struct ActionRequestSolutionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionResourceId(pub usize);
+pub struct ActionResourceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionResourceRelationshipId(pub usize);
+pub struct ActionResourceRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionResourceRequirementId(pub usize);
+pub struct ActionResourceRequirementId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ActionResourceTypeId(pub usize);
+pub struct ActionResourceTypeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AddressId(pub usize);
+pub struct AddressId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AdvancedBrepShapeRepresentationId(pub usize);
+pub struct AdvancedBrepShapeRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AdvancedFaceId(pub usize);
+pub struct AdvancedFaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AllAroundShapeAspectId(pub usize);
+pub struct AllAroundShapeAspectId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AngularLocationId(pub usize);
+pub struct AngularLocationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AngularSizeId(pub usize);
+pub struct AngularSizeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AngularityToleranceId(pub usize);
+pub struct AngularityToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationCurveOccurrenceId(pub usize);
+pub struct AnnotationCurveOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationFillAreaOccurrenceId(pub usize);
+pub struct AnnotationFillAreaOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationOccurrenceId(pub usize);
+pub struct AnnotationOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationOccurrenceAssociativityId(pub usize);
+pub struct AnnotationOccurrenceAssociativityId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationOccurrenceRelationshipId(pub usize);
+pub struct AnnotationOccurrenceRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationPlaceholderLeaderLineId(pub usize);
+pub struct AnnotationPlaceholderLeaderLineId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationPlaceholderOccurrenceId(pub usize);
+pub struct AnnotationPlaceholderOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationPlaceholderOccurrenceWithLeaderLineId(pub usize);
+pub struct AnnotationPlaceholderOccurrenceWithLeaderLineId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationPlaneId(pub usize);
+pub struct AnnotationPlaneId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationSymbolId(pub usize);
+pub struct AnnotationSymbolId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationSymbolOccurrenceId(pub usize);
+pub struct AnnotationSymbolOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationTextId(pub usize);
+pub struct AnnotationTextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationTextCharacterId(pub usize);
+pub struct AnnotationTextCharacterId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationTextOccurrenceId(pub usize);
+pub struct AnnotationTextOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationToAnnotationLeaderLineId(pub usize);
+pub struct AnnotationToAnnotationLeaderLineId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationToModelLeaderLineId(pub usize);
+pub struct AnnotationToModelLeaderLineId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApllPointId(pub usize);
+pub struct ApllPointId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApllPointWithSurfaceId(pub usize);
+pub struct ApllPointWithSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApplicationContextId(pub usize);
+pub struct ApplicationContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApplicationContextElementId(pub usize);
+pub struct ApplicationContextElementId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApplicationProtocolDefinitionId(pub usize);
+pub struct ApplicationProtocolDefinitionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AppliedApprovalAssignmentId(pub usize);
+pub struct AppliedApprovalAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AppliedDateAndTimeAssignmentId(pub usize);
+pub struct AppliedDateAndTimeAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AppliedDocumentReferenceId(pub usize);
+pub struct AppliedDocumentReferenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AppliedExternalIdentificationAssignmentId(pub usize);
+pub struct AppliedExternalIdentificationAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AppliedGroupAssignmentId(pub usize);
+pub struct AppliedGroupAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AppliedPersonAndOrganizationAssignmentId(pub usize);
+pub struct AppliedPersonAndOrganizationAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AppliedPresentedItemId(pub usize);
+pub struct AppliedPresentedItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AppliedSecurityClassificationAssignmentId(pub usize);
+pub struct AppliedSecurityClassificationAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApprovalId(pub usize);
+pub struct ApprovalId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApprovalAssignmentId(pub usize);
+pub struct ApprovalAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApprovalDateTimeId(pub usize);
+pub struct ApprovalDateTimeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApprovalPersonOrganizationId(pub usize);
+pub struct ApprovalPersonOrganizationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApprovalRoleId(pub usize);
+pub struct ApprovalRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApprovalStatusId(pub usize);
+pub struct ApprovalStatusId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApproximationToleranceId(pub usize);
+pub struct ApproximationToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApproximationToleranceDeviationId(pub usize);
+pub struct ApproximationToleranceDeviationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ApproximationToleranceParameterId(pub usize);
+pub struct ApproximationToleranceParameterId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AreaInSetId(pub usize);
+pub struct AreaInSetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AreaUnitId(pub usize);
+pub struct AreaUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AscribableStateId(pub usize);
+pub struct AscribableStateId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AscribableStateRelationshipId(pub usize);
+pub struct AscribableStateRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AssemblyComponentUsageId(pub usize);
+pub struct AssemblyComponentUsageId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AuxiliaryLeaderLineId(pub usize);
+pub struct AuxiliaryLeaderLineId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Axis1PlacementId(pub usize);
+pub struct Axis1PlacementId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Axis2Placement2dId(pub usize);
+pub struct Axis2Placement2dId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Axis2Placement3dId(pub usize);
+pub struct Axis2Placement3dId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BSplineCurveId(pub usize);
+pub struct BSplineCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BSplineCurveWithKnotsId(pub usize);
+pub struct BSplineCurveWithKnotsId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BSplineSurfaceId(pub usize);
+pub struct BSplineSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BSplineSurfaceWithKnotsId(pub usize);
+pub struct BSplineSurfaceWithKnotsId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BezierCurveId(pub usize);
+pub struct BezierCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BezierSurfaceId(pub usize);
+pub struct BezierSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BoundedCurveId(pub usize);
+pub struct BoundedCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BoundedPcurveId(pub usize);
+pub struct BoundedPcurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BoundedSurfaceId(pub usize);
+pub struct BoundedSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BoundedSurfaceCurveId(pub usize);
+pub struct BoundedSurfaceCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BrepWithVoidsId(pub usize);
+pub struct BrepWithVoidsId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CalendarDateId(pub usize);
+pub struct CalendarDateId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CameraImageId(pub usize);
+pub struct CameraImageId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CameraImage3dWithScaleId(pub usize);
+pub struct CameraImage3dWithScaleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CameraModelId(pub usize);
+pub struct CameraModelId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CameraModelD3Id(pub usize);
+pub struct CameraModelD3Id(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CameraModelD3MultiClippingId(pub usize);
+pub struct CameraModelD3MultiClippingId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CameraModelD3WithHlhsrId(pub usize);
+pub struct CameraModelD3WithHlhsrId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CameraUsageId(pub usize);
+pub struct CameraUsageId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CartesianPointId(pub usize);
+pub struct CartesianPointId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CcDesignApprovalId(pub usize);
+pub struct CcDesignApprovalId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CcDesignDateAndTimeAssignmentId(pub usize);
+pub struct CcDesignDateAndTimeAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CcDesignPersonAndOrganizationAssignmentId(pub usize);
+pub struct CcDesignPersonAndOrganizationAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CcDesignSecurityClassificationId(pub usize);
+pub struct CcDesignSecurityClassificationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CentreOfSymmetryId(pub usize);
+pub struct CentreOfSymmetryId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CertificationId(pub usize);
+pub struct CertificationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CertificationTypeId(pub usize);
+pub struct CertificationTypeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ChangeId(pub usize);
+pub struct ChangeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ChangeRequestId(pub usize);
+pub struct ChangeRequestId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CharacterGlyphStyleOutlineId(pub usize);
+pub struct CharacterGlyphStyleOutlineId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CharacterGlyphStyleStrokeId(pub usize);
+pub struct CharacterGlyphStyleStrokeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CharacterizedItemWithinRepresentationId(pub usize);
+pub struct CharacterizedItemWithinRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CharacterizedObjectId(pub usize);
+pub struct CharacterizedObjectId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CharacterizedRepresentationId(pub usize);
+pub struct CharacterizedRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CircleId(pub usize);
+pub struct CircleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CircularRunoutToleranceId(pub usize);
+pub struct CircularRunoutToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ClosedShellId(pub usize);
+pub struct ClosedShellId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CoaxialityToleranceId(pub usize);
+pub struct CoaxialityToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ColourId(pub usize);
+pub struct ColourId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ColourRgbId(pub usize);
+pub struct ColourRgbId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ColourSpecificationId(pub usize);
+pub struct ColourSpecificationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CommonDatumId(pub usize);
+pub struct CommonDatumId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ComplexTriangulatedFaceId(pub usize);
+pub struct ComplexTriangulatedFaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ComplexTriangulatedSurfaceSetId(pub usize);
+pub struct ComplexTriangulatedSurfaceSetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CompositeCurveId(pub usize);
+pub struct CompositeCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CompositeCurveSegmentId(pub usize);
+pub struct CompositeCurveSegmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CompositeGroupShapeAspectId(pub usize);
+pub struct CompositeGroupShapeAspectId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CompositeShapeAspectId(pub usize);
+pub struct CompositeShapeAspectId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CompositeTextId(pub usize);
+pub struct CompositeTextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CompoundRepresentationItemId(pub usize);
+pub struct CompoundRepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConcentricityToleranceId(pub usize);
+pub struct ConcentricityToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConfigurationDesignId(pub usize);
+pub struct ConfigurationDesignId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConfigurationEffectivityId(pub usize);
+pub struct ConfigurationEffectivityId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConfigurationItemId(pub usize);
+pub struct ConfigurationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConicId(pub usize);
+pub struct ConicId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConicalSurfaceId(pub usize);
+pub struct ConicalSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConnectedFaceSetId(pub usize);
+pub struct ConnectedFaceSetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConstructiveGeometryRepresentationId(pub usize);
+pub struct ConstructiveGeometryRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConstructiveGeometryRepresentationRelationshipId(pub usize);
+pub struct ConstructiveGeometryRepresentationRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ContextDependentOverRidingStyledItemId(pub usize);
+pub struct ContextDependentOverRidingStyledItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ContextDependentShapeRepresentationId(pub usize);
+pub struct ContextDependentShapeRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ContextDependentUnitId(pub usize);
+pub struct ContextDependentUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ContinuousShapeAspectId(pub usize);
+pub struct ContinuousShapeAspectId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ContractId(pub usize);
+pub struct ContractId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ContractTypeId(pub usize);
+pub struct ContractTypeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConversionBasedUnitId(pub usize);
+pub struct ConversionBasedUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CoordinatedUniversalTimeOffsetId(pub usize);
+pub struct CoordinatedUniversalTimeOffsetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CoordinatesListId(pub usize);
+pub struct CoordinatesListId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CurveId(pub usize);
+pub struct CurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CurveStyleId(pub usize);
+pub struct CurveStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CurveStyleFontId(pub usize);
+pub struct CurveStyleFontId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CurveStyleFontAndScalingId(pub usize);
+pub struct CurveStyleFontAndScalingId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CurveStyleFontPatternId(pub usize);
+pub struct CurveStyleFontPatternId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CurveStyleRenderingId(pub usize);
+pub struct CurveStyleRenderingId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CylindricalSurfaceId(pub usize);
+pub struct CylindricalSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CylindricityToleranceId(pub usize);
+pub struct CylindricityToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DateId(pub usize);
+pub struct DateId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DateAndTimeId(pub usize);
+pub struct DateAndTimeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DateAndTimeAssignmentId(pub usize);
+pub struct DateAndTimeAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DateRoleId(pub usize);
+pub struct DateRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DateTimeRoleId(pub usize);
+pub struct DateTimeRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DatumId(pub usize);
+pub struct DatumId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DatumFeatureId(pub usize);
+pub struct DatumFeatureId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DatumReferenceId(pub usize);
+pub struct DatumReferenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DatumReferenceCompartmentId(pub usize);
+pub struct DatumReferenceCompartmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DatumReferenceElementId(pub usize);
+pub struct DatumReferenceElementId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DatumReferenceModifierWithValueId(pub usize);
+pub struct DatumReferenceModifierWithValueId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DatumSystemId(pub usize);
+pub struct DatumSystemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DatumTargetId(pub usize);
+pub struct DatumTargetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DefaultModelGeometricViewId(pub usize);
+pub struct DefaultModelGeometricViewId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DefinedCharacterGlyphId(pub usize);
+pub struct DefinedCharacterGlyphId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DefinedSymbolId(pub usize);
+pub struct DefinedSymbolId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DefinitionalRepresentationId(pub usize);
+pub struct DefinitionalRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DefinitionalRepresentationRelationshipId(pub usize);
+pub struct DefinitionalRepresentationRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DefinitionalRepresentationRelationshipWithSameContextId(pub usize);
+pub struct DefinitionalRepresentationRelationshipWithSameContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DegenerateToroidalSurfaceId(pub usize);
+pub struct DegenerateToroidalSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DerivedShapeAspectId(pub usize);
+pub struct DerivedShapeAspectId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DerivedUnitId(pub usize);
+pub struct DerivedUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DerivedUnitElementId(pub usize);
+pub struct DerivedUnitElementId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DescriptionAttributeId(pub usize);
+pub struct DescriptionAttributeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DescriptiveRepresentationItemId(pub usize);
+pub struct DescriptiveRepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DesignContextId(pub usize);
+pub struct DesignContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DimensionalCharacteristicRepresentationId(pub usize);
+pub struct DimensionalCharacteristicRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DimensionalExponentsId(pub usize);
+pub struct DimensionalExponentsId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DimensionalLocationId(pub usize);
+pub struct DimensionalLocationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DimensionalLocationWithPathId(pub usize);
+pub struct DimensionalLocationWithPathId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DimensionalSizeId(pub usize);
+pub struct DimensionalSizeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DimensionalSizeWithDatumFeatureId(pub usize);
+pub struct DimensionalSizeWithDatumFeatureId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DimensionalSizeWithPathId(pub usize);
+pub struct DimensionalSizeWithPathId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DirectedDimensionalLocationId(pub usize);
+pub struct DirectedDimensionalLocationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DirectionId(pub usize);
+pub struct DirectionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DocumentId(pub usize);
+pub struct DocumentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DocumentFileId(pub usize);
+pub struct DocumentFileId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DocumentProductAssociationId(pub usize);
+pub struct DocumentProductAssociationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DocumentProductEquivalenceId(pub usize);
+pub struct DocumentProductEquivalenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DocumentReferenceId(pub usize);
+pub struct DocumentReferenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DocumentRepresentationTypeId(pub usize);
+pub struct DocumentRepresentationTypeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DocumentTypeId(pub usize);
+pub struct DocumentTypeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DraughtingAnnotationOccurrenceId(pub usize);
+pub struct DraughtingAnnotationOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DraughtingCalloutId(pub usize);
+pub struct DraughtingCalloutId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DraughtingCalloutRelationshipId(pub usize);
+pub struct DraughtingCalloutRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DraughtingModelId(pub usize);
+pub struct DraughtingModelId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DraughtingModelItemAssociationId(pub usize);
+pub struct DraughtingModelItemAssociationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DraughtingModelItemAssociationWithPlaceholderId(pub usize);
+pub struct DraughtingModelItemAssociationWithPlaceholderId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DraughtingPreDefinedColourId(pub usize);
+pub struct DraughtingPreDefinedColourId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DraughtingPreDefinedCurveFontId(pub usize);
+pub struct DraughtingPreDefinedCurveFontId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DraughtingPreDefinedTextFontId(pub usize);
+pub struct DraughtingPreDefinedTextFontId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct EdgeId(pub usize);
+pub struct EdgeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct EdgeCurveId(pub usize);
+pub struct EdgeCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct EdgeLoopId(pub usize);
+pub struct EdgeLoopId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct EffectivityId(pub usize);
+pub struct EffectivityId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ElementarySurfaceId(pub usize);
+pub struct ElementarySurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct EllipseId(pub usize);
+pub struct EllipseId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExpressionId(pub usize);
+pub struct ExpressionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternalIdentificationAssignmentId(pub usize);
+pub struct ExternalIdentificationAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternalSourceId(pub usize);
+pub struct ExternalSourceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternallyDefinedCharacterGlyphId(pub usize);
+pub struct ExternallyDefinedCharacterGlyphId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternallyDefinedCurveFontId(pub usize);
+pub struct ExternallyDefinedCurveFontId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternallyDefinedHatchStyleId(pub usize);
+pub struct ExternallyDefinedHatchStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternallyDefinedItemId(pub usize);
+pub struct ExternallyDefinedItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternallyDefinedStyleId(pub usize);
+pub struct ExternallyDefinedStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternallyDefinedSymbolId(pub usize);
+pub struct ExternallyDefinedSymbolId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternallyDefinedTextFontId(pub usize);
+pub struct ExternallyDefinedTextFontId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternallyDefinedTileId(pub usize);
+pub struct ExternallyDefinedTileId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ExternallyDefinedTileStyleId(pub usize);
+pub struct ExternallyDefinedTileStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FaceId(pub usize);
+pub struct FaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FaceBoundId(pub usize);
+pub struct FaceBoundId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FaceOuterBoundId(pub usize);
+pub struct FaceOuterBoundId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FaceSurfaceId(pub usize);
+pub struct FaceSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FeatureForDatumTargetRelationshipId(pub usize);
+pub struct FeatureForDatumTargetRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FillAreaStyleId(pub usize);
+pub struct FillAreaStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FillAreaStyleColourId(pub usize);
+pub struct FillAreaStyleColourId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FillAreaStyleHatchingId(pub usize);
+pub struct FillAreaStyleHatchingId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FillAreaStyleTileColouredRegionId(pub usize);
+pub struct FillAreaStyleTileColouredRegionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FillAreaStyleTileCurveWithStyleId(pub usize);
+pub struct FillAreaStyleTileCurveWithStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FillAreaStyleTileSymbolWithStyleId(pub usize);
+pub struct FillAreaStyleTileSymbolWithStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FillAreaStyleTilesId(pub usize);
+pub struct FillAreaStyleTilesId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FlatnessToleranceId(pub usize);
+pub struct FlatnessToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FoundedItemId(pub usize);
+pub struct FoundedItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FunctionallyDefinedTransformationId(pub usize);
+pub struct FunctionallyDefinedTransformationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeneralDatumReferenceId(pub usize);
+pub struct GeneralDatumReferenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeneralPropertyId(pub usize);
+pub struct GeneralPropertyId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeneralPropertyAssociationId(pub usize);
+pub struct GeneralPropertyAssociationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GenericExpressionId(pub usize);
+pub struct GenericExpressionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GenericLiteralId(pub usize);
+pub struct GenericLiteralId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GenericProductDefinitionReferenceId(pub usize);
+pub struct GenericProductDefinitionReferenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricCurveSetId(pub usize);
+pub struct GeometricCurveSetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricItemSpecificUsageId(pub usize);
+pub struct GeometricItemSpecificUsageId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricRepresentationContextId(pub usize);
+pub struct GeometricRepresentationContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricRepresentationItemId(pub usize);
+pub struct GeometricRepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricSetId(pub usize);
+pub struct GeometricSetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricToleranceId(pub usize);
+pub struct GeometricToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricToleranceRelationshipId(pub usize);
+pub struct GeometricToleranceRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricToleranceWithDatumReferenceId(pub usize);
+pub struct GeometricToleranceWithDatumReferenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricToleranceWithDefinedAreaUnitId(pub usize);
+pub struct GeometricToleranceWithDefinedAreaUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricToleranceWithDefinedUnitId(pub usize);
+pub struct GeometricToleranceWithDefinedUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricToleranceWithMaximumToleranceId(pub usize);
+pub struct GeometricToleranceWithMaximumToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricToleranceWithModifiersId(pub usize);
+pub struct GeometricToleranceWithModifiersId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricallyBoundedSurfaceShapeRepresentationId(pub usize);
+pub struct GeometricallyBoundedSurfaceShapeRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GeometricallyBoundedWireframeShapeRepresentationId(pub usize);
+pub struct GeometricallyBoundedWireframeShapeRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GlobalUncertaintyAssignedContextId(pub usize);
+pub struct GlobalUncertaintyAssignedContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GlobalUnitAssignedContextId(pub usize);
+pub struct GlobalUnitAssignedContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GroupId(pub usize);
+pub struct GroupId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct GroupAssignmentId(pub usize);
+pub struct GroupAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct HyperbolaId(pub usize);
+pub struct HyperbolaId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct IdAttributeId(pub usize);
+pub struct IdAttributeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct IdentificationAssignmentId(pub usize);
+pub struct IdentificationAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct IdentificationRoleId(pub usize);
+pub struct IdentificationRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct IntLiteralId(pub usize);
+pub struct IntLiteralId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct IntegerRepresentationItemId(pub usize);
+pub struct IntegerRepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct IntersectionCurveId(pub usize);
+pub struct IntersectionCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct InvisibilityId(pub usize);
+pub struct InvisibilityId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ItemDefinedTransformationId(pub usize);
+pub struct ItemDefinedTransformationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ItemIdentifiedRepresentationUsageId(pub usize);
+pub struct ItemIdentifiedRepresentationUsageId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LeaderCurveId(pub usize);
+pub struct LeaderCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LeaderDirectedCalloutId(pub usize);
+pub struct LeaderDirectedCalloutId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LeaderTerminatorId(pub usize);
+pub struct LeaderTerminatorId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LengthMeasureWithUnitId(pub usize);
+pub struct LengthMeasureWithUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LengthUnitId(pub usize);
+pub struct LengthUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LimitsAndFitsId(pub usize);
+pub struct LimitsAndFitsId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LineId(pub usize);
+pub struct LineId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LineProfileToleranceId(pub usize);
+pub struct LineProfileToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LiteralNumberId(pub usize);
+pub struct LiteralNumberId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LocalTimeId(pub usize);
+pub struct LocalTimeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct LoopId(pub usize);
+pub struct LoopId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MakeFromUsageOptionId(pub usize);
+pub struct MakeFromUsageOptionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ManifoldSolidBrepId(pub usize);
+pub struct ManifoldSolidBrepId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ManifoldSurfaceShapeRepresentationId(pub usize);
+pub struct ManifoldSurfaceShapeRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MappedItemId(pub usize);
+pub struct MappedItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MassMeasureWithUnitId(pub usize);
+pub struct MassMeasureWithUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MassUnitId(pub usize);
+pub struct MassUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MeasureQualificationId(pub usize);
+pub struct MeasureQualificationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MeasureRepresentationItemId(pub usize);
+pub struct MeasureRepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MeasureWithUnitId(pub usize);
+pub struct MeasureWithUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MechanicalContextId(pub usize);
+pub struct MechanicalContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MechanicalDesignAndDraughtingRelationshipId(pub usize);
+pub struct MechanicalDesignAndDraughtingRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MechanicalDesignGeometricPresentationRepresentationId(pub usize);
+pub struct MechanicalDesignGeometricPresentationRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MechanicalDesignPresentationRepresentationWithDraughtingId(pub usize);
+pub struct MechanicalDesignPresentationRepresentationWithDraughtingId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MechanicalDesignShadedPresentationRepresentationId(pub usize);
+pub struct MechanicalDesignShadedPresentationRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ModelGeometricViewId(pub usize);
+pub struct ModelGeometricViewId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ModifiedGeometricToleranceId(pub usize);
+pub struct ModifiedGeometricToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct NameAttributeId(pub usize);
+pub struct NameAttributeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct NamedUnitId(pub usize);
+pub struct NamedUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct NextAssemblyUsageOccurrenceId(pub usize);
+pub struct NextAssemblyUsageOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct NumericExpressionId(pub usize);
+pub struct NumericExpressionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ObjectRoleId(pub usize);
+pub struct ObjectRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OffsetSurfaceId(pub usize);
+pub struct OffsetSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OneDirectionRepeatFactorId(pub usize);
+pub struct OneDirectionRepeatFactorId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OpenShellId(pub usize);
+pub struct OpenShellId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrganizationId(pub usize);
+pub struct OrganizationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrganizationRelationshipId(pub usize);
+pub struct OrganizationRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrganizationRoleId(pub usize);
+pub struct OrganizationRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrganizationTypeId(pub usize);
+pub struct OrganizationTypeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrganizationTypeRoleId(pub usize);
+pub struct OrganizationTypeRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrganizationalAddressId(pub usize);
+pub struct OrganizationalAddressId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrganizationalProjectId(pub usize);
+pub struct OrganizationalProjectId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrganizationalProjectRelationshipId(pub usize);
+pub struct OrganizationalProjectRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrganizationalProjectRoleId(pub usize);
+pub struct OrganizationalProjectRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrientedClosedShellId(pub usize);
+pub struct OrientedClosedShellId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrientedEdgeId(pub usize);
+pub struct OrientedEdgeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OverRidingStyledItemId(pub usize);
+pub struct OverRidingStyledItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ParallelismToleranceId(pub usize);
+pub struct ParabolaId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ParametricRepresentationContextId(pub usize);
+pub struct ParallelismToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PathId(pub usize);
+pub struct ParametricRepresentationContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PcurveId(pub usize);
+pub struct PathId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PerpendicularityToleranceId(pub usize);
+pub struct PcurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PersonId(pub usize);
+pub struct PerpendicularityToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PersonAndOrganizationId(pub usize);
+pub struct PersonId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PersonAndOrganizationAddressId(pub usize);
+pub struct PersonAndOrganizationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PersonAndOrganizationAssignmentId(pub usize);
+pub struct PersonAndOrganizationAddressId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PersonAndOrganizationRoleId(pub usize);
+pub struct PersonAndOrganizationAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PersonalAddressId(pub usize);
+pub struct PersonAndOrganizationRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PlacedDatumTargetFeatureId(pub usize);
+pub struct PersonalAddressId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PlacementId(pub usize);
+pub struct PlacedDatumTargetFeatureId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PlanarBoxId(pub usize);
+pub struct PlacementId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PlanarExtentId(pub usize);
+pub struct PlanarBoxId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PlaneId(pub usize);
+pub struct PlanarExtentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PlaneAngleMeasureWithUnitId(pub usize);
+pub struct PlaneId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PlaneAngleUnitId(pub usize);
+pub struct PlaneAngleMeasureWithUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PlusMinusToleranceId(pub usize);
+pub struct PlaneAngleUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PointId(pub usize);
+pub struct PlusMinusToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PointStyleId(pub usize);
+pub struct PointId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PolyLoopId(pub usize);
+pub struct PointStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PolylineId(pub usize);
+pub struct PolyLoopId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PositionToleranceId(pub usize);
+pub struct PolylineId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedCharacterGlyphId(pub usize);
+pub struct PositionToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedColourId(pub usize);
+pub struct PreDefinedCharacterGlyphId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedCurveFontId(pub usize);
+pub struct PreDefinedColourId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedItemId(pub usize);
+pub struct PreDefinedCurveFontId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedMarkerId(pub usize);
+pub struct PreDefinedItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedPointMarkerSymbolId(pub usize);
+pub struct PreDefinedMarkerId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedPresentationStyleId(pub usize);
+pub struct PreDefinedPointMarkerSymbolId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedSurfaceSideStyleId(pub usize);
+pub struct PreDefinedPresentationStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedSymbolId(pub usize);
+pub struct PreDefinedSurfaceSideStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedTerminatorSymbolId(pub usize);
+pub struct PreDefinedSymbolId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedTextFontId(pub usize);
+pub struct PreDefinedTerminatorSymbolId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PreDefinedTileId(pub usize);
+pub struct PreDefinedTextFontId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PrecisionQualifierId(pub usize);
+pub struct PreDefinedTileId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentationAreaId(pub usize);
+pub struct PrecisionQualifierId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentationLayerAssignmentId(pub usize);
+pub struct PresentationAreaId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentationRepresentationId(pub usize);
+pub struct PresentationLayerAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentationSetId(pub usize);
+pub struct PresentationRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentationSizeId(pub usize);
+pub struct PresentationSetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentationStyleAssignmentId(pub usize);
+pub struct PresentationSizeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentationStyleByContextId(pub usize);
+pub struct PresentationStyleAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentationViewId(pub usize);
+pub struct PresentationStyleByContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentedItemId(pub usize);
+pub struct PresentationViewId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PresentedItemRepresentationId(pub usize);
+pub struct PresentedItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductId(pub usize);
+pub struct PresentedItemRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductCategoryId(pub usize);
+pub struct ProductId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductCategoryRelationshipId(pub usize);
+pub struct ProductCategoryId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductConceptId(pub usize);
+pub struct ProductCategoryRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductConceptContextId(pub usize);
+pub struct ProductConceptId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductConceptFeatureId(pub usize);
+pub struct ProductConceptContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductConceptFeatureCategoryId(pub usize);
+pub struct ProductConceptFeatureId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductContextId(pub usize);
+pub struct ProductConceptFeatureCategoryId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionId(pub usize);
+pub struct ProductContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionContextId(pub usize);
+pub struct ProductDefinitionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionContextAssociationId(pub usize);
+pub struct ProductDefinitionContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionContextRoleId(pub usize);
+pub struct ProductDefinitionContextAssociationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionEffectivityId(pub usize);
+pub struct ProductDefinitionContextRoleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionFormationId(pub usize);
+pub struct ProductDefinitionEffectivityId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionFormationWithSpecifiedSourceId(pub usize);
+pub struct ProductDefinitionFormationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionOccurrenceId(pub usize);
+pub struct ProductDefinitionFormationWithSpecifiedSourceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionRelationshipId(pub usize);
+pub struct ProductDefinitionOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionRelationshipRelationshipId(pub usize);
+pub struct ProductDefinitionRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionShapeId(pub usize);
+pub struct ProductDefinitionRelationshipRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionSubstituteId(pub usize);
+pub struct ProductDefinitionShapeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionUsageId(pub usize);
+pub struct ProductDefinitionSubstituteId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductDefinitionWithAssociatedDocumentsId(pub usize);
+pub struct ProductDefinitionUsageId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProductRelatedProductCategoryId(pub usize);
+pub struct ProductDefinitionWithAssociatedDocumentsId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ProjectedZoneDefinitionId(pub usize);
+pub struct ProductRelatedProductCategoryId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PropertyDefinitionId(pub usize);
+pub struct ProjectedZoneDefinitionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PropertyDefinitionRelationshipId(pub usize);
+pub struct PropertyDefinitionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PropertyDefinitionRepresentationId(pub usize);
+pub struct PropertyDefinitionRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct QualifiedRepresentationItemId(pub usize);
+pub struct PropertyDefinitionRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct QuasiUniformCurveId(pub usize);
+pub struct QualifiedRepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct QuasiUniformSurfaceId(pub usize);
+pub struct QuasiUniformCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RatioMeasureWithUnitId(pub usize);
+pub struct QuasiUniformSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RatioUnitId(pub usize);
+pub struct RatioMeasureWithUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RationalBSplineCurveId(pub usize);
+pub struct RatioUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RationalBSplineSurfaceId(pub usize);
+pub struct RationalBSplineCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RealLiteralId(pub usize);
+pub struct RationalBSplineSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RealRepresentationItemId(pub usize);
+pub struct RealLiteralId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RepositionedTessellatedItemId(pub usize);
+pub struct RealRepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RepresentationId(pub usize);
+pub struct RepositionedTessellatedItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RepresentationContextId(pub usize);
+pub struct RepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RepresentationContextReferenceId(pub usize);
+pub struct RepresentationContextId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RepresentationItemId(pub usize);
+pub struct RepresentationContextReferenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RepresentationMapId(pub usize);
+pub struct RepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RepresentationReferenceId(pub usize);
+pub struct RepresentationMapId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RepresentationRelationshipId(pub usize);
+pub struct RepresentationReferenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RepresentationRelationshipWithTransformationId(pub usize);
+pub struct RepresentationRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ResourcePropertyId(pub usize);
+pub struct RepresentationRelationshipWithTransformationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ResourceRequirementTypeId(pub usize);
+pub struct ResourcePropertyId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RoleAssociationId(pub usize);
+pub struct ResourceRequirementTypeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RoundnessToleranceId(pub usize);
+pub struct RoleAssociationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SeamCurveId(pub usize);
+pub struct RoundnessToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SecurityClassificationId(pub usize);
+pub struct SeamCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SecurityClassificationAssignmentId(pub usize);
+pub struct SecurityClassificationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SecurityClassificationLevelId(pub usize);
+pub struct SecurityClassificationAssignmentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShapeAspectId(pub usize);
+pub struct SecurityClassificationLevelId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShapeAspectAssociativityId(pub usize);
+pub struct ShapeAspectId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShapeAspectDerivingRelationshipId(pub usize);
+pub struct ShapeAspectAssociativityId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShapeAspectRelationshipId(pub usize);
+pub struct ShapeAspectDerivingRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShapeDefinitionRepresentationId(pub usize);
+pub struct ShapeAspectRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShapeDimensionRepresentationId(pub usize);
+pub struct ShapeDefinitionRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShapeRepresentationId(pub usize);
+pub struct ShapeDimensionRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShapeRepresentationRelationshipId(pub usize);
+pub struct ShapeRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShapeRepresentationWithParametersId(pub usize);
+pub struct ShapeRepresentationRelationshipId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ShellBasedSurfaceModelId(pub usize);
+pub struct ShapeRepresentationWithParametersId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SiUnitId(pub usize);
+pub struct ShellBasedSurfaceModelId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SimpleGenericExpressionId(pub usize);
+pub struct SiUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SimpleNumericExpressionId(pub usize);
+pub struct SimpleGenericExpressionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SolidAngleUnitId(pub usize);
+pub struct SimpleNumericExpressionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SolidModelId(pub usize);
+pub struct SolidAngleUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SphericalSurfaceId(pub usize);
+pub struct SolidModelId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct StartRequestId(pub usize);
+pub struct SphericalSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct StartWorkId(pub usize);
+pub struct StartRequestId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct StateObservedId(pub usize);
+pub struct StartWorkId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct StateTypeId(pub usize);
+pub struct StateObservedId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct StraightnessToleranceId(pub usize);
+pub struct StateTypeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct StyledItemId(pub usize);
+pub struct StraightnessToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceId(pub usize);
+pub struct StyledItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceCurveId(pub usize);
+pub struct SurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceOfLinearExtrusionId(pub usize);
+pub struct SurfaceCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceOfRevolutionId(pub usize);
+pub struct SurfaceOfLinearExtrusionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceProfileToleranceId(pub usize);
+pub struct SurfaceOfRevolutionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceRenderingPropertiesId(pub usize);
+pub struct SurfaceProfileToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceSideStyleId(pub usize);
+pub struct SurfaceRenderingPropertiesId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleBoundaryId(pub usize);
+pub struct SurfaceSideStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleControlGridId(pub usize);
+pub struct SurfaceStyleBoundaryId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleFillAreaId(pub usize);
+pub struct SurfaceStyleControlGridId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleParameterLineId(pub usize);
+pub struct SurfaceStyleFillAreaId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleReflectanceAmbientId(pub usize);
+pub struct SurfaceStyleParameterLineId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleRenderingId(pub usize);
+pub struct SurfaceStyleReflectanceAmbientId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleRenderingWithPropertiesId(pub usize);
+pub struct SurfaceStyleRenderingId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleSegmentationCurveId(pub usize);
+pub struct SurfaceStyleRenderingWithPropertiesId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleSilhouetteId(pub usize);
+pub struct SurfaceStyleSegmentationCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleTransparentId(pub usize);
+pub struct SurfaceStyleSilhouetteId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SurfaceStyleUsageId(pub usize);
+pub struct SurfaceStyleTransparentId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SweptSurfaceId(pub usize);
+pub struct SurfaceStyleUsageId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SymbolColourId(pub usize);
+pub struct SweptSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SymbolRepresentationId(pub usize);
+pub struct SymbolColourId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SymbolStyleId(pub usize);
+pub struct SymbolRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SymbolTargetId(pub usize);
+pub struct SymbolStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SymmetryToleranceId(pub usize);
+pub struct SymbolTargetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TerminatorSymbolId(pub usize);
+pub struct SymmetryToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedAnnotationOccurrenceId(pub usize);
+pub struct TerminatorSymbolId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedCurveSetId(pub usize);
+pub struct TessellatedAnnotationOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedFaceId(pub usize);
+pub struct TessellatedCurveSetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedGeometricSetId(pub usize);
+pub struct TessellatedFaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedItemId(pub usize);
+pub struct TessellatedGeometricSetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedShapeRepresentationId(pub usize);
+pub struct TessellatedItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedShellId(pub usize);
+pub struct TessellatedShapeRepresentationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedSolidId(pub usize);
+pub struct TessellatedShellId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedStructuredItemId(pub usize);
+pub struct TessellatedSolidId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TessellatedSurfaceSetId(pub usize);
+pub struct TessellatedStructuredItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TextFontId(pub usize);
+pub struct TessellatedSurfaceSetId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TextLiteralId(pub usize);
+pub struct TextFontId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TextStyleId(pub usize);
+pub struct TextLiteralId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TextStyleForDefinedFontId(pub usize);
+pub struct TextStyleId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TextStyleWithBoxCharacteristicsId(pub usize);
+pub struct TextStyleForDefinedFontId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TextureStyleSpecificationId(pub usize);
+pub struct TextStyleWithBoxCharacteristicsId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TextureStyleTessellationSpecificationId(pub usize);
+pub struct TextureStyleSpecificationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TimeUnitId(pub usize);
+pub struct TextureStyleTessellationSpecificationId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ToleranceValueId(pub usize);
+pub struct TimeUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ToleranceZoneId(pub usize);
+pub struct ToleranceValueId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ToleranceZoneDefinitionId(pub usize);
+pub struct ToleranceZoneId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ToleranceZoneFormId(pub usize);
+pub struct ToleranceZoneDefinitionId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ToleranceZoneWithDatumId(pub usize);
+pub struct ToleranceZoneFormId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TopologicalRepresentationItemId(pub usize);
+pub struct ToleranceZoneWithDatumId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ToroidalSurfaceId(pub usize);
+pub struct TopologicalRepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TotalRunoutToleranceId(pub usize);
+pub struct ToroidalSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TrimmedCurveId(pub usize);
+pub struct TotalRunoutToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TwoDirectionRepeatFactorId(pub usize);
+pub struct TrimmedCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TypeQualifierId(pub usize);
+pub struct TwoDirectionRepeatFactorId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UncertaintyMeasureWithUnitId(pub usize);
+pub struct TypeQualifierId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UncertaintyQualifierId(pub usize);
+pub struct UncertaintyMeasureWithUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UnequallyDisposedGeometricToleranceId(pub usize);
+pub struct UncertaintyQualifierId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UniformCurveId(pub usize);
+pub struct UnequallyDisposedGeometricToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UniformSurfaceId(pub usize);
+pub struct UniformCurveId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ValueFormatTypeQualifierId(pub usize);
+pub struct UniformSurfaceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ValueRepresentationItemId(pub usize);
+pub struct ValueFormatTypeQualifierId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct VectorId(pub usize);
+pub struct ValueRepresentationItemId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct VersionedActionRequestId(pub usize);
+pub struct VectorId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct VertexId(pub usize);
+pub struct VersionedActionRequestId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct VertexLoopId(pub usize);
+pub struct VertexId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct VertexPointId(pub usize);
+pub struct VertexLoopId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct VertexShellId(pub usize);
+pub struct VertexPointId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ViewVolumeId(pub usize);
+pub struct VertexShellId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct VolumeUnitId(pub usize);
+pub struct ViewVolumeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct WireShellId(pub usize);
+pub struct VolumeUnitId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ComplexUnitId(pub usize);
+pub struct WireShellId(pub u32);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ComplexEntityId(pub u32);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EntityKey {
@@ -2409,6 +2618,7 @@ pub enum EntityKey {
     OrientedClosedShell(OrientedClosedShellId),
     OrientedEdge(OrientedEdgeId),
     OverRidingStyledItem(OverRidingStyledItemId),
+    Parabola(ParabolaId),
     ParallelismTolerance(ParallelismToleranceId),
     ParametricRepresentationContext(ParametricRepresentationContextId),
     Path(PathId),
@@ -2601,19 +2811,1194 @@ pub enum EntityKey {
     ViewVolume(ViewVolumeId),
     VolumeUnit(VolumeUnitId),
     WireShell(WireShellId),
-    ComplexUnit(ComplexUnitId),
+    ComplexEntity(ComplexEntityId),
+}
+
+impl EntityKey {
+    /// How many kinds of key there are.
+    pub(crate) const KINDS: usize = 502;
+
+    /// The key's kind, numbered in declaration order, and its arena index.
+    pub(crate) fn kind_index(self) -> (usize, u32) {
+        match self {
+            EntityKey::Action(i) => (0, i.0),
+            EntityKey::ActionAssignment(i) => (1, i.0),
+            EntityKey::ActionDirective(i) => (2, i.0),
+            EntityKey::ActionMethod(i) => (3, i.0),
+            EntityKey::ActionMethodRelationship(i) => (4, i.0),
+            EntityKey::ActionProperty(i) => (5, i.0),
+            EntityKey::ActionRelationship(i) => (6, i.0),
+            EntityKey::ActionRequestAssignment(i) => (7, i.0),
+            EntityKey::ActionRequestSolution(i) => (8, i.0),
+            EntityKey::ActionResource(i) => (9, i.0),
+            EntityKey::ActionResourceRelationship(i) => (10, i.0),
+            EntityKey::ActionResourceRequirement(i) => (11, i.0),
+            EntityKey::ActionResourceType(i) => (12, i.0),
+            EntityKey::Address(i) => (13, i.0),
+            EntityKey::AdvancedBrepShapeRepresentation(i) => (14, i.0),
+            EntityKey::AdvancedFace(i) => (15, i.0),
+            EntityKey::AllAroundShapeAspect(i) => (16, i.0),
+            EntityKey::AngularLocation(i) => (17, i.0),
+            EntityKey::AngularSize(i) => (18, i.0),
+            EntityKey::AngularityTolerance(i) => (19, i.0),
+            EntityKey::AnnotationCurveOccurrence(i) => (20, i.0),
+            EntityKey::AnnotationFillAreaOccurrence(i) => (21, i.0),
+            EntityKey::AnnotationOccurrence(i) => (22, i.0),
+            EntityKey::AnnotationOccurrenceAssociativity(i) => (23, i.0),
+            EntityKey::AnnotationOccurrenceRelationship(i) => (24, i.0),
+            EntityKey::AnnotationPlaceholderLeaderLine(i) => (25, i.0),
+            EntityKey::AnnotationPlaceholderOccurrence(i) => (26, i.0),
+            EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => (27, i.0),
+            EntityKey::AnnotationPlane(i) => (28, i.0),
+            EntityKey::AnnotationSymbol(i) => (29, i.0),
+            EntityKey::AnnotationSymbolOccurrence(i) => (30, i.0),
+            EntityKey::AnnotationText(i) => (31, i.0),
+            EntityKey::AnnotationTextCharacter(i) => (32, i.0),
+            EntityKey::AnnotationTextOccurrence(i) => (33, i.0),
+            EntityKey::AnnotationToAnnotationLeaderLine(i) => (34, i.0),
+            EntityKey::AnnotationToModelLeaderLine(i) => (35, i.0),
+            EntityKey::ApllPoint(i) => (36, i.0),
+            EntityKey::ApllPointWithSurface(i) => (37, i.0),
+            EntityKey::ApplicationContext(i) => (38, i.0),
+            EntityKey::ApplicationContextElement(i) => (39, i.0),
+            EntityKey::ApplicationProtocolDefinition(i) => (40, i.0),
+            EntityKey::AppliedApprovalAssignment(i) => (41, i.0),
+            EntityKey::AppliedDateAndTimeAssignment(i) => (42, i.0),
+            EntityKey::AppliedDocumentReference(i) => (43, i.0),
+            EntityKey::AppliedExternalIdentificationAssignment(i) => (44, i.0),
+            EntityKey::AppliedGroupAssignment(i) => (45, i.0),
+            EntityKey::AppliedPersonAndOrganizationAssignment(i) => (46, i.0),
+            EntityKey::AppliedPresentedItem(i) => (47, i.0),
+            EntityKey::AppliedSecurityClassificationAssignment(i) => (48, i.0),
+            EntityKey::Approval(i) => (49, i.0),
+            EntityKey::ApprovalAssignment(i) => (50, i.0),
+            EntityKey::ApprovalDateTime(i) => (51, i.0),
+            EntityKey::ApprovalPersonOrganization(i) => (52, i.0),
+            EntityKey::ApprovalRole(i) => (53, i.0),
+            EntityKey::ApprovalStatus(i) => (54, i.0),
+            EntityKey::ApproximationTolerance(i) => (55, i.0),
+            EntityKey::ApproximationToleranceDeviation(i) => (56, i.0),
+            EntityKey::ApproximationToleranceParameter(i) => (57, i.0),
+            EntityKey::AreaInSet(i) => (58, i.0),
+            EntityKey::AreaUnit(i) => (59, i.0),
+            EntityKey::AscribableState(i) => (60, i.0),
+            EntityKey::AscribableStateRelationship(i) => (61, i.0),
+            EntityKey::AssemblyComponentUsage(i) => (62, i.0),
+            EntityKey::AuxiliaryLeaderLine(i) => (63, i.0),
+            EntityKey::Axis1Placement(i) => (64, i.0),
+            EntityKey::Axis2Placement2d(i) => (65, i.0),
+            EntityKey::Axis2Placement3d(i) => (66, i.0),
+            EntityKey::BSplineCurve(i) => (67, i.0),
+            EntityKey::BSplineCurveWithKnots(i) => (68, i.0),
+            EntityKey::BSplineSurface(i) => (69, i.0),
+            EntityKey::BSplineSurfaceWithKnots(i) => (70, i.0),
+            EntityKey::BezierCurve(i) => (71, i.0),
+            EntityKey::BezierSurface(i) => (72, i.0),
+            EntityKey::BoundedCurve(i) => (73, i.0),
+            EntityKey::BoundedPcurve(i) => (74, i.0),
+            EntityKey::BoundedSurface(i) => (75, i.0),
+            EntityKey::BoundedSurfaceCurve(i) => (76, i.0),
+            EntityKey::BrepWithVoids(i) => (77, i.0),
+            EntityKey::CalendarDate(i) => (78, i.0),
+            EntityKey::CameraImage(i) => (79, i.0),
+            EntityKey::CameraImage3dWithScale(i) => (80, i.0),
+            EntityKey::CameraModel(i) => (81, i.0),
+            EntityKey::CameraModelD3(i) => (82, i.0),
+            EntityKey::CameraModelD3MultiClipping(i) => (83, i.0),
+            EntityKey::CameraModelD3WithHlhsr(i) => (84, i.0),
+            EntityKey::CameraUsage(i) => (85, i.0),
+            EntityKey::CartesianPoint(i) => (86, i.0),
+            EntityKey::CcDesignApproval(i) => (87, i.0),
+            EntityKey::CcDesignDateAndTimeAssignment(i) => (88, i.0),
+            EntityKey::CcDesignPersonAndOrganizationAssignment(i) => (89, i.0),
+            EntityKey::CcDesignSecurityClassification(i) => (90, i.0),
+            EntityKey::CentreOfSymmetry(i) => (91, i.0),
+            EntityKey::Certification(i) => (92, i.0),
+            EntityKey::CertificationType(i) => (93, i.0),
+            EntityKey::Change(i) => (94, i.0),
+            EntityKey::ChangeRequest(i) => (95, i.0),
+            EntityKey::CharacterGlyphStyleOutline(i) => (96, i.0),
+            EntityKey::CharacterGlyphStyleStroke(i) => (97, i.0),
+            EntityKey::CharacterizedItemWithinRepresentation(i) => (98, i.0),
+            EntityKey::CharacterizedObject(i) => (99, i.0),
+            EntityKey::CharacterizedRepresentation(i) => (100, i.0),
+            EntityKey::Circle(i) => (101, i.0),
+            EntityKey::CircularRunoutTolerance(i) => (102, i.0),
+            EntityKey::ClosedShell(i) => (103, i.0),
+            EntityKey::CoaxialityTolerance(i) => (104, i.0),
+            EntityKey::Colour(i) => (105, i.0),
+            EntityKey::ColourRgb(i) => (106, i.0),
+            EntityKey::ColourSpecification(i) => (107, i.0),
+            EntityKey::CommonDatum(i) => (108, i.0),
+            EntityKey::ComplexTriangulatedFace(i) => (109, i.0),
+            EntityKey::ComplexTriangulatedSurfaceSet(i) => (110, i.0),
+            EntityKey::CompositeCurve(i) => (111, i.0),
+            EntityKey::CompositeCurveSegment(i) => (112, i.0),
+            EntityKey::CompositeGroupShapeAspect(i) => (113, i.0),
+            EntityKey::CompositeShapeAspect(i) => (114, i.0),
+            EntityKey::CompositeText(i) => (115, i.0),
+            EntityKey::CompoundRepresentationItem(i) => (116, i.0),
+            EntityKey::ConcentricityTolerance(i) => (117, i.0),
+            EntityKey::ConfigurationDesign(i) => (118, i.0),
+            EntityKey::ConfigurationEffectivity(i) => (119, i.0),
+            EntityKey::ConfigurationItem(i) => (120, i.0),
+            EntityKey::Conic(i) => (121, i.0),
+            EntityKey::ConicalSurface(i) => (122, i.0),
+            EntityKey::ConnectedFaceSet(i) => (123, i.0),
+            EntityKey::ConstructiveGeometryRepresentation(i) => (124, i.0),
+            EntityKey::ConstructiveGeometryRepresentationRelationship(i) => (125, i.0),
+            EntityKey::ContextDependentOverRidingStyledItem(i) => (126, i.0),
+            EntityKey::ContextDependentShapeRepresentation(i) => (127, i.0),
+            EntityKey::ContextDependentUnit(i) => (128, i.0),
+            EntityKey::ContinuousShapeAspect(i) => (129, i.0),
+            EntityKey::Contract(i) => (130, i.0),
+            EntityKey::ContractType(i) => (131, i.0),
+            EntityKey::ConversionBasedUnit(i) => (132, i.0),
+            EntityKey::CoordinatedUniversalTimeOffset(i) => (133, i.0),
+            EntityKey::CoordinatesList(i) => (134, i.0),
+            EntityKey::Curve(i) => (135, i.0),
+            EntityKey::CurveStyle(i) => (136, i.0),
+            EntityKey::CurveStyleFont(i) => (137, i.0),
+            EntityKey::CurveStyleFontAndScaling(i) => (138, i.0),
+            EntityKey::CurveStyleFontPattern(i) => (139, i.0),
+            EntityKey::CurveStyleRendering(i) => (140, i.0),
+            EntityKey::CylindricalSurface(i) => (141, i.0),
+            EntityKey::CylindricityTolerance(i) => (142, i.0),
+            EntityKey::Date(i) => (143, i.0),
+            EntityKey::DateAndTime(i) => (144, i.0),
+            EntityKey::DateAndTimeAssignment(i) => (145, i.0),
+            EntityKey::DateRole(i) => (146, i.0),
+            EntityKey::DateTimeRole(i) => (147, i.0),
+            EntityKey::Datum(i) => (148, i.0),
+            EntityKey::DatumFeature(i) => (149, i.0),
+            EntityKey::DatumReference(i) => (150, i.0),
+            EntityKey::DatumReferenceCompartment(i) => (151, i.0),
+            EntityKey::DatumReferenceElement(i) => (152, i.0),
+            EntityKey::DatumReferenceModifierWithValue(i) => (153, i.0),
+            EntityKey::DatumSystem(i) => (154, i.0),
+            EntityKey::DatumTarget(i) => (155, i.0),
+            EntityKey::DefaultModelGeometricView(i) => (156, i.0),
+            EntityKey::DefinedCharacterGlyph(i) => (157, i.0),
+            EntityKey::DefinedSymbol(i) => (158, i.0),
+            EntityKey::DefinitionalRepresentation(i) => (159, i.0),
+            EntityKey::DefinitionalRepresentationRelationship(i) => (160, i.0),
+            EntityKey::DefinitionalRepresentationRelationshipWithSameContext(i) => (161, i.0),
+            EntityKey::DegenerateToroidalSurface(i) => (162, i.0),
+            EntityKey::DerivedShapeAspect(i) => (163, i.0),
+            EntityKey::DerivedUnit(i) => (164, i.0),
+            EntityKey::DerivedUnitElement(i) => (165, i.0),
+            EntityKey::DescriptionAttribute(i) => (166, i.0),
+            EntityKey::DescriptiveRepresentationItem(i) => (167, i.0),
+            EntityKey::DesignContext(i) => (168, i.0),
+            EntityKey::DimensionalCharacteristicRepresentation(i) => (169, i.0),
+            EntityKey::DimensionalExponents(i) => (170, i.0),
+            EntityKey::DimensionalLocation(i) => (171, i.0),
+            EntityKey::DimensionalLocationWithPath(i) => (172, i.0),
+            EntityKey::DimensionalSize(i) => (173, i.0),
+            EntityKey::DimensionalSizeWithDatumFeature(i) => (174, i.0),
+            EntityKey::DimensionalSizeWithPath(i) => (175, i.0),
+            EntityKey::DirectedDimensionalLocation(i) => (176, i.0),
+            EntityKey::Direction(i) => (177, i.0),
+            EntityKey::Document(i) => (178, i.0),
+            EntityKey::DocumentFile(i) => (179, i.0),
+            EntityKey::DocumentProductAssociation(i) => (180, i.0),
+            EntityKey::DocumentProductEquivalence(i) => (181, i.0),
+            EntityKey::DocumentReference(i) => (182, i.0),
+            EntityKey::DocumentRepresentationType(i) => (183, i.0),
+            EntityKey::DocumentType(i) => (184, i.0),
+            EntityKey::DraughtingAnnotationOccurrence(i) => (185, i.0),
+            EntityKey::DraughtingCallout(i) => (186, i.0),
+            EntityKey::DraughtingCalloutRelationship(i) => (187, i.0),
+            EntityKey::DraughtingModel(i) => (188, i.0),
+            EntityKey::DraughtingModelItemAssociation(i) => (189, i.0),
+            EntityKey::DraughtingModelItemAssociationWithPlaceholder(i) => (190, i.0),
+            EntityKey::DraughtingPreDefinedColour(i) => (191, i.0),
+            EntityKey::DraughtingPreDefinedCurveFont(i) => (192, i.0),
+            EntityKey::DraughtingPreDefinedTextFont(i) => (193, i.0),
+            EntityKey::Edge(i) => (194, i.0),
+            EntityKey::EdgeCurve(i) => (195, i.0),
+            EntityKey::EdgeLoop(i) => (196, i.0),
+            EntityKey::Effectivity(i) => (197, i.0),
+            EntityKey::ElementarySurface(i) => (198, i.0),
+            EntityKey::Ellipse(i) => (199, i.0),
+            EntityKey::Expression(i) => (200, i.0),
+            EntityKey::ExternalIdentificationAssignment(i) => (201, i.0),
+            EntityKey::ExternalSource(i) => (202, i.0),
+            EntityKey::ExternallyDefinedCharacterGlyph(i) => (203, i.0),
+            EntityKey::ExternallyDefinedCurveFont(i) => (204, i.0),
+            EntityKey::ExternallyDefinedHatchStyle(i) => (205, i.0),
+            EntityKey::ExternallyDefinedItem(i) => (206, i.0),
+            EntityKey::ExternallyDefinedStyle(i) => (207, i.0),
+            EntityKey::ExternallyDefinedSymbol(i) => (208, i.0),
+            EntityKey::ExternallyDefinedTextFont(i) => (209, i.0),
+            EntityKey::ExternallyDefinedTile(i) => (210, i.0),
+            EntityKey::ExternallyDefinedTileStyle(i) => (211, i.0),
+            EntityKey::Face(i) => (212, i.0),
+            EntityKey::FaceBound(i) => (213, i.0),
+            EntityKey::FaceOuterBound(i) => (214, i.0),
+            EntityKey::FaceSurface(i) => (215, i.0),
+            EntityKey::FeatureForDatumTargetRelationship(i) => (216, i.0),
+            EntityKey::FillAreaStyle(i) => (217, i.0),
+            EntityKey::FillAreaStyleColour(i) => (218, i.0),
+            EntityKey::FillAreaStyleHatching(i) => (219, i.0),
+            EntityKey::FillAreaStyleTileColouredRegion(i) => (220, i.0),
+            EntityKey::FillAreaStyleTileCurveWithStyle(i) => (221, i.0),
+            EntityKey::FillAreaStyleTileSymbolWithStyle(i) => (222, i.0),
+            EntityKey::FillAreaStyleTiles(i) => (223, i.0),
+            EntityKey::FlatnessTolerance(i) => (224, i.0),
+            EntityKey::FoundedItem(i) => (225, i.0),
+            EntityKey::FunctionallyDefinedTransformation(i) => (226, i.0),
+            EntityKey::GeneralDatumReference(i) => (227, i.0),
+            EntityKey::GeneralProperty(i) => (228, i.0),
+            EntityKey::GeneralPropertyAssociation(i) => (229, i.0),
+            EntityKey::GenericExpression(i) => (230, i.0),
+            EntityKey::GenericLiteral(i) => (231, i.0),
+            EntityKey::GenericProductDefinitionReference(i) => (232, i.0),
+            EntityKey::GeometricCurveSet(i) => (233, i.0),
+            EntityKey::GeometricItemSpecificUsage(i) => (234, i.0),
+            EntityKey::GeometricRepresentationContext(i) => (235, i.0),
+            EntityKey::GeometricRepresentationItem(i) => (236, i.0),
+            EntityKey::GeometricSet(i) => (237, i.0),
+            EntityKey::GeometricTolerance(i) => (238, i.0),
+            EntityKey::GeometricToleranceRelationship(i) => (239, i.0),
+            EntityKey::GeometricToleranceWithDatumReference(i) => (240, i.0),
+            EntityKey::GeometricToleranceWithDefinedAreaUnit(i) => (241, i.0),
+            EntityKey::GeometricToleranceWithDefinedUnit(i) => (242, i.0),
+            EntityKey::GeometricToleranceWithMaximumTolerance(i) => (243, i.0),
+            EntityKey::GeometricToleranceWithModifiers(i) => (244, i.0),
+            EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(i) => (245, i.0),
+            EntityKey::GeometricallyBoundedWireframeShapeRepresentation(i) => (246, i.0),
+            EntityKey::GlobalUncertaintyAssignedContext(i) => (247, i.0),
+            EntityKey::GlobalUnitAssignedContext(i) => (248, i.0),
+            EntityKey::Group(i) => (249, i.0),
+            EntityKey::GroupAssignment(i) => (250, i.0),
+            EntityKey::Hyperbola(i) => (251, i.0),
+            EntityKey::IdAttribute(i) => (252, i.0),
+            EntityKey::IdentificationAssignment(i) => (253, i.0),
+            EntityKey::IdentificationRole(i) => (254, i.0),
+            EntityKey::IntLiteral(i) => (255, i.0),
+            EntityKey::IntegerRepresentationItem(i) => (256, i.0),
+            EntityKey::IntersectionCurve(i) => (257, i.0),
+            EntityKey::Invisibility(i) => (258, i.0),
+            EntityKey::ItemDefinedTransformation(i) => (259, i.0),
+            EntityKey::ItemIdentifiedRepresentationUsage(i) => (260, i.0),
+            EntityKey::LeaderCurve(i) => (261, i.0),
+            EntityKey::LeaderDirectedCallout(i) => (262, i.0),
+            EntityKey::LeaderTerminator(i) => (263, i.0),
+            EntityKey::LengthMeasureWithUnit(i) => (264, i.0),
+            EntityKey::LengthUnit(i) => (265, i.0),
+            EntityKey::LimitsAndFits(i) => (266, i.0),
+            EntityKey::Line(i) => (267, i.0),
+            EntityKey::LineProfileTolerance(i) => (268, i.0),
+            EntityKey::LiteralNumber(i) => (269, i.0),
+            EntityKey::LocalTime(i) => (270, i.0),
+            EntityKey::Loop(i) => (271, i.0),
+            EntityKey::MakeFromUsageOption(i) => (272, i.0),
+            EntityKey::ManifoldSolidBrep(i) => (273, i.0),
+            EntityKey::ManifoldSurfaceShapeRepresentation(i) => (274, i.0),
+            EntityKey::MappedItem(i) => (275, i.0),
+            EntityKey::MassMeasureWithUnit(i) => (276, i.0),
+            EntityKey::MassUnit(i) => (277, i.0),
+            EntityKey::MeasureQualification(i) => (278, i.0),
+            EntityKey::MeasureRepresentationItem(i) => (279, i.0),
+            EntityKey::MeasureWithUnit(i) => (280, i.0),
+            EntityKey::MechanicalContext(i) => (281, i.0),
+            EntityKey::MechanicalDesignAndDraughtingRelationship(i) => (282, i.0),
+            EntityKey::MechanicalDesignGeometricPresentationRepresentation(i) => (283, i.0),
+            EntityKey::MechanicalDesignPresentationRepresentationWithDraughting(i) => (284, i.0),
+            EntityKey::MechanicalDesignShadedPresentationRepresentation(i) => (285, i.0),
+            EntityKey::ModelGeometricView(i) => (286, i.0),
+            EntityKey::ModifiedGeometricTolerance(i) => (287, i.0),
+            EntityKey::NameAttribute(i) => (288, i.0),
+            EntityKey::NamedUnit(i) => (289, i.0),
+            EntityKey::NextAssemblyUsageOccurrence(i) => (290, i.0),
+            EntityKey::NumericExpression(i) => (291, i.0),
+            EntityKey::ObjectRole(i) => (292, i.0),
+            EntityKey::OffsetSurface(i) => (293, i.0),
+            EntityKey::OneDirectionRepeatFactor(i) => (294, i.0),
+            EntityKey::OpenShell(i) => (295, i.0),
+            EntityKey::Organization(i) => (296, i.0),
+            EntityKey::OrganizationRelationship(i) => (297, i.0),
+            EntityKey::OrganizationRole(i) => (298, i.0),
+            EntityKey::OrganizationType(i) => (299, i.0),
+            EntityKey::OrganizationTypeRole(i) => (300, i.0),
+            EntityKey::OrganizationalAddress(i) => (301, i.0),
+            EntityKey::OrganizationalProject(i) => (302, i.0),
+            EntityKey::OrganizationalProjectRelationship(i) => (303, i.0),
+            EntityKey::OrganizationalProjectRole(i) => (304, i.0),
+            EntityKey::OrientedClosedShell(i) => (305, i.0),
+            EntityKey::OrientedEdge(i) => (306, i.0),
+            EntityKey::OverRidingStyledItem(i) => (307, i.0),
+            EntityKey::Parabola(i) => (308, i.0),
+            EntityKey::ParallelismTolerance(i) => (309, i.0),
+            EntityKey::ParametricRepresentationContext(i) => (310, i.0),
+            EntityKey::Path(i) => (311, i.0),
+            EntityKey::Pcurve(i) => (312, i.0),
+            EntityKey::PerpendicularityTolerance(i) => (313, i.0),
+            EntityKey::Person(i) => (314, i.0),
+            EntityKey::PersonAndOrganization(i) => (315, i.0),
+            EntityKey::PersonAndOrganizationAddress(i) => (316, i.0),
+            EntityKey::PersonAndOrganizationAssignment(i) => (317, i.0),
+            EntityKey::PersonAndOrganizationRole(i) => (318, i.0),
+            EntityKey::PersonalAddress(i) => (319, i.0),
+            EntityKey::PlacedDatumTargetFeature(i) => (320, i.0),
+            EntityKey::Placement(i) => (321, i.0),
+            EntityKey::PlanarBox(i) => (322, i.0),
+            EntityKey::PlanarExtent(i) => (323, i.0),
+            EntityKey::Plane(i) => (324, i.0),
+            EntityKey::PlaneAngleMeasureWithUnit(i) => (325, i.0),
+            EntityKey::PlaneAngleUnit(i) => (326, i.0),
+            EntityKey::PlusMinusTolerance(i) => (327, i.0),
+            EntityKey::Point(i) => (328, i.0),
+            EntityKey::PointStyle(i) => (329, i.0),
+            EntityKey::PolyLoop(i) => (330, i.0),
+            EntityKey::Polyline(i) => (331, i.0),
+            EntityKey::PositionTolerance(i) => (332, i.0),
+            EntityKey::PreDefinedCharacterGlyph(i) => (333, i.0),
+            EntityKey::PreDefinedColour(i) => (334, i.0),
+            EntityKey::PreDefinedCurveFont(i) => (335, i.0),
+            EntityKey::PreDefinedItem(i) => (336, i.0),
+            EntityKey::PreDefinedMarker(i) => (337, i.0),
+            EntityKey::PreDefinedPointMarkerSymbol(i) => (338, i.0),
+            EntityKey::PreDefinedPresentationStyle(i) => (339, i.0),
+            EntityKey::PreDefinedSurfaceSideStyle(i) => (340, i.0),
+            EntityKey::PreDefinedSymbol(i) => (341, i.0),
+            EntityKey::PreDefinedTerminatorSymbol(i) => (342, i.0),
+            EntityKey::PreDefinedTextFont(i) => (343, i.0),
+            EntityKey::PreDefinedTile(i) => (344, i.0),
+            EntityKey::PrecisionQualifier(i) => (345, i.0),
+            EntityKey::PresentationArea(i) => (346, i.0),
+            EntityKey::PresentationLayerAssignment(i) => (347, i.0),
+            EntityKey::PresentationRepresentation(i) => (348, i.0),
+            EntityKey::PresentationSet(i) => (349, i.0),
+            EntityKey::PresentationSize(i) => (350, i.0),
+            EntityKey::PresentationStyleAssignment(i) => (351, i.0),
+            EntityKey::PresentationStyleByContext(i) => (352, i.0),
+            EntityKey::PresentationView(i) => (353, i.0),
+            EntityKey::PresentedItem(i) => (354, i.0),
+            EntityKey::PresentedItemRepresentation(i) => (355, i.0),
+            EntityKey::Product(i) => (356, i.0),
+            EntityKey::ProductCategory(i) => (357, i.0),
+            EntityKey::ProductCategoryRelationship(i) => (358, i.0),
+            EntityKey::ProductConcept(i) => (359, i.0),
+            EntityKey::ProductConceptContext(i) => (360, i.0),
+            EntityKey::ProductConceptFeature(i) => (361, i.0),
+            EntityKey::ProductConceptFeatureCategory(i) => (362, i.0),
+            EntityKey::ProductContext(i) => (363, i.0),
+            EntityKey::ProductDefinition(i) => (364, i.0),
+            EntityKey::ProductDefinitionContext(i) => (365, i.0),
+            EntityKey::ProductDefinitionContextAssociation(i) => (366, i.0),
+            EntityKey::ProductDefinitionContextRole(i) => (367, i.0),
+            EntityKey::ProductDefinitionEffectivity(i) => (368, i.0),
+            EntityKey::ProductDefinitionFormation(i) => (369, i.0),
+            EntityKey::ProductDefinitionFormationWithSpecifiedSource(i) => (370, i.0),
+            EntityKey::ProductDefinitionOccurrence(i) => (371, i.0),
+            EntityKey::ProductDefinitionRelationship(i) => (372, i.0),
+            EntityKey::ProductDefinitionRelationshipRelationship(i) => (373, i.0),
+            EntityKey::ProductDefinitionShape(i) => (374, i.0),
+            EntityKey::ProductDefinitionSubstitute(i) => (375, i.0),
+            EntityKey::ProductDefinitionUsage(i) => (376, i.0),
+            EntityKey::ProductDefinitionWithAssociatedDocuments(i) => (377, i.0),
+            EntityKey::ProductRelatedProductCategory(i) => (378, i.0),
+            EntityKey::ProjectedZoneDefinition(i) => (379, i.0),
+            EntityKey::PropertyDefinition(i) => (380, i.0),
+            EntityKey::PropertyDefinitionRelationship(i) => (381, i.0),
+            EntityKey::PropertyDefinitionRepresentation(i) => (382, i.0),
+            EntityKey::QualifiedRepresentationItem(i) => (383, i.0),
+            EntityKey::QuasiUniformCurve(i) => (384, i.0),
+            EntityKey::QuasiUniformSurface(i) => (385, i.0),
+            EntityKey::RatioMeasureWithUnit(i) => (386, i.0),
+            EntityKey::RatioUnit(i) => (387, i.0),
+            EntityKey::RationalBSplineCurve(i) => (388, i.0),
+            EntityKey::RationalBSplineSurface(i) => (389, i.0),
+            EntityKey::RealLiteral(i) => (390, i.0),
+            EntityKey::RealRepresentationItem(i) => (391, i.0),
+            EntityKey::RepositionedTessellatedItem(i) => (392, i.0),
+            EntityKey::Representation(i) => (393, i.0),
+            EntityKey::RepresentationContext(i) => (394, i.0),
+            EntityKey::RepresentationContextReference(i) => (395, i.0),
+            EntityKey::RepresentationItem(i) => (396, i.0),
+            EntityKey::RepresentationMap(i) => (397, i.0),
+            EntityKey::RepresentationReference(i) => (398, i.0),
+            EntityKey::RepresentationRelationship(i) => (399, i.0),
+            EntityKey::RepresentationRelationshipWithTransformation(i) => (400, i.0),
+            EntityKey::ResourceProperty(i) => (401, i.0),
+            EntityKey::ResourceRequirementType(i) => (402, i.0),
+            EntityKey::RoleAssociation(i) => (403, i.0),
+            EntityKey::RoundnessTolerance(i) => (404, i.0),
+            EntityKey::SeamCurve(i) => (405, i.0),
+            EntityKey::SecurityClassification(i) => (406, i.0),
+            EntityKey::SecurityClassificationAssignment(i) => (407, i.0),
+            EntityKey::SecurityClassificationLevel(i) => (408, i.0),
+            EntityKey::ShapeAspect(i) => (409, i.0),
+            EntityKey::ShapeAspectAssociativity(i) => (410, i.0),
+            EntityKey::ShapeAspectDerivingRelationship(i) => (411, i.0),
+            EntityKey::ShapeAspectRelationship(i) => (412, i.0),
+            EntityKey::ShapeDefinitionRepresentation(i) => (413, i.0),
+            EntityKey::ShapeDimensionRepresentation(i) => (414, i.0),
+            EntityKey::ShapeRepresentation(i) => (415, i.0),
+            EntityKey::ShapeRepresentationRelationship(i) => (416, i.0),
+            EntityKey::ShapeRepresentationWithParameters(i) => (417, i.0),
+            EntityKey::ShellBasedSurfaceModel(i) => (418, i.0),
+            EntityKey::SiUnit(i) => (419, i.0),
+            EntityKey::SimpleGenericExpression(i) => (420, i.0),
+            EntityKey::SimpleNumericExpression(i) => (421, i.0),
+            EntityKey::SolidAngleUnit(i) => (422, i.0),
+            EntityKey::SolidModel(i) => (423, i.0),
+            EntityKey::SphericalSurface(i) => (424, i.0),
+            EntityKey::StartRequest(i) => (425, i.0),
+            EntityKey::StartWork(i) => (426, i.0),
+            EntityKey::StateObserved(i) => (427, i.0),
+            EntityKey::StateType(i) => (428, i.0),
+            EntityKey::StraightnessTolerance(i) => (429, i.0),
+            EntityKey::StyledItem(i) => (430, i.0),
+            EntityKey::Surface(i) => (431, i.0),
+            EntityKey::SurfaceCurve(i) => (432, i.0),
+            EntityKey::SurfaceOfLinearExtrusion(i) => (433, i.0),
+            EntityKey::SurfaceOfRevolution(i) => (434, i.0),
+            EntityKey::SurfaceProfileTolerance(i) => (435, i.0),
+            EntityKey::SurfaceRenderingProperties(i) => (436, i.0),
+            EntityKey::SurfaceSideStyle(i) => (437, i.0),
+            EntityKey::SurfaceStyleBoundary(i) => (438, i.0),
+            EntityKey::SurfaceStyleControlGrid(i) => (439, i.0),
+            EntityKey::SurfaceStyleFillArea(i) => (440, i.0),
+            EntityKey::SurfaceStyleParameterLine(i) => (441, i.0),
+            EntityKey::SurfaceStyleReflectanceAmbient(i) => (442, i.0),
+            EntityKey::SurfaceStyleRendering(i) => (443, i.0),
+            EntityKey::SurfaceStyleRenderingWithProperties(i) => (444, i.0),
+            EntityKey::SurfaceStyleSegmentationCurve(i) => (445, i.0),
+            EntityKey::SurfaceStyleSilhouette(i) => (446, i.0),
+            EntityKey::SurfaceStyleTransparent(i) => (447, i.0),
+            EntityKey::SurfaceStyleUsage(i) => (448, i.0),
+            EntityKey::SweptSurface(i) => (449, i.0),
+            EntityKey::SymbolColour(i) => (450, i.0),
+            EntityKey::SymbolRepresentation(i) => (451, i.0),
+            EntityKey::SymbolStyle(i) => (452, i.0),
+            EntityKey::SymbolTarget(i) => (453, i.0),
+            EntityKey::SymmetryTolerance(i) => (454, i.0),
+            EntityKey::TerminatorSymbol(i) => (455, i.0),
+            EntityKey::TessellatedAnnotationOccurrence(i) => (456, i.0),
+            EntityKey::TessellatedCurveSet(i) => (457, i.0),
+            EntityKey::TessellatedFace(i) => (458, i.0),
+            EntityKey::TessellatedGeometricSet(i) => (459, i.0),
+            EntityKey::TessellatedItem(i) => (460, i.0),
+            EntityKey::TessellatedShapeRepresentation(i) => (461, i.0),
+            EntityKey::TessellatedShell(i) => (462, i.0),
+            EntityKey::TessellatedSolid(i) => (463, i.0),
+            EntityKey::TessellatedStructuredItem(i) => (464, i.0),
+            EntityKey::TessellatedSurfaceSet(i) => (465, i.0),
+            EntityKey::TextFont(i) => (466, i.0),
+            EntityKey::TextLiteral(i) => (467, i.0),
+            EntityKey::TextStyle(i) => (468, i.0),
+            EntityKey::TextStyleForDefinedFont(i) => (469, i.0),
+            EntityKey::TextStyleWithBoxCharacteristics(i) => (470, i.0),
+            EntityKey::TextureStyleSpecification(i) => (471, i.0),
+            EntityKey::TextureStyleTessellationSpecification(i) => (472, i.0),
+            EntityKey::TimeUnit(i) => (473, i.0),
+            EntityKey::ToleranceValue(i) => (474, i.0),
+            EntityKey::ToleranceZone(i) => (475, i.0),
+            EntityKey::ToleranceZoneDefinition(i) => (476, i.0),
+            EntityKey::ToleranceZoneForm(i) => (477, i.0),
+            EntityKey::ToleranceZoneWithDatum(i) => (478, i.0),
+            EntityKey::TopologicalRepresentationItem(i) => (479, i.0),
+            EntityKey::ToroidalSurface(i) => (480, i.0),
+            EntityKey::TotalRunoutTolerance(i) => (481, i.0),
+            EntityKey::TrimmedCurve(i) => (482, i.0),
+            EntityKey::TwoDirectionRepeatFactor(i) => (483, i.0),
+            EntityKey::TypeQualifier(i) => (484, i.0),
+            EntityKey::UncertaintyMeasureWithUnit(i) => (485, i.0),
+            EntityKey::UncertaintyQualifier(i) => (486, i.0),
+            EntityKey::UnequallyDisposedGeometricTolerance(i) => (487, i.0),
+            EntityKey::UniformCurve(i) => (488, i.0),
+            EntityKey::UniformSurface(i) => (489, i.0),
+            EntityKey::ValueFormatTypeQualifier(i) => (490, i.0),
+            EntityKey::ValueRepresentationItem(i) => (491, i.0),
+            EntityKey::Vector(i) => (492, i.0),
+            EntityKey::VersionedActionRequest(i) => (493, i.0),
+            EntityKey::Vertex(i) => (494, i.0),
+            EntityKey::VertexLoop(i) => (495, i.0),
+            EntityKey::VertexPoint(i) => (496, i.0),
+            EntityKey::VertexShell(i) => (497, i.0),
+            EntityKey::ViewVolume(i) => (498, i.0),
+            EntityKey::VolumeUnit(i) => (499, i.0),
+            EntityKey::WireShell(i) => (500, i.0),
+            EntityKey::ComplexEntity(i) => (501, i.0),
+        }
+    }
+
+    /// The STEP keyword of the entity type this key names
+    /// (`ADVANCED_FACE`); `None` for a complex instance, which joins several.
+    #[must_use]
+    pub fn keyword(self) -> Option<&'static str> {
+        match self {
+            EntityKey::Action(_) => Some("ACTION"),
+            EntityKey::ActionAssignment(_) => Some("ACTION_ASSIGNMENT"),
+            EntityKey::ActionDirective(_) => Some("ACTION_DIRECTIVE"),
+            EntityKey::ActionMethod(_) => Some("ACTION_METHOD"),
+            EntityKey::ActionMethodRelationship(_) => Some("ACTION_METHOD_RELATIONSHIP"),
+            EntityKey::ActionProperty(_) => Some("ACTION_PROPERTY"),
+            EntityKey::ActionRelationship(_) => Some("ACTION_RELATIONSHIP"),
+            EntityKey::ActionRequestAssignment(_) => Some("ACTION_REQUEST_ASSIGNMENT"),
+            EntityKey::ActionRequestSolution(_) => Some("ACTION_REQUEST_SOLUTION"),
+            EntityKey::ActionResource(_) => Some("ACTION_RESOURCE"),
+            EntityKey::ActionResourceRelationship(_) => Some("ACTION_RESOURCE_RELATIONSHIP"),
+            EntityKey::ActionResourceRequirement(_) => Some("ACTION_RESOURCE_REQUIREMENT"),
+            EntityKey::ActionResourceType(_) => Some("ACTION_RESOURCE_TYPE"),
+            EntityKey::Address(_) => Some("ADDRESS"),
+            EntityKey::AdvancedBrepShapeRepresentation(_) => {
+                Some("ADVANCED_BREP_SHAPE_REPRESENTATION")
+            }
+            EntityKey::AdvancedFace(_) => Some("ADVANCED_FACE"),
+            EntityKey::AllAroundShapeAspect(_) => Some("ALL_AROUND_SHAPE_ASPECT"),
+            EntityKey::AngularLocation(_) => Some("ANGULAR_LOCATION"),
+            EntityKey::AngularSize(_) => Some("ANGULAR_SIZE"),
+            EntityKey::AngularityTolerance(_) => Some("ANGULARITY_TOLERANCE"),
+            EntityKey::AnnotationCurveOccurrence(_) => Some("ANNOTATION_CURVE_OCCURRENCE"),
+            EntityKey::AnnotationFillAreaOccurrence(_) => Some("ANNOTATION_FILL_AREA_OCCURRENCE"),
+            EntityKey::AnnotationOccurrence(_) => Some("ANNOTATION_OCCURRENCE"),
+            EntityKey::AnnotationOccurrenceAssociativity(_) => {
+                Some("ANNOTATION_OCCURRENCE_ASSOCIATIVITY")
+            }
+            EntityKey::AnnotationOccurrenceRelationship(_) => {
+                Some("ANNOTATION_OCCURRENCE_RELATIONSHIP")
+            }
+            EntityKey::AnnotationPlaceholderLeaderLine(_) => {
+                Some("ANNOTATION_PLACEHOLDER_LEADER_LINE")
+            }
+            EntityKey::AnnotationPlaceholderOccurrence(_) => {
+                Some("ANNOTATION_PLACEHOLDER_OCCURRENCE")
+            }
+            EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(_) => {
+                Some("ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE")
+            }
+            EntityKey::AnnotationPlane(_) => Some("ANNOTATION_PLANE"),
+            EntityKey::AnnotationSymbol(_) => Some("ANNOTATION_SYMBOL"),
+            EntityKey::AnnotationSymbolOccurrence(_) => Some("ANNOTATION_SYMBOL_OCCURRENCE"),
+            EntityKey::AnnotationText(_) => Some("ANNOTATION_TEXT"),
+            EntityKey::AnnotationTextCharacter(_) => Some("ANNOTATION_TEXT_CHARACTER"),
+            EntityKey::AnnotationTextOccurrence(_) => Some("ANNOTATION_TEXT_OCCURRENCE"),
+            EntityKey::AnnotationToAnnotationLeaderLine(_) => {
+                Some("ANNOTATION_TO_ANNOTATION_LEADER_LINE")
+            }
+            EntityKey::AnnotationToModelLeaderLine(_) => Some("ANNOTATION_TO_MODEL_LEADER_LINE"),
+            EntityKey::ApllPoint(_) => Some("APLL_POINT"),
+            EntityKey::ApllPointWithSurface(_) => Some("APLL_POINT_WITH_SURFACE"),
+            EntityKey::ApplicationContext(_) => Some("APPLICATION_CONTEXT"),
+            EntityKey::ApplicationContextElement(_) => Some("APPLICATION_CONTEXT_ELEMENT"),
+            EntityKey::ApplicationProtocolDefinition(_) => Some("APPLICATION_PROTOCOL_DEFINITION"),
+            EntityKey::AppliedApprovalAssignment(_) => Some("APPLIED_APPROVAL_ASSIGNMENT"),
+            EntityKey::AppliedDateAndTimeAssignment(_) => Some("APPLIED_DATE_AND_TIME_ASSIGNMENT"),
+            EntityKey::AppliedDocumentReference(_) => Some("APPLIED_DOCUMENT_REFERENCE"),
+            EntityKey::AppliedExternalIdentificationAssignment(_) => {
+                Some("APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT")
+            }
+            EntityKey::AppliedGroupAssignment(_) => Some("APPLIED_GROUP_ASSIGNMENT"),
+            EntityKey::AppliedPersonAndOrganizationAssignment(_) => {
+                Some("APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT")
+            }
+            EntityKey::AppliedPresentedItem(_) => Some("APPLIED_PRESENTED_ITEM"),
+            EntityKey::AppliedSecurityClassificationAssignment(_) => {
+                Some("APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT")
+            }
+            EntityKey::Approval(_) => Some("APPROVAL"),
+            EntityKey::ApprovalAssignment(_) => Some("APPROVAL_ASSIGNMENT"),
+            EntityKey::ApprovalDateTime(_) => Some("APPROVAL_DATE_TIME"),
+            EntityKey::ApprovalPersonOrganization(_) => Some("APPROVAL_PERSON_ORGANIZATION"),
+            EntityKey::ApprovalRole(_) => Some("APPROVAL_ROLE"),
+            EntityKey::ApprovalStatus(_) => Some("APPROVAL_STATUS"),
+            EntityKey::ApproximationTolerance(_) => Some("APPROXIMATION_TOLERANCE"),
+            EntityKey::ApproximationToleranceDeviation(_) => {
+                Some("APPROXIMATION_TOLERANCE_DEVIATION")
+            }
+            EntityKey::ApproximationToleranceParameter(_) => {
+                Some("APPROXIMATION_TOLERANCE_PARAMETER")
+            }
+            EntityKey::AreaInSet(_) => Some("AREA_IN_SET"),
+            EntityKey::AreaUnit(_) => Some("AREA_UNIT"),
+            EntityKey::AscribableState(_) => Some("ASCRIBABLE_STATE"),
+            EntityKey::AscribableStateRelationship(_) => Some("ASCRIBABLE_STATE_RELATIONSHIP"),
+            EntityKey::AssemblyComponentUsage(_) => Some("ASSEMBLY_COMPONENT_USAGE"),
+            EntityKey::AuxiliaryLeaderLine(_) => Some("AUXILIARY_LEADER_LINE"),
+            EntityKey::Axis1Placement(_) => Some("AXIS1_PLACEMENT"),
+            EntityKey::Axis2Placement2d(_) => Some("AXIS2_PLACEMENT_2D"),
+            EntityKey::Axis2Placement3d(_) => Some("AXIS2_PLACEMENT_3D"),
+            EntityKey::BSplineCurve(_) => Some("B_SPLINE_CURVE"),
+            EntityKey::BSplineCurveWithKnots(_) => Some("B_SPLINE_CURVE_WITH_KNOTS"),
+            EntityKey::BSplineSurface(_) => Some("B_SPLINE_SURFACE"),
+            EntityKey::BSplineSurfaceWithKnots(_) => Some("B_SPLINE_SURFACE_WITH_KNOTS"),
+            EntityKey::BezierCurve(_) => Some("BEZIER_CURVE"),
+            EntityKey::BezierSurface(_) => Some("BEZIER_SURFACE"),
+            EntityKey::BoundedCurve(_) => Some("BOUNDED_CURVE"),
+            EntityKey::BoundedPcurve(_) => Some("BOUNDED_PCURVE"),
+            EntityKey::BoundedSurface(_) => Some("BOUNDED_SURFACE"),
+            EntityKey::BoundedSurfaceCurve(_) => Some("BOUNDED_SURFACE_CURVE"),
+            EntityKey::BrepWithVoids(_) => Some("BREP_WITH_VOIDS"),
+            EntityKey::CalendarDate(_) => Some("CALENDAR_DATE"),
+            EntityKey::CameraImage(_) => Some("CAMERA_IMAGE"),
+            EntityKey::CameraImage3dWithScale(_) => Some("CAMERA_IMAGE_3D_WITH_SCALE"),
+            EntityKey::CameraModel(_) => Some("CAMERA_MODEL"),
+            EntityKey::CameraModelD3(_) => Some("CAMERA_MODEL_D3"),
+            EntityKey::CameraModelD3MultiClipping(_) => Some("CAMERA_MODEL_D3_MULTI_CLIPPING"),
+            EntityKey::CameraModelD3WithHlhsr(_) => Some("CAMERA_MODEL_D3_WITH_HLHSR"),
+            EntityKey::CameraUsage(_) => Some("CAMERA_USAGE"),
+            EntityKey::CartesianPoint(_) => Some("CARTESIAN_POINT"),
+            EntityKey::CcDesignApproval(_) => Some("CC_DESIGN_APPROVAL"),
+            EntityKey::CcDesignDateAndTimeAssignment(_) => {
+                Some("CC_DESIGN_DATE_AND_TIME_ASSIGNMENT")
+            }
+            EntityKey::CcDesignPersonAndOrganizationAssignment(_) => {
+                Some("CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT")
+            }
+            EntityKey::CcDesignSecurityClassification(_) => {
+                Some("CC_DESIGN_SECURITY_CLASSIFICATION")
+            }
+            EntityKey::CentreOfSymmetry(_) => Some("CENTRE_OF_SYMMETRY"),
+            EntityKey::Certification(_) => Some("CERTIFICATION"),
+            EntityKey::CertificationType(_) => Some("CERTIFICATION_TYPE"),
+            EntityKey::Change(_) => Some("CHANGE"),
+            EntityKey::ChangeRequest(_) => Some("CHANGE_REQUEST"),
+            EntityKey::CharacterGlyphStyleOutline(_) => Some("CHARACTER_GLYPH_STYLE_OUTLINE"),
+            EntityKey::CharacterGlyphStyleStroke(_) => Some("CHARACTER_GLYPH_STYLE_STROKE"),
+            EntityKey::CharacterizedItemWithinRepresentation(_) => {
+                Some("CHARACTERIZED_ITEM_WITHIN_REPRESENTATION")
+            }
+            EntityKey::CharacterizedObject(_) => Some("CHARACTERIZED_OBJECT"),
+            EntityKey::CharacterizedRepresentation(_) => Some("CHARACTERIZED_REPRESENTATION"),
+            EntityKey::Circle(_) => Some("CIRCLE"),
+            EntityKey::CircularRunoutTolerance(_) => Some("CIRCULAR_RUNOUT_TOLERANCE"),
+            EntityKey::ClosedShell(_) => Some("CLOSED_SHELL"),
+            EntityKey::CoaxialityTolerance(_) => Some("COAXIALITY_TOLERANCE"),
+            EntityKey::Colour(_) => Some("COLOUR"),
+            EntityKey::ColourRgb(_) => Some("COLOUR_RGB"),
+            EntityKey::ColourSpecification(_) => Some("COLOUR_SPECIFICATION"),
+            EntityKey::CommonDatum(_) => Some("COMMON_DATUM"),
+            EntityKey::ComplexTriangulatedFace(_) => Some("COMPLEX_TRIANGULATED_FACE"),
+            EntityKey::ComplexTriangulatedSurfaceSet(_) => Some("COMPLEX_TRIANGULATED_SURFACE_SET"),
+            EntityKey::CompositeCurve(_) => Some("COMPOSITE_CURVE"),
+            EntityKey::CompositeCurveSegment(_) => Some("COMPOSITE_CURVE_SEGMENT"),
+            EntityKey::CompositeGroupShapeAspect(_) => Some("COMPOSITE_GROUP_SHAPE_ASPECT"),
+            EntityKey::CompositeShapeAspect(_) => Some("COMPOSITE_SHAPE_ASPECT"),
+            EntityKey::CompositeText(_) => Some("COMPOSITE_TEXT"),
+            EntityKey::CompoundRepresentationItem(_) => Some("COMPOUND_REPRESENTATION_ITEM"),
+            EntityKey::ConcentricityTolerance(_) => Some("CONCENTRICITY_TOLERANCE"),
+            EntityKey::ConfigurationDesign(_) => Some("CONFIGURATION_DESIGN"),
+            EntityKey::ConfigurationEffectivity(_) => Some("CONFIGURATION_EFFECTIVITY"),
+            EntityKey::ConfigurationItem(_) => Some("CONFIGURATION_ITEM"),
+            EntityKey::Conic(_) => Some("CONIC"),
+            EntityKey::ConicalSurface(_) => Some("CONICAL_SURFACE"),
+            EntityKey::ConnectedFaceSet(_) => Some("CONNECTED_FACE_SET"),
+            EntityKey::ConstructiveGeometryRepresentation(_) => {
+                Some("CONSTRUCTIVE_GEOMETRY_REPRESENTATION")
+            }
+            EntityKey::ConstructiveGeometryRepresentationRelationship(_) => {
+                Some("CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP")
+            }
+            EntityKey::ContextDependentOverRidingStyledItem(_) => {
+                Some("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM")
+            }
+            EntityKey::ContextDependentShapeRepresentation(_) => {
+                Some("CONTEXT_DEPENDENT_SHAPE_REPRESENTATION")
+            }
+            EntityKey::ContextDependentUnit(_) => Some("CONTEXT_DEPENDENT_UNIT"),
+            EntityKey::ContinuousShapeAspect(_) => Some("CONTINUOUS_SHAPE_ASPECT"),
+            EntityKey::Contract(_) => Some("CONTRACT"),
+            EntityKey::ContractType(_) => Some("CONTRACT_TYPE"),
+            EntityKey::ConversionBasedUnit(_) => Some("CONVERSION_BASED_UNIT"),
+            EntityKey::CoordinatedUniversalTimeOffset(_) => {
+                Some("COORDINATED_UNIVERSAL_TIME_OFFSET")
+            }
+            EntityKey::CoordinatesList(_) => Some("COORDINATES_LIST"),
+            EntityKey::Curve(_) => Some("CURVE"),
+            EntityKey::CurveStyle(_) => Some("CURVE_STYLE"),
+            EntityKey::CurveStyleFont(_) => Some("CURVE_STYLE_FONT"),
+            EntityKey::CurveStyleFontAndScaling(_) => Some("CURVE_STYLE_FONT_AND_SCALING"),
+            EntityKey::CurveStyleFontPattern(_) => Some("CURVE_STYLE_FONT_PATTERN"),
+            EntityKey::CurveStyleRendering(_) => Some("CURVE_STYLE_RENDERING"),
+            EntityKey::CylindricalSurface(_) => Some("CYLINDRICAL_SURFACE"),
+            EntityKey::CylindricityTolerance(_) => Some("CYLINDRICITY_TOLERANCE"),
+            EntityKey::Date(_) => Some("DATE"),
+            EntityKey::DateAndTime(_) => Some("DATE_AND_TIME"),
+            EntityKey::DateAndTimeAssignment(_) => Some("DATE_AND_TIME_ASSIGNMENT"),
+            EntityKey::DateRole(_) => Some("DATE_ROLE"),
+            EntityKey::DateTimeRole(_) => Some("DATE_TIME_ROLE"),
+            EntityKey::Datum(_) => Some("DATUM"),
+            EntityKey::DatumFeature(_) => Some("DATUM_FEATURE"),
+            EntityKey::DatumReference(_) => Some("DATUM_REFERENCE"),
+            EntityKey::DatumReferenceCompartment(_) => Some("DATUM_REFERENCE_COMPARTMENT"),
+            EntityKey::DatumReferenceElement(_) => Some("DATUM_REFERENCE_ELEMENT"),
+            EntityKey::DatumReferenceModifierWithValue(_) => {
+                Some("DATUM_REFERENCE_MODIFIER_WITH_VALUE")
+            }
+            EntityKey::DatumSystem(_) => Some("DATUM_SYSTEM"),
+            EntityKey::DatumTarget(_) => Some("DATUM_TARGET"),
+            EntityKey::DefaultModelGeometricView(_) => Some("DEFAULT_MODEL_GEOMETRIC_VIEW"),
+            EntityKey::DefinedCharacterGlyph(_) => Some("DEFINED_CHARACTER_GLYPH"),
+            EntityKey::DefinedSymbol(_) => Some("DEFINED_SYMBOL"),
+            EntityKey::DefinitionalRepresentation(_) => Some("DEFINITIONAL_REPRESENTATION"),
+            EntityKey::DefinitionalRepresentationRelationship(_) => {
+                Some("DEFINITIONAL_REPRESENTATION_RELATIONSHIP")
+            }
+            EntityKey::DefinitionalRepresentationRelationshipWithSameContext(_) => {
+                Some("DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT")
+            }
+            EntityKey::DegenerateToroidalSurface(_) => Some("DEGENERATE_TOROIDAL_SURFACE"),
+            EntityKey::DerivedShapeAspect(_) => Some("DERIVED_SHAPE_ASPECT"),
+            EntityKey::DerivedUnit(_) => Some("DERIVED_UNIT"),
+            EntityKey::DerivedUnitElement(_) => Some("DERIVED_UNIT_ELEMENT"),
+            EntityKey::DescriptionAttribute(_) => Some("DESCRIPTION_ATTRIBUTE"),
+            EntityKey::DescriptiveRepresentationItem(_) => Some("DESCRIPTIVE_REPRESENTATION_ITEM"),
+            EntityKey::DesignContext(_) => Some("DESIGN_CONTEXT"),
+            EntityKey::DimensionalCharacteristicRepresentation(_) => {
+                Some("DIMENSIONAL_CHARACTERISTIC_REPRESENTATION")
+            }
+            EntityKey::DimensionalExponents(_) => Some("DIMENSIONAL_EXPONENTS"),
+            EntityKey::DimensionalLocation(_) => Some("DIMENSIONAL_LOCATION"),
+            EntityKey::DimensionalLocationWithPath(_) => Some("DIMENSIONAL_LOCATION_WITH_PATH"),
+            EntityKey::DimensionalSize(_) => Some("DIMENSIONAL_SIZE"),
+            EntityKey::DimensionalSizeWithDatumFeature(_) => {
+                Some("DIMENSIONAL_SIZE_WITH_DATUM_FEATURE")
+            }
+            EntityKey::DimensionalSizeWithPath(_) => Some("DIMENSIONAL_SIZE_WITH_PATH"),
+            EntityKey::DirectedDimensionalLocation(_) => Some("DIRECTED_DIMENSIONAL_LOCATION"),
+            EntityKey::Direction(_) => Some("DIRECTION"),
+            EntityKey::Document(_) => Some("DOCUMENT"),
+            EntityKey::DocumentFile(_) => Some("DOCUMENT_FILE"),
+            EntityKey::DocumentProductAssociation(_) => Some("DOCUMENT_PRODUCT_ASSOCIATION"),
+            EntityKey::DocumentProductEquivalence(_) => Some("DOCUMENT_PRODUCT_EQUIVALENCE"),
+            EntityKey::DocumentReference(_) => Some("DOCUMENT_REFERENCE"),
+            EntityKey::DocumentRepresentationType(_) => Some("DOCUMENT_REPRESENTATION_TYPE"),
+            EntityKey::DocumentType(_) => Some("DOCUMENT_TYPE"),
+            EntityKey::DraughtingAnnotationOccurrence(_) => {
+                Some("DRAUGHTING_ANNOTATION_OCCURRENCE")
+            }
+            EntityKey::DraughtingCallout(_) => Some("DRAUGHTING_CALLOUT"),
+            EntityKey::DraughtingCalloutRelationship(_) => Some("DRAUGHTING_CALLOUT_RELATIONSHIP"),
+            EntityKey::DraughtingModel(_) => Some("DRAUGHTING_MODEL"),
+            EntityKey::DraughtingModelItemAssociation(_) => {
+                Some("DRAUGHTING_MODEL_ITEM_ASSOCIATION")
+            }
+            EntityKey::DraughtingModelItemAssociationWithPlaceholder(_) => {
+                Some("DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER")
+            }
+            EntityKey::DraughtingPreDefinedColour(_) => Some("DRAUGHTING_PRE_DEFINED_COLOUR"),
+            EntityKey::DraughtingPreDefinedCurveFont(_) => {
+                Some("DRAUGHTING_PRE_DEFINED_CURVE_FONT")
+            }
+            EntityKey::DraughtingPreDefinedTextFont(_) => Some("DRAUGHTING_PRE_DEFINED_TEXT_FONT"),
+            EntityKey::Edge(_) => Some("EDGE"),
+            EntityKey::EdgeCurve(_) => Some("EDGE_CURVE"),
+            EntityKey::EdgeLoop(_) => Some("EDGE_LOOP"),
+            EntityKey::Effectivity(_) => Some("EFFECTIVITY"),
+            EntityKey::ElementarySurface(_) => Some("ELEMENTARY_SURFACE"),
+            EntityKey::Ellipse(_) => Some("ELLIPSE"),
+            EntityKey::Expression(_) => Some("EXPRESSION"),
+            EntityKey::ExternalIdentificationAssignment(_) => {
+                Some("EXTERNAL_IDENTIFICATION_ASSIGNMENT")
+            }
+            EntityKey::ExternalSource(_) => Some("EXTERNAL_SOURCE"),
+            EntityKey::ExternallyDefinedCharacterGlyph(_) => {
+                Some("EXTERNALLY_DEFINED_CHARACTER_GLYPH")
+            }
+            EntityKey::ExternallyDefinedCurveFont(_) => Some("EXTERNALLY_DEFINED_CURVE_FONT"),
+            EntityKey::ExternallyDefinedHatchStyle(_) => Some("EXTERNALLY_DEFINED_HATCH_STYLE"),
+            EntityKey::ExternallyDefinedItem(_) => Some("EXTERNALLY_DEFINED_ITEM"),
+            EntityKey::ExternallyDefinedStyle(_) => Some("EXTERNALLY_DEFINED_STYLE"),
+            EntityKey::ExternallyDefinedSymbol(_) => Some("EXTERNALLY_DEFINED_SYMBOL"),
+            EntityKey::ExternallyDefinedTextFont(_) => Some("EXTERNALLY_DEFINED_TEXT_FONT"),
+            EntityKey::ExternallyDefinedTile(_) => Some("EXTERNALLY_DEFINED_TILE"),
+            EntityKey::ExternallyDefinedTileStyle(_) => Some("EXTERNALLY_DEFINED_TILE_STYLE"),
+            EntityKey::Face(_) => Some("FACE"),
+            EntityKey::FaceBound(_) => Some("FACE_BOUND"),
+            EntityKey::FaceOuterBound(_) => Some("FACE_OUTER_BOUND"),
+            EntityKey::FaceSurface(_) => Some("FACE_SURFACE"),
+            EntityKey::FeatureForDatumTargetRelationship(_) => {
+                Some("FEATURE_FOR_DATUM_TARGET_RELATIONSHIP")
+            }
+            EntityKey::FillAreaStyle(_) => Some("FILL_AREA_STYLE"),
+            EntityKey::FillAreaStyleColour(_) => Some("FILL_AREA_STYLE_COLOUR"),
+            EntityKey::FillAreaStyleHatching(_) => Some("FILL_AREA_STYLE_HATCHING"),
+            EntityKey::FillAreaStyleTileColouredRegion(_) => {
+                Some("FILL_AREA_STYLE_TILE_COLOURED_REGION")
+            }
+            EntityKey::FillAreaStyleTileCurveWithStyle(_) => {
+                Some("FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE")
+            }
+            EntityKey::FillAreaStyleTileSymbolWithStyle(_) => {
+                Some("FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE")
+            }
+            EntityKey::FillAreaStyleTiles(_) => Some("FILL_AREA_STYLE_TILES"),
+            EntityKey::FlatnessTolerance(_) => Some("FLATNESS_TOLERANCE"),
+            EntityKey::FoundedItem(_) => Some("FOUNDED_ITEM"),
+            EntityKey::FunctionallyDefinedTransformation(_) => {
+                Some("FUNCTIONALLY_DEFINED_TRANSFORMATION")
+            }
+            EntityKey::GeneralDatumReference(_) => Some("GENERAL_DATUM_REFERENCE"),
+            EntityKey::GeneralProperty(_) => Some("GENERAL_PROPERTY"),
+            EntityKey::GeneralPropertyAssociation(_) => Some("GENERAL_PROPERTY_ASSOCIATION"),
+            EntityKey::GenericExpression(_) => Some("GENERIC_EXPRESSION"),
+            EntityKey::GenericLiteral(_) => Some("GENERIC_LITERAL"),
+            EntityKey::GenericProductDefinitionReference(_) => {
+                Some("GENERIC_PRODUCT_DEFINITION_REFERENCE")
+            }
+            EntityKey::GeometricCurveSet(_) => Some("GEOMETRIC_CURVE_SET"),
+            EntityKey::GeometricItemSpecificUsage(_) => Some("GEOMETRIC_ITEM_SPECIFIC_USAGE"),
+            EntityKey::GeometricRepresentationContext(_) => {
+                Some("GEOMETRIC_REPRESENTATION_CONTEXT")
+            }
+            EntityKey::GeometricRepresentationItem(_) => Some("GEOMETRIC_REPRESENTATION_ITEM"),
+            EntityKey::GeometricSet(_) => Some("GEOMETRIC_SET"),
+            EntityKey::GeometricTolerance(_) => Some("GEOMETRIC_TOLERANCE"),
+            EntityKey::GeometricToleranceRelationship(_) => {
+                Some("GEOMETRIC_TOLERANCE_RELATIONSHIP")
+            }
+            EntityKey::GeometricToleranceWithDatumReference(_) => {
+                Some("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE")
+            }
+            EntityKey::GeometricToleranceWithDefinedAreaUnit(_) => {
+                Some("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT")
+            }
+            EntityKey::GeometricToleranceWithDefinedUnit(_) => {
+                Some("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT")
+            }
+            EntityKey::GeometricToleranceWithMaximumTolerance(_) => {
+                Some("GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE")
+            }
+            EntityKey::GeometricToleranceWithModifiers(_) => {
+                Some("GEOMETRIC_TOLERANCE_WITH_MODIFIERS")
+            }
+            EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(_) => {
+                Some("GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION")
+            }
+            EntityKey::GeometricallyBoundedWireframeShapeRepresentation(_) => {
+                Some("GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION")
+            }
+            EntityKey::GlobalUncertaintyAssignedContext(_) => {
+                Some("GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT")
+            }
+            EntityKey::GlobalUnitAssignedContext(_) => Some("GLOBAL_UNIT_ASSIGNED_CONTEXT"),
+            EntityKey::Group(_) => Some("GROUP"),
+            EntityKey::GroupAssignment(_) => Some("GROUP_ASSIGNMENT"),
+            EntityKey::Hyperbola(_) => Some("HYPERBOLA"),
+            EntityKey::IdAttribute(_) => Some("ID_ATTRIBUTE"),
+            EntityKey::IdentificationAssignment(_) => Some("IDENTIFICATION_ASSIGNMENT"),
+            EntityKey::IdentificationRole(_) => Some("IDENTIFICATION_ROLE"),
+            EntityKey::IntLiteral(_) => Some("INT_LITERAL"),
+            EntityKey::IntegerRepresentationItem(_) => Some("INTEGER_REPRESENTATION_ITEM"),
+            EntityKey::IntersectionCurve(_) => Some("INTERSECTION_CURVE"),
+            EntityKey::Invisibility(_) => Some("INVISIBILITY"),
+            EntityKey::ItemDefinedTransformation(_) => Some("ITEM_DEFINED_TRANSFORMATION"),
+            EntityKey::ItemIdentifiedRepresentationUsage(_) => {
+                Some("ITEM_IDENTIFIED_REPRESENTATION_USAGE")
+            }
+            EntityKey::LeaderCurve(_) => Some("LEADER_CURVE"),
+            EntityKey::LeaderDirectedCallout(_) => Some("LEADER_DIRECTED_CALLOUT"),
+            EntityKey::LeaderTerminator(_) => Some("LEADER_TERMINATOR"),
+            EntityKey::LengthMeasureWithUnit(_) => Some("LENGTH_MEASURE_WITH_UNIT"),
+            EntityKey::LengthUnit(_) => Some("LENGTH_UNIT"),
+            EntityKey::LimitsAndFits(_) => Some("LIMITS_AND_FITS"),
+            EntityKey::Line(_) => Some("LINE"),
+            EntityKey::LineProfileTolerance(_) => Some("LINE_PROFILE_TOLERANCE"),
+            EntityKey::LiteralNumber(_) => Some("LITERAL_NUMBER"),
+            EntityKey::LocalTime(_) => Some("LOCAL_TIME"),
+            EntityKey::Loop(_) => Some("LOOP"),
+            EntityKey::MakeFromUsageOption(_) => Some("MAKE_FROM_USAGE_OPTION"),
+            EntityKey::ManifoldSolidBrep(_) => Some("MANIFOLD_SOLID_BREP"),
+            EntityKey::ManifoldSurfaceShapeRepresentation(_) => {
+                Some("MANIFOLD_SURFACE_SHAPE_REPRESENTATION")
+            }
+            EntityKey::MappedItem(_) => Some("MAPPED_ITEM"),
+            EntityKey::MassMeasureWithUnit(_) => Some("MASS_MEASURE_WITH_UNIT"),
+            EntityKey::MassUnit(_) => Some("MASS_UNIT"),
+            EntityKey::MeasureQualification(_) => Some("MEASURE_QUALIFICATION"),
+            EntityKey::MeasureRepresentationItem(_) => Some("MEASURE_REPRESENTATION_ITEM"),
+            EntityKey::MeasureWithUnit(_) => Some("MEASURE_WITH_UNIT"),
+            EntityKey::MechanicalContext(_) => Some("MECHANICAL_CONTEXT"),
+            EntityKey::MechanicalDesignAndDraughtingRelationship(_) => {
+                Some("MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP")
+            }
+            EntityKey::MechanicalDesignGeometricPresentationRepresentation(_) => {
+                Some("MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION")
+            }
+            EntityKey::MechanicalDesignPresentationRepresentationWithDraughting(_) => {
+                Some("MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING")
+            }
+            EntityKey::MechanicalDesignShadedPresentationRepresentation(_) => {
+                Some("MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION")
+            }
+            EntityKey::ModelGeometricView(_) => Some("MODEL_GEOMETRIC_VIEW"),
+            EntityKey::ModifiedGeometricTolerance(_) => Some("MODIFIED_GEOMETRIC_TOLERANCE"),
+            EntityKey::NameAttribute(_) => Some("NAME_ATTRIBUTE"),
+            EntityKey::NamedUnit(_) => Some("NAMED_UNIT"),
+            EntityKey::NextAssemblyUsageOccurrence(_) => Some("NEXT_ASSEMBLY_USAGE_OCCURRENCE"),
+            EntityKey::NumericExpression(_) => Some("NUMERIC_EXPRESSION"),
+            EntityKey::ObjectRole(_) => Some("OBJECT_ROLE"),
+            EntityKey::OffsetSurface(_) => Some("OFFSET_SURFACE"),
+            EntityKey::OneDirectionRepeatFactor(_) => Some("ONE_DIRECTION_REPEAT_FACTOR"),
+            EntityKey::OpenShell(_) => Some("OPEN_SHELL"),
+            EntityKey::Organization(_) => Some("ORGANIZATION"),
+            EntityKey::OrganizationRelationship(_) => Some("ORGANIZATION_RELATIONSHIP"),
+            EntityKey::OrganizationRole(_) => Some("ORGANIZATION_ROLE"),
+            EntityKey::OrganizationType(_) => Some("ORGANIZATION_TYPE"),
+            EntityKey::OrganizationTypeRole(_) => Some("ORGANIZATION_TYPE_ROLE"),
+            EntityKey::OrganizationalAddress(_) => Some("ORGANIZATIONAL_ADDRESS"),
+            EntityKey::OrganizationalProject(_) => Some("ORGANIZATIONAL_PROJECT"),
+            EntityKey::OrganizationalProjectRelationship(_) => {
+                Some("ORGANIZATIONAL_PROJECT_RELATIONSHIP")
+            }
+            EntityKey::OrganizationalProjectRole(_) => Some("ORGANIZATIONAL_PROJECT_ROLE"),
+            EntityKey::OrientedClosedShell(_) => Some("ORIENTED_CLOSED_SHELL"),
+            EntityKey::OrientedEdge(_) => Some("ORIENTED_EDGE"),
+            EntityKey::OverRidingStyledItem(_) => Some("OVER_RIDING_STYLED_ITEM"),
+            EntityKey::Parabola(_) => Some("PARABOLA"),
+            EntityKey::ParallelismTolerance(_) => Some("PARALLELISM_TOLERANCE"),
+            EntityKey::ParametricRepresentationContext(_) => {
+                Some("PARAMETRIC_REPRESENTATION_CONTEXT")
+            }
+            EntityKey::Path(_) => Some("PATH"),
+            EntityKey::Pcurve(_) => Some("PCURVE"),
+            EntityKey::PerpendicularityTolerance(_) => Some("PERPENDICULARITY_TOLERANCE"),
+            EntityKey::Person(_) => Some("PERSON"),
+            EntityKey::PersonAndOrganization(_) => Some("PERSON_AND_ORGANIZATION"),
+            EntityKey::PersonAndOrganizationAddress(_) => Some("PERSON_AND_ORGANIZATION_ADDRESS"),
+            EntityKey::PersonAndOrganizationAssignment(_) => {
+                Some("PERSON_AND_ORGANIZATION_ASSIGNMENT")
+            }
+            EntityKey::PersonAndOrganizationRole(_) => Some("PERSON_AND_ORGANIZATION_ROLE"),
+            EntityKey::PersonalAddress(_) => Some("PERSONAL_ADDRESS"),
+            EntityKey::PlacedDatumTargetFeature(_) => Some("PLACED_DATUM_TARGET_FEATURE"),
+            EntityKey::Placement(_) => Some("PLACEMENT"),
+            EntityKey::PlanarBox(_) => Some("PLANAR_BOX"),
+            EntityKey::PlanarExtent(_) => Some("PLANAR_EXTENT"),
+            EntityKey::Plane(_) => Some("PLANE"),
+            EntityKey::PlaneAngleMeasureWithUnit(_) => Some("PLANE_ANGLE_MEASURE_WITH_UNIT"),
+            EntityKey::PlaneAngleUnit(_) => Some("PLANE_ANGLE_UNIT"),
+            EntityKey::PlusMinusTolerance(_) => Some("PLUS_MINUS_TOLERANCE"),
+            EntityKey::Point(_) => Some("POINT"),
+            EntityKey::PointStyle(_) => Some("POINT_STYLE"),
+            EntityKey::PolyLoop(_) => Some("POLY_LOOP"),
+            EntityKey::Polyline(_) => Some("POLYLINE"),
+            EntityKey::PositionTolerance(_) => Some("POSITION_TOLERANCE"),
+            EntityKey::PreDefinedCharacterGlyph(_) => Some("PRE_DEFINED_CHARACTER_GLYPH"),
+            EntityKey::PreDefinedColour(_) => Some("PRE_DEFINED_COLOUR"),
+            EntityKey::PreDefinedCurveFont(_) => Some("PRE_DEFINED_CURVE_FONT"),
+            EntityKey::PreDefinedItem(_) => Some("PRE_DEFINED_ITEM"),
+            EntityKey::PreDefinedMarker(_) => Some("PRE_DEFINED_MARKER"),
+            EntityKey::PreDefinedPointMarkerSymbol(_) => Some("PRE_DEFINED_POINT_MARKER_SYMBOL"),
+            EntityKey::PreDefinedPresentationStyle(_) => Some("PRE_DEFINED_PRESENTATION_STYLE"),
+            EntityKey::PreDefinedSurfaceSideStyle(_) => Some("PRE_DEFINED_SURFACE_SIDE_STYLE"),
+            EntityKey::PreDefinedSymbol(_) => Some("PRE_DEFINED_SYMBOL"),
+            EntityKey::PreDefinedTerminatorSymbol(_) => Some("PRE_DEFINED_TERMINATOR_SYMBOL"),
+            EntityKey::PreDefinedTextFont(_) => Some("PRE_DEFINED_TEXT_FONT"),
+            EntityKey::PreDefinedTile(_) => Some("PRE_DEFINED_TILE"),
+            EntityKey::PrecisionQualifier(_) => Some("PRECISION_QUALIFIER"),
+            EntityKey::PresentationArea(_) => Some("PRESENTATION_AREA"),
+            EntityKey::PresentationLayerAssignment(_) => Some("PRESENTATION_LAYER_ASSIGNMENT"),
+            EntityKey::PresentationRepresentation(_) => Some("PRESENTATION_REPRESENTATION"),
+            EntityKey::PresentationSet(_) => Some("PRESENTATION_SET"),
+            EntityKey::PresentationSize(_) => Some("PRESENTATION_SIZE"),
+            EntityKey::PresentationStyleAssignment(_) => Some("PRESENTATION_STYLE_ASSIGNMENT"),
+            EntityKey::PresentationStyleByContext(_) => Some("PRESENTATION_STYLE_BY_CONTEXT"),
+            EntityKey::PresentationView(_) => Some("PRESENTATION_VIEW"),
+            EntityKey::PresentedItem(_) => Some("PRESENTED_ITEM"),
+            EntityKey::PresentedItemRepresentation(_) => Some("PRESENTED_ITEM_REPRESENTATION"),
+            EntityKey::Product(_) => Some("PRODUCT"),
+            EntityKey::ProductCategory(_) => Some("PRODUCT_CATEGORY"),
+            EntityKey::ProductCategoryRelationship(_) => Some("PRODUCT_CATEGORY_RELATIONSHIP"),
+            EntityKey::ProductConcept(_) => Some("PRODUCT_CONCEPT"),
+            EntityKey::ProductConceptContext(_) => Some("PRODUCT_CONCEPT_CONTEXT"),
+            EntityKey::ProductConceptFeature(_) => Some("PRODUCT_CONCEPT_FEATURE"),
+            EntityKey::ProductConceptFeatureCategory(_) => Some("PRODUCT_CONCEPT_FEATURE_CATEGORY"),
+            EntityKey::ProductContext(_) => Some("PRODUCT_CONTEXT"),
+            EntityKey::ProductDefinition(_) => Some("PRODUCT_DEFINITION"),
+            EntityKey::ProductDefinitionContext(_) => Some("PRODUCT_DEFINITION_CONTEXT"),
+            EntityKey::ProductDefinitionContextAssociation(_) => {
+                Some("PRODUCT_DEFINITION_CONTEXT_ASSOCIATION")
+            }
+            EntityKey::ProductDefinitionContextRole(_) => Some("PRODUCT_DEFINITION_CONTEXT_ROLE"),
+            EntityKey::ProductDefinitionEffectivity(_) => Some("PRODUCT_DEFINITION_EFFECTIVITY"),
+            EntityKey::ProductDefinitionFormation(_) => Some("PRODUCT_DEFINITION_FORMATION"),
+            EntityKey::ProductDefinitionFormationWithSpecifiedSource(_) => {
+                Some("PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE")
+            }
+            EntityKey::ProductDefinitionOccurrence(_) => Some("PRODUCT_DEFINITION_OCCURRENCE"),
+            EntityKey::ProductDefinitionRelationship(_) => Some("PRODUCT_DEFINITION_RELATIONSHIP"),
+            EntityKey::ProductDefinitionRelationshipRelationship(_) => {
+                Some("PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP")
+            }
+            EntityKey::ProductDefinitionShape(_) => Some("PRODUCT_DEFINITION_SHAPE"),
+            EntityKey::ProductDefinitionSubstitute(_) => Some("PRODUCT_DEFINITION_SUBSTITUTE"),
+            EntityKey::ProductDefinitionUsage(_) => Some("PRODUCT_DEFINITION_USAGE"),
+            EntityKey::ProductDefinitionWithAssociatedDocuments(_) => {
+                Some("PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS")
+            }
+            EntityKey::ProductRelatedProductCategory(_) => Some("PRODUCT_RELATED_PRODUCT_CATEGORY"),
+            EntityKey::ProjectedZoneDefinition(_) => Some("PROJECTED_ZONE_DEFINITION"),
+            EntityKey::PropertyDefinition(_) => Some("PROPERTY_DEFINITION"),
+            EntityKey::PropertyDefinitionRelationship(_) => {
+                Some("PROPERTY_DEFINITION_RELATIONSHIP")
+            }
+            EntityKey::PropertyDefinitionRepresentation(_) => {
+                Some("PROPERTY_DEFINITION_REPRESENTATION")
+            }
+            EntityKey::QualifiedRepresentationItem(_) => Some("QUALIFIED_REPRESENTATION_ITEM"),
+            EntityKey::QuasiUniformCurve(_) => Some("QUASI_UNIFORM_CURVE"),
+            EntityKey::QuasiUniformSurface(_) => Some("QUASI_UNIFORM_SURFACE"),
+            EntityKey::RatioMeasureWithUnit(_) => Some("RATIO_MEASURE_WITH_UNIT"),
+            EntityKey::RatioUnit(_) => Some("RATIO_UNIT"),
+            EntityKey::RationalBSplineCurve(_) => Some("RATIONAL_B_SPLINE_CURVE"),
+            EntityKey::RationalBSplineSurface(_) => Some("RATIONAL_B_SPLINE_SURFACE"),
+            EntityKey::RealLiteral(_) => Some("REAL_LITERAL"),
+            EntityKey::RealRepresentationItem(_) => Some("REAL_REPRESENTATION_ITEM"),
+            EntityKey::RepositionedTessellatedItem(_) => Some("REPOSITIONED_TESSELLATED_ITEM"),
+            EntityKey::Representation(_) => Some("REPRESENTATION"),
+            EntityKey::RepresentationContext(_) => Some("REPRESENTATION_CONTEXT"),
+            EntityKey::RepresentationContextReference(_) => {
+                Some("REPRESENTATION_CONTEXT_REFERENCE")
+            }
+            EntityKey::RepresentationItem(_) => Some("REPRESENTATION_ITEM"),
+            EntityKey::RepresentationMap(_) => Some("REPRESENTATION_MAP"),
+            EntityKey::RepresentationReference(_) => Some("REPRESENTATION_REFERENCE"),
+            EntityKey::RepresentationRelationship(_) => Some("REPRESENTATION_RELATIONSHIP"),
+            EntityKey::RepresentationRelationshipWithTransformation(_) => {
+                Some("REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION")
+            }
+            EntityKey::ResourceProperty(_) => Some("RESOURCE_PROPERTY"),
+            EntityKey::ResourceRequirementType(_) => Some("RESOURCE_REQUIREMENT_TYPE"),
+            EntityKey::RoleAssociation(_) => Some("ROLE_ASSOCIATION"),
+            EntityKey::RoundnessTolerance(_) => Some("ROUNDNESS_TOLERANCE"),
+            EntityKey::SeamCurve(_) => Some("SEAM_CURVE"),
+            EntityKey::SecurityClassification(_) => Some("SECURITY_CLASSIFICATION"),
+            EntityKey::SecurityClassificationAssignment(_) => {
+                Some("SECURITY_CLASSIFICATION_ASSIGNMENT")
+            }
+            EntityKey::SecurityClassificationLevel(_) => Some("SECURITY_CLASSIFICATION_LEVEL"),
+            EntityKey::ShapeAspect(_) => Some("SHAPE_ASPECT"),
+            EntityKey::ShapeAspectAssociativity(_) => Some("SHAPE_ASPECT_ASSOCIATIVITY"),
+            EntityKey::ShapeAspectDerivingRelationship(_) => {
+                Some("SHAPE_ASPECT_DERIVING_RELATIONSHIP")
+            }
+            EntityKey::ShapeAspectRelationship(_) => Some("SHAPE_ASPECT_RELATIONSHIP"),
+            EntityKey::ShapeDefinitionRepresentation(_) => Some("SHAPE_DEFINITION_REPRESENTATION"),
+            EntityKey::ShapeDimensionRepresentation(_) => Some("SHAPE_DIMENSION_REPRESENTATION"),
+            EntityKey::ShapeRepresentation(_) => Some("SHAPE_REPRESENTATION"),
+            EntityKey::ShapeRepresentationRelationship(_) => {
+                Some("SHAPE_REPRESENTATION_RELATIONSHIP")
+            }
+            EntityKey::ShapeRepresentationWithParameters(_) => {
+                Some("SHAPE_REPRESENTATION_WITH_PARAMETERS")
+            }
+            EntityKey::ShellBasedSurfaceModel(_) => Some("SHELL_BASED_SURFACE_MODEL"),
+            EntityKey::SiUnit(_) => Some("SI_UNIT"),
+            EntityKey::SimpleGenericExpression(_) => Some("SIMPLE_GENERIC_EXPRESSION"),
+            EntityKey::SimpleNumericExpression(_) => Some("SIMPLE_NUMERIC_EXPRESSION"),
+            EntityKey::SolidAngleUnit(_) => Some("SOLID_ANGLE_UNIT"),
+            EntityKey::SolidModel(_) => Some("SOLID_MODEL"),
+            EntityKey::SphericalSurface(_) => Some("SPHERICAL_SURFACE"),
+            EntityKey::StartRequest(_) => Some("START_REQUEST"),
+            EntityKey::StartWork(_) => Some("START_WORK"),
+            EntityKey::StateObserved(_) => Some("STATE_OBSERVED"),
+            EntityKey::StateType(_) => Some("STATE_TYPE"),
+            EntityKey::StraightnessTolerance(_) => Some("STRAIGHTNESS_TOLERANCE"),
+            EntityKey::StyledItem(_) => Some("STYLED_ITEM"),
+            EntityKey::Surface(_) => Some("SURFACE"),
+            EntityKey::SurfaceCurve(_) => Some("SURFACE_CURVE"),
+            EntityKey::SurfaceOfLinearExtrusion(_) => Some("SURFACE_OF_LINEAR_EXTRUSION"),
+            EntityKey::SurfaceOfRevolution(_) => Some("SURFACE_OF_REVOLUTION"),
+            EntityKey::SurfaceProfileTolerance(_) => Some("SURFACE_PROFILE_TOLERANCE"),
+            EntityKey::SurfaceRenderingProperties(_) => Some("SURFACE_RENDERING_PROPERTIES"),
+            EntityKey::SurfaceSideStyle(_) => Some("SURFACE_SIDE_STYLE"),
+            EntityKey::SurfaceStyleBoundary(_) => Some("SURFACE_STYLE_BOUNDARY"),
+            EntityKey::SurfaceStyleControlGrid(_) => Some("SURFACE_STYLE_CONTROL_GRID"),
+            EntityKey::SurfaceStyleFillArea(_) => Some("SURFACE_STYLE_FILL_AREA"),
+            EntityKey::SurfaceStyleParameterLine(_) => Some("SURFACE_STYLE_PARAMETER_LINE"),
+            EntityKey::SurfaceStyleReflectanceAmbient(_) => {
+                Some("SURFACE_STYLE_REFLECTANCE_AMBIENT")
+            }
+            EntityKey::SurfaceStyleRendering(_) => Some("SURFACE_STYLE_RENDERING"),
+            EntityKey::SurfaceStyleRenderingWithProperties(_) => {
+                Some("SURFACE_STYLE_RENDERING_WITH_PROPERTIES")
+            }
+            EntityKey::SurfaceStyleSegmentationCurve(_) => Some("SURFACE_STYLE_SEGMENTATION_CURVE"),
+            EntityKey::SurfaceStyleSilhouette(_) => Some("SURFACE_STYLE_SILHOUETTE"),
+            EntityKey::SurfaceStyleTransparent(_) => Some("SURFACE_STYLE_TRANSPARENT"),
+            EntityKey::SurfaceStyleUsage(_) => Some("SURFACE_STYLE_USAGE"),
+            EntityKey::SweptSurface(_) => Some("SWEPT_SURFACE"),
+            EntityKey::SymbolColour(_) => Some("SYMBOL_COLOUR"),
+            EntityKey::SymbolRepresentation(_) => Some("SYMBOL_REPRESENTATION"),
+            EntityKey::SymbolStyle(_) => Some("SYMBOL_STYLE"),
+            EntityKey::SymbolTarget(_) => Some("SYMBOL_TARGET"),
+            EntityKey::SymmetryTolerance(_) => Some("SYMMETRY_TOLERANCE"),
+            EntityKey::TerminatorSymbol(_) => Some("TERMINATOR_SYMBOL"),
+            EntityKey::TessellatedAnnotationOccurrence(_) => {
+                Some("TESSELLATED_ANNOTATION_OCCURRENCE")
+            }
+            EntityKey::TessellatedCurveSet(_) => Some("TESSELLATED_CURVE_SET"),
+            EntityKey::TessellatedFace(_) => Some("TESSELLATED_FACE"),
+            EntityKey::TessellatedGeometricSet(_) => Some("TESSELLATED_GEOMETRIC_SET"),
+            EntityKey::TessellatedItem(_) => Some("TESSELLATED_ITEM"),
+            EntityKey::TessellatedShapeRepresentation(_) => {
+                Some("TESSELLATED_SHAPE_REPRESENTATION")
+            }
+            EntityKey::TessellatedShell(_) => Some("TESSELLATED_SHELL"),
+            EntityKey::TessellatedSolid(_) => Some("TESSELLATED_SOLID"),
+            EntityKey::TessellatedStructuredItem(_) => Some("TESSELLATED_STRUCTURED_ITEM"),
+            EntityKey::TessellatedSurfaceSet(_) => Some("TESSELLATED_SURFACE_SET"),
+            EntityKey::TextFont(_) => Some("TEXT_FONT"),
+            EntityKey::TextLiteral(_) => Some("TEXT_LITERAL"),
+            EntityKey::TextStyle(_) => Some("TEXT_STYLE"),
+            EntityKey::TextStyleForDefinedFont(_) => Some("TEXT_STYLE_FOR_DEFINED_FONT"),
+            EntityKey::TextStyleWithBoxCharacteristics(_) => {
+                Some("TEXT_STYLE_WITH_BOX_CHARACTERISTICS")
+            }
+            EntityKey::TextureStyleSpecification(_) => Some("TEXTURE_STYLE_SPECIFICATION"),
+            EntityKey::TextureStyleTessellationSpecification(_) => {
+                Some("TEXTURE_STYLE_TESSELLATION_SPECIFICATION")
+            }
+            EntityKey::TimeUnit(_) => Some("TIME_UNIT"),
+            EntityKey::ToleranceValue(_) => Some("TOLERANCE_VALUE"),
+            EntityKey::ToleranceZone(_) => Some("TOLERANCE_ZONE"),
+            EntityKey::ToleranceZoneDefinition(_) => Some("TOLERANCE_ZONE_DEFINITION"),
+            EntityKey::ToleranceZoneForm(_) => Some("TOLERANCE_ZONE_FORM"),
+            EntityKey::ToleranceZoneWithDatum(_) => Some("TOLERANCE_ZONE_WITH_DATUM"),
+            EntityKey::TopologicalRepresentationItem(_) => Some("TOPOLOGICAL_REPRESENTATION_ITEM"),
+            EntityKey::ToroidalSurface(_) => Some("TOROIDAL_SURFACE"),
+            EntityKey::TotalRunoutTolerance(_) => Some("TOTAL_RUNOUT_TOLERANCE"),
+            EntityKey::TrimmedCurve(_) => Some("TRIMMED_CURVE"),
+            EntityKey::TwoDirectionRepeatFactor(_) => Some("TWO_DIRECTION_REPEAT_FACTOR"),
+            EntityKey::TypeQualifier(_) => Some("TYPE_QUALIFIER"),
+            EntityKey::UncertaintyMeasureWithUnit(_) => Some("UNCERTAINTY_MEASURE_WITH_UNIT"),
+            EntityKey::UncertaintyQualifier(_) => Some("UNCERTAINTY_QUALIFIER"),
+            EntityKey::UnequallyDisposedGeometricTolerance(_) => {
+                Some("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE")
+            }
+            EntityKey::UniformCurve(_) => Some("UNIFORM_CURVE"),
+            EntityKey::UniformSurface(_) => Some("UNIFORM_SURFACE"),
+            EntityKey::ValueFormatTypeQualifier(_) => Some("VALUE_FORMAT_TYPE_QUALIFIER"),
+            EntityKey::ValueRepresentationItem(_) => Some("VALUE_REPRESENTATION_ITEM"),
+            EntityKey::Vector(_) => Some("VECTOR"),
+            EntityKey::VersionedActionRequest(_) => Some("VERSIONED_ACTION_REQUEST"),
+            EntityKey::Vertex(_) => Some("VERTEX"),
+            EntityKey::VertexLoop(_) => Some("VERTEX_LOOP"),
+            EntityKey::VertexPoint(_) => Some("VERTEX_POINT"),
+            EntityKey::VertexShell(_) => Some("VERTEX_SHELL"),
+            EntityKey::ViewVolume(_) => Some("VIEW_VOLUME"),
+            EntityKey::VolumeUnit(_) => Some("VOLUME_UNIT"),
+            EntityKey::WireShell(_) => Some("WIRE_SHELL"),
+            EntityKey::ComplexEntity(_) => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ActionMethodRef {
     ActionMethod(ActionMethodId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ActionMethodRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionMethod(i) => Ok(Self::ActionMethod(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ActionMethodRef target, got {other:?}")),
         }
     }
@@ -2622,13 +4007,13 @@ impl ActionMethodRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ActionRef {
     Action(ActionId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ActionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Action(i) => Ok(Self::Action(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ActionRef target, got {other:?}")),
         }
     }
@@ -2637,13 +4022,13 @@ impl ActionRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ActionResourceRef {
     ActionResource(ActionResourceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ActionResourceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionResource(i) => Ok(Self::ActionResource(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ActionResourceRef target, got {other:?}")),
         }
     }
@@ -2654,7 +4039,7 @@ pub enum ActionResourceTypeRef {
     ActionResourceType(ActionResourceTypeId),
 }
 impl ActionResourceTypeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionResourceType(i) => Ok(Self::ActionResourceType(i)),
             other => Err(format!(
@@ -2668,14 +4053,14 @@ impl ActionResourceTypeRef {
 pub enum AnnotationCurveOccurrenceRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
     LeaderCurve(LeaderCurveId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl AnnotationCurveOccurrenceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
             EntityKey::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected AnnotationCurveOccurrenceRef target, got {other:?}"
             )),
@@ -2698,10 +4083,10 @@ pub enum AnnotationOccurrenceRef {
     LeaderTerminator(LeaderTerminatorId),
     TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl AnnotationOccurrenceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
             EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
@@ -2724,7 +4109,7 @@ impl AnnotationOccurrenceRef {
             EntityKey::TessellatedAnnotationOccurrence(i) => {
                 Ok(Self::TessellatedAnnotationOccurrence(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected AnnotationOccurrenceRef target, got {other:?}"
             )),
@@ -2740,7 +4125,7 @@ pub enum AnnotationPlaceholderLeaderLineRef {
     AuxiliaryLeaderLine(AuxiliaryLeaderLineId),
 }
 impl AnnotationPlaceholderLeaderLineRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationPlaceholderLeaderLine(i) => {
                 Ok(Self::AnnotationPlaceholderLeaderLine(i))
@@ -2761,10 +4146,10 @@ impl AnnotationPlaceholderLeaderLineRef {
 pub enum AnnotationPlaceholderOccurrenceRef {
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl AnnotationPlaceholderOccurrenceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationPlaceholderOccurrence(i) => {
                 Ok(Self::AnnotationPlaceholderOccurrence(i))
@@ -2772,7 +4157,7 @@ impl AnnotationPlaceholderOccurrenceRef {
             EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
                 Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected AnnotationPlaceholderOccurrenceRef target, got {other:?}"
             )),
@@ -2800,10 +4185,10 @@ pub enum AnnotationPlaneElementRef {
     StyledItem(StyledItemId),
     TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl AnnotationPlaneElementRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
             EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
@@ -2833,7 +4218,7 @@ impl AnnotationPlaneElementRef {
             EntityKey::TessellatedAnnotationOccurrence(i) => {
                 Ok(Self::TessellatedAnnotationOccurrence(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected AnnotationPlaneElementRef target, got {other:?}"
             )),
@@ -2847,16 +4232,16 @@ pub enum AnnotationRepresentationSelectRef {
     PresentationArea(PresentationAreaId),
     PresentationView(PresentationViewId),
     SymbolRepresentation(SymbolRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl AnnotationRepresentationSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DraughtingModel(i) => Ok(Self::DraughtingModel(i)),
             EntityKey::PresentationArea(i) => Ok(Self::PresentationArea(i)),
             EntityKey::PresentationView(i) => Ok(Self::PresentationView(i)),
             EntityKey::SymbolRepresentation(i) => Ok(Self::SymbolRepresentation(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected AnnotationRepresentationSelectRef target, got {other:?}"
             )),
@@ -2868,14 +4253,14 @@ impl AnnotationRepresentationSelectRef {
 pub enum AnnotationSymbolOccurrenceItemRef {
     AnnotationSymbol(AnnotationSymbolId),
     DefinedSymbol(DefinedSymbolId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl AnnotationSymbolOccurrenceItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
             EntityKey::DefinedSymbol(i) => Ok(Self::DefinedSymbol(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected AnnotationSymbolOccurrenceItemRef target, got {other:?}"
             )),
@@ -2888,15 +4273,15 @@ pub enum AnnotationSymbolOccurrenceRef {
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     LeaderTerminator(LeaderTerminatorId),
     TerminatorSymbol(TerminatorSymbolId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl AnnotationSymbolOccurrenceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
             EntityKey::LeaderTerminator(i) => Ok(Self::LeaderTerminator(i)),
             EntityKey::TerminatorSymbol(i) => Ok(Self::TerminatorSymbol(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected AnnotationSymbolOccurrenceRef target, got {other:?}"
             )),
@@ -2911,17 +4296,17 @@ pub enum AnnotationTextOccurrenceItemRef {
     CompositeText(CompositeTextId),
     DefinedCharacterGlyph(DefinedCharacterGlyphId),
     TextLiteral(TextLiteralId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl AnnotationTextOccurrenceItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationText(i) => Ok(Self::AnnotationText(i)),
             EntityKey::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
             EntityKey::CompositeText(i) => Ok(Self::CompositeText(i)),
             EntityKey::DefinedCharacterGlyph(i) => Ok(Self::DefinedCharacterGlyph(i)),
             EntityKey::TextLiteral(i) => Ok(Self::TextLiteral(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected AnnotationTextOccurrenceItemRef target, got {other:?}"
             )),
@@ -2934,7 +4319,7 @@ pub enum AnnotationToModelLeaderLineRef {
     AnnotationToModelLeaderLine(AnnotationToModelLeaderLineId),
 }
 impl AnnotationToModelLeaderLineRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationToModelLeaderLine(i) => Ok(Self::AnnotationToModelLeaderLine(i)),
             other => Err(format!(
@@ -2949,7 +4334,7 @@ pub enum ApplicationContextRef {
     ApplicationContext(ApplicationContextId),
 }
 impl ApplicationContextRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApplicationContext(i) => Ok(Self::ApplicationContext(i)),
             other => Err(format!(
@@ -3124,6 +4509,7 @@ pub enum ApprovalItemRef {
     OrientedClosedShell(OrientedClosedShellId),
     OrientedEdge(OrientedEdgeId),
     OverRidingStyledItem(OverRidingStyledItemId),
+    Parabola(ParabolaId),
     Path(PathId),
     Pcurve(PcurveId),
     PersonAndOrganization(PersonAndOrganizationId),
@@ -3213,10 +4599,10 @@ pub enum ApprovalItemRef {
     VertexPoint(VertexPointId),
     VertexShell(VertexShellId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ApprovalItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Action(i) => Ok(Self::Action(i)),
             EntityKey::ActionDirective(i) => Ok(Self::ActionDirective(i)),
@@ -3421,6 +4807,7 @@ impl ApprovalItemRef {
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
             EntityKey::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
             EntityKey::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            EntityKey::Parabola(i) => Ok(Self::Parabola(i)),
             EntityKey::Path(i) => Ok(Self::Path(i)),
             EntityKey::Pcurve(i) => Ok(Self::Pcurve(i)),
             EntityKey::PersonAndOrganization(i) => Ok(Self::PersonAndOrganization(i)),
@@ -3536,7 +4923,7 @@ impl ApprovalItemRef {
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ApprovalItemRef target, got {other:?}")),
         }
     }
@@ -3547,7 +4934,7 @@ pub enum ApprovalRef {
     Approval(ApprovalId),
 }
 impl ApprovalRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Approval(i) => Ok(Self::Approval(i)),
             other => Err(format!("expected ApprovalRef target, got {other:?}")),
@@ -3560,7 +4947,7 @@ pub enum ApprovalRoleRef {
     ApprovalRole(ApprovalRoleId),
 }
 impl ApprovalRoleRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApprovalRole(i) => Ok(Self::ApprovalRole(i)),
             other => Err(format!("expected ApprovalRoleRef target, got {other:?}")),
@@ -3573,7 +4960,7 @@ pub enum ApprovalStatusRef {
     ApprovalStatus(ApprovalStatusId),
 }
 impl ApprovalStatusRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApprovalStatus(i) => Ok(Self::ApprovalStatus(i)),
             other => Err(format!("expected ApprovalStatusRef target, got {other:?}")),
@@ -3597,10 +4984,10 @@ pub enum ApprovedItemRef {
     SecurityClassification(SecurityClassificationId),
     StartRequest(StartRequestId),
     StartWork(StartWorkId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ApprovedItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Certification(i) => Ok(Self::Certification(i)),
             EntityKey::Change(i) => Ok(Self::Change(i)),
@@ -3620,7 +5007,7 @@ impl ApprovedItemRef {
             EntityKey::SecurityClassification(i) => Ok(Self::SecurityClassification(i)),
             EntityKey::StartRequest(i) => Ok(Self::StartRequest(i)),
             EntityKey::StartWork(i) => Ok(Self::StartWork(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ApprovedItemRef target, got {other:?}")),
         }
     }
@@ -3631,7 +5018,7 @@ pub enum AscribableStateRef {
     AscribableState(AscribableStateId),
 }
 impl AscribableStateRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AscribableState(i) => Ok(Self::AscribableState(i)),
             other => Err(format!("expected AscribableStateRef target, got {other:?}")),
@@ -3644,7 +5031,7 @@ pub enum Axis1PlacementRef {
     Axis1Placement(Axis1PlacementId),
 }
 impl Axis1PlacementRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Axis1Placement(i) => Ok(Self::Axis1Placement(i)),
             other => Err(format!("expected Axis1PlacementRef target, got {other:?}")),
@@ -3657,7 +5044,7 @@ pub enum Axis2Placement3dRef {
     Axis2Placement3d(Axis2Placement3dId),
 }
 impl Axis2Placement3dRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Axis2Placement3d(i) => Ok(Self::Axis2Placement3d(i)),
             other => Err(format!(
@@ -3673,7 +5060,7 @@ pub enum Axis2PlacementRef {
     Axis2Placement3d(Axis2Placement3dId),
 }
 impl Axis2PlacementRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Axis2Placement2d(i) => Ok(Self::Axis2Placement2d(i)),
             EntityKey::Axis2Placement3d(i) => Ok(Self::Axis2Placement3d(i)),
@@ -3687,7 +5074,7 @@ pub enum CameraModelD3MultiClippingIntersectionSelectRef {
     Plane(PlaneId),
 }
 impl CameraModelD3MultiClippingIntersectionSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Plane(i) => Ok(Self::Plane(i)),
             other => Err(format!(
@@ -3704,7 +5091,7 @@ pub enum CartesianPointRef {
     CartesianPoint(CartesianPointId),
 }
 impl CartesianPointRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApllPoint(i) => Ok(Self::ApllPoint(i)),
             EntityKey::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
@@ -3720,10 +5107,10 @@ pub enum CcClassifiedItemRef {
     NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
     ProductDefinitionFormation(ProductDefinitionFormationId),
     ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CcClassifiedItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AssemblyComponentUsage(i) => Ok(Self::AssemblyComponentUsage(i)),
             EntityKey::NextAssemblyUsageOccurrence(i) => Ok(Self::NextAssemblyUsageOccurrence(i)),
@@ -3731,7 +5118,7 @@ impl CcClassifiedItemRef {
             EntityKey::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CcClassifiedItemRef target, got {other:?}"
             )),
@@ -3753,10 +5140,10 @@ pub enum CcPersonOrganizationItemRef {
     SecurityClassification(SecurityClassificationId),
     StartRequest(StartRequestId),
     StartWork(StartWorkId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CcPersonOrganizationItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Change(i) => Ok(Self::Change(i)),
             EntityKey::ChangeRequest(i) => Ok(Self::ChangeRequest(i)),
@@ -3774,7 +5161,7 @@ impl CcPersonOrganizationItemRef {
             EntityKey::SecurityClassification(i) => Ok(Self::SecurityClassification(i)),
             EntityKey::StartRequest(i) => Ok(Self::StartRequest(i)),
             EntityKey::StartWork(i) => Ok(Self::StartWork(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CcPersonOrganizationItemRef target, got {other:?}"
             )),
@@ -3787,7 +5174,7 @@ pub enum CertificationTypeRef {
     CertificationType(CertificationTypeId),
 }
 impl CertificationTypeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CertificationType(i) => Ok(Self::CertificationType(i)),
             other => Err(format!(
@@ -3801,16 +5188,16 @@ impl CertificationTypeRef {
 pub enum ChangeRequestItemRef {
     ProductDefinitionFormation(ProductDefinitionFormationId),
     ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ChangeRequestItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             EntityKey::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ChangeRequestItemRef target, got {other:?}"
             )),
@@ -3823,15 +5210,15 @@ pub enum CharacterStyleSelectRef {
     CharacterGlyphStyleOutline(CharacterGlyphStyleOutlineId),
     CharacterGlyphStyleStroke(CharacterGlyphStyleStrokeId),
     TextStyleForDefinedFont(TextStyleForDefinedFontId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CharacterStyleSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CharacterGlyphStyleOutline(i) => Ok(Self::CharacterGlyphStyleOutline(i)),
             EntityKey::CharacterGlyphStyleStroke(i) => Ok(Self::CharacterGlyphStyleStroke(i)),
             EntityKey::TextStyleForDefinedFont(i) => Ok(Self::TextStyleForDefinedFont(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CharacterStyleSelectRef target, got {other:?}"
             )),
@@ -3845,16 +5232,16 @@ pub enum CharacterizedActionDefinitionRef {
     ActionMethod(ActionMethodId),
     ActionMethodRelationship(ActionMethodRelationshipId),
     ActionRelationship(ActionRelationshipId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CharacterizedActionDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Action(i) => Ok(Self::Action(i)),
             EntityKey::ActionMethod(i) => Ok(Self::ActionMethod(i)),
             EntityKey::ActionMethodRelationship(i) => Ok(Self::ActionMethodRelationship(i)),
             EntityKey::ActionRelationship(i) => Ok(Self::ActionRelationship(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CharacterizedActionDefinitionRef target, got {other:?}"
             )),
@@ -3937,10 +5324,10 @@ pub enum CharacterizedDefinitionRef {
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
     TotalRunoutTolerance(TotalRunoutToleranceId),
     UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CharacterizedDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
@@ -4047,7 +5434,7 @@ impl CharacterizedDefinitionRef {
             EntityKey::UnequallyDisposedGeometricTolerance(i) => {
                 Ok(Self::UnequallyDisposedGeometricTolerance(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CharacterizedDefinitionRef target, got {other:?}"
             )),
@@ -4060,15 +5447,15 @@ pub enum CharacterizedResourceDefinitionRef {
     ActionResource(ActionResourceId),
     ActionResourceRelationship(ActionResourceRelationshipId),
     ActionResourceRequirement(ActionResourceRequirementId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CharacterizedResourceDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionResource(i) => Ok(Self::ActionResource(i)),
             EntityKey::ActionResourceRelationship(i) => Ok(Self::ActionResourceRelationship(i)),
             EntityKey::ActionResourceRequirement(i) => Ok(Self::ActionResourceRequirement(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CharacterizedResourceDefinitionRef target, got {other:?}"
             )),
@@ -4080,14 +5467,14 @@ impl CharacterizedResourceDefinitionRef {
 pub enum ClosedShellRef {
     ClosedShell(ClosedShellId),
     OrientedClosedShell(OrientedClosedShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ClosedShellRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ClosedShell(i) => Ok(Self::ClosedShell(i)),
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ClosedShellRef target, got {other:?}")),
         }
     }
@@ -4100,17 +5487,17 @@ pub enum ColourRef {
     ColourSpecification(ColourSpecificationId),
     DraughtingPreDefinedColour(DraughtingPreDefinedColourId),
     PreDefinedColour(PreDefinedColourId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ColourRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Colour(i) => Ok(Self::Colour(i)),
             EntityKey::ColourRgb(i) => Ok(Self::ColourRgb(i)),
             EntityKey::ColourSpecification(i) => Ok(Self::ColourSpecification(i)),
             EntityKey::DraughtingPreDefinedColour(i) => Ok(Self::DraughtingPreDefinedColour(i)),
             EntityKey::PreDefinedColour(i) => Ok(Self::PreDefinedColour(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ColourRef target, got {other:?}")),
         }
     }
@@ -4119,13 +5506,13 @@ impl ColourRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum CompositeCurveSegmentRef {
     CompositeCurveSegment(CompositeCurveSegmentId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CompositeCurveSegmentRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CompositeCurveSegment(i) => Ok(Self::CompositeCurveSegment(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CompositeCurveSegmentRef target, got {other:?}"
             )),
@@ -4231,6 +5618,7 @@ pub enum CompoundItemDefinitionRef {
     OrientedClosedShell(OrientedClosedShellId),
     OrientedEdge(OrientedEdgeId),
     OverRidingStyledItem(OverRidingStyledItemId),
+    Parabola(ParabolaId),
     Path(PathId),
     Pcurve(PcurveId),
     Placement(PlacementId),
@@ -4285,10 +5673,10 @@ pub enum CompoundItemDefinitionRef {
     WireShell(WireShellId),
     ListRepresentationItem(Vec<RepresentationItemRef>),
     SetRepresentationItem(Vec<RepresentationItemRef>),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CompoundItemDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
@@ -4408,6 +5796,7 @@ impl CompoundItemDefinitionRef {
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
             EntityKey::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
             EntityKey::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            EntityKey::Parabola(i) => Ok(Self::Parabola(i)),
             EntityKey::Path(i) => Ok(Self::Path(i)),
             EntityKey::Pcurve(i) => Ok(Self::Pcurve(i)),
             EntityKey::Placement(i) => Ok(Self::Placement(i)),
@@ -4464,7 +5853,7 @@ impl CompoundItemDefinitionRef {
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CompoundItemDefinitionRef target, got {other:?}"
             )),
@@ -4479,10 +5868,10 @@ pub enum ConfigurationDesignItemRef {
     ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
     ProductDefinitionOccurrence(ProductDefinitionOccurrenceId),
     ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ConfigurationDesignItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
             EntityKey::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
@@ -4493,7 +5882,7 @@ impl ConfigurationDesignItemRef {
             EntityKey::ProductDefinitionWithAssociatedDocuments(i) => {
                 Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ConfigurationDesignItemRef target, got {other:?}"
             )),
@@ -4506,7 +5895,7 @@ pub enum ConfigurationDesignRef {
     ConfigurationDesign(ConfigurationDesignId),
 }
 impl ConfigurationDesignRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ConfigurationDesign(i) => Ok(Self::ConfigurationDesign(i)),
             other => Err(format!(
@@ -4519,13 +5908,13 @@ impl ConfigurationDesignRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConfigurationItemRef {
     ConfigurationItem(ConfigurationItemId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ConfigurationItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ConfigurationItem(i) => Ok(Self::ConfigurationItem(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ConfigurationItemRef target, got {other:?}"
             )),
@@ -4539,16 +5928,16 @@ pub enum ConnectedFaceSetRef {
     ConnectedFaceSet(ConnectedFaceSetId),
     OpenShell(OpenShellId),
     OrientedClosedShell(OrientedClosedShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ConnectedFaceSetRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ClosedShell(i) => Ok(Self::ClosedShell(i)),
             EntityKey::ConnectedFaceSet(i) => Ok(Self::ConnectedFaceSet(i)),
             EntityKey::OpenShell(i) => Ok(Self::OpenShell(i)),
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ConnectedFaceSetRef target, got {other:?}"
             )),
@@ -4571,10 +5960,10 @@ pub enum ConstructiveGeometryRepresentationOrShapeRepresentationRef {
     ShapeRepresentation(ShapeRepresentationId),
     ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ConstructiveGeometryRepresentationOrShapeRepresentationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedBrepShapeRepresentation(i) => {
                 Ok(Self::AdvancedBrepShapeRepresentation(i))
@@ -4599,7 +5988,7 @@ impl ConstructiveGeometryRepresentationOrShapeRepresentationRef {
             EntityKey::TessellatedShapeRepresentation(i) => {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ConstructiveGeometryRepresentationOrShapeRepresentationRef target, got {other:?}"
             )),
@@ -4612,7 +6001,7 @@ pub enum ContractTypeRef {
     ContractType(ContractTypeId),
 }
 impl ContractTypeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ContractType(i) => Ok(Self::ContractType(i)),
             other => Err(format!("expected ContractTypeRef target, got {other:?}")),
@@ -4625,7 +6014,7 @@ pub enum CoordinatedUniversalTimeOffsetRef {
     CoordinatedUniversalTimeOffset(CoordinatedUniversalTimeOffsetId),
 }
 impl CoordinatedUniversalTimeOffsetRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CoordinatedUniversalTimeOffset(i) => {
                 Ok(Self::CoordinatedUniversalTimeOffset(i))
@@ -4642,7 +6031,7 @@ pub enum CoordinatesListRef {
     CoordinatesList(CoordinatesListId),
 }
 impl CoordinatesListRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CoordinatesList(i) => Ok(Self::CoordinatesList(i)),
             other => Err(format!("expected CoordinatesListRef target, got {other:?}")),
@@ -4657,10 +6046,10 @@ pub enum CurveFontOrScaledCurveFontSelectRef {
     DraughtingPreDefinedCurveFont(DraughtingPreDefinedCurveFontId),
     ExternallyDefinedCurveFont(ExternallyDefinedCurveFontId),
     PreDefinedCurveFont(PreDefinedCurveFontId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CurveFontOrScaledCurveFontSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CurveStyleFont(i) => Ok(Self::CurveStyleFont(i)),
             EntityKey::CurveStyleFontAndScaling(i) => Ok(Self::CurveStyleFontAndScaling(i)),
@@ -4669,7 +6058,7 @@ impl CurveFontOrScaledCurveFontSelectRef {
             }
             EntityKey::ExternallyDefinedCurveFont(i) => Ok(Self::ExternallyDefinedCurveFont(i)),
             EntityKey::PreDefinedCurveFont(i) => Ok(Self::PreDefinedCurveFont(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CurveFontOrScaledCurveFontSelectRef target, got {other:?}"
             )),
@@ -4695,6 +6084,7 @@ pub enum CurveOrAnnotationCurveOccurrenceRef {
     IntersectionCurve(IntersectionCurveId),
     LeaderCurve(LeaderCurveId),
     Line(LineId),
+    Parabola(ParabolaId),
     Pcurve(PcurveId),
     Polyline(PolylineId),
     QuasiUniformCurve(QuasiUniformCurveId),
@@ -4703,10 +6093,10 @@ pub enum CurveOrAnnotationCurveOccurrenceRef {
     SurfaceCurve(SurfaceCurveId),
     TrimmedCurve(TrimmedCurveId),
     UniformCurve(UniformCurveId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CurveOrAnnotationCurveOccurrenceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
             EntityKey::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
@@ -4724,6 +6114,7 @@ impl CurveOrAnnotationCurveOccurrenceRef {
             EntityKey::IntersectionCurve(i) => Ok(Self::IntersectionCurve(i)),
             EntityKey::LeaderCurve(i) => Ok(Self::LeaderCurve(i)),
             EntityKey::Line(i) => Ok(Self::Line(i)),
+            EntityKey::Parabola(i) => Ok(Self::Parabola(i)),
             EntityKey::Pcurve(i) => Ok(Self::Pcurve(i)),
             EntityKey::Polyline(i) => Ok(Self::Polyline(i)),
             EntityKey::QuasiUniformCurve(i) => Ok(Self::QuasiUniformCurve(i)),
@@ -4732,7 +6123,7 @@ impl CurveOrAnnotationCurveOccurrenceRef {
             EntityKey::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
             EntityKey::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
             EntityKey::UniformCurve(i) => Ok(Self::UniformCurve(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CurveOrAnnotationCurveOccurrenceRef target, got {other:?}"
             )),
@@ -4757,6 +6148,7 @@ pub enum CurveOrCurveSetRef {
     Hyperbola(HyperbolaId),
     IntersectionCurve(IntersectionCurveId),
     Line(LineId),
+    Parabola(ParabolaId),
     Pcurve(PcurveId),
     Polyline(PolylineId),
     QuasiUniformCurve(QuasiUniformCurveId),
@@ -4765,10 +6157,10 @@ pub enum CurveOrCurveSetRef {
     SurfaceCurve(SurfaceCurveId),
     TrimmedCurve(TrimmedCurveId),
     UniformCurve(UniformCurveId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CurveOrCurveSetRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
             EntityKey::BSplineCurveWithKnots(i) => Ok(Self::BSplineCurveWithKnots(i)),
@@ -4785,6 +6177,7 @@ impl CurveOrCurveSetRef {
             EntityKey::Hyperbola(i) => Ok(Self::Hyperbola(i)),
             EntityKey::IntersectionCurve(i) => Ok(Self::IntersectionCurve(i)),
             EntityKey::Line(i) => Ok(Self::Line(i)),
+            EntityKey::Parabola(i) => Ok(Self::Parabola(i)),
             EntityKey::Pcurve(i) => Ok(Self::Pcurve(i)),
             EntityKey::Polyline(i) => Ok(Self::Polyline(i)),
             EntityKey::QuasiUniformCurve(i) => Ok(Self::QuasiUniformCurve(i)),
@@ -4793,7 +6186,7 @@ impl CurveOrCurveSetRef {
             EntityKey::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
             EntityKey::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
             EntityKey::UniformCurve(i) => Ok(Self::UniformCurve(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected CurveOrCurveSetRef target, got {other:?}")),
         }
     }
@@ -4803,14 +6196,14 @@ impl CurveOrCurveSetRef {
 pub enum CurveOrRenderRef {
     CurveStyle(CurveStyleId),
     CurveStyleRendering(CurveStyleRenderingId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CurveOrRenderRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CurveStyle(i) => Ok(Self::CurveStyle(i)),
             EntityKey::CurveStyleRendering(i) => Ok(Self::CurveStyleRendering(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected CurveOrRenderRef target, got {other:?}")),
         }
     }
@@ -4832,6 +6225,7 @@ pub enum CurveRef {
     Hyperbola(HyperbolaId),
     IntersectionCurve(IntersectionCurveId),
     Line(LineId),
+    Parabola(ParabolaId),
     Pcurve(PcurveId),
     Polyline(PolylineId),
     QuasiUniformCurve(QuasiUniformCurveId),
@@ -4840,10 +6234,10 @@ pub enum CurveRef {
     SurfaceCurve(SurfaceCurveId),
     TrimmedCurve(TrimmedCurveId),
     UniformCurve(UniformCurveId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CurveRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::BSplineCurve(i) => Ok(Self::BSplineCurve(i)),
             EntityKey::BSplineCurveWithKnots(i) => Ok(Self::BSplineCurveWithKnots(i)),
@@ -4859,6 +6253,7 @@ impl CurveRef {
             EntityKey::Hyperbola(i) => Ok(Self::Hyperbola(i)),
             EntityKey::IntersectionCurve(i) => Ok(Self::IntersectionCurve(i)),
             EntityKey::Line(i) => Ok(Self::Line(i)),
+            EntityKey::Parabola(i) => Ok(Self::Parabola(i)),
             EntityKey::Pcurve(i) => Ok(Self::Pcurve(i)),
             EntityKey::Polyline(i) => Ok(Self::Polyline(i)),
             EntityKey::QuasiUniformCurve(i) => Ok(Self::QuasiUniformCurve(i)),
@@ -4867,7 +6262,7 @@ impl CurveRef {
             EntityKey::SurfaceCurve(i) => Ok(Self::SurfaceCurve(i)),
             EntityKey::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
             EntityKey::UniformCurve(i) => Ok(Self::UniformCurve(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected CurveRef target, got {other:?}")),
         }
     }
@@ -4876,13 +6271,13 @@ impl CurveRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum CurveStyleFontPatternRef {
     CurveStyleFontPattern(CurveStyleFontPatternId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CurveStyleFontPatternRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CurveStyleFontPattern(i) => Ok(Self::CurveStyleFontPattern(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CurveStyleFontPatternRef target, got {other:?}"
             )),
@@ -4896,10 +6291,10 @@ pub enum CurveStyleFontSelectRef {
     DraughtingPreDefinedCurveFont(DraughtingPreDefinedCurveFontId),
     ExternallyDefinedCurveFont(ExternallyDefinedCurveFontId),
     PreDefinedCurveFont(PreDefinedCurveFontId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CurveStyleFontSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CurveStyleFont(i) => Ok(Self::CurveStyleFont(i)),
             EntityKey::DraughtingPreDefinedCurveFont(i) => {
@@ -4907,7 +6302,7 @@ impl CurveStyleFontSelectRef {
             }
             EntityKey::ExternallyDefinedCurveFont(i) => Ok(Self::ExternallyDefinedCurveFont(i)),
             EntityKey::PreDefinedCurveFont(i) => Ok(Self::PreDefinedCurveFont(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected CurveStyleFontSelectRef target, got {other:?}"
             )),
@@ -4918,13 +6313,13 @@ impl CurveStyleFontSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum CurveStyleRef {
     CurveStyle(CurveStyleId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl CurveStyleRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CurveStyle(i) => Ok(Self::CurveStyle(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected CurveStyleRef target, got {other:?}")),
         }
     }
@@ -5013,10 +6408,10 @@ pub enum DateAndTimeItemRef {
     SymbolRepresentation(SymbolRepresentationId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
     VersionedActionRequest(VersionedActionRequestId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DateAndTimeItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Action(i) => Ok(Self::Action(i)),
             EntityKey::ActionDirective(i) => Ok(Self::ActionDirective(i)),
@@ -5121,7 +6516,7 @@ impl DateAndTimeItemRef {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
             EntityKey::VersionedActionRequest(i) => Ok(Self::VersionedActionRequest(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected DateAndTimeItemRef target, got {other:?}")),
         }
     }
@@ -5130,13 +6525,13 @@ impl DateAndTimeItemRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum DateAndTimeRef {
     DateAndTime(DateAndTimeId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DateAndTimeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DateAndTime(i) => Ok(Self::DateAndTime(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected DateAndTimeRef target, got {other:?}")),
         }
     }
@@ -5146,14 +6541,14 @@ impl DateAndTimeRef {
 pub enum DateRef {
     CalendarDate(CalendarDateId),
     Date(DateId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DateRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CalendarDate(i) => Ok(Self::CalendarDate(i)),
             EntityKey::Date(i) => Ok(Self::Date(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected DateRef target, got {other:?}")),
         }
     }
@@ -5171,10 +6566,10 @@ pub enum DateTimeItemRef {
     SecurityClassification(SecurityClassificationId),
     StartRequest(StartRequestId),
     StartWork(StartWorkId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DateTimeItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApprovalPersonOrganization(i) => Ok(Self::ApprovalPersonOrganization(i)),
             EntityKey::Certification(i) => Ok(Self::Certification(i)),
@@ -5188,7 +6583,7 @@ impl DateTimeItemRef {
             EntityKey::SecurityClassification(i) => Ok(Self::SecurityClassification(i)),
             EntityKey::StartRequest(i) => Ok(Self::StartRequest(i)),
             EntityKey::StartWork(i) => Ok(Self::StartWork(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected DateTimeItemRef target, got {other:?}")),
         }
     }
@@ -5199,7 +6594,7 @@ pub enum DateTimeRoleRef {
     DateTimeRole(DateTimeRoleId),
 }
 impl DateTimeRoleRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DateTimeRole(i) => Ok(Self::DateTimeRole(i)),
             other => Err(format!("expected DateTimeRoleRef target, got {other:?}")),
@@ -5213,16 +6608,16 @@ pub enum DateTimeSelectRef {
     Date(DateId),
     DateAndTime(DateAndTimeId),
     LocalTime(LocalTimeId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DateTimeSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CalendarDate(i) => Ok(Self::CalendarDate(i)),
             EntityKey::Date(i) => Ok(Self::Date(i)),
             EntityKey::DateAndTime(i) => Ok(Self::DateAndTime(i)),
             EntityKey::LocalTime(i) => Ok(Self::LocalTime(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected DateTimeSelectRef target, got {other:?}")),
         }
     }
@@ -5234,15 +6629,15 @@ pub enum DatumOrCommonDatumRef {
     Datum(DatumId),
     DatumReferenceElement(DatumReferenceElementId),
     CommonDatumList(Vec<DatumReferenceElementRef>),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DatumOrCommonDatumRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CommonDatum(i) => Ok(Self::CommonDatum(i)),
             EntityKey::Datum(i) => Ok(Self::Datum(i)),
             EntityKey::DatumReferenceElement(i) => Ok(Self::DatumReferenceElement(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DatumOrCommonDatumRef target, got {other:?}"
             )),
@@ -5254,14 +6649,14 @@ impl DatumOrCommonDatumRef {
 pub enum DatumRef {
     CommonDatum(CommonDatumId),
     Datum(DatumId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DatumRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CommonDatum(i) => Ok(Self::CommonDatum(i)),
             EntityKey::Datum(i) => Ok(Self::Datum(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected DatumRef target, got {other:?}")),
         }
     }
@@ -5272,7 +6667,7 @@ pub enum DatumReferenceCompartmentRef {
     DatumReferenceCompartment(DatumReferenceCompartmentId),
 }
 impl DatumReferenceCompartmentRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DatumReferenceCompartment(i) => Ok(Self::DatumReferenceCompartment(i)),
             other => Err(format!(
@@ -5287,7 +6682,7 @@ pub enum DatumReferenceElementRef {
     DatumReferenceElement(DatumReferenceElementId),
 }
 impl DatumReferenceElementRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DatumReferenceElement(i) => Ok(Self::DatumReferenceElement(i)),
             other => Err(format!(
@@ -5303,7 +6698,7 @@ pub enum DatumReferenceModifierRef {
     SimpleDatumReferenceModifier(SimpleDatumReferenceModifier),
 }
 impl DatumReferenceModifierRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DatumReferenceModifierWithValue(i) => {
                 Ok(Self::DatumReferenceModifierWithValue(i))
@@ -5319,14 +6714,14 @@ impl DatumReferenceModifierRef {
 pub enum DatumSystemOrReferenceRef {
     DatumReference(DatumReferenceId),
     DatumSystem(DatumSystemId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DatumSystemOrReferenceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DatumReference(i) => Ok(Self::DatumReference(i)),
             EntityKey::DatumSystem(i) => Ok(Self::DatumSystem(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DatumSystemOrReferenceRef target, got {other:?}"
             )),
@@ -5337,13 +6732,13 @@ impl DatumSystemOrReferenceRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum DatumSystemRef {
     DatumSystem(DatumSystemId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DatumSystemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DatumSystem(i) => Ok(Self::DatumSystem(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected DatumSystemRef target, got {other:?}")),
         }
     }
@@ -5353,16 +6748,16 @@ impl DatumSystemRef {
 pub enum DefinedGlyphSelectRef {
     ExternallyDefinedCharacterGlyph(ExternallyDefinedCharacterGlyphId),
     PreDefinedCharacterGlyph(PreDefinedCharacterGlyphId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DefinedGlyphSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ExternallyDefinedCharacterGlyph(i) => {
                 Ok(Self::ExternallyDefinedCharacterGlyph(i))
             }
             EntityKey::PreDefinedCharacterGlyph(i) => Ok(Self::PreDefinedCharacterGlyph(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DefinedGlyphSelectRef target, got {other:?}"
             )),
@@ -5376,16 +6771,16 @@ pub enum DefinedSymbolSelectRef {
     PreDefinedPointMarkerSymbol(PreDefinedPointMarkerSymbolId),
     PreDefinedSymbol(PreDefinedSymbolId),
     PreDefinedTerminatorSymbol(PreDefinedTerminatorSymbolId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DefinedSymbolSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ExternallyDefinedSymbol(i) => Ok(Self::ExternallyDefinedSymbol(i)),
             EntityKey::PreDefinedPointMarkerSymbol(i) => Ok(Self::PreDefinedPointMarkerSymbol(i)),
             EntityKey::PreDefinedSymbol(i) => Ok(Self::PreDefinedSymbol(i)),
             EntityKey::PreDefinedTerminatorSymbol(i) => Ok(Self::PreDefinedTerminatorSymbol(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DefinedSymbolSelectRef target, got {other:?}"
             )),
@@ -5396,13 +6791,13 @@ impl DefinedSymbolSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum DefinitionalRepresentationRef {
     DefinitionalRepresentation(DefinitionalRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DefinitionalRepresentationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DefinitionalRepresentation(i) => Ok(Self::DefinitionalRepresentation(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DefinitionalRepresentationRef target, got {other:?}"
             )),
@@ -5447,10 +6842,10 @@ pub enum DerivedPropertySelectRef {
     SymmetryTolerance(SymmetryToleranceId),
     TotalRunoutTolerance(TotalRunoutToleranceId),
     UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DerivedPropertySelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionProperty(i) => Ok(Self::ActionProperty(i)),
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
@@ -5501,7 +6896,7 @@ impl DerivedPropertySelectRef {
             EntityKey::UnequallyDisposedGeometricTolerance(i) => {
                 Ok(Self::UnequallyDisposedGeometricTolerance(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DerivedPropertySelectRef target, got {other:?}"
             )),
@@ -5514,7 +6909,7 @@ pub enum DerivedUnitElementRef {
     DerivedUnitElement(DerivedUnitElementId),
 }
 impl DerivedUnitElementRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DerivedUnitElement(i) => Ok(Self::DerivedUnitElement(i)),
             other => Err(format!(
@@ -5530,7 +6925,7 @@ pub enum DesApllPointSelectRef {
     ApllPointWithSurface(ApllPointWithSurfaceId),
 }
 impl DesApllPointSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApllPoint(i) => Ok(Self::ApllPoint(i)),
             EntityKey::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
@@ -5590,10 +6985,10 @@ pub enum DescriptionAttributeSelectRef {
     ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     SymbolRepresentation(SymbolRepresentationId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DescriptionAttributeSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionRequestSolution(i) => Ok(Self::ActionRequestSolution(i)),
             EntityKey::AdvancedBrepShapeRepresentation(i) => {
@@ -5658,7 +7053,7 @@ impl DescriptionAttributeSelectRef {
             EntityKey::TessellatedShapeRepresentation(i) => {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DescriptionAttributeSelectRef target, got {other:?}"
             )),
@@ -5676,10 +7071,10 @@ pub enum DimensionalCharacteristicRef {
     DimensionalSizeWithDatumFeature(DimensionalSizeWithDatumFeatureId),
     DimensionalSizeWithPath(DimensionalSizeWithPathId),
     DirectedDimensionalLocation(DirectedDimensionalLocationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DimensionalCharacteristicRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
             EntityKey::AngularSize(i) => Ok(Self::AngularSize(i)),
@@ -5691,7 +7086,7 @@ impl DimensionalCharacteristicRef {
             }
             EntityKey::DimensionalSizeWithPath(i) => Ok(Self::DimensionalSizeWithPath(i)),
             EntityKey::DirectedDimensionalLocation(i) => Ok(Self::DirectedDimensionalLocation(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DimensionalCharacteristicRef target, got {other:?}"
             )),
@@ -5704,7 +7099,7 @@ pub enum DimensionalExponentsRef {
     DimensionalExponents(DimensionalExponentsId),
 }
 impl DimensionalExponentsRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DimensionalExponents(i) => Ok(Self::DimensionalExponents(i)),
             other => Err(format!(
@@ -5717,13 +7112,13 @@ impl DimensionalExponentsRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum DirectionRef {
     Direction(DirectionId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DirectionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Direction(i) => Ok(Self::Direction(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected DirectionRef target, got {other:?}")),
         }
     }
@@ -5733,14 +7128,14 @@ impl DirectionRef {
 pub enum DocumentRef {
     Document(DocumentId),
     DocumentFile(DocumentFileId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DocumentRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Document(i) => Ok(Self::Document(i)),
             EntityKey::DocumentFile(i) => Ok(Self::DocumentFile(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected DocumentRef target, got {other:?}")),
         }
     }
@@ -5937,6 +7332,7 @@ pub enum DocumentReferenceItemRef {
     OrientedClosedShell(OrientedClosedShellId),
     OrientedEdge(OrientedEdgeId),
     OverRidingStyledItem(OverRidingStyledItemId),
+    Parabola(ParabolaId),
     Path(PathId),
     Pcurve(PcurveId),
     Person(PersonId),
@@ -6033,10 +7429,10 @@ pub enum DocumentReferenceItemRef {
     VertexPoint(VertexPointId),
     VertexShell(VertexShellId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DocumentReferenceItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionDirective(i) => Ok(Self::ActionDirective(i)),
             EntityKey::ActionMethod(i) => Ok(Self::ActionMethod(i)),
@@ -6273,6 +7669,7 @@ impl DocumentReferenceItemRef {
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
             EntityKey::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
             EntityKey::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            EntityKey::Parabola(i) => Ok(Self::Parabola(i)),
             EntityKey::Path(i) => Ok(Self::Path(i)),
             EntityKey::Pcurve(i) => Ok(Self::Pcurve(i)),
             EntityKey::Person(i) => Ok(Self::Person(i)),
@@ -6397,7 +7794,7 @@ impl DocumentReferenceItemRef {
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DocumentReferenceItemRef target, got {other:?}"
             )),
@@ -6410,7 +7807,7 @@ pub enum DocumentTypeRef {
     DocumentType(DocumentTypeId),
 }
 impl DocumentTypeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DocumentType(i) => Ok(Self::DocumentType(i)),
             other => Err(format!("expected DocumentTypeRef target, got {other:?}")),
@@ -6430,10 +7827,10 @@ pub enum DraughtingCalloutElementRef {
     LeaderTerminator(LeaderTerminatorId),
     TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DraughtingCalloutElementRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
             EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
@@ -6451,7 +7848,7 @@ impl DraughtingCalloutElementRef {
             EntityKey::TessellatedAnnotationOccurrence(i) => {
                 Ok(Self::TessellatedAnnotationOccurrence(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DraughtingCalloutElementRef target, got {other:?}"
             )),
@@ -6463,14 +7860,14 @@ impl DraughtingCalloutElementRef {
 pub enum DraughtingCalloutRef {
     DraughtingCallout(DraughtingCalloutId),
     LeaderDirectedCallout(LeaderDirectedCalloutId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DraughtingCalloutRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DraughtingCallout(i) => Ok(Self::DraughtingCallout(i)),
             EntityKey::LeaderDirectedCallout(i) => Ok(Self::LeaderDirectedCallout(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DraughtingCalloutRef target, got {other:?}"
             )),
@@ -6495,10 +7892,10 @@ pub enum DraughtingModelItemAssociationSelectRef {
     LeaderTerminator(LeaderTerminatorId),
     TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DraughtingModelItemAssociationSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
             EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
@@ -6523,7 +7920,7 @@ impl DraughtingModelItemAssociationSelectRef {
             EntityKey::TessellatedAnnotationOccurrence(i) => {
                 Ok(Self::TessellatedAnnotationOccurrence(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DraughtingModelItemAssociationSelectRef target, got {other:?}"
             )),
@@ -6594,10 +7991,10 @@ pub enum DraughtingModelItemDefinitionRef {
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
     TotalRunoutTolerance(TotalRunoutToleranceId),
     UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl DraughtingModelItemDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
@@ -6680,7 +8077,7 @@ impl DraughtingModelItemDefinitionRef {
             EntityKey::UnequallyDisposedGeometricTolerance(i) => {
                 Ok(Self::UnequallyDisposedGeometricTolerance(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected DraughtingModelItemDefinitionRef target, got {other:?}"
             )),
@@ -6693,15 +8090,15 @@ pub enum EdgeRef {
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
     OrientedEdge(OrientedEdgeId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl EdgeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Edge(i) => Ok(Self::Edge(i)),
             EntityKey::EdgeCurve(i) => Ok(Self::EdgeCurve(i)),
             EntityKey::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected EdgeRef target, got {other:?}")),
         }
     }
@@ -6860,6 +8257,7 @@ pub enum ExternalIdentificationItemRef {
     OrientedClosedShell(OrientedClosedShellId),
     OrientedEdge(OrientedEdgeId),
     OverRidingStyledItem(OverRidingStyledItemId),
+    Parabola(ParabolaId),
     Path(PathId),
     Pcurve(PcurveId),
     Person(PersonId),
@@ -6951,10 +8349,10 @@ pub enum ExternalIdentificationItemRef {
     VertexShell(VertexShellId),
     VolumeUnit(VolumeUnitId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ExternalIdentificationItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionDirective(i) => Ok(Self::ActionDirective(i)),
             EntityKey::ActionMethod(i) => Ok(Self::ActionMethod(i)),
@@ -7141,6 +8539,7 @@ impl ExternalIdentificationItemRef {
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
             EntityKey::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
             EntityKey::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            EntityKey::Parabola(i) => Ok(Self::Parabola(i)),
             EntityKey::Path(i) => Ok(Self::Path(i)),
             EntityKey::Pcurve(i) => Ok(Self::Pcurve(i)),
             EntityKey::Person(i) => Ok(Self::Person(i)),
@@ -7246,7 +8645,7 @@ impl ExternalIdentificationItemRef {
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::VolumeUnit(i) => Ok(Self::VolumeUnit(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ExternalIdentificationItemRef target, got {other:?}"
             )),
@@ -7257,13 +8656,13 @@ impl ExternalIdentificationItemRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExternalSourceRef {
     ExternalSource(ExternalSourceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ExternalSourceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ExternalSource(i) => Ok(Self::ExternalSource(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ExternalSourceRef target, got {other:?}")),
         }
     }
@@ -7273,14 +8672,14 @@ impl ExternalSourceRef {
 pub enum FaceBoundRef {
     FaceBound(FaceBoundId),
     FaceOuterBound(FaceOuterBoundId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl FaceBoundRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::FaceBound(i) => Ok(Self::FaceBound(i)),
             EntityKey::FaceOuterBound(i) => Ok(Self::FaceOuterBound(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected FaceBoundRef target, got {other:?}")),
         }
     }
@@ -7310,10 +8709,10 @@ pub enum FaceOrSurfaceRef {
     SweptSurface(SweptSurfaceId),
     ToroidalSurface(ToroidalSurfaceId),
     UniformSurface(UniformSurfaceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl FaceOrSurfaceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
@@ -7337,7 +8736,7 @@ impl FaceOrSurfaceRef {
             EntityKey::SweptSurface(i) => Ok(Self::SweptSurface(i)),
             EntityKey::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
             EntityKey::UniformSurface(i) => Ok(Self::UniformSurface(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected FaceOrSurfaceRef target, got {other:?}")),
         }
     }
@@ -7348,15 +8747,15 @@ pub enum FaceRef {
     AdvancedFace(AdvancedFaceId),
     Face(FaceId),
     FaceSurface(FaceSurfaceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl FaceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::Face(i) => Ok(Self::Face(i)),
             EntityKey::FaceSurface(i) => Ok(Self::FaceSurface(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected FaceRef target, got {other:?}")),
         }
     }
@@ -7366,14 +8765,14 @@ impl FaceRef {
 pub enum FaceSurfaceRef {
     AdvancedFace(AdvancedFaceId),
     FaceSurface(FaceSurfaceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl FaceSurfaceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::FaceSurface(i) => Ok(Self::FaceSurface(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected FaceSurfaceRef target, got {other:?}")),
         }
     }
@@ -7382,13 +8781,13 @@ impl FaceSurfaceRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum FillAreaStyleRef {
     FillAreaStyle(FillAreaStyleId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl FillAreaStyleRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::FillAreaStyle(i) => Ok(Self::FillAreaStyle(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected FillAreaStyleRef target, got {other:?}")),
         }
     }
@@ -7401,10 +8800,10 @@ pub enum FillAreaStyleTileShapeSelectRef {
     FillAreaStyleTileCurveWithStyle(FillAreaStyleTileCurveWithStyleId),
     FillAreaStyleTileSymbolWithStyle(FillAreaStyleTileSymbolWithStyleId),
     PreDefinedTile(PreDefinedTileId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl FillAreaStyleTileShapeSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ExternallyDefinedTile(i) => Ok(Self::ExternallyDefinedTile(i)),
             EntityKey::FillAreaStyleTileColouredRegion(i) => {
@@ -7417,7 +8816,7 @@ impl FillAreaStyleTileShapeSelectRef {
                 Ok(Self::FillAreaStyleTileSymbolWithStyle(i))
             }
             EntityKey::PreDefinedTile(i) => Ok(Self::PreDefinedTile(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected FillAreaStyleTileShapeSelectRef target, got {other:?}"
             )),
@@ -7434,10 +8833,10 @@ pub enum FillStyleSelectRef {
     FillAreaStyleTiles(FillAreaStyleTilesId),
     TextureStyleSpecification(TextureStyleSpecificationId),
     TextureStyleTessellationSpecification(TextureStyleTessellationSpecificationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl FillStyleSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ExternallyDefinedHatchStyle(i) => Ok(Self::ExternallyDefinedHatchStyle(i)),
             EntityKey::ExternallyDefinedTileStyle(i) => Ok(Self::ExternallyDefinedTileStyle(i)),
@@ -7448,7 +8847,7 @@ impl FillStyleSelectRef {
             EntityKey::TextureStyleTessellationSpecification(i) => {
                 Ok(Self::TextureStyleTessellationSpecification(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected FillStyleSelectRef target, got {other:?}")),
         }
     }
@@ -7460,16 +8859,16 @@ pub enum FontSelectRef {
     ExternallyDefinedTextFont(ExternallyDefinedTextFontId),
     PreDefinedTextFont(PreDefinedTextFontId),
     TextFont(TextFontId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl FontSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DraughtingPreDefinedTextFont(i) => Ok(Self::DraughtingPreDefinedTextFont(i)),
             EntityKey::ExternallyDefinedTextFont(i) => Ok(Self::ExternallyDefinedTextFont(i)),
             EntityKey::PreDefinedTextFont(i) => Ok(Self::PreDefinedTextFont(i)),
             EntityKey::TextFont(i) => Ok(Self::TextFont(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected FontSelectRef target, got {other:?}")),
         }
     }
@@ -7478,13 +8877,13 @@ impl FontSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeneralPropertyRef {
     GeneralProperty(GeneralPropertyId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl GeneralPropertyRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::GeneralProperty(i) => Ok(Self::GeneralProperty(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected GeneralPropertyRef target, got {other:?}")),
         }
     }
@@ -7520,10 +8919,10 @@ pub enum GeometricItemSpecificUsageSelectRef {
     ShapeAspectRelationship(ShapeAspectRelationshipId),
     ToleranceZone(ToleranceZoneId),
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl GeometricItemSpecificUsageSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
@@ -7559,7 +8958,7 @@ impl GeometricItemSpecificUsageSelectRef {
             EntityKey::ShapeAspectRelationship(i) => Ok(Self::ShapeAspectRelationship(i)),
             EntityKey::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
             EntityKey::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected GeometricItemSpecificUsageSelectRef target, got {other:?}"
             )),
@@ -7639,6 +9038,7 @@ pub enum GeometricModelItemRef {
     OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
     OpenShell(OpenShellId),
     OrientedClosedShell(OrientedClosedShellId),
+    Parabola(ParabolaId),
     Pcurve(PcurveId),
     Placement(PlacementId),
     PlanarBox(PlanarBoxId),
@@ -7678,10 +9078,10 @@ pub enum GeometricModelItemRef {
     UniformSurface(UniformSurfaceId),
     Vector(VectorId),
     VertexPoint(VertexPointId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl GeometricModelItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::AnnotationPlaceholderLeaderLine(i) => {
@@ -7769,6 +9169,7 @@ impl GeometricModelItemRef {
             EntityKey::OneDirectionRepeatFactor(i) => Ok(Self::OneDirectionRepeatFactor(i)),
             EntityKey::OpenShell(i) => Ok(Self::OpenShell(i)),
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
+            EntityKey::Parabola(i) => Ok(Self::Parabola(i)),
             EntityKey::Pcurve(i) => Ok(Self::Pcurve(i)),
             EntityKey::Placement(i) => Ok(Self::Placement(i)),
             EntityKey::PlanarBox(i) => Ok(Self::PlanarBox(i)),
@@ -7808,7 +9209,7 @@ impl GeometricModelItemRef {
             EntityKey::UniformSurface(i) => Ok(Self::UniformSurface(i)),
             EntityKey::Vector(i) => Ok(Self::Vector(i)),
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected GeometricModelItemRef target, got {other:?}"
             )),
@@ -7848,6 +9249,7 @@ pub enum GeometricSetSelectRef {
     IntersectionCurve(IntersectionCurveId),
     Line(LineId),
     OffsetSurface(OffsetSurfaceId),
+    Parabola(ParabolaId),
     Pcurve(PcurveId),
     Placement(PlacementId),
     PlanarBox(PlanarBoxId),
@@ -7869,10 +9271,10 @@ pub enum GeometricSetSelectRef {
     TrimmedCurve(TrimmedCurveId),
     UniformCurve(UniformCurveId),
     UniformSurface(UniformSurfaceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl GeometricSetSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationText(i) => Ok(Self::AnnotationText(i)),
             EntityKey::ApllPoint(i) => Ok(Self::ApllPoint(i)),
@@ -7904,6 +9306,7 @@ impl GeometricSetSelectRef {
             EntityKey::IntersectionCurve(i) => Ok(Self::IntersectionCurve(i)),
             EntityKey::Line(i) => Ok(Self::Line(i)),
             EntityKey::OffsetSurface(i) => Ok(Self::OffsetSurface(i)),
+            EntityKey::Parabola(i) => Ok(Self::Parabola(i)),
             EntityKey::Pcurve(i) => Ok(Self::Pcurve(i)),
             EntityKey::Placement(i) => Ok(Self::Placement(i)),
             EntityKey::PlanarBox(i) => Ok(Self::PlanarBox(i)),
@@ -7925,7 +9328,7 @@ impl GeometricSetSelectRef {
             EntityKey::TrimmedCurve(i) => Ok(Self::TrimmedCurve(i)),
             EntityKey::UniformCurve(i) => Ok(Self::UniformCurve(i)),
             EntityKey::UniformSurface(i) => Ok(Self::UniformSurface(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected GeometricSetSelectRef target, got {other:?}"
             )),
@@ -7958,10 +9361,10 @@ pub enum GeometricToleranceRef {
     SymmetryTolerance(SymmetryToleranceId),
     TotalRunoutTolerance(TotalRunoutToleranceId),
     UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl GeometricToleranceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AngularityTolerance(i) => Ok(Self::AngularityTolerance(i)),
             EntityKey::CircularRunoutTolerance(i) => Ok(Self::CircularRunoutTolerance(i)),
@@ -7998,7 +9401,7 @@ impl GeometricToleranceRef {
             EntityKey::UnequallyDisposedGeometricTolerance(i) => {
                 Ok(Self::UnequallyDisposedGeometricTolerance(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected GeometricToleranceRef target, got {other:?}"
             )),
@@ -8036,10 +9439,10 @@ pub enum GeometricToleranceTargetRef {
     ShapeAspect(ShapeAspectId),
     ToleranceZone(ToleranceZoneId),
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl GeometricToleranceTargetRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
@@ -8071,7 +9474,7 @@ impl GeometricToleranceTargetRef {
             EntityKey::ShapeAspect(i) => Ok(Self::ShapeAspect(i)),
             EntityKey::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
             EntityKey::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected GeometricToleranceTargetRef target, got {other:?}"
             )),
@@ -8083,16 +9486,16 @@ impl GeometricToleranceTargetRef {
 pub enum GroupRef {
     Group(GroupId),
     ProductConceptFeatureCategory(ProductConceptFeatureCategoryId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl GroupRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Group(i) => Ok(Self::Group(i)),
             EntityKey::ProductConceptFeatureCategory(i) => {
                 Ok(Self::ProductConceptFeatureCategory(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected GroupRef target, got {other:?}")),
         }
     }
@@ -8297,6 +9700,7 @@ pub enum GroupableItemRef {
     OrientedClosedShell(OrientedClosedShellId),
     OrientedEdge(OrientedEdgeId),
     OverRidingStyledItem(OverRidingStyledItemId),
+    Parabola(ParabolaId),
     ParametricRepresentationContext(ParametricRepresentationContextId),
     Path(PathId),
     Pcurve(PcurveId),
@@ -8405,10 +9809,10 @@ pub enum GroupableItemRef {
     VertexShell(VertexShellId),
     VolumeUnit(VolumeUnitId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl GroupableItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionMethod(i) => Ok(Self::ActionMethod(i)),
             EntityKey::Address(i) => Ok(Self::Address(i)),
@@ -8655,6 +10059,7 @@ impl GroupableItemRef {
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
             EntityKey::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
             EntityKey::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            EntityKey::Parabola(i) => Ok(Self::Parabola(i)),
             EntityKey::ParametricRepresentationContext(i) => {
                 Ok(Self::ParametricRepresentationContext(i))
             }
@@ -8789,7 +10194,7 @@ impl GroupableItemRef {
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::VolumeUnit(i) => Ok(Self::VolumeUnit(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected GroupableItemRef target, got {other:?}")),
         }
     }
@@ -8917,10 +10322,10 @@ pub enum IdAttributeSelectRef {
     VertexPoint(VertexPointId),
     VertexShell(VertexShellId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl IdAttributeSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Action(i) => Ok(Self::Action(i)),
             EntityKey::Address(i) => Ok(Self::Address(i)),
@@ -9076,7 +10481,7 @@ impl IdAttributeSelectRef {
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected IdAttributeSelectRef target, got {other:?}"
             )),
@@ -9089,7 +10494,7 @@ pub enum IdentificationRoleRef {
     IdentificationRole(IdentificationRoleId),
 }
 impl IdentificationRoleRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::IdentificationRole(i) => Ok(Self::IdentificationRole(i)),
             other => Err(format!(
@@ -9150,10 +10555,10 @@ pub enum InvisibleItemRef {
     TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl InvisibleItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedBrepShapeRepresentation(i) => {
                 Ok(Self::AdvancedBrepShapeRepresentation(i))
@@ -9224,7 +10629,7 @@ impl InvisibleItemRef {
             EntityKey::TessellatedShapeRepresentation(i) => {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected InvisibleItemRef target, got {other:?}")),
         }
     }
@@ -9233,13 +10638,13 @@ impl InvisibleItemRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ItemDefinedTransformationRef {
     ItemDefinedTransformation(ItemDefinedTransformationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ItemDefinedTransformationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ItemDefinedTransformation(i) => Ok(Self::ItemDefinedTransformation(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ItemDefinedTransformationRef target, got {other:?}"
             )),
@@ -9323,10 +10728,10 @@ pub enum ItemIdentifiedRepresentationUsageDefinitionRef {
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
     TotalRunoutTolerance(TotalRunoutToleranceId),
     UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ItemIdentifiedRepresentationUsageDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
@@ -9430,7 +10835,7 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             EntityKey::UnequallyDisposedGeometricTolerance(i) => {
                 Ok(Self::UnequallyDisposedGeometricTolerance(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ItemIdentifiedRepresentationUsageDefinitionRef target, got {other:?}"
             )),
@@ -9536,6 +10941,7 @@ pub enum ItemIdentifiedRepresentationUsageSelectRef {
     OrientedClosedShell(OrientedClosedShellId),
     OrientedEdge(OrientedEdgeId),
     OverRidingStyledItem(OverRidingStyledItemId),
+    Parabola(ParabolaId),
     Path(PathId),
     Pcurve(PcurveId),
     Placement(PlacementId),
@@ -9590,10 +10996,10 @@ pub enum ItemIdentifiedRepresentationUsageSelectRef {
     WireShell(WireShellId),
     ListRepresentationItem(Vec<RepresentationItemRef>),
     SetRepresentationItem(Vec<RepresentationItemRef>),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ItemIdentifiedRepresentationUsageSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
@@ -9713,6 +11119,7 @@ impl ItemIdentifiedRepresentationUsageSelectRef {
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
             EntityKey::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
             EntityKey::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            EntityKey::Parabola(i) => Ok(Self::Parabola(i)),
             EntityKey::Path(i) => Ok(Self::Path(i)),
             EntityKey::Pcurve(i) => Ok(Self::Pcurve(i)),
             EntityKey::Placement(i) => Ok(Self::Placement(i)),
@@ -9769,7 +11176,7 @@ impl ItemIdentifiedRepresentationUsageSelectRef {
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ItemIdentifiedRepresentationUsageSelectRef target, got {other:?}"
             )),
@@ -9875,6 +11282,7 @@ pub enum LayeredItemRef {
     OrientedClosedShell(OrientedClosedShellId),
     OrientedEdge(OrientedEdgeId),
     OverRidingStyledItem(OverRidingStyledItemId),
+    Parabola(ParabolaId),
     Path(PathId),
     Pcurve(PcurveId),
     Placement(PlacementId),
@@ -9930,10 +11338,10 @@ pub enum LayeredItemRef {
     VertexPoint(VertexPointId),
     VertexShell(VertexShellId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl LayeredItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
@@ -10053,6 +11461,7 @@ impl LayeredItemRef {
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
             EntityKey::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
             EntityKey::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            EntityKey::Parabola(i) => Ok(Self::Parabola(i)),
             EntityKey::Path(i) => Ok(Self::Path(i)),
             EntityKey::Pcurve(i) => Ok(Self::Pcurve(i)),
             EntityKey::Placement(i) => Ok(Self::Placement(i)),
@@ -10112,7 +11521,7 @@ impl LayeredItemRef {
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected LayeredItemRef target, got {other:?}")),
         }
     }
@@ -10121,13 +11530,13 @@ impl LayeredItemRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum LengthMeasureWithUnitRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl LengthMeasureWithUnitRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::LengthMeasureWithUnit(i) => Ok(Self::LengthMeasureWithUnit(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected LengthMeasureWithUnitRef target, got {other:?}"
             )),
@@ -10139,14 +11548,14 @@ impl LengthMeasureWithUnitRef {
 pub enum LengthOrPlaneAngleMeasureWithUnitSelectRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
     PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::LengthMeasureWithUnit(i) => Ok(Self::LengthMeasureWithUnit(i)),
             EntityKey::PlaneAngleMeasureWithUnit(i) => Ok(Self::PlaneAngleMeasureWithUnit(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected LengthOrPlaneAngleMeasureWithUnitSelectRef target, got {other:?}"
             )),
@@ -10159,7 +11568,7 @@ pub enum LocalTimeRef {
     LocalTime(LocalTimeId),
 }
 impl LocalTimeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::LocalTime(i) => Ok(Self::LocalTime(i)),
             other => Err(format!("expected LocalTimeRef target, got {other:?}")),
@@ -10173,16 +11582,16 @@ pub enum LoopRef {
     Loop(LoopId),
     PolyLoop(PolyLoopId),
     VertexLoop(VertexLoopId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl LoopRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::EdgeLoop(i) => Ok(Self::EdgeLoop(i)),
             EntityKey::Loop(i) => Ok(Self::Loop(i)),
             EntityKey::PolyLoop(i) => Ok(Self::PolyLoop(i)),
             EntityKey::VertexLoop(i) => Ok(Self::VertexLoop(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected LoopRef target, got {other:?}")),
         }
     }
@@ -10192,14 +11601,14 @@ impl LoopRef {
 pub enum ManifoldSolidBrepRef {
     BrepWithVoids(BrepWithVoidsId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ManifoldSolidBrepRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::BrepWithVoids(i) => Ok(Self::BrepWithVoids(i)),
             EntityKey::ManifoldSolidBrep(i) => Ok(Self::ManifoldSolidBrep(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ManifoldSolidBrepRef target, got {other:?}"
             )),
@@ -10212,14 +11621,14 @@ pub enum MarkerSelectRef {
     PreDefinedMarker(PreDefinedMarkerId),
     PreDefinedPointMarkerSymbol(PreDefinedPointMarkerSymbolId),
     MarkerType(MarkerType),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl MarkerSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PreDefinedMarker(i) => Ok(Self::PreDefinedMarker(i)),
             EntityKey::PreDefinedPointMarkerSymbol(i) => Ok(Self::PreDefinedPointMarkerSymbol(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected MarkerSelectRef target, got {other:?}")),
         }
     }
@@ -10234,10 +11643,10 @@ pub enum MeasureWithUnitRef {
     PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
     RatioMeasureWithUnit(RatioMeasureWithUnitId),
     UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl MeasureWithUnitRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::LengthMeasureWithUnit(i) => Ok(Self::LengthMeasureWithUnit(i)),
             EntityKey::MassMeasureWithUnit(i) => Ok(Self::MassMeasureWithUnit(i)),
@@ -10246,7 +11655,7 @@ impl MeasureWithUnitRef {
             EntityKey::PlaneAngleMeasureWithUnit(i) => Ok(Self::PlaneAngleMeasureWithUnit(i)),
             EntityKey::RatioMeasureWithUnit(i) => Ok(Self::RatioMeasureWithUnit(i)),
             EntityKey::UncertaintyMeasureWithUnit(i) => Ok(Self::UncertaintyMeasureWithUnit(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected MeasureWithUnitRef target, got {other:?}")),
         }
     }
@@ -10276,10 +11685,10 @@ pub enum MechanicalDesignAndDraughtingRelationshipSelectRef {
     ShapeRepresentation(ShapeRepresentationId),
     ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl MechanicalDesignAndDraughtingRelationshipSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedBrepShapeRepresentation(i) => {
                 Ok(Self::AdvancedBrepShapeRepresentation(i))
@@ -10311,7 +11720,7 @@ impl MechanicalDesignAndDraughtingRelationshipSelectRef {
             EntityKey::TessellatedShapeRepresentation(i) => {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected MechanicalDesignAndDraughtingRelationshipSelectRef target, got {other:?}"
             )),
@@ -10340,10 +11749,10 @@ pub enum NameAttributeSelectRef {
     PropertyDefinitionRepresentation(PropertyDefinitionRepresentationId),
     ShapeDefinitionRepresentation(ShapeDefinitionRepresentationId),
     VolumeUnit(VolumeUnitId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl NameAttributeSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionRequestSolution(i) => Ok(Self::ActionRequestSolution(i)),
             EntityKey::Address(i) => Ok(Self::Address(i)),
@@ -10372,7 +11781,7 @@ impl NameAttributeSelectRef {
                 Ok(Self::ShapeDefinitionRepresentation(i))
             }
             EntityKey::VolumeUnit(i) => Ok(Self::VolumeUnit(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected NameAttributeSelectRef target, got {other:?}"
             )),
@@ -10392,10 +11801,10 @@ pub enum NamedUnitRef {
     SiUnit(SiUnitId),
     SolidAngleUnit(SolidAngleUnitId),
     TimeUnit(TimeUnitId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl NamedUnitRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ContextDependentUnit(i) => Ok(Self::ContextDependentUnit(i)),
             EntityKey::ConversionBasedUnit(i) => Ok(Self::ConversionBasedUnit(i)),
@@ -10407,7 +11816,7 @@ impl NamedUnitRef {
             EntityKey::SiUnit(i) => Ok(Self::SiUnit(i)),
             EntityKey::SolidAngleUnit(i) => Ok(Self::SolidAngleUnit(i)),
             EntityKey::TimeUnit(i) => Ok(Self::TimeUnit(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected NamedUnitRef target, got {other:?}")),
         }
     }
@@ -10418,7 +11827,7 @@ pub enum ObjectRoleRef {
     ObjectRole(ObjectRoleId),
 }
 impl ObjectRoleRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ObjectRole(i) => Ok(Self::ObjectRole(i)),
             other => Err(format!("expected ObjectRoleRef target, got {other:?}")),
@@ -10430,14 +11839,14 @@ impl ObjectRoleRef {
 pub enum OneDirectionRepeatFactorRef {
     OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
     TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl OneDirectionRepeatFactorRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::OneDirectionRepeatFactor(i) => Ok(Self::OneDirectionRepeatFactor(i)),
             EntityKey::TwoDirectionRepeatFactor(i) => Ok(Self::TwoDirectionRepeatFactor(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected OneDirectionRepeatFactorRef target, got {other:?}"
             )),
@@ -10450,7 +11859,7 @@ pub enum OrganizationRef {
     Organization(OrganizationId),
 }
 impl OrganizationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Organization(i) => Ok(Self::Organization(i)),
             other => Err(format!("expected OrganizationRef target, got {other:?}")),
@@ -10463,7 +11872,7 @@ pub enum OrganizationalProjectRef {
     OrganizationalProject(OrganizationalProjectId),
 }
 impl OrganizationalProjectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::OrganizationalProject(i) => Ok(Self::OrganizationalProject(i)),
             other => Err(format!(
@@ -10476,13 +11885,13 @@ impl OrganizationalProjectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum OrientedClosedShellRef {
     OrientedClosedShell(OrientedClosedShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl OrientedClosedShellRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected OrientedClosedShellRef target, got {other:?}"
             )),
@@ -10493,13 +11902,13 @@ impl OrientedClosedShellRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum OrientedEdgeRef {
     OrientedEdge(OrientedEdgeId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl OrientedEdgeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected OrientedEdgeRef target, got {other:?}")),
         }
     }
@@ -10528,10 +11937,10 @@ pub enum PcurveOrSurfaceRef {
     SweptSurface(SweptSurfaceId),
     ToroidalSurface(ToroidalSurfaceId),
     UniformSurface(UniformSurfaceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PcurveOrSurfaceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
             EntityKey::BSplineSurfaceWithKnots(i) => Ok(Self::BSplineSurfaceWithKnots(i)),
@@ -10554,7 +11963,7 @@ impl PcurveOrSurfaceRef {
             EntityKey::SweptSurface(i) => Ok(Self::SweptSurface(i)),
             EntityKey::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
             EntityKey::UniformSurface(i) => Ok(Self::UniformSurface(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected PcurveOrSurfaceRef target, got {other:?}")),
         }
     }
@@ -10648,10 +12057,10 @@ pub enum PersonAndOrganizationItemRef {
     SymbolRepresentation(SymbolRepresentationId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
     VersionedActionRequest(VersionedActionRequestId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PersonAndOrganizationItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Action(i) => Ok(Self::Action(i)),
             EntityKey::ActionDirective(i) => Ok(Self::ActionDirective(i)),
@@ -10765,7 +12174,7 @@ impl PersonAndOrganizationItemRef {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
             EntityKey::VersionedActionRequest(i) => Ok(Self::VersionedActionRequest(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected PersonAndOrganizationItemRef target, got {other:?}"
             )),
@@ -10778,7 +12187,7 @@ pub enum PersonAndOrganizationRef {
     PersonAndOrganization(PersonAndOrganizationId),
 }
 impl PersonAndOrganizationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PersonAndOrganization(i) => Ok(Self::PersonAndOrganization(i)),
             other => Err(format!(
@@ -10793,7 +12202,7 @@ pub enum PersonAndOrganizationRoleRef {
     PersonAndOrganizationRole(PersonAndOrganizationRoleId),
 }
 impl PersonAndOrganizationRoleRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PersonAndOrganizationRole(i) => Ok(Self::PersonAndOrganizationRole(i)),
             other => Err(format!(
@@ -10810,7 +12219,7 @@ pub enum PersonOrganizationSelectRef {
     PersonAndOrganization(PersonAndOrganizationId),
 }
 impl PersonOrganizationSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Organization(i) => Ok(Self::Organization(i)),
             EntityKey::Person(i) => Ok(Self::Person(i)),
@@ -10827,7 +12236,7 @@ pub enum PersonRef {
     Person(PersonId),
 }
 impl PersonRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Person(i) => Ok(Self::Person(i)),
             other => Err(format!("expected PersonRef target, got {other:?}")),
@@ -10838,13 +12247,13 @@ impl PersonRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum PlanarBoxRef {
     PlanarBox(PlanarBoxId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PlanarBoxRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PlanarBox(i) => Ok(Self::PlanarBox(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected PlanarBoxRef target, got {other:?}")),
         }
     }
@@ -10854,14 +12263,14 @@ impl PlanarBoxRef {
 pub enum PlaneOrPlanarBoxRef {
     PlanarBox(PlanarBoxId),
     Plane(PlaneId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PlaneOrPlanarBoxRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PlanarBox(i) => Ok(Self::PlanarBox(i)),
             EntityKey::Plane(i) => Ok(Self::Plane(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected PlaneOrPlanarBoxRef target, got {other:?}"
             )),
@@ -10875,16 +12284,16 @@ pub enum PointRef {
     ApllPointWithSurface(ApllPointWithSurfaceId),
     CartesianPoint(CartesianPointId),
     Point(PointId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PointRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApllPoint(i) => Ok(Self::ApllPoint(i)),
             EntityKey::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
             EntityKey::CartesianPoint(i) => Ok(Self::CartesianPoint(i)),
             EntityKey::Point(i) => Ok(Self::Point(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected PointRef target, got {other:?}")),
         }
     }
@@ -10893,13 +12302,13 @@ impl PointRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum PresentationAreaRef {
     PresentationArea(PresentationAreaId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PresentationAreaRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PresentationArea(i) => Ok(Self::PresentationArea(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected PresentationAreaRef target, got {other:?}"
             )),
@@ -10913,16 +12322,16 @@ pub enum PresentationRepresentationSelectRef {
     PresentationRepresentation(PresentationRepresentationId),
     PresentationSet(PresentationSetId),
     PresentationView(PresentationViewId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PresentationRepresentationSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PresentationArea(i) => Ok(Self::PresentationArea(i)),
             EntityKey::PresentationRepresentation(i) => Ok(Self::PresentationRepresentation(i)),
             EntityKey::PresentationSet(i) => Ok(Self::PresentationSet(i)),
             EntityKey::PresentationView(i) => Ok(Self::PresentationView(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected PresentationRepresentationSelectRef target, got {other:?}"
             )),
@@ -10933,13 +12342,13 @@ impl PresentationRepresentationSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum PresentationSetRef {
     PresentationSet(PresentationSetId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PresentationSetRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PresentationSet(i) => Ok(Self::PresentationSet(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected PresentationSetRef target, got {other:?}")),
         }
     }
@@ -10950,15 +12359,15 @@ pub enum PresentationSizeAssignmentSelectRef {
     AreaInSet(AreaInSetId),
     PresentationArea(PresentationAreaId),
     PresentationView(PresentationViewId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PresentationSizeAssignmentSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AreaInSet(i) => Ok(Self::AreaInSet(i)),
             EntityKey::PresentationArea(i) => Ok(Self::PresentationArea(i)),
             EntityKey::PresentationView(i) => Ok(Self::PresentationView(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected PresentationSizeAssignmentSelectRef target, got {other:?}"
             )),
@@ -10970,14 +12379,14 @@ impl PresentationSizeAssignmentSelectRef {
 pub enum PresentationStyleAssignmentRef {
     PresentationStyleAssignment(PresentationStyleAssignmentId),
     PresentationStyleByContext(PresentationStyleByContextId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PresentationStyleAssignmentRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PresentationStyleAssignment(i) => Ok(Self::PresentationStyleAssignment(i)),
             EntityKey::PresentationStyleByContext(i) => Ok(Self::PresentationStyleByContext(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected PresentationStyleAssignmentRef target, got {other:?}"
             )),
@@ -10999,10 +12408,10 @@ pub enum PresentationStyleSelectRef {
     TextStyleWithBoxCharacteristics(TextStyleWithBoxCharacteristicsId),
     TextureStyleTessellationSpecification(TextureStyleTessellationSpecificationId),
     NullStyle(NullStyle),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PresentationStyleSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApproximationTolerance(i) => Ok(Self::ApproximationTolerance(i)),
             EntityKey::CurveStyle(i) => Ok(Self::CurveStyle(i)),
@@ -11019,7 +12428,7 @@ impl PresentationStyleSelectRef {
             EntityKey::TextureStyleTessellationSpecification(i) => {
                 Ok(Self::TextureStyleTessellationSpecification(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected PresentationStyleSelectRef target, got {other:?}"
             )),
@@ -11031,14 +12440,14 @@ impl PresentationStyleSelectRef {
 pub enum PresentedItemRef {
     AppliedPresentedItem(AppliedPresentedItemId),
     PresentedItem(PresentedItemId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PresentedItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AppliedPresentedItem(i) => Ok(Self::AppliedPresentedItem(i)),
             EntityKey::PresentedItem(i) => Ok(Self::PresentedItem(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected PresentedItemRef target, got {other:?}")),
         }
     }
@@ -11061,10 +12470,10 @@ pub enum PresentedItemSelectRef {
     ProductDefinitionRelationship(ProductDefinitionRelationshipId),
     ProductDefinitionUsage(ProductDefinitionUsageId),
     ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PresentedItemSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Action(i) => Ok(Self::Action(i)),
             EntityKey::ActionMethod(i) => Ok(Self::ActionMethod(i)),
@@ -11089,7 +12498,7 @@ impl PresentedItemSelectRef {
             EntityKey::ProductDefinitionWithAssociatedDocuments(i) => {
                 Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected PresentedItemSelectRef target, got {other:?}"
             )),
@@ -11101,16 +12510,16 @@ impl PresentedItemSelectRef {
 pub enum ProductCategoryRef {
     ProductCategory(ProductCategoryId),
     ProductRelatedProductCategory(ProductRelatedProductCategoryId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductCategoryRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductCategory(i) => Ok(Self::ProductCategory(i)),
             EntityKey::ProductRelatedProductCategory(i) => {
                 Ok(Self::ProductRelatedProductCategory(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ProductCategoryRef target, got {other:?}")),
         }
     }
@@ -11121,7 +12530,7 @@ pub enum ProductConceptContextRef {
     ProductConceptContext(ProductConceptContextId),
 }
 impl ProductConceptContextRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductConceptContext(i) => Ok(Self::ProductConceptContext(i)),
             other => Err(format!(
@@ -11134,13 +12543,13 @@ impl ProductConceptContextRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductConceptRef {
     ProductConcept(ProductConceptId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductConceptRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductConcept(i) => Ok(Self::ProductConcept(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ProductConceptRef target, got {other:?}")),
         }
     }
@@ -11150,14 +12559,14 @@ impl ProductConceptRef {
 pub enum ProductContextRef {
     MechanicalContext(MechanicalContextId),
     ProductContext(ProductContextId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductContextRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::MechanicalContext(i) => Ok(Self::MechanicalContext(i)),
             EntityKey::ProductContext(i) => Ok(Self::ProductContext(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ProductContextRef target, got {other:?}")),
         }
     }
@@ -11167,14 +12576,14 @@ impl ProductContextRef {
 pub enum ProductDefinitionContextRef {
     DesignContext(DesignContextId),
     ProductDefinitionContext(ProductDefinitionContextId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductDefinitionContextRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::DesignContext(i) => Ok(Self::DesignContext(i)),
             EntityKey::ProductDefinitionContext(i) => Ok(Self::ProductDefinitionContext(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ProductDefinitionContextRef target, got {other:?}"
             )),
@@ -11187,7 +12596,7 @@ pub enum ProductDefinitionContextRoleRef {
     ProductDefinitionContextRole(ProductDefinitionContextRoleId),
 }
 impl ProductDefinitionContextRoleRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinitionContextRole(i) => Ok(Self::ProductDefinitionContextRole(i)),
             other => Err(format!(
@@ -11201,16 +12610,16 @@ impl ProductDefinitionContextRoleRef {
 pub enum ProductDefinitionFormationRef {
     ProductDefinitionFormation(ProductDefinitionFormationId),
     ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductDefinitionFormationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             EntityKey::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ProductDefinitionFormationRef target, got {other:?}"
             )),
@@ -11224,10 +12633,10 @@ pub enum ProductDefinitionOrReferenceRef {
     ProductDefinition(ProductDefinitionId),
     ProductDefinitionOccurrence(ProductDefinitionOccurrenceId),
     ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductDefinitionOrReferenceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::GenericProductDefinitionReference(i) => {
                 Ok(Self::GenericProductDefinitionReference(i))
@@ -11237,7 +12646,7 @@ impl ProductDefinitionOrReferenceRef {
             EntityKey::ProductDefinitionWithAssociatedDocuments(i) => {
                 Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ProductDefinitionOrReferenceRef target, got {other:?}"
             )),
@@ -11249,16 +12658,16 @@ impl ProductDefinitionOrReferenceRef {
 pub enum ProductDefinitionRef {
     ProductDefinition(ProductDefinitionId),
     ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
             EntityKey::ProductDefinitionWithAssociatedDocuments(i) => {
                 Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ProductDefinitionRef target, got {other:?}"
             )),
@@ -11273,10 +12682,10 @@ pub enum ProductDefinitionRelationshipRef {
     NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
     ProductDefinitionRelationship(ProductDefinitionRelationshipId),
     ProductDefinitionUsage(ProductDefinitionUsageId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductDefinitionRelationshipRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AssemblyComponentUsage(i) => Ok(Self::AssemblyComponentUsage(i)),
             EntityKey::MakeFromUsageOption(i) => Ok(Self::MakeFromUsageOption(i)),
@@ -11285,7 +12694,7 @@ impl ProductDefinitionRelationshipRef {
                 Ok(Self::ProductDefinitionRelationship(i))
             }
             EntityKey::ProductDefinitionUsage(i) => Ok(Self::ProductDefinitionUsage(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ProductDefinitionRelationshipRef target, got {other:?}"
             )),
@@ -11296,13 +12705,13 @@ impl ProductDefinitionRelationshipRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductDefinitionShapeRef {
     ProductDefinitionShape(ProductDefinitionShapeId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductDefinitionShapeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ProductDefinitionShapeRef target, got {other:?}"
             )),
@@ -11317,10 +12726,10 @@ pub enum ProductOrFormationOrDefinitionRef {
     ProductDefinitionFormation(ProductDefinitionFormationId),
     ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
     ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductOrFormationOrDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Product(i) => Ok(Self::Product(i)),
             EntityKey::ProductDefinition(i) => Ok(Self::ProductDefinition(i)),
@@ -11331,7 +12740,7 @@ impl ProductOrFormationOrDefinitionRef {
             EntityKey::ProductDefinitionWithAssociatedDocuments(i) => {
                 Ok(Self::ProductDefinitionWithAssociatedDocuments(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ProductOrFormationOrDefinitionRef target, got {other:?}"
             )),
@@ -11342,13 +12751,13 @@ impl ProductOrFormationOrDefinitionRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductRef {
     Product(ProductId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ProductRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Product(i) => Ok(Self::Product(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ProductRef target, got {other:?}")),
         }
     }
@@ -11358,14 +12767,14 @@ impl ProductRef {
 pub enum PropertyDefinitionRef {
     ProductDefinitionShape(ProductDefinitionShapeId),
     PropertyDefinition(PropertyDefinitionId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl PropertyDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinitionShape(i) => Ok(Self::ProductDefinitionShape(i)),
             EntityKey::PropertyDefinition(i) => Ok(Self::PropertyDefinition(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected PropertyDefinitionRef target, got {other:?}"
             )),
@@ -11377,16 +12786,16 @@ impl PropertyDefinitionRef {
 pub enum RenderingPropertiesSelectRef {
     SurfaceStyleReflectanceAmbient(SurfaceStyleReflectanceAmbientId),
     SurfaceStyleTransparent(SurfaceStyleTransparentId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl RenderingPropertiesSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::SurfaceStyleReflectanceAmbient(i) => {
                 Ok(Self::SurfaceStyleReflectanceAmbient(i))
             }
             EntityKey::SurfaceStyleTransparent(i) => Ok(Self::SurfaceStyleTransparent(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected RenderingPropertiesSelectRef target, got {other:?}"
             )),
@@ -11401,10 +12810,10 @@ pub enum RepresentationContextRef {
     GlobalUnitAssignedContext(GlobalUnitAssignedContextId),
     ParametricRepresentationContext(ParametricRepresentationContextId),
     RepresentationContext(RepresentationContextId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl RepresentationContextRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::GeometricRepresentationContext(i) => {
                 Ok(Self::GeometricRepresentationContext(i))
@@ -11417,7 +12826,7 @@ impl RepresentationContextRef {
                 Ok(Self::ParametricRepresentationContext(i))
             }
             EntityKey::RepresentationContext(i) => Ok(Self::RepresentationContext(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected RepresentationContextRef target, got {other:?}"
             )),
@@ -11430,7 +12839,7 @@ pub enum RepresentationContextReferenceRef {
     RepresentationContextReference(RepresentationContextReferenceId),
 }
 impl RepresentationContextReferenceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::RepresentationContextReference(i) => {
                 Ok(Self::RepresentationContextReference(i))
@@ -11540,6 +12949,7 @@ pub enum RepresentationItemRef {
     OrientedClosedShell(OrientedClosedShellId),
     OrientedEdge(OrientedEdgeId),
     OverRidingStyledItem(OverRidingStyledItemId),
+    Parabola(ParabolaId),
     Path(PathId),
     Pcurve(PcurveId),
     Placement(PlacementId),
@@ -11592,10 +13002,10 @@ pub enum RepresentationItemRef {
     VertexPoint(VertexPointId),
     VertexShell(VertexShellId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl RepresentationItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
@@ -11715,6 +13125,7 @@ impl RepresentationItemRef {
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
             EntityKey::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
             EntityKey::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            EntityKey::Parabola(i) => Ok(Self::Parabola(i)),
             EntityKey::Path(i) => Ok(Self::Path(i)),
             EntityKey::Pcurve(i) => Ok(Self::Pcurve(i)),
             EntityKey::Placement(i) => Ok(Self::Placement(i)),
@@ -11771,7 +13182,7 @@ impl RepresentationItemRef {
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected RepresentationItemRef target, got {other:?}"
             )),
@@ -11783,14 +13194,14 @@ impl RepresentationItemRef {
 pub enum RepresentationMapRef {
     CameraUsage(CameraUsageId),
     RepresentationMap(RepresentationMapId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl RepresentationMapRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::CameraUsage(i) => Ok(Self::CameraUsage(i)),
             EntityKey::RepresentationMap(i) => Ok(Self::RepresentationMap(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected RepresentationMapRef target, got {other:?}"
             )),
@@ -11831,10 +13242,10 @@ pub enum RepresentationOrRepresentationReferenceRef {
     ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     SymbolRepresentation(SymbolRepresentationId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl RepresentationOrRepresentationReferenceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedBrepShapeRepresentation(i) => {
                 Ok(Self::AdvancedBrepShapeRepresentation(i))
@@ -11877,7 +13288,7 @@ impl RepresentationOrRepresentationReferenceRef {
             EntityKey::TessellatedShapeRepresentation(i) => {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected RepresentationOrRepresentationReferenceRef target, got {other:?}"
             )),
@@ -11917,10 +13328,10 @@ pub enum RepresentationRef {
     ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     SymbolRepresentation(SymbolRepresentationId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl RepresentationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedBrepShapeRepresentation(i) => {
                 Ok(Self::AdvancedBrepShapeRepresentation(i))
@@ -11962,7 +13373,7 @@ impl RepresentationRef {
             EntityKey::TessellatedShapeRepresentation(i) => {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected RepresentationRef target, got {other:?}")),
         }
     }
@@ -12002,10 +13413,10 @@ pub enum RepresentedDefinitionRef {
     ShapeAspectRelationship(ShapeAspectRelationshipId),
     ToleranceZone(ToleranceZoneId),
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl RepresentedDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
@@ -12047,7 +13458,7 @@ impl RepresentedDefinitionRef {
             EntityKey::ShapeAspectRelationship(i) => Ok(Self::ShapeAspectRelationship(i)),
             EntityKey::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
             EntityKey::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected RepresentedDefinitionRef target, got {other:?}"
             )),
@@ -12060,7 +13471,7 @@ pub enum ResourceRequirementTypeRef {
     ResourceRequirementType(ResourceRequirementTypeId),
 }
 impl ResourceRequirementTypeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ResourceRequirementType(i) => Ok(Self::ResourceRequirementType(i)),
             other => Err(format!(
@@ -12089,10 +13500,10 @@ pub enum RoleSelectRef {
     SecurityClassificationAssignment(SecurityClassificationAssignmentId),
     StartRequest(StartRequestId),
     StartWork(StartWorkId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl RoleSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ActionAssignment(i) => Ok(Self::ActionAssignment(i)),
             EntityKey::ActionRequestAssignment(i) => Ok(Self::ActionRequestAssignment(i)),
@@ -12117,7 +13528,7 @@ impl RoleSelectRef {
             }
             EntityKey::StartRequest(i) => Ok(Self::StartRequest(i)),
             EntityKey::StartWork(i) => Ok(Self::StartWork(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected RoleSelectRef target, got {other:?}")),
         }
     }
@@ -12188,10 +13599,10 @@ pub enum SecurityClassificationItemRef {
     SymbolRepresentation(SymbolRepresentationId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
     VersionedActionRequest(VersionedActionRequestId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl SecurityClassificationItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Action(i) => Ok(Self::Action(i)),
             EntityKey::ActionDirective(i) => Ok(Self::ActionDirective(i)),
@@ -12280,7 +13691,7 @@ impl SecurityClassificationItemRef {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
             EntityKey::VersionedActionRequest(i) => Ok(Self::VersionedActionRequest(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected SecurityClassificationItemRef target, got {other:?}"
             )),
@@ -12293,7 +13704,7 @@ pub enum SecurityClassificationLevelRef {
     SecurityClassificationLevel(SecurityClassificationLevelId),
 }
 impl SecurityClassificationLevelRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::SecurityClassificationLevel(i) => Ok(Self::SecurityClassificationLevel(i)),
             other => Err(format!(
@@ -12308,7 +13719,7 @@ pub enum SecurityClassificationRef {
     SecurityClassification(SecurityClassificationId),
 }
 impl SecurityClassificationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::SecurityClassification(i) => Ok(Self::SecurityClassification(i)),
             other => Err(format!(
@@ -12340,10 +13751,10 @@ pub enum ShapeAspectRef {
     ShapeAspect(ShapeAspectId),
     ToleranceZone(ToleranceZoneId),
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ShapeAspectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
             EntityKey::CentreOfSymmetry(i) => Ok(Self::CentreOfSymmetry(i)),
@@ -12367,7 +13778,7 @@ impl ShapeAspectRef {
             EntityKey::ShapeAspect(i) => Ok(Self::ShapeAspect(i)),
             EntityKey::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
             EntityKey::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ShapeAspectRef target, got {other:?}")),
         }
     }
@@ -12376,13 +13787,13 @@ impl ShapeAspectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ShapeDimensionRepresentationRef {
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ShapeDimensionRepresentationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ShapeDimensionRepresentation(i) => Ok(Self::ShapeDimensionRepresentation(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ShapeDimensionRepresentationRef target, got {other:?}"
             )),
@@ -12405,10 +13816,10 @@ pub enum ShapeModelRef {
     ShapeRepresentation(ShapeRepresentationId),
     ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ShapeModelRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedBrepShapeRepresentation(i) => {
                 Ok(Self::AdvancedBrepShapeRepresentation(i))
@@ -12433,7 +13844,7 @@ impl ShapeModelRef {
             EntityKey::TessellatedShapeRepresentation(i) => {
                 Ok(Self::TessellatedShapeRepresentation(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ShapeModelRef target, got {other:?}")),
         }
     }
@@ -12442,15 +13853,15 @@ impl ShapeModelRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ShapeRepresentationRelationshipRef {
     ShapeRepresentationRelationship(ShapeRepresentationRelationshipId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ShapeRepresentationRelationshipRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ShapeRepresentationRelationship(i) => {
                 Ok(Self::ShapeRepresentationRelationship(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ShapeRepresentationRelationshipRef target, got {other:?}"
             )),
@@ -12465,17 +13876,17 @@ pub enum ShellRef {
     OrientedClosedShell(OrientedClosedShellId),
     VertexShell(VertexShellId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ShellRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ClosedShell(i) => Ok(Self::ClosedShell(i)),
             EntityKey::OpenShell(i) => Ok(Self::OpenShell(i)),
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ShellRef target, got {other:?}")),
         }
     }
@@ -12490,12 +13901,12 @@ pub enum SizeSelectRef {
     PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
     RatioMeasureWithUnit(RatioMeasureWithUnitId),
     UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
-    DescriptiveMeasure(String),
+    DescriptiveMeasure(Text),
     PositiveLengthMeasure(f64),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl SizeSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::LengthMeasureWithUnit(i) => Ok(Self::LengthMeasureWithUnit(i)),
             EntityKey::MassMeasureWithUnit(i) => Ok(Self::MassMeasureWithUnit(i)),
@@ -12504,7 +13915,7 @@ impl SizeSelectRef {
             EntityKey::PlaneAngleMeasureWithUnit(i) => Ok(Self::PlaneAngleMeasureWithUnit(i)),
             EntityKey::RatioMeasureWithUnit(i) => Ok(Self::RatioMeasureWithUnit(i)),
             EntityKey::UncertaintyMeasureWithUnit(i) => Ok(Self::UncertaintyMeasureWithUnit(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected SizeSelectRef target, got {other:?}")),
         }
     }
@@ -12514,16 +13925,16 @@ impl SizeSelectRef {
 pub enum StartRequestItemRef {
     ProductDefinitionFormation(ProductDefinitionFormationId),
     ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl StartRequestItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             EntityKey::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected StartRequestItemRef target, got {other:?}"
             )),
@@ -12534,13 +13945,13 @@ impl StartRequestItemRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum StateObservedRef {
     StateObserved(StateObservedId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl StateObservedRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::StateObserved(i) => Ok(Self::StateObserved(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected StateObservedRef target, got {other:?}")),
         }
     }
@@ -12549,13 +13960,13 @@ impl StateObservedRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum StateTypeRef {
     StateType(StateTypeId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl StateTypeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::StateType(i) => Ok(Self::StateType(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected StateTypeRef target, got {other:?}")),
         }
     }
@@ -12690,6 +14101,7 @@ pub enum StyleContextSelectRef {
     OrientedClosedShell(OrientedClosedShellId),
     OrientedEdge(OrientedEdgeId),
     OverRidingStyledItem(OverRidingStyledItemId),
+    Parabola(ParabolaId),
     Path(PathId),
     Pcurve(PcurveId),
     Placement(PlacementId),
@@ -12757,10 +14169,10 @@ pub enum StyleContextSelectRef {
     VertexPoint(VertexPointId),
     VertexShell(VertexShellId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl StyleContextSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedBrepShapeRepresentation(i) => {
                 Ok(Self::AdvancedBrepShapeRepresentation(i))
@@ -12923,6 +14335,7 @@ impl StyleContextSelectRef {
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
             EntityKey::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
             EntityKey::OverRidingStyledItem(i) => Ok(Self::OverRidingStyledItem(i)),
+            EntityKey::Parabola(i) => Ok(Self::Parabola(i)),
             EntityKey::Path(i) => Ok(Self::Path(i)),
             EntityKey::Pcurve(i) => Ok(Self::Pcurve(i)),
             EntityKey::Placement(i) => Ok(Self::Placement(i)),
@@ -13004,7 +14417,7 @@ impl StyleContextSelectRef {
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected StyleContextSelectRef target, got {other:?}"
             )),
@@ -13030,10 +14443,10 @@ pub enum StyledItemRef {
     StyledItem(StyledItemId),
     TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl StyledItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
             EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
@@ -13061,7 +14474,7 @@ impl StyledItemRef {
             EntityKey::TessellatedAnnotationOccurrence(i) => {
                 Ok(Self::TessellatedAnnotationOccurrence(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected StyledItemRef target, got {other:?}")),
         }
     }
@@ -13172,6 +14585,7 @@ pub enum StyledItemTargetRef {
     OpenShell(OpenShellId),
     OrientedClosedShell(OrientedClosedShellId),
     OrientedEdge(OrientedEdgeId),
+    Parabola(ParabolaId),
     Path(PathId),
     Pcurve(PcurveId),
     Placement(PlacementId),
@@ -13227,10 +14641,10 @@ pub enum StyledItemTargetRef {
     VertexPoint(VertexPointId),
     VertexShell(VertexShellId),
     WireShell(WireShellId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl StyledItemTargetRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AdvancedBrepShapeRepresentation(i) => {
                 Ok(Self::AdvancedBrepShapeRepresentation(i))
@@ -13357,6 +14771,7 @@ impl StyledItemTargetRef {
             EntityKey::OpenShell(i) => Ok(Self::OpenShell(i)),
             EntityKey::OrientedClosedShell(i) => Ok(Self::OrientedClosedShell(i)),
             EntityKey::OrientedEdge(i) => Ok(Self::OrientedEdge(i)),
+            EntityKey::Parabola(i) => Ok(Self::Parabola(i)),
             EntityKey::Path(i) => Ok(Self::Path(i)),
             EntityKey::Pcurve(i) => Ok(Self::Pcurve(i)),
             EntityKey::Placement(i) => Ok(Self::Placement(i)),
@@ -13418,7 +14833,7 @@ impl StyledItemTargetRef {
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
             EntityKey::VertexShell(i) => Ok(Self::VertexShell(i)),
             EntityKey::WireShell(i) => Ok(Self::WireShell(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected StyledItemTargetRef target, got {other:?}"
             )),
@@ -13431,15 +14846,15 @@ pub enum SupportedItemRef {
     Action(ActionId),
     ActionDirective(ActionDirectiveId),
     ActionMethod(ActionMethodId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl SupportedItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Action(i) => Ok(Self::Action(i)),
             EntityKey::ActionDirective(i) => Ok(Self::ActionDirective(i)),
             EntityKey::ActionMethod(i) => Ok(Self::ActionMethod(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected SupportedItemRef target, got {other:?}")),
         }
     }
@@ -13466,10 +14881,10 @@ pub enum SurfaceRef {
     SweptSurface(SweptSurfaceId),
     ToroidalSurface(ToroidalSurfaceId),
     UniformSurface(UniformSurfaceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl SurfaceRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::BSplineSurface(i) => Ok(Self::BSplineSurface(i)),
             EntityKey::BSplineSurfaceWithKnots(i) => Ok(Self::BSplineSurfaceWithKnots(i)),
@@ -13490,7 +14905,7 @@ impl SurfaceRef {
             EntityKey::SweptSurface(i) => Ok(Self::SweptSurface(i)),
             EntityKey::ToroidalSurface(i) => Ok(Self::ToroidalSurface(i)),
             EntityKey::UniformSurface(i) => Ok(Self::UniformSurface(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected SurfaceRef target, got {other:?}")),
         }
     }
@@ -13501,7 +14916,7 @@ pub enum SurfaceRenderingPropertiesRef {
     SurfaceRenderingProperties(SurfaceRenderingPropertiesId),
 }
 impl SurfaceRenderingPropertiesRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::SurfaceRenderingProperties(i) => Ok(Self::SurfaceRenderingProperties(i)),
             other => Err(format!(
@@ -13515,14 +14930,14 @@ impl SurfaceRenderingPropertiesRef {
 pub enum SurfaceSideStyleSelectRef {
     PreDefinedSurfaceSideStyle(PreDefinedSurfaceSideStyleId),
     SurfaceSideStyle(SurfaceSideStyleId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl SurfaceSideStyleSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PreDefinedSurfaceSideStyle(i) => Ok(Self::PreDefinedSurfaceSideStyle(i)),
             EntityKey::SurfaceSideStyle(i) => Ok(Self::SurfaceSideStyle(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected SurfaceSideStyleSelectRef target, got {other:?}"
             )),
@@ -13540,10 +14955,10 @@ pub enum SurfaceStyleElementSelectRef {
     SurfaceStyleRenderingWithProperties(SurfaceStyleRenderingWithPropertiesId),
     SurfaceStyleSegmentationCurve(SurfaceStyleSegmentationCurveId),
     SurfaceStyleSilhouette(SurfaceStyleSilhouetteId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl SurfaceStyleElementSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::SurfaceStyleBoundary(i) => Ok(Self::SurfaceStyleBoundary(i)),
             EntityKey::SurfaceStyleControlGrid(i) => Ok(Self::SurfaceStyleControlGrid(i)),
@@ -13557,7 +14972,7 @@ impl SurfaceStyleElementSelectRef {
                 Ok(Self::SurfaceStyleSegmentationCurve(i))
             }
             EntityKey::SurfaceStyleSilhouette(i) => Ok(Self::SurfaceStyleSilhouette(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected SurfaceStyleElementSelectRef target, got {other:?}"
             )),
@@ -13570,7 +14985,7 @@ pub enum SymbolStyleSelectRef {
     SymbolColour(SymbolColourId),
 }
 impl SymbolStyleSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::SymbolColour(i) => Ok(Self::SymbolColour(i)),
             other => Err(format!(
@@ -13585,7 +15000,7 @@ pub enum SymbolTargetRef {
     SymbolTarget(SymbolTargetId),
 }
 impl SymbolTargetRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::SymbolTarget(i) => Ok(Self::SymbolTarget(i)),
             other => Err(format!("expected SymbolTargetRef target, got {other:?}")),
@@ -13607,10 +15022,10 @@ pub enum TessellatedItemRef {
     TessellatedSolid(TessellatedSolidId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl TessellatedItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ComplexTriangulatedFace(i) => Ok(Self::ComplexTriangulatedFace(i)),
             EntityKey::ComplexTriangulatedSurfaceSet(i) => {
@@ -13626,7 +15041,7 @@ impl TessellatedItemRef {
             EntityKey::TessellatedSolid(i) => Ok(Self::TessellatedSolid(i)),
             EntityKey::TessellatedStructuredItem(i) => Ok(Self::TessellatedStructuredItem(i)),
             EntityKey::TessellatedSurfaceSet(i) => Ok(Self::TessellatedSurfaceSet(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected TessellatedItemRef target, got {other:?}")),
         }
     }
@@ -13637,15 +15052,15 @@ pub enum TessellatedStructuredItemRef {
     ComplexTriangulatedFace(ComplexTriangulatedFaceId),
     TessellatedFace(TessellatedFaceId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl TessellatedStructuredItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ComplexTriangulatedFace(i) => Ok(Self::ComplexTriangulatedFace(i)),
             EntityKey::TessellatedFace(i) => Ok(Self::TessellatedFace(i)),
             EntityKey::TessellatedStructuredItem(i) => Ok(Self::TessellatedStructuredItem(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected TessellatedStructuredItemRef target, got {other:?}"
             )),
@@ -13660,17 +15075,17 @@ pub enum TextOrCharacterRef {
     CompositeText(CompositeTextId),
     DefinedCharacterGlyph(DefinedCharacterGlyphId),
     TextLiteral(TextLiteralId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl TextOrCharacterRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationText(i) => Ok(Self::AnnotationText(i)),
             EntityKey::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
             EntityKey::CompositeText(i) => Ok(Self::CompositeText(i)),
             EntityKey::DefinedCharacterGlyph(i) => Ok(Self::DefinedCharacterGlyph(i)),
             EntityKey::TextLiteral(i) => Ok(Self::TextLiteral(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected TextOrCharacterRef target, got {other:?}")),
         }
     }
@@ -13682,7 +15097,7 @@ pub enum ToleranceMethodDefinitionRef {
     ToleranceValue(ToleranceValueId),
 }
 impl ToleranceMethodDefinitionRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::LimitsAndFits(i) => Ok(Self::LimitsAndFits(i)),
             EntityKey::ToleranceValue(i) => Ok(Self::ToleranceValue(i)),
@@ -13699,7 +15114,7 @@ pub enum ToleranceSelectRef {
     ApproximationToleranceParameter(ApproximationToleranceParameterId),
 }
 impl ToleranceSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApproximationToleranceDeviation(i) => {
                 Ok(Self::ApproximationToleranceDeviation(i))
@@ -13717,7 +15132,7 @@ pub enum ToleranceZoneFormRef {
     ToleranceZoneForm(ToleranceZoneFormId),
 }
 impl ToleranceZoneFormRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ToleranceZoneForm(i) => Ok(Self::ToleranceZoneForm(i)),
             other => Err(format!(
@@ -13731,14 +15146,14 @@ impl ToleranceZoneFormRef {
 pub enum ToleranceZoneRef {
     ToleranceZone(ToleranceZoneId),
     ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ToleranceZoneRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ToleranceZone(i) => Ok(Self::ToleranceZone(i)),
             EntityKey::ToleranceZoneWithDatum(i) => Ok(Self::ToleranceZoneWithDatum(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ToleranceZoneRef target, got {other:?}")),
         }
     }
@@ -13780,10 +15195,10 @@ pub enum ToleranceZoneTargetRef {
     SymmetryTolerance(SymmetryToleranceId),
     TotalRunoutTolerance(TotalRunoutToleranceId),
     UnequallyDisposedGeometricTolerance(UnequallyDisposedGeometricToleranceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ToleranceZoneTargetRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
             EntityKey::AngularSize(i) => Ok(Self::AngularSize(i)),
@@ -13833,7 +15248,7 @@ impl ToleranceZoneTargetRef {
             EntityKey::UnequallyDisposedGeometricTolerance(i) => {
                 Ok(Self::UnequallyDisposedGeometricTolerance(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected ToleranceZoneTargetRef target, got {other:?}"
             )),
@@ -13847,16 +15262,16 @@ pub enum TransformationRef {
     ItemDefinedTransformation(ItemDefinedTransformationId),
     ListItemDefinedTransformation(Vec<ItemDefinedTransformationRef>),
     SetItemDefinedTransformation(Vec<ItemDefinedTransformationRef>),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl TransformationRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::FunctionallyDefinedTransformation(i) => {
                 Ok(Self::FunctionallyDefinedTransformation(i))
             }
             EntityKey::ItemDefinedTransformation(i) => Ok(Self::ItemDefinedTransformation(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected TransformationRef target, got {other:?}")),
         }
     }
@@ -13870,7 +15285,7 @@ pub enum TrimmingSelectRef {
     ParameterValue(f64),
 }
 impl TrimmingSelectRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ApllPoint(i) => Ok(Self::ApllPoint(i)),
             EntityKey::ApllPointWithSurface(i) => Ok(Self::ApllPointWithSurface(i)),
@@ -13883,13 +15298,13 @@ impl TrimmingSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum TwoDirectionRepeatFactorRef {
     TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl TwoDirectionRepeatFactorRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::TwoDirectionRepeatFactor(i) => Ok(Self::TwoDirectionRepeatFactor(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected TwoDirectionRepeatFactorRef target, got {other:?}"
             )),
@@ -13902,7 +15317,7 @@ pub enum UncertaintyMeasureWithUnitRef {
     UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
 }
 impl UncertaintyMeasureWithUnitRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::UncertaintyMeasureWithUnit(i) => Ok(Self::UncertaintyMeasureWithUnit(i)),
             other => Err(format!(
@@ -13927,10 +15342,10 @@ pub enum UnitRef {
     SolidAngleUnit(SolidAngleUnitId),
     TimeUnit(TimeUnitId),
     VolumeUnit(VolumeUnitId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl UnitRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AreaUnit(i) => Ok(Self::AreaUnit(i)),
             EntityKey::ContextDependentUnit(i) => Ok(Self::ContextDependentUnit(i)),
@@ -13945,7 +15360,7 @@ impl UnitRef {
             EntityKey::SolidAngleUnit(i) => Ok(Self::SolidAngleUnit(i)),
             EntityKey::TimeUnit(i) => Ok(Self::TimeUnit(i)),
             EntityKey::VolumeUnit(i) => Ok(Self::VolumeUnit(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected UnitRef target, got {other:?}")),
         }
     }
@@ -13959,7 +15374,7 @@ pub enum ValueQualifierRef {
     ValueFormatTypeQualifier(ValueFormatTypeQualifierId),
 }
 impl ValueQualifierRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::PrecisionQualifier(i) => Ok(Self::PrecisionQualifier(i)),
             EntityKey::TypeQualifier(i) => Ok(Self::TypeQualifier(i)),
@@ -13973,13 +15388,13 @@ impl ValueQualifierRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum VectorRef {
     Vector(VectorId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl VectorRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Vector(i) => Ok(Self::Vector(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected VectorRef target, got {other:?}")),
         }
     }
@@ -13990,7 +15405,7 @@ pub enum VersionedActionRequestRef {
     VersionedActionRequest(VersionedActionRequestId),
 }
 impl VersionedActionRequestRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::VersionedActionRequest(i) => Ok(Self::VersionedActionRequest(i)),
             other => Err(format!(
@@ -14005,7 +15420,7 @@ pub enum VertexLoopRef {
     VertexLoop(VertexLoopId),
 }
 impl VertexLoopRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::VertexLoop(i) => Ok(Self::VertexLoop(i)),
             other => Err(format!("expected VertexLoopRef target, got {other:?}")),
@@ -14017,14 +15432,14 @@ impl VertexLoopRef {
 pub enum VertexRef {
     Vertex(VertexId),
     VertexPoint(VertexPointId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl VertexRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::Vertex(i) => Ok(Self::Vertex(i)),
             EntityKey::VertexPoint(i) => Ok(Self::VertexPoint(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected VertexRef target, got {other:?}")),
         }
     }
@@ -14033,13 +15448,13 @@ impl VertexRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ViewVolumeRef {
     ViewVolume(ViewVolumeId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl ViewVolumeRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ViewVolume(i) => Ok(Self::ViewVolume(i)),
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected ViewVolumeRef target, got {other:?}")),
         }
     }
@@ -14049,16 +15464,16 @@ impl ViewVolumeRef {
 pub enum WorkItemRef {
     ProductDefinitionFormation(ProductDefinitionFormationId),
     ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
-    Complex(ComplexUnitId),
+    Complex(ComplexEntityId),
 }
 impl WorkItemRef {
-    pub fn from_any(a: EntityKey) -> Result<Self, String> {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::ProductDefinitionFormation(i) => Ok(Self::ProductDefinitionFormation(i)),
             EntityKey::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 Ok(Self::ProductDefinitionFormationWithSpecifiedSource(i))
             }
-            EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!("expected WorkItemRef target, got {other:?}")),
         }
     }
@@ -14066,8 +15481,8 @@ impl WorkItemRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Action {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub chosen_method: ActionMethodRef,
 }
 
@@ -14078,40 +15493,40 @@ pub struct ActionAssignment {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionDirective {
-    pub name: String,
-    pub description: Option<String>,
-    pub analysis: String,
-    pub comment: String,
+    pub name: Text,
+    pub description: Option<Text>,
+    pub analysis: Text,
+    pub comment: Text,
     pub requests: Vec<VersionedActionRequestRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionMethod {
-    pub name: String,
-    pub description: Option<String>,
-    pub consequence: String,
-    pub purpose: String,
+    pub name: Text,
+    pub description: Option<Text>,
+    pub consequence: Text,
+    pub purpose: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionMethodRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_method: ActionMethodRef,
     pub related_method: ActionMethodRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionProperty {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub definition: CharacterizedActionDefinitionRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_action: ActionRef,
     pub related_action: ActionRef,
 }
@@ -14129,59 +15544,59 @@ pub struct ActionRequestSolution {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionResource {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub usage: Vec<SupportedItemRef>,
     pub kind: ActionResourceTypeRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionResourceRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_resource: ActionResourceRef,
     pub related_resource: ActionResourceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionResourceRequirement {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub kind: ResourceRequirementTypeRef,
     pub operations: Vec<CharacterizedActionDefinitionRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionResourceType {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Address {
-    pub internal_location: Option<String>,
-    pub street_number: Option<String>,
-    pub street: Option<String>,
-    pub postal_box: Option<String>,
-    pub town: Option<String>,
-    pub region: Option<String>,
-    pub postal_code: Option<String>,
-    pub country: Option<String>,
-    pub facsimile_number: Option<String>,
-    pub telephone_number: Option<String>,
-    pub electronic_mail_address: Option<String>,
-    pub telex_number: Option<String>,
+    pub internal_location: Option<Text>,
+    pub street_number: Option<Text>,
+    pub street: Option<Text>,
+    pub postal_box: Option<Text>,
+    pub town: Option<Text>,
+    pub region: Option<Text>,
+    pub postal_code: Option<Text>,
+    pub country: Option<Text>,
+    pub facsimile_number: Option<Text>,
+    pub telephone_number: Option<Text>,
+    pub electronic_mail_address: Option<Text>,
+    pub telex_number: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AdvancedBrepShapeRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AdvancedFace {
-    pub name: String,
+    pub name: Text,
     pub bounds: Vec<FaceBoundRef>,
     pub face_geometry: SurfaceRef,
     pub same_sense: bool,
@@ -14189,16 +15604,16 @@ pub struct AdvancedFace {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AllAroundShapeAspect {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AngularLocation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_shape_aspect: ShapeAspectRef,
     pub related_shape_aspect: ShapeAspectRef,
     pub angle_selection: AngleRelator,
@@ -14207,14 +15622,14 @@ pub struct AngularLocation {
 #[derive(Debug, Clone, PartialEq)]
 pub struct AngularSize {
     pub applies_to: ShapeAspectRef,
-    pub name: String,
+    pub name: Text,
     pub angle_selection: AngleRelator,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AngularityTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -14222,14 +15637,14 @@ pub struct AngularityTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationCurveOccurrence {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: CurveOrCurveSetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationFillAreaOccurrence {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
     pub fill_style_target: PointRef,
@@ -14237,36 +15652,36 @@ pub struct AnnotationFillAreaOccurrence {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationOccurrence {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationOccurrenceAssociativity {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub relating_annotation_occurrence: AnnotationOccurrenceRef,
     pub related_annotation_occurrence: AnnotationOccurrenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationOccurrenceRelationship {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub relating_annotation_occurrence: AnnotationOccurrenceRef,
     pub related_annotation_occurrence: AnnotationOccurrenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationPlaceholderLeaderLine {
-    pub name: String,
+    pub name: Text,
     pub geometric_elements: Vec<DesApllPointSelectRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationPlaceholderOccurrence {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
     pub role: AnnotationPlaceholderOccurrenceRole,
@@ -14275,7 +15690,7 @@ pub struct AnnotationPlaceholderOccurrence {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationPlaceholderOccurrenceWithLeaderLine {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
     pub role: AnnotationPlaceholderOccurrenceRole,
@@ -14285,7 +15700,7 @@ pub struct AnnotationPlaceholderOccurrenceWithLeaderLine {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationPlane {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: PlaneOrPlanarBoxRef,
     pub elements: Option<Vec<AnnotationPlaneElementRef>>,
@@ -14293,82 +15708,82 @@ pub struct AnnotationPlane {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationSymbol {
-    pub name: String,
+    pub name: Text,
     pub mapping_source: RepresentationMapRef,
     pub mapping_target: RepresentationItemRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationSymbolOccurrence {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: AnnotationSymbolOccurrenceItemRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationText {
-    pub name: String,
+    pub name: Text,
     pub mapping_source: RepresentationMapRef,
     pub mapping_target: Axis2PlacementRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationTextCharacter {
-    pub name: String,
+    pub name: Text,
     pub mapping_source: RepresentationMapRef,
     pub mapping_target: Axis2PlacementRef,
-    pub alignment: String,
+    pub alignment: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationTextOccurrence {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: AnnotationTextOccurrenceItemRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationToAnnotationLeaderLine {
-    pub name: String,
+    pub name: Text,
     pub geometric_elements: Vec<DesApllPointSelectRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationToModelLeaderLine {
-    pub name: String,
+    pub name: Text,
     pub geometric_elements: Vec<DesApllPointSelectRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ApllPoint {
-    pub name: String,
-    pub coordinates: Vec<f64>,
+    pub name: Text,
+    pub coordinates: Reals3,
     pub symbol_applied: DesApllPointSymbol,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ApllPointWithSurface {
-    pub name: String,
-    pub coordinates: Vec<f64>,
+    pub name: Text,
+    pub coordinates: Reals3,
     pub symbol_applied: DesApllPointSymbol,
     pub associated_surface: FaceSurfaceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ApplicationContext {
-    pub application: String,
+    pub application: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ApplicationContextElement {
-    pub name: String,
+    pub name: Text,
     pub frame_of_reference: ApplicationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ApplicationProtocolDefinition {
-    pub status: String,
-    pub application_interpreted_model_schema_name: String,
+    pub status: Text,
+    pub application_interpreted_model_schema_name: Text,
     pub application_protocol_year: i64,
     pub application: ApplicationContextRef,
 }
@@ -14389,13 +15804,13 @@ pub struct AppliedDateAndTimeAssignment {
 #[derive(Debug, Clone, PartialEq)]
 pub struct AppliedDocumentReference {
     pub assigned_document: DocumentRef,
-    pub source: String,
+    pub source: Text,
     pub items: Vec<DocumentReferenceItemRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AppliedExternalIdentificationAssignment {
-    pub assigned_id: String,
+    pub assigned_id: Text,
     pub role: IdentificationRoleRef,
     pub source: ExternalSourceRef,
     pub items: Vec<ExternalIdentificationItemRef>,
@@ -14428,7 +15843,7 @@ pub struct AppliedSecurityClassificationAssignment {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Approval {
     pub status: ApprovalStatusRef,
-    pub level: String,
+    pub level: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -14451,12 +15866,12 @@ pub struct ApprovalPersonOrganization {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ApprovalRole {
-    pub role: String,
+    pub role: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ApprovalStatus {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -14489,54 +15904,54 @@ pub struct AreaUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AscribableState {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub pertaining_state_type: StateTypeRef,
     pub ascribed_state_observed: StateObservedRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AscribableStateRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_ascribable_state: AscribableStateRef,
     pub related_ascribable_state: AscribableStateRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AssemblyComponentUsage {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_product_definition: ProductDefinitionOrReferenceRef,
     pub related_product_definition: ProductDefinitionOrReferenceRef,
-    pub reference_designator: Option<String>,
+    pub reference_designator: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AuxiliaryLeaderLine {
-    pub name: String,
+    pub name: Text,
     pub geometric_elements: Vec<DesApllPointSelectRef>,
     pub controlling_leader_line: AnnotationToModelLeaderLineRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Axis1Placement {
-    pub name: String,
+    pub name: Text,
     pub location: CartesianPointRef,
     pub axis: Option<DirectionRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Axis2Placement2d {
-    pub name: String,
+    pub name: Text,
     pub location: CartesianPointRef,
     pub ref_direction: Option<DirectionRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Axis2Placement3d {
-    pub name: String,
+    pub name: Text,
     pub location: CartesianPointRef,
     pub axis: Option<DirectionRef>,
     pub ref_direction: Option<DirectionRef>,
@@ -14544,7 +15959,7 @@ pub struct Axis2Placement3d {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BSplineCurve {
-    pub name: String,
+    pub name: Text,
     pub degree: i64,
     pub control_points_list: Vec<CartesianPointRef>,
     pub curve_form: BSplineCurveForm,
@@ -14554,7 +15969,7 @@ pub struct BSplineCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BSplineCurveWithKnots {
-    pub name: String,
+    pub name: Text,
     pub degree: i64,
     pub control_points_list: Vec<CartesianPointRef>,
     pub curve_form: BSplineCurveForm,
@@ -14567,7 +15982,7 @@ pub struct BSplineCurveWithKnots {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BSplineSurface {
-    pub name: String,
+    pub name: Text,
     pub u_degree: i64,
     pub v_degree: i64,
     pub control_points_list: Vec<Vec<CartesianPointRef>>,
@@ -14579,7 +15994,7 @@ pub struct BSplineSurface {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BSplineSurfaceWithKnots {
-    pub name: String,
+    pub name: Text,
     pub u_degree: i64,
     pub v_degree: i64,
     pub control_points_list: Vec<Vec<CartesianPointRef>>,
@@ -14596,7 +16011,7 @@ pub struct BSplineSurfaceWithKnots {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BezierCurve {
-    pub name: String,
+    pub name: Text,
     pub degree: i64,
     pub control_points_list: Vec<CartesianPointRef>,
     pub curve_form: BSplineCurveForm,
@@ -14606,7 +16021,7 @@ pub struct BezierCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BezierSurface {
-    pub name: String,
+    pub name: Text,
     pub u_degree: i64,
     pub v_degree: i64,
     pub control_points_list: Vec<Vec<CartesianPointRef>>,
@@ -14618,24 +16033,24 @@ pub struct BezierSurface {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BoundedCurve {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BoundedPcurve {
-    pub name: String,
+    pub name: Text,
     pub basis_surface: SurfaceRef,
     pub reference_to_curve: DefinitionalRepresentationRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BoundedSurface {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BoundedSurfaceCurve {
-    pub name: String,
+    pub name: Text,
     pub curve_3d: CurveRef,
     pub associated_geometry: Vec<PcurveOrSurfaceRef>,
     pub master_representation: PreferredSurfaceCurveRepresentation,
@@ -14643,7 +16058,7 @@ pub struct BoundedSurfaceCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BrepWithVoids {
-    pub name: String,
+    pub name: Text,
     pub outer: ClosedShellRef,
     pub voids: Vec<OrientedClosedShellRef>,
 }
@@ -14657,33 +16072,33 @@ pub struct CalendarDate {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CameraImage {
-    pub name: String,
+    pub name: Text,
     pub mapping_source: RepresentationMapRef,
     pub mapping_target: RepresentationItemRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CameraImage3dWithScale {
-    pub name: String,
+    pub name: Text,
     pub mapping_source: RepresentationMapRef,
     pub mapping_target: RepresentationItemRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CameraModel {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CameraModelD3 {
-    pub name: String,
+    pub name: Text,
     pub view_reference_system: Axis2Placement3dRef,
     pub perspective_of_volume: ViewVolumeRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CameraModelD3MultiClipping {
-    pub name: String,
+    pub name: Text,
     pub view_reference_system: Axis2Placement3dRef,
     pub perspective_of_volume: ViewVolumeRef,
     pub shape_clipping: Vec<CameraModelD3MultiClippingIntersectionSelectRef>,
@@ -14691,7 +16106,7 @@ pub struct CameraModelD3MultiClipping {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CameraModelD3WithHlhsr {
-    pub name: String,
+    pub name: Text,
     pub view_reference_system: Axis2Placement3dRef,
     pub perspective_of_volume: ViewVolumeRef,
     pub hidden_line_surface_removal: bool,
@@ -14705,8 +16120,8 @@ pub struct CameraUsage {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CartesianPoint {
-    pub name: String,
-    pub coordinates: Vec<f64>,
+    pub name: Text,
+    pub coordinates: Reals3,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -14737,22 +16152,22 @@ pub struct CcDesignSecurityClassification {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CentreOfSymmetry {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Certification {
-    pub name: String,
-    pub purpose: String,
+    pub name: Text,
+    pub purpose: Text,
     pub kind: CertificationTypeRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CertificationType {
-    pub description: String,
+    pub description: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -14779,16 +16194,16 @@ pub struct CharacterGlyphStyleStroke {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CharacterizedItemWithinRepresentation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub item: RepresentationItemRef,
     pub rep: RepresentationRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CharacterizedObject {
-    pub name: Option<String>,
-    pub description: Option<String>,
+    pub name: Option<Text>,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -14799,15 +16214,15 @@ pub struct CharacterizedRepresentation {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Circle {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2PlacementRef,
     pub radius: f64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CircularRunoutTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -14815,14 +16230,14 @@ pub struct CircularRunoutTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ClosedShell {
-    pub name: String,
+    pub name: Text,
     pub cfs_faces: Vec<FaceRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CoaxialityTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -14833,7 +16248,7 @@ pub struct Colour {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ColourRgb {
-    pub name: String,
+    pub name: Text,
     pub red: f64,
     pub green: f64,
     pub blue: f64,
@@ -14841,24 +16256,24 @@ pub struct ColourRgb {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ColourSpecification {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CommonDatum {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
-    pub identification: String,
+    pub identification: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ComplexTriangulatedFace {
-    pub name: String,
+    pub name: Text,
     pub coordinates: CoordinatesListRef,
     pub pnmax: i64,
-    pub normals: Vec<Vec<f64>>,
+    pub normals: Vec<Reals3>,
     pub geometric_link: Option<FaceOrSurfaceRef>,
     pub pnindex: Vec<i64>,
     pub triangle_strips: Vec<Vec<i64>>,
@@ -14867,10 +16282,10 @@ pub struct ComplexTriangulatedFace {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ComplexTriangulatedSurfaceSet {
-    pub name: String,
+    pub name: Text,
     pub coordinates: CoordinatesListRef,
     pub pnmax: i64,
-    pub normals: Vec<Vec<f64>>,
+    pub normals: Vec<Reals3>,
     pub pnindex: Vec<i64>,
     pub triangle_strips: Vec<Vec<i64>>,
     pub triangle_fans: Vec<Vec<i64>>,
@@ -14878,7 +16293,7 @@ pub struct ComplexTriangulatedSurfaceSet {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CompositeCurve {
-    pub name: String,
+    pub name: Text,
     pub segments: Vec<CompositeCurveSegmentRef>,
     pub self_intersect: Logical,
 }
@@ -14892,36 +16307,36 @@ pub struct CompositeCurveSegment {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CompositeGroupShapeAspect {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CompositeShapeAspect {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CompositeText {
-    pub name: String,
+    pub name: Text,
     pub collected_text: Vec<TextOrCharacterRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CompoundRepresentationItem {
-    pub name: String,
+    pub name: Text,
     pub item_element: CompoundItemDefinitionRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConcentricityTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -14935,29 +16350,29 @@ pub struct ConfigurationDesign {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConfigurationEffectivity {
-    pub id: String,
+    pub id: Text,
     pub usage: ProductDefinitionRelationshipRef,
     pub configuration: ConfigurationDesignRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConfigurationItem {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub item_concept: ProductConceptRef,
-    pub purpose: Option<String>,
+    pub purpose: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Conic {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2PlacementRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConicalSurface {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2Placement3dRef,
     pub radius: f64,
     pub semi_angle: f64,
@@ -14965,28 +16380,28 @@ pub struct ConicalSurface {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConnectedFaceSet {
-    pub name: String,
+    pub name: Text,
     pub cfs_faces: Option<Vec<FaceRef>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConstructiveGeometryRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConstructiveGeometryRepresentationRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub rep_1: ConstructiveGeometryRepresentationOrShapeRepresentationRef,
     pub rep_2: RepresentationOrRepresentationReferenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ContextDependentOverRidingStyledItem {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
     pub over_ridden_style: StyledItemRef,
@@ -15002,33 +16417,33 @@ pub struct ContextDependentShapeRepresentation {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ContextDependentUnit {
     pub dimensions: DimensionalExponentsRef,
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ContinuousShapeAspect {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Contract {
-    pub name: String,
-    pub purpose: String,
+    pub name: Text,
+    pub purpose: Text,
     pub kind: ContractTypeRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ContractType {
-    pub description: String,
+    pub description: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConversionBasedUnit {
     pub dimensions: DimensionalExponentsRef,
-    pub name: String,
+    pub name: Text,
     pub conversion_factor: MeasureWithUnitRef,
 }
 
@@ -15041,19 +16456,19 @@ pub struct CoordinatedUniversalTimeOffset {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CoordinatesList {
-    pub name: String,
+    pub name: Text,
     pub npoints: i64,
-    pub position_coords: Vec<Vec<f64>>,
+    pub position_coords: Vec<Reals3>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Curve {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CurveStyle {
-    pub name: String,
+    pub name: Text,
     pub curve_font: Option<CurveFontOrScaledCurveFontSelectRef>,
     pub curve_width: Option<SizeSelectRef>,
     pub curve_colour: Option<ColourRef>,
@@ -15061,13 +16476,13 @@ pub struct CurveStyle {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CurveStyleFont {
-    pub name: String,
+    pub name: Text,
     pub pattern_list: Vec<CurveStyleFontPatternRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CurveStyleFontAndScaling {
-    pub name: String,
+    pub name: Text,
     pub curve_font: CurveStyleFontSelectRef,
     pub curve_font_scaling: f64,
 }
@@ -15086,15 +16501,15 @@ pub struct CurveStyleRendering {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CylindricalSurface {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2Placement3dRef,
     pub radius: f64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CylindricityTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
 }
@@ -15118,27 +16533,27 @@ pub struct DateAndTimeAssignment {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DateRole {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DateTimeRole {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Datum {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
-    pub identification: String,
+    pub identification: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DatumFeature {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
 }
@@ -15151,8 +16566,8 @@ pub struct DatumReference {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DatumReferenceCompartment {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
     pub base: DatumOrCommonDatumRef,
@@ -15161,8 +16576,8 @@ pub struct DatumReferenceCompartment {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DatumReferenceElement {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
     pub base: DatumOrCommonDatumRef,
@@ -15177,8 +16592,8 @@ pub struct DatumReferenceModifierWithValue {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DatumSystem {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
     pub constituents: Vec<DatumReferenceCompartmentRef>,
@@ -15186,64 +16601,64 @@ pub struct DatumSystem {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DatumTarget {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
-    pub target_id: String,
+    pub target_id: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DefaultModelGeometricView {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub item: RepresentationItemRef,
     pub rep: RepresentationRef,
-    pub name_1: String,
-    pub description_1: Option<String>,
+    pub name_1: Text,
+    pub description_1: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DefinedCharacterGlyph {
-    pub name: String,
+    pub name: Text,
     pub definition: DefinedGlyphSelectRef,
     pub placement: Axis2PlacementRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DefinedSymbol {
-    pub name: String,
+    pub name: Text,
     pub definition: DefinedSymbolSelectRef,
     pub target: SymbolTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DefinitionalRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DefinitionalRepresentationRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub rep_1: RepresentationOrRepresentationReferenceRef,
     pub rep_2: RepresentationOrRepresentationReferenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DefinitionalRepresentationRelationshipWithSameContext {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub rep_1: RepresentationOrRepresentationReferenceRef,
     pub rep_2: RepresentationOrRepresentationReferenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DegenerateToroidalSurface {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2Placement3dRef,
     pub major_radius: f64,
     pub minor_radius: f64,
@@ -15252,8 +16667,8 @@ pub struct DegenerateToroidalSurface {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DerivedShapeAspect {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
 }
@@ -15271,21 +16686,21 @@ pub struct DerivedUnitElement {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DescriptionAttribute {
-    pub attribute_value: String,
+    pub attribute_value: Text,
     pub described_item: DescriptionAttributeSelectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DescriptiveRepresentationItem {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DesignContext {
-    pub name: String,
+    pub name: Text,
     pub frame_of_reference: ApplicationContextRef,
-    pub life_cycle_stage: String,
+    pub life_cycle_stage: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -15307,16 +16722,16 @@ pub struct DimensionalExponents {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DimensionalLocation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_shape_aspect: ShapeAspectRef,
     pub related_shape_aspect: ShapeAspectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DimensionalLocationWithPath {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_shape_aspect: ShapeAspectRef,
     pub related_shape_aspect: ShapeAspectRef,
     pub path: ShapeAspectRef,
@@ -15325,70 +16740,70 @@ pub struct DimensionalLocationWithPath {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DimensionalSize {
     pub applies_to: ShapeAspectRef,
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DimensionalSizeWithDatumFeature {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
     pub applies_to: ShapeAspectRef,
-    pub name_1: String,
+    pub name_1: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DimensionalSizeWithPath {
     pub applies_to: ShapeAspectRef,
-    pub name: String,
+    pub name: Text,
     pub path: ShapeAspectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DirectedDimensionalLocation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_shape_aspect: ShapeAspectRef,
     pub related_shape_aspect: ShapeAspectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Direction {
-    pub name: String,
-    pub direction_ratios: Vec<f64>,
+    pub name: Text,
+    pub direction_ratios: Reals3,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Document {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub kind: DocumentTypeRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DocumentFile {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub kind: DocumentTypeRef,
-    pub name_1: String,
-    pub description_1: Option<String>,
+    pub name_1: Text,
+    pub description_1: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DocumentProductAssociation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_document: DocumentRef,
     pub related_product: ProductOrFormationOrDefinitionRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DocumentProductEquivalence {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_document: DocumentRef,
     pub related_product: ProductOrFormationOrDefinitionRef,
 }
@@ -15396,52 +16811,52 @@ pub struct DocumentProductEquivalence {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DocumentReference {
     pub assigned_document: DocumentRef,
-    pub source: String,
+    pub source: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DocumentRepresentationType {
-    pub name: String,
+    pub name: Text,
     pub represented_document: DocumentRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DocumentType {
-    pub product_data_type: String,
+    pub product_data_type: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingAnnotationOccurrence {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingCallout {
-    pub name: String,
+    pub name: Text,
     pub contents: Vec<DraughtingCalloutElementRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingCalloutRelationship {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub relating_draughting_callout: DraughtingCalloutRef,
     pub related_draughting_callout: DraughtingCalloutRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingModel {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingModelItemAssociation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub definition: DraughtingModelItemDefinitionRef,
     pub used_representation: AnnotationRepresentationSelectRef,
     pub identified_item: DraughtingModelItemAssociationSelectRef,
@@ -15449,8 +16864,8 @@ pub struct DraughtingModelItemAssociation {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingModelItemAssociationWithPlaceholder {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub definition: DraughtingModelItemDefinitionRef,
     pub used_representation: AnnotationRepresentationSelectRef,
     pub identified_item: DraughtingModelItemAssociationSelectRef,
@@ -15459,29 +16874,29 @@ pub struct DraughtingModelItemAssociationWithPlaceholder {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingPreDefinedColour {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingPreDefinedCurveFont {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingPreDefinedTextFont {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Edge {
-    pub name: String,
+    pub name: Text,
     pub edge_start: Option<VertexRef>,
     pub edge_end: Option<VertexRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct EdgeCurve {
-    pub name: String,
+    pub name: Text,
     pub edge_start: VertexRef,
     pub edge_end: VertexRef,
     pub edge_geometry: CurveRef,
@@ -15490,24 +16905,24 @@ pub struct EdgeCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct EdgeLoop {
-    pub name: String,
+    pub name: Text,
     pub edge_list: Vec<OrientedEdgeRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Effectivity {
-    pub id: String,
+    pub id: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ElementarySurface {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2Placement3dRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Ellipse {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2PlacementRef,
     pub semi_axis_1: f64,
     pub semi_axis_2: f64,
@@ -15518,7 +16933,7 @@ pub struct Expression {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ExternalIdentificationAssignment {
-    pub assigned_id: String,
+    pub assigned_id: Text,
     pub role: IdentificationRoleRef,
     pub source: ExternalSourceRef,
 }
@@ -15544,7 +16959,7 @@ pub struct ExternallyDefinedCurveFont {
 pub struct ExternallyDefinedHatchStyle {
     pub item_id: StringSelectValue,
     pub source: ExternalSourceRef,
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -15581,32 +16996,32 @@ pub struct ExternallyDefinedTile {
 pub struct ExternallyDefinedTileStyle {
     pub item_id: StringSelectValue,
     pub source: ExternalSourceRef,
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Face {
-    pub name: String,
+    pub name: Text,
     pub bounds: Vec<FaceBoundRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FaceBound {
-    pub name: String,
+    pub name: Text,
     pub bound: LoopRef,
     pub orientation: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FaceOuterBound {
-    pub name: String,
+    pub name: Text,
     pub bound: LoopRef,
     pub orientation: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FaceSurface {
-    pub name: String,
+    pub name: Text,
     pub bounds: Vec<FaceBoundRef>,
     pub face_geometry: SurfaceRef,
     pub same_sense: bool,
@@ -15614,27 +17029,27 @@ pub struct FaceSurface {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FeatureForDatumTargetRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_shape_aspect: ShapeAspectRef,
     pub related_shape_aspect: ShapeAspectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FillAreaStyle {
-    pub name: String,
+    pub name: Text,
     pub fill_styles: Vec<FillStyleSelectRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FillAreaStyleColour {
-    pub name: String,
+    pub name: Text,
     pub fill_colour: ColourRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FillAreaStyleHatching {
-    pub name: String,
+    pub name: Text,
     pub hatch_line_appearance: CurveStyleRef,
     pub start_of_next_hatch_line: OneDirectionRepeatFactorRef,
     pub point_of_reference_hatch_line: CartesianPointRef,
@@ -15644,26 +17059,26 @@ pub struct FillAreaStyleHatching {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FillAreaStyleTileColouredRegion {
-    pub name: String,
+    pub name: Text,
     pub closed_curve: CurveOrAnnotationCurveOccurrenceRef,
     pub region_colour: ColourRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FillAreaStyleTileCurveWithStyle {
-    pub name: String,
+    pub name: Text,
     pub styled_curve: AnnotationCurveOccurrenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FillAreaStyleTileSymbolWithStyle {
-    pub name: String,
+    pub name: Text,
     pub symbol: AnnotationSymbolOccurrenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FillAreaStyleTiles {
-    pub name: String,
+    pub name: Text,
     pub tiling_pattern: TwoDirectionRepeatFactorRef,
     pub tiles: Vec<FillAreaStyleTileShapeSelectRef>,
     pub tiling_scale: f64,
@@ -15671,8 +17086,8 @@ pub struct FillAreaStyleTiles {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FlatnessTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
 }
@@ -15682,14 +17097,14 @@ pub struct FoundedItem {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunctionallyDefinedTransformation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeneralDatumReference {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
     pub base: DatumOrCommonDatumRef,
@@ -15698,15 +17113,15 @@ pub struct GeneralDatumReference {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeneralProperty {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeneralPropertyAssociation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub base_definition: GeneralPropertyRef,
     pub derived_definition: DerivedPropertySelectRef,
 }
@@ -15724,14 +17139,14 @@ pub struct GenericProductDefinitionReference {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricCurveSet {
-    pub name: String,
+    pub name: Text,
     pub elements: Vec<GeometricSetSelectRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricItemSpecificUsage {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub definition: GeometricItemSpecificUsageSelectRef,
     pub used_representation: ShapeModelRef,
     pub identified_item: GeometricModelItemRef,
@@ -15739,42 +17154,42 @@ pub struct GeometricItemSpecificUsage {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricRepresentationContext {
-    pub context_identifier: String,
-    pub context_type: String,
+    pub context_identifier: Text,
+    pub context_type: Text,
     pub coordinate_space_dimension: i64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricRepresentationItem {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricSet {
-    pub name: String,
+    pub name: Text,
     pub elements: Vec<GeometricSetSelectRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricToleranceRelationship {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub relating_geometric_tolerance: GeometricToleranceRef,
     pub related_geometric_tolerance: GeometricToleranceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricToleranceWithDatumReference {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -15782,8 +17197,8 @@ pub struct GeometricToleranceWithDatumReference {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricToleranceWithDefinedAreaUnit {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef,
@@ -15793,8 +17208,8 @@ pub struct GeometricToleranceWithDefinedAreaUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricToleranceWithDefinedUnit {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef,
@@ -15802,8 +17217,8 @@ pub struct GeometricToleranceWithDefinedUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricToleranceWithMaximumTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub modifiers: Vec<GeometricToleranceModifier>,
@@ -15812,8 +17227,8 @@ pub struct GeometricToleranceWithMaximumTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricToleranceWithModifiers {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub modifiers: Vec<GeometricToleranceModifier>,
@@ -15821,36 +17236,36 @@ pub struct GeometricToleranceWithModifiers {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricallyBoundedSurfaceShapeRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeometricallyBoundedWireframeShapeRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GlobalUncertaintyAssignedContext {
-    pub context_identifier: String,
-    pub context_type: String,
+    pub context_identifier: Text,
+    pub context_type: Text,
     pub uncertainty: Vec<UncertaintyMeasureWithUnitRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GlobalUnitAssignedContext {
-    pub context_identifier: String,
-    pub context_type: String,
+    pub context_identifier: Text,
+    pub context_type: Text,
     pub units: Vec<UnitRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Group {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -15860,7 +17275,7 @@ pub struct GroupAssignment {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Hyperbola {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2PlacementRef,
     pub semi_axis: f64,
     pub semi_imag_axis: f64,
@@ -15868,20 +17283,20 @@ pub struct Hyperbola {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct IdAttribute {
-    pub attribute_value: String,
+    pub attribute_value: Text,
     pub identified_item: IdAttributeSelectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct IdentificationAssignment {
-    pub assigned_id: String,
+    pub assigned_id: Text,
     pub role: IdentificationRoleRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct IdentificationRole {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -15891,13 +17306,13 @@ pub struct IntLiteral {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct IntegerRepresentationItem {
-    pub name: String,
+    pub name: Text,
     pub the_value: i64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct IntersectionCurve {
-    pub name: String,
+    pub name: Text,
     pub curve_3d: CurveRef,
     pub associated_geometry: Vec<PcurveOrSurfaceRef>,
     pub master_representation: PreferredSurfaceCurveRepresentation,
@@ -15910,16 +17325,16 @@ pub struct Invisibility {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ItemDefinedTransformation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub transform_item_1: RepresentationItemRef,
     pub transform_item_2: RepresentationItemRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ItemIdentifiedRepresentationUsage {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub definition: ItemIdentifiedRepresentationUsageDefinitionRef,
     pub used_representation: RepresentationRef,
     pub identified_item: ItemIdentifiedRepresentationUsageSelectRef,
@@ -15927,20 +17342,20 @@ pub struct ItemIdentifiedRepresentationUsage {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LeaderCurve {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: CurveOrCurveSetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LeaderDirectedCallout {
-    pub name: String,
+    pub name: Text,
     pub contents: Vec<DraughtingCalloutElementRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LeaderTerminator {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: AnnotationSymbolOccurrenceItemRef,
     pub annotated_curve: AnnotationCurveOccurrenceRef,
@@ -15959,23 +17374,23 @@ pub struct LengthUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LimitsAndFits {
-    pub form_variance: String,
-    pub zone_variance: String,
-    pub grade: String,
-    pub source: String,
+    pub form_variance: Text,
+    pub zone_variance: Text,
+    pub grade: Text,
+    pub source: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Line {
-    pub name: String,
+    pub name: Text,
     pub pnt: CartesianPointRef,
     pub dir: VectorRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LineProfileTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
 }
@@ -15995,37 +17410,37 @@ pub struct LocalTime {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Loop {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MakeFromUsageOption {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_product_definition: ProductDefinitionOrReferenceRef,
     pub related_product_definition: ProductDefinitionOrReferenceRef,
     pub ranking: i64,
-    pub ranking_rationale: String,
+    pub ranking_rationale: Text,
     pub quantity: MeasureWithUnitRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ManifoldSolidBrep {
-    pub name: String,
+    pub name: Text,
     pub outer: ClosedShellRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ManifoldSurfaceShapeRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MappedItem {
-    pub name: String,
+    pub name: Text,
     pub mapping_source: RepresentationMapRef,
     pub mapping_target: RepresentationItemRef,
 }
@@ -16043,15 +17458,15 @@ pub struct MassUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MeasureQualification {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub qualified_measure: MeasureWithUnitRef,
     pub qualifiers: Vec<ValueQualifierRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MeasureRepresentationItem {
-    pub name: String,
+    pub name: Text,
     pub value_component: MeasureValue,
     pub unit_component: UnitRef,
 }
@@ -16064,52 +17479,52 @@ pub struct MeasureWithUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MechanicalContext {
-    pub name: String,
+    pub name: Text,
     pub frame_of_reference: ApplicationContextRef,
-    pub discipline_type: String,
+    pub discipline_type: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MechanicalDesignAndDraughtingRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub rep_1: MechanicalDesignAndDraughtingRelationshipSelectRef,
     pub rep_2: MechanicalDesignAndDraughtingRelationshipSelectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MechanicalDesignGeometricPresentationRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MechanicalDesignPresentationRepresentationWithDraughting {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MechanicalDesignShadedPresentationRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ModelGeometricView {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub item: RepresentationItemRef,
     pub rep: RepresentationRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ModifiedGeometricTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub modifier: LimitCondition,
@@ -16117,7 +17532,7 @@ pub struct ModifiedGeometricTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NameAttribute {
-    pub attribute_value: String,
+    pub attribute_value: Text,
     pub named_item: NameAttributeSelectRef,
 }
 
@@ -16128,12 +17543,12 @@ pub struct NamedUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NextAssemblyUsageOccurrence {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_product_definition: ProductDefinitionOrReferenceRef,
     pub related_product_definition: ProductDefinitionOrReferenceRef,
-    pub reference_designator: Option<String>,
+    pub reference_designator: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -16141,13 +17556,13 @@ pub struct NumericExpression {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ObjectRole {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OffsetSurface {
-    pub name: String,
+    pub name: Text,
     pub basis_surface: SurfaceRef,
     pub distance: f64,
     pub self_intersect: Logical,
@@ -16155,115 +17570,122 @@ pub struct OffsetSurface {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OneDirectionRepeatFactor {
-    pub name: String,
+    pub name: Text,
     pub repeat_factor: VectorRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OpenShell {
-    pub name: String,
+    pub name: Text,
     pub cfs_faces: Vec<FaceRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Organization {
-    pub id: Option<String>,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Option<Text>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrganizationRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_organization: OrganizationRef,
     pub related_organization: OrganizationRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrganizationRole {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrganizationType {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrganizationTypeRole {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrganizationalAddress {
-    pub internal_location: Option<String>,
-    pub street_number: Option<String>,
-    pub street: Option<String>,
-    pub postal_box: Option<String>,
-    pub town: Option<String>,
-    pub region: Option<String>,
-    pub postal_code: Option<String>,
-    pub country: Option<String>,
-    pub facsimile_number: Option<String>,
-    pub telephone_number: Option<String>,
-    pub electronic_mail_address: Option<String>,
-    pub telex_number: Option<String>,
+    pub internal_location: Option<Text>,
+    pub street_number: Option<Text>,
+    pub street: Option<Text>,
+    pub postal_box: Option<Text>,
+    pub town: Option<Text>,
+    pub region: Option<Text>,
+    pub postal_code: Option<Text>,
+    pub country: Option<Text>,
+    pub facsimile_number: Option<Text>,
+    pub telephone_number: Option<Text>,
+    pub electronic_mail_address: Option<Text>,
+    pub telex_number: Option<Text>,
     pub organizations: Vec<OrganizationRef>,
-    pub description: Option<String>,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrganizationalProject {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub responsible_organizations: Vec<OrganizationRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrganizationalProjectRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_organizational_project: OrganizationalProjectRef,
     pub related_organizational_project: OrganizationalProjectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrganizationalProjectRole {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrientedClosedShell {
-    pub name: String,
+    pub name: Text,
     pub closed_shell_element: ClosedShellRef,
     pub orientation: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrientedEdge {
-    pub name: String,
+    pub name: Text,
     pub edge_element: EdgeRef,
     pub orientation: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OverRidingStyledItem {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
     pub over_ridden_style: StyledItemRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct Parabola {
+    pub name: Text,
+    pub position: Axis2PlacementRef,
+    pub focal_dist: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ParallelismTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -16271,27 +17693,27 @@ pub struct ParallelismTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParametricRepresentationContext {
-    pub context_identifier: String,
-    pub context_type: String,
+    pub context_identifier: Text,
+    pub context_type: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Path {
-    pub name: String,
+    pub name: Text,
     pub edge_list: Vec<OrientedEdgeRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Pcurve {
-    pub name: String,
+    pub name: Text,
     pub basis_surface: SurfaceRef,
     pub reference_to_curve: DefinitionalRepresentationRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PerpendicularityTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -16299,12 +17721,12 @@ pub struct PerpendicularityTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Person {
-    pub id: String,
-    pub last_name: Option<String>,
-    pub first_name: Option<String>,
-    pub middle_names: Option<Vec<String>>,
-    pub prefix_titles: Option<Vec<String>>,
-    pub suffix_titles: Option<Vec<String>>,
+    pub id: Text,
+    pub last_name: Option<Text>,
+    pub first_name: Option<Text>,
+    pub middle_names: Option<Vec<Text>>,
+    pub prefix_titles: Option<Vec<Text>>,
+    pub suffix_titles: Option<Vec<Text>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -16315,22 +17737,22 @@ pub struct PersonAndOrganization {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PersonAndOrganizationAddress {
-    pub internal_location: Option<String>,
-    pub street_number: Option<String>,
-    pub street: Option<String>,
-    pub postal_box: Option<String>,
-    pub town: Option<String>,
-    pub region: Option<String>,
-    pub postal_code: Option<String>,
-    pub country: Option<String>,
-    pub facsimile_number: Option<String>,
-    pub telephone_number: Option<String>,
-    pub electronic_mail_address: Option<String>,
-    pub telex_number: Option<String>,
+    pub internal_location: Option<Text>,
+    pub street_number: Option<Text>,
+    pub street: Option<Text>,
+    pub postal_box: Option<Text>,
+    pub town: Option<Text>,
+    pub region: Option<Text>,
+    pub postal_code: Option<Text>,
+    pub country: Option<Text>,
+    pub facsimile_number: Option<Text>,
+    pub telephone_number: Option<Text>,
+    pub electronic_mail_address: Option<Text>,
+    pub telex_number: Option<Text>,
     pub organizations: Vec<OrganizationRef>,
-    pub description: Option<String>,
+    pub description: Option<Text>,
     pub people: Vec<PersonRef>,
-    pub description_1: Option<String>,
+    pub description_1: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -16341,45 +17763,45 @@ pub struct PersonAndOrganizationAssignment {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PersonAndOrganizationRole {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PersonalAddress {
-    pub internal_location: Option<String>,
-    pub street_number: Option<String>,
-    pub street: Option<String>,
-    pub postal_box: Option<String>,
-    pub town: Option<String>,
-    pub region: Option<String>,
-    pub postal_code: Option<String>,
-    pub country: Option<String>,
-    pub facsimile_number: Option<String>,
-    pub telephone_number: Option<String>,
-    pub electronic_mail_address: Option<String>,
-    pub telex_number: Option<String>,
+    pub internal_location: Option<Text>,
+    pub street_number: Option<Text>,
+    pub street: Option<Text>,
+    pub postal_box: Option<Text>,
+    pub town: Option<Text>,
+    pub region: Option<Text>,
+    pub postal_code: Option<Text>,
+    pub country: Option<Text>,
+    pub facsimile_number: Option<Text>,
+    pub telephone_number: Option<Text>,
+    pub electronic_mail_address: Option<Text>,
+    pub telex_number: Option<Text>,
     pub people: Vec<PersonRef>,
-    pub description: Option<String>,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PlacedDatumTargetFeature {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
-    pub target_id: String,
+    pub target_id: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Placement {
-    pub name: String,
+    pub name: Text,
     pub location: CartesianPointRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PlanarBox {
-    pub name: String,
+    pub name: Text,
     pub size_in_x: f64,
     pub size_in_y: f64,
     pub placement: Axis2PlacementRef,
@@ -16387,14 +17809,14 @@ pub struct PlanarBox {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PlanarExtent {
-    pub name: String,
+    pub name: Text,
     pub size_in_x: f64,
     pub size_in_y: f64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Plane {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2Placement3dRef,
 }
 
@@ -16417,12 +17839,12 @@ pub struct PlusMinusTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Point {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PointStyle {
-    pub name: String,
+    pub name: Text,
     pub marker: Option<MarkerSelectRef>,
     pub marker_size: Option<SizeSelectRef>,
     pub marker_colour: Option<ColourRef>,
@@ -16430,82 +17852,82 @@ pub struct PointStyle {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PolyLoop {
-    pub name: String,
+    pub name: Text,
     pub polygon: Vec<CartesianPointRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Polyline {
-    pub name: String,
+    pub name: Text,
     pub points: Vec<CartesianPointRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PositionTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedCharacterGlyph {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedColour {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedCurveFont {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedItem {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedMarker {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedPointMarkerSymbol {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedPresentationStyle {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedSurfaceSideStyle {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedSymbol {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedTerminatorSymbol {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedTextFont {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedTile {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -16515,21 +17937,21 @@ pub struct PrecisionQualifier {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PresentationArea {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PresentationLayerAssignment {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub assigned_items: Vec<LayeredItemRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PresentationRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
@@ -16556,7 +17978,7 @@ pub struct PresentationStyleByContext {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PresentationView {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
@@ -16572,74 +17994,74 @@ pub struct PresentedItemRepresentation {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Product {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub frame_of_reference: Vec<ProductContextRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductCategory {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductCategoryRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub category: ProductCategoryRef,
     pub sub_category: ProductCategoryRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductConcept {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub market_context: ProductConceptContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductConceptContext {
-    pub name: String,
+    pub name: Text,
     pub frame_of_reference: ApplicationContextRef,
-    pub market_segment_type: String,
+    pub market_segment_type: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductConceptFeature {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductConceptFeatureCategory {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductContext {
-    pub name: String,
+    pub name: Text,
     pub frame_of_reference: ApplicationContextRef,
-    pub discipline_type: String,
+    pub discipline_type: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinition {
-    pub id: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub description: Option<Text>,
     pub formation: ProductDefinitionFormationRef,
     pub frame_of_reference: ProductDefinitionContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionContext {
-    pub name: String,
+    pub name: Text,
     pub frame_of_reference: ApplicationContextRef,
-    pub life_cycle_stage: String,
+    pub life_cycle_stage: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -16651,85 +18073,85 @@ pub struct ProductDefinitionContextAssociation {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionContextRole {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionEffectivity {
-    pub id: String,
+    pub id: Text,
     pub usage: ProductDefinitionRelationshipRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionFormation {
-    pub id: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub description: Option<Text>,
     pub of_product: ProductRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionFormationWithSpecifiedSource {
-    pub id: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub description: Option<Text>,
     pub of_product: ProductRef,
     pub make_or_buy: Source,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionOccurrence {
-    pub id: String,
-    pub name: Option<String>,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Option<Text>,
+    pub description: Option<Text>,
     pub definition: Option<ProductDefinitionOrReferenceRef>,
     pub quantity: Option<MeasureWithUnitRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionRelationship {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_product_definition: ProductDefinitionOrReferenceRef,
     pub related_product_definition: ProductDefinitionOrReferenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionRelationshipRelationship {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating: ProductDefinitionRelationshipRef,
     pub related: ProductDefinitionRelationshipRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionShape {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub definition: CharacterizedDefinitionRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionSubstitute {
-    pub description: Option<String>,
+    pub description: Option<Text>,
     pub context_relationship: ProductDefinitionRelationshipRef,
     pub substitute_definition: ProductDefinitionRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionUsage {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_product_definition: ProductDefinitionOrReferenceRef,
     pub related_product_definition: ProductDefinitionOrReferenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductDefinitionWithAssociatedDocuments {
-    pub id: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub description: Option<Text>,
     pub formation: ProductDefinitionFormationRef,
     pub frame_of_reference: ProductDefinitionContextRef,
     pub documentation_ids: Vec<DocumentRef>,
@@ -16737,8 +18159,8 @@ pub struct ProductDefinitionWithAssociatedDocuments {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductRelatedProductCategory {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub products: Vec<ProductRef>,
 }
 
@@ -16752,15 +18174,15 @@ pub struct ProjectedZoneDefinition {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PropertyDefinition {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub definition: CharacterizedDefinitionRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PropertyDefinitionRelationship {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub relating_property_definition: PropertyDefinitionRef,
     pub related_property_definition: PropertyDefinitionRef,
 }
@@ -16773,13 +18195,13 @@ pub struct PropertyDefinitionRepresentation {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct QualifiedRepresentationItem {
-    pub name: String,
+    pub name: Text,
     pub qualifiers: Vec<ValueQualifierRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct QuasiUniformCurve {
-    pub name: String,
+    pub name: Text,
     pub degree: i64,
     pub control_points_list: Vec<CartesianPointRef>,
     pub curve_form: BSplineCurveForm,
@@ -16789,7 +18211,7 @@ pub struct QuasiUniformCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct QuasiUniformSurface {
-    pub name: String,
+    pub name: Text,
     pub u_degree: i64,
     pub v_degree: i64,
     pub control_points_list: Vec<Vec<CartesianPointRef>>,
@@ -16812,7 +18234,7 @@ pub struct RatioUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RationalBSplineCurve {
-    pub name: String,
+    pub name: Text,
     pub degree: i64,
     pub control_points_list: Vec<CartesianPointRef>,
     pub curve_form: BSplineCurveForm,
@@ -16823,7 +18245,7 @@ pub struct RationalBSplineCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RationalBSplineSurface {
-    pub name: String,
+    pub name: Text,
     pub u_degree: i64,
     pub v_degree: i64,
     pub control_points_list: Vec<Vec<CartesianPointRef>>,
@@ -16841,37 +18263,37 @@ pub struct RealLiteral {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RealRepresentationItem {
-    pub name: String,
+    pub name: Text,
     pub the_value: f64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RepositionedTessellatedItem {
-    pub name: String,
+    pub name: Text,
     pub location: Axis2Placement3dRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Representation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RepresentationContext {
-    pub context_identifier: String,
-    pub context_type: String,
+    pub context_identifier: Text,
+    pub context_type: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RepresentationContextReference {
-    pub context_identifier: String,
+    pub context_identifier: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RepresentationItem {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -16882,22 +18304,22 @@ pub struct RepresentationMap {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RepresentationReference {
-    pub id: String,
+    pub id: Text,
     pub context_of_items: RepresentationContextReferenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RepresentationRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub rep_1: RepresentationOrRepresentationReferenceRef,
     pub rep_2: RepresentationOrRepresentationReferenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RepresentationRelationshipWithTransformation {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub rep_1: RepresentationOrRepresentationReferenceRef,
     pub rep_2: RepresentationOrRepresentationReferenceRef,
     pub transformation_operator: TransformationRef,
@@ -16905,15 +18327,15 @@ pub struct RepresentationRelationshipWithTransformation {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ResourceProperty {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
     pub resource: CharacterizedResourceDefinitionRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ResourceRequirementType {
-    pub name: String,
-    pub description: String,
+    pub name: Text,
+    pub description: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -16924,15 +18346,15 @@ pub struct RoleAssociation {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RoundnessTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SeamCurve {
-    pub name: String,
+    pub name: Text,
     pub curve_3d: CurveRef,
     pub associated_geometry: Vec<PcurveOrSurfaceRef>,
     pub master_representation: PreferredSurfaceCurveRepresentation,
@@ -16940,8 +18362,8 @@ pub struct SeamCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SecurityClassification {
-    pub name: String,
-    pub purpose: String,
+    pub name: Text,
+    pub purpose: Text,
     pub security_level: SecurityClassificationLevelRef,
 }
 
@@ -16952,37 +18374,37 @@ pub struct SecurityClassificationAssignment {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SecurityClassificationLevel {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeAspect {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Option<Logical>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeAspectAssociativity {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_shape_aspect: ShapeAspectRef,
     pub related_shape_aspect: ShapeAspectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeAspectDerivingRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_shape_aspect: ShapeAspectRef,
     pub related_shape_aspect: ShapeAspectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeAspectRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub relating_shape_aspect: ShapeAspectRef,
     pub related_shape_aspect: ShapeAspectRef,
 }
@@ -16995,36 +18417,36 @@ pub struct ShapeDefinitionRepresentation {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeDimensionRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeRepresentationRelationship {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub rep_1: RepresentationOrRepresentationReferenceRef,
     pub rep_2: RepresentationOrRepresentationReferenceRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeRepresentationWithParameters {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShellBasedSurfaceModel {
-    pub name: String,
+    pub name: Text,
     pub sbsm_boundary: Vec<ShellRef>,
 }
 
@@ -17047,12 +18469,12 @@ pub struct SolidAngleUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SolidModel {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SphericalSurface {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2Placement3dRef,
     pub radius: f64,
 }
@@ -17071,39 +18493,39 @@ pub struct StartWork {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct StateObserved {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct StateType {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct StraightnessTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct StyledItem {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Surface {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SurfaceCurve {
-    pub name: String,
+    pub name: Text,
     pub curve_3d: CurveRef,
     pub associated_geometry: Vec<PcurveOrSurfaceRef>,
     pub master_representation: PreferredSurfaceCurveRepresentation,
@@ -17111,22 +18533,22 @@ pub struct SurfaceCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SurfaceOfLinearExtrusion {
-    pub name: String,
+    pub name: Text,
     pub swept_curve: CurveRef,
     pub extrusion_axis: VectorRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SurfaceOfRevolution {
-    pub name: String,
+    pub name: Text,
     pub swept_curve: CurveRef,
     pub axis_position: Axis1PlacementRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SurfaceProfileTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
 }
@@ -17138,7 +18560,7 @@ pub struct SurfaceRenderingProperties {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SurfaceSideStyle {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<SurfaceStyleElementSelectRef>,
 }
 
@@ -17204,7 +18626,7 @@ pub struct SurfaceStyleUsage {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SweptSurface {
-    pub name: String,
+    pub name: Text,
     pub swept_curve: CurveRef,
 }
 
@@ -17215,20 +18637,20 @@ pub struct SymbolColour {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SymbolRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SymbolStyle {
-    pub name: String,
+    pub name: Text,
     pub style_of_symbol: SymbolStyleSelectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SymbolTarget {
-    pub name: String,
+    pub name: Text,
     pub placement: Axis2PlacementRef,
     pub x_scale: f64,
     pub y_scale: f64,
@@ -17236,8 +18658,8 @@ pub struct SymbolTarget {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SymmetryTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -17245,7 +18667,7 @@ pub struct SymmetryTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TerminatorSymbol {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: AnnotationSymbolOccurrenceItemRef,
     pub annotated_curve: AnnotationCurveOccurrenceRef,
@@ -17253,92 +18675,92 @@ pub struct TerminatorSymbol {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedAnnotationOccurrence {
-    pub name: String,
+    pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: StyledItemTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedCurveSet {
-    pub name: String,
+    pub name: Text,
     pub coordinates: CoordinatesListRef,
     pub line_strips: Vec<Vec<i64>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedFace {
-    pub name: String,
+    pub name: Text,
     pub coordinates: CoordinatesListRef,
     pub pnmax: i64,
-    pub normals: Vec<Vec<f64>>,
+    pub normals: Vec<Reals3>,
     pub geometric_link: Option<FaceOrSurfaceRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedGeometricSet {
-    pub name: String,
+    pub name: Text,
     pub children: Vec<TessellatedItemRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedItem {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedShapeRepresentation {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<RepresentationItemRef>,
     pub context_of_items: RepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedShell {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<TessellatedStructuredItemRef>,
     pub topological_link: Option<ConnectedFaceSetRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedSolid {
-    pub name: String,
+    pub name: Text,
     pub items: Vec<TessellatedStructuredItemRef>,
     pub geometric_link: Option<ManifoldSolidBrepRef>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedStructuredItem {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TessellatedSurfaceSet {
-    pub name: String,
+    pub name: Text,
     pub coordinates: CoordinatesListRef,
     pub pnmax: i64,
-    pub normals: Vec<Vec<f64>>,
+    pub normals: Vec<Reals3>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextFont {
-    pub id: String,
-    pub name: String,
-    pub description: String,
+    pub id: Text,
+    pub name: Text,
+    pub description: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextLiteral {
-    pub name: String,
-    pub literal: String,
+    pub name: Text,
+    pub literal: Text,
     pub placement: Axis2PlacementRef,
-    pub alignment: String,
+    pub alignment: Text,
     pub path: TextPath,
     pub font: FontSelectRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextStyle {
-    pub name: String,
+    pub name: Text,
     pub character_appearance: CharacterStyleSelectRef,
 }
 
@@ -17349,7 +18771,7 @@ pub struct TextStyleForDefinedFont {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextStyleWithBoxCharacteristics {
-    pub name: String,
+    pub name: Text,
     pub character_appearance: CharacterStyleSelectRef,
     pub characteristics: Vec<MeasureValue>,
 }
@@ -17373,8 +18795,8 @@ pub struct ToleranceValue {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ToleranceZone {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
     pub defining_tolerance: Vec<ToleranceZoneTargetRef>,
@@ -17389,13 +18811,13 @@ pub struct ToleranceZoneDefinition {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ToleranceZoneForm {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ToleranceZoneWithDatum {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
     pub product_definitional: Logical,
     pub defining_tolerance: Vec<ToleranceZoneTargetRef>,
@@ -17405,12 +18827,12 @@ pub struct ToleranceZoneWithDatum {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TopologicalRepresentationItem {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ToroidalSurface {
-    pub name: String,
+    pub name: Text,
     pub position: Axis2Placement3dRef,
     pub major_radius: f64,
     pub minor_radius: f64,
@@ -17418,8 +18840,8 @@ pub struct ToroidalSurface {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TotalRunoutTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub datum_system: Vec<DatumSystemOrReferenceRef>,
@@ -17427,7 +18849,7 @@ pub struct TotalRunoutTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TrimmedCurve {
-    pub name: String,
+    pub name: Text,
     pub basis_curve: CurveRef,
     pub trim_1: Vec<TrimmingSelectRef>,
     pub trim_2: Vec<TrimmingSelectRef>,
@@ -17437,34 +18859,34 @@ pub struct TrimmedCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TwoDirectionRepeatFactor {
-    pub name: String,
+    pub name: Text,
     pub repeat_factor: VectorRef,
     pub second_repeat_factor: VectorRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TypeQualifier {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UncertaintyMeasureWithUnit {
     pub value_component: MeasureValue,
     pub unit_component: UnitRef,
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UncertaintyQualifier {
-    pub measure_name: String,
-    pub description: String,
+    pub measure_name: Text,
+    pub description: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnequallyDisposedGeometricTolerance {
-    pub name: String,
-    pub description: Option<String>,
+    pub name: Text,
+    pub description: Option<Text>,
     pub magnitude: Option<LengthMeasureWithUnitRef>,
     pub toleranced_shape_aspect: GeometricToleranceTargetRef,
     pub displacement: LengthMeasureWithUnitRef,
@@ -17472,7 +18894,7 @@ pub struct UnequallyDisposedGeometricTolerance {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UniformCurve {
-    pub name: String,
+    pub name: Text,
     pub degree: i64,
     pub control_points_list: Vec<CartesianPointRef>,
     pub curve_form: BSplineCurveForm,
@@ -17482,7 +18904,7 @@ pub struct UniformCurve {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UniformSurface {
-    pub name: String,
+    pub name: Text,
     pub u_degree: i64,
     pub v_degree: i64,
     pub control_points_list: Vec<Vec<CartesianPointRef>>,
@@ -17494,50 +18916,50 @@ pub struct UniformSurface {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ValueFormatTypeQualifier {
-    pub format_type: String,
+    pub format_type: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ValueRepresentationItem {
-    pub name: String,
+    pub name: Text,
     pub value_component: MeasureValue,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Vector {
-    pub name: String,
+    pub name: Text,
     pub orientation: DirectionRef,
     pub magnitude: f64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VersionedActionRequest {
-    pub id: String,
-    pub version: Option<String>,
-    pub purpose: String,
-    pub description: Option<String>,
+    pub id: Text,
+    pub version: Option<Text>,
+    pub purpose: Text,
+    pub description: Option<Text>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Vertex {
-    pub name: String,
+    pub name: Text,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VertexLoop {
-    pub name: String,
+    pub name: Text,
     pub loop_vertex: VertexRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VertexPoint {
-    pub name: String,
+    pub name: Text,
     pub vertex_geometry: PointRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VertexShell {
-    pub name: String,
+    pub name: Text,
     pub vertex_shell_extent: VertexLoopRef,
 }
 
@@ -17561,32 +18983,34 @@ pub struct VolumeUnit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct WireShell {
-    pub name: String,
+    pub name: Text,
     pub wire_shell_extent: Vec<LoopRef>,
 }
 
+/// One entity type's share of a [`ComplexEntity`] — Part 21's partial entity
+/// instance, such as `B_SPLINE_CURVE(...)` in a rational B-spline curve.
 #[derive(Debug, Clone, PartialEq)]
-pub enum UnitPart {
+pub enum PartialEntity {
     Action {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         chosen_method: ActionMethodRef,
     },
     ActionMethod {
-        name: String,
-        description: Option<String>,
-        consequence: String,
-        purpose: String,
+        name: Text,
+        description: Option<Text>,
+        consequence: Text,
+        purpose: Text,
     },
     ActionMethodRelationship {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         relating_method: ActionMethodRef,
         related_method: ActionMethodRef,
     },
     ActionRelationship {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         relating_action: ActionRef,
         related_action: ActionRef,
     },
@@ -17594,30 +19018,30 @@ pub enum UnitPart {
         assigned_action_request: VersionedActionRequestRef,
     },
     ActionResource {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         usage: Vec<SupportedItemRef>,
         kind: ActionResourceTypeRef,
     },
     ActionResourceRequirement {
-        name: String,
-        description: String,
+        name: Text,
+        description: Text,
         kind: ResourceRequirementTypeRef,
         operations: Vec<CharacterizedActionDefinitionRef>,
     },
     Address {
-        internal_location: Option<String>,
-        street_number: Option<String>,
-        street: Option<String>,
-        postal_box: Option<String>,
-        town: Option<String>,
-        region: Option<String>,
-        postal_code: Option<String>,
-        country: Option<String>,
-        facsimile_number: Option<String>,
-        telephone_number: Option<String>,
-        electronic_mail_address: Option<String>,
-        telex_number: Option<String>,
+        internal_location: Option<Text>,
+        street_number: Option<Text>,
+        street: Option<Text>,
+        postal_box: Option<Text>,
+        town: Option<Text>,
+        region: Option<Text>,
+        postal_code: Option<Text>,
+        country: Option<Text>,
+        facsimile_number: Option<Text>,
+        telephone_number: Option<Text>,
+        electronic_mail_address: Option<Text>,
+        telex_number: Option<Text>,
     },
     AdvancedBrepShapeRepresentation,
     AdvancedFace,
@@ -17628,8 +19052,8 @@ pub enum UnitPart {
     AnnotationOccurrence,
     AnnotationOccurrenceAssociativity,
     AnnotationOccurrenceRelationship {
-        name: String,
-        description: String,
+        name: Text,
+        description: Text,
         relating_annotation_occurrence: AnnotationOccurrenceRef,
         related_annotation_occurrence: AnnotationOccurrenceRef,
     },
@@ -17647,11 +19071,11 @@ pub enum UnitPart {
     AnnotationSymbolOccurrence,
     AnnotationText,
     AnnotationTextCharacter {
-        alignment: String,
+        alignment: Text,
     },
     AnnotationTextOccurrence,
     ApplicationContextElement {
-        name: String,
+        name: Text,
         frame_of_reference: ApplicationContextRef,
     },
     AppliedApprovalAssignment {
@@ -17686,13 +19110,13 @@ pub enum UnitPart {
         in_set: PresentationSetRef,
     },
     AscribableStateRelationship {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         relating_ascribable_state: AscribableStateRef,
         related_ascribable_state: AscribableStateRef,
     },
     AssemblyComponentUsage {
-        reference_designator: Option<String>,
+        reference_designator: Option<Text>,
     },
     BSplineCurve {
         degree: i64,
@@ -17771,8 +19195,8 @@ pub enum UnitPart {
         rep: RepresentationRef,
     },
     CharacterizedObject {
-        name: Option<String>,
-        description: Option<String>,
+        name: Option<Text>,
+        description: Option<Text>,
     },
     CharacterizedRepresentation,
     CircularRunoutTolerance,
@@ -17784,7 +19208,7 @@ pub enum UnitPart {
         blue: f64,
     },
     ColourSpecification {
-        name: String,
+        name: Text,
     },
     CommonDatum,
     CompositeCurve {
@@ -17808,11 +19232,11 @@ pub enum UnitPart {
         configuration: ConfigurationDesignRef,
     },
     ConfigurationItem {
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: Text,
+        name: Text,
+        description: Option<Text>,
         item_concept: ProductConceptRef,
-        purpose: Option<String>,
+        purpose: Option<Text>,
     },
     ConnectedFaceSet {
         cfs_faces: Option<Vec<FaceRef>>,
@@ -17822,25 +19246,25 @@ pub enum UnitPart {
         style_context: Vec<StyleContextSelectRef>,
     },
     ContextDependentUnit {
-        name: String,
+        name: Text,
     },
     ConversionBasedUnit {
-        name: String,
+        name: Text,
         conversion_factor: MeasureWithUnitRef,
     },
     Curve,
     CurveStyle {
-        name: String,
+        name: Text,
         curve_font: Option<CurveFontOrScaledCurveFontSelectRef>,
         curve_width: Option<SizeSelectRef>,
         curve_colour: Option<ColourRef>,
     },
     CurveStyleFont {
-        name: String,
+        name: Text,
         pattern_list: Vec<CurveStyleFontPatternRef>,
     },
     CurveStyleFontAndScaling {
-        name: String,
+        name: Text,
         curve_font: CurveStyleFontSelectRef,
         curve_font_scaling: f64,
     },
@@ -17861,7 +19285,7 @@ pub enum UnitPart {
         role: DateTimeRoleRef,
     },
     Datum {
-        identification: String,
+        identification: Text,
     },
     DatumFeature,
     DatumReference {
@@ -17872,7 +19296,7 @@ pub enum UnitPart {
         constituents: Vec<DatumReferenceCompartmentRef>,
     },
     DatumTarget {
-        target_id: String,
+        target_id: Text,
     },
     DefaultModelGeometricView,
     DefinitionalRepresentation,
@@ -17887,36 +19311,36 @@ pub enum UnitPart {
     DesignContext,
     DimensionalSize {
         applies_to: ShapeAspectRef,
-        name: String,
+        name: Text,
     },
     Direction {
-        direction_ratios: Vec<f64>,
+        direction_ratios: Reals3,
     },
     Document {
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: Text,
+        name: Text,
+        description: Option<Text>,
         kind: DocumentTypeRef,
     },
     DocumentFile,
     DocumentProductAssociation {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         relating_document: DocumentRef,
         related_product: ProductOrFormationOrDefinitionRef,
     },
     DocumentProductEquivalence,
     DocumentReference {
         assigned_document: DocumentRef,
-        source: String,
+        source: Text,
     },
     DraughtingAnnotationOccurrence,
     DraughtingCallout {
         contents: Vec<DraughtingCalloutElementRef>,
     },
     DraughtingCalloutRelationship {
-        name: String,
-        description: String,
+        name: Text,
+        description: Text,
         relating_draughting_callout: DraughtingCalloutRef,
         related_draughting_callout: DraughtingCalloutRef,
     },
@@ -17938,7 +19362,7 @@ pub enum UnitPart {
     },
     EdgeLoop,
     Effectivity {
-        id: String,
+        id: Text,
     },
     ElementarySurface {
         position: Axis2Placement3dRef,
@@ -17975,7 +19399,7 @@ pub enum UnitPart {
         same_sense: bool,
     },
     FillAreaStyle {
-        name: String,
+        name: Text,
         fill_styles: Vec<FillStyleSelectRef>,
     },
     FillAreaStyleHatching {
@@ -17996,17 +19420,17 @@ pub enum UnitPart {
     FlatnessTolerance,
     FoundedItem,
     FunctionallyDefinedTransformation {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
     },
     GeneralDatumReference {
         base: DatumOrCommonDatumRef,
         modifiers: Option<Vec<DatumReferenceModifierRef>>,
     },
     GeneralProperty {
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: Text,
+        name: Text,
+        description: Option<Text>,
     },
     GenericExpression,
     GenericLiteral,
@@ -18023,8 +19447,8 @@ pub enum UnitPart {
         elements: Vec<GeometricSetSelectRef>,
     },
     GeometricTolerance {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         magnitude: Option<LengthMeasureWithUnitRef>,
         toleranced_shape_aspect: GeometricToleranceTargetRef,
     },
@@ -18053,14 +19477,14 @@ pub enum UnitPart {
         units: Vec<UnitRef>,
     },
     Group {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
     },
     GroupAssignment {
         assigned_group: GroupRef,
     },
     IdentificationAssignment {
-        assigned_id: String,
+        assigned_id: Text,
         role: IdentificationRoleRef,
     },
     IntLiteral,
@@ -18070,14 +19494,14 @@ pub enum UnitPart {
         invisible_items: Vec<InvisibleItemRef>,
     },
     ItemDefinedTransformation {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         transform_item_1: RepresentationItemRef,
         transform_item_2: RepresentationItemRef,
     },
     ItemIdentifiedRepresentationUsage {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         definition: ItemIdentifiedRepresentationUsageDefinitionRef,
         used_representation: RepresentationRef,
         identified_item: ItemIdentifiedRepresentationUsageSelectRef,
@@ -18123,7 +19547,7 @@ pub enum UnitPart {
     OpenShell,
     OrganizationalAddress {
         organizations: Vec<OrganizationRef>,
-        description: Option<String>,
+        description: Option<Text>,
     },
     OrientedClosedShell {
         closed_shell_element: ClosedShellRef,
@@ -18153,7 +19577,7 @@ pub enum UnitPart {
     },
     PersonalAddress {
         people: Vec<PersonRef>,
-        description: Option<String>,
+        description: Option<Text>,
     },
     PlacedDatumTargetFeature,
     Placement {
@@ -18170,7 +19594,7 @@ pub enum UnitPart {
     PlaneAngleUnit,
     Point,
     PointStyle {
-        name: String,
+        name: Text,
         marker: Option<MarkerSelectRef>,
         marker_size: Option<SizeSelectRef>,
         marker_colour: Option<ColourRef>,
@@ -18183,7 +19607,7 @@ pub enum UnitPart {
     PreDefinedColour,
     PreDefinedCurveFont,
     PreDefinedItem {
-        name: String,
+        name: Text,
     },
     PreDefinedMarker,
     PreDefinedPointMarkerSymbol,
@@ -18205,68 +19629,68 @@ pub enum UnitPart {
     PresentationView,
     PresentedItem,
     Product {
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: Text,
+        name: Text,
+        description: Option<Text>,
         frame_of_reference: Vec<ProductContextRef>,
     },
     ProductCategory {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
     },
     ProductConcept {
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: Text,
+        name: Text,
+        description: Option<Text>,
         market_context: ProductConceptContextRef,
     },
     ProductConceptFeature {
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: Text,
+        name: Text,
+        description: Option<Text>,
     },
     ProductConceptFeatureCategory,
     ProductContext {
-        discipline_type: String,
+        discipline_type: Text,
     },
     ProductDefinition {
-        id: String,
-        description: Option<String>,
+        id: Text,
+        description: Option<Text>,
         formation: ProductDefinitionFormationRef,
         frame_of_reference: ProductDefinitionContextRef,
     },
     ProductDefinitionContext {
-        life_cycle_stage: String,
+        life_cycle_stage: Text,
     },
     ProductDefinitionEffectivity {
         usage: ProductDefinitionRelationshipRef,
     },
     ProductDefinitionFormation {
-        id: String,
-        description: Option<String>,
+        id: Text,
+        description: Option<Text>,
         of_product: ProductRef,
     },
     ProductDefinitionFormationWithSpecifiedSource {
         make_or_buy: Source,
     },
     ProductDefinitionOccurrence {
-        id: String,
-        name: Option<String>,
-        description: Option<String>,
+        id: Text,
+        name: Option<Text>,
+        description: Option<Text>,
         definition: Option<ProductDefinitionOrReferenceRef>,
         quantity: Option<MeasureWithUnitRef>,
     },
     ProductDefinitionRelationship {
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: Text,
+        name: Text,
+        description: Option<Text>,
         relating_product_definition: ProductDefinitionOrReferenceRef,
         related_product_definition: ProductDefinitionOrReferenceRef,
     },
     ProductDefinitionRelationshipRelationship {
-        id: String,
-        name: String,
-        description: Option<String>,
+        id: Text,
+        name: Text,
+        description: Option<Text>,
         relating: ProductDefinitionRelationshipRef,
         related: ProductDefinitionRelationshipRef,
     },
@@ -18283,8 +19707,8 @@ pub enum UnitPart {
         projected_length: LengthMeasureWithUnitRef,
     },
     PropertyDefinition {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         definition: CharacterizedDefinitionRef,
     },
     PropertyDefinitionRepresentation {
@@ -18310,28 +19734,28 @@ pub enum UnitPart {
         location: Axis2Placement3dRef,
     },
     Representation {
-        name: String,
+        name: Text,
         items: Vec<RepresentationItemRef>,
         context_of_items: RepresentationContextRef,
     },
     RepresentationContext {
-        context_identifier: String,
-        context_type: String,
+        context_identifier: Text,
+        context_type: Text,
     },
     RepresentationItem {
-        name: String,
+        name: Text,
     },
     RepresentationMap {
         mapping_origin: RepresentationItemRef,
         mapped_representation: RepresentationRef,
     },
     RepresentationReference {
-        id: String,
+        id: Text,
         context_of_items: RepresentationContextReferenceRef,
     },
     RepresentationRelationship {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         rep_1: RepresentationOrRepresentationReferenceRef,
         rep_2: RepresentationOrRepresentationReferenceRef,
     },
@@ -18344,14 +19768,14 @@ pub enum UnitPart {
         assigned_security_classification: SecurityClassificationRef,
     },
     ShapeAspect {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Option<Logical>,
     },
     ShapeAspectRelationship {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
         relating_shape_aspect: ShapeAspectRef,
         related_shape_aspect: ShapeAspectRef,
     },
@@ -18375,12 +19799,12 @@ pub enum UnitPart {
         items: Vec<StartRequestItemRef>,
     },
     StateObserved {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
     },
     StateType {
-        name: String,
-        description: Option<String>,
+        name: Text,
+        description: Option<Text>,
     },
     StraightnessTolerance,
     StyledItem {
@@ -18395,7 +19819,7 @@ pub enum UnitPart {
     },
     SurfaceProfileTolerance,
     SurfaceSideStyle {
-        name: String,
+        name: Text,
         styles: Vec<SurfaceStyleElementSelectRef>,
     },
     SurfaceStyleBoundary {
@@ -18433,7 +19857,7 @@ pub enum UnitPart {
     },
     SymbolRepresentation,
     SymbolStyle {
-        name: String,
+        name: Text,
         style_of_symbol: SymbolStyleSelectRef,
     },
     TerminatorSymbol {
@@ -18446,14 +19870,14 @@ pub enum UnitPart {
     TessellatedShapeRepresentation,
     TessellatedStructuredItem,
     TextLiteral {
-        literal: String,
+        literal: Text,
         placement: Axis2PlacementRef,
-        alignment: String,
+        alignment: Text,
         path: TextPath,
         font: FontSelectRef,
     },
     TextStyle {
-        name: String,
+        name: Text,
         character_appearance: CharacterStyleSelectRef,
     },
     TextStyleWithBoxCharacteristics {
@@ -18510,538 +19934,2468 @@ pub enum UnitPart {
     },
 }
 
+/// A complex entity instance: one `#id` that combines several entity
+/// types, written as `( A(...) B(...) … )`, with one [`PartialEntity`] per
+/// type.
 #[derive(Debug, Clone, PartialEq)]
-pub struct ComplexUnit {
-    pub parts: Vec<UnitPart>,
+pub struct ComplexEntity {
+    pub parts: Vec<PartialEntity>,
 }
 
 #[derive(Debug, Default)]
 pub struct StepModel {
     pub(crate) header: crate::header::FileHeader,
-    pub action_arena: Arena<Action>,
-    pub action_assignment_arena: Arena<ActionAssignment>,
-    pub action_directive_arena: Arena<ActionDirective>,
-    pub action_method_arena: Arena<ActionMethod>,
-    pub action_method_relationship_arena: Arena<ActionMethodRelationship>,
-    pub action_property_arena: Arena<ActionProperty>,
-    pub action_relationship_arena: Arena<ActionRelationship>,
-    pub action_request_assignment_arena: Arena<ActionRequestAssignment>,
-    pub action_request_solution_arena: Arena<ActionRequestSolution>,
-    pub action_resource_arena: Arena<ActionResource>,
-    pub action_resource_relationship_arena: Arena<ActionResourceRelationship>,
-    pub action_resource_requirement_arena: Arena<ActionResourceRequirement>,
-    pub action_resource_type_arena: Arena<ActionResourceType>,
-    pub address_arena: Arena<Address>,
-    pub advanced_brep_shape_representation_arena: Arena<AdvancedBrepShapeRepresentation>,
-    pub advanced_face_arena: Arena<AdvancedFace>,
-    pub all_around_shape_aspect_arena: Arena<AllAroundShapeAspect>,
-    pub angular_location_arena: Arena<AngularLocation>,
-    pub angular_size_arena: Arena<AngularSize>,
-    pub angularity_tolerance_arena: Arena<AngularityTolerance>,
-    pub annotation_curve_occurrence_arena: Arena<AnnotationCurveOccurrence>,
-    pub annotation_fill_area_occurrence_arena: Arena<AnnotationFillAreaOccurrence>,
-    pub annotation_occurrence_arena: Arena<AnnotationOccurrence>,
-    pub annotation_occurrence_associativity_arena: Arena<AnnotationOccurrenceAssociativity>,
-    pub annotation_occurrence_relationship_arena: Arena<AnnotationOccurrenceRelationship>,
-    pub annotation_placeholder_leader_line_arena: Arena<AnnotationPlaceholderLeaderLine>,
-    pub annotation_placeholder_occurrence_arena: Arena<AnnotationPlaceholderOccurrence>,
-    pub annotation_placeholder_occurrence_with_leader_line_arena:
+    pub(crate) texts: Texts,
+    pub(crate) action_arena: Arena<Action>,
+    pub(crate) action_assignment_arena: Arena<ActionAssignment>,
+    pub(crate) action_directive_arena: Arena<ActionDirective>,
+    pub(crate) action_method_arena: Arena<ActionMethod>,
+    pub(crate) action_method_relationship_arena: Arena<ActionMethodRelationship>,
+    pub(crate) action_property_arena: Arena<ActionProperty>,
+    pub(crate) action_relationship_arena: Arena<ActionRelationship>,
+    pub(crate) action_request_assignment_arena: Arena<ActionRequestAssignment>,
+    pub(crate) action_request_solution_arena: Arena<ActionRequestSolution>,
+    pub(crate) action_resource_arena: Arena<ActionResource>,
+    pub(crate) action_resource_relationship_arena: Arena<ActionResourceRelationship>,
+    pub(crate) action_resource_requirement_arena: Arena<ActionResourceRequirement>,
+    pub(crate) action_resource_type_arena: Arena<ActionResourceType>,
+    pub(crate) address_arena: Arena<Address>,
+    pub(crate) advanced_brep_shape_representation_arena: Arena<AdvancedBrepShapeRepresentation>,
+    pub(crate) advanced_face_arena: Arena<AdvancedFace>,
+    pub(crate) all_around_shape_aspect_arena: Arena<AllAroundShapeAspect>,
+    pub(crate) angular_location_arena: Arena<AngularLocation>,
+    pub(crate) angular_size_arena: Arena<AngularSize>,
+    pub(crate) angularity_tolerance_arena: Arena<AngularityTolerance>,
+    pub(crate) annotation_curve_occurrence_arena: Arena<AnnotationCurveOccurrence>,
+    pub(crate) annotation_fill_area_occurrence_arena: Arena<AnnotationFillAreaOccurrence>,
+    pub(crate) annotation_occurrence_arena: Arena<AnnotationOccurrence>,
+    pub(crate) annotation_occurrence_associativity_arena: Arena<AnnotationOccurrenceAssociativity>,
+    pub(crate) annotation_occurrence_relationship_arena: Arena<AnnotationOccurrenceRelationship>,
+    pub(crate) annotation_placeholder_leader_line_arena: Arena<AnnotationPlaceholderLeaderLine>,
+    pub(crate) annotation_placeholder_occurrence_arena: Arena<AnnotationPlaceholderOccurrence>,
+    pub(crate) annotation_placeholder_occurrence_with_leader_line_arena:
         Arena<AnnotationPlaceholderOccurrenceWithLeaderLine>,
-    pub annotation_plane_arena: Arena<AnnotationPlane>,
-    pub annotation_symbol_arena: Arena<AnnotationSymbol>,
-    pub annotation_symbol_occurrence_arena: Arena<AnnotationSymbolOccurrence>,
-    pub annotation_text_arena: Arena<AnnotationText>,
-    pub annotation_text_character_arena: Arena<AnnotationTextCharacter>,
-    pub annotation_text_occurrence_arena: Arena<AnnotationTextOccurrence>,
-    pub annotation_to_annotation_leader_line_arena: Arena<AnnotationToAnnotationLeaderLine>,
-    pub annotation_to_model_leader_line_arena: Arena<AnnotationToModelLeaderLine>,
-    pub apll_point_arena: Arena<ApllPoint>,
-    pub apll_point_with_surface_arena: Arena<ApllPointWithSurface>,
-    pub application_context_arena: Arena<ApplicationContext>,
-    pub application_context_element_arena: Arena<ApplicationContextElement>,
-    pub application_protocol_definition_arena: Arena<ApplicationProtocolDefinition>,
-    pub applied_approval_assignment_arena: Arena<AppliedApprovalAssignment>,
-    pub applied_date_and_time_assignment_arena: Arena<AppliedDateAndTimeAssignment>,
-    pub applied_document_reference_arena: Arena<AppliedDocumentReference>,
-    pub applied_external_identification_assignment_arena:
+    pub(crate) annotation_plane_arena: Arena<AnnotationPlane>,
+    pub(crate) annotation_symbol_arena: Arena<AnnotationSymbol>,
+    pub(crate) annotation_symbol_occurrence_arena: Arena<AnnotationSymbolOccurrence>,
+    pub(crate) annotation_text_arena: Arena<AnnotationText>,
+    pub(crate) annotation_text_character_arena: Arena<AnnotationTextCharacter>,
+    pub(crate) annotation_text_occurrence_arena: Arena<AnnotationTextOccurrence>,
+    pub(crate) annotation_to_annotation_leader_line_arena: Arena<AnnotationToAnnotationLeaderLine>,
+    pub(crate) annotation_to_model_leader_line_arena: Arena<AnnotationToModelLeaderLine>,
+    pub(crate) apll_point_arena: Arena<ApllPoint>,
+    pub(crate) apll_point_with_surface_arena: Arena<ApllPointWithSurface>,
+    pub(crate) application_context_arena: Arena<ApplicationContext>,
+    pub(crate) application_context_element_arena: Arena<ApplicationContextElement>,
+    pub(crate) application_protocol_definition_arena: Arena<ApplicationProtocolDefinition>,
+    pub(crate) applied_approval_assignment_arena: Arena<AppliedApprovalAssignment>,
+    pub(crate) applied_date_and_time_assignment_arena: Arena<AppliedDateAndTimeAssignment>,
+    pub(crate) applied_document_reference_arena: Arena<AppliedDocumentReference>,
+    pub(crate) applied_external_identification_assignment_arena:
         Arena<AppliedExternalIdentificationAssignment>,
-    pub applied_group_assignment_arena: Arena<AppliedGroupAssignment>,
-    pub applied_person_and_organization_assignment_arena:
+    pub(crate) applied_group_assignment_arena: Arena<AppliedGroupAssignment>,
+    pub(crate) applied_person_and_organization_assignment_arena:
         Arena<AppliedPersonAndOrganizationAssignment>,
-    pub applied_presented_item_arena: Arena<AppliedPresentedItem>,
-    pub applied_security_classification_assignment_arena:
+    pub(crate) applied_presented_item_arena: Arena<AppliedPresentedItem>,
+    pub(crate) applied_security_classification_assignment_arena:
         Arena<AppliedSecurityClassificationAssignment>,
-    pub approval_arena: Arena<Approval>,
-    pub approval_assignment_arena: Arena<ApprovalAssignment>,
-    pub approval_date_time_arena: Arena<ApprovalDateTime>,
-    pub approval_person_organization_arena: Arena<ApprovalPersonOrganization>,
-    pub approval_role_arena: Arena<ApprovalRole>,
-    pub approval_status_arena: Arena<ApprovalStatus>,
-    pub approximation_tolerance_arena: Arena<ApproximationTolerance>,
-    pub approximation_tolerance_deviation_arena: Arena<ApproximationToleranceDeviation>,
-    pub approximation_tolerance_parameter_arena: Arena<ApproximationToleranceParameter>,
-    pub area_in_set_arena: Arena<AreaInSet>,
-    pub area_unit_arena: Arena<AreaUnit>,
-    pub ascribable_state_arena: Arena<AscribableState>,
-    pub ascribable_state_relationship_arena: Arena<AscribableStateRelationship>,
-    pub assembly_component_usage_arena: Arena<AssemblyComponentUsage>,
-    pub auxiliary_leader_line_arena: Arena<AuxiliaryLeaderLine>,
-    pub axis1_placement_arena: Arena<Axis1Placement>,
-    pub axis2_placement2d_arena: Arena<Axis2Placement2d>,
-    pub axis2_placement3d_arena: Arena<Axis2Placement3d>,
-    pub b_spline_curve_arena: Arena<BSplineCurve>,
-    pub b_spline_curve_with_knots_arena: Arena<BSplineCurveWithKnots>,
-    pub b_spline_surface_arena: Arena<BSplineSurface>,
-    pub b_spline_surface_with_knots_arena: Arena<BSplineSurfaceWithKnots>,
-    pub bezier_curve_arena: Arena<BezierCurve>,
-    pub bezier_surface_arena: Arena<BezierSurface>,
-    pub bounded_curve_arena: Arena<BoundedCurve>,
-    pub bounded_pcurve_arena: Arena<BoundedPcurve>,
-    pub bounded_surface_arena: Arena<BoundedSurface>,
-    pub bounded_surface_curve_arena: Arena<BoundedSurfaceCurve>,
-    pub brep_with_voids_arena: Arena<BrepWithVoids>,
-    pub calendar_date_arena: Arena<CalendarDate>,
-    pub camera_image_arena: Arena<CameraImage>,
-    pub camera_image3d_with_scale_arena: Arena<CameraImage3dWithScale>,
-    pub camera_model_arena: Arena<CameraModel>,
-    pub camera_model_d3_arena: Arena<CameraModelD3>,
-    pub camera_model_d3_multi_clipping_arena: Arena<CameraModelD3MultiClipping>,
-    pub camera_model_d3_with_hlhsr_arena: Arena<CameraModelD3WithHlhsr>,
-    pub camera_usage_arena: Arena<CameraUsage>,
-    pub cartesian_point_arena: Arena<CartesianPoint>,
-    pub cc_design_approval_arena: Arena<CcDesignApproval>,
-    pub cc_design_date_and_time_assignment_arena: Arena<CcDesignDateAndTimeAssignment>,
-    pub cc_design_person_and_organization_assignment_arena:
+    pub(crate) approval_arena: Arena<Approval>,
+    pub(crate) approval_assignment_arena: Arena<ApprovalAssignment>,
+    pub(crate) approval_date_time_arena: Arena<ApprovalDateTime>,
+    pub(crate) approval_person_organization_arena: Arena<ApprovalPersonOrganization>,
+    pub(crate) approval_role_arena: Arena<ApprovalRole>,
+    pub(crate) approval_status_arena: Arena<ApprovalStatus>,
+    pub(crate) approximation_tolerance_arena: Arena<ApproximationTolerance>,
+    pub(crate) approximation_tolerance_deviation_arena: Arena<ApproximationToleranceDeviation>,
+    pub(crate) approximation_tolerance_parameter_arena: Arena<ApproximationToleranceParameter>,
+    pub(crate) area_in_set_arena: Arena<AreaInSet>,
+    pub(crate) area_unit_arena: Arena<AreaUnit>,
+    pub(crate) ascribable_state_arena: Arena<AscribableState>,
+    pub(crate) ascribable_state_relationship_arena: Arena<AscribableStateRelationship>,
+    pub(crate) assembly_component_usage_arena: Arena<AssemblyComponentUsage>,
+    pub(crate) auxiliary_leader_line_arena: Arena<AuxiliaryLeaderLine>,
+    pub(crate) axis1_placement_arena: Arena<Axis1Placement>,
+    pub(crate) axis2_placement2d_arena: Arena<Axis2Placement2d>,
+    pub(crate) axis2_placement3d_arena: Arena<Axis2Placement3d>,
+    pub(crate) b_spline_curve_arena: Arena<BSplineCurve>,
+    pub(crate) b_spline_curve_with_knots_arena: Arena<BSplineCurveWithKnots>,
+    pub(crate) b_spline_surface_arena: Arena<BSplineSurface>,
+    pub(crate) b_spline_surface_with_knots_arena: Arena<BSplineSurfaceWithKnots>,
+    pub(crate) bezier_curve_arena: Arena<BezierCurve>,
+    pub(crate) bezier_surface_arena: Arena<BezierSurface>,
+    pub(crate) bounded_curve_arena: Arena<BoundedCurve>,
+    pub(crate) bounded_pcurve_arena: Arena<BoundedPcurve>,
+    pub(crate) bounded_surface_arena: Arena<BoundedSurface>,
+    pub(crate) bounded_surface_curve_arena: Arena<BoundedSurfaceCurve>,
+    pub(crate) brep_with_voids_arena: Arena<BrepWithVoids>,
+    pub(crate) calendar_date_arena: Arena<CalendarDate>,
+    pub(crate) camera_image_arena: Arena<CameraImage>,
+    pub(crate) camera_image3d_with_scale_arena: Arena<CameraImage3dWithScale>,
+    pub(crate) camera_model_arena: Arena<CameraModel>,
+    pub(crate) camera_model_d3_arena: Arena<CameraModelD3>,
+    pub(crate) camera_model_d3_multi_clipping_arena: Arena<CameraModelD3MultiClipping>,
+    pub(crate) camera_model_d3_with_hlhsr_arena: Arena<CameraModelD3WithHlhsr>,
+    pub(crate) camera_usage_arena: Arena<CameraUsage>,
+    pub(crate) cartesian_point_arena: Arena<CartesianPoint>,
+    pub(crate) cc_design_approval_arena: Arena<CcDesignApproval>,
+    pub(crate) cc_design_date_and_time_assignment_arena: Arena<CcDesignDateAndTimeAssignment>,
+    pub(crate) cc_design_person_and_organization_assignment_arena:
         Arena<CcDesignPersonAndOrganizationAssignment>,
-    pub cc_design_security_classification_arena: Arena<CcDesignSecurityClassification>,
-    pub centre_of_symmetry_arena: Arena<CentreOfSymmetry>,
-    pub certification_arena: Arena<Certification>,
-    pub certification_type_arena: Arena<CertificationType>,
-    pub change_arena: Arena<Change>,
-    pub change_request_arena: Arena<ChangeRequest>,
-    pub character_glyph_style_outline_arena: Arena<CharacterGlyphStyleOutline>,
-    pub character_glyph_style_stroke_arena: Arena<CharacterGlyphStyleStroke>,
-    pub characterized_item_within_representation_arena:
+    pub(crate) cc_design_security_classification_arena: Arena<CcDesignSecurityClassification>,
+    pub(crate) centre_of_symmetry_arena: Arena<CentreOfSymmetry>,
+    pub(crate) certification_arena: Arena<Certification>,
+    pub(crate) certification_type_arena: Arena<CertificationType>,
+    pub(crate) change_arena: Arena<Change>,
+    pub(crate) change_request_arena: Arena<ChangeRequest>,
+    pub(crate) character_glyph_style_outline_arena: Arena<CharacterGlyphStyleOutline>,
+    pub(crate) character_glyph_style_stroke_arena: Arena<CharacterGlyphStyleStroke>,
+    pub(crate) characterized_item_within_representation_arena:
         Arena<CharacterizedItemWithinRepresentation>,
-    pub characterized_object_arena: Arena<CharacterizedObject>,
-    pub characterized_representation_arena: Arena<CharacterizedRepresentation>,
-    pub circle_arena: Arena<Circle>,
-    pub circular_runout_tolerance_arena: Arena<CircularRunoutTolerance>,
-    pub closed_shell_arena: Arena<ClosedShell>,
-    pub coaxiality_tolerance_arena: Arena<CoaxialityTolerance>,
-    pub colour_arena: Arena<Colour>,
-    pub colour_rgb_arena: Arena<ColourRgb>,
-    pub colour_specification_arena: Arena<ColourSpecification>,
-    pub common_datum_arena: Arena<CommonDatum>,
-    pub complex_triangulated_face_arena: Arena<ComplexTriangulatedFace>,
-    pub complex_triangulated_surface_set_arena: Arena<ComplexTriangulatedSurfaceSet>,
-    pub composite_curve_arena: Arena<CompositeCurve>,
-    pub composite_curve_segment_arena: Arena<CompositeCurveSegment>,
-    pub composite_group_shape_aspect_arena: Arena<CompositeGroupShapeAspect>,
-    pub composite_shape_aspect_arena: Arena<CompositeShapeAspect>,
-    pub composite_text_arena: Arena<CompositeText>,
-    pub compound_representation_item_arena: Arena<CompoundRepresentationItem>,
-    pub concentricity_tolerance_arena: Arena<ConcentricityTolerance>,
-    pub configuration_design_arena: Arena<ConfigurationDesign>,
-    pub configuration_effectivity_arena: Arena<ConfigurationEffectivity>,
-    pub configuration_item_arena: Arena<ConfigurationItem>,
-    pub conic_arena: Arena<Conic>,
-    pub conical_surface_arena: Arena<ConicalSurface>,
-    pub connected_face_set_arena: Arena<ConnectedFaceSet>,
-    pub constructive_geometry_representation_arena: Arena<ConstructiveGeometryRepresentation>,
-    pub constructive_geometry_representation_relationship_arena:
+    pub(crate) characterized_object_arena: Arena<CharacterizedObject>,
+    pub(crate) characterized_representation_arena: Arena<CharacterizedRepresentation>,
+    pub(crate) circle_arena: Arena<Circle>,
+    pub(crate) circular_runout_tolerance_arena: Arena<CircularRunoutTolerance>,
+    pub(crate) closed_shell_arena: Arena<ClosedShell>,
+    pub(crate) coaxiality_tolerance_arena: Arena<CoaxialityTolerance>,
+    pub(crate) colour_arena: Arena<Colour>,
+    pub(crate) colour_rgb_arena: Arena<ColourRgb>,
+    pub(crate) colour_specification_arena: Arena<ColourSpecification>,
+    pub(crate) common_datum_arena: Arena<CommonDatum>,
+    pub(crate) complex_triangulated_face_arena: Arena<ComplexTriangulatedFace>,
+    pub(crate) complex_triangulated_surface_set_arena: Arena<ComplexTriangulatedSurfaceSet>,
+    pub(crate) composite_curve_arena: Arena<CompositeCurve>,
+    pub(crate) composite_curve_segment_arena: Arena<CompositeCurveSegment>,
+    pub(crate) composite_group_shape_aspect_arena: Arena<CompositeGroupShapeAspect>,
+    pub(crate) composite_shape_aspect_arena: Arena<CompositeShapeAspect>,
+    pub(crate) composite_text_arena: Arena<CompositeText>,
+    pub(crate) compound_representation_item_arena: Arena<CompoundRepresentationItem>,
+    pub(crate) concentricity_tolerance_arena: Arena<ConcentricityTolerance>,
+    pub(crate) configuration_design_arena: Arena<ConfigurationDesign>,
+    pub(crate) configuration_effectivity_arena: Arena<ConfigurationEffectivity>,
+    pub(crate) configuration_item_arena: Arena<ConfigurationItem>,
+    pub(crate) conic_arena: Arena<Conic>,
+    pub(crate) conical_surface_arena: Arena<ConicalSurface>,
+    pub(crate) connected_face_set_arena: Arena<ConnectedFaceSet>,
+    pub(crate) constructive_geometry_representation_arena:
+        Arena<ConstructiveGeometryRepresentation>,
+    pub(crate) constructive_geometry_representation_relationship_arena:
         Arena<ConstructiveGeometryRepresentationRelationship>,
-    pub context_dependent_over_riding_styled_item_arena:
+    pub(crate) context_dependent_over_riding_styled_item_arena:
         Arena<ContextDependentOverRidingStyledItem>,
-    pub context_dependent_shape_representation_arena: Arena<ContextDependentShapeRepresentation>,
-    pub context_dependent_unit_arena: Arena<ContextDependentUnit>,
-    pub continuous_shape_aspect_arena: Arena<ContinuousShapeAspect>,
-    pub contract_arena: Arena<Contract>,
-    pub contract_type_arena: Arena<ContractType>,
-    pub conversion_based_unit_arena: Arena<ConversionBasedUnit>,
-    pub coordinated_universal_time_offset_arena: Arena<CoordinatedUniversalTimeOffset>,
-    pub coordinates_list_arena: Arena<CoordinatesList>,
-    pub curve_arena: Arena<Curve>,
-    pub curve_style_arena: Arena<CurveStyle>,
-    pub curve_style_font_arena: Arena<CurveStyleFont>,
-    pub curve_style_font_and_scaling_arena: Arena<CurveStyleFontAndScaling>,
-    pub curve_style_font_pattern_arena: Arena<CurveStyleFontPattern>,
-    pub curve_style_rendering_arena: Arena<CurveStyleRendering>,
-    pub cylindrical_surface_arena: Arena<CylindricalSurface>,
-    pub cylindricity_tolerance_arena: Arena<CylindricityTolerance>,
-    pub date_arena: Arena<Date>,
-    pub date_and_time_arena: Arena<DateAndTime>,
-    pub date_and_time_assignment_arena: Arena<DateAndTimeAssignment>,
-    pub date_role_arena: Arena<DateRole>,
-    pub date_time_role_arena: Arena<DateTimeRole>,
-    pub datum_arena: Arena<Datum>,
-    pub datum_feature_arena: Arena<DatumFeature>,
-    pub datum_reference_arena: Arena<DatumReference>,
-    pub datum_reference_compartment_arena: Arena<DatumReferenceCompartment>,
-    pub datum_reference_element_arena: Arena<DatumReferenceElement>,
-    pub datum_reference_modifier_with_value_arena: Arena<DatumReferenceModifierWithValue>,
-    pub datum_system_arena: Arena<DatumSystem>,
-    pub datum_target_arena: Arena<DatumTarget>,
-    pub default_model_geometric_view_arena: Arena<DefaultModelGeometricView>,
-    pub defined_character_glyph_arena: Arena<DefinedCharacterGlyph>,
-    pub defined_symbol_arena: Arena<DefinedSymbol>,
-    pub definitional_representation_arena: Arena<DefinitionalRepresentation>,
-    pub definitional_representation_relationship_arena:
+    pub(crate) context_dependent_shape_representation_arena:
+        Arena<ContextDependentShapeRepresentation>,
+    pub(crate) context_dependent_unit_arena: Arena<ContextDependentUnit>,
+    pub(crate) continuous_shape_aspect_arena: Arena<ContinuousShapeAspect>,
+    pub(crate) contract_arena: Arena<Contract>,
+    pub(crate) contract_type_arena: Arena<ContractType>,
+    pub(crate) conversion_based_unit_arena: Arena<ConversionBasedUnit>,
+    pub(crate) coordinated_universal_time_offset_arena: Arena<CoordinatedUniversalTimeOffset>,
+    pub(crate) coordinates_list_arena: Arena<CoordinatesList>,
+    pub(crate) curve_arena: Arena<Curve>,
+    pub(crate) curve_style_arena: Arena<CurveStyle>,
+    pub(crate) curve_style_font_arena: Arena<CurveStyleFont>,
+    pub(crate) curve_style_font_and_scaling_arena: Arena<CurveStyleFontAndScaling>,
+    pub(crate) curve_style_font_pattern_arena: Arena<CurveStyleFontPattern>,
+    pub(crate) curve_style_rendering_arena: Arena<CurveStyleRendering>,
+    pub(crate) cylindrical_surface_arena: Arena<CylindricalSurface>,
+    pub(crate) cylindricity_tolerance_arena: Arena<CylindricityTolerance>,
+    pub(crate) date_arena: Arena<Date>,
+    pub(crate) date_and_time_arena: Arena<DateAndTime>,
+    pub(crate) date_and_time_assignment_arena: Arena<DateAndTimeAssignment>,
+    pub(crate) date_role_arena: Arena<DateRole>,
+    pub(crate) date_time_role_arena: Arena<DateTimeRole>,
+    pub(crate) datum_arena: Arena<Datum>,
+    pub(crate) datum_feature_arena: Arena<DatumFeature>,
+    pub(crate) datum_reference_arena: Arena<DatumReference>,
+    pub(crate) datum_reference_compartment_arena: Arena<DatumReferenceCompartment>,
+    pub(crate) datum_reference_element_arena: Arena<DatumReferenceElement>,
+    pub(crate) datum_reference_modifier_with_value_arena: Arena<DatumReferenceModifierWithValue>,
+    pub(crate) datum_system_arena: Arena<DatumSystem>,
+    pub(crate) datum_target_arena: Arena<DatumTarget>,
+    pub(crate) default_model_geometric_view_arena: Arena<DefaultModelGeometricView>,
+    pub(crate) defined_character_glyph_arena: Arena<DefinedCharacterGlyph>,
+    pub(crate) defined_symbol_arena: Arena<DefinedSymbol>,
+    pub(crate) definitional_representation_arena: Arena<DefinitionalRepresentation>,
+    pub(crate) definitional_representation_relationship_arena:
         Arena<DefinitionalRepresentationRelationship>,
-    pub definitional_representation_relationship_with_same_context_arena:
+    pub(crate) definitional_representation_relationship_with_same_context_arena:
         Arena<DefinitionalRepresentationRelationshipWithSameContext>,
-    pub degenerate_toroidal_surface_arena: Arena<DegenerateToroidalSurface>,
-    pub derived_shape_aspect_arena: Arena<DerivedShapeAspect>,
-    pub derived_unit_arena: Arena<DerivedUnit>,
-    pub derived_unit_element_arena: Arena<DerivedUnitElement>,
-    pub description_attribute_arena: Arena<DescriptionAttribute>,
-    pub descriptive_representation_item_arena: Arena<DescriptiveRepresentationItem>,
-    pub design_context_arena: Arena<DesignContext>,
-    pub dimensional_characteristic_representation_arena:
+    pub(crate) degenerate_toroidal_surface_arena: Arena<DegenerateToroidalSurface>,
+    pub(crate) derived_shape_aspect_arena: Arena<DerivedShapeAspect>,
+    pub(crate) derived_unit_arena: Arena<DerivedUnit>,
+    pub(crate) derived_unit_element_arena: Arena<DerivedUnitElement>,
+    pub(crate) description_attribute_arena: Arena<DescriptionAttribute>,
+    pub(crate) descriptive_representation_item_arena: Arena<DescriptiveRepresentationItem>,
+    pub(crate) design_context_arena: Arena<DesignContext>,
+    pub(crate) dimensional_characteristic_representation_arena:
         Arena<DimensionalCharacteristicRepresentation>,
-    pub dimensional_exponents_arena: Arena<DimensionalExponents>,
-    pub dimensional_location_arena: Arena<DimensionalLocation>,
-    pub dimensional_location_with_path_arena: Arena<DimensionalLocationWithPath>,
-    pub dimensional_size_arena: Arena<DimensionalSize>,
-    pub dimensional_size_with_datum_feature_arena: Arena<DimensionalSizeWithDatumFeature>,
-    pub dimensional_size_with_path_arena: Arena<DimensionalSizeWithPath>,
-    pub directed_dimensional_location_arena: Arena<DirectedDimensionalLocation>,
-    pub direction_arena: Arena<Direction>,
-    pub document_arena: Arena<Document>,
-    pub document_file_arena: Arena<DocumentFile>,
-    pub document_product_association_arena: Arena<DocumentProductAssociation>,
-    pub document_product_equivalence_arena: Arena<DocumentProductEquivalence>,
-    pub document_reference_arena: Arena<DocumentReference>,
-    pub document_representation_type_arena: Arena<DocumentRepresentationType>,
-    pub document_type_arena: Arena<DocumentType>,
-    pub draughting_annotation_occurrence_arena: Arena<DraughtingAnnotationOccurrence>,
-    pub draughting_callout_arena: Arena<DraughtingCallout>,
-    pub draughting_callout_relationship_arena: Arena<DraughtingCalloutRelationship>,
-    pub draughting_model_arena: Arena<DraughtingModel>,
-    pub draughting_model_item_association_arena: Arena<DraughtingModelItemAssociation>,
-    pub draughting_model_item_association_with_placeholder_arena:
+    pub(crate) dimensional_exponents_arena: Arena<DimensionalExponents>,
+    pub(crate) dimensional_location_arena: Arena<DimensionalLocation>,
+    pub(crate) dimensional_location_with_path_arena: Arena<DimensionalLocationWithPath>,
+    pub(crate) dimensional_size_arena: Arena<DimensionalSize>,
+    pub(crate) dimensional_size_with_datum_feature_arena: Arena<DimensionalSizeWithDatumFeature>,
+    pub(crate) dimensional_size_with_path_arena: Arena<DimensionalSizeWithPath>,
+    pub(crate) directed_dimensional_location_arena: Arena<DirectedDimensionalLocation>,
+    pub(crate) direction_arena: Arena<Direction>,
+    pub(crate) document_arena: Arena<Document>,
+    pub(crate) document_file_arena: Arena<DocumentFile>,
+    pub(crate) document_product_association_arena: Arena<DocumentProductAssociation>,
+    pub(crate) document_product_equivalence_arena: Arena<DocumentProductEquivalence>,
+    pub(crate) document_reference_arena: Arena<DocumentReference>,
+    pub(crate) document_representation_type_arena: Arena<DocumentRepresentationType>,
+    pub(crate) document_type_arena: Arena<DocumentType>,
+    pub(crate) draughting_annotation_occurrence_arena: Arena<DraughtingAnnotationOccurrence>,
+    pub(crate) draughting_callout_arena: Arena<DraughtingCallout>,
+    pub(crate) draughting_callout_relationship_arena: Arena<DraughtingCalloutRelationship>,
+    pub(crate) draughting_model_arena: Arena<DraughtingModel>,
+    pub(crate) draughting_model_item_association_arena: Arena<DraughtingModelItemAssociation>,
+    pub(crate) draughting_model_item_association_with_placeholder_arena:
         Arena<DraughtingModelItemAssociationWithPlaceholder>,
-    pub draughting_pre_defined_colour_arena: Arena<DraughtingPreDefinedColour>,
-    pub draughting_pre_defined_curve_font_arena: Arena<DraughtingPreDefinedCurveFont>,
-    pub draughting_pre_defined_text_font_arena: Arena<DraughtingPreDefinedTextFont>,
-    pub edge_arena: Arena<Edge>,
-    pub edge_curve_arena: Arena<EdgeCurve>,
-    pub edge_loop_arena: Arena<EdgeLoop>,
-    pub effectivity_arena: Arena<Effectivity>,
-    pub elementary_surface_arena: Arena<ElementarySurface>,
-    pub ellipse_arena: Arena<Ellipse>,
-    pub expression_arena: Arena<Expression>,
-    pub external_identification_assignment_arena: Arena<ExternalIdentificationAssignment>,
-    pub external_source_arena: Arena<ExternalSource>,
-    pub externally_defined_character_glyph_arena: Arena<ExternallyDefinedCharacterGlyph>,
-    pub externally_defined_curve_font_arena: Arena<ExternallyDefinedCurveFont>,
-    pub externally_defined_hatch_style_arena: Arena<ExternallyDefinedHatchStyle>,
-    pub externally_defined_item_arena: Arena<ExternallyDefinedItem>,
-    pub externally_defined_style_arena: Arena<ExternallyDefinedStyle>,
-    pub externally_defined_symbol_arena: Arena<ExternallyDefinedSymbol>,
-    pub externally_defined_text_font_arena: Arena<ExternallyDefinedTextFont>,
-    pub externally_defined_tile_arena: Arena<ExternallyDefinedTile>,
-    pub externally_defined_tile_style_arena: Arena<ExternallyDefinedTileStyle>,
-    pub face_arena: Arena<Face>,
-    pub face_bound_arena: Arena<FaceBound>,
-    pub face_outer_bound_arena: Arena<FaceOuterBound>,
-    pub face_surface_arena: Arena<FaceSurface>,
-    pub feature_for_datum_target_relationship_arena: Arena<FeatureForDatumTargetRelationship>,
-    pub fill_area_style_arena: Arena<FillAreaStyle>,
-    pub fill_area_style_colour_arena: Arena<FillAreaStyleColour>,
-    pub fill_area_style_hatching_arena: Arena<FillAreaStyleHatching>,
-    pub fill_area_style_tile_coloured_region_arena: Arena<FillAreaStyleTileColouredRegion>,
-    pub fill_area_style_tile_curve_with_style_arena: Arena<FillAreaStyleTileCurveWithStyle>,
-    pub fill_area_style_tile_symbol_with_style_arena: Arena<FillAreaStyleTileSymbolWithStyle>,
-    pub fill_area_style_tiles_arena: Arena<FillAreaStyleTiles>,
-    pub flatness_tolerance_arena: Arena<FlatnessTolerance>,
-    pub founded_item_arena: Arena<FoundedItem>,
-    pub functionally_defined_transformation_arena: Arena<FunctionallyDefinedTransformation>,
-    pub general_datum_reference_arena: Arena<GeneralDatumReference>,
-    pub general_property_arena: Arena<GeneralProperty>,
-    pub general_property_association_arena: Arena<GeneralPropertyAssociation>,
-    pub generic_expression_arena: Arena<GenericExpression>,
-    pub generic_literal_arena: Arena<GenericLiteral>,
-    pub generic_product_definition_reference_arena: Arena<GenericProductDefinitionReference>,
-    pub geometric_curve_set_arena: Arena<GeometricCurveSet>,
-    pub geometric_item_specific_usage_arena: Arena<GeometricItemSpecificUsage>,
-    pub geometric_representation_context_arena: Arena<GeometricRepresentationContext>,
-    pub geometric_representation_item_arena: Arena<GeometricRepresentationItem>,
-    pub geometric_set_arena: Arena<GeometricSet>,
-    pub geometric_tolerance_arena: Arena<GeometricTolerance>,
-    pub geometric_tolerance_relationship_arena: Arena<GeometricToleranceRelationship>,
-    pub geometric_tolerance_with_datum_reference_arena: Arena<GeometricToleranceWithDatumReference>,
-    pub geometric_tolerance_with_defined_area_unit_arena:
+    pub(crate) draughting_pre_defined_colour_arena: Arena<DraughtingPreDefinedColour>,
+    pub(crate) draughting_pre_defined_curve_font_arena: Arena<DraughtingPreDefinedCurveFont>,
+    pub(crate) draughting_pre_defined_text_font_arena: Arena<DraughtingPreDefinedTextFont>,
+    pub(crate) edge_arena: Arena<Edge>,
+    pub(crate) edge_curve_arena: Arena<EdgeCurve>,
+    pub(crate) edge_loop_arena: Arena<EdgeLoop>,
+    pub(crate) effectivity_arena: Arena<Effectivity>,
+    pub(crate) elementary_surface_arena: Arena<ElementarySurface>,
+    pub(crate) ellipse_arena: Arena<Ellipse>,
+    pub(crate) expression_arena: Arena<Expression>,
+    pub(crate) external_identification_assignment_arena: Arena<ExternalIdentificationAssignment>,
+    pub(crate) external_source_arena: Arena<ExternalSource>,
+    pub(crate) externally_defined_character_glyph_arena: Arena<ExternallyDefinedCharacterGlyph>,
+    pub(crate) externally_defined_curve_font_arena: Arena<ExternallyDefinedCurveFont>,
+    pub(crate) externally_defined_hatch_style_arena: Arena<ExternallyDefinedHatchStyle>,
+    pub(crate) externally_defined_item_arena: Arena<ExternallyDefinedItem>,
+    pub(crate) externally_defined_style_arena: Arena<ExternallyDefinedStyle>,
+    pub(crate) externally_defined_symbol_arena: Arena<ExternallyDefinedSymbol>,
+    pub(crate) externally_defined_text_font_arena: Arena<ExternallyDefinedTextFont>,
+    pub(crate) externally_defined_tile_arena: Arena<ExternallyDefinedTile>,
+    pub(crate) externally_defined_tile_style_arena: Arena<ExternallyDefinedTileStyle>,
+    pub(crate) face_arena: Arena<Face>,
+    pub(crate) face_bound_arena: Arena<FaceBound>,
+    pub(crate) face_outer_bound_arena: Arena<FaceOuterBound>,
+    pub(crate) face_surface_arena: Arena<FaceSurface>,
+    pub(crate) feature_for_datum_target_relationship_arena:
+        Arena<FeatureForDatumTargetRelationship>,
+    pub(crate) fill_area_style_arena: Arena<FillAreaStyle>,
+    pub(crate) fill_area_style_colour_arena: Arena<FillAreaStyleColour>,
+    pub(crate) fill_area_style_hatching_arena: Arena<FillAreaStyleHatching>,
+    pub(crate) fill_area_style_tile_coloured_region_arena: Arena<FillAreaStyleTileColouredRegion>,
+    pub(crate) fill_area_style_tile_curve_with_style_arena: Arena<FillAreaStyleTileCurveWithStyle>,
+    pub(crate) fill_area_style_tile_symbol_with_style_arena:
+        Arena<FillAreaStyleTileSymbolWithStyle>,
+    pub(crate) fill_area_style_tiles_arena: Arena<FillAreaStyleTiles>,
+    pub(crate) flatness_tolerance_arena: Arena<FlatnessTolerance>,
+    pub(crate) founded_item_arena: Arena<FoundedItem>,
+    pub(crate) functionally_defined_transformation_arena: Arena<FunctionallyDefinedTransformation>,
+    pub(crate) general_datum_reference_arena: Arena<GeneralDatumReference>,
+    pub(crate) general_property_arena: Arena<GeneralProperty>,
+    pub(crate) general_property_association_arena: Arena<GeneralPropertyAssociation>,
+    pub(crate) generic_expression_arena: Arena<GenericExpression>,
+    pub(crate) generic_literal_arena: Arena<GenericLiteral>,
+    pub(crate) generic_product_definition_reference_arena: Arena<GenericProductDefinitionReference>,
+    pub(crate) geometric_curve_set_arena: Arena<GeometricCurveSet>,
+    pub(crate) geometric_item_specific_usage_arena: Arena<GeometricItemSpecificUsage>,
+    pub(crate) geometric_representation_context_arena: Arena<GeometricRepresentationContext>,
+    pub(crate) geometric_representation_item_arena: Arena<GeometricRepresentationItem>,
+    pub(crate) geometric_set_arena: Arena<GeometricSet>,
+    pub(crate) geometric_tolerance_arena: Arena<GeometricTolerance>,
+    pub(crate) geometric_tolerance_relationship_arena: Arena<GeometricToleranceRelationship>,
+    pub(crate) geometric_tolerance_with_datum_reference_arena:
+        Arena<GeometricToleranceWithDatumReference>,
+    pub(crate) geometric_tolerance_with_defined_area_unit_arena:
         Arena<GeometricToleranceWithDefinedAreaUnit>,
-    pub geometric_tolerance_with_defined_unit_arena: Arena<GeometricToleranceWithDefinedUnit>,
-    pub geometric_tolerance_with_maximum_tolerance_arena:
+    pub(crate) geometric_tolerance_with_defined_unit_arena:
+        Arena<GeometricToleranceWithDefinedUnit>,
+    pub(crate) geometric_tolerance_with_maximum_tolerance_arena:
         Arena<GeometricToleranceWithMaximumTolerance>,
-    pub geometric_tolerance_with_modifiers_arena: Arena<GeometricToleranceWithModifiers>,
-    pub geometrically_bounded_surface_shape_representation_arena:
+    pub(crate) geometric_tolerance_with_modifiers_arena: Arena<GeometricToleranceWithModifiers>,
+    pub(crate) geometrically_bounded_surface_shape_representation_arena:
         Arena<GeometricallyBoundedSurfaceShapeRepresentation>,
-    pub geometrically_bounded_wireframe_shape_representation_arena:
+    pub(crate) geometrically_bounded_wireframe_shape_representation_arena:
         Arena<GeometricallyBoundedWireframeShapeRepresentation>,
-    pub global_uncertainty_assigned_context_arena: Arena<GlobalUncertaintyAssignedContext>,
-    pub global_unit_assigned_context_arena: Arena<GlobalUnitAssignedContext>,
-    pub group_arena: Arena<Group>,
-    pub group_assignment_arena: Arena<GroupAssignment>,
-    pub hyperbola_arena: Arena<Hyperbola>,
-    pub id_attribute_arena: Arena<IdAttribute>,
-    pub identification_assignment_arena: Arena<IdentificationAssignment>,
-    pub identification_role_arena: Arena<IdentificationRole>,
-    pub int_literal_arena: Arena<IntLiteral>,
-    pub integer_representation_item_arena: Arena<IntegerRepresentationItem>,
-    pub intersection_curve_arena: Arena<IntersectionCurve>,
-    pub invisibility_arena: Arena<Invisibility>,
-    pub item_defined_transformation_arena: Arena<ItemDefinedTransformation>,
-    pub item_identified_representation_usage_arena: Arena<ItemIdentifiedRepresentationUsage>,
-    pub leader_curve_arena: Arena<LeaderCurve>,
-    pub leader_directed_callout_arena: Arena<LeaderDirectedCallout>,
-    pub leader_terminator_arena: Arena<LeaderTerminator>,
-    pub length_measure_with_unit_arena: Arena<LengthMeasureWithUnit>,
-    pub length_unit_arena: Arena<LengthUnit>,
-    pub limits_and_fits_arena: Arena<LimitsAndFits>,
-    pub line_arena: Arena<Line>,
-    pub line_profile_tolerance_arena: Arena<LineProfileTolerance>,
-    pub literal_number_arena: Arena<LiteralNumber>,
-    pub local_time_arena: Arena<LocalTime>,
-    pub loop_arena: Arena<Loop>,
-    pub make_from_usage_option_arena: Arena<MakeFromUsageOption>,
-    pub manifold_solid_brep_arena: Arena<ManifoldSolidBrep>,
-    pub manifold_surface_shape_representation_arena: Arena<ManifoldSurfaceShapeRepresentation>,
-    pub mapped_item_arena: Arena<MappedItem>,
-    pub mass_measure_with_unit_arena: Arena<MassMeasureWithUnit>,
-    pub mass_unit_arena: Arena<MassUnit>,
-    pub measure_qualification_arena: Arena<MeasureQualification>,
-    pub measure_representation_item_arena: Arena<MeasureRepresentationItem>,
-    pub measure_with_unit_arena: Arena<MeasureWithUnit>,
-    pub mechanical_context_arena: Arena<MechanicalContext>,
-    pub mechanical_design_and_draughting_relationship_arena:
+    pub(crate) global_uncertainty_assigned_context_arena: Arena<GlobalUncertaintyAssignedContext>,
+    pub(crate) global_unit_assigned_context_arena: Arena<GlobalUnitAssignedContext>,
+    pub(crate) group_arena: Arena<Group>,
+    pub(crate) group_assignment_arena: Arena<GroupAssignment>,
+    pub(crate) hyperbola_arena: Arena<Hyperbola>,
+    pub(crate) id_attribute_arena: Arena<IdAttribute>,
+    pub(crate) identification_assignment_arena: Arena<IdentificationAssignment>,
+    pub(crate) identification_role_arena: Arena<IdentificationRole>,
+    pub(crate) int_literal_arena: Arena<IntLiteral>,
+    pub(crate) integer_representation_item_arena: Arena<IntegerRepresentationItem>,
+    pub(crate) intersection_curve_arena: Arena<IntersectionCurve>,
+    pub(crate) invisibility_arena: Arena<Invisibility>,
+    pub(crate) item_defined_transformation_arena: Arena<ItemDefinedTransformation>,
+    pub(crate) item_identified_representation_usage_arena: Arena<ItemIdentifiedRepresentationUsage>,
+    pub(crate) leader_curve_arena: Arena<LeaderCurve>,
+    pub(crate) leader_directed_callout_arena: Arena<LeaderDirectedCallout>,
+    pub(crate) leader_terminator_arena: Arena<LeaderTerminator>,
+    pub(crate) length_measure_with_unit_arena: Arena<LengthMeasureWithUnit>,
+    pub(crate) length_unit_arena: Arena<LengthUnit>,
+    pub(crate) limits_and_fits_arena: Arena<LimitsAndFits>,
+    pub(crate) line_arena: Arena<Line>,
+    pub(crate) line_profile_tolerance_arena: Arena<LineProfileTolerance>,
+    pub(crate) literal_number_arena: Arena<LiteralNumber>,
+    pub(crate) local_time_arena: Arena<LocalTime>,
+    pub(crate) loop_arena: Arena<Loop>,
+    pub(crate) make_from_usage_option_arena: Arena<MakeFromUsageOption>,
+    pub(crate) manifold_solid_brep_arena: Arena<ManifoldSolidBrep>,
+    pub(crate) manifold_surface_shape_representation_arena:
+        Arena<ManifoldSurfaceShapeRepresentation>,
+    pub(crate) mapped_item_arena: Arena<MappedItem>,
+    pub(crate) mass_measure_with_unit_arena: Arena<MassMeasureWithUnit>,
+    pub(crate) mass_unit_arena: Arena<MassUnit>,
+    pub(crate) measure_qualification_arena: Arena<MeasureQualification>,
+    pub(crate) measure_representation_item_arena: Arena<MeasureRepresentationItem>,
+    pub(crate) measure_with_unit_arena: Arena<MeasureWithUnit>,
+    pub(crate) mechanical_context_arena: Arena<MechanicalContext>,
+    pub(crate) mechanical_design_and_draughting_relationship_arena:
         Arena<MechanicalDesignAndDraughtingRelationship>,
-    pub mechanical_design_geometric_presentation_representation_arena:
+    pub(crate) mechanical_design_geometric_presentation_representation_arena:
         Arena<MechanicalDesignGeometricPresentationRepresentation>,
-    pub mechanical_design_presentation_representation_with_draughting_arena:
+    pub(crate) mechanical_design_presentation_representation_with_draughting_arena:
         Arena<MechanicalDesignPresentationRepresentationWithDraughting>,
-    pub mechanical_design_shaded_presentation_representation_arena:
+    pub(crate) mechanical_design_shaded_presentation_representation_arena:
         Arena<MechanicalDesignShadedPresentationRepresentation>,
-    pub model_geometric_view_arena: Arena<ModelGeometricView>,
-    pub modified_geometric_tolerance_arena: Arena<ModifiedGeometricTolerance>,
-    pub name_attribute_arena: Arena<NameAttribute>,
-    pub named_unit_arena: Arena<NamedUnit>,
-    pub next_assembly_usage_occurrence_arena: Arena<NextAssemblyUsageOccurrence>,
-    pub numeric_expression_arena: Arena<NumericExpression>,
-    pub object_role_arena: Arena<ObjectRole>,
-    pub offset_surface_arena: Arena<OffsetSurface>,
-    pub one_direction_repeat_factor_arena: Arena<OneDirectionRepeatFactor>,
-    pub open_shell_arena: Arena<OpenShell>,
-    pub organization_arena: Arena<Organization>,
-    pub organization_relationship_arena: Arena<OrganizationRelationship>,
-    pub organization_role_arena: Arena<OrganizationRole>,
-    pub organization_type_arena: Arena<OrganizationType>,
-    pub organization_type_role_arena: Arena<OrganizationTypeRole>,
-    pub organizational_address_arena: Arena<OrganizationalAddress>,
-    pub organizational_project_arena: Arena<OrganizationalProject>,
-    pub organizational_project_relationship_arena: Arena<OrganizationalProjectRelationship>,
-    pub organizational_project_role_arena: Arena<OrganizationalProjectRole>,
-    pub oriented_closed_shell_arena: Arena<OrientedClosedShell>,
-    pub oriented_edge_arena: Arena<OrientedEdge>,
-    pub over_riding_styled_item_arena: Arena<OverRidingStyledItem>,
-    pub parallelism_tolerance_arena: Arena<ParallelismTolerance>,
-    pub parametric_representation_context_arena: Arena<ParametricRepresentationContext>,
-    pub path_arena: Arena<Path>,
-    pub pcurve_arena: Arena<Pcurve>,
-    pub perpendicularity_tolerance_arena: Arena<PerpendicularityTolerance>,
-    pub person_arena: Arena<Person>,
-    pub person_and_organization_arena: Arena<PersonAndOrganization>,
-    pub person_and_organization_address_arena: Arena<PersonAndOrganizationAddress>,
-    pub person_and_organization_assignment_arena: Arena<PersonAndOrganizationAssignment>,
-    pub person_and_organization_role_arena: Arena<PersonAndOrganizationRole>,
-    pub personal_address_arena: Arena<PersonalAddress>,
-    pub placed_datum_target_feature_arena: Arena<PlacedDatumTargetFeature>,
-    pub placement_arena: Arena<Placement>,
-    pub planar_box_arena: Arena<PlanarBox>,
-    pub planar_extent_arena: Arena<PlanarExtent>,
-    pub plane_arena: Arena<Plane>,
-    pub plane_angle_measure_with_unit_arena: Arena<PlaneAngleMeasureWithUnit>,
-    pub plane_angle_unit_arena: Arena<PlaneAngleUnit>,
-    pub plus_minus_tolerance_arena: Arena<PlusMinusTolerance>,
-    pub point_arena: Arena<Point>,
-    pub point_style_arena: Arena<PointStyle>,
-    pub poly_loop_arena: Arena<PolyLoop>,
-    pub polyline_arena: Arena<Polyline>,
-    pub position_tolerance_arena: Arena<PositionTolerance>,
-    pub pre_defined_character_glyph_arena: Arena<PreDefinedCharacterGlyph>,
-    pub pre_defined_colour_arena: Arena<PreDefinedColour>,
-    pub pre_defined_curve_font_arena: Arena<PreDefinedCurveFont>,
-    pub pre_defined_item_arena: Arena<PreDefinedItem>,
-    pub pre_defined_marker_arena: Arena<PreDefinedMarker>,
-    pub pre_defined_point_marker_symbol_arena: Arena<PreDefinedPointMarkerSymbol>,
-    pub pre_defined_presentation_style_arena: Arena<PreDefinedPresentationStyle>,
-    pub pre_defined_surface_side_style_arena: Arena<PreDefinedSurfaceSideStyle>,
-    pub pre_defined_symbol_arena: Arena<PreDefinedSymbol>,
-    pub pre_defined_terminator_symbol_arena: Arena<PreDefinedTerminatorSymbol>,
-    pub pre_defined_text_font_arena: Arena<PreDefinedTextFont>,
-    pub pre_defined_tile_arena: Arena<PreDefinedTile>,
-    pub precision_qualifier_arena: Arena<PrecisionQualifier>,
-    pub presentation_area_arena: Arena<PresentationArea>,
-    pub presentation_layer_assignment_arena: Arena<PresentationLayerAssignment>,
-    pub presentation_representation_arena: Arena<PresentationRepresentation>,
-    pub presentation_set_arena: Arena<PresentationSet>,
-    pub presentation_size_arena: Arena<PresentationSize>,
-    pub presentation_style_assignment_arena: Arena<PresentationStyleAssignment>,
-    pub presentation_style_by_context_arena: Arena<PresentationStyleByContext>,
-    pub presentation_view_arena: Arena<PresentationView>,
-    pub presented_item_arena: Arena<PresentedItem>,
-    pub presented_item_representation_arena: Arena<PresentedItemRepresentation>,
-    pub product_arena: Arena<Product>,
-    pub product_category_arena: Arena<ProductCategory>,
-    pub product_category_relationship_arena: Arena<ProductCategoryRelationship>,
-    pub product_concept_arena: Arena<ProductConcept>,
-    pub product_concept_context_arena: Arena<ProductConceptContext>,
-    pub product_concept_feature_arena: Arena<ProductConceptFeature>,
-    pub product_concept_feature_category_arena: Arena<ProductConceptFeatureCategory>,
-    pub product_context_arena: Arena<ProductContext>,
-    pub product_definition_arena: Arena<ProductDefinition>,
-    pub product_definition_context_arena: Arena<ProductDefinitionContext>,
-    pub product_definition_context_association_arena: Arena<ProductDefinitionContextAssociation>,
-    pub product_definition_context_role_arena: Arena<ProductDefinitionContextRole>,
-    pub product_definition_effectivity_arena: Arena<ProductDefinitionEffectivity>,
-    pub product_definition_formation_arena: Arena<ProductDefinitionFormation>,
-    pub product_definition_formation_with_specified_source_arena:
+    pub(crate) model_geometric_view_arena: Arena<ModelGeometricView>,
+    pub(crate) modified_geometric_tolerance_arena: Arena<ModifiedGeometricTolerance>,
+    pub(crate) name_attribute_arena: Arena<NameAttribute>,
+    pub(crate) named_unit_arena: Arena<NamedUnit>,
+    pub(crate) next_assembly_usage_occurrence_arena: Arena<NextAssemblyUsageOccurrence>,
+    pub(crate) numeric_expression_arena: Arena<NumericExpression>,
+    pub(crate) object_role_arena: Arena<ObjectRole>,
+    pub(crate) offset_surface_arena: Arena<OffsetSurface>,
+    pub(crate) one_direction_repeat_factor_arena: Arena<OneDirectionRepeatFactor>,
+    pub(crate) open_shell_arena: Arena<OpenShell>,
+    pub(crate) organization_arena: Arena<Organization>,
+    pub(crate) organization_relationship_arena: Arena<OrganizationRelationship>,
+    pub(crate) organization_role_arena: Arena<OrganizationRole>,
+    pub(crate) organization_type_arena: Arena<OrganizationType>,
+    pub(crate) organization_type_role_arena: Arena<OrganizationTypeRole>,
+    pub(crate) organizational_address_arena: Arena<OrganizationalAddress>,
+    pub(crate) organizational_project_arena: Arena<OrganizationalProject>,
+    pub(crate) organizational_project_relationship_arena: Arena<OrganizationalProjectRelationship>,
+    pub(crate) organizational_project_role_arena: Arena<OrganizationalProjectRole>,
+    pub(crate) oriented_closed_shell_arena: Arena<OrientedClosedShell>,
+    pub(crate) oriented_edge_arena: Arena<OrientedEdge>,
+    pub(crate) over_riding_styled_item_arena: Arena<OverRidingStyledItem>,
+    pub(crate) parabola_arena: Arena<Parabola>,
+    pub(crate) parallelism_tolerance_arena: Arena<ParallelismTolerance>,
+    pub(crate) parametric_representation_context_arena: Arena<ParametricRepresentationContext>,
+    pub(crate) path_arena: Arena<Path>,
+    pub(crate) pcurve_arena: Arena<Pcurve>,
+    pub(crate) perpendicularity_tolerance_arena: Arena<PerpendicularityTolerance>,
+    pub(crate) person_arena: Arena<Person>,
+    pub(crate) person_and_organization_arena: Arena<PersonAndOrganization>,
+    pub(crate) person_and_organization_address_arena: Arena<PersonAndOrganizationAddress>,
+    pub(crate) person_and_organization_assignment_arena: Arena<PersonAndOrganizationAssignment>,
+    pub(crate) person_and_organization_role_arena: Arena<PersonAndOrganizationRole>,
+    pub(crate) personal_address_arena: Arena<PersonalAddress>,
+    pub(crate) placed_datum_target_feature_arena: Arena<PlacedDatumTargetFeature>,
+    pub(crate) placement_arena: Arena<Placement>,
+    pub(crate) planar_box_arena: Arena<PlanarBox>,
+    pub(crate) planar_extent_arena: Arena<PlanarExtent>,
+    pub(crate) plane_arena: Arena<Plane>,
+    pub(crate) plane_angle_measure_with_unit_arena: Arena<PlaneAngleMeasureWithUnit>,
+    pub(crate) plane_angle_unit_arena: Arena<PlaneAngleUnit>,
+    pub(crate) plus_minus_tolerance_arena: Arena<PlusMinusTolerance>,
+    pub(crate) point_arena: Arena<Point>,
+    pub(crate) point_style_arena: Arena<PointStyle>,
+    pub(crate) poly_loop_arena: Arena<PolyLoop>,
+    pub(crate) polyline_arena: Arena<Polyline>,
+    pub(crate) position_tolerance_arena: Arena<PositionTolerance>,
+    pub(crate) pre_defined_character_glyph_arena: Arena<PreDefinedCharacterGlyph>,
+    pub(crate) pre_defined_colour_arena: Arena<PreDefinedColour>,
+    pub(crate) pre_defined_curve_font_arena: Arena<PreDefinedCurveFont>,
+    pub(crate) pre_defined_item_arena: Arena<PreDefinedItem>,
+    pub(crate) pre_defined_marker_arena: Arena<PreDefinedMarker>,
+    pub(crate) pre_defined_point_marker_symbol_arena: Arena<PreDefinedPointMarkerSymbol>,
+    pub(crate) pre_defined_presentation_style_arena: Arena<PreDefinedPresentationStyle>,
+    pub(crate) pre_defined_surface_side_style_arena: Arena<PreDefinedSurfaceSideStyle>,
+    pub(crate) pre_defined_symbol_arena: Arena<PreDefinedSymbol>,
+    pub(crate) pre_defined_terminator_symbol_arena: Arena<PreDefinedTerminatorSymbol>,
+    pub(crate) pre_defined_text_font_arena: Arena<PreDefinedTextFont>,
+    pub(crate) pre_defined_tile_arena: Arena<PreDefinedTile>,
+    pub(crate) precision_qualifier_arena: Arena<PrecisionQualifier>,
+    pub(crate) presentation_area_arena: Arena<PresentationArea>,
+    pub(crate) presentation_layer_assignment_arena: Arena<PresentationLayerAssignment>,
+    pub(crate) presentation_representation_arena: Arena<PresentationRepresentation>,
+    pub(crate) presentation_set_arena: Arena<PresentationSet>,
+    pub(crate) presentation_size_arena: Arena<PresentationSize>,
+    pub(crate) presentation_style_assignment_arena: Arena<PresentationStyleAssignment>,
+    pub(crate) presentation_style_by_context_arena: Arena<PresentationStyleByContext>,
+    pub(crate) presentation_view_arena: Arena<PresentationView>,
+    pub(crate) presented_item_arena: Arena<PresentedItem>,
+    pub(crate) presented_item_representation_arena: Arena<PresentedItemRepresentation>,
+    pub(crate) product_arena: Arena<Product>,
+    pub(crate) product_category_arena: Arena<ProductCategory>,
+    pub(crate) product_category_relationship_arena: Arena<ProductCategoryRelationship>,
+    pub(crate) product_concept_arena: Arena<ProductConcept>,
+    pub(crate) product_concept_context_arena: Arena<ProductConceptContext>,
+    pub(crate) product_concept_feature_arena: Arena<ProductConceptFeature>,
+    pub(crate) product_concept_feature_category_arena: Arena<ProductConceptFeatureCategory>,
+    pub(crate) product_context_arena: Arena<ProductContext>,
+    pub(crate) product_definition_arena: Arena<ProductDefinition>,
+    pub(crate) product_definition_context_arena: Arena<ProductDefinitionContext>,
+    pub(crate) product_definition_context_association_arena:
+        Arena<ProductDefinitionContextAssociation>,
+    pub(crate) product_definition_context_role_arena: Arena<ProductDefinitionContextRole>,
+    pub(crate) product_definition_effectivity_arena: Arena<ProductDefinitionEffectivity>,
+    pub(crate) product_definition_formation_arena: Arena<ProductDefinitionFormation>,
+    pub(crate) product_definition_formation_with_specified_source_arena:
         Arena<ProductDefinitionFormationWithSpecifiedSource>,
-    pub product_definition_occurrence_arena: Arena<ProductDefinitionOccurrence>,
-    pub product_definition_relationship_arena: Arena<ProductDefinitionRelationship>,
-    pub product_definition_relationship_relationship_arena:
+    pub(crate) product_definition_occurrence_arena: Arena<ProductDefinitionOccurrence>,
+    pub(crate) product_definition_relationship_arena: Arena<ProductDefinitionRelationship>,
+    pub(crate) product_definition_relationship_relationship_arena:
         Arena<ProductDefinitionRelationshipRelationship>,
-    pub product_definition_shape_arena: Arena<ProductDefinitionShape>,
-    pub product_definition_substitute_arena: Arena<ProductDefinitionSubstitute>,
-    pub product_definition_usage_arena: Arena<ProductDefinitionUsage>,
-    pub product_definition_with_associated_documents_arena:
+    pub(crate) product_definition_shape_arena: Arena<ProductDefinitionShape>,
+    pub(crate) product_definition_substitute_arena: Arena<ProductDefinitionSubstitute>,
+    pub(crate) product_definition_usage_arena: Arena<ProductDefinitionUsage>,
+    pub(crate) product_definition_with_associated_documents_arena:
         Arena<ProductDefinitionWithAssociatedDocuments>,
-    pub product_related_product_category_arena: Arena<ProductRelatedProductCategory>,
-    pub projected_zone_definition_arena: Arena<ProjectedZoneDefinition>,
-    pub property_definition_arena: Arena<PropertyDefinition>,
-    pub property_definition_relationship_arena: Arena<PropertyDefinitionRelationship>,
-    pub property_definition_representation_arena: Arena<PropertyDefinitionRepresentation>,
-    pub qualified_representation_item_arena: Arena<QualifiedRepresentationItem>,
-    pub quasi_uniform_curve_arena: Arena<QuasiUniformCurve>,
-    pub quasi_uniform_surface_arena: Arena<QuasiUniformSurface>,
-    pub ratio_measure_with_unit_arena: Arena<RatioMeasureWithUnit>,
-    pub ratio_unit_arena: Arena<RatioUnit>,
-    pub rational_b_spline_curve_arena: Arena<RationalBSplineCurve>,
-    pub rational_b_spline_surface_arena: Arena<RationalBSplineSurface>,
-    pub real_literal_arena: Arena<RealLiteral>,
-    pub real_representation_item_arena: Arena<RealRepresentationItem>,
-    pub repositioned_tessellated_item_arena: Arena<RepositionedTessellatedItem>,
-    pub representation_arena: Arena<Representation>,
-    pub representation_context_arena: Arena<RepresentationContext>,
-    pub representation_context_reference_arena: Arena<RepresentationContextReference>,
-    pub representation_item_arena: Arena<RepresentationItem>,
-    pub representation_map_arena: Arena<RepresentationMap>,
-    pub representation_reference_arena: Arena<RepresentationReference>,
-    pub representation_relationship_arena: Arena<RepresentationRelationship>,
-    pub representation_relationship_with_transformation_arena:
+    pub(crate) product_related_product_category_arena: Arena<ProductRelatedProductCategory>,
+    pub(crate) projected_zone_definition_arena: Arena<ProjectedZoneDefinition>,
+    pub(crate) property_definition_arena: Arena<PropertyDefinition>,
+    pub(crate) property_definition_relationship_arena: Arena<PropertyDefinitionRelationship>,
+    pub(crate) property_definition_representation_arena: Arena<PropertyDefinitionRepresentation>,
+    pub(crate) qualified_representation_item_arena: Arena<QualifiedRepresentationItem>,
+    pub(crate) quasi_uniform_curve_arena: Arena<QuasiUniformCurve>,
+    pub(crate) quasi_uniform_surface_arena: Arena<QuasiUniformSurface>,
+    pub(crate) ratio_measure_with_unit_arena: Arena<RatioMeasureWithUnit>,
+    pub(crate) ratio_unit_arena: Arena<RatioUnit>,
+    pub(crate) rational_b_spline_curve_arena: Arena<RationalBSplineCurve>,
+    pub(crate) rational_b_spline_surface_arena: Arena<RationalBSplineSurface>,
+    pub(crate) real_literal_arena: Arena<RealLiteral>,
+    pub(crate) real_representation_item_arena: Arena<RealRepresentationItem>,
+    pub(crate) repositioned_tessellated_item_arena: Arena<RepositionedTessellatedItem>,
+    pub(crate) representation_arena: Arena<Representation>,
+    pub(crate) representation_context_arena: Arena<RepresentationContext>,
+    pub(crate) representation_context_reference_arena: Arena<RepresentationContextReference>,
+    pub(crate) representation_item_arena: Arena<RepresentationItem>,
+    pub(crate) representation_map_arena: Arena<RepresentationMap>,
+    pub(crate) representation_reference_arena: Arena<RepresentationReference>,
+    pub(crate) representation_relationship_arena: Arena<RepresentationRelationship>,
+    pub(crate) representation_relationship_with_transformation_arena:
         Arena<RepresentationRelationshipWithTransformation>,
-    pub resource_property_arena: Arena<ResourceProperty>,
-    pub resource_requirement_type_arena: Arena<ResourceRequirementType>,
-    pub role_association_arena: Arena<RoleAssociation>,
-    pub roundness_tolerance_arena: Arena<RoundnessTolerance>,
-    pub seam_curve_arena: Arena<SeamCurve>,
-    pub security_classification_arena: Arena<SecurityClassification>,
-    pub security_classification_assignment_arena: Arena<SecurityClassificationAssignment>,
-    pub security_classification_level_arena: Arena<SecurityClassificationLevel>,
-    pub shape_aspect_arena: Arena<ShapeAspect>,
-    pub shape_aspect_associativity_arena: Arena<ShapeAspectAssociativity>,
-    pub shape_aspect_deriving_relationship_arena: Arena<ShapeAspectDerivingRelationship>,
-    pub shape_aspect_relationship_arena: Arena<ShapeAspectRelationship>,
-    pub shape_definition_representation_arena: Arena<ShapeDefinitionRepresentation>,
-    pub shape_dimension_representation_arena: Arena<ShapeDimensionRepresentation>,
-    pub shape_representation_arena: Arena<ShapeRepresentation>,
-    pub shape_representation_relationship_arena: Arena<ShapeRepresentationRelationship>,
-    pub shape_representation_with_parameters_arena: Arena<ShapeRepresentationWithParameters>,
-    pub shell_based_surface_model_arena: Arena<ShellBasedSurfaceModel>,
-    pub si_unit_arena: Arena<SiUnit>,
-    pub simple_generic_expression_arena: Arena<SimpleGenericExpression>,
-    pub simple_numeric_expression_arena: Arena<SimpleNumericExpression>,
-    pub solid_angle_unit_arena: Arena<SolidAngleUnit>,
-    pub solid_model_arena: Arena<SolidModel>,
-    pub spherical_surface_arena: Arena<SphericalSurface>,
-    pub start_request_arena: Arena<StartRequest>,
-    pub start_work_arena: Arena<StartWork>,
-    pub state_observed_arena: Arena<StateObserved>,
-    pub state_type_arena: Arena<StateType>,
-    pub straightness_tolerance_arena: Arena<StraightnessTolerance>,
-    pub styled_item_arena: Arena<StyledItem>,
-    pub surface_arena: Arena<Surface>,
-    pub surface_curve_arena: Arena<SurfaceCurve>,
-    pub surface_of_linear_extrusion_arena: Arena<SurfaceOfLinearExtrusion>,
-    pub surface_of_revolution_arena: Arena<SurfaceOfRevolution>,
-    pub surface_profile_tolerance_arena: Arena<SurfaceProfileTolerance>,
-    pub surface_rendering_properties_arena: Arena<SurfaceRenderingProperties>,
-    pub surface_side_style_arena: Arena<SurfaceSideStyle>,
-    pub surface_style_boundary_arena: Arena<SurfaceStyleBoundary>,
-    pub surface_style_control_grid_arena: Arena<SurfaceStyleControlGrid>,
-    pub surface_style_fill_area_arena: Arena<SurfaceStyleFillArea>,
-    pub surface_style_parameter_line_arena: Arena<SurfaceStyleParameterLine>,
-    pub surface_style_reflectance_ambient_arena: Arena<SurfaceStyleReflectanceAmbient>,
-    pub surface_style_rendering_arena: Arena<SurfaceStyleRendering>,
-    pub surface_style_rendering_with_properties_arena: Arena<SurfaceStyleRenderingWithProperties>,
-    pub surface_style_segmentation_curve_arena: Arena<SurfaceStyleSegmentationCurve>,
-    pub surface_style_silhouette_arena: Arena<SurfaceStyleSilhouette>,
-    pub surface_style_transparent_arena: Arena<SurfaceStyleTransparent>,
-    pub surface_style_usage_arena: Arena<SurfaceStyleUsage>,
-    pub swept_surface_arena: Arena<SweptSurface>,
-    pub symbol_colour_arena: Arena<SymbolColour>,
-    pub symbol_representation_arena: Arena<SymbolRepresentation>,
-    pub symbol_style_arena: Arena<SymbolStyle>,
-    pub symbol_target_arena: Arena<SymbolTarget>,
-    pub symmetry_tolerance_arena: Arena<SymmetryTolerance>,
-    pub terminator_symbol_arena: Arena<TerminatorSymbol>,
-    pub tessellated_annotation_occurrence_arena: Arena<TessellatedAnnotationOccurrence>,
-    pub tessellated_curve_set_arena: Arena<TessellatedCurveSet>,
-    pub tessellated_face_arena: Arena<TessellatedFace>,
-    pub tessellated_geometric_set_arena: Arena<TessellatedGeometricSet>,
-    pub tessellated_item_arena: Arena<TessellatedItem>,
-    pub tessellated_shape_representation_arena: Arena<TessellatedShapeRepresentation>,
-    pub tessellated_shell_arena: Arena<TessellatedShell>,
-    pub tessellated_solid_arena: Arena<TessellatedSolid>,
-    pub tessellated_structured_item_arena: Arena<TessellatedStructuredItem>,
-    pub tessellated_surface_set_arena: Arena<TessellatedSurfaceSet>,
-    pub text_font_arena: Arena<TextFont>,
-    pub text_literal_arena: Arena<TextLiteral>,
-    pub text_style_arena: Arena<TextStyle>,
-    pub text_style_for_defined_font_arena: Arena<TextStyleForDefinedFont>,
-    pub text_style_with_box_characteristics_arena: Arena<TextStyleWithBoxCharacteristics>,
-    pub texture_style_specification_arena: Arena<TextureStyleSpecification>,
-    pub texture_style_tessellation_specification_arena:
+    pub(crate) resource_property_arena: Arena<ResourceProperty>,
+    pub(crate) resource_requirement_type_arena: Arena<ResourceRequirementType>,
+    pub(crate) role_association_arena: Arena<RoleAssociation>,
+    pub(crate) roundness_tolerance_arena: Arena<RoundnessTolerance>,
+    pub(crate) seam_curve_arena: Arena<SeamCurve>,
+    pub(crate) security_classification_arena: Arena<SecurityClassification>,
+    pub(crate) security_classification_assignment_arena: Arena<SecurityClassificationAssignment>,
+    pub(crate) security_classification_level_arena: Arena<SecurityClassificationLevel>,
+    pub(crate) shape_aspect_arena: Arena<ShapeAspect>,
+    pub(crate) shape_aspect_associativity_arena: Arena<ShapeAspectAssociativity>,
+    pub(crate) shape_aspect_deriving_relationship_arena: Arena<ShapeAspectDerivingRelationship>,
+    pub(crate) shape_aspect_relationship_arena: Arena<ShapeAspectRelationship>,
+    pub(crate) shape_definition_representation_arena: Arena<ShapeDefinitionRepresentation>,
+    pub(crate) shape_dimension_representation_arena: Arena<ShapeDimensionRepresentation>,
+    pub(crate) shape_representation_arena: Arena<ShapeRepresentation>,
+    pub(crate) shape_representation_relationship_arena: Arena<ShapeRepresentationRelationship>,
+    pub(crate) shape_representation_with_parameters_arena: Arena<ShapeRepresentationWithParameters>,
+    pub(crate) shell_based_surface_model_arena: Arena<ShellBasedSurfaceModel>,
+    pub(crate) si_unit_arena: Arena<SiUnit>,
+    pub(crate) simple_generic_expression_arena: Arena<SimpleGenericExpression>,
+    pub(crate) simple_numeric_expression_arena: Arena<SimpleNumericExpression>,
+    pub(crate) solid_angle_unit_arena: Arena<SolidAngleUnit>,
+    pub(crate) solid_model_arena: Arena<SolidModel>,
+    pub(crate) spherical_surface_arena: Arena<SphericalSurface>,
+    pub(crate) start_request_arena: Arena<StartRequest>,
+    pub(crate) start_work_arena: Arena<StartWork>,
+    pub(crate) state_observed_arena: Arena<StateObserved>,
+    pub(crate) state_type_arena: Arena<StateType>,
+    pub(crate) straightness_tolerance_arena: Arena<StraightnessTolerance>,
+    pub(crate) styled_item_arena: Arena<StyledItem>,
+    pub(crate) surface_arena: Arena<Surface>,
+    pub(crate) surface_curve_arena: Arena<SurfaceCurve>,
+    pub(crate) surface_of_linear_extrusion_arena: Arena<SurfaceOfLinearExtrusion>,
+    pub(crate) surface_of_revolution_arena: Arena<SurfaceOfRevolution>,
+    pub(crate) surface_profile_tolerance_arena: Arena<SurfaceProfileTolerance>,
+    pub(crate) surface_rendering_properties_arena: Arena<SurfaceRenderingProperties>,
+    pub(crate) surface_side_style_arena: Arena<SurfaceSideStyle>,
+    pub(crate) surface_style_boundary_arena: Arena<SurfaceStyleBoundary>,
+    pub(crate) surface_style_control_grid_arena: Arena<SurfaceStyleControlGrid>,
+    pub(crate) surface_style_fill_area_arena: Arena<SurfaceStyleFillArea>,
+    pub(crate) surface_style_parameter_line_arena: Arena<SurfaceStyleParameterLine>,
+    pub(crate) surface_style_reflectance_ambient_arena: Arena<SurfaceStyleReflectanceAmbient>,
+    pub(crate) surface_style_rendering_arena: Arena<SurfaceStyleRendering>,
+    pub(crate) surface_style_rendering_with_properties_arena:
+        Arena<SurfaceStyleRenderingWithProperties>,
+    pub(crate) surface_style_segmentation_curve_arena: Arena<SurfaceStyleSegmentationCurve>,
+    pub(crate) surface_style_silhouette_arena: Arena<SurfaceStyleSilhouette>,
+    pub(crate) surface_style_transparent_arena: Arena<SurfaceStyleTransparent>,
+    pub(crate) surface_style_usage_arena: Arena<SurfaceStyleUsage>,
+    pub(crate) swept_surface_arena: Arena<SweptSurface>,
+    pub(crate) symbol_colour_arena: Arena<SymbolColour>,
+    pub(crate) symbol_representation_arena: Arena<SymbolRepresentation>,
+    pub(crate) symbol_style_arena: Arena<SymbolStyle>,
+    pub(crate) symbol_target_arena: Arena<SymbolTarget>,
+    pub(crate) symmetry_tolerance_arena: Arena<SymmetryTolerance>,
+    pub(crate) terminator_symbol_arena: Arena<TerminatorSymbol>,
+    pub(crate) tessellated_annotation_occurrence_arena: Arena<TessellatedAnnotationOccurrence>,
+    pub(crate) tessellated_curve_set_arena: Arena<TessellatedCurveSet>,
+    pub(crate) tessellated_face_arena: Arena<TessellatedFace>,
+    pub(crate) tessellated_geometric_set_arena: Arena<TessellatedGeometricSet>,
+    pub(crate) tessellated_item_arena: Arena<TessellatedItem>,
+    pub(crate) tessellated_shape_representation_arena: Arena<TessellatedShapeRepresentation>,
+    pub(crate) tessellated_shell_arena: Arena<TessellatedShell>,
+    pub(crate) tessellated_solid_arena: Arena<TessellatedSolid>,
+    pub(crate) tessellated_structured_item_arena: Arena<TessellatedStructuredItem>,
+    pub(crate) tessellated_surface_set_arena: Arena<TessellatedSurfaceSet>,
+    pub(crate) text_font_arena: Arena<TextFont>,
+    pub(crate) text_literal_arena: Arena<TextLiteral>,
+    pub(crate) text_style_arena: Arena<TextStyle>,
+    pub(crate) text_style_for_defined_font_arena: Arena<TextStyleForDefinedFont>,
+    pub(crate) text_style_with_box_characteristics_arena: Arena<TextStyleWithBoxCharacteristics>,
+    pub(crate) texture_style_specification_arena: Arena<TextureStyleSpecification>,
+    pub(crate) texture_style_tessellation_specification_arena:
         Arena<TextureStyleTessellationSpecification>,
-    pub time_unit_arena: Arena<TimeUnit>,
-    pub tolerance_value_arena: Arena<ToleranceValue>,
-    pub tolerance_zone_arena: Arena<ToleranceZone>,
-    pub tolerance_zone_definition_arena: Arena<ToleranceZoneDefinition>,
-    pub tolerance_zone_form_arena: Arena<ToleranceZoneForm>,
-    pub tolerance_zone_with_datum_arena: Arena<ToleranceZoneWithDatum>,
-    pub topological_representation_item_arena: Arena<TopologicalRepresentationItem>,
-    pub toroidal_surface_arena: Arena<ToroidalSurface>,
-    pub total_runout_tolerance_arena: Arena<TotalRunoutTolerance>,
-    pub trimmed_curve_arena: Arena<TrimmedCurve>,
-    pub two_direction_repeat_factor_arena: Arena<TwoDirectionRepeatFactor>,
-    pub type_qualifier_arena: Arena<TypeQualifier>,
-    pub uncertainty_measure_with_unit_arena: Arena<UncertaintyMeasureWithUnit>,
-    pub uncertainty_qualifier_arena: Arena<UncertaintyQualifier>,
-    pub unequally_disposed_geometric_tolerance_arena: Arena<UnequallyDisposedGeometricTolerance>,
-    pub uniform_curve_arena: Arena<UniformCurve>,
-    pub uniform_surface_arena: Arena<UniformSurface>,
-    pub value_format_type_qualifier_arena: Arena<ValueFormatTypeQualifier>,
-    pub value_representation_item_arena: Arena<ValueRepresentationItem>,
-    pub vector_arena: Arena<Vector>,
-    pub versioned_action_request_arena: Arena<VersionedActionRequest>,
-    pub vertex_arena: Arena<Vertex>,
-    pub vertex_loop_arena: Arena<VertexLoop>,
-    pub vertex_point_arena: Arena<VertexPoint>,
-    pub vertex_shell_arena: Arena<VertexShell>,
-    pub view_volume_arena: Arena<ViewVolume>,
-    pub volume_unit_arena: Arena<VolumeUnit>,
-    pub wire_shell_arena: Arena<WireShell>,
-    pub complex_unit_arena: Arena<ComplexUnit>,
+    pub(crate) time_unit_arena: Arena<TimeUnit>,
+    pub(crate) tolerance_value_arena: Arena<ToleranceValue>,
+    pub(crate) tolerance_zone_arena: Arena<ToleranceZone>,
+    pub(crate) tolerance_zone_definition_arena: Arena<ToleranceZoneDefinition>,
+    pub(crate) tolerance_zone_form_arena: Arena<ToleranceZoneForm>,
+    pub(crate) tolerance_zone_with_datum_arena: Arena<ToleranceZoneWithDatum>,
+    pub(crate) topological_representation_item_arena: Arena<TopologicalRepresentationItem>,
+    pub(crate) toroidal_surface_arena: Arena<ToroidalSurface>,
+    pub(crate) total_runout_tolerance_arena: Arena<TotalRunoutTolerance>,
+    pub(crate) trimmed_curve_arena: Arena<TrimmedCurve>,
+    pub(crate) two_direction_repeat_factor_arena: Arena<TwoDirectionRepeatFactor>,
+    pub(crate) type_qualifier_arena: Arena<TypeQualifier>,
+    pub(crate) uncertainty_measure_with_unit_arena: Arena<UncertaintyMeasureWithUnit>,
+    pub(crate) uncertainty_qualifier_arena: Arena<UncertaintyQualifier>,
+    pub(crate) unequally_disposed_geometric_tolerance_arena:
+        Arena<UnequallyDisposedGeometricTolerance>,
+    pub(crate) uniform_curve_arena: Arena<UniformCurve>,
+    pub(crate) uniform_surface_arena: Arena<UniformSurface>,
+    pub(crate) value_format_type_qualifier_arena: Arena<ValueFormatTypeQualifier>,
+    pub(crate) value_representation_item_arena: Arena<ValueRepresentationItem>,
+    pub(crate) vector_arena: Arena<Vector>,
+    pub(crate) versioned_action_request_arena: Arena<VersionedActionRequest>,
+    pub(crate) vertex_arena: Arena<Vertex>,
+    pub(crate) vertex_loop_arena: Arena<VertexLoop>,
+    pub(crate) vertex_point_arena: Arena<VertexPoint>,
+    pub(crate) vertex_shell_arena: Arena<VertexShell>,
+    pub(crate) view_volume_arena: Arena<ViewVolume>,
+    pub(crate) volume_unit_arena: Arena<VolumeUnit>,
+    pub(crate) wire_shell_arena: Arena<WireShell>,
+    pub(crate) complex_entity_arena: Arena<ComplexEntity>,
 }
+impl StepModel {
+    /// The string `t` stands for. A `Text` of another model gives an
+    /// unrelated string, or `""` past the end of this model's text table.
+    pub fn text(&self, t: Text) -> &str {
+        self.texts.get(t)
+    }
+    /// Store `s` as a new `Text`.
+    pub(crate) fn add_text(&mut self, s: &str) -> Text {
+        self.texts.push(s)
+    }
+}
+
+/// An entity type of the model: a generated entity struct, or [`ComplexEntity`]
+/// for a complex instance. [`StepModel::all`] lists the entities of a type.
+/// The trait is sealed: only the model's own types implement it.
+pub trait Entity: sealed::SealedEntity {
+    /// The id type of this entity type.
+    type Id: EntityId<Entity = Self>;
+}
+
+/// The id of one entity type: [`StepModel::get`] or `model[id]` reads the
+/// entity it names. The trait is sealed: only the model's own ids implement
+/// it.
+pub trait EntityId: sealed::SealedId {
+    /// The entity type this id names.
+    type Entity: Entity<Id = Self>;
+}
+
+// The storage access behind the public traits. The `Token` argument, which
+// only this crate can make, keeps the methods out of reach through a
+// public trait bound.
+mod sealed {
+    pub struct Token(pub(crate) ());
+    pub trait SealedEntity: Sized + 'static {
+        fn items(model: &super::StepModel, _: Token) -> &[Self];
+    }
+    pub trait SealedId: Copy {
+        fn slot(self, _: Token) -> usize;
+        fn at(index: u32, _: Token) -> Self;
+    }
+}
+use sealed::Token;
+
+impl StepModel {
+    /// Every entity of type `T`, with its id, in the model's order:
+    /// `model.all::<Circle>()`.
+    #[allow(clippy::cast_possible_truncation)] // a model holds at most u32::MAX of a type
+    pub fn all<T: Entity>(&self) -> impl ExactSizeIterator<Item = (T::Id, &T)> + '_ {
+        <T as sealed::SealedEntity>::items(self, Token(()))
+            .iter()
+            .enumerate()
+            .map(|(i, e)| (<T::Id as sealed::SealedId>::at(i as u32, Token(())), e))
+    }
+    /// The entity `id` names, or `None` for an id out of this model's range.
+    pub fn get<I: EntityId>(&self, id: I) -> Option<&I::Entity> {
+        <I::Entity as sealed::SealedEntity>::items(self, Token(()))
+            .get(sealed::SealedId::slot(id, Token(())))
+    }
+}
+
+/// `model[id]`: the entity `id` names. Panics for an id out of this model's
+/// range; [`StepModel::get`] returns `None` instead.
+impl<I: EntityId> std::ops::Index<I> for StepModel {
+    type Output = I::Entity;
+    fn index(&self, id: I) -> &I::Entity {
+        &<I::Entity as sealed::SealedEntity>::items(self, Token(()))
+            [sealed::SealedId::slot(id, Token(()))]
+    }
+}
+
+macro_rules! entity {
+    ($entity:ident, $id:ident, $arena:ident) => {
+        impl Entity for $entity {
+            type Id = $id;
+        }
+        impl sealed::SealedEntity for $entity {
+            fn items(model: &StepModel, _: Token) -> &[Self] {
+                &model.$arena.items
+            }
+        }
+        impl EntityId for $id {
+            type Entity = $entity;
+        }
+        impl sealed::SealedId for $id {
+            fn slot(self, _: Token) -> usize {
+                self.0 as usize
+            }
+            fn at(index: u32, _: Token) -> Self {
+                $id(index)
+            }
+        }
+    };
+}
+entity!(Action, ActionId, action_arena);
+entity!(
+    ActionAssignment,
+    ActionAssignmentId,
+    action_assignment_arena
+);
+entity!(ActionDirective, ActionDirectiveId, action_directive_arena);
+entity!(ActionMethod, ActionMethodId, action_method_arena);
+entity!(
+    ActionMethodRelationship,
+    ActionMethodRelationshipId,
+    action_method_relationship_arena
+);
+entity!(ActionProperty, ActionPropertyId, action_property_arena);
+entity!(
+    ActionRelationship,
+    ActionRelationshipId,
+    action_relationship_arena
+);
+entity!(
+    ActionRequestAssignment,
+    ActionRequestAssignmentId,
+    action_request_assignment_arena
+);
+entity!(
+    ActionRequestSolution,
+    ActionRequestSolutionId,
+    action_request_solution_arena
+);
+entity!(ActionResource, ActionResourceId, action_resource_arena);
+entity!(
+    ActionResourceRelationship,
+    ActionResourceRelationshipId,
+    action_resource_relationship_arena
+);
+entity!(
+    ActionResourceRequirement,
+    ActionResourceRequirementId,
+    action_resource_requirement_arena
+);
+entity!(
+    ActionResourceType,
+    ActionResourceTypeId,
+    action_resource_type_arena
+);
+entity!(Address, AddressId, address_arena);
+entity!(
+    AdvancedBrepShapeRepresentation,
+    AdvancedBrepShapeRepresentationId,
+    advanced_brep_shape_representation_arena
+);
+entity!(AdvancedFace, AdvancedFaceId, advanced_face_arena);
+entity!(
+    AllAroundShapeAspect,
+    AllAroundShapeAspectId,
+    all_around_shape_aspect_arena
+);
+entity!(AngularLocation, AngularLocationId, angular_location_arena);
+entity!(AngularSize, AngularSizeId, angular_size_arena);
+entity!(
+    AngularityTolerance,
+    AngularityToleranceId,
+    angularity_tolerance_arena
+);
+entity!(
+    AnnotationCurveOccurrence,
+    AnnotationCurveOccurrenceId,
+    annotation_curve_occurrence_arena
+);
+entity!(
+    AnnotationFillAreaOccurrence,
+    AnnotationFillAreaOccurrenceId,
+    annotation_fill_area_occurrence_arena
+);
+entity!(
+    AnnotationOccurrence,
+    AnnotationOccurrenceId,
+    annotation_occurrence_arena
+);
+entity!(
+    AnnotationOccurrenceAssociativity,
+    AnnotationOccurrenceAssociativityId,
+    annotation_occurrence_associativity_arena
+);
+entity!(
+    AnnotationOccurrenceRelationship,
+    AnnotationOccurrenceRelationshipId,
+    annotation_occurrence_relationship_arena
+);
+entity!(
+    AnnotationPlaceholderLeaderLine,
+    AnnotationPlaceholderLeaderLineId,
+    annotation_placeholder_leader_line_arena
+);
+entity!(
+    AnnotationPlaceholderOccurrence,
+    AnnotationPlaceholderOccurrenceId,
+    annotation_placeholder_occurrence_arena
+);
+entity!(
+    AnnotationPlaceholderOccurrenceWithLeaderLine,
+    AnnotationPlaceholderOccurrenceWithLeaderLineId,
+    annotation_placeholder_occurrence_with_leader_line_arena
+);
+entity!(AnnotationPlane, AnnotationPlaneId, annotation_plane_arena);
+entity!(
+    AnnotationSymbol,
+    AnnotationSymbolId,
+    annotation_symbol_arena
+);
+entity!(
+    AnnotationSymbolOccurrence,
+    AnnotationSymbolOccurrenceId,
+    annotation_symbol_occurrence_arena
+);
+entity!(AnnotationText, AnnotationTextId, annotation_text_arena);
+entity!(
+    AnnotationTextCharacter,
+    AnnotationTextCharacterId,
+    annotation_text_character_arena
+);
+entity!(
+    AnnotationTextOccurrence,
+    AnnotationTextOccurrenceId,
+    annotation_text_occurrence_arena
+);
+entity!(
+    AnnotationToAnnotationLeaderLine,
+    AnnotationToAnnotationLeaderLineId,
+    annotation_to_annotation_leader_line_arena
+);
+entity!(
+    AnnotationToModelLeaderLine,
+    AnnotationToModelLeaderLineId,
+    annotation_to_model_leader_line_arena
+);
+entity!(ApllPoint, ApllPointId, apll_point_arena);
+entity!(
+    ApllPointWithSurface,
+    ApllPointWithSurfaceId,
+    apll_point_with_surface_arena
+);
+entity!(
+    ApplicationContext,
+    ApplicationContextId,
+    application_context_arena
+);
+entity!(
+    ApplicationContextElement,
+    ApplicationContextElementId,
+    application_context_element_arena
+);
+entity!(
+    ApplicationProtocolDefinition,
+    ApplicationProtocolDefinitionId,
+    application_protocol_definition_arena
+);
+entity!(
+    AppliedApprovalAssignment,
+    AppliedApprovalAssignmentId,
+    applied_approval_assignment_arena
+);
+entity!(
+    AppliedDateAndTimeAssignment,
+    AppliedDateAndTimeAssignmentId,
+    applied_date_and_time_assignment_arena
+);
+entity!(
+    AppliedDocumentReference,
+    AppliedDocumentReferenceId,
+    applied_document_reference_arena
+);
+entity!(
+    AppliedExternalIdentificationAssignment,
+    AppliedExternalIdentificationAssignmentId,
+    applied_external_identification_assignment_arena
+);
+entity!(
+    AppliedGroupAssignment,
+    AppliedGroupAssignmentId,
+    applied_group_assignment_arena
+);
+entity!(
+    AppliedPersonAndOrganizationAssignment,
+    AppliedPersonAndOrganizationAssignmentId,
+    applied_person_and_organization_assignment_arena
+);
+entity!(
+    AppliedPresentedItem,
+    AppliedPresentedItemId,
+    applied_presented_item_arena
+);
+entity!(
+    AppliedSecurityClassificationAssignment,
+    AppliedSecurityClassificationAssignmentId,
+    applied_security_classification_assignment_arena
+);
+entity!(Approval, ApprovalId, approval_arena);
+entity!(
+    ApprovalAssignment,
+    ApprovalAssignmentId,
+    approval_assignment_arena
+);
+entity!(
+    ApprovalDateTime,
+    ApprovalDateTimeId,
+    approval_date_time_arena
+);
+entity!(
+    ApprovalPersonOrganization,
+    ApprovalPersonOrganizationId,
+    approval_person_organization_arena
+);
+entity!(ApprovalRole, ApprovalRoleId, approval_role_arena);
+entity!(ApprovalStatus, ApprovalStatusId, approval_status_arena);
+entity!(
+    ApproximationTolerance,
+    ApproximationToleranceId,
+    approximation_tolerance_arena
+);
+entity!(
+    ApproximationToleranceDeviation,
+    ApproximationToleranceDeviationId,
+    approximation_tolerance_deviation_arena
+);
+entity!(
+    ApproximationToleranceParameter,
+    ApproximationToleranceParameterId,
+    approximation_tolerance_parameter_arena
+);
+entity!(AreaInSet, AreaInSetId, area_in_set_arena);
+entity!(AreaUnit, AreaUnitId, area_unit_arena);
+entity!(AscribableState, AscribableStateId, ascribable_state_arena);
+entity!(
+    AscribableStateRelationship,
+    AscribableStateRelationshipId,
+    ascribable_state_relationship_arena
+);
+entity!(
+    AssemblyComponentUsage,
+    AssemblyComponentUsageId,
+    assembly_component_usage_arena
+);
+entity!(
+    AuxiliaryLeaderLine,
+    AuxiliaryLeaderLineId,
+    auxiliary_leader_line_arena
+);
+entity!(Axis1Placement, Axis1PlacementId, axis1_placement_arena);
+entity!(
+    Axis2Placement2d,
+    Axis2Placement2dId,
+    axis2_placement2d_arena
+);
+entity!(
+    Axis2Placement3d,
+    Axis2Placement3dId,
+    axis2_placement3d_arena
+);
+entity!(BSplineCurve, BSplineCurveId, b_spline_curve_arena);
+entity!(
+    BSplineCurveWithKnots,
+    BSplineCurveWithKnotsId,
+    b_spline_curve_with_knots_arena
+);
+entity!(BSplineSurface, BSplineSurfaceId, b_spline_surface_arena);
+entity!(
+    BSplineSurfaceWithKnots,
+    BSplineSurfaceWithKnotsId,
+    b_spline_surface_with_knots_arena
+);
+entity!(BezierCurve, BezierCurveId, bezier_curve_arena);
+entity!(BezierSurface, BezierSurfaceId, bezier_surface_arena);
+entity!(BoundedCurve, BoundedCurveId, bounded_curve_arena);
+entity!(BoundedPcurve, BoundedPcurveId, bounded_pcurve_arena);
+entity!(BoundedSurface, BoundedSurfaceId, bounded_surface_arena);
+entity!(
+    BoundedSurfaceCurve,
+    BoundedSurfaceCurveId,
+    bounded_surface_curve_arena
+);
+entity!(BrepWithVoids, BrepWithVoidsId, brep_with_voids_arena);
+entity!(CalendarDate, CalendarDateId, calendar_date_arena);
+entity!(CameraImage, CameraImageId, camera_image_arena);
+entity!(
+    CameraImage3dWithScale,
+    CameraImage3dWithScaleId,
+    camera_image3d_with_scale_arena
+);
+entity!(CameraModel, CameraModelId, camera_model_arena);
+entity!(CameraModelD3, CameraModelD3Id, camera_model_d3_arena);
+entity!(
+    CameraModelD3MultiClipping,
+    CameraModelD3MultiClippingId,
+    camera_model_d3_multi_clipping_arena
+);
+entity!(
+    CameraModelD3WithHlhsr,
+    CameraModelD3WithHlhsrId,
+    camera_model_d3_with_hlhsr_arena
+);
+entity!(CameraUsage, CameraUsageId, camera_usage_arena);
+entity!(CartesianPoint, CartesianPointId, cartesian_point_arena);
+entity!(
+    CcDesignApproval,
+    CcDesignApprovalId,
+    cc_design_approval_arena
+);
+entity!(
+    CcDesignDateAndTimeAssignment,
+    CcDesignDateAndTimeAssignmentId,
+    cc_design_date_and_time_assignment_arena
+);
+entity!(
+    CcDesignPersonAndOrganizationAssignment,
+    CcDesignPersonAndOrganizationAssignmentId,
+    cc_design_person_and_organization_assignment_arena
+);
+entity!(
+    CcDesignSecurityClassification,
+    CcDesignSecurityClassificationId,
+    cc_design_security_classification_arena
+);
+entity!(
+    CentreOfSymmetry,
+    CentreOfSymmetryId,
+    centre_of_symmetry_arena
+);
+entity!(Certification, CertificationId, certification_arena);
+entity!(
+    CertificationType,
+    CertificationTypeId,
+    certification_type_arena
+);
+entity!(Change, ChangeId, change_arena);
+entity!(ChangeRequest, ChangeRequestId, change_request_arena);
+entity!(
+    CharacterGlyphStyleOutline,
+    CharacterGlyphStyleOutlineId,
+    character_glyph_style_outline_arena
+);
+entity!(
+    CharacterGlyphStyleStroke,
+    CharacterGlyphStyleStrokeId,
+    character_glyph_style_stroke_arena
+);
+entity!(
+    CharacterizedItemWithinRepresentation,
+    CharacterizedItemWithinRepresentationId,
+    characterized_item_within_representation_arena
+);
+entity!(
+    CharacterizedObject,
+    CharacterizedObjectId,
+    characterized_object_arena
+);
+entity!(
+    CharacterizedRepresentation,
+    CharacterizedRepresentationId,
+    characterized_representation_arena
+);
+entity!(Circle, CircleId, circle_arena);
+entity!(
+    CircularRunoutTolerance,
+    CircularRunoutToleranceId,
+    circular_runout_tolerance_arena
+);
+entity!(ClosedShell, ClosedShellId, closed_shell_arena);
+entity!(
+    CoaxialityTolerance,
+    CoaxialityToleranceId,
+    coaxiality_tolerance_arena
+);
+entity!(Colour, ColourId, colour_arena);
+entity!(ColourRgb, ColourRgbId, colour_rgb_arena);
+entity!(
+    ColourSpecification,
+    ColourSpecificationId,
+    colour_specification_arena
+);
+entity!(CommonDatum, CommonDatumId, common_datum_arena);
+entity!(
+    ComplexTriangulatedFace,
+    ComplexTriangulatedFaceId,
+    complex_triangulated_face_arena
+);
+entity!(
+    ComplexTriangulatedSurfaceSet,
+    ComplexTriangulatedSurfaceSetId,
+    complex_triangulated_surface_set_arena
+);
+entity!(CompositeCurve, CompositeCurveId, composite_curve_arena);
+entity!(
+    CompositeCurveSegment,
+    CompositeCurveSegmentId,
+    composite_curve_segment_arena
+);
+entity!(
+    CompositeGroupShapeAspect,
+    CompositeGroupShapeAspectId,
+    composite_group_shape_aspect_arena
+);
+entity!(
+    CompositeShapeAspect,
+    CompositeShapeAspectId,
+    composite_shape_aspect_arena
+);
+entity!(CompositeText, CompositeTextId, composite_text_arena);
+entity!(
+    CompoundRepresentationItem,
+    CompoundRepresentationItemId,
+    compound_representation_item_arena
+);
+entity!(
+    ConcentricityTolerance,
+    ConcentricityToleranceId,
+    concentricity_tolerance_arena
+);
+entity!(
+    ConfigurationDesign,
+    ConfigurationDesignId,
+    configuration_design_arena
+);
+entity!(
+    ConfigurationEffectivity,
+    ConfigurationEffectivityId,
+    configuration_effectivity_arena
+);
+entity!(
+    ConfigurationItem,
+    ConfigurationItemId,
+    configuration_item_arena
+);
+entity!(Conic, ConicId, conic_arena);
+entity!(ConicalSurface, ConicalSurfaceId, conical_surface_arena);
+entity!(
+    ConnectedFaceSet,
+    ConnectedFaceSetId,
+    connected_face_set_arena
+);
+entity!(
+    ConstructiveGeometryRepresentation,
+    ConstructiveGeometryRepresentationId,
+    constructive_geometry_representation_arena
+);
+entity!(
+    ConstructiveGeometryRepresentationRelationship,
+    ConstructiveGeometryRepresentationRelationshipId,
+    constructive_geometry_representation_relationship_arena
+);
+entity!(
+    ContextDependentOverRidingStyledItem,
+    ContextDependentOverRidingStyledItemId,
+    context_dependent_over_riding_styled_item_arena
+);
+entity!(
+    ContextDependentShapeRepresentation,
+    ContextDependentShapeRepresentationId,
+    context_dependent_shape_representation_arena
+);
+entity!(
+    ContextDependentUnit,
+    ContextDependentUnitId,
+    context_dependent_unit_arena
+);
+entity!(
+    ContinuousShapeAspect,
+    ContinuousShapeAspectId,
+    continuous_shape_aspect_arena
+);
+entity!(Contract, ContractId, contract_arena);
+entity!(ContractType, ContractTypeId, contract_type_arena);
+entity!(
+    ConversionBasedUnit,
+    ConversionBasedUnitId,
+    conversion_based_unit_arena
+);
+entity!(
+    CoordinatedUniversalTimeOffset,
+    CoordinatedUniversalTimeOffsetId,
+    coordinated_universal_time_offset_arena
+);
+entity!(CoordinatesList, CoordinatesListId, coordinates_list_arena);
+entity!(Curve, CurveId, curve_arena);
+entity!(CurveStyle, CurveStyleId, curve_style_arena);
+entity!(CurveStyleFont, CurveStyleFontId, curve_style_font_arena);
+entity!(
+    CurveStyleFontAndScaling,
+    CurveStyleFontAndScalingId,
+    curve_style_font_and_scaling_arena
+);
+entity!(
+    CurveStyleFontPattern,
+    CurveStyleFontPatternId,
+    curve_style_font_pattern_arena
+);
+entity!(
+    CurveStyleRendering,
+    CurveStyleRenderingId,
+    curve_style_rendering_arena
+);
+entity!(
+    CylindricalSurface,
+    CylindricalSurfaceId,
+    cylindrical_surface_arena
+);
+entity!(
+    CylindricityTolerance,
+    CylindricityToleranceId,
+    cylindricity_tolerance_arena
+);
+entity!(Date, DateId, date_arena);
+entity!(DateAndTime, DateAndTimeId, date_and_time_arena);
+entity!(
+    DateAndTimeAssignment,
+    DateAndTimeAssignmentId,
+    date_and_time_assignment_arena
+);
+entity!(DateRole, DateRoleId, date_role_arena);
+entity!(DateTimeRole, DateTimeRoleId, date_time_role_arena);
+entity!(Datum, DatumId, datum_arena);
+entity!(DatumFeature, DatumFeatureId, datum_feature_arena);
+entity!(DatumReference, DatumReferenceId, datum_reference_arena);
+entity!(
+    DatumReferenceCompartment,
+    DatumReferenceCompartmentId,
+    datum_reference_compartment_arena
+);
+entity!(
+    DatumReferenceElement,
+    DatumReferenceElementId,
+    datum_reference_element_arena
+);
+entity!(
+    DatumReferenceModifierWithValue,
+    DatumReferenceModifierWithValueId,
+    datum_reference_modifier_with_value_arena
+);
+entity!(DatumSystem, DatumSystemId, datum_system_arena);
+entity!(DatumTarget, DatumTargetId, datum_target_arena);
+entity!(
+    DefaultModelGeometricView,
+    DefaultModelGeometricViewId,
+    default_model_geometric_view_arena
+);
+entity!(
+    DefinedCharacterGlyph,
+    DefinedCharacterGlyphId,
+    defined_character_glyph_arena
+);
+entity!(DefinedSymbol, DefinedSymbolId, defined_symbol_arena);
+entity!(
+    DefinitionalRepresentation,
+    DefinitionalRepresentationId,
+    definitional_representation_arena
+);
+entity!(
+    DefinitionalRepresentationRelationship,
+    DefinitionalRepresentationRelationshipId,
+    definitional_representation_relationship_arena
+);
+entity!(
+    DefinitionalRepresentationRelationshipWithSameContext,
+    DefinitionalRepresentationRelationshipWithSameContextId,
+    definitional_representation_relationship_with_same_context_arena
+);
+entity!(
+    DegenerateToroidalSurface,
+    DegenerateToroidalSurfaceId,
+    degenerate_toroidal_surface_arena
+);
+entity!(
+    DerivedShapeAspect,
+    DerivedShapeAspectId,
+    derived_shape_aspect_arena
+);
+entity!(DerivedUnit, DerivedUnitId, derived_unit_arena);
+entity!(
+    DerivedUnitElement,
+    DerivedUnitElementId,
+    derived_unit_element_arena
+);
+entity!(
+    DescriptionAttribute,
+    DescriptionAttributeId,
+    description_attribute_arena
+);
+entity!(
+    DescriptiveRepresentationItem,
+    DescriptiveRepresentationItemId,
+    descriptive_representation_item_arena
+);
+entity!(DesignContext, DesignContextId, design_context_arena);
+entity!(
+    DimensionalCharacteristicRepresentation,
+    DimensionalCharacteristicRepresentationId,
+    dimensional_characteristic_representation_arena
+);
+entity!(
+    DimensionalExponents,
+    DimensionalExponentsId,
+    dimensional_exponents_arena
+);
+entity!(
+    DimensionalLocation,
+    DimensionalLocationId,
+    dimensional_location_arena
+);
+entity!(
+    DimensionalLocationWithPath,
+    DimensionalLocationWithPathId,
+    dimensional_location_with_path_arena
+);
+entity!(DimensionalSize, DimensionalSizeId, dimensional_size_arena);
+entity!(
+    DimensionalSizeWithDatumFeature,
+    DimensionalSizeWithDatumFeatureId,
+    dimensional_size_with_datum_feature_arena
+);
+entity!(
+    DimensionalSizeWithPath,
+    DimensionalSizeWithPathId,
+    dimensional_size_with_path_arena
+);
+entity!(
+    DirectedDimensionalLocation,
+    DirectedDimensionalLocationId,
+    directed_dimensional_location_arena
+);
+entity!(Direction, DirectionId, direction_arena);
+entity!(Document, DocumentId, document_arena);
+entity!(DocumentFile, DocumentFileId, document_file_arena);
+entity!(
+    DocumentProductAssociation,
+    DocumentProductAssociationId,
+    document_product_association_arena
+);
+entity!(
+    DocumentProductEquivalence,
+    DocumentProductEquivalenceId,
+    document_product_equivalence_arena
+);
+entity!(
+    DocumentReference,
+    DocumentReferenceId,
+    document_reference_arena
+);
+entity!(
+    DocumentRepresentationType,
+    DocumentRepresentationTypeId,
+    document_representation_type_arena
+);
+entity!(DocumentType, DocumentTypeId, document_type_arena);
+entity!(
+    DraughtingAnnotationOccurrence,
+    DraughtingAnnotationOccurrenceId,
+    draughting_annotation_occurrence_arena
+);
+entity!(
+    DraughtingCallout,
+    DraughtingCalloutId,
+    draughting_callout_arena
+);
+entity!(
+    DraughtingCalloutRelationship,
+    DraughtingCalloutRelationshipId,
+    draughting_callout_relationship_arena
+);
+entity!(DraughtingModel, DraughtingModelId, draughting_model_arena);
+entity!(
+    DraughtingModelItemAssociation,
+    DraughtingModelItemAssociationId,
+    draughting_model_item_association_arena
+);
+entity!(
+    DraughtingModelItemAssociationWithPlaceholder,
+    DraughtingModelItemAssociationWithPlaceholderId,
+    draughting_model_item_association_with_placeholder_arena
+);
+entity!(
+    DraughtingPreDefinedColour,
+    DraughtingPreDefinedColourId,
+    draughting_pre_defined_colour_arena
+);
+entity!(
+    DraughtingPreDefinedCurveFont,
+    DraughtingPreDefinedCurveFontId,
+    draughting_pre_defined_curve_font_arena
+);
+entity!(
+    DraughtingPreDefinedTextFont,
+    DraughtingPreDefinedTextFontId,
+    draughting_pre_defined_text_font_arena
+);
+entity!(Edge, EdgeId, edge_arena);
+entity!(EdgeCurve, EdgeCurveId, edge_curve_arena);
+entity!(EdgeLoop, EdgeLoopId, edge_loop_arena);
+entity!(Effectivity, EffectivityId, effectivity_arena);
+entity!(
+    ElementarySurface,
+    ElementarySurfaceId,
+    elementary_surface_arena
+);
+entity!(Ellipse, EllipseId, ellipse_arena);
+entity!(Expression, ExpressionId, expression_arena);
+entity!(
+    ExternalIdentificationAssignment,
+    ExternalIdentificationAssignmentId,
+    external_identification_assignment_arena
+);
+entity!(ExternalSource, ExternalSourceId, external_source_arena);
+entity!(
+    ExternallyDefinedCharacterGlyph,
+    ExternallyDefinedCharacterGlyphId,
+    externally_defined_character_glyph_arena
+);
+entity!(
+    ExternallyDefinedCurveFont,
+    ExternallyDefinedCurveFontId,
+    externally_defined_curve_font_arena
+);
+entity!(
+    ExternallyDefinedHatchStyle,
+    ExternallyDefinedHatchStyleId,
+    externally_defined_hatch_style_arena
+);
+entity!(
+    ExternallyDefinedItem,
+    ExternallyDefinedItemId,
+    externally_defined_item_arena
+);
+entity!(
+    ExternallyDefinedStyle,
+    ExternallyDefinedStyleId,
+    externally_defined_style_arena
+);
+entity!(
+    ExternallyDefinedSymbol,
+    ExternallyDefinedSymbolId,
+    externally_defined_symbol_arena
+);
+entity!(
+    ExternallyDefinedTextFont,
+    ExternallyDefinedTextFontId,
+    externally_defined_text_font_arena
+);
+entity!(
+    ExternallyDefinedTile,
+    ExternallyDefinedTileId,
+    externally_defined_tile_arena
+);
+entity!(
+    ExternallyDefinedTileStyle,
+    ExternallyDefinedTileStyleId,
+    externally_defined_tile_style_arena
+);
+entity!(Face, FaceId, face_arena);
+entity!(FaceBound, FaceBoundId, face_bound_arena);
+entity!(FaceOuterBound, FaceOuterBoundId, face_outer_bound_arena);
+entity!(FaceSurface, FaceSurfaceId, face_surface_arena);
+entity!(
+    FeatureForDatumTargetRelationship,
+    FeatureForDatumTargetRelationshipId,
+    feature_for_datum_target_relationship_arena
+);
+entity!(FillAreaStyle, FillAreaStyleId, fill_area_style_arena);
+entity!(
+    FillAreaStyleColour,
+    FillAreaStyleColourId,
+    fill_area_style_colour_arena
+);
+entity!(
+    FillAreaStyleHatching,
+    FillAreaStyleHatchingId,
+    fill_area_style_hatching_arena
+);
+entity!(
+    FillAreaStyleTileColouredRegion,
+    FillAreaStyleTileColouredRegionId,
+    fill_area_style_tile_coloured_region_arena
+);
+entity!(
+    FillAreaStyleTileCurveWithStyle,
+    FillAreaStyleTileCurveWithStyleId,
+    fill_area_style_tile_curve_with_style_arena
+);
+entity!(
+    FillAreaStyleTileSymbolWithStyle,
+    FillAreaStyleTileSymbolWithStyleId,
+    fill_area_style_tile_symbol_with_style_arena
+);
+entity!(
+    FillAreaStyleTiles,
+    FillAreaStyleTilesId,
+    fill_area_style_tiles_arena
+);
+entity!(
+    FlatnessTolerance,
+    FlatnessToleranceId,
+    flatness_tolerance_arena
+);
+entity!(FoundedItem, FoundedItemId, founded_item_arena);
+entity!(
+    FunctionallyDefinedTransformation,
+    FunctionallyDefinedTransformationId,
+    functionally_defined_transformation_arena
+);
+entity!(
+    GeneralDatumReference,
+    GeneralDatumReferenceId,
+    general_datum_reference_arena
+);
+entity!(GeneralProperty, GeneralPropertyId, general_property_arena);
+entity!(
+    GeneralPropertyAssociation,
+    GeneralPropertyAssociationId,
+    general_property_association_arena
+);
+entity!(
+    GenericExpression,
+    GenericExpressionId,
+    generic_expression_arena
+);
+entity!(GenericLiteral, GenericLiteralId, generic_literal_arena);
+entity!(
+    GenericProductDefinitionReference,
+    GenericProductDefinitionReferenceId,
+    generic_product_definition_reference_arena
+);
+entity!(
+    GeometricCurveSet,
+    GeometricCurveSetId,
+    geometric_curve_set_arena
+);
+entity!(
+    GeometricItemSpecificUsage,
+    GeometricItemSpecificUsageId,
+    geometric_item_specific_usage_arena
+);
+entity!(
+    GeometricRepresentationContext,
+    GeometricRepresentationContextId,
+    geometric_representation_context_arena
+);
+entity!(
+    GeometricRepresentationItem,
+    GeometricRepresentationItemId,
+    geometric_representation_item_arena
+);
+entity!(GeometricSet, GeometricSetId, geometric_set_arena);
+entity!(
+    GeometricTolerance,
+    GeometricToleranceId,
+    geometric_tolerance_arena
+);
+entity!(
+    GeometricToleranceRelationship,
+    GeometricToleranceRelationshipId,
+    geometric_tolerance_relationship_arena
+);
+entity!(
+    GeometricToleranceWithDatumReference,
+    GeometricToleranceWithDatumReferenceId,
+    geometric_tolerance_with_datum_reference_arena
+);
+entity!(
+    GeometricToleranceWithDefinedAreaUnit,
+    GeometricToleranceWithDefinedAreaUnitId,
+    geometric_tolerance_with_defined_area_unit_arena
+);
+entity!(
+    GeometricToleranceWithDefinedUnit,
+    GeometricToleranceWithDefinedUnitId,
+    geometric_tolerance_with_defined_unit_arena
+);
+entity!(
+    GeometricToleranceWithMaximumTolerance,
+    GeometricToleranceWithMaximumToleranceId,
+    geometric_tolerance_with_maximum_tolerance_arena
+);
+entity!(
+    GeometricToleranceWithModifiers,
+    GeometricToleranceWithModifiersId,
+    geometric_tolerance_with_modifiers_arena
+);
+entity!(
+    GeometricallyBoundedSurfaceShapeRepresentation,
+    GeometricallyBoundedSurfaceShapeRepresentationId,
+    geometrically_bounded_surface_shape_representation_arena
+);
+entity!(
+    GeometricallyBoundedWireframeShapeRepresentation,
+    GeometricallyBoundedWireframeShapeRepresentationId,
+    geometrically_bounded_wireframe_shape_representation_arena
+);
+entity!(
+    GlobalUncertaintyAssignedContext,
+    GlobalUncertaintyAssignedContextId,
+    global_uncertainty_assigned_context_arena
+);
+entity!(
+    GlobalUnitAssignedContext,
+    GlobalUnitAssignedContextId,
+    global_unit_assigned_context_arena
+);
+entity!(Group, GroupId, group_arena);
+entity!(GroupAssignment, GroupAssignmentId, group_assignment_arena);
+entity!(Hyperbola, HyperbolaId, hyperbola_arena);
+entity!(IdAttribute, IdAttributeId, id_attribute_arena);
+entity!(
+    IdentificationAssignment,
+    IdentificationAssignmentId,
+    identification_assignment_arena
+);
+entity!(
+    IdentificationRole,
+    IdentificationRoleId,
+    identification_role_arena
+);
+entity!(IntLiteral, IntLiteralId, int_literal_arena);
+entity!(
+    IntegerRepresentationItem,
+    IntegerRepresentationItemId,
+    integer_representation_item_arena
+);
+entity!(
+    IntersectionCurve,
+    IntersectionCurveId,
+    intersection_curve_arena
+);
+entity!(Invisibility, InvisibilityId, invisibility_arena);
+entity!(
+    ItemDefinedTransformation,
+    ItemDefinedTransformationId,
+    item_defined_transformation_arena
+);
+entity!(
+    ItemIdentifiedRepresentationUsage,
+    ItemIdentifiedRepresentationUsageId,
+    item_identified_representation_usage_arena
+);
+entity!(LeaderCurve, LeaderCurveId, leader_curve_arena);
+entity!(
+    LeaderDirectedCallout,
+    LeaderDirectedCalloutId,
+    leader_directed_callout_arena
+);
+entity!(
+    LeaderTerminator,
+    LeaderTerminatorId,
+    leader_terminator_arena
+);
+entity!(
+    LengthMeasureWithUnit,
+    LengthMeasureWithUnitId,
+    length_measure_with_unit_arena
+);
+entity!(LengthUnit, LengthUnitId, length_unit_arena);
+entity!(LimitsAndFits, LimitsAndFitsId, limits_and_fits_arena);
+entity!(Line, LineId, line_arena);
+entity!(
+    LineProfileTolerance,
+    LineProfileToleranceId,
+    line_profile_tolerance_arena
+);
+entity!(LiteralNumber, LiteralNumberId, literal_number_arena);
+entity!(LocalTime, LocalTimeId, local_time_arena);
+entity!(Loop, LoopId, loop_arena);
+entity!(
+    MakeFromUsageOption,
+    MakeFromUsageOptionId,
+    make_from_usage_option_arena
+);
+entity!(
+    ManifoldSolidBrep,
+    ManifoldSolidBrepId,
+    manifold_solid_brep_arena
+);
+entity!(
+    ManifoldSurfaceShapeRepresentation,
+    ManifoldSurfaceShapeRepresentationId,
+    manifold_surface_shape_representation_arena
+);
+entity!(MappedItem, MappedItemId, mapped_item_arena);
+entity!(
+    MassMeasureWithUnit,
+    MassMeasureWithUnitId,
+    mass_measure_with_unit_arena
+);
+entity!(MassUnit, MassUnitId, mass_unit_arena);
+entity!(
+    MeasureQualification,
+    MeasureQualificationId,
+    measure_qualification_arena
+);
+entity!(
+    MeasureRepresentationItem,
+    MeasureRepresentationItemId,
+    measure_representation_item_arena
+);
+entity!(MeasureWithUnit, MeasureWithUnitId, measure_with_unit_arena);
+entity!(
+    MechanicalContext,
+    MechanicalContextId,
+    mechanical_context_arena
+);
+entity!(
+    MechanicalDesignAndDraughtingRelationship,
+    MechanicalDesignAndDraughtingRelationshipId,
+    mechanical_design_and_draughting_relationship_arena
+);
+entity!(
+    MechanicalDesignGeometricPresentationRepresentation,
+    MechanicalDesignGeometricPresentationRepresentationId,
+    mechanical_design_geometric_presentation_representation_arena
+);
+entity!(
+    MechanicalDesignPresentationRepresentationWithDraughting,
+    MechanicalDesignPresentationRepresentationWithDraughtingId,
+    mechanical_design_presentation_representation_with_draughting_arena
+);
+entity!(
+    MechanicalDesignShadedPresentationRepresentation,
+    MechanicalDesignShadedPresentationRepresentationId,
+    mechanical_design_shaded_presentation_representation_arena
+);
+entity!(
+    ModelGeometricView,
+    ModelGeometricViewId,
+    model_geometric_view_arena
+);
+entity!(
+    ModifiedGeometricTolerance,
+    ModifiedGeometricToleranceId,
+    modified_geometric_tolerance_arena
+);
+entity!(NameAttribute, NameAttributeId, name_attribute_arena);
+entity!(NamedUnit, NamedUnitId, named_unit_arena);
+entity!(
+    NextAssemblyUsageOccurrence,
+    NextAssemblyUsageOccurrenceId,
+    next_assembly_usage_occurrence_arena
+);
+entity!(
+    NumericExpression,
+    NumericExpressionId,
+    numeric_expression_arena
+);
+entity!(ObjectRole, ObjectRoleId, object_role_arena);
+entity!(OffsetSurface, OffsetSurfaceId, offset_surface_arena);
+entity!(
+    OneDirectionRepeatFactor,
+    OneDirectionRepeatFactorId,
+    one_direction_repeat_factor_arena
+);
+entity!(OpenShell, OpenShellId, open_shell_arena);
+entity!(Organization, OrganizationId, organization_arena);
+entity!(
+    OrganizationRelationship,
+    OrganizationRelationshipId,
+    organization_relationship_arena
+);
+entity!(
+    OrganizationRole,
+    OrganizationRoleId,
+    organization_role_arena
+);
+entity!(
+    OrganizationType,
+    OrganizationTypeId,
+    organization_type_arena
+);
+entity!(
+    OrganizationTypeRole,
+    OrganizationTypeRoleId,
+    organization_type_role_arena
+);
+entity!(
+    OrganizationalAddress,
+    OrganizationalAddressId,
+    organizational_address_arena
+);
+entity!(
+    OrganizationalProject,
+    OrganizationalProjectId,
+    organizational_project_arena
+);
+entity!(
+    OrganizationalProjectRelationship,
+    OrganizationalProjectRelationshipId,
+    organizational_project_relationship_arena
+);
+entity!(
+    OrganizationalProjectRole,
+    OrganizationalProjectRoleId,
+    organizational_project_role_arena
+);
+entity!(
+    OrientedClosedShell,
+    OrientedClosedShellId,
+    oriented_closed_shell_arena
+);
+entity!(OrientedEdge, OrientedEdgeId, oriented_edge_arena);
+entity!(
+    OverRidingStyledItem,
+    OverRidingStyledItemId,
+    over_riding_styled_item_arena
+);
+entity!(Parabola, ParabolaId, parabola_arena);
+entity!(
+    ParallelismTolerance,
+    ParallelismToleranceId,
+    parallelism_tolerance_arena
+);
+entity!(
+    ParametricRepresentationContext,
+    ParametricRepresentationContextId,
+    parametric_representation_context_arena
+);
+entity!(Path, PathId, path_arena);
+entity!(Pcurve, PcurveId, pcurve_arena);
+entity!(
+    PerpendicularityTolerance,
+    PerpendicularityToleranceId,
+    perpendicularity_tolerance_arena
+);
+entity!(Person, PersonId, person_arena);
+entity!(
+    PersonAndOrganization,
+    PersonAndOrganizationId,
+    person_and_organization_arena
+);
+entity!(
+    PersonAndOrganizationAddress,
+    PersonAndOrganizationAddressId,
+    person_and_organization_address_arena
+);
+entity!(
+    PersonAndOrganizationAssignment,
+    PersonAndOrganizationAssignmentId,
+    person_and_organization_assignment_arena
+);
+entity!(
+    PersonAndOrganizationRole,
+    PersonAndOrganizationRoleId,
+    person_and_organization_role_arena
+);
+entity!(PersonalAddress, PersonalAddressId, personal_address_arena);
+entity!(
+    PlacedDatumTargetFeature,
+    PlacedDatumTargetFeatureId,
+    placed_datum_target_feature_arena
+);
+entity!(Placement, PlacementId, placement_arena);
+entity!(PlanarBox, PlanarBoxId, planar_box_arena);
+entity!(PlanarExtent, PlanarExtentId, planar_extent_arena);
+entity!(Plane, PlaneId, plane_arena);
+entity!(
+    PlaneAngleMeasureWithUnit,
+    PlaneAngleMeasureWithUnitId,
+    plane_angle_measure_with_unit_arena
+);
+entity!(PlaneAngleUnit, PlaneAngleUnitId, plane_angle_unit_arena);
+entity!(
+    PlusMinusTolerance,
+    PlusMinusToleranceId,
+    plus_minus_tolerance_arena
+);
+entity!(Point, PointId, point_arena);
+entity!(PointStyle, PointStyleId, point_style_arena);
+entity!(PolyLoop, PolyLoopId, poly_loop_arena);
+entity!(Polyline, PolylineId, polyline_arena);
+entity!(
+    PositionTolerance,
+    PositionToleranceId,
+    position_tolerance_arena
+);
+entity!(
+    PreDefinedCharacterGlyph,
+    PreDefinedCharacterGlyphId,
+    pre_defined_character_glyph_arena
+);
+entity!(
+    PreDefinedColour,
+    PreDefinedColourId,
+    pre_defined_colour_arena
+);
+entity!(
+    PreDefinedCurveFont,
+    PreDefinedCurveFontId,
+    pre_defined_curve_font_arena
+);
+entity!(PreDefinedItem, PreDefinedItemId, pre_defined_item_arena);
+entity!(
+    PreDefinedMarker,
+    PreDefinedMarkerId,
+    pre_defined_marker_arena
+);
+entity!(
+    PreDefinedPointMarkerSymbol,
+    PreDefinedPointMarkerSymbolId,
+    pre_defined_point_marker_symbol_arena
+);
+entity!(
+    PreDefinedPresentationStyle,
+    PreDefinedPresentationStyleId,
+    pre_defined_presentation_style_arena
+);
+entity!(
+    PreDefinedSurfaceSideStyle,
+    PreDefinedSurfaceSideStyleId,
+    pre_defined_surface_side_style_arena
+);
+entity!(
+    PreDefinedSymbol,
+    PreDefinedSymbolId,
+    pre_defined_symbol_arena
+);
+entity!(
+    PreDefinedTerminatorSymbol,
+    PreDefinedTerminatorSymbolId,
+    pre_defined_terminator_symbol_arena
+);
+entity!(
+    PreDefinedTextFont,
+    PreDefinedTextFontId,
+    pre_defined_text_font_arena
+);
+entity!(PreDefinedTile, PreDefinedTileId, pre_defined_tile_arena);
+entity!(
+    PrecisionQualifier,
+    PrecisionQualifierId,
+    precision_qualifier_arena
+);
+entity!(
+    PresentationArea,
+    PresentationAreaId,
+    presentation_area_arena
+);
+entity!(
+    PresentationLayerAssignment,
+    PresentationLayerAssignmentId,
+    presentation_layer_assignment_arena
+);
+entity!(
+    PresentationRepresentation,
+    PresentationRepresentationId,
+    presentation_representation_arena
+);
+entity!(PresentationSet, PresentationSetId, presentation_set_arena);
+entity!(
+    PresentationSize,
+    PresentationSizeId,
+    presentation_size_arena
+);
+entity!(
+    PresentationStyleAssignment,
+    PresentationStyleAssignmentId,
+    presentation_style_assignment_arena
+);
+entity!(
+    PresentationStyleByContext,
+    PresentationStyleByContextId,
+    presentation_style_by_context_arena
+);
+entity!(
+    PresentationView,
+    PresentationViewId,
+    presentation_view_arena
+);
+entity!(PresentedItem, PresentedItemId, presented_item_arena);
+entity!(
+    PresentedItemRepresentation,
+    PresentedItemRepresentationId,
+    presented_item_representation_arena
+);
+entity!(Product, ProductId, product_arena);
+entity!(ProductCategory, ProductCategoryId, product_category_arena);
+entity!(
+    ProductCategoryRelationship,
+    ProductCategoryRelationshipId,
+    product_category_relationship_arena
+);
+entity!(ProductConcept, ProductConceptId, product_concept_arena);
+entity!(
+    ProductConceptContext,
+    ProductConceptContextId,
+    product_concept_context_arena
+);
+entity!(
+    ProductConceptFeature,
+    ProductConceptFeatureId,
+    product_concept_feature_arena
+);
+entity!(
+    ProductConceptFeatureCategory,
+    ProductConceptFeatureCategoryId,
+    product_concept_feature_category_arena
+);
+entity!(ProductContext, ProductContextId, product_context_arena);
+entity!(
+    ProductDefinition,
+    ProductDefinitionId,
+    product_definition_arena
+);
+entity!(
+    ProductDefinitionContext,
+    ProductDefinitionContextId,
+    product_definition_context_arena
+);
+entity!(
+    ProductDefinitionContextAssociation,
+    ProductDefinitionContextAssociationId,
+    product_definition_context_association_arena
+);
+entity!(
+    ProductDefinitionContextRole,
+    ProductDefinitionContextRoleId,
+    product_definition_context_role_arena
+);
+entity!(
+    ProductDefinitionEffectivity,
+    ProductDefinitionEffectivityId,
+    product_definition_effectivity_arena
+);
+entity!(
+    ProductDefinitionFormation,
+    ProductDefinitionFormationId,
+    product_definition_formation_arena
+);
+entity!(
+    ProductDefinitionFormationWithSpecifiedSource,
+    ProductDefinitionFormationWithSpecifiedSourceId,
+    product_definition_formation_with_specified_source_arena
+);
+entity!(
+    ProductDefinitionOccurrence,
+    ProductDefinitionOccurrenceId,
+    product_definition_occurrence_arena
+);
+entity!(
+    ProductDefinitionRelationship,
+    ProductDefinitionRelationshipId,
+    product_definition_relationship_arena
+);
+entity!(
+    ProductDefinitionRelationshipRelationship,
+    ProductDefinitionRelationshipRelationshipId,
+    product_definition_relationship_relationship_arena
+);
+entity!(
+    ProductDefinitionShape,
+    ProductDefinitionShapeId,
+    product_definition_shape_arena
+);
+entity!(
+    ProductDefinitionSubstitute,
+    ProductDefinitionSubstituteId,
+    product_definition_substitute_arena
+);
+entity!(
+    ProductDefinitionUsage,
+    ProductDefinitionUsageId,
+    product_definition_usage_arena
+);
+entity!(
+    ProductDefinitionWithAssociatedDocuments,
+    ProductDefinitionWithAssociatedDocumentsId,
+    product_definition_with_associated_documents_arena
+);
+entity!(
+    ProductRelatedProductCategory,
+    ProductRelatedProductCategoryId,
+    product_related_product_category_arena
+);
+entity!(
+    ProjectedZoneDefinition,
+    ProjectedZoneDefinitionId,
+    projected_zone_definition_arena
+);
+entity!(
+    PropertyDefinition,
+    PropertyDefinitionId,
+    property_definition_arena
+);
+entity!(
+    PropertyDefinitionRelationship,
+    PropertyDefinitionRelationshipId,
+    property_definition_relationship_arena
+);
+entity!(
+    PropertyDefinitionRepresentation,
+    PropertyDefinitionRepresentationId,
+    property_definition_representation_arena
+);
+entity!(
+    QualifiedRepresentationItem,
+    QualifiedRepresentationItemId,
+    qualified_representation_item_arena
+);
+entity!(
+    QuasiUniformCurve,
+    QuasiUniformCurveId,
+    quasi_uniform_curve_arena
+);
+entity!(
+    QuasiUniformSurface,
+    QuasiUniformSurfaceId,
+    quasi_uniform_surface_arena
+);
+entity!(
+    RatioMeasureWithUnit,
+    RatioMeasureWithUnitId,
+    ratio_measure_with_unit_arena
+);
+entity!(RatioUnit, RatioUnitId, ratio_unit_arena);
+entity!(
+    RationalBSplineCurve,
+    RationalBSplineCurveId,
+    rational_b_spline_curve_arena
+);
+entity!(
+    RationalBSplineSurface,
+    RationalBSplineSurfaceId,
+    rational_b_spline_surface_arena
+);
+entity!(RealLiteral, RealLiteralId, real_literal_arena);
+entity!(
+    RealRepresentationItem,
+    RealRepresentationItemId,
+    real_representation_item_arena
+);
+entity!(
+    RepositionedTessellatedItem,
+    RepositionedTessellatedItemId,
+    repositioned_tessellated_item_arena
+);
+entity!(Representation, RepresentationId, representation_arena);
+entity!(
+    RepresentationContext,
+    RepresentationContextId,
+    representation_context_arena
+);
+entity!(
+    RepresentationContextReference,
+    RepresentationContextReferenceId,
+    representation_context_reference_arena
+);
+entity!(
+    RepresentationItem,
+    RepresentationItemId,
+    representation_item_arena
+);
+entity!(
+    RepresentationMap,
+    RepresentationMapId,
+    representation_map_arena
+);
+entity!(
+    RepresentationReference,
+    RepresentationReferenceId,
+    representation_reference_arena
+);
+entity!(
+    RepresentationRelationship,
+    RepresentationRelationshipId,
+    representation_relationship_arena
+);
+entity!(
+    RepresentationRelationshipWithTransformation,
+    RepresentationRelationshipWithTransformationId,
+    representation_relationship_with_transformation_arena
+);
+entity!(
+    ResourceProperty,
+    ResourcePropertyId,
+    resource_property_arena
+);
+entity!(
+    ResourceRequirementType,
+    ResourceRequirementTypeId,
+    resource_requirement_type_arena
+);
+entity!(RoleAssociation, RoleAssociationId, role_association_arena);
+entity!(
+    RoundnessTolerance,
+    RoundnessToleranceId,
+    roundness_tolerance_arena
+);
+entity!(SeamCurve, SeamCurveId, seam_curve_arena);
+entity!(
+    SecurityClassification,
+    SecurityClassificationId,
+    security_classification_arena
+);
+entity!(
+    SecurityClassificationAssignment,
+    SecurityClassificationAssignmentId,
+    security_classification_assignment_arena
+);
+entity!(
+    SecurityClassificationLevel,
+    SecurityClassificationLevelId,
+    security_classification_level_arena
+);
+entity!(ShapeAspect, ShapeAspectId, shape_aspect_arena);
+entity!(
+    ShapeAspectAssociativity,
+    ShapeAspectAssociativityId,
+    shape_aspect_associativity_arena
+);
+entity!(
+    ShapeAspectDerivingRelationship,
+    ShapeAspectDerivingRelationshipId,
+    shape_aspect_deriving_relationship_arena
+);
+entity!(
+    ShapeAspectRelationship,
+    ShapeAspectRelationshipId,
+    shape_aspect_relationship_arena
+);
+entity!(
+    ShapeDefinitionRepresentation,
+    ShapeDefinitionRepresentationId,
+    shape_definition_representation_arena
+);
+entity!(
+    ShapeDimensionRepresentation,
+    ShapeDimensionRepresentationId,
+    shape_dimension_representation_arena
+);
+entity!(
+    ShapeRepresentation,
+    ShapeRepresentationId,
+    shape_representation_arena
+);
+entity!(
+    ShapeRepresentationRelationship,
+    ShapeRepresentationRelationshipId,
+    shape_representation_relationship_arena
+);
+entity!(
+    ShapeRepresentationWithParameters,
+    ShapeRepresentationWithParametersId,
+    shape_representation_with_parameters_arena
+);
+entity!(
+    ShellBasedSurfaceModel,
+    ShellBasedSurfaceModelId,
+    shell_based_surface_model_arena
+);
+entity!(SiUnit, SiUnitId, si_unit_arena);
+entity!(
+    SimpleGenericExpression,
+    SimpleGenericExpressionId,
+    simple_generic_expression_arena
+);
+entity!(
+    SimpleNumericExpression,
+    SimpleNumericExpressionId,
+    simple_numeric_expression_arena
+);
+entity!(SolidAngleUnit, SolidAngleUnitId, solid_angle_unit_arena);
+entity!(SolidModel, SolidModelId, solid_model_arena);
+entity!(
+    SphericalSurface,
+    SphericalSurfaceId,
+    spherical_surface_arena
+);
+entity!(StartRequest, StartRequestId, start_request_arena);
+entity!(StartWork, StartWorkId, start_work_arena);
+entity!(StateObserved, StateObservedId, state_observed_arena);
+entity!(StateType, StateTypeId, state_type_arena);
+entity!(
+    StraightnessTolerance,
+    StraightnessToleranceId,
+    straightness_tolerance_arena
+);
+entity!(StyledItem, StyledItemId, styled_item_arena);
+entity!(Surface, SurfaceId, surface_arena);
+entity!(SurfaceCurve, SurfaceCurveId, surface_curve_arena);
+entity!(
+    SurfaceOfLinearExtrusion,
+    SurfaceOfLinearExtrusionId,
+    surface_of_linear_extrusion_arena
+);
+entity!(
+    SurfaceOfRevolution,
+    SurfaceOfRevolutionId,
+    surface_of_revolution_arena
+);
+entity!(
+    SurfaceProfileTolerance,
+    SurfaceProfileToleranceId,
+    surface_profile_tolerance_arena
+);
+entity!(
+    SurfaceRenderingProperties,
+    SurfaceRenderingPropertiesId,
+    surface_rendering_properties_arena
+);
+entity!(
+    SurfaceSideStyle,
+    SurfaceSideStyleId,
+    surface_side_style_arena
+);
+entity!(
+    SurfaceStyleBoundary,
+    SurfaceStyleBoundaryId,
+    surface_style_boundary_arena
+);
+entity!(
+    SurfaceStyleControlGrid,
+    SurfaceStyleControlGridId,
+    surface_style_control_grid_arena
+);
+entity!(
+    SurfaceStyleFillArea,
+    SurfaceStyleFillAreaId,
+    surface_style_fill_area_arena
+);
+entity!(
+    SurfaceStyleParameterLine,
+    SurfaceStyleParameterLineId,
+    surface_style_parameter_line_arena
+);
+entity!(
+    SurfaceStyleReflectanceAmbient,
+    SurfaceStyleReflectanceAmbientId,
+    surface_style_reflectance_ambient_arena
+);
+entity!(
+    SurfaceStyleRendering,
+    SurfaceStyleRenderingId,
+    surface_style_rendering_arena
+);
+entity!(
+    SurfaceStyleRenderingWithProperties,
+    SurfaceStyleRenderingWithPropertiesId,
+    surface_style_rendering_with_properties_arena
+);
+entity!(
+    SurfaceStyleSegmentationCurve,
+    SurfaceStyleSegmentationCurveId,
+    surface_style_segmentation_curve_arena
+);
+entity!(
+    SurfaceStyleSilhouette,
+    SurfaceStyleSilhouetteId,
+    surface_style_silhouette_arena
+);
+entity!(
+    SurfaceStyleTransparent,
+    SurfaceStyleTransparentId,
+    surface_style_transparent_arena
+);
+entity!(
+    SurfaceStyleUsage,
+    SurfaceStyleUsageId,
+    surface_style_usage_arena
+);
+entity!(SweptSurface, SweptSurfaceId, swept_surface_arena);
+entity!(SymbolColour, SymbolColourId, symbol_colour_arena);
+entity!(
+    SymbolRepresentation,
+    SymbolRepresentationId,
+    symbol_representation_arena
+);
+entity!(SymbolStyle, SymbolStyleId, symbol_style_arena);
+entity!(SymbolTarget, SymbolTargetId, symbol_target_arena);
+entity!(
+    SymmetryTolerance,
+    SymmetryToleranceId,
+    symmetry_tolerance_arena
+);
+entity!(
+    TerminatorSymbol,
+    TerminatorSymbolId,
+    terminator_symbol_arena
+);
+entity!(
+    TessellatedAnnotationOccurrence,
+    TessellatedAnnotationOccurrenceId,
+    tessellated_annotation_occurrence_arena
+);
+entity!(
+    TessellatedCurveSet,
+    TessellatedCurveSetId,
+    tessellated_curve_set_arena
+);
+entity!(TessellatedFace, TessellatedFaceId, tessellated_face_arena);
+entity!(
+    TessellatedGeometricSet,
+    TessellatedGeometricSetId,
+    tessellated_geometric_set_arena
+);
+entity!(TessellatedItem, TessellatedItemId, tessellated_item_arena);
+entity!(
+    TessellatedShapeRepresentation,
+    TessellatedShapeRepresentationId,
+    tessellated_shape_representation_arena
+);
+entity!(
+    TessellatedShell,
+    TessellatedShellId,
+    tessellated_shell_arena
+);
+entity!(
+    TessellatedSolid,
+    TessellatedSolidId,
+    tessellated_solid_arena
+);
+entity!(
+    TessellatedStructuredItem,
+    TessellatedStructuredItemId,
+    tessellated_structured_item_arena
+);
+entity!(
+    TessellatedSurfaceSet,
+    TessellatedSurfaceSetId,
+    tessellated_surface_set_arena
+);
+entity!(TextFont, TextFontId, text_font_arena);
+entity!(TextLiteral, TextLiteralId, text_literal_arena);
+entity!(TextStyle, TextStyleId, text_style_arena);
+entity!(
+    TextStyleForDefinedFont,
+    TextStyleForDefinedFontId,
+    text_style_for_defined_font_arena
+);
+entity!(
+    TextStyleWithBoxCharacteristics,
+    TextStyleWithBoxCharacteristicsId,
+    text_style_with_box_characteristics_arena
+);
+entity!(
+    TextureStyleSpecification,
+    TextureStyleSpecificationId,
+    texture_style_specification_arena
+);
+entity!(
+    TextureStyleTessellationSpecification,
+    TextureStyleTessellationSpecificationId,
+    texture_style_tessellation_specification_arena
+);
+entity!(TimeUnit, TimeUnitId, time_unit_arena);
+entity!(ToleranceValue, ToleranceValueId, tolerance_value_arena);
+entity!(ToleranceZone, ToleranceZoneId, tolerance_zone_arena);
+entity!(
+    ToleranceZoneDefinition,
+    ToleranceZoneDefinitionId,
+    tolerance_zone_definition_arena
+);
+entity!(
+    ToleranceZoneForm,
+    ToleranceZoneFormId,
+    tolerance_zone_form_arena
+);
+entity!(
+    ToleranceZoneWithDatum,
+    ToleranceZoneWithDatumId,
+    tolerance_zone_with_datum_arena
+);
+entity!(
+    TopologicalRepresentationItem,
+    TopologicalRepresentationItemId,
+    topological_representation_item_arena
+);
+entity!(ToroidalSurface, ToroidalSurfaceId, toroidal_surface_arena);
+entity!(
+    TotalRunoutTolerance,
+    TotalRunoutToleranceId,
+    total_runout_tolerance_arena
+);
+entity!(TrimmedCurve, TrimmedCurveId, trimmed_curve_arena);
+entity!(
+    TwoDirectionRepeatFactor,
+    TwoDirectionRepeatFactorId,
+    two_direction_repeat_factor_arena
+);
+entity!(TypeQualifier, TypeQualifierId, type_qualifier_arena);
+entity!(
+    UncertaintyMeasureWithUnit,
+    UncertaintyMeasureWithUnitId,
+    uncertainty_measure_with_unit_arena
+);
+entity!(
+    UncertaintyQualifier,
+    UncertaintyQualifierId,
+    uncertainty_qualifier_arena
+);
+entity!(
+    UnequallyDisposedGeometricTolerance,
+    UnequallyDisposedGeometricToleranceId,
+    unequally_disposed_geometric_tolerance_arena
+);
+entity!(UniformCurve, UniformCurveId, uniform_curve_arena);
+entity!(UniformSurface, UniformSurfaceId, uniform_surface_arena);
+entity!(
+    ValueFormatTypeQualifier,
+    ValueFormatTypeQualifierId,
+    value_format_type_qualifier_arena
+);
+entity!(
+    ValueRepresentationItem,
+    ValueRepresentationItemId,
+    value_representation_item_arena
+);
+entity!(Vector, VectorId, vector_arena);
+entity!(
+    VersionedActionRequest,
+    VersionedActionRequestId,
+    versioned_action_request_arena
+);
+entity!(Vertex, VertexId, vertex_arena);
+entity!(VertexLoop, VertexLoopId, vertex_loop_arena);
+entity!(VertexPoint, VertexPointId, vertex_point_arena);
+entity!(VertexShell, VertexShellId, vertex_shell_arena);
+entity!(ViewVolume, ViewVolumeId, view_volume_arena);
+entity!(VolumeUnit, VolumeUnitId, volume_unit_arena);
+entity!(WireShell, WireShellId, wire_shell_arena);
+entity!(ComplexEntity, ComplexEntityId, complex_entity_arena);

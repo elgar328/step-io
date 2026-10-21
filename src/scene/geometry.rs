@@ -1,7 +1,7 @@
 //! Read-only b-rep geometry navigation handles over a [`Scene`].
 //!
-//! The walk is `Solid → Face → Surface` and `Face → Bound → Edge → Curve /
-//! Vertex → Point`. Surfaces and curves report their analytic kind
+//! The walk is `Solid` or `SurfaceModel → Shell → Face → Surface` and `Face →
+//! Bound → Edge → Curve / Vertex → Point`. Surfaces and curves report their analytic kind
 //! (`Plane`, `Cylindrical`, …); a shape outside the handled set comes back
 //! as `SurfaceKind::Other` / `CurveKind::Other` carrying the raw STEP
 //! keyword, never hidden.
@@ -10,6 +10,7 @@
 // pure noise, so allow the pedantic lint module-wide.
 #![allow(clippy::must_use_candidate)]
 
+use crate::Orientation;
 use crate::RefGraph;
 use crate::StepModel;
 use crate::scene::{Ctx, Scene};
@@ -22,26 +23,45 @@ use crate::generated::model as m;
 /// of a type in the whole model (the storage is flat — one arena per type — so a
 /// model-level query is always "find all of this type"); navigating *from* a
 /// handle (e.g. `solid.faces()`) is unprefixed and scoped to that element.
+/// `Scene::root_definitions` is unprefixed too: it filters the definitions
+/// rather than listing a type. A move from a handle to any number of other
+/// handles returns an iterator, to at most one an `Option`; computed data (a
+/// mesh's points, the warnings so far) comes as a `Vec`.
 impl Scene<'_> {
     /// Every b-rep solid in the model — `MANIFOLD_SOLID_BREP` and
     /// `BREP_WITH_VOIDS` (solids with internal cavities).
     pub fn all_solids(&self) -> impl Iterator<Item = Solid<'_>> + '_ {
         let cx = self.ctx();
-        let manifold = (0..cx.model.manifold_solid_brep_arena.items.len())
+        let manifold = cx
+            .model
+            .manifold_solid_brep_arena
+            .indices()
             .map(move |i| Solid::from_id(cx, m::ManifoldSolidBrepId(i)));
-        let with_voids = (0..cx.model.brep_with_voids_arena.items.len())
+        let with_voids = cx
+            .model
+            .brep_with_voids_arena
+            .indices()
             .map(move |i| Solid::from_void_id(cx, m::BrepWithVoidsId(i)));
         manifold.chain(with_voids)
+    }
+
+    /// Every surface model in the model (`SHELL_BASED_SURFACE_MODEL`).
+    pub fn all_surface_models(&self) -> impl Iterator<Item = SurfaceModel<'_>> + '_ {
+        let cx = self.ctx();
+        cx.model
+            .shell_based_surface_model_arena
+            .indices()
+            .map(move |i| SurfaceModel::from_id(cx, m::ShellBasedSurfaceModelId(i)))
     }
 
     /// Every face in the model (`ADVANCED_FACE` and `FACE_SURFACE`).
     pub fn all_faces(&self) -> impl Iterator<Item = Face<'_>> + '_ {
         let cx = self.ctx();
-        let advanced = (0..cx.model.advanced_face_arena.items.len()).map(move |i| Face {
+        let advanced = cx.model.advanced_face_arena.indices().map(move |i| Face {
             cx,
             which: FaceImpl::Advanced(m::AdvancedFaceId(i)),
         });
-        let surfaces = (0..cx.model.face_surface_arena.items.len()).map(move |i| Face {
+        let surfaces = cx.model.face_surface_arena.indices().map(move |i| Face {
             cx,
             which: FaceImpl::Surface(m::FaceSurfaceId(i)),
         });
@@ -51,7 +71,7 @@ impl Scene<'_> {
     /// Every edge in the model (`EDGE_CURVE`).
     pub fn all_edges(&self) -> impl Iterator<Item = Edge<'_>> + '_ {
         let cx = self.ctx();
-        (0..cx.model.edge_curve_arena.items.len()).map(move |i| Edge {
+        cx.model.edge_curve_arena.indices().map(move |i| Edge {
             cx,
             id: m::EdgeCurveId(i),
         })
@@ -60,7 +80,7 @@ impl Scene<'_> {
     /// Every vertex in the model (`VERTEX_POINT`).
     pub fn all_vertices(&self) -> impl Iterator<Item = Vertex<'_>> + '_ {
         let cx = self.ctx();
-        (0..cx.model.vertex_point_arena.items.len()).map(move |i| Vertex {
+        cx.model.vertex_point_arena.indices().map(move |i| Vertex {
             cx,
             id: m::VertexPointId(i),
         })
@@ -69,10 +89,13 @@ impl Scene<'_> {
     /// Every geometric point in the model (`CARTESIAN_POINT`).
     pub fn all_points(&self) -> impl Iterator<Item = Point<'_>> + '_ {
         let cx = self.ctx();
-        (0..cx.model.cartesian_point_arena.items.len()).map(move |i| Point {
-            cx,
-            id: m::CartesianPointId(i),
-        })
+        cx.model
+            .cartesian_point_arena
+            .indices()
+            .map(move |i| Point {
+                cx,
+                id: m::CartesianPointId(i),
+            })
     }
 }
 
@@ -113,17 +136,23 @@ impl<'m> Solid<'m> {
         }
     }
 
+    /// The solid whose outer shell or void is the closed shell `cs`.
+    pub(crate) fn of_closed_shell(cx: Ctx<'m>, cs: m::ClosedShellId) -> Option<Self> {
+        let which = closed_shell_to_solid(cx.ref_graph(), cs)?;
+        Some(Solid { cx, which })
+    }
+
     /// (`name`, `outer` shell) — `MANIFOLD_SOLID_BREP` and `BREP_WITH_VOIDS`
     /// share this layout.
     fn name_and_outer(&self) -> (&'m str, &'m m::ClosedShellRef) {
         match self.which {
             SolidImpl::Manifold(i) => {
                 let s = self.cx.model.manifold_solid_brep_arena.get(i.0);
-                (&s.name, &s.outer)
+                (self.cx.model.text(s.name), &s.outer)
             }
             SolidImpl::WithVoids(i) => {
                 let s = self.cx.model.brep_with_voids_arena.get(i.0);
-                (&s.name, &s.outer)
+                (self.cx.model.text(s.name), &s.outer)
             }
         }
     }
@@ -143,13 +172,15 @@ impl<'m> Solid<'m> {
 
     /// The colour styled onto this solid, if any.
     pub fn color(&self) -> Option<crate::scene::presentation::Rgb> {
-        crate::scene::presentation::colour_of(self.cx, self.key())
+        let this = self.about();
+        crate::scene::presentation::colour_of(this.cx, this.key())
     }
 
     /// The transparency styled onto this solid (`0.0` opaque … `1.0` fully
     /// transparent), if any.
     pub fn transparency(&self) -> Option<f64> {
-        crate::scene::presentation::transparency_of(self.cx, self.key())
+        let this = self.about();
+        crate::scene::presentation::transparency_of(this.cx, this.key())
     }
 
     /// The name of the presentation layer this solid belongs to, if any.
@@ -163,45 +194,276 @@ impl<'m> Solid<'m> {
         crate::scene::presentation::is_visible(self.cx, self.key())
     }
 
-    /// Faces of the solid's outer shell.
+    /// The solid's outer shell and the way the solid uses it: `Reversed` when
+    /// the shell is reached through an `ORIENTED_CLOSED_SHELL` with `.F.`
+    /// (wrappers compose). `None` for a shell this layer cannot resolve (a
+    /// complex instance, reported in [`Scene::warnings`]).
+    pub fn outer(&self) -> Option<(Shell<'m>, Orientation)> {
+        let this = self.about();
+        let cx = this.cx;
+        let (id, orientation) = resolve_closed_shell(cx, this.name_and_outer().1)?;
+        Some((Shell::closed(cx, id), orientation))
+    }
+
+    /// Faces of the solid's outer shell — [`outer`](Self::outer)'s faces. A
+    /// face points the way its own [`orientation`](Face::orientation) and the
+    /// shell's orientation in [`outer`](Self::outer) give together.
     pub fn faces(&self) -> impl Iterator<Item = Face<'m>> + 'm {
-        let cx = self.cx;
-        resolve_closed_shell(cx.model, self.name_and_outer().1)
+        let this = self.about();
+        this.outer()
             .into_iter()
-            .flat_map(|shell| shell.cfs_faces.iter())
+            .flat_map(|(shell, _)| shell.faces())
+    }
+
+    /// The internal void shells of a `BREP_WITH_VOIDS`, one per cavity, each
+    /// with the way the solid uses it. Writers differ: Open CASCADE writes a
+    /// cavity's faces as an ordinary outward shell and reverses it with
+    /// `.F.` (`Reversed` here); others write the faces already pointing into
+    /// the hole and keep `.T.` (`Forward`). A face of a cavity points the way
+    /// its own [`orientation`](Face::orientation) and the shell's orientation
+    /// give together. Empty for a plain `MANIFOLD_SOLID_BREP`.
+    pub fn voids(&self) -> impl Iterator<Item = (Shell<'m>, Orientation)> + 'm {
+        let this = self.about();
+        let cx = this.cx;
+        let voids: &'m [m::OrientedClosedShellRef] = match this.which {
+            SolidImpl::WithVoids(id) => &cx.model.brep_with_voids_arena.get(id.0).voids,
+            SolidImpl::Manifold(_) => &[],
+        };
+        voids.iter().filter_map(move |ocs| {
+            let m::OrientedClosedShellRef::OrientedClosedShell(o) = ocs else {
+                cx.warn("BREP_WITH_VOIDS: void shell is a complex instance".to_owned());
+                return None;
+            };
+            let (id, orientation) =
+                resolve_oriented_closed_shell(cx, cx.model.oriented_closed_shell_arena.get(o.0))?;
+            Some((Shell::closed(cx, id), orientation))
+        })
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Shell
+// ---------------------------------------------------------------------------
+
+/// A shell: a closed shell (`CLOSED_SHELL`) bounding a [`Solid`] — its outer
+/// boundary or a cavity — or a closed or open shell (`OPEN_SHELL`) of a
+/// [`SurfaceModel`]. How the solid or surface model uses the shell (forward or
+/// reversed) comes with it from [`Solid::outer`], [`Solid::voids`] and
+/// [`SurfaceModel::shells`], as an edge's direction in a loop comes with it
+/// from [`Bound::oriented_edges`].
+#[derive(Clone, Copy)]
+pub struct Shell<'m> {
+    cx: Ctx<'m>,
+    which: ShellImpl,
+}
+
+#[derive(Clone, Copy)]
+enum ShellImpl {
+    Closed(m::ClosedShellId),
+    Open(m::OpenShellId),
+}
+
+impl<'m> Shell<'m> {
+    fn closed(cx: Ctx<'m>, id: m::ClosedShellId) -> Self {
+        Shell {
+            cx,
+            which: ShellImpl::Closed(id),
+        }
+    }
+
+    /// This shell's global identity (a `Copy` key for maps / deduplication;
+    /// the `CLOSED_SHELL` or `OPEN_SHELL`, however it is wrapped).
+    pub fn key(&self) -> m::EntityKey {
+        match self.which {
+            ShellImpl::Closed(i) => m::EntityKey::ClosedShell(i),
+            ShellImpl::Open(i) => m::EntityKey::OpenShell(i),
+        }
+    }
+
+    /// `true` for a `CLOSED_SHELL`, `false` for an `OPEN_SHELL`.
+    pub fn is_closed(&self) -> bool {
+        matches!(self.which, ShellImpl::Closed(_))
+    }
+
+    /// (`name`, `cfs_faces`) — the two shells share this layout.
+    fn parts(&self) -> (&'m str, &'m [m::FaceRef]) {
+        let model = self.cx.model;
+        match self.which {
+            ShellImpl::Closed(i) => {
+                let s = model.closed_shell_arena.get(i.0);
+                (model.text(s.name), &s.cfs_faces)
+            }
+            ShellImpl::Open(i) => {
+                let s = model.open_shell_arena.get(i.0);
+                (model.text(s.name), &s.cfs_faces)
+            }
+        }
+    }
+
+    pub fn name(&self) -> &'m str {
+        self.parts().0
+    }
+
+    /// The faces of this shell, as stored (each with its own
+    /// [`orientation`](Face::orientation)).
+    pub fn faces(&self) -> impl Iterator<Item = Face<'m>> + use<'m> {
+        let cx = self.cx;
+        self.parts()
+            .1
+            .iter()
             .filter_map(move |fr| Face::from_ref(cx, fr))
     }
 
-    /// Faces of each internal void shell — one inner `Vec` per cavity of a
-    /// `BREP_WITH_VOIDS`. Empty for a plain `MANIFOLD_SOLID_BREP`.
-    pub fn voids(&self) -> Vec<Vec<Face<'m>>> {
-        let cx = self.cx;
-        let SolidImpl::WithVoids(id) = self.which else {
-            return Vec::new();
+    /// The solid this closed shell bounds, as its outer shell or a cavity —
+    /// directly or through `ORIENTED_CLOSED_SHELL` wrappers. `None` for an
+    /// open shell or a shell of a surface model.
+    pub fn solid(&self) -> Option<Solid<'m>> {
+        let ShellImpl::Closed(id) = self.which else {
+            return None;
         };
+        Solid::of_closed_shell(self.cx, id)
+    }
+
+    /// The surface model this shell belongs to — directly or, for a closed
+    /// shell, through `ORIENTED_CLOSED_SHELL` wrappers. `None` for a shell of a
+    /// solid.
+    pub fn surface_model(&self) -> Option<SurfaceModel<'m>> {
+        let cx = self.cx;
+        let rg = cx.ref_graph();
+        let pick = |r: m::EntityKey| match r {
+            m::EntityKey::ShellBasedSurfaceModel(id) => Some(SurfaceModel { cx, id }),
+            _ => None,
+        };
+        match self.which {
+            ShellImpl::Closed(id) => closed_shell_user(rg, id, pick),
+            ShellImpl::Open(_) => rg.referrers(self.key()).iter().find_map(|&r| pick(r)),
+        }
+    }
+
+    /// The colour styled onto this shell, if any.
+    pub fn color(&self) -> Option<crate::scene::presentation::Rgb> {
+        let this = self.about();
+        crate::scene::presentation::colour_of(this.cx, this.key())
+    }
+
+    /// The transparency styled onto this shell (`0.0` opaque … `1.0` fully
+    /// transparent), if any.
+    pub fn transparency(&self) -> Option<f64> {
+        let this = self.about();
+        crate::scene::presentation::transparency_of(this.cx, this.key())
+    }
+
+    /// The name of the presentation layer this shell belongs to, if any.
+    pub fn layer(&self) -> Option<&'m str> {
+        crate::scene::presentation::layer_of(self.cx, self.key())
+    }
+
+    /// Whether this shell is visible — `false` if an `INVISIBILITY` hides it
+    /// (via its styled item or its layer). Defaults to visible.
+    pub fn is_visible(&self) -> bool {
+        crate::scene::presentation::is_visible(self.cx, self.key())
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Surface model
+// ---------------------------------------------------------------------------
+
+/// A surface body (`SHELL_BASED_SURFACE_MODEL`): faces in open or closed shells
+/// that bound no solid — a sheet, or a closed skin kept as surfaces.
+#[derive(Clone, Copy)]
+pub struct SurfaceModel<'m> {
+    cx: Ctx<'m>,
+    id: m::ShellBasedSurfaceModelId,
+}
+
+impl<'m> SurfaceModel<'m> {
+    /// Construct a surface model handle from its id — used by other scene
+    /// modules (e.g. `product`) to bridge into geometry.
+    pub(crate) fn from_id(cx: Ctx<'m>, id: m::ShellBasedSurfaceModelId) -> Self {
+        SurfaceModel { cx, id }
+    }
+
+    /// This surface model's global identity (a `Copy` key for maps /
+    /// deduplication).
+    pub fn key(&self) -> m::EntityKey {
+        m::EntityKey::ShellBasedSurfaceModel(self.id)
+    }
+
+    pub fn name(&self) -> &'m str {
+        let model = self.cx.model;
+        model.text(model.shell_based_surface_model_arena.get(self.id.0).name)
+    }
+
+    /// The shells of this surface model, each with the way the model uses it:
+    /// `Reversed` for a closed shell reached through an `ORIENTED_CLOSED_SHELL`
+    /// with `.F.`. A vertex or wire shell, which has no faces, is reported in
+    /// [`Scene::warnings`] and skipped.
+    pub fn shells(&self) -> impl Iterator<Item = (Shell<'m>, Orientation)> + 'm {
+        let this = self.about();
+        let cx = this.cx;
         cx.model
-            .brep_with_voids_arena
-            .get(id.0)
-            .voids
+            .shell_based_surface_model_arena
+            .get(this.id.0)
+            .sbsm_boundary
             .iter()
-            .map(|ocs| {
-                let shell = match ocs {
-                    m::OrientedClosedShellRef::OrientedClosedShell(o) => resolve_closed_shell(
-                        cx.model,
-                        &cx.model
-                            .oriented_closed_shell_arena
-                            .get(o.0)
-                            .closed_shell_element,
-                    ),
-                    m::OrientedClosedShellRef::Complex(_) => None,
-                };
-                shell
-                    .into_iter()
-                    .flat_map(|s| s.cfs_faces.iter())
-                    .filter_map(|fr| Face::from_ref(cx, fr))
-                    .collect()
+            .filter_map(move |b| match b {
+                m::ShellRef::ClosedShell(i) => Some((Shell::closed(cx, *i), Orientation::Forward)),
+                m::ShellRef::OpenShell(i) => Some((
+                    Shell {
+                        cx,
+                        which: ShellImpl::Open(*i),
+                    },
+                    Orientation::Forward,
+                )),
+                m::ShellRef::OrientedClosedShell(i) => {
+                    let oc = cx.model.oriented_closed_shell_arena.get(i.0);
+                    let (id, orientation) = resolve_oriented_closed_shell(cx, oc)?;
+                    Some((Shell::closed(cx, id), orientation))
+                }
+                m::ShellRef::VertexShell(_) | m::ShellRef::WireShell(_) => {
+                    cx.warn(
+                        "SHELL_BASED_SURFACE_MODEL: a vertex or wire shell is not read".to_owned(),
+                    );
+                    None
+                }
+                m::ShellRef::Complex(_) => {
+                    cx.warn("SHELL_BASED_SURFACE_MODEL: shell is a complex instance".to_owned());
+                    None
+                }
             })
-            .collect()
+    }
+
+    /// The faces of all this surface model's shells. A face points the way its
+    /// own [`orientation`](Face::orientation) and its shell's orientation in
+    /// [`shells`](Self::shells) give together.
+    pub fn faces(&self) -> impl Iterator<Item = Face<'m>> + 'm {
+        self.shells().flat_map(|(shell, _)| shell.faces())
+    }
+
+    /// The colour styled onto this surface model, if any.
+    pub fn color(&self) -> Option<crate::scene::presentation::Rgb> {
+        let this = self.about();
+        crate::scene::presentation::colour_of(this.cx, this.key())
+    }
+
+    /// The transparency styled onto this surface model (`0.0` opaque … `1.0`
+    /// fully transparent), if any.
+    pub fn transparency(&self) -> Option<f64> {
+        let this = self.about();
+        crate::scene::presentation::transparency_of(this.cx, this.key())
+    }
+
+    /// The name of the presentation layer this surface model belongs to, if
+    /// any.
+    pub fn layer(&self) -> Option<&'m str> {
+        crate::scene::presentation::layer_of(self.cx, self.key())
+    }
+
+    /// Whether this surface model is visible — `false` if an `INVISIBILITY`
+    /// hides it (via its styled item or its layer). Defaults to visible.
+    pub fn is_visible(&self) -> bool {
+        crate::scene::presentation::is_visible(self.cx, self.key())
     }
 }
 
@@ -215,7 +477,8 @@ enum FaceImpl {
     Surface(m::FaceSurfaceId),
 }
 
-/// A bounded face of a solid (`ADVANCED_FACE` / `FACE_SURFACE`) — a surface
+/// A bounded face of a solid or surface model (`ADVANCED_FACE` /
+/// `FACE_SURFACE`) — a surface
 /// trimmed by boundary loops, with an orientation.
 #[derive(Clone, Copy)]
 pub struct Face<'m> {
@@ -230,6 +493,13 @@ impl<'m> Face<'m> {
         Face {
             cx,
             which: FaceImpl::Advanced(id),
+        }
+    }
+
+    pub(crate) fn from_face_surface(cx: Ctx<'m>, id: m::FaceSurfaceId) -> Self {
+        Face {
+            cx,
+            which: FaceImpl::Surface(id),
         }
     }
 
@@ -254,11 +524,21 @@ impl<'m> Face<'m> {
         match self.which {
             FaceImpl::Advanced(i) => {
                 let f = self.cx.model.advanced_face_arena.get(i.0);
-                (&f.name, &f.bounds, &f.face_geometry, f.same_sense)
+                (
+                    self.cx.model.text(f.name),
+                    &f.bounds,
+                    &f.face_geometry,
+                    f.same_sense,
+                )
             }
             FaceImpl::Surface(i) => {
                 let f = self.cx.model.face_surface_arena.get(i.0);
-                (&f.name, &f.bounds, &f.face_geometry, f.same_sense)
+                (
+                    self.cx.model.text(f.name),
+                    &f.bounds,
+                    &f.face_geometry,
+                    f.same_sense,
+                )
             }
         }
     }
@@ -267,8 +547,11 @@ impl<'m> Face<'m> {
         self.parts().0
     }
 
-    pub fn same_sense(&self) -> bool {
-        self.parts().3
+    /// Whether this face's normal is its surface's normal
+    /// ([`Forward`](Orientation::Forward)) or against it — the face's
+    /// `same_sense` flag.
+    pub fn orientation(&self) -> Orientation {
+        Orientation::from_flag(self.parts().3)
     }
 
     /// The underlying (unbounded) surface this face sits on.
@@ -297,6 +580,9 @@ impl<'m> Face<'m> {
     fn boundary_points(&self) -> Vec<[f64; 3]> {
         let mut points = Vec::new();
         for bound in self.bounds() {
+            if let Some(pt) = bound.vertex().and_then(|v| v.point()) {
+                points.push(pt.xyz());
+            }
             for edge in bound.edges() {
                 if let Some(n) = edge.to_nurbs() {
                     points.extend(n.control_points);
@@ -313,20 +599,29 @@ impl<'m> Face<'m> {
     }
 
     /// The NURBS ([`NurbsSurface`](crate::scene::NurbsSurface)) form of this
-    /// face's geometry. A closed analytic surface (sphere, torus, B-spline) is
-    /// returned whole via [`Surface::to_nurbs`]. An *unbounded* surface (plane,
-    /// cylinder, cone, linear extrusion) is sized to the control points of its
-    /// boundary edges' NURBS forms — a guaranteed cover of the boundary — and
-    /// is the untrimmed base patch (the edge loops trim it separately).
-    /// `None` if the kind is unsupported or the bounds are degenerate.
+    /// face's geometry. A surface that converts on its own (B-spline, sphere,
+    /// torus, degenerate torus, an offset of a sphere or torus, a surface of
+    /// revolution over a bounded profile) is returned whole via
+    /// [`Surface::to_nurbs`]. An *unbounded* surface (plane, cylinder, cone,
+    /// linear extrusion, a surface of revolution over a line, an offset of a
+    /// plane, cylinder or cone — see [`Surface::to_nurbs`] for which offsets
+    /// convert) is sized to the
+    /// control points of its boundary edges' NURBS forms and to the vertices
+    /// of its vertex loops — a guaranteed cover of the boundary; a cone
+    /// bounded at one level reaches its apex — and is the untrimmed base patch
+    /// (the edge loops trim it separately).
+    /// `None` if the kind is unsupported or the bounds are degenerate, or for a
+    /// B-spline whose degree is outside 1–25 or whose knot multiplicities do
+    /// not match its control points.
     pub fn to_nurbs(&self) -> Option<crate::scene::nurbs::NurbsSurface> {
-        if let Some(n) = self.surface().to_nurbs() {
+        let this = self.about();
+        if let Some(n) = this.surface().to_nurbs() {
             return Some(n);
         }
-        let cx = self.cx;
-        let pts = self.boundary_points();
-        match self.surface().kind() {
-            SurfaceKind::Plane(p) => crate::scene::nurbs::plane_patch(cx, p, &pts),
+        let cx = this.cx;
+        let pts = this.boundary_points();
+        match this.surface().kind() {
+            SurfaceKind::Plane(p) => crate::scene::nurbs::plane_patch(cx, &p.position, 0.0, &pts),
             SurfaceKind::Cylindrical(c) => {
                 crate::scene::nurbs::cylinder_cone_patch(cx, &c.position, c.radius, 0.0, &pts)
             }
@@ -353,6 +648,7 @@ impl<'m> Face<'m> {
                 let seg = crate::scene::nurbs::revolved_line_segment(cx, line, frame, &pts)?;
                 Some(crate::scene::nurbs::revolve_curve(&seg, frame))
             }
+            SurfaceKind::Offset(o) => crate::scene::nurbs::offset_patch(cx, o, &pts),
             _ => None,
         }
     }
@@ -368,13 +664,15 @@ impl<'m> Face<'m> {
 
     /// The colour styled onto this face, if any.
     pub fn color(&self) -> Option<crate::scene::presentation::Rgb> {
-        crate::scene::presentation::colour_of(self.cx, self.key())
+        let this = self.about();
+        crate::scene::presentation::colour_of(this.cx, this.key())
     }
 
     /// The transparency styled onto this face (`0.0` opaque … `1.0` fully
     /// transparent), if any.
     pub fn transparency(&self) -> Option<f64> {
-        crate::scene::presentation::transparency_of(self.cx, self.key())
+        let this = self.about();
+        crate::scene::presentation::transparency_of(this.cx, this.key())
     }
 
     /// The name of the presentation layer this face belongs to, if any.
@@ -402,6 +700,23 @@ impl<'m> Face<'m> {
         }
         None
     }
+
+    /// The shell listing this face — a `CLOSED_SHELL` of a solid or surface
+    /// model, or an `OPEN_SHELL` of a surface model.
+    pub fn shell(&self) -> Option<Shell<'m>> {
+        let cx = self.cx;
+        cx.ref_graph()
+            .referrers(self.key())
+            .iter()
+            .find_map(|r| match r {
+                m::EntityKey::ClosedShell(i) => Some(Shell::closed(cx, *i)),
+                m::EntityKey::OpenShell(i) => Some(Shell {
+                    cx,
+                    which: ShellImpl::Open(*i),
+                }),
+                _ => None,
+            })
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -418,12 +733,19 @@ pub struct Surface<'m> {
 /// The concrete surface geometry. Common kinds are typed; everything else is
 /// `Other(keyword)` (the surface still exists — it is surfaced, not dropped).
 #[derive(Clone, Copy, Debug)]
+#[non_exhaustive]
 pub enum SurfaceKind<'m> {
     Plane(&'m m::Plane),
     Cylindrical(&'m m::CylindricalSurface),
     Conical(&'m m::ConicalSurface),
     Spherical(&'m m::SphericalSurface),
     Toroidal(&'m m::ToroidalSurface),
+    /// A torus whose minor radius exceeds its major one: `select_outer`
+    /// picks the outer lobe (the "apple") or the inner spindle (the "lemon").
+    DegenerateToroidal(&'m m::DegenerateToroidalSurface),
+    /// A surface at a constant `distance` along the normal of its basis
+    /// surface, which [`Surface::basis_surface`] gives as a handle.
+    Offset(&'m m::OffsetSurface),
     BSpline(&'m m::BSplineSurface),
     BSplineWithKnots(&'m m::BSplineSurfaceWithKnots),
     LinearExtrusion(&'m m::SurfaceOfLinearExtrusion),
@@ -442,18 +764,42 @@ impl<'m> Surface<'m> {
     }
 
     /// The rational-B-spline ([`NurbsSurface`](crate::scene::NurbsSurface))
-    /// form of this surface, if the kind is supported. Only *closed* analytic
-    /// surfaces convert as-is — a full sphere or torus. Open surfaces (plane,
-    /// cylinder, cone) are unbounded and need a face's bounds, so they return
-    /// `None` here — use [`Face::to_nurbs`] instead, which has the bounds.
+    /// form of this surface, if the kind is supported and needs no bounds: a
+    /// B-spline surface (with knots, rational, uniform, quasi-uniform,
+    /// Bézier), a full sphere or torus, the part of a degenerate torus its
+    /// `select_outer` picks, an offset of a sphere or torus, or a full
+    /// revolution of a bounded profile. Open surfaces
+    /// (plane, cylinder, cone, linear extrusion, a revolved line, and offsets
+    /// of the first three) are unbounded and need a face's bounds, so they
+    /// return `None` here — use [`Face::to_nurbs`] instead, which has the
+    /// bounds. A B-spline whose
+    /// degree is outside 1–25 or whose knot multiplicities do not match its
+    /// control points is `None` too.
+    ///
+    /// An offset converts only over a plane, cylinder, cone, sphere or torus,
+    /// and only where it keeps the surface's sense: not past a cylinder's axis or
+    /// a sphere's centre, not with a torus tube shrunk past its centre circle
+    /// or grown past the axis, not through a cone's apex. An offset of a
+    /// free-form surface has no exact rational form; build it from
+    /// [`basis_surface`](Self::basis_surface) and the distance.
     pub fn to_nurbs(&self) -> Option<crate::scene::nurbs::NurbsSurface> {
-        let cx = self.cx;
-        match self.r {
+        let this = self.about();
+        let cx = this.cx;
+        match this.r {
             m::SurfaceRef::SphericalSurface(i) => {
                 crate::scene::nurbs::sphere_to_nurbs(cx, cx.model.spherical_surface_arena.get(i.0))
             }
             m::SurfaceRef::ToroidalSurface(i) => {
                 crate::scene::nurbs::torus_to_nurbs(cx, cx.model.toroidal_surface_arena.get(i.0))
+            }
+            m::SurfaceRef::DegenerateToroidalSurface(i) => {
+                crate::scene::nurbs::degenerate_torus_to_nurbs(
+                    cx,
+                    cx.model.degenerate_toroidal_surface_arena.get(i.0),
+                )
+            }
+            m::SurfaceRef::OffsetSurface(i) => {
+                crate::scene::nurbs::offset_to_nurbs(cx, cx.model.offset_surface_arena.get(i.0))
             }
             m::SurfaceRef::BSplineSurfaceWithKnots(i) => {
                 crate::scene::nurbs::bspline_surf_wk_to_nurbs(
@@ -464,7 +810,7 @@ impl<'m> Surface<'m> {
             // A rational B-spline surface arrives as a complex instance.
             m::SurfaceRef::Complex(i) => crate::scene::nurbs::complex_bspline_surface_to_nurbs(
                 cx,
-                &cx.model.complex_unit_arena.get(i.0).parts,
+                &cx.model.complex_entity_arena.get(i.0).parts,
             ),
             // A full revolution is closed in u, so a bounded profile gives the
             // whole surface (an unbounded LINE profile needs a face's bounds).
@@ -506,6 +852,19 @@ impl<'m> Surface<'m> {
         }
     }
 
+    /// The surface an `OFFSET_SURFACE` is offset from (its `basis_surface`);
+    /// `None` for any other surface. The distance is on
+    /// [`SurfaceKind::Offset`].
+    pub fn basis_surface(&self) -> Option<Surface<'m>> {
+        let m::SurfaceRef::OffsetSurface(i) = self.r else {
+            return None;
+        };
+        Some(Surface {
+            cx: self.cx,
+            r: &self.cx.model.offset_surface_arena.get(i.0).basis_surface,
+        })
+    }
+
     pub fn kind(&self) -> SurfaceKind<'m> {
         let model = self.cx.model;
         match self.r {
@@ -532,11 +891,13 @@ impl<'m> Surface<'m> {
                 SurfaceKind::Bezier(model.bezier_surface_arena.get(i.0))
             }
             m::SurfaceRef::BoundedSurface(_) => SurfaceKind::Other("BOUNDED_SURFACE"),
-            m::SurfaceRef::DegenerateToroidalSurface(_) => {
-                SurfaceKind::Other("DEGENERATE_TOROIDAL_SURFACE")
+            m::SurfaceRef::DegenerateToroidalSurface(i) => {
+                SurfaceKind::DegenerateToroidal(model.degenerate_toroidal_surface_arena.get(i.0))
             }
             m::SurfaceRef::ElementarySurface(_) => SurfaceKind::Other("ELEMENTARY_SURFACE"),
-            m::SurfaceRef::OffsetSurface(_) => SurfaceKind::Other("OFFSET_SURFACE"),
+            m::SurfaceRef::OffsetSurface(i) => {
+                SurfaceKind::Offset(model.offset_surface_arena.get(i.0))
+            }
             m::SurfaceRef::QuasiUniformSurface(i) => {
                 SurfaceKind::QuasiUniform(model.quasi_uniform_surface_arena.get(i.0))
             }
@@ -611,38 +972,56 @@ impl<'m> Bound<'m> {
         }
     }
 
-    /// Whether this loop runs in its stated sense with respect to the face —
-    /// the `FACE_BOUND` `orientation` flag; `false` means the loop is used
-    /// reversed. One of the three orientation layers a kernel composes:
-    /// [`Face::same_sense`] (surface normal), this flag (whole loop), and the
-    /// per-edge flag of [`Bound::oriented_edges`].
-    pub fn orientation(&self) -> bool {
-        match self.which {
+    /// Whether the face uses this loop as it runs
+    /// ([`Forward`](Orientation::Forward)) or reversed — the `FACE_BOUND`
+    /// `orientation` flag. One of the three orientation layers a kernel
+    /// composes: [`Face::orientation`] (surface normal), this (whole loop),
+    /// and the per-edge orientation of [`Bound::oriented_edges`].
+    pub fn orientation(&self) -> Orientation {
+        Orientation::from_flag(match self.which {
             BoundImpl::Inner(i) => self.cx.model.face_bound_arena.get(i.0).orientation,
             BoundImpl::Outer(i) => self.cx.model.face_outer_bound_arena.get(i.0).orientation,
-        }
+        })
     }
 
-    /// Edges of this boundary loop (only `EDGE_LOOP` loops carry edges),
-    /// without their per-edge orientation — use [`Bound::oriented_edges`] to
-    /// assemble a wire.
+    /// Edges of this boundary loop (only `EDGE_LOOP` loops carry edges; a
+    /// `VERTEX_LOOP`, as at a cone's apex, has its one [`vertex`](Self::vertex)
+    /// instead), without their per-edge orientation — use
+    /// [`Bound::oriented_edges`] to assemble a wire.
     pub fn edges(&self) -> impl Iterator<Item = Edge<'m>> + 'm {
         self.oriented_edges().map(|(e, _)| e)
     }
 
     /// Edges of this boundary loop with each `ORIENTED_EDGE`'s orientation:
-    /// `true` means the edge is traversed in its own start → end direction at
-    /// this position in the loop, `false` reversed — what a kernel needs to
-    /// assemble the loop into a wire without end-matching heuristics.
-    pub fn oriented_edges(&self) -> impl Iterator<Item = (Edge<'m>, bool)> + 'm {
-        let cx = self.cx;
-        resolve_edge_loop(cx.model, self.loop_ref())
+    /// [`Forward`](Orientation::Forward) means the edge is traversed in its
+    /// own start → end direction at this position in the loop,
+    /// [`Reversed`](Orientation::Reversed) end → start — what a kernel needs
+    /// to assemble the loop into a wire without end-matching heuristics.
+    pub fn oriented_edges(&self) -> impl Iterator<Item = (Edge<'m>, Orientation)> + 'm {
+        let this = self.about();
+        let cx = this.cx;
+        resolve_edge_loop(cx, this.loop_ref())
             .into_iter()
             .flat_map(|el| el.edge_list.iter())
             .filter_map(move |oer| {
                 let oe = resolve_oriented_edge(cx.model, oer)?;
-                Some((Edge::from_edge_ref(cx, &oe.edge_element)?, oe.orientation))
+                Some((
+                    Edge::from_edge_ref(cx, &oe.edge_element)?,
+                    Orientation::from_flag(oe.orientation),
+                ))
             })
+    }
+
+    /// The one vertex of a `VERTEX_LOOP` boundary — a face that closes to a
+    /// point, such as a cone at its apex. `None` for any other loop.
+    pub fn vertex(&self) -> Option<Vertex<'m>> {
+        let m::LoopRef::VertexLoop(i) = self.loop_ref() else {
+            return None;
+        };
+        Vertex::from_ref(
+            self.cx,
+            &self.cx.model.vertex_loop_arena.get(i.0).loop_vertex,
+        )
     }
 }
 
@@ -703,20 +1082,56 @@ impl<'m> Edge<'m> {
         self.raw().same_sense
     }
 
+    /// The colour of this edge's line style (`CURVE_STYLE.curve_colour`), if
+    /// any.
+    pub fn color(&self) -> Option<crate::scene::presentation::Rgb> {
+        let this = self.about();
+        crate::scene::presentation::curve_colour_of(this.cx, this.key())
+    }
+
+    /// The line width of this edge's style (`CURVE_STYLE.curve_width`, a raw
+    /// measure value), if any.
+    pub fn width(&self) -> Option<f64> {
+        let this = self.about();
+        crate::scene::presentation::curve_width_of(this.cx, this.key())
+    }
+
+    /// The line font of this edge's style (`CURVE_STYLE.curve_font`) — a
+    /// pre-defined font name such as `continuous` or `dashed` — if any.
+    pub fn line_font(&self) -> Option<&'m str> {
+        let this = self.about();
+        crate::scene::presentation::curve_font_of(this.cx, this.key())
+    }
+
+    /// The name of the presentation layer this edge belongs to, if any.
+    pub fn layer(&self) -> Option<&'m str> {
+        crate::scene::presentation::layer_of(self.cx, self.key())
+    }
+
+    /// Whether this edge is visible — `false` if an `INVISIBILITY` hides it
+    /// (via its styled item or its layer). Defaults to visible.
+    pub fn is_visible(&self) -> bool {
+        crate::scene::presentation::is_visible(self.cx, self.key())
+    }
+
     /// The NURBS ([`NurbsCurve`](crate::scene::NurbsCurve)) form of this
     /// edge: its geometry bounded between the two vertex points, in the edge's
     /// direction (start → end). Contrast with [`Curve::to_nurbs`], which
     /// converts the *whole* curve — here an unbounded line becomes the finite
-    /// segment, a circle the arc between the vertices, and an edge whose
-    /// vertices coincide (a closed edge) the whole closed curve.
+    /// segment, a circle the arc between the vertices, a parabola or hyperbola
+    /// the exact span between them, and an edge whose vertices coincide (a
+    /// closed edge) the whole closed curve. `None` for a closed edge on a line,
+    /// parabola or hyperbola, and for a B-spline whose degree is outside 1–25
+    /// or whose knot multiplicities do not match its control points.
     pub fn to_nurbs(&self) -> Option<crate::scene::nurbs::NurbsCurve> {
-        let cx = self.cx;
+        let this = self.about();
+        let cx = this.cx;
         let coords = |v: Option<Vertex<'m>>| Some(v?.point()?.xyz());
-        let (Some(p0), Some(p1)) = (coords(self.start()), coords(self.end())) else {
+        let (Some(p0), Some(p1)) = (coords(this.start()), coords(this.end())) else {
             cx.warn("EDGE_CURVE.to_nurbs: unresolved edge vertex".to_owned());
             return None;
         };
-        let raw = self.raw();
+        let raw = this.raw();
         crate::scene::nurbs::edge_to_nurbs(cx, &raw.edge_geometry, p0, p1, raw.same_sense)
     }
 }
@@ -736,10 +1151,13 @@ pub struct Curve<'m> {
 /// The concrete curve geometry. Common kinds are typed; everything else is
 /// `Other(keyword)`.
 #[derive(Clone, Copy, Debug)]
+#[non_exhaustive]
 pub enum CurveKind<'m> {
     Line(&'m m::Line),
     Circle(&'m m::Circle),
     Ellipse(&'m m::Ellipse),
+    Parabola(&'m m::Parabola),
+    Hyperbola(&'m m::Hyperbola),
     BSpline(&'m m::BSplineCurve),
     BSplineWithKnots(&'m m::BSplineCurveWithKnots),
     Trimmed(&'m m::TrimmedCurve),
@@ -765,7 +1183,7 @@ macro_rules! curve_impl {
         #[derive(Clone, Copy)]
         enum CurveImpl {
             $( $V(m::$id), )+
-            Complex(m::ComplexUnitId),
+            Complex(m::ComplexEntityId),
         }
 
         impl<'m> Curve<'m> {
@@ -774,7 +1192,7 @@ macro_rules! curve_impl {
             pub fn key(&self) -> m::EntityKey {
                 match self.which {
                     $( CurveImpl::$V(i) => m::EntityKey::$V(i), )+
-                    CurveImpl::Complex(i) => m::EntityKey::ComplexUnit(i),
+                    CurveImpl::Complex(i) => m::EntityKey::ComplexEntity(i),
                 }
             }
 
@@ -784,6 +1202,18 @@ macro_rules! curve_impl {
                     m::CurveRef::Complex(i) => CurveImpl::Complex(*i),
                 };
                 Curve { cx, which }
+            }
+
+            /// A curve element of a `GEOMETRIC_SET`; `None` for any other element.
+            pub(crate) fn from_set_select(
+                cx: Ctx<'m>,
+                r: &m::GeometricSetSelectRef,
+            ) -> Option<Self> {
+                let which = match r {
+                    $( m::GeometricSetSelectRef::$V(i) => CurveImpl::$V(*i), )+
+                    _ => return None,
+                };
+                Some(Curve { cx, which })
             }
 
             /// A curve reached as a `GEOMETRIC_ITEM_SPECIFIC_USAGE` identified item
@@ -817,6 +1247,7 @@ curve_impl! {
     Hyperbola, HyperbolaId;
     IntersectionCurve, IntersectionCurveId;
     Line, LineId;
+    Parabola, ParabolaId;
     Pcurve, PcurveId;
     Polyline, PolylineId;
     QuasiUniformCurve, QuasiUniformCurveId;
@@ -830,30 +1261,51 @@ curve_impl! {
 impl<'m> Curve<'m> {
     /// The colour of this curve's line style (`CURVE_STYLE.curve_colour`), if any.
     pub fn color(&self) -> Option<crate::scene::presentation::Rgb> {
-        crate::scene::presentation::curve_colour_of(self.cx, self.key())
+        let this = self.about();
+        crate::scene::presentation::curve_colour_of(this.cx, this.key())
     }
 
     /// The line width of this curve's style (`CURVE_STYLE.curve_width`, a raw
     /// measure value), if any.
     pub fn width(&self) -> Option<f64> {
-        crate::scene::presentation::curve_width_of(self.cx, self.key())
+        let this = self.about();
+        crate::scene::presentation::curve_width_of(this.cx, this.key())
     }
 
     /// The line-font name of this curve's style (`CURVE_STYLE.curve_font`, a line
     /// pattern like `continuous` / `dashed`), if any.
     pub fn line_font(&self) -> Option<&'m str> {
-        crate::scene::presentation::curve_font_of(self.cx, self.key())
+        let this = self.about();
+        crate::scene::presentation::curve_font_of(this.cx, this.key())
+    }
+
+    /// The name of the presentation layer this curve belongs to, if any.
+    pub fn layer(&self) -> Option<&'m str> {
+        crate::scene::presentation::layer_of(self.cx, self.key())
+    }
+
+    /// Whether this curve is visible — `false` if an `INVISIBILITY` hides it
+    /// (via its styled item or its layer). Defaults to visible.
+    pub fn is_visible(&self) -> bool {
+        crate::scene::presentation::is_visible(self.cx, self.key())
     }
 
     /// The rational-B-spline ([`NurbsCurve`](crate::scene::NurbsCurve))
-    /// form of this curve, if the kind is supported (circle, ellipse, B-spline
-    /// with knots). Returns the *full* analytic curve — trimming applied by an
+    /// form of this curve, if the kind is supported: a circle, an ellipse, the
+    /// B-spline family (with knots, rational, uniform, quasi-uniform, Bézier),
+    /// a polyline, a trimmed or composite curve, or the 3D curve of a curve on
+    /// a surface. Returns the *full* analytic curve — trimming applied by an
     /// edge that uses this curve is **not** reflected here. `None` for a curve
-    /// that needs bounds it alone lacks — an unbounded line, say; use
-    /// [`Edge::to_nurbs`] there.
+    /// that needs bounds it alone lacks — an unbounded line, parabola or
+    /// hyperbola; use [`Edge::to_nurbs`] there, or trim it — and for a B-spline
+    /// whose degree is outside 1–25 or whose knot multiplicities do not match
+    /// its control points. A trimmed parabola or hyperbola converts exactly; a
+    /// trim given as a point is followed rather than its parameter, which
+    /// writers disagree on for a parabola.
     pub fn to_nurbs(&self) -> Option<crate::scene::nurbs::NurbsCurve> {
-        let cx = self.cx;
-        match self.which {
+        let this = self.about();
+        let cx = this.cx;
+        match this.which {
             CurveImpl::Circle(i) => {
                 crate::scene::nurbs::circle_to_nurbs(cx, cx.model.circle_arena.get(i.0))
             }
@@ -867,9 +1319,10 @@ impl<'m> Curve<'m> {
             // A rational B-spline arrives as a complex instance; dig its parts.
             CurveImpl::Complex(i) => crate::scene::nurbs::complex_bspline_curve_to_nurbs(
                 cx,
-                &cx.model.complex_unit_arena.get(i.0).parts,
+                &cx.model.complex_entity_arena.get(i.0).parts,
             ),
-            // A trimmed line/circle/ellipse → a bounded segment/arc.
+            // A trimmed line/circle/ellipse/parabola/hyperbola → a bounded
+            // segment/arc/span.
             CurveImpl::TrimmedCurve(i) => {
                 crate::scene::nurbs::trimmed_to_nurbs(cx, cx.model.trimmed_curve_arena.get(i.0))
             }
@@ -929,6 +1382,23 @@ impl<'m> Curve<'m> {
         }
     }
 
+    /// The 3D curve of a curve on a surface — `SURFACE_CURVE`, `SEAM_CURVE`,
+    /// `BOUNDED_SURFACE_CURVE` or `INTERSECTION_CURVE` (its `curve_3d`), the
+    /// geometry an edge on one follows. `None` for any other curve.
+    pub fn curve_3d(&self) -> Option<Curve<'m>> {
+        let model = self.cx.model;
+        let r = match self.which {
+            CurveImpl::SurfaceCurve(i) => &model.surface_curve_arena.get(i.0).curve_3d,
+            CurveImpl::SeamCurve(i) => &model.seam_curve_arena.get(i.0).curve_3d,
+            CurveImpl::BoundedSurfaceCurve(i) => {
+                &model.bounded_surface_curve_arena.get(i.0).curve_3d
+            }
+            CurveImpl::IntersectionCurve(i) => &model.intersection_curve_arena.get(i.0).curve_3d,
+            _ => return None,
+        };
+        Some(Curve::from_curve_ref(self.cx, r))
+    }
+
     pub fn kind(&self) -> CurveKind<'m> {
         let model = self.cx.model;
         match self.which {
@@ -951,7 +1421,8 @@ impl<'m> Curve<'m> {
             }
             CurveImpl::Conic(_) => CurveKind::Other("CONIC"),
             CurveImpl::Curve(_) => CurveKind::Other("CURVE"),
-            CurveImpl::Hyperbola(_) => CurveKind::Other("HYPERBOLA"),
+            CurveImpl::Hyperbola(i) => CurveKind::Hyperbola(model.hyperbola_arena.get(i.0)),
+            CurveImpl::Parabola(i) => CurveKind::Parabola(model.parabola_arena.get(i.0)),
             CurveImpl::IntersectionCurve(i) => {
                 CurveKind::IntersectionCurve(model.intersection_curve_arena.get(i.0))
             }
@@ -1052,7 +1523,6 @@ impl<'m> Point<'m> {
         m::EntityKey::CartesianPoint(self.id)
     }
 
-    /// The point's coordinates (`x, y[, z]`).
     /// The coordinates as a 3-vector, missing components padded with `0.0` —
     /// the form every consumer wants (see [`Point::coords`] for the raw slice).
     pub fn xyz(&self) -> [f64; 3] {
@@ -1064,6 +1534,7 @@ impl<'m> Point<'m> {
         ]
     }
 
+    /// The point's coordinates as written (`x, y[, z]`).
     pub fn coords(&self) -> &'m [f64] {
         &self
             .cx
@@ -1072,63 +1543,128 @@ impl<'m> Point<'m> {
             .get(self.id.0)
             .coordinates
     }
+
+    /// The marker colour of this point's style (`POINT_STYLE.marker_colour`),
+    /// if any.
+    pub fn color(&self) -> Option<crate::scene::presentation::Rgb> {
+        let this = self.about();
+        crate::scene::presentation::point_colour_of(this.cx, this.key())
+    }
+
+    /// The name of the presentation layer this point belongs to, if any.
+    pub fn layer(&self) -> Option<&'m str> {
+        crate::scene::presentation::layer_of(self.cx, self.key())
+    }
+
+    /// Whether this point is visible — `false` if an `INVISIBILITY` hides it
+    /// (via its styled item or its layer). Defaults to visible.
+    pub fn is_visible(&self) -> bool {
+        crate::scene::presentation::is_visible(self.cx, self.key())
+    }
 }
 
 // ---------------------------------------------------------------------------
 // Reference resolvers (hand-written for the spike)
 // ---------------------------------------------------------------------------
 
-/// The solid whose shell is this closed shell — a `MANIFOLD_SOLID_BREP` or a
-/// `BREP_WITH_VOIDS`, directly or through an `ORIENTED_CLOSED_SHELL` wrapper
-/// (the wrapper is how a `BREP_WITH_VOIDS` cavity references its shell). Reverse
-/// over [`RefGraph`].
+/// The solid whose outer shell or void is the closed shell `cs` — directly
+/// or through `ORIENTED_CLOSED_SHELL` wrappers.
 fn closed_shell_to_solid(rg: &RefGraph, cs: m::ClosedShellId) -> Option<SolidImpl> {
-    for &r in rg.referrers(m::EntityKey::ClosedShell(cs)) {
-        match r {
-            m::EntityKey::ManifoldSolidBrep(msb) => return Some(SolidImpl::Manifold(msb)),
-            m::EntityKey::BrepWithVoids(bwv) => return Some(SolidImpl::WithVoids(bwv)),
-            m::EntityKey::OrientedClosedShell(ocs) => {
-                for &r2 in rg.referrers(m::EntityKey::OrientedClosedShell(ocs)) {
-                    match r2 {
-                        m::EntityKey::ManifoldSolidBrep(msb) => {
-                            return Some(SolidImpl::Manifold(msb));
-                        }
-                        m::EntityKey::BrepWithVoids(bwv) => return Some(SolidImpl::WithVoids(bwv)),
-                        _ => {}
-                    }
+    closed_shell_user(rg, cs, |r| match r {
+        m::EntityKey::ManifoldSolidBrep(msb) => Some(SolidImpl::Manifold(msb)),
+        m::EntityKey::BrepWithVoids(bwv) => Some(SolidImpl::WithVoids(bwv)),
+        _ => None,
+    })
+}
+
+/// The first referrer `pick` accepts of the closed shell `cs` — directly or
+/// through `ORIENTED_CLOSED_SHELL` wrappers.
+fn closed_shell_user<T>(
+    rg: &RefGraph,
+    cs: m::ClosedShellId,
+    pick: impl Fn(m::EntityKey) -> Option<T>,
+) -> Option<T> {
+    let mut level = vec![m::EntityKey::ClosedShell(cs)];
+    for _ in 0..=SHELL_WRAP_DEPTH {
+        let mut wrappers = Vec::new();
+        for &key in &level {
+            for &r in rg.referrers(key) {
+                if let Some(found) = pick(r) {
+                    return Some(found);
+                }
+                if matches!(r, m::EntityKey::OrientedClosedShell(_)) {
+                    wrappers.push(r);
                 }
             }
-            _ => {}
         }
+        if wrappers.is_empty() {
+            break;
+        }
+        level = wrappers;
     }
     None
 }
 
-/// Resolve a `ClosedShellRef` to the underlying closed shell, following an
-/// `OrientedClosedShell` indirection. `Complex` shells are not resolved.
-fn resolve_closed_shell<'m>(
-    model: &'m StepModel,
+/// How deep `ORIENTED_CLOSED_SHELL` wrappers are followed.
+const SHELL_WRAP_DEPTH: usize = 8;
+
+/// Resolve a `ClosedShellRef` to the underlying closed shell and the
+/// orientation its `ORIENTED_CLOSED_SHELL` wrappers compose to. `Complex`
+/// shells are not resolved (warned).
+fn resolve_closed_shell(
+    cx: Ctx<'_>,
     r: &m::ClosedShellRef,
-) -> Option<&'m m::ClosedShell> {
+) -> Option<(m::ClosedShellId, Orientation)> {
     match r {
-        m::ClosedShellRef::ClosedShell(i) => Some(model.closed_shell_arena.get(i.0)),
+        m::ClosedShellRef::ClosedShell(i) => Some((*i, Orientation::Forward)),
         m::ClosedShellRef::OrientedClosedShell(i) => {
-            let oc = model.oriented_closed_shell_arena.get(i.0);
-            resolve_closed_shell(model, &oc.closed_shell_element)
+            resolve_oriented_closed_shell(cx, cx.model.oriented_closed_shell_arena.get(i.0))
         }
-        m::ClosedShellRef::Complex(_) => None,
+        m::ClosedShellRef::Complex(_) => {
+            cx.warn("closed shell is a complex instance".to_owned());
+            None
+        }
     }
 }
 
-/// Resolve a `LoopRef` to an `EdgeLoop` (only edge loops carry edges).
-fn resolve_edge_loop<'m>(model: &'m StepModel, r: &m::LoopRef) -> Option<&'m m::EdgeLoop> {
-    match r {
-        m::LoopRef::EdgeLoop(i) => Some(model.edge_loop_arena.get(i.0)),
-        m::LoopRef::Loop(_)
-        | m::LoopRef::PolyLoop(_)
-        | m::LoopRef::VertexLoop(_)
-        | m::LoopRef::Complex(_) => None,
+/// [`resolve_closed_shell`] from an `ORIENTED_CLOSED_SHELL`.
+fn resolve_oriented_closed_shell<'m>(
+    cx: Ctx<'m>,
+    mut oc: &'m m::OrientedClosedShell,
+) -> Option<(m::ClosedShellId, Orientation)> {
+    let mut forward = true;
+    for _ in 0..SHELL_WRAP_DEPTH {
+        forward ^= !oc.orientation;
+        match &oc.closed_shell_element {
+            m::ClosedShellRef::ClosedShell(i) => {
+                return Some((*i, Orientation::from_flag(forward)));
+            }
+            m::ClosedShellRef::OrientedClosedShell(i) => {
+                oc = cx.model.oriented_closed_shell_arena.get(i.0);
+            }
+            m::ClosedShellRef::Complex(_) => {
+                cx.warn("closed shell is a complex instance".to_owned());
+                return None;
+            }
+        }
     }
+    cx.warn("ORIENTED_CLOSED_SHELL nesting too deep to resolve".to_owned());
+    None
+}
+
+/// Resolve a `LoopRef` to an `EdgeLoop` (only edge loops carry edges; a vertex
+/// loop is reached through [`Bound::vertex`]). Loops this layer does not read
+/// are reported.
+fn resolve_edge_loop<'m>(cx: Ctx<'m>, r: &m::LoopRef) -> Option<&'m m::EdgeLoop> {
+    let what = match r {
+        m::LoopRef::EdgeLoop(i) => return Some(cx.model.edge_loop_arena.get(i.0)),
+        m::LoopRef::VertexLoop(_) => return None,
+        m::LoopRef::PolyLoop(_) => "POLY_LOOP",
+        m::LoopRef::Loop(_) => "LOOP",
+        m::LoopRef::Complex(_) => "complex loop",
+    };
+    cx.warn(format!("FACE_BOUND: a {what} boundary is not read"));
+    None
 }
 
 /// Resolve an `OrientedEdgeRef` to an `OrientedEdge`.
@@ -1141,3 +1677,15 @@ fn resolve_oriented_edge<'m>(
         m::OrientedEdgeRef::Complex(_) => None,
     }
 }
+
+about_by_key!(
+    Bound,
+    Curve,
+    Edge,
+    Face,
+    Point,
+    Shell,
+    Solid,
+    Surface,
+    SurfaceModel
+);

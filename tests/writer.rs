@@ -4,7 +4,9 @@
 //! APD/`application_context` entities agree). Inline STEP docs, not valid-CAD
 //! fixtures.
 
-use step_io::{dump_universal, read, write};
+mod common;
+
+use step_io::{read, write};
 
 const HEADER: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\n\
 FILE_NAME('','',(''),(''),'','','');\n\
@@ -24,7 +26,7 @@ fn write_reserializes_faithfully_under_source_schema() {
     let (model, rep) = read(src.as_bytes()).expect("read");
     assert_eq!(rep.dropped.len(), 0, "input clean: {:?}", rep.dropped);
 
-    let out = write(&model);
+    let out = common::text(&model);
     assert!(out.contains("STATE_OBSERVED"), "{out}");
     assert!(out.contains("PRE_DEFINED_PRESENTATION_STYLE"), "{out}");
     assert!(
@@ -51,7 +53,7 @@ fn dump_universal_marks_header_and_apd() {
                 #2=APPLICATION_PROTOCOL_DEFINITION('international standard','automotive_design',2010,#1);\n";
     let (mut model, _) = read(doc(body).as_bytes()).expect("read");
 
-    let uni = dump_universal(&mut model);
+    let uni = universal(&mut model);
     assert!(uni.contains("FILE_SCHEMA(('STEPIO_UNIVERSAL'))"), "{uni}");
     assert!(
         uni.contains("APPLICATION_PROTOCOL_DEFINITION('not a standard','stepio_universal',0"),
@@ -63,4 +65,91 @@ fn dump_universal_marks_header_and_apd() {
         ),
         "{uni}"
     );
+}
+
+/// The model as step-io's universal dump, through [`step_io::dump_universal`].
+fn universal(model: &mut step_io::StepModel) -> String {
+    let mut out = Vec::new();
+    step_io::dump_universal(model, &mut out).expect("writing to a Vec does not fail");
+    String::from_utf8(out).expect("Part 21 output is ASCII")
+}
+
+/// A builder model of `n` free vertices — about 100 bytes of text each.
+fn vertices(n: u32) -> step_io::StepModel {
+    let mut b = step_io::StepBuilder::new();
+    for i in 0..n {
+        b.vertex([f64::from(i), 0.0, 0.0]).expect("vertex");
+    }
+    b.finish()
+}
+
+/// Records each write the writer makes.
+#[derive(Default)]
+struct Writes {
+    sizes: Vec<usize>,
+    bytes: Vec<u8>,
+    flushes: usize,
+}
+
+impl std::io::Write for Writes {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.sizes.push(buf.len());
+        self.bytes.extend_from_slice(buf);
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        self.flushes += 1;
+        Ok(())
+    }
+}
+
+#[test]
+fn write_sends_the_text_a_chunk_at_a_time() {
+    const CHUNK: usize = 64 * 1024;
+    let model = vertices(5_000);
+    let mut out = Writes::default();
+    write(&model, &mut out).expect("write");
+
+    let text = common::text(&model);
+    assert!(text.len() > 4 * CHUNK, "only {} bytes", text.len());
+    assert_eq!(
+        out.bytes,
+        text.as_bytes(),
+        "the same text, however it is sent"
+    );
+    assert!(out.sizes.len() > 4, "{} writes", out.sizes.len());
+    let largest = out.sizes.iter().max().copied().unwrap_or(0);
+    assert!(largest < 2 * CHUNK, "a write of {largest} bytes");
+    assert_eq!(out.flushes, 1, "flushed once, at the end");
+}
+
+/// An output with room for `room` bytes, failing once it is full.
+struct Full {
+    room: usize,
+}
+
+impl std::io::Write for Full {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        if self.room == 0 {
+            return Err(std::io::Error::other("the disk is full"));
+        }
+        let taken = buf.len().min(self.room);
+        self.room -= taken;
+        Ok(taken)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
+#[test]
+fn write_reports_a_failing_output() {
+    let model = vertices(5_000);
+    // Full at once, during the header, and partway through the entities.
+    for room in [0, 100, 200_000] {
+        let err = write(&model, Full { room }).expect_err("the output is full");
+        assert_eq!(err.to_string(), "the disk is full", "room {room}");
+    }
 }

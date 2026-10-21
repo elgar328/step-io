@@ -18,15 +18,62 @@ fn field_type(ir: &ModelIr, f: &Field) -> String {
     }
 }
 
+/// Whether a field holds strings the authoring layer takes as `&str`s: a
+/// STRING, or a list of them.
+fn author_takes_strings(k: &Kind) -> bool {
+    match k {
+        Kind::Str => true,
+        Kind::Vec(inner) => matches!(inner.as_ref(), Kind::Str),
+        _ => false,
+    }
+}
+
+/// The type an `Ap242Author` constructor takes for a field: the field's
+/// type, with `&str` for a `Text` and `&[&str]` for a list of them.
+fn author_param_type(ir: &ModelIr, f: &Field) -> String {
+    if !author_takes_strings(&f.kind) {
+        return field_type(ir, f);
+    }
+    let base = if matches!(f.kind, Kind::Str) {
+        "&str"
+    } else {
+        "&[&str]"
+    };
+    if f.optional || f.derivable {
+        format!("Option<{base}>")
+    } else {
+        base.to_owned()
+    }
+}
+
+/// The statement storing a constructor's string argument(s) `ident` as
+/// model `Text`, or `""` if the field takes no strings.
+fn author_store_strings(ident: &str, f: &Field) -> String {
+    if !author_takes_strings(&f.kind) {
+        return String::new();
+    }
+    let one = if matches!(f.kind, Kind::Str) {
+        "self.text(v)".to_string()
+    } else {
+        "v.iter().map(|e| self.text(e)).collect()".to_string()
+    };
+    if f.optional || f.derivable {
+        format!("        let {ident} = {ident}.map(|v| {one});\n")
+    } else {
+        format!("        let {ident} = {{ let v = {ident}; {one} }};\n")
+    }
+}
+
 fn kind_type(ir: &ModelIr, k: &Kind) -> String {
     match k {
         Kind::Ref(t) => ir.ref_enums[t].rust.clone(),
         Kind::Vec(inner) => format!("Vec<{}>", kind_type(ir, inner)),
+        Kind::Reals3 { .. } => "Reals3".into(),
         Kind::Real => "f64".into(),
         Kind::Int => "i64".into(),
         Kind::Bool => "bool".into(),
         Kind::Logical => "Logical".into(),
-        Kind::Str => "String".into(),
+        Kind::Str => "Text".into(),
         Kind::Binary => "String".into(),
         Kind::Enum(a) => ir.enums[a].rust.clone(),
         Kind::MeasureSelect(_) => "MeasureValue".into(),
@@ -60,29 +107,252 @@ fn idents(fields: &[Field]) -> Vec<(String, &Field)> {
 // model.rs
 // ===========================================================================
 
+/// The model's read access: the `Entity` / `EntityId` traits, `StepModel::all`,
+/// `get` and indexing, and the `entity!` macro implementing them per type.
+const ENTITY_ACCESS: &str = r#"
+/// An entity type of the model: a generated entity struct, or [`ComplexEntity`]
+/// for a complex instance. [`StepModel::all`] lists the entities of a type.
+/// The trait is sealed: only the model's own types implement it.
+pub trait Entity: sealed::SealedEntity {
+    /// The id type of this entity type.
+    type Id: EntityId<Entity = Self>;
+}
+
+/// The id of one entity type: [`StepModel::get`] or `model[id]` reads the
+/// entity it names. The trait is sealed: only the model's own ids implement
+/// it.
+pub trait EntityId: sealed::SealedId {
+    /// The entity type this id names.
+    type Entity: Entity<Id = Self>;
+}
+
+// The storage access behind the public traits. The `Token` argument, which
+// only this crate can make, keeps the methods out of reach through a
+// public trait bound.
+mod sealed {
+    pub struct Token(pub(crate) ());
+    pub trait SealedEntity: Sized + 'static {
+        fn items(model: &super::StepModel, _: Token) -> &[Self];
+    }
+    pub trait SealedId: Copy {
+        fn slot(self, _: Token) -> usize;
+        fn at(index: u32, _: Token) -> Self;
+    }
+}
+use sealed::Token;
+
+impl StepModel {
+    /// Every entity of type `T`, with its id, in the model's order:
+    /// `model.all::<Circle>()`.
+    #[allow(clippy::cast_possible_truncation)] // a model holds at most u32::MAX of a type
+    pub fn all<T: Entity>(&self) -> impl ExactSizeIterator<Item = (T::Id, &T)> + '_ {
+        <T as sealed::SealedEntity>::items(self, Token(()))
+            .iter()
+            .enumerate()
+            .map(|(i, e)| (<T::Id as sealed::SealedId>::at(i as u32, Token(())), e))
+    }
+    /// The entity `id` names, or `None` for an id out of this model's range.
+    pub fn get<I: EntityId>(&self, id: I) -> Option<&I::Entity> {
+        <I::Entity as sealed::SealedEntity>::items(self, Token(())).get(sealed::SealedId::slot(id, Token(())))
+    }
+}
+
+/// `model[id]`: the entity `id` names. Panics for an id out of this model's
+/// range; [`StepModel::get`] returns `None` instead.
+impl<I: EntityId> std::ops::Index<I> for StepModel {
+    type Output = I::Entity;
+    fn index(&self, id: I) -> &I::Entity {
+        &<I::Entity as sealed::SealedEntity>::items(self, Token(()))[sealed::SealedId::slot(id, Token(()))]
+    }
+}
+
+macro_rules! entity {
+    ($entity:ident, $id:ident, $arena:ident) => {
+        impl Entity for $entity { type Id = $id; }
+        impl sealed::SealedEntity for $entity {
+            fn items(model: &StepModel, _: Token) -> &[Self] { &model.$arena.items }
+        }
+        impl EntityId for $id { type Entity = $entity; }
+        impl sealed::SealedId for $id {
+            fn slot(self, _: Token) -> usize { self.0 as usize }
+            fn at(index: u32, _: Token) -> Self { $id(index) }
+        }
+    };
+}
+"#;
+
 pub fn emit_model(ir: &ModelIr) -> String {
     let mut s = String::from(HEADER);
-    s.push_str("//! The schema-faithful model — [`StepModel`], one arena per entity type.\n\n");
+    s.push_str("//! The schema-faithful model — [`StepModel`], one arena per entity type.\n//! Public as `step_io::model`, whose docs describe it.\n\n");
 
     // Arena + helpers.
     s.push_str(
         r#"#[derive(Debug)]
-pub struct Arena<T> { pub items: Vec<T> }
+pub(crate) struct Arena<T> { pub(crate) items: Vec<T> }
 impl<T> Default for Arena<T> { fn default() -> Self { Arena { items: Vec::new() } } }
 impl<T> Arena<T> {
-    pub fn push(&mut self, v: T) -> usize { let i = self.items.len(); self.items.push(v); i }
-    pub fn get(&self, i: usize) -> &T { &self.items[i] }
+    /// Append an item and return its index. An arena holds at most
+    /// `u32::MAX` items (the reader rejects larger files).
+    pub(crate) fn push(&mut self, v: T) -> u32 { let i = self.items.len() as u32; self.items.push(v); i }
+    pub(crate) fn get(&self, i: u32) -> &T { &self.items[i as usize] }
+    /// The indices of the items, in order.
+    pub(crate) fn indices(&self) -> std::ops::Range<u32> { 0..self.items.len() as u32 }
+    /// Keep the items at the distinct indices `order`, in that order, and drop
+    /// the rest. Permutes in place, without a second copy of the items.
+    pub(crate) fn retain_order(&mut self, order: &[u32]) {
+        let n = self.items.len();
+        if order.iter().enumerate().all(|(p, &i)| i as usize == p) {
+            self.items.truncate(order.len());
+            return;
+        }
+        // src[p] = the index whose item ends up at p; the dropped ones fill the tail.
+        let mut kept = vec![false; n];
+        for &i in order { kept[i as usize] = true; }
+        let mut src: Vec<u32> = Vec::with_capacity(n);
+        src.extend_from_slice(order);
+        src.extend((0..n as u32).filter(|&i| !kept[i as usize]));
+        drop(kept);
+        for start in 0..n {
+            let mut j = start;
+            loop {
+                let from = src[j] as usize;
+                src[j] = j as u32;
+                if from == start { break; }
+                self.items.swap(j, from);
+                j = from;
+            }
+        }
+        self.items.truncate(order.len());
+    }
 }
 
 /// EXPRESS LOGICAL (.T./.F./.U.).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Logical { True, False, Unknown }
 impl Logical {
-    pub fn parse(s: &str) -> Option<Self> {
+    pub(crate) fn parse(s: &str) -> Option<Self> {
         Some(match s { "T" => Self::True, "F" => Self::False, "U" | "UNKNOWN" => Self::Unknown, _ => return None })
     }
-    pub fn token(self) -> &'static str {
+    pub(crate) fn token(self) -> &'static str {
         match self { Self::True => ".T.", Self::False => ".F.", Self::Unknown => ".U." }
+    }
+}
+
+/// A list of at most three reals held inline — a point's coordinates, a
+/// direction's ratios, a mesh vertex — read as a slice (`&[f64]`).
+#[derive(Clone, Copy, Default)]
+pub struct Reals3 { len: u8, values: [f64; 3] }
+impl Reals3 {
+    /// The values, or `None` for more than three.
+    pub fn from_slice(v: &[f64]) -> Option<Self> {
+        if v.len() > 3 { return None; }
+        let mut r = Self::default();
+        r.values[..v.len()].copy_from_slice(v);
+        r.len = v.len() as u8;
+        Some(r)
+    }
+    /// Collect read values; an error from one, or a fourth value, stops it.
+    pub(crate) fn try_collect(values: impl Iterator<Item = Result<f64, String>>, ctx: &str) -> Result<Self, String> {
+        let mut r = Self::default();
+        for v in values {
+            let v = v?;
+            let Some(slot) = r.values.get_mut(usize::from(r.len)) else {
+                return Err(format!("{ctx}: more than three values"));
+            };
+            *slot = v;
+            r.len += 1;
+        }
+        Ok(r)
+    }
+}
+impl std::ops::Deref for Reals3 {
+    type Target = [f64];
+    fn deref(&self) -> &[f64] { &self.values[..usize::from(self.len)] }
+}
+impl PartialEq for Reals3 { fn eq(&self, other: &Self) -> bool { **self == **other } }
+impl std::fmt::Debug for Reals3 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { (**self).fmt(f) }
+}
+impl From<[f64; 1]> for Reals3 { fn from(v: [f64; 1]) -> Self { Self { len: 1, values: [v[0], 0.0, 0.0] } } }
+impl From<[f64; 2]> for Reals3 { fn from(v: [f64; 2]) -> Self { Self { len: 2, values: [v[0], v[1], 0.0] } } }
+impl From<[f64; 3]> for Reals3 { fn from(v: [f64; 3]) -> Self { Self { len: 3, values: v } } }
+
+/// A string held by a [`StepModel`]: its index in the model's text table.
+/// Read it with [`StepModel::text`]; it means nothing in another model. The
+/// reader and the authoring layer store each distinct string once, so within
+/// a model equal strings are the same `Text`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Text(std::num::NonZeroU32);
+
+/// The strings of a model, back to back in one buffer.
+#[derive(Debug, Default)]
+pub(crate) struct Texts { buf: String, spans: Vec<(u32, u32)> }
+impl Texts {
+    pub(crate) fn get(&self, t: Text) -> &str {
+        let span = self.spans.get(t.0.get() as usize - 1);
+        span.and_then(|&(at, n)| self.buf.get(at as usize..at as usize + n as usize)).unwrap_or("")
+    }
+    /// Append `s` as a new `Text` (no deduplication).
+    pub(crate) fn push(&mut self, s: &str) -> Text {
+        let at = self.buf.len() as u32;
+        self.buf.push_str(s);
+        self.spans.push((at, s.len() as u32));
+        Text(std::num::NonZeroU32::new(self.spans.len() as u32).unwrap_or(std::num::NonZeroU32::MIN))
+    }
+    /// Whether the table has outgrown its 32-bit positions.
+    pub(crate) fn overflowed(&self) -> bool {
+        self.buf.len() > u32::MAX as usize || self.spans.len() >= u32::MAX as usize
+    }
+    pub(crate) fn shrink(&mut self) { self.buf.shrink_to_fit(); self.spans.shrink_to_fit(); }
+}
+
+/// A `Hasher` for keys that are already hashes.
+#[derive(Default)]
+pub(crate) struct Prehashed(u64);
+impl std::hash::Hasher for Prehashed {
+    fn finish(&self) -> u64 { self.0 }
+    fn write(&mut self, bytes: &[u8]) { for &b in bytes { self.0 = self.0.rotate_left(8) ^ u64::from(b); } }
+    fn write_u64(&mut self, v: u64) { self.0 = v; }
+}
+
+/// Stores each distinct string of a model once, while it is read or
+/// authored. Holds only hashes; the strings stay in the model's `Texts`.
+#[derive(Default)]
+pub(crate) struct TextDedup {
+    by_hash: std::collections::HashMap<u64, Text, std::hash::BuildHasherDefault<Prehashed>>,
+    /// Strings whose hash another string already has.
+    collided: std::collections::HashMap<u64, Vec<Text>, std::hash::BuildHasherDefault<Prehashed>>,
+    last: Option<Text>,
+}
+impl TextDedup {
+    pub(crate) fn intern(&mut self, texts: &mut Texts, s: &str) -> Text {
+        if let Some(t) = self.last.filter(|&t| texts.get(t) == s) {
+            return t;
+        }
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        std::hash::Hash::hash(s, &mut hasher);
+        let h = std::hash::Hasher::finish(&hasher);
+        let t = match self.by_hash.get(&h) {
+            None => {
+                let t = texts.push(s);
+                self.by_hash.insert(h, t);
+                t
+            }
+            Some(&t) if texts.get(t) == s => t,
+            Some(_) => {
+                let list = self.collided.entry(h).or_default();
+                match list.iter().copied().find(|&t| texts.get(t) == s) {
+                    Some(t) => t,
+                    None => {
+                        let t = texts.push(s);
+                        list.push(t);
+                        t
+                    }
+                }
+            }
+        };
+        self.last = Some(t);
+        t
     }
 }
 
@@ -93,18 +363,18 @@ impl Logical {
 pub enum MeasureScalar { Int(i64), Real(f64) }
 impl MeasureScalar { pub fn as_f64(&self) -> f64 { match self { Self::Int(i) => *i as f64, Self::Real(r) => *r } } }
 #[derive(Debug, Clone, PartialEq)]
-pub struct MeasureValue { pub type_name: Option<String>, pub value: MeasureScalar }
+pub struct MeasureValue { pub type_name: Option<Text>, pub value: MeasureScalar }
 
 /// select-of-named-strings (e.g. SELECT(identifier, message)): `Some(type_name)`
 /// = typed member `TYPE('s')`; `None` = bare string.
 #[derive(Debug, Clone, PartialEq)]
-pub struct StringSelectValue { pub type_name: Option<String>, pub value: String }
+pub struct StringSelectValue { pub type_name: Option<Text>, pub value: Text }
 
 /// select-of-named-integers (e.g. SELECT(u_direction_count, v_direction_count)):
 /// `Some(type_name)` = typed member `TYPE(2)`; `None` = bare integer. Integer-
 /// valued so counts are not widened to reals.
 #[derive(Debug, Clone, PartialEq)]
-pub struct IntMeasureValue { pub type_name: Option<String>, pub value: i64 }
+pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
 
 "#,
     );
@@ -122,14 +392,18 @@ pub struct IntMeasureValue { pub type_name: Option<String>, pub value: i64 }
         writeln!(s, "impl {} {{", e.rust).unwrap();
         writeln!(
             s,
-            "    pub fn parse(s: &str) -> Option<Self> {{ Some(match s {{"
+            "    pub(crate) fn parse(s: &str) -> Option<Self> {{ Some(match s {{"
         )
         .unwrap();
         for (tok, v) in &e.members {
             writeln!(s, "        \"{tok}\" => Self::{v},").unwrap();
         }
         writeln!(s, "        _ => return None }}) }}").unwrap();
-        writeln!(s, "    pub fn token(self) -> &'static str {{ match self {{").unwrap();
+        writeln!(
+            s,
+            "    pub(crate) fn token(self) -> &'static str {{ match self {{"
+        )
+        .unwrap();
         for (tok, v) in &e.members {
             writeln!(s, "        Self::{v} => \".{tok}.\",").unwrap();
         }
@@ -140,7 +414,7 @@ pub struct IntMeasureValue { pub type_name: Option<String>, pub value: i64 }
     for se in &ir.simples {
         writeln!(
             s,
-            "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct {}Id(pub usize);",
+            "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct {}Id(pub u32);",
             se.rust
         )
         .unwrap();
@@ -148,7 +422,7 @@ pub struct IntMeasureValue { pub type_name: Option<String>, pub value: i64 }
     if ir.has_part_bag {
         writeln!(
             s,
-            "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct ComplexUnitId(pub usize);"
+            "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct ComplexEntityId(pub u32);"
         )
         .unwrap();
     }
@@ -164,9 +438,54 @@ pub struct IntMeasureValue { pub type_name: Option<String>, pub value: i64 }
         writeln!(s, "    {}({}Id),", se.rust, se.rust).unwrap();
     }
     if ir.has_part_bag {
-        writeln!(s, "    ComplexUnit(ComplexUnitId),").unwrap();
+        writeln!(s, "    ComplexEntity(ComplexEntityId),").unwrap();
     }
     writeln!(s, "}}\n").unwrap();
+
+    // EntityKey::kind_index: the variant's number (declaration order) and arena
+    // index, so a key maps onto a dense number (RefGraph).
+    let kinds = ir.simples.len() + usize::from(ir.has_part_bag);
+    writeln!(
+        s,
+        "impl EntityKey {{\n    /// How many kinds of key there are.\n    pub(crate) const KINDS: usize = {kinds};\n\n    \
+         /// The key's kind, numbered in declaration order, and its arena index.\n    \
+         pub(crate) fn kind_index(self) -> (usize, u32) {{\n        match self {{"
+    )
+    .unwrap();
+    for (k, se) in ir.simples.iter().enumerate() {
+        writeln!(s, "            EntityKey::{}(i) => ({k}, i.0),", se.rust).unwrap();
+    }
+    if ir.has_part_bag {
+        writeln!(
+            s,
+            "            EntityKey::ComplexEntity(i) => ({}, i.0),",
+            ir.simples.len()
+        )
+        .unwrap();
+    }
+    writeln!(s, "        }}\n    }}\n").unwrap();
+
+    // EntityKey::keyword: the STEP name of the key's entity type.
+    writeln!(
+        s,
+        "    /// The STEP keyword of the entity type this key names\n    \
+         /// (`ADVANCED_FACE`); `None` for a complex instance, which joins several.\n    \
+         #[must_use]\n    \
+         pub fn keyword(self) -> Option<&'static str> {{\n        match self {{"
+    )
+    .unwrap();
+    for se in &ir.simples {
+        writeln!(
+            s,
+            "            EntityKey::{}(_) => Some(\"{}\"),",
+            se.rust, se.name
+        )
+        .unwrap();
+    }
+    if ir.has_part_bag {
+        writeln!(s, "            EntityKey::ComplexEntity(_) => None,").unwrap();
+    }
+    writeln!(s, "        }}\n    }}\n}}\n").unwrap();
 
     // Ref enums.
     let mut refs: Vec<_> = ir.ref_enums.values().collect();
@@ -196,7 +515,9 @@ pub struct IntMeasureValue { pub type_name: Option<String>, pub value: i64 }
     if ir.has_part_bag {
         writeln!(
             s,
-            "#[derive(Debug, Clone, PartialEq)]\npub enum UnitPart {{"
+            "/// One entity type's share of a [`ComplexEntity`] — Part 21's partial entity\n\
+             /// instance, such as `B_SPLINE_CURVE(...)` in a rational B-spline curve.\n\
+             #[derive(Debug, Clone, PartialEq)]\npub enum PartialEntity {{"
         )
         .unwrap();
         for p in &ir.parts {
@@ -217,7 +538,10 @@ pub struct IntMeasureValue { pub type_name: Option<String>, pub value: i64 }
         writeln!(s, "}}\n").unwrap();
         writeln!(
             s,
-            "#[derive(Debug, Clone, PartialEq)]\npub struct ComplexUnit {{ pub parts: Vec<UnitPart> }}\n"
+            "/// A complex entity instance: one `#id` that combines several entity\n\
+             /// types, written as `( A(...) B(...) … )`, with one [`PartialEntity`] per\n\
+             /// type.\n\
+             #[derive(Debug, Clone, PartialEq)]\npub struct ComplexEntity {{ pub parts: Vec<PartialEntity> }}\n"
         )
         .unwrap();
     }
@@ -226,13 +550,44 @@ pub struct IntMeasureValue { pub type_name: Option<String>, pub value: i64 }
     writeln!(s, "#[derive(Debug, Default)]\npub struct StepModel {{").unwrap();
     // The file's HEADER section (hand-written module; accessor lives there).
     writeln!(s, "    pub(crate) header: crate::header::FileHeader,").unwrap();
+    writeln!(s, "    pub(crate) texts: Texts,").unwrap();
     for se in &ir.simples {
-        writeln!(s, "    pub {}: Arena<{}>,", arena_field(&se.rust), se.rust).unwrap();
+        writeln!(
+            s,
+            "    pub(crate) {}: Arena<{}>,",
+            arena_field(&se.rust),
+            se.rust
+        )
+        .unwrap();
     }
     if ir.has_part_bag {
-        writeln!(s, "    pub complex_unit_arena: Arena<ComplexUnit>,").unwrap();
+        writeln!(
+            s,
+            "    pub(crate) complex_entity_arena: Arena<ComplexEntity>,"
+        )
+        .unwrap();
     }
     writeln!(s, "}}").unwrap();
+    s.push_str("impl StepModel {\n    /// The string `t` stands for. A `Text` of another model gives an\n    /// unrelated string, or `\"\"` past the end of this model's text table.\n    pub fn text(&self, t: Text) -> &str { self.texts.get(t) }\n    /// Store `s` as a new `Text`.\n    pub(crate) fn add_text(&mut self, s: &str) -> Text { self.texts.push(s) }\n}\n");
+
+    // Read access by entity type and by id.
+    s.push_str(ENTITY_ACCESS);
+    for se in &ir.simples {
+        writeln!(
+            s,
+            "entity!({0}, {0}Id, {1});",
+            se.rust,
+            arena_field(&se.rust)
+        )
+        .unwrap();
+    }
+    if ir.has_part_bag {
+        writeln!(
+            s,
+            "entity!(ComplexEntity, ComplexEntityId, complex_entity_arena);"
+        )
+        .unwrap();
+    }
 
     s
 }
@@ -251,7 +606,7 @@ pub fn emit_walk(ir: &ModelIr) -> String {
     for se in &ir.simples {
         writeln!(
             s,
-            "    for i in 0..model.{}.items.len() {{ f(EntityKey::{}({}Id(i))); }}",
+            "    for i in 0..model.{}.items.len() as u32 {{ f(EntityKey::{}({}Id(i))); }}",
             arena_field(&se.rust),
             se.rust,
             se.rust
@@ -260,7 +615,7 @@ pub fn emit_walk(ir: &ModelIr) -> String {
     }
     if ir.has_part_bag {
         s.push_str(
-            "    for i in 0..model.complex_unit_arena.items.len() { f(EntityKey::ComplexUnit(ComplexUnitId(i))); }\n",
+            "    for i in 0..model.complex_entity_arena.items.len() as u32 { f(EntityKey::ComplexEntity(ComplexEntityId(i))); }\n",
         );
     }
     s.push_str("}\n");
@@ -294,7 +649,7 @@ pub fn emit_resolvers(ir: &ModelIr) -> String {
             writeln!(s, "    {variant}(&'m {target}),").unwrap();
         }
         if re.has_complex {
-            writeln!(s, "    Complex(&'m ComplexUnit),").unwrap();
+            writeln!(s, "    Complex(&'m ComplexEntity),").unwrap();
         }
         writeln!(s, "}}").unwrap();
         writeln!(s, "impl {r} {{").unwrap();
@@ -315,7 +670,7 @@ pub fn emit_resolvers(ir: &ModelIr) -> String {
         if re.has_complex {
             writeln!(
                 s,
-                "            {r}::Complex(i) => {r}View::Complex(model.complex_unit_arena.get(i.0)),"
+                "            {r}::Complex(i) => {r}View::Complex(model.complex_entity_arena.get(i.0)),"
             )
             .unwrap();
         }
@@ -335,7 +690,7 @@ pub fn emit_resolvers(ir: &ModelIr) -> String {
         if re.has_complex {
             writeln!(
                 s,
-                "            {r}::Complex(i) => EntityKey::ComplexUnit(*i),"
+                "            {r}::Complex(i) => EntityKey::ComplexEntity(*i),"
             )
             .unwrap();
         }
@@ -352,7 +707,7 @@ pub fn emit_resolvers(ir: &ModelIr) -> String {
 fn scalar_rust_ty(k: &Kind) -> &'static str {
     match k {
         Kind::Real => "f64",
-        Kind::Str => "String",
+        Kind::Str => "Text",
         _ => unreachable!("unsupported scalar arm kind: {k:?}"),
     }
 }
@@ -387,7 +742,7 @@ fn emit_ref_enum(s: &mut String, re: &RefEnum) {
         writeln!(s, "    {variant}({}),", scalar_rust_ty(sk)).unwrap();
     }
     if re.has_complex {
-        writeln!(s, "    Complex(ComplexUnitId),").unwrap();
+        writeln!(s, "    Complex(ComplexEntityId),").unwrap();
     }
     // An enum with no arms at all (all ref targets out of closure, e.g. excluded)
     // would be uninhabited and make its referrer unconstructible. Such referrers
@@ -406,7 +761,7 @@ fn emit_ref_enum(s: &mut String, re: &RefEnum) {
     writeln!(s, "impl {} {{", re.rust).unwrap();
     writeln!(
         s,
-        "    pub fn from_any(a: EntityKey) -> Result<Self, String> {{ match a {{"
+        "    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {{ match a {{"
     )
     .unwrap();
     for (variant, target) in &re.simple_arms {
@@ -419,7 +774,7 @@ fn emit_ref_enum(s: &mut String, re: &RefEnum) {
     if re.has_complex {
         writeln!(
             s,
-            "        EntityKey::ComplexUnit(i) => Ok(Self::Complex(i)),"
+            "        EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),"
         )
         .unwrap();
     }
@@ -461,7 +816,7 @@ fn has_ref(k: &Kind) -> bool {
 pub fn emit_read(ir: &ModelIr, crate_path: &str) -> String {
     let mut s = String::from(HEADER);
     s.push_str(&format!(
-        "use std::collections::{{BTreeMap, BTreeSet}};\nuse {crate_path}::parser::{{Attribute, RawEntity, RawEntityPart}};\nuse super::model::*;\n\n"
+        "use {crate_path}::parser::{{Attribute, RawEntityPart}};\nuse {crate_path}::reader::table::IdMap;\nuse super::model::*;\n\n"
     ));
 
     // scalar readers (fallible)
@@ -482,13 +837,19 @@ fn as_int(a: &Attribute, ctx: &str) -> Result<i64, String> {
 fn as_str(a: &Attribute, ctx: &str) -> Result<String, String> {
     match a { Attribute::String(s) => Ok(s.clone()), other => Err(format!("{ctx}: expected string, got {other:?}")) }
 }
+/// Where the reader stores strings: the model's texts, each distinct string once.
+pub struct TextIn<'a> { pub texts: &'a mut Texts, pub dedup: &'a mut TextDedup }
+impl TextIn<'_> { fn intern(&mut self, s: &str) -> Text { self.dedup.intern(self.texts, s) } }
+fn as_text(a: &Attribute, ctx: &str, tt: &mut TextIn<'_>) -> Result<Text, String> {
+    match a { Attribute::String(s) => Ok(tt.intern(s)), other => Err(format!("{ctx}: expected string, got {other:?}")) }
+}
 fn as_logical(a: &Attribute, ctx: &str) -> Result<Logical, String> {
     match a { Attribute::Enum(s) => Logical::parse(s).ok_or_else(|| format!("{ctx}: bad logical {s:?}")), other => Err(format!("{ctx}: expected logical, got {other:?}")) }
 }
 fn as_ref_id(a: &Attribute, ctx: &str) -> Result<u64, String> {
     match a { Attribute::EntityRef(n) => Ok(*n), other => Err(format!("{ctx}: expected ref, got {other:?}")) }
 }
-fn read_measure_value(a: &Attribute, ctx: &str) -> Result<MeasureValue, String> {
+fn read_measure_value(a: &Attribute, ctx: &str, tt: &mut TextIn<'_>) -> Result<MeasureValue, String> {
     // A measure's numeric literal sits nested inside a Typed/bare attribute, so
     // it is not a top-level slot the normalize layer rewrites; preserve the
     // original token (integer vs real) — `number` members admit either.
@@ -496,31 +857,34 @@ fn read_measure_value(a: &Attribute, ctx: &str) -> Result<MeasureValue, String> 
         match a { Attribute::Real(r) => Ok(MeasureScalar::Real(*r)), Attribute::Integer(i) => Ok(MeasureScalar::Int(*i)), other => Err(format!("{ctx}: expected measure scalar, got {other:?}")) }
     }
     match a {
-        Attribute::Typed { type_name, value } => Ok(MeasureValue { type_name: Some(type_name.clone()), value: measure_scalar(value, ctx)? }),
+        Attribute::Typed { type_name, value } => Ok(MeasureValue { type_name: Some(tt.intern(type_name)), value: measure_scalar(value, ctx)? }),
         Attribute::Real(_) | Attribute::Integer(_) => Ok(MeasureValue { type_name: None, value: measure_scalar(a, ctx)? }),
         other => Err(format!("{ctx}: expected measure_value, got {other:?}")),
     }
 }
-fn read_string_select(a: &Attribute, ctx: &str) -> Result<StringSelectValue, String> {
+fn read_string_select(a: &Attribute, ctx: &str, tt: &mut TextIn<'_>) -> Result<StringSelectValue, String> {
     // A named string select member is a Typed literal `TYPE('s')`; a bare string
     // is unwrapped. (Mirrors read_measure_value for the string case.)
     fn str_of(a: &Attribute, ctx: &str) -> Result<String, String> {
         match a { Attribute::String(s) => Ok(s.clone()), other => Err(format!("{ctx}: expected select string, got {other:?}")) }
     }
     match a {
-        Attribute::Typed { type_name, value } => Ok(StringSelectValue { type_name: Some(type_name.clone()), value: str_of(value, ctx)? }),
-        Attribute::String(s) => Ok(StringSelectValue { type_name: None, value: s.clone() }),
+        Attribute::Typed { type_name, value } => {
+            let value = str_of(value, ctx)?;
+            Ok(StringSelectValue { type_name: Some(tt.intern(type_name)), value: tt.intern(&value) })
+        }
+        Attribute::String(s) => Ok(StringSelectValue { type_name: None, value: tt.intern(s) }),
         other => Err(format!("{ctx}: expected string_select, got {other:?}")),
     }
 }
-fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, String> {
+fn read_int_measure_value(a: &Attribute, ctx: &str, tt: &mut TextIn<'_>) -> Result<IntMeasureValue, String> {
     // Integer-valued select-of-scalars (mirrors read_measure_value but keeps the
     // value as i64). A non-standard real literal is truncated (NORM).
     fn int_of(a: &Attribute, ctx: &str) -> Result<i64, String> {
         match a { Attribute::Integer(i) => Ok(*i), Attribute::Real(r) => Ok(*r as i64), other => Err(format!("{ctx}: expected measure int, got {other:?}")) }
     }
     match a {
-        Attribute::Typed { type_name, value } => Ok(IntMeasureValue { type_name: Some(type_name.clone()), value: int_of(value, ctx)? }),
+        Attribute::Typed { type_name, value } => Ok(IntMeasureValue { type_name: Some(tt.intern(type_name)), value: int_of(value, ctx)? }),
         Attribute::Integer(_) | Attribute::Real(_) => Ok(IntMeasureValue { type_name: None, value: int_of(a, ctx)? }),
         other => Err(format!("{ctx}: expected int_measure_value, got {other:?}")),
     }
@@ -541,49 +905,100 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
         simple_names.join(", ")
     )
     .unwrap();
+    // The same names sorted, each with its SIMPLE_NAMES index: a type name
+    // resolves to that index once, and the tables below are keyed by it.
+    let mut by_name: Vec<(&str, usize)> = ir
+        .simples
+        .iter()
+        .enumerate()
+        .map(|(i, se)| (se.name.as_str(), i))
+        .collect();
+    by_name.sort_unstable();
+    let by_name: Vec<String> = by_name
+        .iter()
+        .map(|(n, i)| format!("(\"{n}\", {i})"))
+        .collect();
+    writeln!(
+        s,
+        "const SIMPLE_INDEX: &[(&str, u16)] = &[{}];",
+        by_name.join(", ")
+    )
+    .unwrap();
+    s.push_str("pub fn simple_index(name: &str) -> Option<u16> {\n    SIMPLE_INDEX.binary_search_by(|(n, _)| (*n).cmp(name)).ok().map(|i| SIMPLE_INDEX[i].1)\n}\n\n");
 
-    // ---- dispatch table for complex part-bag ----
-    if ir.has_part_bag {
-        let names: Vec<String> = ir.parts.iter().map(|p| format!("\"{}\"", p.name)).collect();
-        writeln!(
-            s,
-            "pub const COMPLEX_PART_NAMES: &[&str] = &[{}];",
-            names.join(", ")
-        )
-        .unwrap();
-        s.push_str("pub fn is_complex_unit(parts: &[RawEntityPart]) -> bool { !parts.is_empty() && parts.iter().all(|p| COMPLEX_PART_NAMES.contains(&p.name.as_str())) }\n\n");
-    } else {
-        s.push_str("pub const COMPLEX_PART_NAMES: &[&str] = &[];\npub fn is_complex_unit(_parts: &[RawEntityPart]) -> bool { false }\n\n");
-    }
-
-    // subset membership predicate used by the round-trip filter.
-    s.push_str("pub fn in_subset(ent: &RawEntity) -> bool {\n    match ent {\n        RawEntity::Simple { name, .. } => SIMPLE_NAMES.contains(&name.as_str()),\n        RawEntity::Complex { parts, .. } => is_complex_unit(parts),\n    }\n}\n\n");
+    // ---- complex part-bag names, indexed like SIMPLE_NAMES ----
+    let names: Vec<String> = ir.parts.iter().map(|p| format!("\"{}\"", p.name)).collect();
+    writeln!(
+        s,
+        "pub const COMPLEX_PART_NAMES: &[&str] = &[{}];",
+        names.join(", ")
+    )
+    .unwrap();
+    let mut parts_by_name: Vec<(&str, usize)> = ir
+        .parts
+        .iter()
+        .enumerate()
+        .map(|(i, p)| (p.name.as_str(), i))
+        .collect();
+    parts_by_name.sort_unstable();
+    let parts_by_name: Vec<String> = parts_by_name
+        .iter()
+        .map(|(n, i)| format!("(\"{n}\", {i})"))
+        .collect();
+    writeln!(
+        s,
+        "const COMPLEX_PART_INDEX: &[(&str, u16)] = &[{}];",
+        parts_by_name.join(", ")
+    )
+    .unwrap();
+    s.push_str("pub fn complex_part_index(name: &str) -> Option<u16> {\n    COMPLEX_PART_INDEX.binary_search_by(|(n, _)| (*n).cmp(name)).ok().map(|i| COMPLEX_PART_INDEX[i].1)\n}\n\n");
 
     // ---- per-slot ref allow-list (nonstandard-ref detection) ----
     // For each ref slot of each entity/part: the standard target types this slot
-    // admits (`allowed` = the ref-enum's simple arms as UPPER wire names, plus
-    // `complex_ok` for a part-bag target). A ref whose target type is in the
-    // closure but not in this list sits in a slot that does not admit it = a
-    // schema-violating (nonstandard) reference.
-    s.push_str("#[derive(Clone, Copy)]\npub struct RefSlot { pub idx: usize, pub name: &'static str, pub allowed: &'static [&'static str], pub complex_ok: bool, pub is_vec: bool }\n\n");
-    let rust_to_name: std::collections::HashMap<&str, &str> = ir
+    // admits (`allowed` = the ref-enum's simple arms as sorted SIMPLE_NAMES
+    // indices, plus `complex_ok` for a part-bag target). A ref whose target type
+    // is in the closure but not in this list sits in a slot that does not admit
+    // it = a schema-violating (nonstandard) reference.
+    s.push_str("#[derive(Clone, Copy)]\npub struct RefSlot { pub idx: usize, pub name: &'static str, pub allowed: &'static [u16], pub complex_ok: bool, pub is_vec: bool }\n\n");
+    let rust_to_index: std::collections::HashMap<&str, usize> = ir
         .simples
         .iter()
-        .map(|se| (se.rust.as_str(), se.name.as_str()))
+        .enumerate()
+        .map(|(i, se)| (se.rust.as_str(), i))
         .collect();
+    // Simple entities are keyed by their SIMPLE_NAMES index, complex parts by
+    // their COMPLEX_PART_NAMES index.
     emit_ref_slot_table(
         &mut s,
         "ref_slots",
+        "ix",
         ir,
-        &rust_to_name,
-        ir.simples.iter().map(|se| (&se.name, &se.fields)),
+        &rust_to_index,
+        ir.simples.iter().enumerate().map(|(i, se)| (i, &se.fields)),
     );
     emit_ref_slot_table(
         &mut s,
         "complex_ref_slots",
+        "pix",
         ir,
-        &rust_to_name,
-        ir.parts.iter().map(|p| (&p.name, &p.fields)),
+        &rust_to_index,
+        ir.parts.iter().enumerate().map(|(i, p)| (i, &p.fields)),
+    );
+
+    // ---- attribute positions resolved in pass 2 ----
+    // The reader keeps these slots (and any other slot holding a reference)
+    // of each entity for resolving once the whole file is read.
+    emit_ref_field_slots(
+        &mut s,
+        "ref_field_slots",
+        "ix",
+        ir.simples.iter().map(|se| &se.fields),
+    );
+    emit_ref_field_slots(
+        &mut s,
+        "complex_ref_field_slots",
+        "pix",
+        ir.parts.iter().map(|p| &p.fields),
     );
 
     // ---- build_* fns (pass1, fallible) ----
@@ -591,107 +1006,81 @@ fn read_int_measure_value(a: &Attribute, ctx: &str) -> Result<IntMeasureValue, S
         emit_build(&mut s, ir, se);
     }
 
-    // ---- read() ----
-    s.push_str(
-        "pub fn read(graph: &BTreeMap<u64, RawEntity>, kept: &BTreeSet<u64>) -> (StepModel, BTreeMap<u64, EntityKey>, Vec<(u64, String)>) {\n",
-    );
-    s.push_str("    let mut model = StepModel::default();\n");
-    s.push_str("    let mut idmap: BTreeMap<u64, EntityKey> = BTreeMap::new();\n");
-    s.push_str("    let mut read_drops: Vec<(u64, String)> = Vec::new();\n");
-    // pending lists for pass 2
-    for se in &ir.simples {
+    // ---- per-entity entry points, dispatched by type index ----
+    // The reader builds each entity as it streams past (`build_entity`), keeps
+    // the ref slots, and resolves them once the file is read
+    // (`resolve_entity`); `finalize_arenas` puts the arenas in id order first.
+    s.push_str("pub fn build_entity(model: &mut StepModel, ix: u16, attributes: &[Attribute], dedup: &mut TextDedup) -> Result<u32, String> {\n    let mut tt = TextIn { texts: &mut model.texts, dedup };\n    Ok(match ix {\n");
+    for (ix, se) in ir.simples.iter().enumerate() {
+        let af = arena_field(&se.rust);
+        writeln!(
+            s,
+            "        {ix} => model.{af}.push(build_{af}(attributes, &mut tt)?),"
+        )
+        .unwrap();
+    }
+    s.push_str("        _ => return Err(format!(\"no entity type #{ix}\")),\n    })\n}\n\n");
+
+    s.push_str("pub fn key_of(ix: u16, i: u32) -> Option<EntityKey> {\n    Some(match ix {\n");
+    for (ix, se) in ir.simples.iter().enumerate() {
+        writeln!(s, "        {ix} => EntityKey::{0}({0}Id(i)),", se.rust).unwrap();
+    }
+    s.push_str("        _ => return None,\n    })\n}\n\n");
+
+    s.push_str("pub fn resolve_entity(model: &mut StepModel, ix: u16, i: u32, attributes: &[Attribute], idmap: &IdMap, dedup: &mut TextDedup) -> Result<(), String> {\n    match ix {\n");
+    for (ix, se) in ir.simples.iter().enumerate() {
         if se.fields.iter().any(|f| has_ref(&f.kind)) {
+            let af = arena_field(&se.rust);
             writeln!(
                 s,
-                "    let mut pending_{}: Vec<({}Id, u64)> = Vec::new();",
-                arena_field(&se.rust),
+                "        {ix} => resolve_{af}(model, {}Id(i), attributes, idmap, dedup),",
                 se.rust
             )
             .unwrap();
         }
     }
+    s.push_str("        _ => Ok(()),\n    }\n}\n\n");
+
     if ir.has_part_bag {
-        s.push_str("    let mut pending_complex: Vec<(ComplexUnitId, u64)> = Vec::new();\n");
+        s.push_str("pub fn build_complex_entity(model: &mut StepModel, parts: &[RawEntityPart], dedup: &mut TextDedup) -> Result<u32, String> {\n    let mut tt = TextIn { texts: &mut model.texts, dedup };\n    Ok(model.complex_entity_arena.push(ComplexEntity { parts: read_complex_parts_norefs(parts, &mut tt)? }))\n}\n\n");
+        s.push_str("pub fn complex_key_of(i: u32) -> Option<EntityKey> {\n    Some(EntityKey::ComplexEntity(ComplexEntityId(i)))\n}\n\n");
+        s.push_str("pub fn resolve_complex_entity(model: &mut StepModel, i: u32, parts: &[RawEntityPart], idmap: &IdMap, dedup: &mut TextDedup) -> Result<(), String> {\n    resolve_complex(model, ComplexEntityId(i), parts, idmap, dedup)\n}\n\n");
+    } else {
+        s.push_str("pub fn build_complex_entity(_model: &mut StepModel, _parts: &[RawEntityPart], _dedup: &mut TextDedup) -> Result<u32, String> {\n    Err(\"no complex entities are modeled\".to_string())\n}\n\n");
+        s.push_str("pub fn complex_key_of(_i: u32) -> Option<EntityKey> {\n    None\n}\n\n");
+        s.push_str("pub fn resolve_complex_entity(_model: &mut StepModel, _i: u32, _parts: &[RawEntityPart], _idmap: &IdMap, _dedup: &mut TextDedup) -> Result<(), String> {\n    Ok(())\n}\n\n");
     }
 
-    // Iterate the full graph but build only kept entities (no clone: the kept
-    // set is borrowed from drop_pass, entities are borrowed from `graph`).
-    s.push_str("    for (&id, ent) in graph {\n        if !kept.contains(&id) { continue; }\n        match ent {\n");
-    // simple dispatch arms (exact name match) — pass1 build is fallible; an
-    // unreadable own-attr drops just this entity (no panic, surfaced as reason).
-    for se in &ir.simples {
+    // `order[ix]` = the arena indices of type `ix` to keep, in id order.
+    s.push_str(
+        "pub fn finalize_arenas(model: &mut StepModel, order: &[Vec<u32>], complex: &[u32]) {\n",
+    );
+    for (ix, se) in ir.simples.iter().enumerate() {
         let af = arena_field(&se.rust);
-        let has_r = se.fields.iter().any(|f| has_ref(&f.kind));
         writeln!(
             s,
-            "            RawEntity::Simple {{ name, attributes, .. }} if name == \"{}\" => {{",
-            se.name
+            "    model.{af}.retain_order(order.get({ix}).map_or(&[], Vec::as_slice));"
         )
         .unwrap();
-        writeln!(s, "                match build_{af}(attributes) {{").unwrap();
-        s.push_str("                    Ok(v) => {\n");
-        writeln!(
-            s,
-            "                        let aid = {}Id(model.{af}.push(v));",
-            se.rust
-        )
-        .unwrap();
-        writeln!(
-            s,
-            "                        idmap.insert(id, EntityKey::{}(aid));",
-            se.rust
-        )
-        .unwrap();
-        if has_r {
-            writeln!(s, "                        pending_{af}.push((aid, id));").unwrap();
-        }
-        s.push_str("                    }\n");
-        s.push_str("                    Err(e) => read_drops.push((id, e)),\n");
-        s.push_str("                }\n");
-        s.push_str("            }\n");
     }
-    // complex dispatch
     if ir.has_part_bag {
-        s.push_str("            RawEntity::Complex { parts, .. } if is_complex_unit(parts) => {\n");
-        s.push_str("                match read_complex_parts_norefs(parts) {\n");
-        s.push_str("                    Ok(bag) => {\n");
-        s.push_str("                        let aid = ComplexUnitId(model.complex_unit_arena.push(ComplexUnit { parts: bag }));\n");
-        s.push_str("                        idmap.insert(id, EntityKey::ComplexUnit(aid));\n");
-        s.push_str("                        pending_complex.push((aid, id));\n");
-        s.push_str("                    }\n");
-        s.push_str("                    Err(e) => read_drops.push((id, e)),\n");
-        s.push_str("                }\n");
-        s.push_str("            }\n");
+        s.push_str("    model.complex_entity_arena.retain_order(complex);\n");
     }
-    s.push_str("            _ => {}\n        }\n    }\n");
+    s.push_str("}\n\n");
 
-    // ---- pass 2 (fallible ref resolution) ----
+    s.push_str("pub fn shrink_arenas(model: &mut StepModel) {\n    model.texts.shrink();\n");
     for se in &ir.simples {
-        if !se.fields.iter().any(|f| has_ref(&f.kind)) {
-            continue;
-        }
-        let af = arena_field(&se.rust);
-        writeln!(s, "    for (aid, raw) in pending_{af} {{").unwrap();
         writeln!(
             s,
-            "        if let Some(RawEntity::Simple {{ attributes, .. }}) = graph.get(&raw) {{"
+            "    model.{}.items.shrink_to_fit();",
+            arena_field(&se.rust)
         )
         .unwrap();
-        writeln!(
-            s,
-            "            if let Err(e) = resolve_{af}(&mut model, aid, attributes, &idmap) {{ read_drops.push((raw, e)); }}"
-        )
-        .unwrap();
-        s.push_str("        }\n    }\n");
     }
     if ir.has_part_bag {
-        s.push_str("    for (aid, raw) in pending_complex {\n");
-        s.push_str("        if let Some(RawEntity::Complex { parts, .. }) = graph.get(&raw) {\n");
-        s.push_str(
-            "            if let Err(e) = resolve_complex(&mut model, aid, parts, &idmap) { read_drops.push((raw, e)); }\n        }\n    }\n",
-        );
+        s.push_str("    model.complex_entity_arena.items.shrink_to_fit();\n");
     }
-    s.push_str("    (model, idmap, read_drops)\n}\n\n");
+    s.push_str("}\n\n");
 
     // ---- resolve fns ----
     for se in &ir.simples {
@@ -714,7 +1103,7 @@ fn emit_build(s: &mut String, ir: &ModelIr, se: &SimpleEnt) {
     let af = arena_field(&se.rust);
     writeln!(
         s,
-        "fn build_{af}(attributes: &[Attribute]) -> Result<{}, String> {{",
+        "fn build_{af}(attributes: &[Attribute], tt: &mut TextIn<'_>) -> Result<{}, String> {{",
         se.rust
     )
     .unwrap();
@@ -759,9 +1148,9 @@ fn ref_placeholder(ir: &ModelIr, k: &Kind, optional: bool) -> String {
             let re = &ir.ref_enums[t];
             // pick any arm for the placeholder
             if let Some((variant, target)) = re.simple_arms.first() {
-                format!("{}::{}({}Id(usize::MAX))", re.rust, variant, target)
+                format!("{}::{}({}Id(u32::MAX))", re.rust, variant, target)
             } else if re.has_complex {
-                format!("{}::Complex(ComplexUnitId(usize::MAX))", re.rust)
+                format!("{}::Complex(ComplexEntityId(u32::MAX))", re.rust)
             } else if let Some((variant, _, _)) = re.aggregate.first() {
                 // aggregate-only select (no single arm): empty-vec placeholder.
                 format!("{}::{}(Vec::new())", re.rust, variant)
@@ -821,14 +1210,15 @@ fn scalar_fallible(ir: &ModelIr, k: &Kind, a: &str, ctx: &str) -> String {
     match k {
         Kind::Real => format!("as_real({a}, {ctx:?})"),
         Kind::Int => format!("as_int({a}, {ctx:?})"),
-        Kind::Str | Kind::Binary => format!("as_str({a}, {ctx:?})"),
+        Kind::Str => format!("as_text({a}, {ctx:?}, tt)"),
+        Kind::Binary => format!("as_str({a}, {ctx:?})"),
         Kind::Bool => {
             format!("Ok::<bool, String>(matches!({a}, Attribute::Enum(s) if s == \"T\"))")
         }
         Kind::Logical => format!("as_logical({a}, {ctx:?})"),
-        Kind::MeasureSelect(_) => format!("read_measure_value({a}, {ctx:?})"),
-        Kind::StringSelect(_) => format!("read_string_select({a}, {ctx:?})"),
-        Kind::IntSelect(_) => format!("read_int_measure_value({a}, {ctx:?})"),
+        Kind::MeasureSelect(_) => format!("read_measure_value({a}, {ctx:?}, tt)"),
+        Kind::StringSelect(_) => format!("read_string_select({a}, {ctx:?}, tt)"),
+        Kind::IntSelect(_) => format!("read_int_measure_value({a}, {ctx:?}, tt)"),
         Kind::Enum(name) => {
             let ty = &ir.enums[name].rust;
             format!(
@@ -841,6 +1231,9 @@ fn scalar_fallible(ir: &ModelIr, k: &Kind, a: &str, ctx: &str) -> String {
                 "match {a} {{ Attribute::List(l) => l.iter().map(|e| {elem}).collect::<Result<Vec<_>, String>>(), o => Err(format!(\"{ctx}: expected list, got {{o:?}}\")) }}"
             )
         }
+        Kind::Reals3 { .. } => format!(
+            "match {a} {{ Attribute::List(l) => Reals3::try_collect(l.iter().map(|e| as_real(e, {ctx:?})), {ctx:?}), o => Err(format!(\"{ctx}: expected list, got {{o:?}}\")) }}"
+        ),
         Kind::Ref(_) => unreachable!(),
     }
 }
@@ -850,7 +1243,7 @@ fn emit_resolve(s: &mut String, ir: &ModelIr, se: &SimpleEnt) {
     let af = arena_field(&se.rust);
     writeln!(
         s,
-        "fn resolve_{af}(model: &mut StepModel, aid: {}Id, attrs: &[Attribute], idmap: &BTreeMap<u64, EntityKey>) -> Result<(), String> {{",
+        "fn resolve_{af}(model: &mut StepModel, aid: {}Id, attrs: &[Attribute], idmap: &IdMap, dedup: &mut TextDedup) -> Result<(), String> {{\n    let tt = &mut TextIn {{ texts: &mut model.texts, dedup }};",
         se.rust
     )
     .unwrap();
@@ -870,7 +1263,7 @@ fn emit_resolve(s: &mut String, ir: &ModelIr, se: &SimpleEnt) {
         }
         idx += 1;
     }
-    writeln!(s, "    let it = &mut model.{af}.items[aid.0];").unwrap();
+    writeln!(s, "    let it = &mut model.{af}.items[aid.0 as usize];").unwrap();
     for (id, f) in idents(&se.fields) {
         if f.derived || !has_ref(&f.kind) {
             continue;
@@ -887,7 +1280,7 @@ fn emit_resolve(s: &mut String, ir: &ModelIr, se: &SimpleEnt) {
 /// usable both at field level (caller adds `?`) and as a Vec element (collected).
 fn resolve_ref_one(re: &RefEnum, aref: &str, ctx: &str) -> String {
     let single = format!(
-        "{}::from_any(*idmap.get(&as_ref_id({aref}, {ctx:?})?).ok_or_else(|| format!(\"{ctx}: dangling ref\"))?).map_err(|e| format!(\"{ctx}: {{e}}\"))?",
+        "{}::from_any(idmap.get(as_ref_id({aref}, {ctx:?})?).ok_or_else(|| format!(\"{ctx}: dangling ref\"))?).map_err(|e| format!(\"{ctx}: {{e}}\"))?",
         re.rust
     );
     let mut arms: Vec<String> = Vec::new();
@@ -899,7 +1292,7 @@ fn resolve_ref_one(re: &RefEnum, aref: &str, ctx: &str) -> String {
     }
     for (agg_variant, elt_ref, wire) in &re.aggregate {
         arms.push(format!(
-            "Attribute::Typed {{ type_name, value }} if type_name == \"{wire}\" => {}::{}(match value.as_ref() {{ Attribute::List(l) => l.iter().map(|e| {}::from_any(*idmap.get(&as_ref_id(e, {ctx:?})?).ok_or_else(|| format!(\"{ctx}: dangling ref\"))?)).collect::<Result<Vec<_>, String>>()?, o => return Err(format!(\"{ctx}: agg list {wire}: {{o:?}}\")) }}),",
+            "Attribute::Typed {{ type_name, value }} if type_name == \"{wire}\" => {}::{}(match value.as_ref() {{ Attribute::List(l) => l.iter().map(|e| {}::from_any(idmap.get(as_ref_id(e, {ctx:?})?).ok_or_else(|| format!(\"{ctx}: dangling ref\"))?)).collect::<Result<Vec<_>, String>>()?, o => return Err(format!(\"{ctx}: agg list {wire}: {{o:?}}\")) }}),",
             re.rust, agg_variant, elt_ref
         ));
     }
@@ -913,7 +1306,7 @@ fn resolve_ref_one(re: &RefEnum, aref: &str, ctx: &str) -> String {
             _ => unreachable!("unsupported scalar arm kind"),
         };
         arms.push(format!(
-            "Attribute::Typed {{ type_name, .. }} if type_name == \"{wire}\" => {}::{}({reader}({aref}, {ctx:?})?.value{accessor}),",
+            "Attribute::Typed {{ type_name, .. }} if type_name == \"{wire}\" => {}::{}({reader}({aref}, {ctx:?}, tt)?.value{accessor}),",
             re.rust, sv
         ));
     }
@@ -971,19 +1364,19 @@ fn resolve_ref_vec(ir: &ModelIr, inner: &Kind, a: &str, ctx: &str) -> String {
 fn emit_complex_read(s: &mut String, ir: &ModelIr) {
     // pass1: bind non-ref part attrs
     s.push_str(
-        "fn read_complex_parts_norefs(parts: &[RawEntityPart]) -> Result<Vec<UnitPart>, String> {\n",
+        "fn read_complex_parts_norefs(parts: &[RawEntityPart], tt: &mut TextIn<'_>) -> Result<Vec<PartialEntity>, String> {\n",
     );
     s.push_str(
-        "    parts.iter().map(|p| -> Result<UnitPart, String> { Ok(match p.name.as_str() {\n",
+        "    parts.iter().map(|p| -> Result<PartialEntity, String> { Ok(match p.name.as_str() {\n",
     );
     for p in &ir.parts {
         let kept: Vec<_> = idents(&p.fields).into_iter().collect();
         let nonderived: Vec<_> = kept.iter().filter(|(_, f)| !f.derived).collect();
         if nonderived.is_empty() {
-            writeln!(s, "        \"{}\" => UnitPart::{},", p.name, p.rust).unwrap();
+            writeln!(s, "        \"{}\" => PartialEntity::{},", p.name, p.rust).unwrap();
             continue;
         }
-        write!(s, "        \"{}\" => UnitPart::{} {{ ", p.name, p.rust).unwrap();
+        write!(s, "        \"{}\" => PartialEntity::{} {{ ", p.name, p.rust).unwrap();
         let mut idx = 0usize;
         for (id, f) in &kept {
             if f.derived {
@@ -1011,8 +1404,9 @@ fn emit_complex_read(s: &mut String, ir: &ModelIr) {
     );
 
     // pass2: patch ref part attrs
-    s.push_str("fn resolve_complex(model: &mut StepModel, aid: ComplexUnitId, parts: &[RawEntityPart], idmap: &BTreeMap<u64, EntityKey>) -> Result<(), String> {\n");
-    s.push_str("    let bag = &mut model.complex_unit_arena.items[aid.0];\n");
+    s.push_str("fn resolve_complex(model: &mut StepModel, aid: ComplexEntityId, parts: &[RawEntityPart], idmap: &IdMap, dedup: &mut TextDedup) -> Result<(), String> {\n");
+    s.push_str("    let tt = &mut TextIn { texts: &mut model.texts, dedup };\n");
+    s.push_str("    let bag = &mut model.complex_entity_arena.items[aid.0 as usize];\n");
     s.push_str("    for (slot, p) in bag.parts.iter_mut().zip(parts.iter()) {\n");
     s.push_str("        match slot {\n");
     for p in &ir.parts {
@@ -1033,7 +1427,7 @@ fn emit_complex_read(s: &mut String, ir: &ModelIr) {
             .collect();
         writeln!(
             s,
-            "            UnitPart::{} {{ {}, .. }} => {{",
+            "            PartialEntity::{} {{ {}, .. }} => {{",
             p.rust,
             binding.join(", ")
         )
@@ -1082,32 +1476,32 @@ pub fn emit_write(ir: &ModelIr) -> String {
         format!("{mant}{exp}")
     } else { s }
 }
-fn measure(m: &MeasureValue) -> String {
+fn measure(model: &StepModel, m: &MeasureValue) -> String {
     let v = match &m.value { MeasureScalar::Int(i) => format!("{i}"), MeasureScalar::Real(r) => real(*r) };
-    match &m.type_name { Some(t) => format!("{t}({v})"), None => v }
+    match m.type_name { Some(t) => format!("{}({v})", model.text(t)), None => v }
 }
-fn int_measure(m: &IntMeasureValue) -> String {
-    match &m.type_name { Some(t) => format!("{t}({})", m.value), None => format!("{}", m.value) }
+fn int_measure(model: &StepModel, m: &IntMeasureValue) -> String {
+    match m.type_name { Some(t) => format!("{}({})", model.text(t), m.value), None => format!("{}", m.value) }
 }
-fn string_select(m: &StringSelectValue) -> String {
-    match &m.type_name { Some(t) => format!("{t}({})", step_str(&m.value)), None => step_str(&m.value) }
+fn string_select(model: &StepModel, m: &StringSelectValue) -> String {
+    let v = step_str(model.text(m.value));
+    match m.type_name { Some(t) => format!("{}({v})", model.text(t)), None => v }
 }
-/// Part 21 string literal: single-quoted, inner `'` doubled to `''` (matches
-/// step-io `writer/lexical.rs::format_string`). Non-ASCII passes through raw.
+/// Part 21 string literal, quotes included, in plain ASCII — see
+/// `crate::parser::string::encode`.
 fn step_str(s: &str) -> String {
-    let mut out = String::with_capacity(s.len() + 2);
-    out.push('\'');
-    for ch in s.chars() { if ch == '\'' { out.push('\''); } out.push(ch); }
-    out.push('\'');
-    out
+    crate::parser::string::encode(s)
 }
+
+/// Text gathered in `Writer::out` before it goes to the output.
+const CHUNK: usize = 64 * 1024;
 
 "#,
     );
 
     // Writer struct.
     s.push_str(
-        "pub struct Writer<'a> {\n    model: &'a StepModel,\n    next: u64,\n    out: String,\n",
+        "pub struct Writer<'a> {\n    model: &'a StepModel,\n    next: u64,\n    /// Rendered text not yet sent to the output.\n    out: String,\n",
     );
     for se in &ir.simples {
         writeln!(s, "    {}: Vec<Option<u64>>,", ids_field(&se.rust)).unwrap();
@@ -1129,7 +1523,9 @@ fn step_str(s: &str) -> String {
         .unwrap();
     }
     if ir.has_part_bag {
-        s.push_str("            complex_ids: vec![None; model.complex_unit_arena.items.len()],\n");
+        s.push_str(
+            "            complex_ids: vec![None; model.complex_entity_arena.items.len()],\n",
+        );
     }
     s.push_str("        }\n    }\n\n");
     s.push_str("    fn fresh(&mut self) -> u64 { let n = self.next; self.next += 1; n }\n\n");
@@ -1139,28 +1535,30 @@ fn step_str(s: &str) -> String {
     for se in &ir.simples {
         writeln!(
             s,
-            "        EntityKey::{}(i) => self.{}[i.0],",
+            "        EntityKey::{}(i) => self.{}[i.0 as usize],",
             se.rust,
             ids_field(&se.rust)
         )
         .unwrap();
     }
     if ir.has_part_bag {
-        s.push_str("        EntityKey::ComplexUnit(i) => self.complex_ids[i.0],\n");
+        s.push_str("        EntityKey::ComplexEntity(i) => self.complex_ids[i.0 as usize],\n");
     }
     s.push_str("    } }\n\n");
     s.push_str("    fn set_id(&mut self, any: EntityKey, n: u64) { match any {\n");
     for se in &ir.simples {
         writeln!(
             s,
-            "        EntityKey::{}(i) => self.{}[i.0] = Some(n),",
+            "        EntityKey::{}(i) => self.{}[i.0 as usize] = Some(n),",
             se.rust,
             ids_field(&se.rust)
         )
         .unwrap();
     }
     if ir.has_part_bag {
-        s.push_str("        EntityKey::ComplexUnit(i) => self.complex_ids[i.0] = Some(n),\n");
+        s.push_str(
+            "        EntityKey::ComplexEntity(i) => self.complex_ids[i.0 as usize] = Some(n),\n",
+        );
     }
     s.push_str("    } }\n\n");
 
@@ -1239,11 +1637,12 @@ fn collect_deps_elem(ir: &ModelIr, k: &Kind) -> Option<String> {
     }
 }
 
-/// Emit `deps_of(any, out)`: push the EntityKey deps of an entity (simple or complex
-/// part-bag). Self-edges are filtered by the driver, not here.
+/// Emit `deps_of(model, any, out)`: push the EntityKey deps of an entity (simple or
+/// complex part-bag). Self-edges are filtered by the driver, not here. It reads only
+/// the model, so `RefGraph` calls it without a `Writer`.
 fn emit_deps_of(s: &mut String, ir: &ModelIr) {
     s.push_str(
-        "    pub(crate) fn deps_of(&self, any: EntityKey, out: &mut Vec<EntityKey>) { match any {\n",
+        "    pub(crate) fn deps_of(model: &StepModel, any: EntityKey, out: &mut Vec<EntityKey>) { match any {\n",
     );
     for se in &ir.simples {
         let af = arena_field(&se.rust);
@@ -1269,7 +1668,7 @@ fn emit_deps_of(s: &mut String, ir: &ModelIr) {
         } else {
             writeln!(
                 s,
-                "        EntityKey::{}(id) => {{ let it = self.model.{}.get(id.0); {} }},",
+                "        EntityKey::{}(id) => {{ let it = model.{}.get(id.0); {} }},",
                 se.rust, af, body
             )
             .unwrap();
@@ -1277,7 +1676,7 @@ fn emit_deps_of(s: &mut String, ir: &ModelIr) {
     }
     if ir.has_part_bag {
         s.push_str(
-            "        EntityKey::ComplexUnit(id) => { let cu = self.model.complex_unit_arena.get(id.0); for part in &cu.parts { match part {\n",
+            "        EntityKey::ComplexEntity(id) => { let cu = model.complex_entity_arena.get(id.0); for part in &cu.parts { match part {\n",
         );
         for p in &ir.parts {
             let kept = idents(&p.fields);
@@ -1298,7 +1697,7 @@ fn emit_deps_of(s: &mut String, ir: &ModelIr) {
             }
             writeln!(
                 s,
-                "            UnitPart::{} {{ {}, .. }} => {{ {} }},",
+                "            PartialEntity::{} {{ {}, .. }} => {{ {} }},",
                 p.rust,
                 binders.join(", "),
                 stmts
@@ -1348,7 +1747,7 @@ fn emit_render_one(s: &mut String, ir: &ModelIr) {
     }
     if ir.has_part_bag {
         s.push_str(
-            "        EntityKey::ComplexUnit(id) => { let cu = self.model.complex_unit_arena.get(id.0); let n = self.get_id(any).expect(\"id assigned\"); let mut part_txt: Vec<String> = Vec::with_capacity(cu.parts.len()); for part in &cu.parts { part_txt.push(match part {\n",
+            "        EntityKey::ComplexEntity(id) => { let cu = self.model.complex_entity_arena.get(id.0); let n = self.get_id(any).expect(\"id assigned\"); let mut part_txt: Vec<String> = Vec::with_capacity(cu.parts.len()); for part in &cu.parts { part_txt.push(match part {\n",
         );
         for p in &ir.parts {
             let kept = idents(&p.fields);
@@ -1356,7 +1755,7 @@ fn emit_render_one(s: &mut String, ir: &ModelIr) {
             if kept.is_empty() {
                 writeln!(
                     s,
-                    "                UnitPart::{} => \"{}()\".to_string(),",
+                    "                PartialEntity::{} => \"{}()\".to_string(),",
                     p.rust, p.name
                 )
                 .unwrap();
@@ -1365,7 +1764,7 @@ fn emit_render_one(s: &mut String, ir: &ModelIr) {
             let binders: Vec<String> = nonderived.iter().map(|(id, _)| id.clone()).collect();
             write!(
                 s,
-                "                UnitPart::{} {{ {} }} => {{",
+                "                PartialEntity::{} {{ {} }} => {{",
                 p.rust,
                 if binders.is_empty() {
                     ".. ".to_string()
@@ -1395,7 +1794,17 @@ fn emit_render_one(s: &mut String, ir: &ModelIr) {
 /// Render one attribute to a `String` expression. `access` is the field
 /// accessor. An optional field renders `None` as `$`; a derivable field renders
 /// `None` as `*`.
+/// A `Reals3` writes like a list of reals (it reads as a slice).
+fn written_as(k: &Kind) -> std::borrow::Cow<'_, Kind> {
+    match k {
+        Kind::Reals3 { .. } => std::borrow::Cow::Owned(Kind::Vec(Box::new(Kind::Real))),
+        _ => std::borrow::Cow::Borrowed(k),
+    }
+}
+
 fn render_attr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, access: &str) -> String {
+    let written = written_as(k);
+    let k = &*written;
     let wrapped = optional || derivable;
     let none_tok = if derivable { "*" } else { "$" };
     match k {
@@ -1463,7 +1872,7 @@ fn render_ref_value(re: &RefEnum, v: &str) -> String {
         // `WIRE(value)` (a bare-on-read value is normalized to this on write).
         let val = match sk {
             Kind::Real => "real(*x)",
-            Kind::Str => "step_str(x)",
+            Kind::Str => "step_str(self.model.text(*x))",
             _ => unreachable!("unsupported scalar arm kind"),
         };
         arms.push(format!(
@@ -1485,13 +1894,13 @@ fn render_scalar(_ir: &ModelIr, k: &Kind, access: &str) -> String {
     match k {
         Kind::Real => format!("real({access})"),
         Kind::Int => format!("format!(\"{{}}\", {access})"),
-        Kind::Str => format!("step_str(&{access})"),
+        Kind::Str => format!("step_str(self.model.text({access}))"),
         Kind::Bool => format!("(if {access} {{ \".T.\" }} else {{ \".F.\" }}).to_string()"),
         Kind::Logical => format!("{access}.token().to_string()"),
         Kind::Binary => format!("format!(\"'{{}}'\", {access})"),
-        Kind::MeasureSelect(_) => format!("measure(&{access})"),
-        Kind::StringSelect(_) => format!("string_select(&{access})"),
-        Kind::IntSelect(_) => format!("int_measure(&{access})"),
+        Kind::MeasureSelect(_) => format!("measure(self.model, &{access})"),
+        Kind::StringSelect(_) => format!("string_select(self.model, &{access})"),
+        Kind::IntSelect(_) => format!("int_measure(self.model, &{access})"),
         Kind::Enum(_) => format!("{access}.token().to_string()"),
         _ => unreachable!(),
     }
@@ -1502,19 +1911,21 @@ fn render_scalar_ref(_ir: &ModelIr, k: &Kind, access: &str) -> String {
     match k {
         Kind::Real => format!("real(*{access})"),
         Kind::Int => format!("format!(\"{{}}\", {access})"),
-        Kind::Str => format!("step_str({access})"),
+        Kind::Str => format!("step_str(self.model.text(*{access}))"),
         Kind::Bool => format!("(if *{access} {{ \".T.\" }} else {{ \".F.\" }}).to_string()"),
         Kind::Logical => format!("{access}.token().to_string()"),
         Kind::Binary => format!("format!(\"'{{}}'\", {access})"),
-        Kind::MeasureSelect(_) => format!("measure({access})"),
-        Kind::StringSelect(_) => format!("string_select({access})"),
-        Kind::IntSelect(_) => format!("int_measure({access})"),
+        Kind::MeasureSelect(_) => format!("measure(self.model, {access})"),
+        Kind::StringSelect(_) => format!("string_select(self.model, {access})"),
+        Kind::IntSelect(_) => format!("int_measure(self.model, {access})"),
         Kind::Enum(_) => format!("{access}.token().to_string()"),
         _ => unreachable!(),
     }
 }
 
 fn render_vec_elem(ir: &ModelIr, inner: &Kind) -> String {
+    let written = written_as(inner);
+    let inner = &*written;
     match inner {
         Kind::Ref(t) => {
             let re = &ir.ref_enums[t];
@@ -1529,12 +1940,12 @@ fn render_vec_elem(ir: &ModelIr, inner: &Kind) -> String {
         }
         Kind::Real => "real(*e)".to_string(),
         Kind::Int => "format!(\"{e}\")".to_string(),
-        Kind::Str => "step_str(e)".to_string(),
+        Kind::Str => "step_str(self.model.text(*e))".to_string(),
         Kind::Logical => "e.token().to_string()".to_string(),
         Kind::Enum(_) => "e.token().to_string()".to_string(),
-        Kind::MeasureSelect(_) => "measure(e)".to_string(),
-        Kind::StringSelect(_) => "string_select(e)".to_string(),
-        Kind::IntSelect(_) => "int_measure(e)".to_string(),
+        Kind::MeasureSelect(_) => "measure(self.model, e)".to_string(),
+        Kind::StringSelect(_) => "string_select(self.model, e)".to_string(),
+        Kind::IntSelect(_) => "int_measure(self.model, e)".to_string(),
         _ => "real(*e)".to_string(),
     }
 }
@@ -1567,7 +1978,7 @@ fn emit_ref_id_of(s: &mut String, re: &RefEnum) {
     for (variant, target) in &re.simple_arms {
         writeln!(
             s,
-            "        {}::{variant}(i) => self.{}[i.0].expect(\"dep id assigned\"),",
+            "        {}::{variant}(i) => self.{}[i.0 as usize].expect(\"dep id assigned\"),",
             re.rust,
             ids_field(target)
         )
@@ -1576,7 +1987,7 @@ fn emit_ref_id_of(s: &mut String, re: &RefEnum) {
     if re.has_complex {
         writeln!(
             s,
-            "        {}::Complex(i) => self.complex_ids[i.0].expect(\"dep id assigned\"),",
+            "        {}::Complex(i) => self.complex_ids[i.0 as usize].expect(\"dep id assigned\"),",
             re.rust
         )
         .unwrap();
@@ -1642,7 +2053,7 @@ fn emit_ref_deps(s: &mut String, re: &RefEnum) {
     if re.has_complex {
         writeln!(
             s,
-            "        {}::Complex(i) => out.push(EntityKey::ComplexUnit(*i)),",
+            "        {}::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),",
             re.rust
         )
         .unwrap();
@@ -1687,19 +2098,19 @@ fn emit_writer_primitives(s: &mut String, ir: &ModelIr) {
     }
     if ir.has_part_bag {
         // complex = no single keyword; rendered from its parts.
-        s.push_str("        EntityKey::ComplexUnit(_) => \"\",\n");
+        s.push_str("        EntityKey::ComplexEntity(_) => \"\",\n");
     }
     s.push_str("    } }\n\n");
 
     // all_ids: every node, arena order (the former emit_all roots block).
     s.push_str("    pub(crate) fn all_ids(&self) -> Vec<EntityKey> {\n        let mut roots: Vec<EntityKey> = Vec::new();\n");
     if ir.has_part_bag {
-        s.push_str("        for i in 0..self.model.complex_unit_arena.items.len() { roots.push(EntityKey::ComplexUnit(ComplexUnitId(i))); }\n");
+        s.push_str("        for i in 0..self.model.complex_entity_arena.items.len() as u32 { roots.push(EntityKey::ComplexEntity(ComplexEntityId(i))); }\n");
     }
     for se in &ir.simples {
         writeln!(
             s,
-            "        for i in 0..self.model.{}.items.len() {{ roots.push(EntityKey::{}({}Id(i))); }}",
+            "        for i in 0..self.model.{}.items.len() as u32 {{ roots.push(EntityKey::{}({}Id(i))); }}",
             arena_field(&se.rust),
             se.rust,
             se.rust
@@ -1713,12 +2124,13 @@ fn emit_writer_primitives(s: &mut String, ir: &ModelIr) {
 /// (emit_writer_primitives).
 fn emit_all_iter(s: &mut String, _ir: &ModelIr) {
     s.push_str(
-        r#"    pub fn emit_all(self) -> String {
+        r#"    /// Write every entity's DATA line to `w`, a chunk at a time.
+    pub fn emit_all(self, w: &mut dyn std::io::Write) -> std::io::Result<()> {
         let roots = self.all_ids();
-        self.dfs_render(roots)
+        self.dfs_render(roots, w)
     }
 
-    fn dfs_render(mut self, roots: Vec<EntityKey>) -> String {
+    fn dfs_render(mut self, roots: Vec<EntityKey>, w: &mut dyn std::io::Write) -> std::io::Result<()> {
         let mut order: Vec<EntityKey> = Vec::new();
         let mut stack: Vec<(EntityKey, bool)> = Vec::new();
         let mut on_path: std::collections::HashSet<EntityKey> = std::collections::HashSet::new();
@@ -1746,7 +2158,7 @@ fn emit_all_iter(s: &mut String, _ir: &ModelIr) {
                 on_path.insert(any);
                 stack.push((any, true));
                 let mut deps: Vec<EntityKey> = Vec::new();
-                self.deps_of(any, &mut deps);
+                Self::deps_of(self.model, any, &mut deps);
                 for d in deps.into_iter().rev() {
                     if d == any { continue; }
                     if self.get_id(d).is_some() { continue; }
@@ -1757,8 +2169,12 @@ fn emit_all_iter(s: &mut String, _ir: &ModelIr) {
         for any in &order {
             let line = self.render_one(*any);
             self.out.push_str(&line);
+            if self.out.len() >= CHUNK {
+                w.write_all(self.out.as_bytes())?;
+                self.out.clear();
+            }
         }
-        self.out
+        w.write_all(self.out.as_bytes())
     }
 }
 
@@ -1768,6 +2184,8 @@ fn emit_all_iter(s: &mut String, _ir: &ModelIr) {
 
 /// Render a complex part attribute (the binder `id` is a `&T` reference).
 fn render_part_attr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, id: &str) -> String {
+    let written = written_as(k);
+    let k = &*written;
     let wrapped = optional || derivable;
     let none_tok = if derivable { "*" } else { "$" };
     match k {
@@ -1809,10 +2227,10 @@ fn render_part_attr(ir: &ModelIr, k: &Kind, optional: bool, derivable: bool, id:
 
 // ===========================================================================
 // normalize.rs — strict-input normalization (slot-kind general rules).
-// Runs on the raw graph BEFORE the strict read: rewrites non-standard values to
-// standard (record a NormCase note), or — when not normalizable (required ref =
-// `$`) — drops the entity (its referrers cascade-drop via the round-trip subset
-// escape filter). The model/read stay strict; nothing here bends them.
+// Runs on each raw entity BEFORE the strict read: rewrites non-standard values
+// to standard (record a normalization note), or — when not normalizable (required
+// ref = `$`) — drops the entity (its referrers cascade-drop via the drop pass).
+// The model/read stay strict; nothing here bends them.
 // ===========================================================================
 
 /// Top-level slot kind tag for the normalize rule table.
@@ -1826,7 +2244,7 @@ fn sk_variant(k: &Kind) -> &'static str {
         Kind::Logical => "Log",
         Kind::Enum(_) => "Enum",
         Kind::Ref(_) => "Ref",
-        Kind::Vec(_) => "Vec",
+        Kind::Vec(_) | Kind::Reals3 { .. } => "Vec",
         Kind::MeasureSelect(_) => "Meas",
         // string-select required `$` normalizes to "" (read as bare).
         Kind::StringSelect(_) => "Str",
@@ -1854,19 +2272,21 @@ fn scalar_wire_of(ir: &ModelIr, k: &Kind) -> Option<String> {
     }
 }
 
-/// Emit a `fn {fname}(n: &str) -> &'static [RefSlot]` table: one RefSlot per ref
-/// slot (`Ref` / `Vec<Ref>`), carrying the slot index, the admitted target type
-/// UPPER names (the ref-enum's simple arms), complex-target flag, and vec flag.
-/// Non-ref slots are omitted.
+/// Emit a `fn {fname}({param}) -> &'static [RefSlot]` table: one RefSlot per ref
+/// slot (`Ref` / `Vec<Ref>`), carrying the slot index, the admitted target types'
+/// SIMPLE_NAMES indices (the ref-enum's simple arms), complex-target flag, and
+/// vec flag. Non-ref slots are omitted. `ents` yields each entity's match
+/// pattern (a SIMPLE_NAMES index or a quoted part name) with its fields.
 fn emit_ref_slot_table<'a>(
     s: &mut String,
     fname: &str,
+    param: &str,
     ir: &ModelIr,
-    rust_to_name: &std::collections::HashMap<&str, &str>,
-    ents: impl Iterator<Item = (&'a String, &'a Vec<Field>)>,
+    rust_to_index: &std::collections::HashMap<&str, usize>,
+    ents: impl Iterator<Item = (usize, &'a Vec<Field>)>,
 ) {
-    writeln!(s, "pub fn {fname}(n: &str) -> &'static [RefSlot] {{").unwrap();
-    s.push_str("    match n {\n");
+    writeln!(s, "pub fn {fname}({param}: u16) -> &'static [RefSlot] {{").unwrap();
+    writeln!(s, "    match {param} {{").unwrap();
     for (name, fields) in ents {
         let slots: Vec<String> = fields
             .iter()
@@ -1881,12 +2301,14 @@ fn emit_ref_slot_table<'a>(
                     _ => return None,
                 };
                 let re = ir.ref_enums.get(target)?;
-                let allowed: Vec<String> = re
+                let mut allowed: Vec<usize> = re
                     .simple_arms
                     .iter()
-                    .filter_map(|(_, rust)| rust_to_name.get(rust.as_str()))
-                    .map(|n| format!("\"{n}\""))
+                    .filter_map(|(_, rust)| rust_to_index.get(rust.as_str()).copied())
                     .collect();
+                allowed.sort_unstable();
+                allowed.dedup();
+                let allowed: Vec<String> = allowed.iter().map(usize::to_string).collect();
                 Some(format!(
                     "RefSlot{{idx:{idx},name:\"{}\",allowed:&[{}],complex_ok:{},is_vec:{is_vec}}}",
                     f.name,
@@ -1896,7 +2318,31 @@ fn emit_ref_slot_table<'a>(
             })
             .collect();
         if !slots.is_empty() {
-            writeln!(s, "        \"{}\" => &[{}],", name, slots.join(",")).unwrap();
+            writeln!(s, "        {} => &[{}],", name, slots.join(",")).unwrap();
+        }
+    }
+    s.push_str("        _ => &[],\n    }\n}\n\n");
+}
+
+/// `fn {fname}({param}: u16) -> &'static [u16]`: the attribute positions of
+/// the fields resolved in pass 2 (counting derived slots, as the wire does).
+fn emit_ref_field_slots<'a>(
+    s: &mut String,
+    fname: &str,
+    param: &str,
+    ents: impl Iterator<Item = &'a Vec<Field>>,
+) {
+    writeln!(s, "pub fn {fname}({param}: u16) -> &'static [u16] {{").unwrap();
+    writeln!(s, "    match {param} {{").unwrap();
+    for (i, fields) in ents.enumerate() {
+        let slots: Vec<String> = fields
+            .iter()
+            .enumerate()
+            .filter(|(_, f)| !f.derived && has_ref(&f.kind))
+            .map(|(idx, _)| idx.to_string())
+            .collect();
+        if !slots.is_empty() {
+            writeln!(s, "        {i} => &[{}],", slots.join(",")).unwrap();
         }
     }
     s.push_str("        _ => &[],\n    }\n}\n\n");
@@ -1931,8 +2377,15 @@ fn emit_slot_table<'a>(
                     Some(w) => format!("Some(\"{w}\")"),
                     None => "None".to_string(),
                 };
+                // Reals held inline (`Reals3`): 1 = the slot's list, 2 = each
+                // list in the slot's list.
+                let r3 = match &f.kind {
+                    Kind::Reals3 { .. } => 1,
+                    Kind::Vec(inner) if matches!(inner.as_ref(), Kind::Reals3 { .. }) => 2,
+                    _ => 0,
+                };
                 format!(
-                    "Slot{{k:Sk::{k},req:{req},der:{},swire:{swire}}}",
+                    "Slot{{k:Sk::{k},req:{req},der:{},swire:{swire},r3:{r3}}}",
                     f.derived
                 )
             })
@@ -1945,13 +2398,23 @@ fn emit_slot_table<'a>(
 pub fn emit_normalize(ir: &ModelIr, crate_path: &str) -> String {
     let mut s = String::from(HEADER);
     s.push_str(&format!(
-        "use std::collections::BTreeMap;\nuse {crate_path}::parser::{{Attribute, RawEntity}};\n\n"
+        "use {crate_path}::parser::{{Attribute, RawEntity}};\n\n"
     ));
     s.push_str(
         r#"#[derive(Clone, Copy)]
 enum Sk { Real, Int, Str, Bin, Bool, Log, Enum, Ref, Vec, Meas }
 #[derive(Clone, Copy)]
-struct Slot { k: Sk, req: bool, der: bool, swire: Option<&'static str> }
+struct Slot { k: Sk, req: bool, der: bool, swire: Option<&'static str>, r3: u8 }
+
+/// Does a list the model holds inline as `Reals3` (`r3` as in `Slot`) have
+/// more than three values?
+fn too_many_reals(r3: u8, a: &Attribute) -> bool {
+    match (r3, a) {
+        (1, Attribute::List(l)) => l.len() > 3,
+        (2, Attribute::List(l)) => l.iter().any(|e| matches!(e, Attribute::List(v) if v.len() > 3)),
+        _ => false,
+    }
+}
 
 /// Value-level canonical: signed-zero -0.0 -> +0.0, recursively (incl. lists).
 fn canon(a: &mut Attribute) {
@@ -2036,43 +2499,30 @@ fn norm_attrs(slots: &[Slot], attrs: &mut Vec<Attribute>, warns: &mut Vec<&'stat
                 NormAction::Rewrite(na, w) => { *a = na; warns.push(w); }
                 NormAction::Drop(w) => { *drop_out = Some(w); return false; }
             }
+            if too_many_reals(s.r3, a) {
+                *drop_out = Some("list has more values than its type allows");
+                return false;
+            }
         }
     }
     true
 }
 
-/// Normalize the raw graph in place. Returns the surviving map (non-normalizable
-/// entities removed; their referrers cascade-drop later via the drop pass) plus
-/// two separate channels: `warns` = rewrite notes (fix, kept), `slot_drops` =
-/// `(id, reason)` per entity removed here (surfaced as drops).
-pub fn normalize(mut map: BTreeMap<u64, RawEntity>) -> (BTreeMap<u64, RawEntity>, Vec<&'static str>, Vec<(u64, &'static str)>) {
-    let mut warns: Vec<&'static str> = Vec::new();
-    let mut slot_drops: Vec<(u64, &'static str)> = Vec::new();
-    for (&id, ent) in map.iter_mut() {
-        let mut drop_reason: Option<&'static str> = None;
-        let keep = match ent {
-            RawEntity::Simple { name, attributes, .. } => {
-                norm_attrs(simple_slots(name), attributes, &mut warns, &mut drop_reason)
-            }
-            RawEntity::Complex { parts, .. } => {
-                let mut ok = true;
-                for p in parts.iter_mut() {
-                    if !norm_attrs(part_slots(&p.name), &mut p.attributes, &mut warns, &mut drop_reason) {
-                        ok = false;
-                        break;
-                    }
-                }
-                ok
-            }
-        };
-        if !keep {
-            slot_drops.push((id, drop_reason.unwrap_or("unspecified")));
+/// Normalize one entity in place. Rewrites push to `warns` (norm channel), kept
+/// even when the entity is then dropped; a non-normalizable slot returns its
+/// reason (a nonstandard-value drop; its referrers cascade later via the drop
+/// pass).
+pub fn normalize_entity(ent: &mut RawEntity, warns: &mut Vec<&'static str>) -> Result<(), &'static str> {
+    let mut drop_reason: Option<&'static str> = None;
+    let keep = match ent {
+        RawEntity::Simple { name, attributes, .. } => {
+            norm_attrs(simple_slots(name), attributes, warns, &mut drop_reason)
         }
-    }
-    for (id, _) in &slot_drops {
-        map.remove(id);
-    }
-    (map, warns, slot_drops)
+        RawEntity::Complex { parts, .. } => {
+            parts.iter_mut().all(|p| norm_attrs(part_slots(&p.name), &mut p.attributes, warns, &mut drop_reason))
+        }
+    };
+    if keep { Ok(()) } else { Err(drop_reason.unwrap_or("unspecified")) }
 }
 
 "#,
@@ -2148,7 +2598,89 @@ fn author_card_check(
     f: &Field,
     expr_is_ref: bool,
 ) -> String {
-    if !matches!(f.kind, Kind::Vec(_)) || (f.min == 0 && f.max.is_none()) {
+    let mut s = author_card_check_outer(entity_upper, attribute, expr, f, expr_is_ref);
+    let inner = match &f.kind {
+        Kind::Vec(inner) => Some(inner.as_ref()),
+        _ => None,
+    };
+    if let Some(check) =
+        inner.and_then(|k| nested_card_check(entity_upper, attribute, k, &f.nested, "v", 1))
+    {
+        // The bounds of lists nested in lists (`LIST [2:?] OF LIST [2:?] OF …`).
+        let amp = if expr_is_ref { "" } else { "&" };
+        if f.optional || f.derivable {
+            s.push_str(&format!(
+                "        if let Some(v) = {amp}{expr} {{ {check} }}\n"
+            ));
+        } else {
+            s.push_str(&format!("        {{ let v = {amp}{expr}; {check} }}\n"));
+        }
+    }
+    if let Some(Kind::Reals3 { min, max }) = inner {
+        // The inner lists' bounds (`LIST OF LIST [3:3] OF real`).
+        let err = format!(
+            "return Err(AuthorError::Cardinality {{ entity: {entity_upper:?}, attribute: {attribute:?}, got: e.len(), min: {min}, max: Some({max}) }});"
+        );
+        let check =
+            format!("for e in v.iter() {{ if e.len() < {min} || e.len() > {max} {{ {err} }} }}");
+        let amp = if expr_is_ref { "" } else { "&" };
+        if f.optional || f.derivable {
+            s.push_str(&format!(
+                "        if let Some(v) = {amp}{expr} {{ {check} }}\n"
+            ));
+        } else {
+            s.push_str(&format!("        {{ let v = {amp}{expr}; {check} }}\n"));
+        }
+    }
+    s
+}
+
+/// A length check on every list nested in `var`, whose elements are of kind
+/// `elems`, level by level (`bounds` outermost first), or `None` when no level
+/// is bounded. A `Reals3` level is left to its own check.
+fn nested_card_check(
+    entity_upper: &str,
+    attribute: &str,
+    elems: &Kind,
+    bounds: &[(u32, Option<u32>)],
+    var: &str,
+    depth: usize,
+) -> Option<String> {
+    let (&(min, max), deeper) = bounds.split_first()?;
+    let Kind::Vec(inner) = elems else {
+        return None;
+    };
+    let e = format!("e{depth}");
+    let here = if min == 0 && max.is_none() {
+        String::new()
+    } else {
+        let cond = match max {
+            Some(max) => format!("{e}.len() < {min} || {e}.len() > {max}"),
+            None => format!("{e}.len() < {min}"),
+        };
+        let max_expr = max.map_or_else(|| "None".to_string(), |m| format!("Some({m})"));
+        format!(
+            "if {cond} {{ return Err(AuthorError::Cardinality {{ entity: {entity_upper:?}, attribute: {attribute:?}, got: {e}.len(), min: {min}, max: {max_expr} }}); }} "
+        )
+    };
+    let below = nested_card_check(entity_upper, attribute, inner, deeper, &e, depth + 1);
+    if here.is_empty() && below.is_none() {
+        return None;
+    }
+    Some(format!(
+        "for {e} in {var}.iter() {{ {here}{} }}",
+        below.unwrap_or_default()
+    ))
+}
+
+fn author_card_check_outer(
+    entity_upper: &str,
+    attribute: &str,
+    expr: &str,
+    f: &Field,
+    expr_is_ref: bool,
+) -> String {
+    if !matches!(f.kind, Kind::Vec(_) | Kind::Reals3 { .. }) || (f.min == 0 && f.max.is_none()) {
         return String::new();
     }
     let min = f.min as usize;
@@ -2168,6 +2700,59 @@ fn author_card_check(
         format!("        if let Some(x) = {amp}{expr} {{ if {cond} {{ {err} }} }}\n")
     } else {
         format!("        {{ let x = {amp}{expr}; if {cond} {{ {err} }} }}\n")
+    }
+}
+
+/// Whether a field kind holds a real (an `f64` somewhere inside).
+fn has_real(k: &Kind) -> bool {
+    match k {
+        Kind::Real | Kind::Reals3 { .. } | Kind::MeasureSelect(_) => true,
+        Kind::Vec(inner) => has_real(inner),
+        _ => false,
+    }
+}
+
+/// Code rejecting a non-finite real anywhere in the field at `expr`: Part 21
+/// has no spelling for NaN or an infinity, so such a value would make the
+/// file unreadable.
+fn author_finite_check(
+    entity_upper: &str,
+    attribute: &str,
+    k: &Kind,
+    expr: &str,
+    optional: bool,
+    expr_is_ref: bool,
+    depth: usize,
+) -> String {
+    if !has_real(k) {
+        return String::new();
+    }
+    let amp = if expr_is_ref { "" } else { "&" };
+    let err = format!(
+        "return Err(AuthorError::NonFiniteReal {{ entity: {entity_upper:?}, attribute: {attribute:?} }});"
+    );
+    if optional {
+        let inner = author_finite_check(entity_upper, attribute, k, "x", false, true, depth);
+        return format!("        if let Some(x) = {amp}{expr} {{\n{inner}        }}\n");
+    }
+    match k {
+        Kind::Real => format!("        if !{expr}.is_finite() {{ {err} }}\n"),
+        Kind::Reals3 { .. } => {
+            format!("        if {expr}.iter().any(|v| !v.is_finite()) {{ {err} }}\n")
+        }
+        Kind::MeasureSelect(_) => format!(
+            "        if let MeasureScalar::Real(v) = &{expr}.value {{ if !v.is_finite() {{ {err} }} }}\n"
+        ),
+        Kind::Vec(inner) if matches!(**inner, Kind::Real) => {
+            format!("        if {expr}.iter().any(|v| !v.is_finite()) {{ {err} }}\n")
+        }
+        Kind::Vec(inner) => {
+            let var = format!("f{depth}");
+            let body =
+                author_finite_check(entity_upper, attribute, inner, &var, false, true, depth + 1);
+            format!("        for {var} in {amp}{expr} {{\n{body}        }}\n")
+        }
+        _ => String::new(),
     }
 }
 
@@ -2240,9 +2825,10 @@ pub fn emit_author(
     // Error type.
     s.push_str(
         r#"/// An authoring-time rejection: the input cannot be part of a strict AP242
-/// model. These fire while an adapter is being developed; a correct adapter
-/// never triggers them.
+/// model: a real that is not finite, an input that breaks a rule of the
+/// standard, a reference to an entity that is missing or of the wrong type, …
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum AuthorError {
     /// The referenced entity kind is not legal in AP242.
     NotAp242 { entity: &'static str },
@@ -2259,6 +2845,17 @@ pub enum AuthorError {
         min: usize,
         max: Option<usize>,
     },
+    /// A placement would make an assembly contain itself: the part placed
+    /// is the assembly, or already contains it.
+    CyclicAssembly,
+    /// A real is NaN or infinite, which Part 21 cannot write.
+    NonFiniteReal {
+        entity: &'static str,
+        attribute: &'static str,
+    },
+    /// Builder input breaks a rule of the standard: a B-spline whose knots do
+    /// not fit its degree and control points, a mesh index past its points.
+    InvalidInput { reason: &'static str },
 }
 
 impl std::fmt::Display for AuthorError {
@@ -2286,6 +2883,13 @@ impl std::fmt::Display for AuthorError {
                 ),
                 None => write!(f, "{entity}.{attribute}: {got} elements, minimum {min}"),
             },
+            AuthorError::CyclicAssembly => {
+                write!(f, "placement would make an assembly contain itself")
+            }
+            AuthorError::NonFiniteReal { entity, attribute } => {
+                write!(f, "{entity}.{attribute}: not a finite number")
+            }
+            AuthorError::InvalidInput { reason } => write!(f, "invalid input: {reason}"),
         }
     }
 }
@@ -2293,11 +2897,19 @@ impl std::fmt::Display for AuthorError {
 impl std::error::Error for AuthorError {}
 
 /// Strict AP242 authoring handle. Owns the model privately: entities enter
-/// only through the generated constructors, so everything inside is AP242 by
-/// construction. [`Ap242Author::finish`] emits the Part 21 text.
+/// only through the generated constructors, which check every value against
+/// the schema's types, the size of each aggregate attribute and of each list
+/// nested in one (such as a row of B-spline control points), every reference
+/// for an entity of a fitting type that exists in this model, every complex
+/// instance against the schema's rules for combining types, and every real
+/// for being finite. They do not check `WHERE` rules, and an id from another
+/// author that is in range here is taken as one of this model's.
+/// [`Ap242Author::finish`] returns the model, for [`write`](crate::write) to
+/// send out as Part 21 text.
 #[derive(Default)]
 pub struct Ap242Author {
     model: StepModel,
+    dedup: TextDedup,
 }
 
 impl Ap242Author {
@@ -2305,16 +2917,31 @@ impl Ap242Author {
         Self::default()
     }
 
-    /// Emit the model as AP242 (edition 2 IS) Part 21 text. The header's
-    /// `FILE_SCHEMA` is stamped AP242 — the authoring layer's schema.
-    pub fn finish(mut self) -> String {
+    /// Store a string in the model, once per distinct string, for the
+    /// entities built directly as values (complex parts, self-referencing
+    /// entities); the constructors take `&str`s and store them themselves.
+    pub fn text(&mut self, s: &str) -> Text {
+        self.dedup.intern(&mut self.model.texts, s)
+    }
+
+    /// The model built so far, for the crate's own checks.
+    pub(crate) fn model(&self) -> &StepModel {
+        &self.model
+    }
+
+    /// The authored model, its header's `FILE_SCHEMA` stamped AP242 (edition
+    /// 2 IS) — the authoring layer's schema. Write it out with
+    /// [`write`](crate::write).
+    #[must_use]
+    pub fn finish(mut self) -> StepModel {
         self.model.header.schema = super::schema::ap242e2_schema_id();
-        crate::emit::write(&self.model)
+        self.model
     }
 
     /// [`Ap242Author::finish`] with explicit Part 21 HEADER fields. The
     /// header's `schema` is overwritten with AP242 regardless of input.
-    pub fn finish_with_header(mut self, header: &crate::header::FileHeader) -> String {
+    #[must_use]
+    pub fn finish_with_header(mut self, header: &crate::header::FileHeader) -> StepModel {
         self.model.header = header.clone();
         self.finish()
     }
@@ -2334,7 +2961,7 @@ impl Ap242Author {
             if f.derived {
                 continue;
             }
-            write!(sig, ", {ident}: {}", field_type(ir, f)).unwrap();
+            write!(sig, ", {ident}: {}", author_param_type(ir, f)).unwrap();
         }
         writeln!(s, "\n    /// `{}` — strict AP242 constructor.", se.name).unwrap();
         writeln!(
@@ -2349,6 +2976,15 @@ impl Ap242Author {
                 continue;
             }
             s.push_str(&author_card_check(&se.name, &f.name, ident, f, false));
+            s.push_str(&author_finite_check(
+                &se.name,
+                &f.name,
+                &f.kind,
+                ident,
+                f.optional || f.derivable,
+                false,
+                0,
+            ));
             let check = author_check_expr(
                 ir,
                 &f.kind,
@@ -2359,6 +2995,11 @@ impl Ap242Author {
                 0,
             );
             s.push_str(&check);
+        }
+        for (ident, f) in &params {
+            if !f.derived {
+                s.push_str(&author_store_strings(ident, f));
+            }
         }
         write!(
             s,
@@ -2385,7 +3026,7 @@ impl Ap242Author {
     // Self-referencing (cyclic) variants: for entities whose ref fields can
     // target their own type, a closure-based constructor hands out the id the
     // entity will get before it exists, then validates after the push and
-    // rolls back on error. The corpus-real case is
+    // rolls back on error. The case seen in real files is
     // DIMENSIONAL_SIZE_WITH_DATUM_FEATURE.applies_to referencing itself.
     let mut cyclic_checks = String::new();
     let mut cyclic = 0usize;
@@ -2409,7 +3050,7 @@ impl Ap242Author {
         .unwrap();
         writeln!(
             s,
-            "        let id = {}Id(self.model.{arena}.items.len());\n        self.model.{arena}.push(build(id));\n        if let Err(e) = cyclic_check_{snake}(&self.model, id.0) {{\n            self.model.{arena}.items.pop();\n            return Err(e);\n        }}\n        Ok(id)\n    }}",
+            "        let id = {}Id(self.model.{arena}.items.len() as u32);\n        self.model.{arena}.push(build(id));\n        if let Err(e) = cyclic_check_{snake}(&self.model, id.0) {{\n            self.model.{arena}.items.pop();\n            return Err(e);\n        }}\n        Ok(id)\n    }}",
             se.rust,
             arena = arena_field(&se.rust)
         )
@@ -2417,14 +3058,24 @@ impl Ap242Author {
 
         writeln!(
             cyclic_checks,
-            "fn cyclic_check_{snake}(model: &StepModel, id: usize) -> Result<(), AuthorError> {{"
+            "fn cyclic_check_{snake}(model: &StepModel, id: u32) -> Result<(), AuthorError> {{"
         )
         .unwrap();
         for (ident, f) in idents(&se.fields) {
             if f.derived {
                 continue;
             }
-            let expr = format!("model.{}.items[id].{ident}", arena_field(&se.rust));
+            let expr = format!("model.{}.items[id as usize].{ident}", arena_field(&se.rust));
+            cyclic_checks.push_str(&author_card_check(&se.name, &f.name, &expr, f, false));
+            cyclic_checks.push_str(&author_finite_check(
+                &se.name,
+                &f.name,
+                &f.kind,
+                &expr,
+                f.optional || f.derivable,
+                false,
+                0,
+            ));
             let check = author_check_expr(
                 ir,
                 &f.kind,
@@ -2446,14 +3097,14 @@ impl Ap242Author {
     /// supertype-chain completeness, connectivity, ONEOF exclusivity), then
     /// every reference field is checked; parts are stored in Part 21 order
     /// (alphabetical).
-    pub fn add_complex(&mut self, mut parts: Vec<UnitPart>) -> Result<ComplexUnitId, AuthorError> {
+    pub fn add_complex(&mut self, mut parts: Vec<PartialEntity>) -> Result<ComplexEntityId, AuthorError> {
         let names: Vec<&'static str> = parts.iter().map(part_name).collect();
         complex_rule(&names)?;
         for p in &parts {
-            check_unit_part(&self.model, p)?;
+            check_partial_entity(&self.model, p)?;
         }
         parts.sort_by(|a, b| part_name(a).cmp(part_name(b)));
-        Ok(ComplexUnitId(self.model.complex_unit_arena.push(ComplexUnit { parts })))
+        Ok(ComplexEntityId(self.model.complex_entity_arena.push(ComplexEntity { parts })))
     }
 "#,
         );
@@ -2503,7 +3154,7 @@ fn self_ref_capable(ir: &ModelIr, se: &SimpleEnt) -> bool {
 
 /// The complex-assembler support items for `author.rs`: `part_name`, the
 /// `PART_INFO` / `ONEOF_GROUPS` static tables, the name-set rule
-/// `complex_rule`, and the per-part reference check `check_unit_part`.
+/// `complex_rule`, and the per-part reference check `check_partial_entity`.
 fn emit_author_complex(
     ir: &ModelIr,
     legal: &std::collections::BTreeSet<String>,
@@ -2511,17 +3162,17 @@ fn emit_author_complex(
     schema: &crate::schema::Schema,
     s: &mut String,
 ) {
-    // part_name: UnitPart variant -> UPPER STEP keyword (mirrors the model's
+    // part_name: PartialEntity variant -> UPPER STEP keyword (mirrors the model's
     // unit-vs-struct variant shape: unit iff no non-derived fields).
-    s.push_str("fn part_name(p: &UnitPart) -> &'static str {\n    match p {\n");
+    s.push_str("fn part_name(p: &PartialEntity) -> &'static str {\n    match p {\n");
     for p in &ir.parts {
         let unit = idents(&p.fields).iter().all(|(_, f)| f.derived);
         if unit {
-            writeln!(s, "        UnitPart::{} => \"{}\",", p.rust, p.name).unwrap();
+            writeln!(s, "        PartialEntity::{} => \"{}\",", p.rust, p.name).unwrap();
         } else {
             writeln!(
                 s,
-                "        UnitPart::{} {{ .. }} => \"{}\",",
+                "        PartialEntity::{} {{ .. }} => \"{}\",",
                 p.rust, p.name
             )
             .unwrap();
@@ -2689,7 +3340,7 @@ pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
 
     // Per-part reference checks: one arm per part with reference fields.
     s.push_str(
-        "fn check_unit_part(model: &StepModel, p: &UnitPart) -> Result<(), AuthorError> {\n    match p {\n",
+        "fn check_partial_entity(model: &StepModel, p: &PartialEntity) -> Result<(), AuthorError> {\n    match p {\n",
     );
     for p in &ir.parts {
         let mut binds = Vec::new();
@@ -2699,6 +3350,15 @@ pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
                 continue;
             }
             let card = author_card_check(&p.name, &f.name, &ident, f, true);
+            let finite = author_finite_check(
+                &p.name,
+                &f.name,
+                &f.kind,
+                &ident,
+                f.optional || f.derivable,
+                true,
+                0,
+            );
             let check = author_check_expr(
                 ir,
                 &f.kind,
@@ -2708,9 +3368,10 @@ pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
                 "model",
                 0,
             );
-            if !card.is_empty() || !check.is_empty() {
+            if !card.is_empty() || !finite.is_empty() || !check.is_empty() {
                 binds.push(ident);
                 body.push_str(&card);
+                body.push_str(&finite);
                 body.push_str(&check);
             }
         }
@@ -2719,7 +3380,7 @@ pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
         }
         writeln!(
             s,
-            "        UnitPart::{} {{ {}, .. }} => {{\n{body}        }}",
+            "        PartialEntity::{} {{ {}, .. }} => {{\n{body}        }}",
             p.rust,
             binds.join(", ")
         )
@@ -2740,7 +3401,7 @@ fn emit_author_ref_checks(
         .iter()
         .map(|se| (se.rust.as_str(), se.name.as_str()))
         .collect();
-    for re in ir.ref_enums.values() {
+    for (target, re) in &ir.ref_enums {
         let r = &re.rust;
         writeln!(
             s,
@@ -2754,7 +3415,7 @@ fn emit_author_ref_checks(
             if legal.contains(upper) {
                 writeln!(
                     s,
-                    "        {r}::{variant}(i) => {{ if i.0 >= model.{}.items.len() {{ return Err(AuthorError::DanglingRef {{ entity: {upper:?} }}); }} }}",
+                    "        {r}::{variant}(i) => {{ if i.0 as usize >= model.{}.items.len() {{ return Err(AuthorError::DanglingRef {{ entity: {upper:?} }}); }} }}",
                     arena_field(target)
                 )
                 .unwrap();
@@ -2777,14 +3438,28 @@ fn emit_author_ref_checks(
         for (variant, _enum_rust, _wire) in &re.enum_arms {
             writeln!(s, "        {r}::{variant}(_) => {{}}").unwrap();
         }
-        for (variant, kind, _wire) in &re.scalar_arms {
-            let _ = kind;
-            writeln!(s, "        {r}::{variant}(_) => {{}}").unwrap();
+        for (variant, kind, wire) in &re.scalar_arms {
+            if matches!(kind, Kind::Real) {
+                writeln!(
+                    s,
+                    "        {r}::{variant}(v) => {{ if !v.is_finite() {{ return Err(AuthorError::NonFiniteReal {{ entity: {wire:?}, attribute: \"value\" }}); }} }}"
+                )
+                .unwrap();
+            } else {
+                writeln!(s, "        {r}::{variant}(_) => {{}}").unwrap();
+            }
         }
         if re.has_complex {
+            let fits = re
+                .complex_parts
+                .iter()
+                .map(|p| format!("{p:?}"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            let target = target.to_uppercase();
             writeln!(
                 s,
-                "        {r}::Complex(i) => {{ if i.0 >= model.complex_unit_arena.items.len() {{ return Err(AuthorError::DanglingRef {{ entity: \"COMPLEX\" }}); }} }}"
+                "        {r}::Complex(i) => {{ let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {{ return Err(AuthorError::DanglingRef {{ entity: \"COMPLEX\" }}); }}; if !c.parts.iter().any(|p| [{fits}].contains(&part_name(p))) {{ return Err(AuthorError::InvalidComplex {{ reason: \"not a {target}\" }}); }} }}"
             )
             .unwrap();
         }

@@ -1,9 +1,10 @@
 //! PMI — the product and manufacturing information annotating a shape.
 //!
-//! Model-wide slices so far: **dimensions** ([`Scene::dimensions`]),
-//! **geometric tolerances** ([`Scene::tolerances`]), and **datums**
-//! ([`Scene::datums`]). A dimension carries a [`kind`](Dimension::kind) and a
-//! nominal [`value`](Dimension::value); a tolerance its
+//! Model-wide slices: **dimensions** ([`Scene::all_dimensions`]),
+//! **geometric tolerances** ([`Scene::all_tolerances`]), **datums**
+//! ([`Scene::all_datums`]), and **features** ([`Scene::all_features`]). A
+//! dimension carries a [`kind`](Dimension::kind) and a nominal
+//! [`value`](Dimension::value); a tolerance its
 //! [`kind`](Tolerance::kind), [`magnitude`](Tolerance::magnitude), and
 //! referenced [`datums`](Tolerance::datums). Both point at the shape
 //! [`Feature`] they apply to ([`Dimension::features`] /
@@ -15,6 +16,8 @@
 
 use crate::generated::model as m;
 use crate::scene::geometry::{Curve, Edge, Face, Point, Solid};
+use crate::scene::mesh::Mesh;
+use crate::scene::sets::GeometricSet;
 use crate::scene::{Ctx, Scene};
 
 /// What a [`Dimension`] measures.
@@ -50,34 +53,34 @@ impl Scene<'_> {
     /// Every dimension in the model. Covers the four base dimension types;
     /// the `…_WITH_PATH` / `…_WITH_DATUM_FEATURE` / `DIRECTED_…` subtypes are
     /// not yet surfaced.
-    pub fn dimensions(&self) -> impl Iterator<Item = Dimension<'_>> + '_ {
+    pub fn all_dimensions(&self) -> impl Iterator<Item = Dimension<'_>> + '_ {
         all_dimensions(self.ctx()).into_iter()
     }
 }
 
 /// Every dimension in the model (the four base types). Shared by
-/// [`Scene::dimensions`] and the per-part [`crate::scene::ProductDef`] queries.
+/// [`Scene::all_dimensions`] and the per-part [`crate::scene::ProductDef`] queries.
 fn all_dimensions(cx: Ctx<'_>) -> Vec<Dimension<'_>> {
     let mut out = Vec::new();
-    for i in 0..cx.model.dimensional_size_arena.items.len() {
+    for i in cx.model.dimensional_size_arena.indices() {
         out.push(Dimension {
             cx,
             which: DimImpl::Size(m::DimensionalSizeId(i)),
         });
     }
-    for i in 0..cx.model.dimensional_location_arena.items.len() {
+    for i in cx.model.dimensional_location_arena.indices() {
         out.push(Dimension {
             cx,
             which: DimImpl::Location(m::DimensionalLocationId(i)),
         });
     }
-    for i in 0..cx.model.angular_size_arena.items.len() {
+    for i in cx.model.angular_size_arena.indices() {
         out.push(Dimension {
             cx,
             which: DimImpl::AngularSize(m::AngularSizeId(i)),
         });
     }
-    for i in 0..cx.model.angular_location_arena.items.len() {
+    for i in cx.model.angular_location_arena.indices() {
         out.push(Dimension {
             cx,
             which: DimImpl::AngularLocation(m::AngularLocationId(i)),
@@ -100,10 +103,22 @@ impl<'m> Dimension<'m> {
     /// The dimension's name.
     pub fn name(&self) -> &'m str {
         match self.which {
-            DimImpl::Size(i) => &self.cx.model.dimensional_size_arena.get(i.0).name,
-            DimImpl::Location(i) => &self.cx.model.dimensional_location_arena.get(i.0).name,
-            DimImpl::AngularSize(i) => &self.cx.model.angular_size_arena.get(i.0).name,
-            DimImpl::AngularLocation(i) => &self.cx.model.angular_location_arena.get(i.0).name,
+            DimImpl::Size(i) => self
+                .cx
+                .model
+                .text(self.cx.model.dimensional_size_arena.get(i.0).name),
+            DimImpl::Location(i) => self
+                .cx
+                .model
+                .text(self.cx.model.dimensional_location_arena.get(i.0).name),
+            DimImpl::AngularSize(i) => self
+                .cx
+                .model
+                .text(self.cx.model.angular_size_arena.get(i.0).name),
+            DimImpl::AngularLocation(i) => self
+                .cx
+                .model
+                .text(self.cx.model.angular_location_arena.get(i.0).name),
         }
     }
 
@@ -125,12 +140,13 @@ impl<'m> Dimension<'m> {
     /// (`Size`/`Location` are lengths, `Angular*` are angles) and
     /// [`Scene::units`], exactly as point coordinates are read. A representation
     /// the walk cannot resolve (a complex one) is reported via
-    /// [`Scene::warnings`](crate::scene::Scene); a dimension with no value
-    /// representation simply yields `None`.
+    /// [`Scene::warnings`]; a dimension with no value representation simply
+    /// yields `None`.
     pub fn value(&self) -> Option<f64> {
-        let cx = self.cx;
+        let this = self.about();
+        let cx = this.cx;
         let rg = cx.ref_graph();
-        for r in rg.referrers(self.key()) {
+        for r in rg.referrers(this.key()) {
             let m::EntityKey::DimensionalCharacteristicRepresentation(dcr_id) = r else {
                 continue;
             };
@@ -165,6 +181,7 @@ impl<'m> Dimension<'m> {
 
 /// The GD&T characteristic a [`Tolerance`] specifies (its control-frame symbol).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ToleranceKind {
     /// `POSITION_TOLERANCE`.
     Position,
@@ -197,7 +214,7 @@ pub enum ToleranceKind {
     /// `TOTAL_RUNOUT_TOLERANCE`.
     TotalRunout,
     /// A geometric tolerance whose characteristic subtype was not recognized
-    /// (reported via [`Scene::warnings`](crate::scene::Scene)).
+    /// (reported via [`Scene::warnings`]).
     Other,
 }
 
@@ -220,12 +237,12 @@ macro_rules! leaf_tolerances {
         #[derive(Clone, Copy)]
         enum TolImpl {
             $( $ent(m::$id), )+
-            Complex(m::ComplexUnitId),
+            Complex(m::ComplexEntityId),
         }
 
         fn push_dedicated_tolerances<'m>(cx: Ctx<'m>, out: &mut Vec<Tolerance<'m>>) {
             $(
-                for i in 0..cx.model.$arena.items.len() {
+                for i in cx.model.$arena.indices() {
                     out.push(Tolerance { cx, which: TolImpl::$ent(m::$id(i)) });
                 }
             )+
@@ -234,9 +251,10 @@ macro_rules! leaf_tolerances {
         impl<'m> Tolerance<'m> {
             /// The GD&T characteristic this tolerance specifies.
             pub fn kind(&self) -> ToleranceKind {
-                match self.which {
+                let this = self.about();
+                match this.which {
                     $( TolImpl::$ent(_) => ToleranceKind::$kind, )+
-                    TolImpl::Complex(cuid) => self.complex_kind(cuid),
+                    TolImpl::Complex(cuid) => this.complex_kind(cuid),
                 }
             }
 
@@ -244,7 +262,7 @@ macro_rules! leaf_tolerances {
             pub fn key(&self) -> m::EntityKey {
                 match self.which {
                     $( TolImpl::$ent(i) => m::EntityKey::$ent(i), )+
-                    TolImpl::Complex(cuid) => m::EntityKey::ComplexUnit(cuid),
+                    TolImpl::Complex(cuid) => m::EntityKey::ComplexEntity(cuid),
                 }
             }
 
@@ -253,7 +271,7 @@ macro_rules! leaf_tolerances {
                 match self.which {
                     $( TolImpl::$ent(i) => {
                         let e = self.cx.model.$arena.get(i.0);
-                        Some((&e.name, e.magnitude.as_ref()))
+                        Some((self.cx.model.text(e.name), e.magnitude.as_ref()))
                     } )+
                     TolImpl::Complex(_) => None,
                 }
@@ -293,27 +311,27 @@ leaf_tolerances! {
 impl Scene<'_> {
     /// Every geometric tolerance in the model. Covers both standalone leaf
     /// entities (in their dedicated arenas) and complex multi-supertype
-    /// instances (any `ComplexUnit` carrying a `GEOMETRIC_TOLERANCE` facet).
-    pub fn tolerances(&self) -> impl Iterator<Item = Tolerance<'_>> + '_ {
+    /// instances (any `ComplexEntity` carrying a `GEOMETRIC_TOLERANCE` facet).
+    pub fn all_tolerances(&self) -> impl Iterator<Item = Tolerance<'_>> + '_ {
         all_tolerances(self.ctx()).into_iter()
     }
 }
 
 /// Every geometric tolerance in the model — standalone leaf entities plus complex
-/// multi-supertype instances. Shared by [`Scene::tolerances`] and per-part queries.
+/// multi-supertype instances. Shared by [`Scene::all_tolerances`] and per-part queries.
 fn all_tolerances(cx: Ctx<'_>) -> Vec<Tolerance<'_>> {
     let mut out: Vec<Tolerance<'_>> = Vec::new();
     push_dedicated_tolerances(cx, &mut out);
-    for i in 0..cx.model.complex_unit_arena.items.len() {
-        let cu = cx.model.complex_unit_arena.get(i);
+    for i in cx.model.complex_entity_arena.indices() {
+        let cu = cx.model.complex_entity_arena.get(i);
         if cu
             .parts
             .iter()
-            .any(|p| matches!(p, m::UnitPart::GeometricTolerance { .. }))
+            .any(|p| matches!(p, m::PartialEntity::GeometricTolerance { .. }))
         {
             out.push(Tolerance {
                 cx,
-                which: TolImpl::Complex(m::ComplexUnitId(i)),
+                which: TolImpl::Complex(m::ComplexEntityId(i)),
             });
         }
     }
@@ -334,12 +352,13 @@ impl<'m> Tolerance<'m> {
     /// [`Scene::units`], exactly as point coordinates and dimension values are
     /// read. `None` when the tolerance carries no magnitude, or its magnitude is
     /// a complex measure instance the walk cannot resolve (reported via
-    /// [`Scene::warnings`](crate::scene::Scene)).
+    /// [`Scene::warnings`]).
     pub fn magnitude(&self) -> Option<f64> {
-        let (_, mag) = self
+        let this = self.about();
+        let (_, mag) = this
             .dedicated_fields()
-            .or_else(|| self.complex_geometric_tolerance())?;
-        mag.and_then(|r| length_measure_f64(self.cx, r))
+            .or_else(|| this.complex_geometric_tolerance())?;
+        mag.and_then(|r| length_measure_f64(this.cx, r))
     }
 
     /// The `GEOMETRIC_TOLERANCE` supertype facet of a complex tolerance, as
@@ -350,33 +369,33 @@ impl<'m> Tolerance<'m> {
         let TolImpl::Complex(cuid) = self.which else {
             return None;
         };
-        let cu = self.cx.model.complex_unit_arena.get(cuid.0);
+        let cu = self.cx.model.complex_entity_arena.get(cuid.0);
         cu.parts.iter().find_map(|p| match p {
-            m::UnitPart::GeometricTolerance {
+            m::PartialEntity::GeometricTolerance {
                 name, magnitude, ..
-            } => Some((name.as_str(), magnitude.as_ref())),
+            } => Some((self.cx.model.text(*name), magnitude.as_ref())),
             _ => None,
         })
     }
 
     /// The characteristic of a complex tolerance, read from its leaf-subtype
-    /// facet. Only the leaf markers that occur in the corpus exist as
-    /// `UnitPart` variants; a complex tolerance without a recognized one is
+    /// facet. Only the leaf markers that occur in real files exist as
+    /// `PartialEntity` variants; a complex tolerance without a recognized one is
     /// surfaced as `Other`.
-    fn complex_kind(&self, cuid: m::ComplexUnitId) -> ToleranceKind {
-        let cu = self.cx.model.complex_unit_arena.get(cuid.0);
+    fn complex_kind(&self, cuid: m::ComplexEntityId) -> ToleranceKind {
+        let cu = self.cx.model.complex_entity_arena.get(cuid.0);
         for p in &cu.parts {
             let kind = match p {
-                m::UnitPart::PositionTolerance => ToleranceKind::Position,
-                m::UnitPart::FlatnessTolerance => ToleranceKind::Flatness,
-                m::UnitPart::StraightnessTolerance => ToleranceKind::Straightness,
-                m::UnitPart::RoundnessTolerance => ToleranceKind::Roundness,
-                m::UnitPart::CylindricityTolerance => ToleranceKind::Cylindricity,
-                m::UnitPart::LineProfileTolerance => ToleranceKind::LineProfile,
-                m::UnitPart::SurfaceProfileTolerance => ToleranceKind::SurfaceProfile,
-                m::UnitPart::ParallelismTolerance => ToleranceKind::Parallelism,
-                m::UnitPart::PerpendicularityTolerance => ToleranceKind::Perpendicularity,
-                m::UnitPart::CircularRunoutTolerance => ToleranceKind::CircularRunout,
+                m::PartialEntity::PositionTolerance => ToleranceKind::Position,
+                m::PartialEntity::FlatnessTolerance => ToleranceKind::Flatness,
+                m::PartialEntity::StraightnessTolerance => ToleranceKind::Straightness,
+                m::PartialEntity::RoundnessTolerance => ToleranceKind::Roundness,
+                m::PartialEntity::CylindricityTolerance => ToleranceKind::Cylindricity,
+                m::PartialEntity::LineProfileTolerance => ToleranceKind::LineProfile,
+                m::PartialEntity::SurfaceProfileTolerance => ToleranceKind::SurfaceProfile,
+                m::PartialEntity::ParallelismTolerance => ToleranceKind::Parallelism,
+                m::PartialEntity::PerpendicularityTolerance => ToleranceKind::Perpendicularity,
+                m::PartialEntity::CircularRunoutTolerance => ToleranceKind::CircularRunout,
                 _ => continue,
             };
             return kind;
@@ -423,23 +442,24 @@ enum DatumImpl {
 impl Scene<'_> {
     /// Every datum in the model — `DATUM`s and `COMMON_DATUM`s (the reference
     /// features that carry an identifying letter). The physical `DATUM_FEATURE`
-    /// a datum is established from is a different entity, reached later.
-    pub fn datums(&self) -> impl Iterator<Item = Datum<'_>> + '_ {
+    /// a datum is established from is a different entity, reached through
+    /// [`Datum::datum_feature`].
+    pub fn all_datums(&self) -> impl Iterator<Item = Datum<'_>> + '_ {
         all_datums(self.ctx()).into_iter()
     }
 }
 
 /// Every datum (`DATUM` / `COMMON_DATUM`) in the model. Shared by
-/// [`Scene::datums`] and per-part queries.
+/// [`Scene::all_datums`] and per-part queries.
 fn all_datums(cx: Ctx<'_>) -> Vec<Datum<'_>> {
     let mut out: Vec<Datum<'_>> = Vec::new();
-    for i in 0..cx.model.datum_arena.items.len() {
+    for i in cx.model.datum_arena.indices() {
         out.push(Datum {
             cx,
             which: DatumImpl::Datum(m::DatumId(i)),
         });
     }
-    for i in 0..cx.model.common_datum_arena.items.len() {
+    for i in cx.model.common_datum_arena.indices() {
         out.push(Datum {
             cx,
             which: DatumImpl::CommonDatum(m::CommonDatumId(i)),
@@ -453,16 +473,25 @@ impl<'m> Datum<'m> {
     /// letter (A, B, C, …); a common datum may carry a compound label ("A-B").
     pub fn letter(&self) -> &'m str {
         match self.which {
-            DatumImpl::Datum(i) => &self.cx.model.datum_arena.get(i.0).identification,
-            DatumImpl::CommonDatum(i) => &self.cx.model.common_datum_arena.get(i.0).identification,
+            DatumImpl::Datum(i) => self
+                .cx
+                .model
+                .text(self.cx.model.datum_arena.get(i.0).identification),
+            DatumImpl::CommonDatum(i) => self
+                .cx
+                .model
+                .text(self.cx.model.common_datum_arena.get(i.0).identification),
         }
     }
 
     /// The datum's name.
     pub fn name(&self) -> &'m str {
         match self.which {
-            DatumImpl::Datum(i) => &self.cx.model.datum_arena.get(i.0).name,
-            DatumImpl::CommonDatum(i) => &self.cx.model.common_datum_arena.get(i.0).name,
+            DatumImpl::Datum(i) => self.cx.model.text(self.cx.model.datum_arena.get(i.0).name),
+            DatumImpl::CommonDatum(i) => self
+                .cx
+                .model
+                .text(self.cx.model.common_datum_arena.get(i.0).name),
         }
     }
 
@@ -508,18 +537,19 @@ impl<'m> Tolerance<'m> {
     /// Empty for a form tolerance (flatness, straightness, …) that references no
     /// datum. A common datum (`A-B`) is flattened to its constituent datums; a
     /// reference the walk cannot resolve (a complex facet) is reported via
-    /// [`Scene::warnings`](crate::scene::Scene).
-    pub fn datums(&self) -> Vec<Datum<'m>> {
+    /// [`Scene::warnings`].
+    pub fn datums(&self) -> impl Iterator<Item = Datum<'m>> + 'm {
+        let this = self.about();
         // `precedence` is authored per DATUM_REFERENCE but a DATUM_SYSTEM orders
         // its compartments positionally; collect a sort key from whichever form
         // applies, then order by it so the frame reads primary-first regardless
         // of file order.
         let mut keyed: Vec<(i64, Datum<'m>)> = Vec::new();
-        for r in self.datum_system() {
-            self.collect_system_ref(r, &mut keyed);
+        for r in this.datum_system() {
+            this.collect_system_ref(r, &mut keyed);
         }
         keyed.sort_by_key(|(k, _)| *k);
-        keyed.into_iter().map(|(_, d)| d).collect()
+        keyed.into_iter().map(|(_, d)| d)
     }
 
     /// The tolerance's `datum_system` list: on the dedicated arena for the eight
@@ -551,12 +581,12 @@ impl<'m> Tolerance<'m> {
                 &model.total_runout_tolerance_arena.get(i.0).datum_system
             }
             TolImpl::Complex(cuid) => model
-                .complex_unit_arena
+                .complex_entity_arena
                 .get(cuid.0)
                 .parts
                 .iter()
                 .find_map(|p| match p {
-                    m::UnitPart::GeometricToleranceWithDatumReference { datum_system } => {
+                    m::PartialEntity::GeometricToleranceWithDatumReference { datum_system } => {
                         Some(datum_system.as_slice())
                     }
                     _ => None,
@@ -673,10 +703,10 @@ pub struct Feature<'m> {
 // family, since a dimension / tolerance target may point at any of them.
 //
 // The family splits in two: `regions` are the SHAPE_ASPECT subtypes that denote a
-// portion of the part's shape (a feature) and are what `Scene::features` lists;
+// portion of the part's shape (a feature) and are what `Scene::all_features` lists;
 // `aspects` are also SHAPE_ASPECTs in the schema but are datum callouts, datum
 // reference structures, tolerance zones, views, or dimensions — reached via
-// their own queries or the raw model. Corpus-checked: no dimension / tolerance
+// their own queries or the raw model. Checked on real files: no dimension / tolerance
 // ever targets an `aspects` type, so this split drops no real feature.
 macro_rules! feature_family {
     (
@@ -692,6 +722,7 @@ macro_rules! feature_family {
         /// The concrete kind of a [`Feature`] — which `SHAPE_ASPECT`-family
         /// entity backs it, without matching on [`Feature::key`]'s `EntityKey`.
         #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+        #[non_exhaustive]
         pub enum FeatureKind {
             $( $rent, )+
             $( $aent, )+
@@ -708,8 +739,8 @@ macro_rules! feature_family {
             /// The feature's name.
             pub fn name(&self) -> &'m str {
                 match self.which {
-                    $( FeatureImpl::$rent(i) => &self.cx.model.$rarena.get(i.0).name, )+
-                    $( FeatureImpl::$aent(i) => &self.cx.model.$aarena.get(i.0).name, )+
+                    $( FeatureImpl::$rent(i) => self.cx.model.text(self.cx.model.$rarena.get(i.0).name), )+
+                    $( FeatureImpl::$aent(i) => self.cx.model.text(self.cx.model.$aarena.get(i.0).name), )+
                 }
             }
 
@@ -717,10 +748,10 @@ macro_rules! feature_family {
             pub fn description(&self) -> Option<&'m str> {
                 match self.which {
                     $( FeatureImpl::$rent(i) => {
-                        self.cx.model.$rarena.get(i.0).description.as_deref()
+                        self.cx.model.$rarena.get(i.0).description.map(|t| self.cx.model.text(t))
                     } )+
                     $( FeatureImpl::$aent(i) => {
-                        self.cx.model.$aarena.get(i.0).description.as_deref()
+                        self.cx.model.$aarena.get(i.0).description.map(|t| self.cx.model.text(t))
                     } )+
                 }
             }
@@ -766,10 +797,10 @@ macro_rules! feature_family {
         }
 
         /// Every shape-region feature (the `regions` group) in the model — what
-        /// [`Scene::features`] enumerates.
+        /// [`Scene::all_features`] enumerates.
         fn push_all_features<'m>(cx: Ctx<'m>, out: &mut Vec<Feature<'m>>) {
             $(
-                for i in 0..cx.model.$rarena.items.len() {
+                for i in cx.model.$rarena.indices() {
                     out.push(Feature { cx, which: FeatureImpl::$rent(m::$rid(i)) });
                 }
             )+
@@ -813,8 +844,8 @@ impl Scene<'_> {
     /// composite / derived / all-around / centre-of-symmetry / continuous
     /// aspects). Datum callouts, datum-system references, tolerance zones, and
     /// views are also `SHAPE_ASPECT`s in the schema but are not features here —
-    /// datums are reached via [`Scene::datums`], the rest via the raw model.
-    pub fn features(&self) -> impl Iterator<Item = Feature<'_>> + '_ {
+    /// datums are reached via [`Scene::all_datums`], the rest via the raw model.
+    pub fn all_features(&self) -> impl Iterator<Item = Feature<'_>> + '_ {
         let cx = self.ctx();
         let mut out: Vec<Feature<'_>> = Vec::new();
         push_all_features(cx, &mut out);
@@ -827,9 +858,10 @@ impl<'m> Dimension<'m> {
     /// / `ANGULAR_SIZE`) yields the one feature it measures; a location
     /// (`DIMENSIONAL_LOCATION` / `ANGULAR_LOCATION`) yields the two it spans, in
     /// `[relating, related]` order.
-    pub fn features(&self) -> Vec<Feature<'m>> {
-        let model = self.cx.model;
-        let refs: Vec<&m::ShapeAspectRef> = match self.which {
+    pub fn features(&self) -> impl Iterator<Item = Feature<'m>> + 'm {
+        let this = self.about();
+        let model = this.cx.model;
+        let refs: Vec<&m::ShapeAspectRef> = match this.which {
             DimImpl::Size(i) => vec![&model.dimensional_size_arena.get(i.0).applies_to],
             DimImpl::AngularSize(i) => vec![&model.angular_size_arena.get(i.0).applies_to],
             DimImpl::Location(i) => {
@@ -842,8 +874,7 @@ impl<'m> Dimension<'m> {
             }
         };
         refs.into_iter()
-            .filter_map(|r| self.feature_from_sa_ref(r))
-            .collect()
+            .filter_map(move |r| this.feature_from_sa_ref(r))
     }
 
     fn feature_from_sa_ref(&self, r: &m::ShapeAspectRef) -> Option<Feature<'m>> {
@@ -862,15 +893,16 @@ impl<'m> Tolerance<'m> {
     /// `None` when the target is not a named shape aspect — a tolerance placed on
     /// a dimension or on the whole part (`PRODUCT_DEFINITION_SHAPE`) — or when the
     /// target is a complex instance the walk cannot resolve (reported via
-    /// [`Scene::warnings`](crate::scene::Scene)).
+    /// [`Scene::warnings`]).
     pub fn feature(&self) -> Option<Feature<'m>> {
-        let target = self.tolerance_target()?;
+        let this = self.about();
+        let target = this.tolerance_target()?;
         if matches!(target, m::GeometricToleranceTargetRef::Complex(_)) {
-            self.cx
+            this.cx
                 .warn("tolerance target is a complex instance".to_owned());
             return None;
         }
-        feature_impl_from_tolerance_target(target).map(|which| Feature { cx: self.cx, which })
+        feature_impl_from_tolerance_target(target).map(|which| Feature { cx: this.cx, which })
     }
 
     /// The tolerance's `toleranced_shape_aspect`: from the dedicated arena for a
@@ -884,12 +916,12 @@ impl<'m> Tolerance<'m> {
         };
         self.cx
             .model
-            .complex_unit_arena
+            .complex_entity_arena
             .get(cuid.0)
             .parts
             .iter()
             .find_map(|p| match p {
-                m::UnitPart::GeometricTolerance {
+                m::PartialEntity::GeometricTolerance {
                     toleranced_shape_aspect,
                     ..
                 } => Some(toleranced_shape_aspect),
@@ -901,32 +933,40 @@ impl<'m> Tolerance<'m> {
 /// A concrete geometry item a [`Feature`] designates (via
 /// `GEOMETRIC_ITEM_SPECIFIC_USAGE`). The common cases resolve to a typed handle;
 /// anything else is surfaced as `Other` carrying its key rather than dropped.
+#[derive(Clone, Copy, Debug)]
+#[non_exhaustive]
 pub enum FeatureGeometry<'m> {
-    /// An `ADVANCED_FACE`.
+    /// An `ADVANCED_FACE` or `FACE_SURFACE`.
     Face(Face<'m>),
     /// An `EDGE_CURVE`.
     Edge(Edge<'m>),
     /// A `CARTESIAN_POINT`.
     Point(Point<'m>),
-    /// A `MANIFOLD_SOLID_BREP`.
+    /// A `MANIFOLD_SOLID_BREP` or `BREP_WITH_VOIDS`.
     Solid(Solid<'m>),
     /// A curve (`TRIMMED_CURVE`, `COMPOSITE_CURVE`, `CIRCLE`, …); dispatch its
-    /// exact kind via [`Curve::kind`](crate::scene::geometry::Curve::kind).
+    /// exact kind via [`Curve::kind`](crate::scene::Curve::kind).
     Curve(Curve<'m>),
-    /// Any other identified item (a tessellated face, a geometric set, …), by key.
+    /// A display mesh (`COMPLEX_TRIANGULATED_FACE`, …).
+    Mesh(Mesh<'m>),
+    /// A `GEOMETRIC_SET` or `GEOMETRIC_CURVE_SET`.
+    GeometricSet(GeometricSet<'m>),
+    /// Any other identified item (a tessellated geometric set, a placement, …),
+    /// by key.
     Other(m::EntityKey),
 }
 
 impl<'m> Feature<'m> {
     /// The concrete geometry this feature designates — the faces / edges / points
-    /// / solids linked to it by `GEOMETRIC_ITEM_SPECIFIC_USAGE` (GISU).
+    /// / solids / curves / meshes / geometric sets linked to it by
+    /// `GEOMETRIC_ITEM_SPECIFIC_USAGE` (GISU).
     ///
     /// A feature may designate several items (one per GISU). Items outside the
-    /// typed set (curves, tessellated faces, …) come back as
+    /// typed set (a tessellated geometric set, a placement, …) come back as
     /// [`FeatureGeometry::Other`] with their key. Only GISUs whose `definition`
     /// points directly at this feature are followed; indirect links through a
     /// shape-aspect relationship are not yet resolved.
-    pub fn geometry(&self) -> Vec<FeatureGeometry<'m>> {
+    pub fn geometry(&self) -> impl Iterator<Item = FeatureGeometry<'m>> + 'm {
         let cx = self.cx;
         let rg = cx.ref_graph();
         let mut out = Vec::new();
@@ -943,6 +983,9 @@ impl<'m> Feature<'m> {
                 m::GeometricModelItemRef::AdvancedFace(id) => {
                     FeatureGeometry::Face(Face::from_advanced_face(cx, *id))
                 }
+                m::GeometricModelItemRef::FaceSurface(id) => {
+                    FeatureGeometry::Face(Face::from_face_surface(cx, *id))
+                }
                 m::GeometricModelItemRef::EdgeCurve(id) => {
                     FeatureGeometry::Edge(Edge::from_id(cx, *id))
                 }
@@ -952,13 +995,23 @@ impl<'m> Feature<'m> {
                 m::GeometricModelItemRef::ManifoldSolidBrep(id) => {
                     FeatureGeometry::Solid(Solid::from_id(cx, *id))
                 }
-                other => match Curve::from_model_item(cx, other) {
-                    Some(c) => FeatureGeometry::Curve(c),
-                    None => FeatureGeometry::Other(other.entity_key()),
-                },
+                m::GeometricModelItemRef::BrepWithVoids(id) => {
+                    FeatureGeometry::Solid(Solid::from_void_id(cx, *id))
+                }
+                other => {
+                    if let Some(c) = Curve::from_model_item(cx, other) {
+                        FeatureGeometry::Curve(c)
+                    } else if let Some(mesh) = Mesh::from_model_item(cx, other) {
+                        FeatureGeometry::Mesh(mesh)
+                    } else if let Some(set) = GeometricSet::from_model_item(cx, other) {
+                        FeatureGeometry::GeometricSet(set)
+                    } else {
+                        FeatureGeometry::Other(other.entity_key())
+                    }
+                }
             });
         }
-        out
+        out.into_iter()
     }
 }
 
@@ -1044,7 +1097,7 @@ pub(crate) fn datums_of(cx: Ctx<'_>, part: m::EntityKey) -> Vec<Datum<'_>> {
 /// The dimensions belonging to `part` — those whose targeted feature is on it.
 pub(crate) fn dimensions_of(cx: Ctx<'_>, part: m::EntityKey) -> Vec<Dimension<'_>> {
     let mut all = all_dimensions(cx);
-    all.retain(|d| d.features().iter().any(|f| f.part_def_id() == Some(part)));
+    all.retain(|d| d.features().any(|f| f.part_def_id() == Some(part)));
     all
 }
 
@@ -1055,3 +1108,5 @@ pub(crate) fn tolerances_of(cx: Ctx<'_>, part: m::EntityKey) -> Vec<Tolerance<'_
     all.retain(|t| t.part_def_id() == Some(part));
     all
 }
+
+about_by_key!(Dimension, Tolerance);

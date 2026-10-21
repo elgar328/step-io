@@ -6,19 +6,19 @@ use super::model::*;
 #[derive(Clone, Copy, Debug)]
 pub enum ActionRefView<'m> {
     Action(&'m Action),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ActionRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ActionRefView<'m> {
         match self {
             ActionRef::Action(i) => ActionRefView::Action(model.action_arena.get(i.0)),
-            ActionRef::Complex(i) => ActionRefView::Complex(model.complex_unit_arena.get(i.0)),
+            ActionRef::Complex(i) => ActionRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ActionRef::Action(i) => EntityKey::Action(*i),
-            ActionRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ActionRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -26,7 +26,7 @@ impl ActionRef {
 #[derive(Clone, Copy, Debug)]
 pub enum ActionMethodRefView<'m> {
     ActionMethod(&'m ActionMethod),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ActionMethodRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ActionMethodRefView<'m> {
@@ -35,14 +35,14 @@ impl ActionMethodRef {
                 ActionMethodRefView::ActionMethod(model.action_method_arena.get(i.0))
             }
             ActionMethodRef::Complex(i) => {
-                ActionMethodRefView::Complex(model.complex_unit_arena.get(i.0))
+                ActionMethodRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ActionMethodRef::ActionMethod(i) => EntityKey::ActionMethod(*i),
-            ActionMethodRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ActionMethodRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -50,7 +50,7 @@ impl ActionMethodRef {
 #[derive(Clone, Copy, Debug)]
 pub enum ActionResourceRefView<'m> {
     ActionResource(&'m ActionResource),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ActionResourceRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ActionResourceRefView<'m> {
@@ -59,14 +59,14 @@ impl ActionResourceRef {
                 ActionResourceRefView::ActionResource(model.action_resource_arena.get(i.0))
             }
             ActionResourceRef::Complex(i) => {
-                ActionResourceRefView::Complex(model.complex_unit_arena.get(i.0))
+                ActionResourceRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ActionResourceRef::ActionResource(i) => EntityKey::ActionResource(*i),
-            ActionResourceRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ActionResourceRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -96,7 +96,7 @@ impl ActionResourceTypeRef {
 pub enum AnnotationCurveOccurrenceRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
     LeaderCurve(&'m LeaderCurve),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl AnnotationCurveOccurrenceRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationCurveOccurrenceRefView<'m> {
@@ -110,7 +110,7 @@ impl AnnotationCurveOccurrenceRef {
                 AnnotationCurveOccurrenceRefView::LeaderCurve(model.leader_curve_arena.get(i.0))
             }
             AnnotationCurveOccurrenceRef::Complex(i) => {
-                AnnotationCurveOccurrenceRefView::Complex(model.complex_unit_arena.get(i.0))
+                AnnotationCurveOccurrenceRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -120,7 +120,7 @@ impl AnnotationCurveOccurrenceRef {
                 EntityKey::AnnotationCurveOccurrence(*i)
             }
             AnnotationCurveOccurrenceRef::LeaderCurve(i) => EntityKey::LeaderCurve(*i),
-            AnnotationCurveOccurrenceRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            AnnotationCurveOccurrenceRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -142,7 +142,7 @@ pub enum AnnotationOccurrenceRefView<'m> {
     LeaderTerminator(&'m LeaderTerminator),
     TerminatorSymbol(&'m TerminatorSymbol),
     TessellatedAnnotationOccurrence(&'m TessellatedAnnotationOccurrence),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl AnnotationOccurrenceRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationOccurrenceRefView<'m> {
@@ -211,7 +211,7 @@ impl AnnotationOccurrenceRef {
                 )
             }
             AnnotationOccurrenceRef::Complex(i) => {
-                AnnotationOccurrenceRefView::Complex(model.complex_unit_arena.get(i.0))
+                AnnotationOccurrenceRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -246,7 +246,7 @@ impl AnnotationOccurrenceRef {
             AnnotationOccurrenceRef::TessellatedAnnotationOccurrence(i) => {
                 EntityKey::TessellatedAnnotationOccurrence(*i)
             }
-            AnnotationOccurrenceRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            AnnotationOccurrenceRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -307,14 +307,14 @@ pub enum AnnotationPlaceholderOccurrenceRefView<'m> {
     AnnotationPlaceholderOccurrenceWithLeaderLine(
         &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
     ),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl AnnotationPlaceholderOccurrenceRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationPlaceholderOccurrenceRefView<'m> {
         match self {
             AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrence(i) => AnnotationPlaceholderOccurrenceRefView::AnnotationPlaceholderOccurrence(model.annotation_placeholder_occurrence_arena.get(i.0)),
             AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => AnnotationPlaceholderOccurrenceRefView::AnnotationPlaceholderOccurrenceWithLeaderLine(model.annotation_placeholder_occurrence_with_leader_line_arena.get(i.0)),
-            AnnotationPlaceholderOccurrenceRef::Complex(i) => AnnotationPlaceholderOccurrenceRefView::Complex(model.complex_unit_arena.get(i.0)),
+            AnnotationPlaceholderOccurrenceRef::Complex(i) => AnnotationPlaceholderOccurrenceRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -325,7 +325,7 @@ impl AnnotationPlaceholderOccurrenceRef {
             AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrenceWithLeaderLine(
                 i,
             ) => EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i),
-            AnnotationPlaceholderOccurrenceRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            AnnotationPlaceholderOccurrenceRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -352,7 +352,7 @@ pub enum AnnotationPlaneElementRefView<'m> {
     StyledItem(&'m StyledItem),
     TerminatorSymbol(&'m TerminatorSymbol),
     TessellatedAnnotationOccurrence(&'m TessellatedAnnotationOccurrence),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl AnnotationPlaneElementRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationPlaneElementRefView<'m> {
@@ -448,7 +448,7 @@ impl AnnotationPlaneElementRef {
                 )
             }
             AnnotationPlaneElementRef::Complex(i) => {
-                AnnotationPlaneElementRefView::Complex(model.complex_unit_arena.get(i.0))
+                AnnotationPlaneElementRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -496,7 +496,7 @@ impl AnnotationPlaneElementRef {
             AnnotationPlaneElementRef::TessellatedAnnotationOccurrence(i) => {
                 EntityKey::TessellatedAnnotationOccurrence(*i)
             }
-            AnnotationPlaneElementRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            AnnotationPlaneElementRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -507,7 +507,7 @@ pub enum AnnotationRepresentationSelectRefView<'m> {
     PresentationArea(&'m PresentationArea),
     PresentationView(&'m PresentationView),
     SymbolRepresentation(&'m SymbolRepresentation),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl AnnotationRepresentationSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationRepresentationSelectRefView<'m> {
@@ -533,7 +533,7 @@ impl AnnotationRepresentationSelectRef {
                 )
             }
             AnnotationRepresentationSelectRef::Complex(i) => {
-                AnnotationRepresentationSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                AnnotationRepresentationSelectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -549,7 +549,7 @@ impl AnnotationRepresentationSelectRef {
             AnnotationRepresentationSelectRef::SymbolRepresentation(i) => {
                 EntityKey::SymbolRepresentation(*i)
             }
-            AnnotationRepresentationSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            AnnotationRepresentationSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -559,7 +559,7 @@ pub enum AnnotationSymbolOccurrenceRefView<'m> {
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     LeaderTerminator(&'m LeaderTerminator),
     TerminatorSymbol(&'m TerminatorSymbol),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl AnnotationSymbolOccurrenceRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationSymbolOccurrenceRefView<'m> {
@@ -580,7 +580,7 @@ impl AnnotationSymbolOccurrenceRef {
                 )
             }
             AnnotationSymbolOccurrenceRef::Complex(i) => {
-                AnnotationSymbolOccurrenceRefView::Complex(model.complex_unit_arena.get(i.0))
+                AnnotationSymbolOccurrenceRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -591,7 +591,7 @@ impl AnnotationSymbolOccurrenceRef {
             }
             AnnotationSymbolOccurrenceRef::LeaderTerminator(i) => EntityKey::LeaderTerminator(*i),
             AnnotationSymbolOccurrenceRef::TerminatorSymbol(i) => EntityKey::TerminatorSymbol(*i),
-            AnnotationSymbolOccurrenceRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            AnnotationSymbolOccurrenceRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -600,7 +600,7 @@ impl AnnotationSymbolOccurrenceRef {
 pub enum AnnotationSymbolOccurrenceItemRefView<'m> {
     AnnotationSymbol(&'m AnnotationSymbol),
     DefinedSymbol(&'m DefinedSymbol),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl AnnotationSymbolOccurrenceItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationSymbolOccurrenceItemRefView<'m> {
@@ -616,7 +616,7 @@ impl AnnotationSymbolOccurrenceItemRef {
                 )
             }
             AnnotationSymbolOccurrenceItemRef::Complex(i) => {
-                AnnotationSymbolOccurrenceItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                AnnotationSymbolOccurrenceItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -626,7 +626,7 @@ impl AnnotationSymbolOccurrenceItemRef {
                 EntityKey::AnnotationSymbol(*i)
             }
             AnnotationSymbolOccurrenceItemRef::DefinedSymbol(i) => EntityKey::DefinedSymbol(*i),
-            AnnotationSymbolOccurrenceItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            AnnotationSymbolOccurrenceItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -638,7 +638,7 @@ pub enum AnnotationTextOccurrenceItemRefView<'m> {
     CompositeText(&'m CompositeText),
     DefinedCharacterGlyph(&'m DefinedCharacterGlyph),
     TextLiteral(&'m TextLiteral),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl AnnotationTextOccurrenceItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationTextOccurrenceItemRefView<'m> {
@@ -667,7 +667,7 @@ impl AnnotationTextOccurrenceItemRef {
                 AnnotationTextOccurrenceItemRefView::TextLiteral(model.text_literal_arena.get(i.0))
             }
             AnnotationTextOccurrenceItemRef::Complex(i) => {
-                AnnotationTextOccurrenceItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                AnnotationTextOccurrenceItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -682,7 +682,7 @@ impl AnnotationTextOccurrenceItemRef {
                 EntityKey::DefinedCharacterGlyph(*i)
             }
             AnnotationTextOccurrenceItemRef::TextLiteral(i) => EntityKey::TextLiteral(*i),
-            AnnotationTextOccurrenceItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            AnnotationTextOccurrenceItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -915,6 +915,7 @@ pub enum ApprovalItemRefView<'m> {
     OrientedClosedShell(&'m OrientedClosedShell),
     OrientedEdge(&'m OrientedEdge),
     OverRidingStyledItem(&'m OverRidingStyledItem),
+    Parabola(&'m Parabola),
     Path(&'m Path),
     Pcurve(&'m Pcurve),
     PersonAndOrganization(&'m PersonAndOrganization),
@@ -1006,7 +1007,7 @@ pub enum ApprovalItemRefView<'m> {
     VertexPoint(&'m VertexPoint),
     VertexShell(&'m VertexShell),
     WireShell(&'m WireShell),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ApprovalItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ApprovalItemRefView<'m> {
@@ -1596,6 +1597,9 @@ impl ApprovalItemRef {
             ApprovalItemRef::OverRidingStyledItem(i) => ApprovalItemRefView::OverRidingStyledItem(
                 model.over_riding_styled_item_arena.get(i.0),
             ),
+            ApprovalItemRef::Parabola(i) => {
+                ApprovalItemRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             ApprovalItemRef::Path(i) => ApprovalItemRefView::Path(model.path_arena.get(i.0)),
             ApprovalItemRef::Pcurve(i) => ApprovalItemRefView::Pcurve(model.pcurve_arena.get(i.0)),
             ApprovalItemRef::PersonAndOrganization(i) => {
@@ -1938,7 +1942,7 @@ impl ApprovalItemRef {
                 ApprovalItemRefView::WireShell(model.wire_shell_arena.get(i.0))
             }
             ApprovalItemRef::Complex(i) => {
-                ApprovalItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                ApprovalItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -2185,6 +2189,7 @@ impl ApprovalItemRef {
             ApprovalItemRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
             ApprovalItemRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
             ApprovalItemRef::OverRidingStyledItem(i) => EntityKey::OverRidingStyledItem(*i),
+            ApprovalItemRef::Parabola(i) => EntityKey::Parabola(*i),
             ApprovalItemRef::Path(i) => EntityKey::Path(*i),
             ApprovalItemRef::Pcurve(i) => EntityKey::Pcurve(*i),
             ApprovalItemRef::PersonAndOrganization(i) => EntityKey::PersonAndOrganization(*i),
@@ -2320,7 +2325,7 @@ impl ApprovalItemRef {
             ApprovalItemRef::VertexPoint(i) => EntityKey::VertexPoint(*i),
             ApprovalItemRef::VertexShell(i) => EntityKey::VertexShell(*i),
             ApprovalItemRef::WireShell(i) => EntityKey::WireShell(*i),
-            ApprovalItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ApprovalItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -2381,7 +2386,7 @@ pub enum ApprovedItemRefView<'m> {
     SecurityClassification(&'m SecurityClassification),
     StartRequest(&'m StartRequest),
     StartWork(&'m StartWork),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ApprovedItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ApprovedItemRefView<'m> {
@@ -2441,7 +2446,7 @@ impl ApprovedItemRef {
                 ApprovedItemRefView::StartWork(model.start_work_arena.get(i.0))
             }
             ApprovedItemRef::Complex(i) => {
-                ApprovedItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                ApprovedItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -2467,7 +2472,7 @@ impl ApprovedItemRef {
             ApprovedItemRef::SecurityClassification(i) => EntityKey::SecurityClassification(*i),
             ApprovedItemRef::StartRequest(i) => EntityKey::StartRequest(*i),
             ApprovedItemRef::StartWork(i) => EntityKey::StartWork(*i),
-            ApprovedItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ApprovedItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -2616,7 +2621,7 @@ pub enum CcClassifiedItemRefView<'m> {
     ProductDefinitionFormationWithSpecifiedSource(
         &'m ProductDefinitionFormationWithSpecifiedSource,
     ),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl CcClassifiedItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CcClassifiedItemRefView<'m> {
@@ -2644,7 +2649,7 @@ impl CcClassifiedItemRef {
                 )
             }
             CcClassifiedItemRef::Complex(i) => {
-                CcClassifiedItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                CcClassifiedItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -2660,7 +2665,7 @@ impl CcClassifiedItemRef {
             CcClassifiedItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 EntityKey::ProductDefinitionFormationWithSpecifiedSource(*i)
             }
-            CcClassifiedItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            CcClassifiedItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -2681,7 +2686,7 @@ pub enum CcPersonOrganizationItemRefView<'m> {
     SecurityClassification(&'m SecurityClassification),
     StartRequest(&'m StartRequest),
     StartWork(&'m StartWork),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl CcPersonOrganizationItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CcPersonOrganizationItemRefView<'m> {
@@ -2739,7 +2744,7 @@ impl CcPersonOrganizationItemRef {
                 CcPersonOrganizationItemRefView::StartWork(model.start_work_arena.get(i.0))
             }
             CcPersonOrganizationItemRef::Complex(i) => {
-                CcPersonOrganizationItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                CcPersonOrganizationItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -2765,7 +2770,7 @@ impl CcPersonOrganizationItemRef {
             }
             CcPersonOrganizationItemRef::StartRequest(i) => EntityKey::StartRequest(*i),
             CcPersonOrganizationItemRef::StartWork(i) => EntityKey::StartWork(*i),
-            CcPersonOrganizationItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            CcPersonOrganizationItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -2795,7 +2800,7 @@ pub enum ChangeRequestItemRefView<'m> {
     ProductDefinitionFormationWithSpecifiedSource(
         &'m ProductDefinitionFormationWithSpecifiedSource,
     ),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ChangeRequestItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ChangeRequestItemRefView<'m> {
@@ -2813,7 +2818,7 @@ impl ChangeRequestItemRef {
                 )
             }
             ChangeRequestItemRef::Complex(i) => {
-                ChangeRequestItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                ChangeRequestItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -2825,7 +2830,7 @@ impl ChangeRequestItemRef {
             ChangeRequestItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 EntityKey::ProductDefinitionFormationWithSpecifiedSource(*i)
             }
-            ChangeRequestItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ChangeRequestItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -2835,7 +2840,7 @@ pub enum CharacterStyleSelectRefView<'m> {
     CharacterGlyphStyleOutline(&'m CharacterGlyphStyleOutline),
     CharacterGlyphStyleStroke(&'m CharacterGlyphStyleStroke),
     TextStyleForDefinedFont(&'m TextStyleForDefinedFont),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl CharacterStyleSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CharacterStyleSelectRefView<'m> {
@@ -2856,7 +2861,7 @@ impl CharacterStyleSelectRef {
                 )
             }
             CharacterStyleSelectRef::Complex(i) => {
-                CharacterStyleSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                CharacterStyleSelectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -2871,7 +2876,7 @@ impl CharacterStyleSelectRef {
             CharacterStyleSelectRef::TextStyleForDefinedFont(i) => {
                 EntityKey::TextStyleForDefinedFont(*i)
             }
-            CharacterStyleSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            CharacterStyleSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -2882,7 +2887,7 @@ pub enum CharacterizedActionDefinitionRefView<'m> {
     ActionMethod(&'m ActionMethod),
     ActionMethodRelationship(&'m ActionMethodRelationship),
     ActionRelationship(&'m ActionRelationship),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl CharacterizedActionDefinitionRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CharacterizedActionDefinitionRefView<'m> {
@@ -2906,7 +2911,7 @@ impl CharacterizedActionDefinitionRef {
                 )
             }
             CharacterizedActionDefinitionRef::Complex(i) => {
-                CharacterizedActionDefinitionRefView::Complex(model.complex_unit_arena.get(i.0))
+                CharacterizedActionDefinitionRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -2920,7 +2925,7 @@ impl CharacterizedActionDefinitionRef {
             CharacterizedActionDefinitionRef::ActionRelationship(i) => {
                 EntityKey::ActionRelationship(*i)
             }
-            CharacterizedActionDefinitionRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            CharacterizedActionDefinitionRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -3002,7 +3007,7 @@ pub enum CharacterizedDefinitionRefView<'m> {
     ToleranceZoneWithDatum(&'m ToleranceZoneWithDatum),
     TotalRunoutTolerance(&'m TotalRunoutTolerance),
     UnequallyDisposedGeometricTolerance(&'m UnequallyDisposedGeometricTolerance),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl CharacterizedDefinitionRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CharacterizedDefinitionRefView<'m> {
@@ -3369,7 +3374,7 @@ impl CharacterizedDefinitionRef {
                 )
             }
             CharacterizedDefinitionRef::Complex(i) => {
-                CharacterizedDefinitionRefView::Complex(model.complex_unit_arena.get(i.0))
+                CharacterizedDefinitionRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -3554,7 +3559,7 @@ impl CharacterizedDefinitionRef {
             CharacterizedDefinitionRef::UnequallyDisposedGeometricTolerance(i) => {
                 EntityKey::UnequallyDisposedGeometricTolerance(*i)
             }
-            CharacterizedDefinitionRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            CharacterizedDefinitionRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -3564,7 +3569,7 @@ pub enum CharacterizedResourceDefinitionRefView<'m> {
     ActionResource(&'m ActionResource),
     ActionResourceRelationship(&'m ActionResourceRelationship),
     ActionResourceRequirement(&'m ActionResourceRequirement),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl CharacterizedResourceDefinitionRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CharacterizedResourceDefinitionRefView<'m> {
@@ -3585,7 +3590,7 @@ impl CharacterizedResourceDefinitionRef {
                 )
             }
             CharacterizedResourceDefinitionRef::Complex(i) => {
-                CharacterizedResourceDefinitionRefView::Complex(model.complex_unit_arena.get(i.0))
+                CharacterizedResourceDefinitionRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -3598,7 +3603,7 @@ impl CharacterizedResourceDefinitionRef {
             CharacterizedResourceDefinitionRef::ActionResourceRequirement(i) => {
                 EntityKey::ActionResourceRequirement(*i)
             }
-            CharacterizedResourceDefinitionRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            CharacterizedResourceDefinitionRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -3607,7 +3612,7 @@ impl CharacterizedResourceDefinitionRef {
 pub enum ClosedShellRefView<'m> {
     ClosedShell(&'m ClosedShell),
     OrientedClosedShell(&'m OrientedClosedShell),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ClosedShellRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ClosedShellRefView<'m> {
@@ -3619,7 +3624,7 @@ impl ClosedShellRef {
                 ClosedShellRefView::OrientedClosedShell(model.oriented_closed_shell_arena.get(i.0))
             }
             ClosedShellRef::Complex(i) => {
-                ClosedShellRefView::Complex(model.complex_unit_arena.get(i.0))
+                ClosedShellRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -3627,7 +3632,7 @@ impl ClosedShellRef {
         match self {
             ClosedShellRef::ClosedShell(i) => EntityKey::ClosedShell(*i),
             ClosedShellRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
-            ClosedShellRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ClosedShellRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -3639,7 +3644,7 @@ pub enum ColourRefView<'m> {
     ColourSpecification(&'m ColourSpecification),
     DraughtingPreDefinedColour(&'m DraughtingPreDefinedColour),
     PreDefinedColour(&'m PreDefinedColour),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ColourRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ColourRefView<'m> {
@@ -3655,7 +3660,7 @@ impl ColourRef {
             ColourRef::PreDefinedColour(i) => {
                 ColourRefView::PreDefinedColour(model.pre_defined_colour_arena.get(i.0))
             }
-            ColourRef::Complex(i) => ColourRefView::Complex(model.complex_unit_arena.get(i.0)),
+            ColourRef::Complex(i) => ColourRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -3665,7 +3670,7 @@ impl ColourRef {
             ColourRef::ColourSpecification(i) => EntityKey::ColourSpecification(*i),
             ColourRef::DraughtingPreDefinedColour(i) => EntityKey::DraughtingPreDefinedColour(*i),
             ColourRef::PreDefinedColour(i) => EntityKey::PreDefinedColour(*i),
-            ColourRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ColourRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -3673,7 +3678,7 @@ impl ColourRef {
 #[derive(Clone, Copy, Debug)]
 pub enum CompositeCurveSegmentRefView<'m> {
     CompositeCurveSegment(&'m CompositeCurveSegment),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl CompositeCurveSegmentRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CompositeCurveSegmentRefView<'m> {
@@ -3684,7 +3689,7 @@ impl CompositeCurveSegmentRef {
                 )
             }
             CompositeCurveSegmentRef::Complex(i) => {
-                CompositeCurveSegmentRefView::Complex(model.complex_unit_arena.get(i.0))
+                CompositeCurveSegmentRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -3693,7 +3698,7 @@ impl CompositeCurveSegmentRef {
             CompositeCurveSegmentRef::CompositeCurveSegment(i) => {
                 EntityKey::CompositeCurveSegment(*i)
             }
-            CompositeCurveSegmentRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            CompositeCurveSegmentRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -3728,7 +3733,7 @@ pub enum ConfigurationDesignItemRefView<'m> {
     ),
     ProductDefinitionOccurrence(&'m ProductDefinitionOccurrence),
     ProductDefinitionWithAssociatedDocuments(&'m ProductDefinitionWithAssociatedDocuments),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ConfigurationDesignItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ConfigurationDesignItemRefView<'m> {
@@ -3763,7 +3768,7 @@ impl ConfigurationDesignItemRef {
                 )
             }
             ConfigurationDesignItemRef::Complex(i) => {
-                ConfigurationDesignItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                ConfigurationDesignItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -3782,7 +3787,7 @@ impl ConfigurationDesignItemRef {
             ConfigurationDesignItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
                 EntityKey::ProductDefinitionWithAssociatedDocuments(*i)
             }
-            ConfigurationDesignItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ConfigurationDesignItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -3790,7 +3795,7 @@ impl ConfigurationDesignItemRef {
 #[derive(Clone, Copy, Debug)]
 pub enum ConfigurationItemRefView<'m> {
     ConfigurationItem(&'m ConfigurationItem),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ConfigurationItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ConfigurationItemRefView<'m> {
@@ -3799,14 +3804,14 @@ impl ConfigurationItemRef {
                 ConfigurationItemRefView::ConfigurationItem(model.configuration_item_arena.get(i.0))
             }
             ConfigurationItemRef::Complex(i) => {
-                ConfigurationItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                ConfigurationItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ConfigurationItemRef::ConfigurationItem(i) => EntityKey::ConfigurationItem(*i),
-            ConfigurationItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ConfigurationItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -3817,7 +3822,7 @@ pub enum ConnectedFaceSetRefView<'m> {
     ConnectedFaceSet(&'m ConnectedFaceSet),
     OpenShell(&'m OpenShell),
     OrientedClosedShell(&'m OrientedClosedShell),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ConnectedFaceSetRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ConnectedFaceSetRefView<'m> {
@@ -3837,7 +3842,7 @@ impl ConnectedFaceSetRef {
                 )
             }
             ConnectedFaceSetRef::Complex(i) => {
-                ConnectedFaceSetRefView::Complex(model.complex_unit_arena.get(i.0))
+                ConnectedFaceSetRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -3847,7 +3852,7 @@ impl ConnectedFaceSetRef {
             ConnectedFaceSetRef::ConnectedFaceSet(i) => EntityKey::ConnectedFaceSet(*i),
             ConnectedFaceSetRef::OpenShell(i) => EntityKey::OpenShell(*i),
             ConnectedFaceSetRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
-            ConnectedFaceSetRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ConnectedFaceSetRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -3867,7 +3872,7 @@ pub enum ConstructiveGeometryRepresentationOrShapeRepresentationRefView<'m> {
     ShapeRepresentation(&'m ShapeRepresentation),
     ShapeRepresentationWithParameters(&'m ShapeRepresentationWithParameters),
     TessellatedShapeRepresentation(&'m TessellatedShapeRepresentation),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ConstructiveGeometryRepresentationOrShapeRepresentationRef {
     pub fn resolve<'m>(
@@ -3884,7 +3889,7 @@ impl ConstructiveGeometryRepresentationOrShapeRepresentationRef {
             ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentation(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::ShapeRepresentation(model.shape_representation_arena.get(i.0)),
             ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentationWithParameters(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::ShapeRepresentationWithParameters(model.shape_representation_with_parameters_arena.get(i.0)),
             ConstructiveGeometryRepresentationOrShapeRepresentationRef::TessellatedShapeRepresentation(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::TessellatedShapeRepresentation(model.tessellated_shape_representation_arena.get(i.0)),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::Complex(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::Complex(model.complex_unit_arena.get(i.0)),
+            ConstructiveGeometryRepresentationOrShapeRepresentationRef::Complex(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -3898,7 +3903,7 @@ impl ConstructiveGeometryRepresentationOrShapeRepresentationRef {
             ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentation(i) => EntityKey::ShapeRepresentation(*i),
             ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentationWithParameters(i) => EntityKey::ShapeRepresentationWithParameters(*i),
             ConstructiveGeometryRepresentationOrShapeRepresentationRef::TessellatedShapeRepresentation(i) => EntityKey::TessellatedShapeRepresentation(*i),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ConstructiveGeometryRepresentationOrShapeRepresentationRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -3980,6 +3985,7 @@ pub enum CurveRefView<'m> {
     Hyperbola(&'m Hyperbola),
     IntersectionCurve(&'m IntersectionCurve),
     Line(&'m Line),
+    Parabola(&'m Parabola),
     Pcurve(&'m Pcurve),
     Polyline(&'m Polyline),
     QuasiUniformCurve(&'m QuasiUniformCurve),
@@ -3988,7 +3994,7 @@ pub enum CurveRefView<'m> {
     SurfaceCurve(&'m SurfaceCurve),
     TrimmedCurve(&'m TrimmedCurve),
     UniformCurve(&'m UniformCurve),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl CurveRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveRefView<'m> {
@@ -4023,6 +4029,7 @@ impl CurveRef {
                 CurveRefView::IntersectionCurve(model.intersection_curve_arena.get(i.0))
             }
             CurveRef::Line(i) => CurveRefView::Line(model.line_arena.get(i.0)),
+            CurveRef::Parabola(i) => CurveRefView::Parabola(model.parabola_arena.get(i.0)),
             CurveRef::Pcurve(i) => CurveRefView::Pcurve(model.pcurve_arena.get(i.0)),
             CurveRef::Polyline(i) => CurveRefView::Polyline(model.polyline_arena.get(i.0)),
             CurveRef::QuasiUniformCurve(i) => {
@@ -4041,7 +4048,7 @@ impl CurveRef {
             CurveRef::UniformCurve(i) => {
                 CurveRefView::UniformCurve(model.uniform_curve_arena.get(i.0))
             }
-            CurveRef::Complex(i) => CurveRefView::Complex(model.complex_unit_arena.get(i.0)),
+            CurveRef::Complex(i) => CurveRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -4060,6 +4067,7 @@ impl CurveRef {
             CurveRef::Hyperbola(i) => EntityKey::Hyperbola(*i),
             CurveRef::IntersectionCurve(i) => EntityKey::IntersectionCurve(*i),
             CurveRef::Line(i) => EntityKey::Line(*i),
+            CurveRef::Parabola(i) => EntityKey::Parabola(*i),
             CurveRef::Pcurve(i) => EntityKey::Pcurve(*i),
             CurveRef::Polyline(i) => EntityKey::Polyline(*i),
             CurveRef::QuasiUniformCurve(i) => EntityKey::QuasiUniformCurve(*i),
@@ -4068,7 +4076,7 @@ impl CurveRef {
             CurveRef::SurfaceCurve(i) => EntityKey::SurfaceCurve(*i),
             CurveRef::TrimmedCurve(i) => EntityKey::TrimmedCurve(*i),
             CurveRef::UniformCurve(i) => EntityKey::UniformCurve(*i),
-            CurveRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            CurveRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -4080,7 +4088,7 @@ pub enum CurveFontOrScaledCurveFontSelectRefView<'m> {
     DraughtingPreDefinedCurveFont(&'m DraughtingPreDefinedCurveFont),
     ExternallyDefinedCurveFont(&'m ExternallyDefinedCurveFont),
     PreDefinedCurveFont(&'m PreDefinedCurveFont),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl CurveFontOrScaledCurveFontSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveFontOrScaledCurveFontSelectRefView<'m> {
@@ -4111,7 +4119,9 @@ impl CurveFontOrScaledCurveFontSelectRef {
                 )
             }
             CurveFontOrScaledCurveFontSelectRef::Complex(i) => {
-                CurveFontOrScaledCurveFontSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                CurveFontOrScaledCurveFontSelectRefView::Complex(
+                    model.complex_entity_arena.get(i.0),
+                )
             }
         }
     }
@@ -4130,7 +4140,7 @@ impl CurveFontOrScaledCurveFontSelectRef {
             CurveFontOrScaledCurveFontSelectRef::PreDefinedCurveFont(i) => {
                 EntityKey::PreDefinedCurveFont(*i)
             }
-            CurveFontOrScaledCurveFontSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            CurveFontOrScaledCurveFontSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -4153,6 +4163,7 @@ pub enum CurveOrAnnotationCurveOccurrenceRefView<'m> {
     IntersectionCurve(&'m IntersectionCurve),
     LeaderCurve(&'m LeaderCurve),
     Line(&'m Line),
+    Parabola(&'m Parabola),
     Pcurve(&'m Pcurve),
     Polyline(&'m Polyline),
     QuasiUniformCurve(&'m QuasiUniformCurve),
@@ -4161,7 +4172,7 @@ pub enum CurveOrAnnotationCurveOccurrenceRefView<'m> {
     SurfaceCurve(&'m SurfaceCurve),
     TrimmedCurve(&'m TrimmedCurve),
     UniformCurve(&'m UniformCurve),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl CurveOrAnnotationCurveOccurrenceRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveOrAnnotationCurveOccurrenceRefView<'m> {
@@ -4234,6 +4245,9 @@ impl CurveOrAnnotationCurveOccurrenceRef {
             CurveOrAnnotationCurveOccurrenceRef::Line(i) => {
                 CurveOrAnnotationCurveOccurrenceRefView::Line(model.line_arena.get(i.0))
             }
+            CurveOrAnnotationCurveOccurrenceRef::Parabola(i) => {
+                CurveOrAnnotationCurveOccurrenceRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             CurveOrAnnotationCurveOccurrenceRef::Pcurve(i) => {
                 CurveOrAnnotationCurveOccurrenceRefView::Pcurve(model.pcurve_arena.get(i.0))
             }
@@ -4269,7 +4283,9 @@ impl CurveOrAnnotationCurveOccurrenceRef {
                 )
             }
             CurveOrAnnotationCurveOccurrenceRef::Complex(i) => {
-                CurveOrAnnotationCurveOccurrenceRefView::Complex(model.complex_unit_arena.get(i.0))
+                CurveOrAnnotationCurveOccurrenceRefView::Complex(
+                    model.complex_entity_arena.get(i.0),
+                )
             }
         }
     }
@@ -4299,6 +4315,7 @@ impl CurveOrAnnotationCurveOccurrenceRef {
             }
             CurveOrAnnotationCurveOccurrenceRef::LeaderCurve(i) => EntityKey::LeaderCurve(*i),
             CurveOrAnnotationCurveOccurrenceRef::Line(i) => EntityKey::Line(*i),
+            CurveOrAnnotationCurveOccurrenceRef::Parabola(i) => EntityKey::Parabola(*i),
             CurveOrAnnotationCurveOccurrenceRef::Pcurve(i) => EntityKey::Pcurve(*i),
             CurveOrAnnotationCurveOccurrenceRef::Polyline(i) => EntityKey::Polyline(*i),
             CurveOrAnnotationCurveOccurrenceRef::QuasiUniformCurve(i) => {
@@ -4311,7 +4328,7 @@ impl CurveOrAnnotationCurveOccurrenceRef {
             CurveOrAnnotationCurveOccurrenceRef::SurfaceCurve(i) => EntityKey::SurfaceCurve(*i),
             CurveOrAnnotationCurveOccurrenceRef::TrimmedCurve(i) => EntityKey::TrimmedCurve(*i),
             CurveOrAnnotationCurveOccurrenceRef::UniformCurve(i) => EntityKey::UniformCurve(*i),
-            CurveOrAnnotationCurveOccurrenceRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            CurveOrAnnotationCurveOccurrenceRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -4333,6 +4350,7 @@ pub enum CurveOrCurveSetRefView<'m> {
     Hyperbola(&'m Hyperbola),
     IntersectionCurve(&'m IntersectionCurve),
     Line(&'m Line),
+    Parabola(&'m Parabola),
     Pcurve(&'m Pcurve),
     Polyline(&'m Polyline),
     QuasiUniformCurve(&'m QuasiUniformCurve),
@@ -4341,7 +4359,7 @@ pub enum CurveOrCurveSetRefView<'m> {
     SurfaceCurve(&'m SurfaceCurve),
     TrimmedCurve(&'m TrimmedCurve),
     UniformCurve(&'m UniformCurve),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl CurveOrCurveSetRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveOrCurveSetRefView<'m> {
@@ -4393,6 +4411,9 @@ impl CurveOrCurveSetRef {
                 CurveOrCurveSetRefView::IntersectionCurve(model.intersection_curve_arena.get(i.0))
             }
             CurveOrCurveSetRef::Line(i) => CurveOrCurveSetRefView::Line(model.line_arena.get(i.0)),
+            CurveOrCurveSetRef::Parabola(i) => {
+                CurveOrCurveSetRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             CurveOrCurveSetRef::Pcurve(i) => {
                 CurveOrCurveSetRefView::Pcurve(model.pcurve_arena.get(i.0))
             }
@@ -4420,7 +4441,7 @@ impl CurveOrCurveSetRef {
                 CurveOrCurveSetRefView::UniformCurve(model.uniform_curve_arena.get(i.0))
             }
             CurveOrCurveSetRef::Complex(i) => {
-                CurveOrCurveSetRefView::Complex(model.complex_unit_arena.get(i.0))
+                CurveOrCurveSetRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -4441,6 +4462,7 @@ impl CurveOrCurveSetRef {
             CurveOrCurveSetRef::Hyperbola(i) => EntityKey::Hyperbola(*i),
             CurveOrCurveSetRef::IntersectionCurve(i) => EntityKey::IntersectionCurve(*i),
             CurveOrCurveSetRef::Line(i) => EntityKey::Line(*i),
+            CurveOrCurveSetRef::Parabola(i) => EntityKey::Parabola(*i),
             CurveOrCurveSetRef::Pcurve(i) => EntityKey::Pcurve(*i),
             CurveOrCurveSetRef::Polyline(i) => EntityKey::Polyline(*i),
             CurveOrCurveSetRef::QuasiUniformCurve(i) => EntityKey::QuasiUniformCurve(*i),
@@ -4449,7 +4471,7 @@ impl CurveOrCurveSetRef {
             CurveOrCurveSetRef::SurfaceCurve(i) => EntityKey::SurfaceCurve(*i),
             CurveOrCurveSetRef::TrimmedCurve(i) => EntityKey::TrimmedCurve(*i),
             CurveOrCurveSetRef::UniformCurve(i) => EntityKey::UniformCurve(*i),
-            CurveOrCurveSetRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            CurveOrCurveSetRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -4458,7 +4480,7 @@ impl CurveOrCurveSetRef {
 pub enum CurveOrRenderRefView<'m> {
     CurveStyle(&'m CurveStyle),
     CurveStyleRendering(&'m CurveStyleRendering),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl CurveOrRenderRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveOrRenderRefView<'m> {
@@ -4470,7 +4492,7 @@ impl CurveOrRenderRef {
                 model.curve_style_rendering_arena.get(i.0),
             ),
             CurveOrRenderRef::Complex(i) => {
-                CurveOrRenderRefView::Complex(model.complex_unit_arena.get(i.0))
+                CurveOrRenderRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -4478,7 +4500,7 @@ impl CurveOrRenderRef {
         match self {
             CurveOrRenderRef::CurveStyle(i) => EntityKey::CurveStyle(*i),
             CurveOrRenderRef::CurveStyleRendering(i) => EntityKey::CurveStyleRendering(*i),
-            CurveOrRenderRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            CurveOrRenderRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -4486,7 +4508,7 @@ impl CurveOrRenderRef {
 #[derive(Clone, Copy, Debug)]
 pub enum CurveStyleRefView<'m> {
     CurveStyle(&'m CurveStyle),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl CurveStyleRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveStyleRefView<'m> {
@@ -4495,14 +4517,14 @@ impl CurveStyleRef {
                 CurveStyleRefView::CurveStyle(model.curve_style_arena.get(i.0))
             }
             CurveStyleRef::Complex(i) => {
-                CurveStyleRefView::Complex(model.complex_unit_arena.get(i.0))
+                CurveStyleRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CurveStyleRef::CurveStyle(i) => EntityKey::CurveStyle(*i),
-            CurveStyleRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            CurveStyleRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -4510,7 +4532,7 @@ impl CurveStyleRef {
 #[derive(Clone, Copy, Debug)]
 pub enum CurveStyleFontPatternRefView<'m> {
     CurveStyleFontPattern(&'m CurveStyleFontPattern),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl CurveStyleFontPatternRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveStyleFontPatternRefView<'m> {
@@ -4521,7 +4543,7 @@ impl CurveStyleFontPatternRef {
                 )
             }
             CurveStyleFontPatternRef::Complex(i) => {
-                CurveStyleFontPatternRefView::Complex(model.complex_unit_arena.get(i.0))
+                CurveStyleFontPatternRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -4530,7 +4552,7 @@ impl CurveStyleFontPatternRef {
             CurveStyleFontPatternRef::CurveStyleFontPattern(i) => {
                 EntityKey::CurveStyleFontPattern(*i)
             }
-            CurveStyleFontPatternRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            CurveStyleFontPatternRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -4541,7 +4563,7 @@ pub enum CurveStyleFontSelectRefView<'m> {
     DraughtingPreDefinedCurveFont(&'m DraughtingPreDefinedCurveFont),
     ExternallyDefinedCurveFont(&'m ExternallyDefinedCurveFont),
     PreDefinedCurveFont(&'m PreDefinedCurveFont),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl CurveStyleFontSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveStyleFontSelectRefView<'m> {
@@ -4565,7 +4587,7 @@ impl CurveStyleFontSelectRef {
                 )
             }
             CurveStyleFontSelectRef::Complex(i) => {
-                CurveStyleFontSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                CurveStyleFontSelectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -4579,7 +4601,7 @@ impl CurveStyleFontSelectRef {
                 EntityKey::ExternallyDefinedCurveFont(*i)
             }
             CurveStyleFontSelectRef::PreDefinedCurveFont(i) => EntityKey::PreDefinedCurveFont(*i),
-            CurveStyleFontSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            CurveStyleFontSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -4588,7 +4610,7 @@ impl CurveStyleFontSelectRef {
 pub enum DateRefView<'m> {
     CalendarDate(&'m CalendarDate),
     Date(&'m Date),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DateRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DateRefView<'m> {
@@ -4597,14 +4619,14 @@ impl DateRef {
                 DateRefView::CalendarDate(model.calendar_date_arena.get(i.0))
             }
             DateRef::Date(i) => DateRefView::Date(model.date_arena.get(i.0)),
-            DateRef::Complex(i) => DateRefView::Complex(model.complex_unit_arena.get(i.0)),
+            DateRef::Complex(i) => DateRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DateRef::CalendarDate(i) => EntityKey::CalendarDate(*i),
             DateRef::Date(i) => EntityKey::Date(*i),
-            DateRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DateRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -4612,7 +4634,7 @@ impl DateRef {
 #[derive(Clone, Copy, Debug)]
 pub enum DateAndTimeRefView<'m> {
     DateAndTime(&'m DateAndTime),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DateAndTimeRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DateAndTimeRefView<'m> {
@@ -4621,14 +4643,14 @@ impl DateAndTimeRef {
                 DateAndTimeRefView::DateAndTime(model.date_and_time_arena.get(i.0))
             }
             DateAndTimeRef::Complex(i) => {
-                DateAndTimeRefView::Complex(model.complex_unit_arena.get(i.0))
+                DateAndTimeRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DateAndTimeRef::DateAndTime(i) => EntityKey::DateAndTime(*i),
-            DateAndTimeRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DateAndTimeRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -4718,7 +4740,7 @@ pub enum DateAndTimeItemRefView<'m> {
     SymbolRepresentation(&'m SymbolRepresentation),
     TessellatedShapeRepresentation(&'m TessellatedShapeRepresentation),
     VersionedActionRequest(&'m VersionedActionRequest),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DateAndTimeItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DateAndTimeItemRefView<'m> {
@@ -5037,7 +5059,7 @@ impl DateAndTimeItemRef {
                 )
             }
             DateAndTimeItemRef::Complex(i) => {
-                DateAndTimeItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                DateAndTimeItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -5174,7 +5196,7 @@ impl DateAndTimeItemRef {
                 EntityKey::TessellatedShapeRepresentation(*i)
             }
             DateAndTimeItemRef::VersionedActionRequest(i) => EntityKey::VersionedActionRequest(*i),
-            DateAndTimeItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DateAndTimeItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -5191,7 +5213,7 @@ pub enum DateTimeItemRefView<'m> {
     SecurityClassification(&'m SecurityClassification),
     StartRequest(&'m StartRequest),
     StartWork(&'m StartWork),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DateTimeItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DateTimeItemRefView<'m> {
@@ -5233,7 +5255,7 @@ impl DateTimeItemRef {
                 DateTimeItemRefView::StartWork(model.start_work_arena.get(i.0))
             }
             DateTimeItemRef::Complex(i) => {
-                DateTimeItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                DateTimeItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -5253,7 +5275,7 @@ impl DateTimeItemRef {
             DateTimeItemRef::SecurityClassification(i) => EntityKey::SecurityClassification(*i),
             DateTimeItemRef::StartRequest(i) => EntityKey::StartRequest(*i),
             DateTimeItemRef::StartWork(i) => EntityKey::StartWork(*i),
-            DateTimeItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DateTimeItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -5283,7 +5305,7 @@ pub enum DateTimeSelectRefView<'m> {
     Date(&'m Date),
     DateAndTime(&'m DateAndTime),
     LocalTime(&'m LocalTime),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DateTimeSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DateTimeSelectRefView<'m> {
@@ -5299,7 +5321,7 @@ impl DateTimeSelectRef {
                 DateTimeSelectRefView::LocalTime(model.local_time_arena.get(i.0))
             }
             DateTimeSelectRef::Complex(i) => {
-                DateTimeSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                DateTimeSelectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -5309,7 +5331,7 @@ impl DateTimeSelectRef {
             DateTimeSelectRef::Date(i) => EntityKey::Date(*i),
             DateTimeSelectRef::DateAndTime(i) => EntityKey::DateAndTime(*i),
             DateTimeSelectRef::LocalTime(i) => EntityKey::LocalTime(*i),
-            DateTimeSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DateTimeSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -5318,7 +5340,7 @@ impl DateTimeSelectRef {
 pub enum DatumRefView<'m> {
     CommonDatum(&'m CommonDatum),
     Datum(&'m Datum),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DatumRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DatumRefView<'m> {
@@ -5327,14 +5349,14 @@ impl DatumRef {
                 DatumRefView::CommonDatum(model.common_datum_arena.get(i.0))
             }
             DatumRef::Datum(i) => DatumRefView::Datum(model.datum_arena.get(i.0)),
-            DatumRef::Complex(i) => DatumRefView::Complex(model.complex_unit_arena.get(i.0)),
+            DatumRef::Complex(i) => DatumRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DatumRef::CommonDatum(i) => EntityKey::CommonDatum(*i),
             DatumRef::Datum(i) => EntityKey::Datum(*i),
-            DatumRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DatumRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -5388,7 +5410,7 @@ impl DatumReferenceElementRef {
 #[derive(Clone, Copy, Debug)]
 pub enum DatumSystemRefView<'m> {
     DatumSystem(&'m DatumSystem),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DatumSystemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DatumSystemRefView<'m> {
@@ -5397,14 +5419,14 @@ impl DatumSystemRef {
                 DatumSystemRefView::DatumSystem(model.datum_system_arena.get(i.0))
             }
             DatumSystemRef::Complex(i) => {
-                DatumSystemRefView::Complex(model.complex_unit_arena.get(i.0))
+                DatumSystemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DatumSystemRef::DatumSystem(i) => EntityKey::DatumSystem(*i),
-            DatumSystemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DatumSystemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -5413,7 +5435,7 @@ impl DatumSystemRef {
 pub enum DatumSystemOrReferenceRefView<'m> {
     DatumReference(&'m DatumReference),
     DatumSystem(&'m DatumSystem),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DatumSystemOrReferenceRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DatumSystemOrReferenceRefView<'m> {
@@ -5425,7 +5447,7 @@ impl DatumSystemOrReferenceRef {
                 DatumSystemOrReferenceRefView::DatumSystem(model.datum_system_arena.get(i.0))
             }
             DatumSystemOrReferenceRef::Complex(i) => {
-                DatumSystemOrReferenceRefView::Complex(model.complex_unit_arena.get(i.0))
+                DatumSystemOrReferenceRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -5433,7 +5455,7 @@ impl DatumSystemOrReferenceRef {
         match self {
             DatumSystemOrReferenceRef::DatumReference(i) => EntityKey::DatumReference(*i),
             DatumSystemOrReferenceRef::DatumSystem(i) => EntityKey::DatumSystem(*i),
-            DatumSystemOrReferenceRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DatumSystemOrReferenceRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -5442,7 +5464,7 @@ impl DatumSystemOrReferenceRef {
 pub enum DefinedGlyphSelectRefView<'m> {
     ExternallyDefinedCharacterGlyph(&'m ExternallyDefinedCharacterGlyph),
     PreDefinedCharacterGlyph(&'m PreDefinedCharacterGlyph),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DefinedGlyphSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DefinedGlyphSelectRefView<'m> {
@@ -5458,7 +5480,7 @@ impl DefinedGlyphSelectRef {
                 )
             }
             DefinedGlyphSelectRef::Complex(i) => {
-                DefinedGlyphSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                DefinedGlyphSelectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -5470,7 +5492,7 @@ impl DefinedGlyphSelectRef {
             DefinedGlyphSelectRef::PreDefinedCharacterGlyph(i) => {
                 EntityKey::PreDefinedCharacterGlyph(*i)
             }
-            DefinedGlyphSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DefinedGlyphSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -5481,7 +5503,7 @@ pub enum DefinedSymbolSelectRefView<'m> {
     PreDefinedPointMarkerSymbol(&'m PreDefinedPointMarkerSymbol),
     PreDefinedSymbol(&'m PreDefinedSymbol),
     PreDefinedTerminatorSymbol(&'m PreDefinedTerminatorSymbol),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DefinedSymbolSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DefinedSymbolSelectRefView<'m> {
@@ -5507,7 +5529,7 @@ impl DefinedSymbolSelectRef {
                 )
             }
             DefinedSymbolSelectRef::Complex(i) => {
-                DefinedSymbolSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                DefinedSymbolSelectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -5523,7 +5545,7 @@ impl DefinedSymbolSelectRef {
             DefinedSymbolSelectRef::PreDefinedTerminatorSymbol(i) => {
                 EntityKey::PreDefinedTerminatorSymbol(*i)
             }
-            DefinedSymbolSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DefinedSymbolSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -5531,7 +5553,7 @@ impl DefinedSymbolSelectRef {
 #[derive(Clone, Copy, Debug)]
 pub enum DefinitionalRepresentationRefView<'m> {
     DefinitionalRepresentation(&'m DefinitionalRepresentation),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DefinitionalRepresentationRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DefinitionalRepresentationRefView<'m> {
@@ -5542,7 +5564,7 @@ impl DefinitionalRepresentationRef {
                 )
             }
             DefinitionalRepresentationRef::Complex(i) => {
-                DefinitionalRepresentationRefView::Complex(model.complex_unit_arena.get(i.0))
+                DefinitionalRepresentationRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -5551,7 +5573,7 @@ impl DefinitionalRepresentationRef {
             DefinitionalRepresentationRef::DefinitionalRepresentation(i) => {
                 EntityKey::DefinitionalRepresentation(*i)
             }
-            DefinitionalRepresentationRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DefinitionalRepresentationRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -5593,7 +5615,7 @@ pub enum DerivedPropertySelectRefView<'m> {
     SymmetryTolerance(&'m SymmetryTolerance),
     TotalRunoutTolerance(&'m TotalRunoutTolerance),
     UnequallyDisposedGeometricTolerance(&'m UnequallyDisposedGeometricTolerance),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DerivedPropertySelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DerivedPropertySelectRefView<'m> {
@@ -5772,7 +5794,7 @@ impl DerivedPropertySelectRef {
                 )
             }
             DerivedPropertySelectRef::Complex(i) => {
-                DerivedPropertySelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                DerivedPropertySelectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -5855,7 +5877,7 @@ impl DerivedPropertySelectRef {
             DerivedPropertySelectRef::UnequallyDisposedGeometricTolerance(i) => {
                 EntityKey::UnequallyDisposedGeometricTolerance(*i)
             }
-            DerivedPropertySelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DerivedPropertySelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -5956,7 +5978,7 @@ pub enum DescriptionAttributeSelectRefView<'m> {
     ShapeRepresentationWithParameters(&'m ShapeRepresentationWithParameters),
     SymbolRepresentation(&'m SymbolRepresentation),
     TessellatedShapeRepresentation(&'m TessellatedShapeRepresentation),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DescriptionAttributeSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DescriptionAttributeSelectRefView<'m> {
@@ -5998,7 +6020,7 @@ impl DescriptionAttributeSelectRef {
             DescriptionAttributeSelectRef::ShapeRepresentationWithParameters(i) => DescriptionAttributeSelectRefView::ShapeRepresentationWithParameters(model.shape_representation_with_parameters_arena.get(i.0)),
             DescriptionAttributeSelectRef::SymbolRepresentation(i) => DescriptionAttributeSelectRefView::SymbolRepresentation(model.symbol_representation_arena.get(i.0)),
             DescriptionAttributeSelectRef::TessellatedShapeRepresentation(i) => DescriptionAttributeSelectRefView::TessellatedShapeRepresentation(model.tessellated_shape_representation_arena.get(i.0)),
-            DescriptionAttributeSelectRef::Complex(i) => DescriptionAttributeSelectRefView::Complex(model.complex_unit_arena.get(i.0)),
+            DescriptionAttributeSelectRef::Complex(i) => DescriptionAttributeSelectRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -6040,7 +6062,7 @@ impl DescriptionAttributeSelectRef {
             DescriptionAttributeSelectRef::ShapeRepresentationWithParameters(i) => EntityKey::ShapeRepresentationWithParameters(*i),
             DescriptionAttributeSelectRef::SymbolRepresentation(i) => EntityKey::SymbolRepresentation(*i),
             DescriptionAttributeSelectRef::TessellatedShapeRepresentation(i) => EntityKey::TessellatedShapeRepresentation(*i),
-            DescriptionAttributeSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DescriptionAttributeSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -6055,7 +6077,7 @@ pub enum DimensionalCharacteristicRefView<'m> {
     DimensionalSizeWithDatumFeature(&'m DimensionalSizeWithDatumFeature),
     DimensionalSizeWithPath(&'m DimensionalSizeWithPath),
     DirectedDimensionalLocation(&'m DirectedDimensionalLocation),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DimensionalCharacteristicRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DimensionalCharacteristicRefView<'m> {
@@ -6099,7 +6121,7 @@ impl DimensionalCharacteristicRef {
                 )
             }
             DimensionalCharacteristicRef::Complex(i) => {
-                DimensionalCharacteristicRefView::Complex(model.complex_unit_arena.get(i.0))
+                DimensionalCharacteristicRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -6123,7 +6145,7 @@ impl DimensionalCharacteristicRef {
             DimensionalCharacteristicRef::DirectedDimensionalLocation(i) => {
                 EntityKey::DirectedDimensionalLocation(*i)
             }
-            DimensionalCharacteristicRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DimensionalCharacteristicRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -6152,7 +6174,7 @@ impl DimensionalExponentsRef {
 #[derive(Clone, Copy, Debug)]
 pub enum DirectionRefView<'m> {
     Direction(&'m Direction),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DirectionRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DirectionRefView<'m> {
@@ -6161,14 +6183,14 @@ impl DirectionRef {
                 DirectionRefView::Direction(model.direction_arena.get(i.0))
             }
             DirectionRef::Complex(i) => {
-                DirectionRefView::Complex(model.complex_unit_arena.get(i.0))
+                DirectionRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DirectionRef::Direction(i) => EntityKey::Direction(*i),
-            DirectionRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DirectionRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -6177,7 +6199,7 @@ impl DirectionRef {
 pub enum DocumentRefView<'m> {
     Document(&'m Document),
     DocumentFile(&'m DocumentFile),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DocumentRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DocumentRefView<'m> {
@@ -6186,14 +6208,16 @@ impl DocumentRef {
             DocumentRef::DocumentFile(i) => {
                 DocumentRefView::DocumentFile(model.document_file_arena.get(i.0))
             }
-            DocumentRef::Complex(i) => DocumentRefView::Complex(model.complex_unit_arena.get(i.0)),
+            DocumentRef::Complex(i) => {
+                DocumentRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DocumentRef::Document(i) => EntityKey::Document(*i),
             DocumentRef::DocumentFile(i) => EntityKey::DocumentFile(*i),
-            DocumentRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DocumentRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -6391,6 +6415,7 @@ pub enum DocumentReferenceItemRefView<'m> {
     OrientedClosedShell(&'m OrientedClosedShell),
     OrientedEdge(&'m OrientedEdge),
     OverRidingStyledItem(&'m OverRidingStyledItem),
+    Parabola(&'m Parabola),
     Path(&'m Path),
     Pcurve(&'m Pcurve),
     Person(&'m Person),
@@ -6489,7 +6514,7 @@ pub enum DocumentReferenceItemRefView<'m> {
     VertexPoint(&'m VertexPoint),
     VertexShell(&'m VertexShell),
     WireShell(&'m WireShell),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DocumentReferenceItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DocumentReferenceItemRefView<'m> {
@@ -6669,6 +6694,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::OrientedClosedShell(i) => DocumentReferenceItemRefView::OrientedClosedShell(model.oriented_closed_shell_arena.get(i.0)),
             DocumentReferenceItemRef::OrientedEdge(i) => DocumentReferenceItemRefView::OrientedEdge(model.oriented_edge_arena.get(i.0)),
             DocumentReferenceItemRef::OverRidingStyledItem(i) => DocumentReferenceItemRefView::OverRidingStyledItem(model.over_riding_styled_item_arena.get(i.0)),
+            DocumentReferenceItemRef::Parabola(i) => DocumentReferenceItemRefView::Parabola(model.parabola_arena.get(i.0)),
             DocumentReferenceItemRef::Path(i) => DocumentReferenceItemRefView::Path(model.path_arena.get(i.0)),
             DocumentReferenceItemRef::Pcurve(i) => DocumentReferenceItemRefView::Pcurve(model.pcurve_arena.get(i.0)),
             DocumentReferenceItemRef::Person(i) => DocumentReferenceItemRefView::Person(model.person_arena.get(i.0)),
@@ -6765,7 +6791,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::VertexPoint(i) => DocumentReferenceItemRefView::VertexPoint(model.vertex_point_arena.get(i.0)),
             DocumentReferenceItemRef::VertexShell(i) => DocumentReferenceItemRefView::VertexShell(model.vertex_shell_arena.get(i.0)),
             DocumentReferenceItemRef::WireShell(i) => DocumentReferenceItemRefView::WireShell(model.wire_shell_arena.get(i.0)),
-            DocumentReferenceItemRef::Complex(i) => DocumentReferenceItemRefView::Complex(model.complex_unit_arena.get(i.0)),
+            DocumentReferenceItemRef::Complex(i) => DocumentReferenceItemRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -7117,6 +7143,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::OverRidingStyledItem(i) => {
                 EntityKey::OverRidingStyledItem(*i)
             }
+            DocumentReferenceItemRef::Parabola(i) => EntityKey::Parabola(*i),
             DocumentReferenceItemRef::Path(i) => EntityKey::Path(*i),
             DocumentReferenceItemRef::Pcurve(i) => EntityKey::Pcurve(*i),
             DocumentReferenceItemRef::Person(i) => EntityKey::Person(*i),
@@ -7301,7 +7328,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::VertexPoint(i) => EntityKey::VertexPoint(*i),
             DocumentReferenceItemRef::VertexShell(i) => EntityKey::VertexShell(*i),
             DocumentReferenceItemRef::WireShell(i) => EntityKey::WireShell(*i),
-            DocumentReferenceItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DocumentReferenceItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -7329,7 +7356,7 @@ impl DocumentTypeRef {
 pub enum DraughtingCalloutRefView<'m> {
     DraughtingCallout(&'m DraughtingCallout),
     LeaderDirectedCallout(&'m LeaderDirectedCallout),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DraughtingCalloutRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DraughtingCalloutRefView<'m> {
@@ -7343,7 +7370,7 @@ impl DraughtingCalloutRef {
                 )
             }
             DraughtingCalloutRef::Complex(i) => {
-                DraughtingCalloutRefView::Complex(model.complex_unit_arena.get(i.0))
+                DraughtingCalloutRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -7351,7 +7378,7 @@ impl DraughtingCalloutRef {
         match self {
             DraughtingCalloutRef::DraughtingCallout(i) => EntityKey::DraughtingCallout(*i),
             DraughtingCalloutRef::LeaderDirectedCallout(i) => EntityKey::LeaderDirectedCallout(*i),
-            DraughtingCalloutRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DraughtingCalloutRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -7370,7 +7397,7 @@ pub enum DraughtingCalloutElementRefView<'m> {
     LeaderTerminator(&'m LeaderTerminator),
     TerminatorSymbol(&'m TerminatorSymbol),
     TessellatedAnnotationOccurrence(&'m TessellatedAnnotationOccurrence),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DraughtingCalloutElementRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DraughtingCalloutElementRefView<'m> {
@@ -7426,7 +7453,7 @@ impl DraughtingCalloutElementRef {
                 )
             }
             DraughtingCalloutElementRef::Complex(i) => {
-                DraughtingCalloutElementRefView::Complex(model.complex_unit_arena.get(i.0))
+                DraughtingCalloutElementRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -7456,7 +7483,7 @@ impl DraughtingCalloutElementRef {
             DraughtingCalloutElementRef::TessellatedAnnotationOccurrence(i) => {
                 EntityKey::TessellatedAnnotationOccurrence(*i)
             }
-            DraughtingCalloutElementRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DraughtingCalloutElementRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -7480,7 +7507,7 @@ pub enum DraughtingModelItemAssociationSelectRefView<'m> {
     LeaderTerminator(&'m LeaderTerminator),
     TerminatorSymbol(&'m TerminatorSymbol),
     TessellatedAnnotationOccurrence(&'m TessellatedAnnotationOccurrence),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DraughtingModelItemAssociationSelectRef {
     pub fn resolve<'m>(
@@ -7503,7 +7530,7 @@ impl DraughtingModelItemAssociationSelectRef {
             DraughtingModelItemAssociationSelectRef::LeaderTerminator(i) => DraughtingModelItemAssociationSelectRefView::LeaderTerminator(model.leader_terminator_arena.get(i.0)),
             DraughtingModelItemAssociationSelectRef::TerminatorSymbol(i) => DraughtingModelItemAssociationSelectRefView::TerminatorSymbol(model.terminator_symbol_arena.get(i.0)),
             DraughtingModelItemAssociationSelectRef::TessellatedAnnotationOccurrence(i) => DraughtingModelItemAssociationSelectRefView::TessellatedAnnotationOccurrence(model.tessellated_annotation_occurrence_arena.get(i.0)),
-            DraughtingModelItemAssociationSelectRef::Complex(i) => DraughtingModelItemAssociationSelectRefView::Complex(model.complex_unit_arena.get(i.0)),
+            DraughtingModelItemAssociationSelectRef::Complex(i) => DraughtingModelItemAssociationSelectRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -7523,7 +7550,7 @@ impl DraughtingModelItemAssociationSelectRef {
             DraughtingModelItemAssociationSelectRef::LeaderTerminator(i) => EntityKey::LeaderTerminator(*i),
             DraughtingModelItemAssociationSelectRef::TerminatorSymbol(i) => EntityKey::TerminatorSymbol(*i),
             DraughtingModelItemAssociationSelectRef::TessellatedAnnotationOccurrence(i) => EntityKey::TessellatedAnnotationOccurrence(*i),
-            DraughtingModelItemAssociationSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DraughtingModelItemAssociationSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -7591,7 +7618,7 @@ pub enum DraughtingModelItemDefinitionRefView<'m> {
     ToleranceZoneWithDatum(&'m ToleranceZoneWithDatum),
     TotalRunoutTolerance(&'m TotalRunoutTolerance),
     UnequallyDisposedGeometricTolerance(&'m UnequallyDisposedGeometricTolerance),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl DraughtingModelItemDefinitionRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DraughtingModelItemDefinitionRefView<'m> {
@@ -7896,7 +7923,7 @@ impl DraughtingModelItemDefinitionRef {
                 )
             }
             DraughtingModelItemDefinitionRef::Complex(i) => {
-                DraughtingModelItemDefinitionRefView::Complex(model.complex_unit_arena.get(i.0))
+                DraughtingModelItemDefinitionRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -8065,7 +8092,7 @@ impl DraughtingModelItemDefinitionRef {
             DraughtingModelItemDefinitionRef::UnequallyDisposedGeometricTolerance(i) => {
                 EntityKey::UnequallyDisposedGeometricTolerance(*i)
             }
-            DraughtingModelItemDefinitionRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            DraughtingModelItemDefinitionRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -8075,7 +8102,7 @@ pub enum EdgeRefView<'m> {
     Edge(&'m Edge),
     EdgeCurve(&'m EdgeCurve),
     OrientedEdge(&'m OrientedEdge),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl EdgeRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> EdgeRefView<'m> {
@@ -8085,7 +8112,7 @@ impl EdgeRef {
             EdgeRef::OrientedEdge(i) => {
                 EdgeRefView::OrientedEdge(model.oriented_edge_arena.get(i.0))
             }
-            EdgeRef::Complex(i) => EdgeRefView::Complex(model.complex_unit_arena.get(i.0)),
+            EdgeRef::Complex(i) => EdgeRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -8093,7 +8120,7 @@ impl EdgeRef {
             EdgeRef::Edge(i) => EntityKey::Edge(*i),
             EdgeRef::EdgeCurve(i) => EntityKey::EdgeCurve(*i),
             EdgeRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
-            EdgeRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            EdgeRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -8253,6 +8280,7 @@ pub enum ExternalIdentificationItemRefView<'m> {
     OrientedClosedShell(&'m OrientedClosedShell),
     OrientedEdge(&'m OrientedEdge),
     OverRidingStyledItem(&'m OverRidingStyledItem),
+    Parabola(&'m Parabola),
     Path(&'m Path),
     Pcurve(&'m Pcurve),
     Person(&'m Person),
@@ -8346,7 +8374,7 @@ pub enum ExternalIdentificationItemRefView<'m> {
     VertexShell(&'m VertexShell),
     VolumeUnit(&'m VolumeUnit),
     WireShell(&'m WireShell),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ExternalIdentificationItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ExternalIdentificationItemRefView<'m> {
@@ -8492,6 +8520,7 @@ impl ExternalIdentificationItemRef {
             ExternalIdentificationItemRef::OrientedClosedShell(i) => ExternalIdentificationItemRefView::OrientedClosedShell(model.oriented_closed_shell_arena.get(i.0)),
             ExternalIdentificationItemRef::OrientedEdge(i) => ExternalIdentificationItemRefView::OrientedEdge(model.oriented_edge_arena.get(i.0)),
             ExternalIdentificationItemRef::OverRidingStyledItem(i) => ExternalIdentificationItemRefView::OverRidingStyledItem(model.over_riding_styled_item_arena.get(i.0)),
+            ExternalIdentificationItemRef::Parabola(i) => ExternalIdentificationItemRefView::Parabola(model.parabola_arena.get(i.0)),
             ExternalIdentificationItemRef::Path(i) => ExternalIdentificationItemRefView::Path(model.path_arena.get(i.0)),
             ExternalIdentificationItemRef::Pcurve(i) => ExternalIdentificationItemRefView::Pcurve(model.pcurve_arena.get(i.0)),
             ExternalIdentificationItemRef::Person(i) => ExternalIdentificationItemRefView::Person(model.person_arena.get(i.0)),
@@ -8583,7 +8612,7 @@ impl ExternalIdentificationItemRef {
             ExternalIdentificationItemRef::VertexShell(i) => ExternalIdentificationItemRefView::VertexShell(model.vertex_shell_arena.get(i.0)),
             ExternalIdentificationItemRef::VolumeUnit(i) => ExternalIdentificationItemRefView::VolumeUnit(model.volume_unit_arena.get(i.0)),
             ExternalIdentificationItemRef::WireShell(i) => ExternalIdentificationItemRefView::WireShell(model.wire_shell_arena.get(i.0)),
-            ExternalIdentificationItemRef::Complex(i) => ExternalIdentificationItemRefView::Complex(model.complex_unit_arena.get(i.0)),
+            ExternalIdentificationItemRef::Complex(i) => ExternalIdentificationItemRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -8729,6 +8758,7 @@ impl ExternalIdentificationItemRef {
             ExternalIdentificationItemRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
             ExternalIdentificationItemRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
             ExternalIdentificationItemRef::OverRidingStyledItem(i) => EntityKey::OverRidingStyledItem(*i),
+            ExternalIdentificationItemRef::Parabola(i) => EntityKey::Parabola(*i),
             ExternalIdentificationItemRef::Path(i) => EntityKey::Path(*i),
             ExternalIdentificationItemRef::Pcurve(i) => EntityKey::Pcurve(*i),
             ExternalIdentificationItemRef::Person(i) => EntityKey::Person(*i),
@@ -8820,7 +8850,7 @@ impl ExternalIdentificationItemRef {
             ExternalIdentificationItemRef::VertexShell(i) => EntityKey::VertexShell(*i),
             ExternalIdentificationItemRef::VolumeUnit(i) => EntityKey::VolumeUnit(*i),
             ExternalIdentificationItemRef::WireShell(i) => EntityKey::WireShell(*i),
-            ExternalIdentificationItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ExternalIdentificationItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -8828,7 +8858,7 @@ impl ExternalIdentificationItemRef {
 #[derive(Clone, Copy, Debug)]
 pub enum ExternalSourceRefView<'m> {
     ExternalSource(&'m ExternalSource),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ExternalSourceRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ExternalSourceRefView<'m> {
@@ -8837,14 +8867,14 @@ impl ExternalSourceRef {
                 ExternalSourceRefView::ExternalSource(model.external_source_arena.get(i.0))
             }
             ExternalSourceRef::Complex(i) => {
-                ExternalSourceRefView::Complex(model.complex_unit_arena.get(i.0))
+                ExternalSourceRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ExternalSourceRef::ExternalSource(i) => EntityKey::ExternalSource(*i),
-            ExternalSourceRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ExternalSourceRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -8854,7 +8884,7 @@ pub enum FaceRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
     Face(&'m Face),
     FaceSurface(&'m FaceSurface),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl FaceRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FaceRefView<'m> {
@@ -8864,7 +8894,7 @@ impl FaceRef {
             }
             FaceRef::Face(i) => FaceRefView::Face(model.face_arena.get(i.0)),
             FaceRef::FaceSurface(i) => FaceRefView::FaceSurface(model.face_surface_arena.get(i.0)),
-            FaceRef::Complex(i) => FaceRefView::Complex(model.complex_unit_arena.get(i.0)),
+            FaceRef::Complex(i) => FaceRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -8872,7 +8902,7 @@ impl FaceRef {
             FaceRef::AdvancedFace(i) => EntityKey::AdvancedFace(*i),
             FaceRef::Face(i) => EntityKey::Face(*i),
             FaceRef::FaceSurface(i) => EntityKey::FaceSurface(*i),
-            FaceRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            FaceRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -8881,7 +8911,7 @@ impl FaceRef {
 pub enum FaceBoundRefView<'m> {
     FaceBound(&'m FaceBound),
     FaceOuterBound(&'m FaceOuterBound),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl FaceBoundRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FaceBoundRefView<'m> {
@@ -8893,7 +8923,7 @@ impl FaceBoundRef {
                 FaceBoundRefView::FaceOuterBound(model.face_outer_bound_arena.get(i.0))
             }
             FaceBoundRef::Complex(i) => {
-                FaceBoundRefView::Complex(model.complex_unit_arena.get(i.0))
+                FaceBoundRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -8901,7 +8931,7 @@ impl FaceBoundRef {
         match self {
             FaceBoundRef::FaceBound(i) => EntityKey::FaceBound(*i),
             FaceBoundRef::FaceOuterBound(i) => EntityKey::FaceOuterBound(*i),
-            FaceBoundRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            FaceBoundRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -8930,7 +8960,7 @@ pub enum FaceOrSurfaceRefView<'m> {
     SweptSurface(&'m SweptSurface),
     ToroidalSurface(&'m ToroidalSurface),
     UniformSurface(&'m UniformSurface),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl FaceOrSurfaceRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FaceOrSurfaceRefView<'m> {
@@ -9006,7 +9036,7 @@ impl FaceOrSurfaceRef {
                 FaceOrSurfaceRefView::UniformSurface(model.uniform_surface_arena.get(i.0))
             }
             FaceOrSurfaceRef::Complex(i) => {
-                FaceOrSurfaceRefView::Complex(model.complex_unit_arena.get(i.0))
+                FaceOrSurfaceRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -9038,7 +9068,7 @@ impl FaceOrSurfaceRef {
             FaceOrSurfaceRef::SweptSurface(i) => EntityKey::SweptSurface(*i),
             FaceOrSurfaceRef::ToroidalSurface(i) => EntityKey::ToroidalSurface(*i),
             FaceOrSurfaceRef::UniformSurface(i) => EntityKey::UniformSurface(*i),
-            FaceOrSurfaceRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            FaceOrSurfaceRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -9047,7 +9077,7 @@ impl FaceOrSurfaceRef {
 pub enum FaceSurfaceRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
     FaceSurface(&'m FaceSurface),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl FaceSurfaceRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FaceSurfaceRefView<'m> {
@@ -9059,7 +9089,7 @@ impl FaceSurfaceRef {
                 FaceSurfaceRefView::FaceSurface(model.face_surface_arena.get(i.0))
             }
             FaceSurfaceRef::Complex(i) => {
-                FaceSurfaceRefView::Complex(model.complex_unit_arena.get(i.0))
+                FaceSurfaceRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -9067,7 +9097,7 @@ impl FaceSurfaceRef {
         match self {
             FaceSurfaceRef::AdvancedFace(i) => EntityKey::AdvancedFace(*i),
             FaceSurfaceRef::FaceSurface(i) => EntityKey::FaceSurface(*i),
-            FaceSurfaceRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            FaceSurfaceRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -9075,7 +9105,7 @@ impl FaceSurfaceRef {
 #[derive(Clone, Copy, Debug)]
 pub enum FillAreaStyleRefView<'m> {
     FillAreaStyle(&'m FillAreaStyle),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl FillAreaStyleRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FillAreaStyleRefView<'m> {
@@ -9084,14 +9114,14 @@ impl FillAreaStyleRef {
                 FillAreaStyleRefView::FillAreaStyle(model.fill_area_style_arena.get(i.0))
             }
             FillAreaStyleRef::Complex(i) => {
-                FillAreaStyleRefView::Complex(model.complex_unit_arena.get(i.0))
+                FillAreaStyleRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             FillAreaStyleRef::FillAreaStyle(i) => EntityKey::FillAreaStyle(*i),
-            FillAreaStyleRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            FillAreaStyleRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -9103,7 +9133,7 @@ pub enum FillAreaStyleTileShapeSelectRefView<'m> {
     FillAreaStyleTileCurveWithStyle(&'m FillAreaStyleTileCurveWithStyle),
     FillAreaStyleTileSymbolWithStyle(&'m FillAreaStyleTileSymbolWithStyle),
     PreDefinedTile(&'m PreDefinedTile),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl FillAreaStyleTileShapeSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FillAreaStyleTileShapeSelectRefView<'m> {
@@ -9134,7 +9164,7 @@ impl FillAreaStyleTileShapeSelectRef {
                 )
             }
             FillAreaStyleTileShapeSelectRef::Complex(i) => {
-                FillAreaStyleTileShapeSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                FillAreaStyleTileShapeSelectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -9153,7 +9183,7 @@ impl FillAreaStyleTileShapeSelectRef {
                 EntityKey::FillAreaStyleTileSymbolWithStyle(*i)
             }
             FillAreaStyleTileShapeSelectRef::PreDefinedTile(i) => EntityKey::PreDefinedTile(*i),
-            FillAreaStyleTileShapeSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            FillAreaStyleTileShapeSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -9167,7 +9197,7 @@ pub enum FillStyleSelectRefView<'m> {
     FillAreaStyleTiles(&'m FillAreaStyleTiles),
     TextureStyleSpecification(&'m TextureStyleSpecification),
     TextureStyleTessellationSpecification(&'m TextureStyleTessellationSpecification),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl FillStyleSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FillStyleSelectRefView<'m> {
@@ -9210,7 +9240,7 @@ impl FillStyleSelectRef {
                 )
             }
             FillStyleSelectRef::Complex(i) => {
-                FillStyleSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                FillStyleSelectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -9231,7 +9261,7 @@ impl FillStyleSelectRef {
             FillStyleSelectRef::TextureStyleTessellationSpecification(i) => {
                 EntityKey::TextureStyleTessellationSpecification(*i)
             }
-            FillStyleSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            FillStyleSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -9242,7 +9272,7 @@ pub enum FontSelectRefView<'m> {
     ExternallyDefinedTextFont(&'m ExternallyDefinedTextFont),
     PreDefinedTextFont(&'m PreDefinedTextFont),
     TextFont(&'m TextFont),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl FontSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FontSelectRefView<'m> {
@@ -9264,7 +9294,7 @@ impl FontSelectRef {
                 FontSelectRefView::TextFont(model.text_font_arena.get(i.0))
             }
             FontSelectRef::Complex(i) => {
-                FontSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                FontSelectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -9276,7 +9306,7 @@ impl FontSelectRef {
             FontSelectRef::ExternallyDefinedTextFont(i) => EntityKey::ExternallyDefinedTextFont(*i),
             FontSelectRef::PreDefinedTextFont(i) => EntityKey::PreDefinedTextFont(*i),
             FontSelectRef::TextFont(i) => EntityKey::TextFont(*i),
-            FontSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            FontSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -9284,7 +9314,7 @@ impl FontSelectRef {
 #[derive(Clone, Copy, Debug)]
 pub enum GeneralPropertyRefView<'m> {
     GeneralProperty(&'m GeneralProperty),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl GeneralPropertyRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeneralPropertyRefView<'m> {
@@ -9293,14 +9323,14 @@ impl GeneralPropertyRef {
                 GeneralPropertyRefView::GeneralProperty(model.general_property_arena.get(i.0))
             }
             GeneralPropertyRef::Complex(i) => {
-                GeneralPropertyRefView::Complex(model.complex_unit_arena.get(i.0))
+                GeneralPropertyRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             GeneralPropertyRef::GeneralProperty(i) => EntityKey::GeneralProperty(*i),
-            GeneralPropertyRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            GeneralPropertyRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -9335,7 +9365,7 @@ pub enum GeometricItemSpecificUsageSelectRefView<'m> {
     ShapeAspectRelationship(&'m ShapeAspectRelationship),
     ToleranceZone(&'m ToleranceZone),
     ToleranceZoneWithDatum(&'m ToleranceZoneWithDatum),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl GeometricItemSpecificUsageSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricItemSpecificUsageSelectRefView<'m> {
@@ -9479,7 +9509,9 @@ impl GeometricItemSpecificUsageSelectRef {
                 )
             }
             GeometricItemSpecificUsageSelectRef::Complex(i) => {
-                GeometricItemSpecificUsageSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                GeometricItemSpecificUsageSelectRefView::Complex(
+                    model.complex_entity_arena.get(i.0),
+                )
             }
         }
     }
@@ -9555,7 +9587,7 @@ impl GeometricItemSpecificUsageSelectRef {
             GeometricItemSpecificUsageSelectRef::ToleranceZoneWithDatum(i) => {
                 EntityKey::ToleranceZoneWithDatum(*i)
             }
-            GeometricItemSpecificUsageSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            GeometricItemSpecificUsageSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -9634,6 +9666,7 @@ pub enum GeometricModelItemRefView<'m> {
     OneDirectionRepeatFactor(&'m OneDirectionRepeatFactor),
     OpenShell(&'m OpenShell),
     OrientedClosedShell(&'m OrientedClosedShell),
+    Parabola(&'m Parabola),
     Pcurve(&'m Pcurve),
     Placement(&'m Placement),
     PlanarBox(&'m PlanarBox),
@@ -9673,7 +9706,7 @@ pub enum GeometricModelItemRefView<'m> {
     UniformSurface(&'m UniformSurface),
     Vector(&'m Vector),
     VertexPoint(&'m VertexPoint),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl GeometricModelItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricModelItemRefView<'m> {
@@ -9956,6 +9989,9 @@ impl GeometricModelItemRef {
                     model.oriented_closed_shell_arena.get(i.0),
                 )
             }
+            GeometricModelItemRef::Parabola(i) => {
+                GeometricModelItemRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             GeometricModelItemRef::Pcurve(i) => {
                 GeometricModelItemRefView::Pcurve(model.pcurve_arena.get(i.0))
             }
@@ -10100,7 +10136,7 @@ impl GeometricModelItemRef {
                 GeometricModelItemRefView::VertexPoint(model.vertex_point_arena.get(i.0))
             }
             GeometricModelItemRef::Complex(i) => {
-                GeometricModelItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                GeometricModelItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -10212,6 +10248,7 @@ impl GeometricModelItemRef {
             }
             GeometricModelItemRef::OpenShell(i) => EntityKey::OpenShell(*i),
             GeometricModelItemRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
+            GeometricModelItemRef::Parabola(i) => EntityKey::Parabola(*i),
             GeometricModelItemRef::Pcurve(i) => EntityKey::Pcurve(*i),
             GeometricModelItemRef::Placement(i) => EntityKey::Placement(*i),
             GeometricModelItemRef::PlanarBox(i) => EntityKey::PlanarBox(*i),
@@ -10265,7 +10302,7 @@ impl GeometricModelItemRef {
             GeometricModelItemRef::UniformSurface(i) => EntityKey::UniformSurface(*i),
             GeometricModelItemRef::Vector(i) => EntityKey::Vector(*i),
             GeometricModelItemRef::VertexPoint(i) => EntityKey::VertexPoint(*i),
-            GeometricModelItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            GeometricModelItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -10302,6 +10339,7 @@ pub enum GeometricSetSelectRefView<'m> {
     IntersectionCurve(&'m IntersectionCurve),
     Line(&'m Line),
     OffsetSurface(&'m OffsetSurface),
+    Parabola(&'m Parabola),
     Pcurve(&'m Pcurve),
     Placement(&'m Placement),
     PlanarBox(&'m PlanarBox),
@@ -10323,7 +10361,7 @@ pub enum GeometricSetSelectRefView<'m> {
     TrimmedCurve(&'m TrimmedCurve),
     UniformCurve(&'m UniformCurve),
     UniformSurface(&'m UniformSurface),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl GeometricSetSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricSetSelectRefView<'m> {
@@ -10434,6 +10472,9 @@ impl GeometricSetSelectRef {
             GeometricSetSelectRef::OffsetSurface(i) => {
                 GeometricSetSelectRefView::OffsetSurface(model.offset_surface_arena.get(i.0))
             }
+            GeometricSetSelectRef::Parabola(i) => {
+                GeometricSetSelectRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             GeometricSetSelectRef::Pcurve(i) => {
                 GeometricSetSelectRefView::Pcurve(model.pcurve_arena.get(i.0))
             }
@@ -10510,7 +10551,7 @@ impl GeometricSetSelectRef {
                 GeometricSetSelectRefView::UniformSurface(model.uniform_surface_arena.get(i.0))
             }
             GeometricSetSelectRef::Complex(i) => {
-                GeometricSetSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                GeometricSetSelectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -10550,6 +10591,7 @@ impl GeometricSetSelectRef {
             GeometricSetSelectRef::IntersectionCurve(i) => EntityKey::IntersectionCurve(*i),
             GeometricSetSelectRef::Line(i) => EntityKey::Line(*i),
             GeometricSetSelectRef::OffsetSurface(i) => EntityKey::OffsetSurface(*i),
+            GeometricSetSelectRef::Parabola(i) => EntityKey::Parabola(*i),
             GeometricSetSelectRef::Pcurve(i) => EntityKey::Pcurve(*i),
             GeometricSetSelectRef::Placement(i) => EntityKey::Placement(*i),
             GeometricSetSelectRef::PlanarBox(i) => EntityKey::PlanarBox(*i),
@@ -10575,7 +10617,7 @@ impl GeometricSetSelectRef {
             GeometricSetSelectRef::TrimmedCurve(i) => EntityKey::TrimmedCurve(*i),
             GeometricSetSelectRef::UniformCurve(i) => EntityKey::UniformCurve(*i),
             GeometricSetSelectRef::UniformSurface(i) => EntityKey::UniformSurface(*i),
-            GeometricSetSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            GeometricSetSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -10605,7 +10647,7 @@ pub enum GeometricToleranceRefView<'m> {
     SymmetryTolerance(&'m SymmetryTolerance),
     TotalRunoutTolerance(&'m TotalRunoutTolerance),
     UnequallyDisposedGeometricTolerance(&'m UnequallyDisposedGeometricTolerance),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl GeometricToleranceRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricToleranceRefView<'m> {
@@ -10732,7 +10774,7 @@ impl GeometricToleranceRef {
                 )
             }
             GeometricToleranceRef::Complex(i) => {
-                GeometricToleranceRefView::Complex(model.complex_unit_arena.get(i.0))
+                GeometricToleranceRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -10783,7 +10825,7 @@ impl GeometricToleranceRef {
             GeometricToleranceRef::UnequallyDisposedGeometricTolerance(i) => {
                 EntityKey::UnequallyDisposedGeometricTolerance(*i)
             }
-            GeometricToleranceRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            GeometricToleranceRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -10818,7 +10860,7 @@ pub enum GeometricToleranceTargetRefView<'m> {
     ShapeAspect(&'m ShapeAspect),
     ToleranceZone(&'m ToleranceZone),
     ToleranceZoneWithDatum(&'m ToleranceZoneWithDatum),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl GeometricToleranceTargetRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricToleranceTargetRefView<'m> {
@@ -10948,7 +10990,7 @@ impl GeometricToleranceTargetRef {
                 )
             }
             GeometricToleranceTargetRef::Complex(i) => {
-                GeometricToleranceTargetRefView::Complex(model.complex_unit_arena.get(i.0))
+                GeometricToleranceTargetRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -11014,7 +11056,7 @@ impl GeometricToleranceTargetRef {
             GeometricToleranceTargetRef::ToleranceZoneWithDatum(i) => {
                 EntityKey::ToleranceZoneWithDatum(*i)
             }
-            GeometricToleranceTargetRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            GeometricToleranceTargetRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -11023,7 +11065,7 @@ impl GeometricToleranceTargetRef {
 pub enum GroupRefView<'m> {
     Group(&'m Group),
     ProductConceptFeatureCategory(&'m ProductConceptFeatureCategory),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl GroupRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GroupRefView<'m> {
@@ -11034,7 +11076,7 @@ impl GroupRef {
                     model.product_concept_feature_category_arena.get(i.0),
                 )
             }
-            GroupRef::Complex(i) => GroupRefView::Complex(model.complex_unit_arena.get(i.0)),
+            GroupRef::Complex(i) => GroupRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -11043,7 +11085,7 @@ impl GroupRef {
             GroupRef::ProductConceptFeatureCategory(i) => {
                 EntityKey::ProductConceptFeatureCategory(*i)
             }
-            GroupRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            GroupRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -11249,6 +11291,7 @@ pub enum GroupableItemRefView<'m> {
     OrientedClosedShell(&'m OrientedClosedShell),
     OrientedEdge(&'m OrientedEdge),
     OverRidingStyledItem(&'m OverRidingStyledItem),
+    Parabola(&'m Parabola),
     ParametricRepresentationContext(&'m ParametricRepresentationContext),
     Path(&'m Path),
     Pcurve(&'m Pcurve),
@@ -11359,7 +11402,7 @@ pub enum GroupableItemRefView<'m> {
     VertexShell(&'m VertexShell),
     VolumeUnit(&'m VolumeUnit),
     WireShell(&'m WireShell),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl GroupableItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GroupableItemRefView<'m> {
@@ -12091,6 +12134,9 @@ impl GroupableItemRef {
                     model.over_riding_styled_item_arena.get(i.0),
                 )
             }
+            GroupableItemRef::Parabola(i) => {
+                GroupableItemRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             GroupableItemRef::ParametricRepresentationContext(i) => {
                 GroupableItemRefView::ParametricRepresentationContext(
                     model.parametric_representation_context_arena.get(i.0),
@@ -12512,7 +12558,7 @@ impl GroupableItemRef {
                 GroupableItemRefView::WireShell(model.wire_shell_arena.get(i.0))
             }
             GroupableItemRef::Complex(i) => {
-                GroupableItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                GroupableItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -12823,6 +12869,7 @@ impl GroupableItemRef {
             GroupableItemRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
             GroupableItemRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
             GroupableItemRef::OverRidingStyledItem(i) => EntityKey::OverRidingStyledItem(*i),
+            GroupableItemRef::Parabola(i) => EntityKey::Parabola(*i),
             GroupableItemRef::ParametricRepresentationContext(i) => {
                 EntityKey::ParametricRepresentationContext(*i)
             }
@@ -12989,7 +13036,7 @@ impl GroupableItemRef {
             GroupableItemRef::VertexShell(i) => EntityKey::VertexShell(*i),
             GroupableItemRef::VolumeUnit(i) => EntityKey::VolumeUnit(*i),
             GroupableItemRef::WireShell(i) => EntityKey::WireShell(*i),
-            GroupableItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            GroupableItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -13116,7 +13163,7 @@ pub enum IdAttributeSelectRefView<'m> {
     VertexPoint(&'m VertexPoint),
     VertexShell(&'m VertexShell),
     WireShell(&'m WireShell),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl IdAttributeSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> IdAttributeSelectRefView<'m> {
@@ -13602,7 +13649,7 @@ impl IdAttributeSelectRef {
                 IdAttributeSelectRefView::WireShell(model.wire_shell_arena.get(i.0))
             }
             IdAttributeSelectRef::Complex(i) => {
-                IdAttributeSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                IdAttributeSelectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -13806,7 +13853,7 @@ impl IdAttributeSelectRef {
             IdAttributeSelectRef::VertexPoint(i) => EntityKey::VertexPoint(*i),
             IdAttributeSelectRef::VertexShell(i) => EntityKey::VertexShell(*i),
             IdAttributeSelectRef::WireShell(i) => EntityKey::WireShell(*i),
-            IdAttributeSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            IdAttributeSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -13885,7 +13932,7 @@ pub enum InvisibleItemRefView<'m> {
     TerminatorSymbol(&'m TerminatorSymbol),
     TessellatedAnnotationOccurrence(&'m TessellatedAnnotationOccurrence),
     TessellatedShapeRepresentation(&'m TessellatedShapeRepresentation),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl InvisibleItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> InvisibleItemRefView<'m> {
@@ -14078,7 +14125,7 @@ impl InvisibleItemRef {
                 )
             }
             InvisibleItemRef::Complex(i) => {
-                InvisibleItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                InvisibleItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -14171,7 +14218,7 @@ impl InvisibleItemRef {
             InvisibleItemRef::TessellatedShapeRepresentation(i) => {
                 EntityKey::TessellatedShapeRepresentation(*i)
             }
-            InvisibleItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            InvisibleItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -14179,7 +14226,7 @@ impl InvisibleItemRef {
 #[derive(Clone, Copy, Debug)]
 pub enum ItemDefinedTransformationRefView<'m> {
     ItemDefinedTransformation(&'m ItemDefinedTransformation),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ItemDefinedTransformationRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ItemDefinedTransformationRefView<'m> {
@@ -14190,7 +14237,7 @@ impl ItemDefinedTransformationRef {
                 )
             }
             ItemDefinedTransformationRef::Complex(i) => {
-                ItemDefinedTransformationRefView::Complex(model.complex_unit_arena.get(i.0))
+                ItemDefinedTransformationRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -14199,7 +14246,7 @@ impl ItemDefinedTransformationRef {
             ItemDefinedTransformationRef::ItemDefinedTransformation(i) => {
                 EntityKey::ItemDefinedTransformation(*i)
             }
-            ItemDefinedTransformationRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ItemDefinedTransformationRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -14280,7 +14327,7 @@ pub enum ItemIdentifiedRepresentationUsageDefinitionRefView<'m> {
     ToleranceZoneWithDatum(&'m ToleranceZoneWithDatum),
     TotalRunoutTolerance(&'m TotalRunoutTolerance),
     UnequallyDisposedGeometricTolerance(&'m UnequallyDisposedGeometricTolerance),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ItemIdentifiedRepresentationUsageDefinitionRef {
     pub fn resolve<'m>(
@@ -14362,7 +14409,7 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::ToleranceZoneWithDatum(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::ToleranceZoneWithDatum(model.tolerance_zone_with_datum_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::TotalRunoutTolerance(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::TotalRunoutTolerance(model.total_runout_tolerance_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::UnequallyDisposedGeometricTolerance(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::UnequallyDisposedGeometricTolerance(model.unequally_disposed_geometric_tolerance_arena.get(i.0)),
-            ItemIdentifiedRepresentationUsageDefinitionRef::Complex(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::Complex(model.complex_unit_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::Complex(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -14441,7 +14488,7 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::ToleranceZoneWithDatum(i) => EntityKey::ToleranceZoneWithDatum(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::TotalRunoutTolerance(i) => EntityKey::TotalRunoutTolerance(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::UnequallyDisposedGeometricTolerance(i) => EntityKey::UnequallyDisposedGeometricTolerance(*i),
-            ItemIdentifiedRepresentationUsageDefinitionRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -14546,6 +14593,7 @@ pub enum LayeredItemRefView<'m> {
     OrientedClosedShell(&'m OrientedClosedShell),
     OrientedEdge(&'m OrientedEdge),
     OverRidingStyledItem(&'m OverRidingStyledItem),
+    Parabola(&'m Parabola),
     Path(&'m Path),
     Pcurve(&'m Pcurve),
     Placement(&'m Placement),
@@ -14601,7 +14649,7 @@ pub enum LayeredItemRefView<'m> {
     VertexPoint(&'m VertexPoint),
     VertexShell(&'m VertexShell),
     WireShell(&'m WireShell),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl LayeredItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> LayeredItemRefView<'m> {
@@ -14942,6 +14990,9 @@ impl LayeredItemRef {
             LayeredItemRef::OverRidingStyledItem(i) => LayeredItemRefView::OverRidingStyledItem(
                 model.over_riding_styled_item_arena.get(i.0),
             ),
+            LayeredItemRef::Parabola(i) => {
+                LayeredItemRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             LayeredItemRef::Path(i) => LayeredItemRefView::Path(model.path_arena.get(i.0)),
             LayeredItemRef::Pcurve(i) => LayeredItemRefView::Pcurve(model.pcurve_arena.get(i.0)),
             LayeredItemRef::Placement(i) => {
@@ -15120,7 +15171,7 @@ impl LayeredItemRef {
                 LayeredItemRefView::WireShell(model.wire_shell_arena.get(i.0))
             }
             LayeredItemRef::Complex(i) => {
-                LayeredItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                LayeredItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -15268,6 +15319,7 @@ impl LayeredItemRef {
             LayeredItemRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
             LayeredItemRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
             LayeredItemRef::OverRidingStyledItem(i) => EntityKey::OverRidingStyledItem(*i),
+            LayeredItemRef::Parabola(i) => EntityKey::Parabola(*i),
             LayeredItemRef::Path(i) => EntityKey::Path(*i),
             LayeredItemRef::Pcurve(i) => EntityKey::Pcurve(*i),
             LayeredItemRef::Placement(i) => EntityKey::Placement(*i),
@@ -15335,7 +15387,7 @@ impl LayeredItemRef {
             LayeredItemRef::VertexPoint(i) => EntityKey::VertexPoint(*i),
             LayeredItemRef::VertexShell(i) => EntityKey::VertexShell(*i),
             LayeredItemRef::WireShell(i) => EntityKey::WireShell(*i),
-            LayeredItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            LayeredItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -15343,7 +15395,7 @@ impl LayeredItemRef {
 #[derive(Clone, Copy, Debug)]
 pub enum LengthMeasureWithUnitRefView<'m> {
     LengthMeasureWithUnit(&'m LengthMeasureWithUnit),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl LengthMeasureWithUnitRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> LengthMeasureWithUnitRefView<'m> {
@@ -15354,7 +15406,7 @@ impl LengthMeasureWithUnitRef {
                 )
             }
             LengthMeasureWithUnitRef::Complex(i) => {
-                LengthMeasureWithUnitRefView::Complex(model.complex_unit_arena.get(i.0))
+                LengthMeasureWithUnitRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -15363,7 +15415,7 @@ impl LengthMeasureWithUnitRef {
             LengthMeasureWithUnitRef::LengthMeasureWithUnit(i) => {
                 EntityKey::LengthMeasureWithUnit(*i)
             }
-            LengthMeasureWithUnitRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            LengthMeasureWithUnitRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -15372,7 +15424,7 @@ impl LengthMeasureWithUnitRef {
 pub enum LengthOrPlaneAngleMeasureWithUnitSelectRefView<'m> {
     LengthMeasureWithUnit(&'m LengthMeasureWithUnit),
     PlaneAngleMeasureWithUnit(&'m PlaneAngleMeasureWithUnit),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
     pub fn resolve<'m>(
@@ -15392,7 +15444,7 @@ impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
             }
             LengthOrPlaneAngleMeasureWithUnitSelectRef::Complex(i) => {
                 LengthOrPlaneAngleMeasureWithUnitSelectRefView::Complex(
-                    model.complex_unit_arena.get(i.0),
+                    model.complex_entity_arena.get(i.0),
                 )
             }
         }
@@ -15405,7 +15457,7 @@ impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
             LengthOrPlaneAngleMeasureWithUnitSelectRef::PlaneAngleMeasureWithUnit(i) => {
                 EntityKey::PlaneAngleMeasureWithUnit(*i)
             }
-            LengthOrPlaneAngleMeasureWithUnitSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            LengthOrPlaneAngleMeasureWithUnitSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -15435,7 +15487,7 @@ pub enum LoopRefView<'m> {
     Loop(&'m Loop),
     PolyLoop(&'m PolyLoop),
     VertexLoop(&'m VertexLoop),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl LoopRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> LoopRefView<'m> {
@@ -15444,7 +15496,7 @@ impl LoopRef {
             LoopRef::Loop(i) => LoopRefView::Loop(model.loop_arena.get(i.0)),
             LoopRef::PolyLoop(i) => LoopRefView::PolyLoop(model.poly_loop_arena.get(i.0)),
             LoopRef::VertexLoop(i) => LoopRefView::VertexLoop(model.vertex_loop_arena.get(i.0)),
-            LoopRef::Complex(i) => LoopRefView::Complex(model.complex_unit_arena.get(i.0)),
+            LoopRef::Complex(i) => LoopRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -15453,7 +15505,7 @@ impl LoopRef {
             LoopRef::Loop(i) => EntityKey::Loop(*i),
             LoopRef::PolyLoop(i) => EntityKey::PolyLoop(*i),
             LoopRef::VertexLoop(i) => EntityKey::VertexLoop(*i),
-            LoopRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            LoopRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -15462,7 +15514,7 @@ impl LoopRef {
 pub enum ManifoldSolidBrepRefView<'m> {
     BrepWithVoids(&'m BrepWithVoids),
     ManifoldSolidBrep(&'m ManifoldSolidBrep),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ManifoldSolidBrepRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ManifoldSolidBrepRefView<'m> {
@@ -15476,7 +15528,7 @@ impl ManifoldSolidBrepRef {
                 )
             }
             ManifoldSolidBrepRef::Complex(i) => {
-                ManifoldSolidBrepRefView::Complex(model.complex_unit_arena.get(i.0))
+                ManifoldSolidBrepRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -15484,7 +15536,7 @@ impl ManifoldSolidBrepRef {
         match self {
             ManifoldSolidBrepRef::BrepWithVoids(i) => EntityKey::BrepWithVoids(*i),
             ManifoldSolidBrepRef::ManifoldSolidBrep(i) => EntityKey::ManifoldSolidBrep(*i),
-            ManifoldSolidBrepRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ManifoldSolidBrepRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -15498,7 +15550,7 @@ pub enum MeasureWithUnitRefView<'m> {
     PlaneAngleMeasureWithUnit(&'m PlaneAngleMeasureWithUnit),
     RatioMeasureWithUnit(&'m RatioMeasureWithUnit),
     UncertaintyMeasureWithUnit(&'m UncertaintyMeasureWithUnit),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl MeasureWithUnitRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> MeasureWithUnitRefView<'m> {
@@ -15537,7 +15589,7 @@ impl MeasureWithUnitRef {
                 )
             }
             MeasureWithUnitRef::Complex(i) => {
-                MeasureWithUnitRefView::Complex(model.complex_unit_arena.get(i.0))
+                MeasureWithUnitRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -15556,7 +15608,7 @@ impl MeasureWithUnitRef {
             MeasureWithUnitRef::UncertaintyMeasureWithUnit(i) => {
                 EntityKey::UncertaintyMeasureWithUnit(*i)
             }
-            MeasureWithUnitRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            MeasureWithUnitRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -15585,7 +15637,7 @@ pub enum MechanicalDesignAndDraughtingRelationshipSelectRefView<'m> {
     ShapeRepresentation(&'m ShapeRepresentation),
     ShapeRepresentationWithParameters(&'m ShapeRepresentationWithParameters),
     TessellatedShapeRepresentation(&'m TessellatedShapeRepresentation),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl MechanicalDesignAndDraughtingRelationshipSelectRef {
     pub fn resolve<'m>(
@@ -15605,7 +15657,7 @@ impl MechanicalDesignAndDraughtingRelationshipSelectRef {
             MechanicalDesignAndDraughtingRelationshipSelectRef::ShapeRepresentation(i) => MechanicalDesignAndDraughtingRelationshipSelectRefView::ShapeRepresentation(model.shape_representation_arena.get(i.0)),
             MechanicalDesignAndDraughtingRelationshipSelectRef::ShapeRepresentationWithParameters(i) => MechanicalDesignAndDraughtingRelationshipSelectRefView::ShapeRepresentationWithParameters(model.shape_representation_with_parameters_arena.get(i.0)),
             MechanicalDesignAndDraughtingRelationshipSelectRef::TessellatedShapeRepresentation(i) => MechanicalDesignAndDraughtingRelationshipSelectRefView::TessellatedShapeRepresentation(model.tessellated_shape_representation_arena.get(i.0)),
-            MechanicalDesignAndDraughtingRelationshipSelectRef::Complex(i) => MechanicalDesignAndDraughtingRelationshipSelectRefView::Complex(model.complex_unit_arena.get(i.0)),
+            MechanicalDesignAndDraughtingRelationshipSelectRef::Complex(i) => MechanicalDesignAndDraughtingRelationshipSelectRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -15622,7 +15674,7 @@ impl MechanicalDesignAndDraughtingRelationshipSelectRef {
             MechanicalDesignAndDraughtingRelationshipSelectRef::ShapeRepresentation(i) => EntityKey::ShapeRepresentation(*i),
             MechanicalDesignAndDraughtingRelationshipSelectRef::ShapeRepresentationWithParameters(i) => EntityKey::ShapeRepresentationWithParameters(*i),
             MechanicalDesignAndDraughtingRelationshipSelectRef::TessellatedShapeRepresentation(i) => EntityKey::TessellatedShapeRepresentation(*i),
-            MechanicalDesignAndDraughtingRelationshipSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            MechanicalDesignAndDraughtingRelationshipSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -15648,7 +15700,7 @@ pub enum NameAttributeSelectRefView<'m> {
     PropertyDefinitionRepresentation(&'m PropertyDefinitionRepresentation),
     ShapeDefinitionRepresentation(&'m ShapeDefinitionRepresentation),
     VolumeUnit(&'m VolumeUnit),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl NameAttributeSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> NameAttributeSelectRefView<'m> {
@@ -15739,7 +15791,7 @@ impl NameAttributeSelectRef {
                 NameAttributeSelectRefView::VolumeUnit(model.volume_unit_arena.get(i.0))
             }
             NameAttributeSelectRef::Complex(i) => {
-                NameAttributeSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                NameAttributeSelectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -15786,7 +15838,7 @@ impl NameAttributeSelectRef {
                 EntityKey::ShapeDefinitionRepresentation(*i)
             }
             NameAttributeSelectRef::VolumeUnit(i) => EntityKey::VolumeUnit(*i),
-            NameAttributeSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            NameAttributeSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -15803,7 +15855,7 @@ pub enum NamedUnitRefView<'m> {
     SiUnit(&'m SiUnit),
     SolidAngleUnit(&'m SolidAngleUnit),
     TimeUnit(&'m TimeUnit),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl NamedUnitRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> NamedUnitRefView<'m> {
@@ -15833,7 +15885,7 @@ impl NamedUnitRef {
             }
             NamedUnitRef::TimeUnit(i) => NamedUnitRefView::TimeUnit(model.time_unit_arena.get(i.0)),
             NamedUnitRef::Complex(i) => {
-                NamedUnitRefView::Complex(model.complex_unit_arena.get(i.0))
+                NamedUnitRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -15849,7 +15901,7 @@ impl NamedUnitRef {
             NamedUnitRef::SiUnit(i) => EntityKey::SiUnit(*i),
             NamedUnitRef::SolidAngleUnit(i) => EntityKey::SolidAngleUnit(*i),
             NamedUnitRef::TimeUnit(i) => EntityKey::TimeUnit(*i),
-            NamedUnitRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            NamedUnitRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -15877,7 +15929,7 @@ impl ObjectRoleRef {
 pub enum OneDirectionRepeatFactorRefView<'m> {
     OneDirectionRepeatFactor(&'m OneDirectionRepeatFactor),
     TwoDirectionRepeatFactor(&'m TwoDirectionRepeatFactor),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl OneDirectionRepeatFactorRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> OneDirectionRepeatFactorRefView<'m> {
@@ -15893,7 +15945,7 @@ impl OneDirectionRepeatFactorRef {
                 )
             }
             OneDirectionRepeatFactorRef::Complex(i) => {
-                OneDirectionRepeatFactorRefView::Complex(model.complex_unit_arena.get(i.0))
+                OneDirectionRepeatFactorRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -15905,7 +15957,7 @@ impl OneDirectionRepeatFactorRef {
             OneDirectionRepeatFactorRef::TwoDirectionRepeatFactor(i) => {
                 EntityKey::TwoDirectionRepeatFactor(*i)
             }
-            OneDirectionRepeatFactorRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            OneDirectionRepeatFactorRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -15955,7 +16007,7 @@ impl OrganizationalProjectRef {
 #[derive(Clone, Copy, Debug)]
 pub enum OrientedClosedShellRefView<'m> {
     OrientedClosedShell(&'m OrientedClosedShell),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl OrientedClosedShellRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> OrientedClosedShellRefView<'m> {
@@ -15966,14 +16018,14 @@ impl OrientedClosedShellRef {
                 )
             }
             OrientedClosedShellRef::Complex(i) => {
-                OrientedClosedShellRefView::Complex(model.complex_unit_arena.get(i.0))
+                OrientedClosedShellRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             OrientedClosedShellRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
-            OrientedClosedShellRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            OrientedClosedShellRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -15981,7 +16033,7 @@ impl OrientedClosedShellRef {
 #[derive(Clone, Copy, Debug)]
 pub enum OrientedEdgeRefView<'m> {
     OrientedEdge(&'m OrientedEdge),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl OrientedEdgeRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> OrientedEdgeRefView<'m> {
@@ -15990,14 +16042,14 @@ impl OrientedEdgeRef {
                 OrientedEdgeRefView::OrientedEdge(model.oriented_edge_arena.get(i.0))
             }
             OrientedEdgeRef::Complex(i) => {
-                OrientedEdgeRefView::Complex(model.complex_unit_arena.get(i.0))
+                OrientedEdgeRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             OrientedEdgeRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
-            OrientedEdgeRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            OrientedEdgeRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -16025,7 +16077,7 @@ pub enum PcurveOrSurfaceRefView<'m> {
     SweptSurface(&'m SweptSurface),
     ToroidalSurface(&'m ToroidalSurface),
     UniformSurface(&'m UniformSurface),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl PcurveOrSurfaceRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PcurveOrSurfaceRefView<'m> {
@@ -16106,7 +16158,7 @@ impl PcurveOrSurfaceRef {
                 PcurveOrSurfaceRefView::UniformSurface(model.uniform_surface_arena.get(i.0))
             }
             PcurveOrSurfaceRef::Complex(i) => {
-                PcurveOrSurfaceRefView::Complex(model.complex_unit_arena.get(i.0))
+                PcurveOrSurfaceRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -16139,7 +16191,7 @@ impl PcurveOrSurfaceRef {
             PcurveOrSurfaceRef::SweptSurface(i) => EntityKey::SweptSurface(*i),
             PcurveOrSurfaceRef::ToroidalSurface(i) => EntityKey::ToroidalSurface(*i),
             PcurveOrSurfaceRef::UniformSurface(i) => EntityKey::UniformSurface(*i),
-            PcurveOrSurfaceRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            PcurveOrSurfaceRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -16274,7 +16326,7 @@ pub enum PersonAndOrganizationItemRefView<'m> {
     SymbolRepresentation(&'m SymbolRepresentation),
     TessellatedShapeRepresentation(&'m TessellatedShapeRepresentation),
     VersionedActionRequest(&'m VersionedActionRequest),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl PersonAndOrganizationItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PersonAndOrganizationItemRefView<'m> {
@@ -16355,7 +16407,7 @@ impl PersonAndOrganizationItemRef {
             PersonAndOrganizationItemRef::SymbolRepresentation(i) => PersonAndOrganizationItemRefView::SymbolRepresentation(model.symbol_representation_arena.get(i.0)),
             PersonAndOrganizationItemRef::TessellatedShapeRepresentation(i) => PersonAndOrganizationItemRefView::TessellatedShapeRepresentation(model.tessellated_shape_representation_arena.get(i.0)),
             PersonAndOrganizationItemRef::VersionedActionRequest(i) => PersonAndOrganizationItemRefView::VersionedActionRequest(model.versioned_action_request_arena.get(i.0)),
-            PersonAndOrganizationItemRef::Complex(i) => PersonAndOrganizationItemRefView::Complex(model.complex_unit_arena.get(i.0)),
+            PersonAndOrganizationItemRef::Complex(i) => PersonAndOrganizationItemRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -16436,7 +16488,7 @@ impl PersonAndOrganizationItemRef {
             PersonAndOrganizationItemRef::SymbolRepresentation(i) => EntityKey::SymbolRepresentation(*i),
             PersonAndOrganizationItemRef::TessellatedShapeRepresentation(i) => EntityKey::TessellatedShapeRepresentation(*i),
             PersonAndOrganizationItemRef::VersionedActionRequest(i) => EntityKey::VersionedActionRequest(*i),
-            PersonAndOrganizationItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            PersonAndOrganizationItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -16500,7 +16552,7 @@ impl PersonOrganizationSelectRef {
 #[derive(Clone, Copy, Debug)]
 pub enum PlanarBoxRefView<'m> {
     PlanarBox(&'m PlanarBox),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl PlanarBoxRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PlanarBoxRefView<'m> {
@@ -16509,14 +16561,14 @@ impl PlanarBoxRef {
                 PlanarBoxRefView::PlanarBox(model.planar_box_arena.get(i.0))
             }
             PlanarBoxRef::Complex(i) => {
-                PlanarBoxRefView::Complex(model.complex_unit_arena.get(i.0))
+                PlanarBoxRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PlanarBoxRef::PlanarBox(i) => EntityKey::PlanarBox(*i),
-            PlanarBoxRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            PlanarBoxRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -16525,7 +16577,7 @@ impl PlanarBoxRef {
 pub enum PlaneOrPlanarBoxRefView<'m> {
     PlanarBox(&'m PlanarBox),
     Plane(&'m Plane),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl PlaneOrPlanarBoxRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PlaneOrPlanarBoxRefView<'m> {
@@ -16537,7 +16589,7 @@ impl PlaneOrPlanarBoxRef {
                 PlaneOrPlanarBoxRefView::Plane(model.plane_arena.get(i.0))
             }
             PlaneOrPlanarBoxRef::Complex(i) => {
-                PlaneOrPlanarBoxRefView::Complex(model.complex_unit_arena.get(i.0))
+                PlaneOrPlanarBoxRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -16545,7 +16597,7 @@ impl PlaneOrPlanarBoxRef {
         match self {
             PlaneOrPlanarBoxRef::PlanarBox(i) => EntityKey::PlanarBox(*i),
             PlaneOrPlanarBoxRef::Plane(i) => EntityKey::Plane(*i),
-            PlaneOrPlanarBoxRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            PlaneOrPlanarBoxRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -16556,7 +16608,7 @@ pub enum PointRefView<'m> {
     ApllPointWithSurface(&'m ApllPointWithSurface),
     CartesianPoint(&'m CartesianPoint),
     Point(&'m Point),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl PointRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PointRefView<'m> {
@@ -16569,7 +16621,7 @@ impl PointRef {
                 PointRefView::CartesianPoint(model.cartesian_point_arena.get(i.0))
             }
             PointRef::Point(i) => PointRefView::Point(model.point_arena.get(i.0)),
-            PointRef::Complex(i) => PointRefView::Complex(model.complex_unit_arena.get(i.0)),
+            PointRef::Complex(i) => PointRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -16578,7 +16630,7 @@ impl PointRef {
             PointRef::ApllPointWithSurface(i) => EntityKey::ApllPointWithSurface(*i),
             PointRef::CartesianPoint(i) => EntityKey::CartesianPoint(*i),
             PointRef::Point(i) => EntityKey::Point(*i),
-            PointRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            PointRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -16586,7 +16638,7 @@ impl PointRef {
 #[derive(Clone, Copy, Debug)]
 pub enum PresentationAreaRefView<'m> {
     PresentationArea(&'m PresentationArea),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl PresentationAreaRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentationAreaRefView<'m> {
@@ -16595,14 +16647,14 @@ impl PresentationAreaRef {
                 PresentationAreaRefView::PresentationArea(model.presentation_area_arena.get(i.0))
             }
             PresentationAreaRef::Complex(i) => {
-                PresentationAreaRefView::Complex(model.complex_unit_arena.get(i.0))
+                PresentationAreaRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PresentationAreaRef::PresentationArea(i) => EntityKey::PresentationArea(*i),
-            PresentationAreaRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            PresentationAreaRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -16613,7 +16665,7 @@ pub enum PresentationRepresentationSelectRefView<'m> {
     PresentationRepresentation(&'m PresentationRepresentation),
     PresentationSet(&'m PresentationSet),
     PresentationView(&'m PresentationView),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl PresentationRepresentationSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentationRepresentationSelectRefView<'m> {
@@ -16639,7 +16691,9 @@ impl PresentationRepresentationSelectRef {
                 )
             }
             PresentationRepresentationSelectRef::Complex(i) => {
-                PresentationRepresentationSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                PresentationRepresentationSelectRefView::Complex(
+                    model.complex_entity_arena.get(i.0),
+                )
             }
         }
     }
@@ -16657,7 +16711,7 @@ impl PresentationRepresentationSelectRef {
             PresentationRepresentationSelectRef::PresentationView(i) => {
                 EntityKey::PresentationView(*i)
             }
-            PresentationRepresentationSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            PresentationRepresentationSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -16665,7 +16719,7 @@ impl PresentationRepresentationSelectRef {
 #[derive(Clone, Copy, Debug)]
 pub enum PresentationSetRefView<'m> {
     PresentationSet(&'m PresentationSet),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl PresentationSetRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentationSetRefView<'m> {
@@ -16674,14 +16728,14 @@ impl PresentationSetRef {
                 PresentationSetRefView::PresentationSet(model.presentation_set_arena.get(i.0))
             }
             PresentationSetRef::Complex(i) => {
-                PresentationSetRefView::Complex(model.complex_unit_arena.get(i.0))
+                PresentationSetRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PresentationSetRef::PresentationSet(i) => EntityKey::PresentationSet(*i),
-            PresentationSetRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            PresentationSetRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -16691,7 +16745,7 @@ pub enum PresentationSizeAssignmentSelectRefView<'m> {
     AreaInSet(&'m AreaInSet),
     PresentationArea(&'m PresentationArea),
     PresentationView(&'m PresentationView),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl PresentationSizeAssignmentSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentationSizeAssignmentSelectRefView<'m> {
@@ -16710,7 +16764,9 @@ impl PresentationSizeAssignmentSelectRef {
                 )
             }
             PresentationSizeAssignmentSelectRef::Complex(i) => {
-                PresentationSizeAssignmentSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                PresentationSizeAssignmentSelectRefView::Complex(
+                    model.complex_entity_arena.get(i.0),
+                )
             }
         }
     }
@@ -16723,7 +16779,7 @@ impl PresentationSizeAssignmentSelectRef {
             PresentationSizeAssignmentSelectRef::PresentationView(i) => {
                 EntityKey::PresentationView(*i)
             }
-            PresentationSizeAssignmentSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            PresentationSizeAssignmentSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -16732,7 +16788,7 @@ impl PresentationSizeAssignmentSelectRef {
 pub enum PresentationStyleAssignmentRefView<'m> {
     PresentationStyleAssignment(&'m PresentationStyleAssignment),
     PresentationStyleByContext(&'m PresentationStyleByContext),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl PresentationStyleAssignmentRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentationStyleAssignmentRefView<'m> {
@@ -16748,7 +16804,7 @@ impl PresentationStyleAssignmentRef {
                 )
             }
             PresentationStyleAssignmentRef::Complex(i) => {
-                PresentationStyleAssignmentRefView::Complex(model.complex_unit_arena.get(i.0))
+                PresentationStyleAssignmentRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -16760,7 +16816,7 @@ impl PresentationStyleAssignmentRef {
             PresentationStyleAssignmentRef::PresentationStyleByContext(i) => {
                 EntityKey::PresentationStyleByContext(*i)
             }
-            PresentationStyleAssignmentRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            PresentationStyleAssignmentRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -16769,7 +16825,7 @@ impl PresentationStyleAssignmentRef {
 pub enum PresentedItemRefView<'m> {
     AppliedPresentedItem(&'m AppliedPresentedItem),
     PresentedItem(&'m PresentedItem),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl PresentedItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentedItemRefView<'m> {
@@ -16783,7 +16839,7 @@ impl PresentedItemRef {
                 PresentedItemRefView::PresentedItem(model.presented_item_arena.get(i.0))
             }
             PresentedItemRef::Complex(i) => {
-                PresentedItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                PresentedItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -16791,7 +16847,7 @@ impl PresentedItemRef {
         match self {
             PresentedItemRef::AppliedPresentedItem(i) => EntityKey::AppliedPresentedItem(*i),
             PresentedItemRef::PresentedItem(i) => EntityKey::PresentedItem(*i),
-            PresentedItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            PresentedItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -16815,7 +16871,7 @@ pub enum PresentedItemSelectRefView<'m> {
     ProductDefinitionRelationship(&'m ProductDefinitionRelationship),
     ProductDefinitionUsage(&'m ProductDefinitionUsage),
     ProductDefinitionWithAssociatedDocuments(&'m ProductDefinitionWithAssociatedDocuments),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl PresentedItemSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentedItemSelectRefView<'m> {
@@ -16894,7 +16950,7 @@ impl PresentedItemSelectRef {
                 )
             }
             PresentedItemSelectRef::Complex(i) => {
-                PresentedItemSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                PresentedItemSelectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -16933,7 +16989,7 @@ impl PresentedItemSelectRef {
             PresentedItemSelectRef::ProductDefinitionWithAssociatedDocuments(i) => {
                 EntityKey::ProductDefinitionWithAssociatedDocuments(*i)
             }
-            PresentedItemSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            PresentedItemSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -16941,19 +16997,19 @@ impl PresentedItemSelectRef {
 #[derive(Clone, Copy, Debug)]
 pub enum ProductRefView<'m> {
     Product(&'m Product),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ProductRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductRefView<'m> {
         match self {
             ProductRef::Product(i) => ProductRefView::Product(model.product_arena.get(i.0)),
-            ProductRef::Complex(i) => ProductRefView::Complex(model.complex_unit_arena.get(i.0)),
+            ProductRef::Complex(i) => ProductRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductRef::Product(i) => EntityKey::Product(*i),
-            ProductRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ProductRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -16962,7 +17018,7 @@ impl ProductRef {
 pub enum ProductCategoryRefView<'m> {
     ProductCategory(&'m ProductCategory),
     ProductRelatedProductCategory(&'m ProductRelatedProductCategory),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ProductCategoryRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductCategoryRefView<'m> {
@@ -16976,7 +17032,7 @@ impl ProductCategoryRef {
                 )
             }
             ProductCategoryRef::Complex(i) => {
-                ProductCategoryRefView::Complex(model.complex_unit_arena.get(i.0))
+                ProductCategoryRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -16986,7 +17042,7 @@ impl ProductCategoryRef {
             ProductCategoryRef::ProductRelatedProductCategory(i) => {
                 EntityKey::ProductRelatedProductCategory(*i)
             }
-            ProductCategoryRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ProductCategoryRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -16994,7 +17050,7 @@ impl ProductCategoryRef {
 #[derive(Clone, Copy, Debug)]
 pub enum ProductConceptRefView<'m> {
     ProductConcept(&'m ProductConcept),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ProductConceptRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductConceptRefView<'m> {
@@ -17003,14 +17059,14 @@ impl ProductConceptRef {
                 ProductConceptRefView::ProductConcept(model.product_concept_arena.get(i.0))
             }
             ProductConceptRef::Complex(i) => {
-                ProductConceptRefView::Complex(model.complex_unit_arena.get(i.0))
+                ProductConceptRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductConceptRef::ProductConcept(i) => EntityKey::ProductConcept(*i),
-            ProductConceptRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ProductConceptRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -17042,7 +17098,7 @@ impl ProductConceptContextRef {
 pub enum ProductContextRefView<'m> {
     MechanicalContext(&'m MechanicalContext),
     ProductContext(&'m ProductContext),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ProductContextRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductContextRefView<'m> {
@@ -17054,7 +17110,7 @@ impl ProductContextRef {
                 ProductContextRefView::ProductContext(model.product_context_arena.get(i.0))
             }
             ProductContextRef::Complex(i) => {
-                ProductContextRefView::Complex(model.complex_unit_arena.get(i.0))
+                ProductContextRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -17062,7 +17118,7 @@ impl ProductContextRef {
         match self {
             ProductContextRef::MechanicalContext(i) => EntityKey::MechanicalContext(*i),
             ProductContextRef::ProductContext(i) => EntityKey::ProductContext(*i),
-            ProductContextRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ProductContextRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -17071,7 +17127,7 @@ impl ProductContextRef {
 pub enum ProductDefinitionRefView<'m> {
     ProductDefinition(&'m ProductDefinition),
     ProductDefinitionWithAssociatedDocuments(&'m ProductDefinitionWithAssociatedDocuments),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ProductDefinitionRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionRefView<'m> {
@@ -17087,7 +17143,7 @@ impl ProductDefinitionRef {
                 )
             }
             ProductDefinitionRef::Complex(i) => {
-                ProductDefinitionRefView::Complex(model.complex_unit_arena.get(i.0))
+                ProductDefinitionRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -17097,7 +17153,7 @@ impl ProductDefinitionRef {
             ProductDefinitionRef::ProductDefinitionWithAssociatedDocuments(i) => {
                 EntityKey::ProductDefinitionWithAssociatedDocuments(*i)
             }
-            ProductDefinitionRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ProductDefinitionRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -17106,7 +17162,7 @@ impl ProductDefinitionRef {
 pub enum ProductDefinitionContextRefView<'m> {
     DesignContext(&'m DesignContext),
     ProductDefinitionContext(&'m ProductDefinitionContext),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ProductDefinitionContextRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionContextRefView<'m> {
@@ -17120,7 +17176,7 @@ impl ProductDefinitionContextRef {
                 )
             }
             ProductDefinitionContextRef::Complex(i) => {
-                ProductDefinitionContextRefView::Complex(model.complex_unit_arena.get(i.0))
+                ProductDefinitionContextRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -17130,7 +17186,7 @@ impl ProductDefinitionContextRef {
             ProductDefinitionContextRef::ProductDefinitionContext(i) => {
                 EntityKey::ProductDefinitionContext(*i)
             }
-            ProductDefinitionContextRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ProductDefinitionContextRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -17164,7 +17220,7 @@ pub enum ProductDefinitionFormationRefView<'m> {
     ProductDefinitionFormationWithSpecifiedSource(
         &'m ProductDefinitionFormationWithSpecifiedSource,
     ),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ProductDefinitionFormationRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionFormationRefView<'m> {
@@ -17182,7 +17238,7 @@ impl ProductDefinitionFormationRef {
                 )
             }
             ProductDefinitionFormationRef::Complex(i) => {
-                ProductDefinitionFormationRefView::Complex(model.complex_unit_arena.get(i.0))
+                ProductDefinitionFormationRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -17194,7 +17250,7 @@ impl ProductDefinitionFormationRef {
             ProductDefinitionFormationRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 EntityKey::ProductDefinitionFormationWithSpecifiedSource(*i)
             }
-            ProductDefinitionFormationRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ProductDefinitionFormationRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -17205,7 +17261,7 @@ pub enum ProductDefinitionOrReferenceRefView<'m> {
     ProductDefinition(&'m ProductDefinition),
     ProductDefinitionOccurrence(&'m ProductDefinitionOccurrence),
     ProductDefinitionWithAssociatedDocuments(&'m ProductDefinitionWithAssociatedDocuments),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ProductDefinitionOrReferenceRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionOrReferenceRefView<'m> {
@@ -17233,7 +17289,7 @@ impl ProductDefinitionOrReferenceRef {
                 )
             }
             ProductDefinitionOrReferenceRef::Complex(i) => {
-                ProductDefinitionOrReferenceRefView::Complex(model.complex_unit_arena.get(i.0))
+                ProductDefinitionOrReferenceRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -17251,7 +17307,7 @@ impl ProductDefinitionOrReferenceRef {
             ProductDefinitionOrReferenceRef::ProductDefinitionWithAssociatedDocuments(i) => {
                 EntityKey::ProductDefinitionWithAssociatedDocuments(*i)
             }
-            ProductDefinitionOrReferenceRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ProductDefinitionOrReferenceRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -17263,7 +17319,7 @@ pub enum ProductDefinitionRelationshipRefView<'m> {
     NextAssemblyUsageOccurrence(&'m NextAssemblyUsageOccurrence),
     ProductDefinitionRelationship(&'m ProductDefinitionRelationship),
     ProductDefinitionUsage(&'m ProductDefinitionUsage),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ProductDefinitionRelationshipRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionRelationshipRefView<'m> {
@@ -17294,7 +17350,7 @@ impl ProductDefinitionRelationshipRef {
                 )
             }
             ProductDefinitionRelationshipRef::Complex(i) => {
-                ProductDefinitionRelationshipRefView::Complex(model.complex_unit_arena.get(i.0))
+                ProductDefinitionRelationshipRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -17315,7 +17371,7 @@ impl ProductDefinitionRelationshipRef {
             ProductDefinitionRelationshipRef::ProductDefinitionUsage(i) => {
                 EntityKey::ProductDefinitionUsage(*i)
             }
-            ProductDefinitionRelationshipRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ProductDefinitionRelationshipRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -17323,7 +17379,7 @@ impl ProductDefinitionRelationshipRef {
 #[derive(Clone, Copy, Debug)]
 pub enum ProductDefinitionShapeRefView<'m> {
     ProductDefinitionShape(&'m ProductDefinitionShape),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ProductDefinitionShapeRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionShapeRefView<'m> {
@@ -17334,7 +17390,7 @@ impl ProductDefinitionShapeRef {
                 )
             }
             ProductDefinitionShapeRef::Complex(i) => {
-                ProductDefinitionShapeRefView::Complex(model.complex_unit_arena.get(i.0))
+                ProductDefinitionShapeRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -17343,7 +17399,7 @@ impl ProductDefinitionShapeRef {
             ProductDefinitionShapeRef::ProductDefinitionShape(i) => {
                 EntityKey::ProductDefinitionShape(*i)
             }
-            ProductDefinitionShapeRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ProductDefinitionShapeRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -17357,7 +17413,7 @@ pub enum ProductOrFormationOrDefinitionRefView<'m> {
         &'m ProductDefinitionFormationWithSpecifiedSource,
     ),
     ProductDefinitionWithAssociatedDocuments(&'m ProductDefinitionWithAssociatedDocuments),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ProductOrFormationOrDefinitionRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductOrFormationOrDefinitionRefView<'m> {
@@ -17390,7 +17446,7 @@ impl ProductOrFormationOrDefinitionRef {
                 )
             }
             ProductOrFormationOrDefinitionRef::Complex(i) => {
-                ProductOrFormationOrDefinitionRefView::Complex(model.complex_unit_arena.get(i.0))
+                ProductOrFormationOrDefinitionRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -17409,7 +17465,7 @@ impl ProductOrFormationOrDefinitionRef {
             ProductOrFormationOrDefinitionRef::ProductDefinitionWithAssociatedDocuments(i) => {
                 EntityKey::ProductDefinitionWithAssociatedDocuments(*i)
             }
-            ProductOrFormationOrDefinitionRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ProductOrFormationOrDefinitionRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -17418,7 +17474,7 @@ impl ProductOrFormationOrDefinitionRef {
 pub enum PropertyDefinitionRefView<'m> {
     ProductDefinitionShape(&'m ProductDefinitionShape),
     PropertyDefinition(&'m PropertyDefinition),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl PropertyDefinitionRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PropertyDefinitionRefView<'m> {
@@ -17434,7 +17490,7 @@ impl PropertyDefinitionRef {
                 )
             }
             PropertyDefinitionRef::Complex(i) => {
-                PropertyDefinitionRefView::Complex(model.complex_unit_arena.get(i.0))
+                PropertyDefinitionRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -17444,7 +17500,7 @@ impl PropertyDefinitionRef {
                 EntityKey::ProductDefinitionShape(*i)
             }
             PropertyDefinitionRef::PropertyDefinition(i) => EntityKey::PropertyDefinition(*i),
-            PropertyDefinitionRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            PropertyDefinitionRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -17453,7 +17509,7 @@ impl PropertyDefinitionRef {
 pub enum RenderingPropertiesSelectRefView<'m> {
     SurfaceStyleReflectanceAmbient(&'m SurfaceStyleReflectanceAmbient),
     SurfaceStyleTransparent(&'m SurfaceStyleTransparent),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl RenderingPropertiesSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RenderingPropertiesSelectRefView<'m> {
@@ -17469,7 +17525,7 @@ impl RenderingPropertiesSelectRef {
                 )
             }
             RenderingPropertiesSelectRef::Complex(i) => {
-                RenderingPropertiesSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                RenderingPropertiesSelectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -17481,7 +17537,7 @@ impl RenderingPropertiesSelectRef {
             RenderingPropertiesSelectRef::SurfaceStyleTransparent(i) => {
                 EntityKey::SurfaceStyleTransparent(*i)
             }
-            RenderingPropertiesSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            RenderingPropertiesSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -17518,7 +17574,7 @@ pub enum RepresentationRefView<'m> {
     ShapeRepresentationWithParameters(&'m ShapeRepresentationWithParameters),
     SymbolRepresentation(&'m SymbolRepresentation),
     TessellatedShapeRepresentation(&'m TessellatedShapeRepresentation),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl RepresentationRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RepresentationRefView<'m> {
@@ -17626,7 +17682,7 @@ impl RepresentationRef {
                 )
             }
             RepresentationRef::Complex(i) => {
-                RepresentationRefView::Complex(model.complex_unit_arena.get(i.0))
+                RepresentationRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -17680,7 +17736,7 @@ impl RepresentationRef {
             RepresentationRef::TessellatedShapeRepresentation(i) => {
                 EntityKey::TessellatedShapeRepresentation(*i)
             }
-            RepresentationRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            RepresentationRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -17692,7 +17748,7 @@ pub enum RepresentationContextRefView<'m> {
     GlobalUnitAssignedContext(&'m GlobalUnitAssignedContext),
     ParametricRepresentationContext(&'m ParametricRepresentationContext),
     RepresentationContext(&'m RepresentationContext),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl RepresentationContextRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RepresentationContextRefView<'m> {
@@ -17723,7 +17779,7 @@ impl RepresentationContextRef {
                 )
             }
             RepresentationContextRef::Complex(i) => {
-                RepresentationContextRefView::Complex(model.complex_unit_arena.get(i.0))
+                RepresentationContextRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -17744,7 +17800,7 @@ impl RepresentationContextRef {
             RepresentationContextRef::RepresentationContext(i) => {
                 EntityKey::RepresentationContext(*i)
             }
-            RepresentationContextRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            RepresentationContextRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -17872,6 +17928,7 @@ pub enum RepresentationItemRefView<'m> {
     OrientedClosedShell(&'m OrientedClosedShell),
     OrientedEdge(&'m OrientedEdge),
     OverRidingStyledItem(&'m OverRidingStyledItem),
+    Parabola(&'m Parabola),
     Path(&'m Path),
     Pcurve(&'m Pcurve),
     Placement(&'m Placement),
@@ -17924,7 +17981,7 @@ pub enum RepresentationItemRefView<'m> {
     VertexPoint(&'m VertexPoint),
     VertexShell(&'m VertexShell),
     WireShell(&'m WireShell),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl RepresentationItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RepresentationItemRefView<'m> {
@@ -18315,6 +18372,9 @@ impl RepresentationItemRef {
                     model.over_riding_styled_item_arena.get(i.0),
                 )
             }
+            RepresentationItemRef::Parabola(i) => {
+                RepresentationItemRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             RepresentationItemRef::Path(i) => {
                 RepresentationItemRefView::Path(model.path_arena.get(i.0))
             }
@@ -18510,7 +18570,7 @@ impl RepresentationItemRef {
                 RepresentationItemRefView::WireShell(model.wire_shell_arena.get(i.0))
             }
             RepresentationItemRef::Complex(i) => {
-                RepresentationItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                RepresentationItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -18672,6 +18732,7 @@ impl RepresentationItemRef {
             RepresentationItemRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
             RepresentationItemRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
             RepresentationItemRef::OverRidingStyledItem(i) => EntityKey::OverRidingStyledItem(*i),
+            RepresentationItemRef::Parabola(i) => EntityKey::Parabola(*i),
             RepresentationItemRef::Path(i) => EntityKey::Path(*i),
             RepresentationItemRef::Pcurve(i) => EntityKey::Pcurve(*i),
             RepresentationItemRef::Placement(i) => EntityKey::Placement(*i),
@@ -18748,7 +18809,7 @@ impl RepresentationItemRef {
             RepresentationItemRef::VertexPoint(i) => EntityKey::VertexPoint(*i),
             RepresentationItemRef::VertexShell(i) => EntityKey::VertexShell(*i),
             RepresentationItemRef::WireShell(i) => EntityKey::WireShell(*i),
-            RepresentationItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            RepresentationItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -18757,7 +18818,7 @@ impl RepresentationItemRef {
 pub enum RepresentationMapRefView<'m> {
     CameraUsage(&'m CameraUsage),
     RepresentationMap(&'m RepresentationMap),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl RepresentationMapRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RepresentationMapRefView<'m> {
@@ -18769,7 +18830,7 @@ impl RepresentationMapRef {
                 RepresentationMapRefView::RepresentationMap(model.representation_map_arena.get(i.0))
             }
             RepresentationMapRef::Complex(i) => {
-                RepresentationMapRefView::Complex(model.complex_unit_arena.get(i.0))
+                RepresentationMapRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -18777,7 +18838,7 @@ impl RepresentationMapRef {
         match self {
             RepresentationMapRef::CameraUsage(i) => EntityKey::CameraUsage(*i),
             RepresentationMapRef::RepresentationMap(i) => EntityKey::RepresentationMap(*i),
-            RepresentationMapRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            RepresentationMapRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -18815,7 +18876,7 @@ pub enum RepresentationOrRepresentationReferenceRefView<'m> {
     ShapeRepresentationWithParameters(&'m ShapeRepresentationWithParameters),
     SymbolRepresentation(&'m SymbolRepresentation),
     TessellatedShapeRepresentation(&'m TessellatedShapeRepresentation),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl RepresentationOrRepresentationReferenceRef {
     pub fn resolve<'m>(
@@ -18844,7 +18905,7 @@ impl RepresentationOrRepresentationReferenceRef {
             RepresentationOrRepresentationReferenceRef::ShapeRepresentationWithParameters(i) => RepresentationOrRepresentationReferenceRefView::ShapeRepresentationWithParameters(model.shape_representation_with_parameters_arena.get(i.0)),
             RepresentationOrRepresentationReferenceRef::SymbolRepresentation(i) => RepresentationOrRepresentationReferenceRefView::SymbolRepresentation(model.symbol_representation_arena.get(i.0)),
             RepresentationOrRepresentationReferenceRef::TessellatedShapeRepresentation(i) => RepresentationOrRepresentationReferenceRefView::TessellatedShapeRepresentation(model.tessellated_shape_representation_arena.get(i.0)),
-            RepresentationOrRepresentationReferenceRef::Complex(i) => RepresentationOrRepresentationReferenceRefView::Complex(model.complex_unit_arena.get(i.0)),
+            RepresentationOrRepresentationReferenceRef::Complex(i) => RepresentationOrRepresentationReferenceRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -18870,7 +18931,7 @@ impl RepresentationOrRepresentationReferenceRef {
             RepresentationOrRepresentationReferenceRef::ShapeRepresentationWithParameters(i) => EntityKey::ShapeRepresentationWithParameters(*i),
             RepresentationOrRepresentationReferenceRef::SymbolRepresentation(i) => EntityKey::SymbolRepresentation(*i),
             RepresentationOrRepresentationReferenceRef::TessellatedShapeRepresentation(i) => EntityKey::TessellatedShapeRepresentation(*i),
-            RepresentationOrRepresentationReferenceRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            RepresentationOrRepresentationReferenceRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -18909,7 +18970,7 @@ pub enum RepresentedDefinitionRefView<'m> {
     ShapeAspectRelationship(&'m ShapeAspectRelationship),
     ToleranceZone(&'m ToleranceZone),
     ToleranceZoneWithDatum(&'m ToleranceZoneWithDatum),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl RepresentedDefinitionRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RepresentedDefinitionRefView<'m> {
@@ -19057,7 +19118,7 @@ impl RepresentedDefinitionRef {
                 )
             }
             RepresentedDefinitionRef::Complex(i) => {
-                RepresentedDefinitionRefView::Complex(model.complex_unit_arena.get(i.0))
+                RepresentedDefinitionRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -19133,7 +19194,7 @@ impl RepresentedDefinitionRef {
             RepresentedDefinitionRef::ToleranceZoneWithDatum(i) => {
                 EntityKey::ToleranceZoneWithDatum(*i)
             }
-            RepresentedDefinitionRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            RepresentedDefinitionRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -19180,7 +19241,7 @@ pub enum RoleSelectRefView<'m> {
     SecurityClassificationAssignment(&'m SecurityClassificationAssignment),
     StartRequest(&'m StartRequest),
     StartWork(&'m StartWork),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl RoleSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RoleSelectRefView<'m> {
@@ -19249,7 +19310,7 @@ impl RoleSelectRef {
                 RoleSelectRefView::StartWork(model.start_work_arena.get(i.0))
             }
             RoleSelectRef::Complex(i) => {
-                RoleSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                RoleSelectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -19278,7 +19339,7 @@ impl RoleSelectRef {
             }
             RoleSelectRef::StartRequest(i) => EntityKey::StartRequest(*i),
             RoleSelectRef::StartWork(i) => EntityKey::StartWork(*i),
-            RoleSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            RoleSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -19373,7 +19434,7 @@ pub enum SecurityClassificationItemRefView<'m> {
     SymbolRepresentation(&'m SymbolRepresentation),
     TessellatedShapeRepresentation(&'m TessellatedShapeRepresentation),
     VersionedActionRequest(&'m VersionedActionRequest),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl SecurityClassificationItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SecurityClassificationItemRefView<'m> {
@@ -19431,7 +19492,7 @@ impl SecurityClassificationItemRef {
             SecurityClassificationItemRef::SymbolRepresentation(i) => SecurityClassificationItemRefView::SymbolRepresentation(model.symbol_representation_arena.get(i.0)),
             SecurityClassificationItemRef::TessellatedShapeRepresentation(i) => SecurityClassificationItemRefView::TessellatedShapeRepresentation(model.tessellated_shape_representation_arena.get(i.0)),
             SecurityClassificationItemRef::VersionedActionRequest(i) => SecurityClassificationItemRefView::VersionedActionRequest(model.versioned_action_request_arena.get(i.0)),
-            SecurityClassificationItemRef::Complex(i) => SecurityClassificationItemRefView::Complex(model.complex_unit_arena.get(i.0)),
+            SecurityClassificationItemRef::Complex(i) => SecurityClassificationItemRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -19489,7 +19550,7 @@ impl SecurityClassificationItemRef {
             SecurityClassificationItemRef::SymbolRepresentation(i) => EntityKey::SymbolRepresentation(*i),
             SecurityClassificationItemRef::TessellatedShapeRepresentation(i) => EntityKey::TessellatedShapeRepresentation(*i),
             SecurityClassificationItemRef::VersionedActionRequest(i) => EntityKey::VersionedActionRequest(*i),
-            SecurityClassificationItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            SecurityClassificationItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -19539,7 +19600,7 @@ pub enum ShapeAspectRefView<'m> {
     ShapeAspect(&'m ShapeAspect),
     ToleranceZone(&'m ToleranceZone),
     ToleranceZoneWithDatum(&'m ToleranceZoneWithDatum),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ShapeAspectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ShapeAspectRefView<'m> {
@@ -19615,7 +19676,7 @@ impl ShapeAspectRef {
                 )
             }
             ShapeAspectRef::Complex(i) => {
-                ShapeAspectRefView::Complex(model.complex_unit_arena.get(i.0))
+                ShapeAspectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -19649,7 +19710,7 @@ impl ShapeAspectRef {
             ShapeAspectRef::ShapeAspect(i) => EntityKey::ShapeAspect(*i),
             ShapeAspectRef::ToleranceZone(i) => EntityKey::ToleranceZone(*i),
             ShapeAspectRef::ToleranceZoneWithDatum(i) => EntityKey::ToleranceZoneWithDatum(*i),
-            ShapeAspectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ShapeAspectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -19657,7 +19718,7 @@ impl ShapeAspectRef {
 #[derive(Clone, Copy, Debug)]
 pub enum ShapeDimensionRepresentationRefView<'m> {
     ShapeDimensionRepresentation(&'m ShapeDimensionRepresentation),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ShapeDimensionRepresentationRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ShapeDimensionRepresentationRefView<'m> {
@@ -19668,7 +19729,7 @@ impl ShapeDimensionRepresentationRef {
                 )
             }
             ShapeDimensionRepresentationRef::Complex(i) => {
-                ShapeDimensionRepresentationRefView::Complex(model.complex_unit_arena.get(i.0))
+                ShapeDimensionRepresentationRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -19677,7 +19738,7 @@ impl ShapeDimensionRepresentationRef {
             ShapeDimensionRepresentationRef::ShapeDimensionRepresentation(i) => {
                 EntityKey::ShapeDimensionRepresentation(*i)
             }
-            ShapeDimensionRepresentationRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ShapeDimensionRepresentationRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -19697,7 +19758,7 @@ pub enum ShapeModelRefView<'m> {
     ShapeRepresentation(&'m ShapeRepresentation),
     ShapeRepresentationWithParameters(&'m ShapeRepresentationWithParameters),
     TessellatedShapeRepresentation(&'m TessellatedShapeRepresentation),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ShapeModelRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ShapeModelRefView<'m> {
@@ -19750,7 +19811,7 @@ impl ShapeModelRef {
                 )
             }
             ShapeModelRef::Complex(i) => {
-                ShapeModelRefView::Complex(model.complex_unit_arena.get(i.0))
+                ShapeModelRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -19781,7 +19842,7 @@ impl ShapeModelRef {
             ShapeModelRef::TessellatedShapeRepresentation(i) => {
                 EntityKey::TessellatedShapeRepresentation(*i)
             }
-            ShapeModelRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ShapeModelRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -19789,7 +19850,7 @@ impl ShapeModelRef {
 #[derive(Clone, Copy, Debug)]
 pub enum ShapeRepresentationRelationshipRefView<'m> {
     ShapeRepresentationRelationship(&'m ShapeRepresentationRelationship),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ShapeRepresentationRelationshipRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ShapeRepresentationRelationshipRefView<'m> {
@@ -19800,7 +19861,7 @@ impl ShapeRepresentationRelationshipRef {
                 )
             }
             ShapeRepresentationRelationshipRef::Complex(i) => {
-                ShapeRepresentationRelationshipRefView::Complex(model.complex_unit_arena.get(i.0))
+                ShapeRepresentationRelationshipRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -19809,7 +19870,7 @@ impl ShapeRepresentationRelationshipRef {
             ShapeRepresentationRelationshipRef::ShapeRepresentationRelationship(i) => {
                 EntityKey::ShapeRepresentationRelationship(*i)
             }
-            ShapeRepresentationRelationshipRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ShapeRepresentationRelationshipRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -19821,7 +19882,7 @@ pub enum ShellRefView<'m> {
     OrientedClosedShell(&'m OrientedClosedShell),
     VertexShell(&'m VertexShell),
     WireShell(&'m WireShell),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ShellRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ShellRefView<'m> {
@@ -19837,7 +19898,7 @@ impl ShellRef {
                 ShellRefView::VertexShell(model.vertex_shell_arena.get(i.0))
             }
             ShellRef::WireShell(i) => ShellRefView::WireShell(model.wire_shell_arena.get(i.0)),
-            ShellRef::Complex(i) => ShellRefView::Complex(model.complex_unit_arena.get(i.0)),
+            ShellRef::Complex(i) => ShellRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -19847,7 +19908,7 @@ impl ShellRef {
             ShellRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
             ShellRef::VertexShell(i) => EntityKey::VertexShell(*i),
             ShellRef::WireShell(i) => EntityKey::WireShell(*i),
-            ShellRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ShellRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -19858,7 +19919,7 @@ pub enum StartRequestItemRefView<'m> {
     ProductDefinitionFormationWithSpecifiedSource(
         &'m ProductDefinitionFormationWithSpecifiedSource,
     ),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl StartRequestItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> StartRequestItemRefView<'m> {
@@ -19876,7 +19937,7 @@ impl StartRequestItemRef {
                 )
             }
             StartRequestItemRef::Complex(i) => {
-                StartRequestItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                StartRequestItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -19888,7 +19949,7 @@ impl StartRequestItemRef {
             StartRequestItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 EntityKey::ProductDefinitionFormationWithSpecifiedSource(*i)
             }
-            StartRequestItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            StartRequestItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -19896,7 +19957,7 @@ impl StartRequestItemRef {
 #[derive(Clone, Copy, Debug)]
 pub enum StateObservedRefView<'m> {
     StateObserved(&'m StateObserved),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl StateObservedRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> StateObservedRefView<'m> {
@@ -19905,14 +19966,14 @@ impl StateObservedRef {
                 StateObservedRefView::StateObserved(model.state_observed_arena.get(i.0))
             }
             StateObservedRef::Complex(i) => {
-                StateObservedRefView::Complex(model.complex_unit_arena.get(i.0))
+                StateObservedRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             StateObservedRef::StateObserved(i) => EntityKey::StateObserved(*i),
-            StateObservedRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            StateObservedRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -19920,7 +19981,7 @@ impl StateObservedRef {
 #[derive(Clone, Copy, Debug)]
 pub enum StateTypeRefView<'m> {
     StateType(&'m StateType),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl StateTypeRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> StateTypeRefView<'m> {
@@ -19929,14 +19990,14 @@ impl StateTypeRef {
                 StateTypeRefView::StateType(model.state_type_arena.get(i.0))
             }
             StateTypeRef::Complex(i) => {
-                StateTypeRefView::Complex(model.complex_unit_arena.get(i.0))
+                StateTypeRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             StateTypeRef::StateType(i) => EntityKey::StateType(*i),
-            StateTypeRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            StateTypeRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -20072,6 +20133,7 @@ pub enum StyleContextSelectRefView<'m> {
     OrientedClosedShell(&'m OrientedClosedShell),
     OrientedEdge(&'m OrientedEdge),
     OverRidingStyledItem(&'m OverRidingStyledItem),
+    Parabola(&'m Parabola),
     Path(&'m Path),
     Pcurve(&'m Pcurve),
     Placement(&'m Placement),
@@ -20139,7 +20201,7 @@ pub enum StyleContextSelectRefView<'m> {
     VertexPoint(&'m VertexPoint),
     VertexShell(&'m VertexShell),
     WireShell(&'m WireShell),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl StyleContextSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> StyleContextSelectRefView<'m> {
@@ -20629,6 +20691,9 @@ impl StyleContextSelectRef {
                     model.over_riding_styled_item_arena.get(i.0),
                 )
             }
+            StyleContextSelectRef::Parabola(i) => {
+                StyleContextSelectRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             StyleContextSelectRef::Path(i) => {
                 StyleContextSelectRefView::Path(model.path_arena.get(i.0))
             }
@@ -20893,7 +20958,7 @@ impl StyleContextSelectRef {
                 StyleContextSelectRefView::WireShell(model.wire_shell_arena.get(i.0))
             }
             StyleContextSelectRef::Complex(i) => {
-                StyleContextSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                StyleContextSelectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -21102,6 +21167,7 @@ impl StyleContextSelectRef {
             StyleContextSelectRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
             StyleContextSelectRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
             StyleContextSelectRef::OverRidingStyledItem(i) => EntityKey::OverRidingStyledItem(*i),
+            StyleContextSelectRef::Parabola(i) => EntityKey::Parabola(*i),
             StyleContextSelectRef::Path(i) => EntityKey::Path(*i),
             StyleContextSelectRef::Pcurve(i) => EntityKey::Pcurve(*i),
             StyleContextSelectRef::Placement(i) => EntityKey::Placement(*i),
@@ -21211,7 +21277,7 @@ impl StyleContextSelectRef {
             StyleContextSelectRef::VertexPoint(i) => EntityKey::VertexPoint(*i),
             StyleContextSelectRef::VertexShell(i) => EntityKey::VertexShell(*i),
             StyleContextSelectRef::WireShell(i) => EntityKey::WireShell(*i),
-            StyleContextSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            StyleContextSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -21236,7 +21302,7 @@ pub enum StyledItemRefView<'m> {
     StyledItem(&'m StyledItem),
     TerminatorSymbol(&'m TerminatorSymbol),
     TessellatedAnnotationOccurrence(&'m TessellatedAnnotationOccurrence),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl StyledItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> StyledItemRefView<'m> {
@@ -21312,7 +21378,7 @@ impl StyledItemRef {
                 )
             }
             StyledItemRef::Complex(i) => {
-                StyledItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                StyledItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -21348,7 +21414,7 @@ impl StyledItemRef {
             StyledItemRef::TessellatedAnnotationOccurrence(i) => {
                 EntityKey::TessellatedAnnotationOccurrence(*i)
             }
-            StyledItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            StyledItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -21460,6 +21526,7 @@ pub enum StyledItemTargetRefView<'m> {
     OpenShell(&'m OpenShell),
     OrientedClosedShell(&'m OrientedClosedShell),
     OrientedEdge(&'m OrientedEdge),
+    Parabola(&'m Parabola),
     Path(&'m Path),
     Pcurve(&'m Pcurve),
     Placement(&'m Placement),
@@ -21515,7 +21582,7 @@ pub enum StyledItemTargetRefView<'m> {
     VertexPoint(&'m VertexPoint),
     VertexShell(&'m VertexShell),
     WireShell(&'m WireShell),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl StyledItemTargetRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> StyledItemTargetRefView<'m> {
@@ -21891,6 +21958,9 @@ impl StyledItemTargetRef {
             StyledItemTargetRef::OrientedEdge(i) => {
                 StyledItemTargetRefView::OrientedEdge(model.oriented_edge_arena.get(i.0))
             }
+            StyledItemTargetRef::Parabola(i) => {
+                StyledItemTargetRefView::Parabola(model.parabola_arena.get(i.0))
+            }
             StyledItemTargetRef::Path(i) => {
                 StyledItemTargetRefView::Path(model.path_arena.get(i.0))
             }
@@ -22097,7 +22167,7 @@ impl StyledItemTargetRef {
                 StyledItemTargetRefView::WireShell(model.wire_shell_arena.get(i.0))
             }
             StyledItemTargetRef::Complex(i) => {
-                StyledItemTargetRefView::Complex(model.complex_unit_arena.get(i.0))
+                StyledItemTargetRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -22252,6 +22322,7 @@ impl StyledItemTargetRef {
             StyledItemTargetRef::OpenShell(i) => EntityKey::OpenShell(*i),
             StyledItemTargetRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
             StyledItemTargetRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
+            StyledItemTargetRef::Parabola(i) => EntityKey::Parabola(*i),
             StyledItemTargetRef::Path(i) => EntityKey::Path(*i),
             StyledItemTargetRef::Pcurve(i) => EntityKey::Pcurve(*i),
             StyledItemTargetRef::Placement(i) => EntityKey::Placement(*i),
@@ -22329,7 +22400,7 @@ impl StyledItemTargetRef {
             StyledItemTargetRef::VertexPoint(i) => EntityKey::VertexPoint(*i),
             StyledItemTargetRef::VertexShell(i) => EntityKey::VertexShell(*i),
             StyledItemTargetRef::WireShell(i) => EntityKey::WireShell(*i),
-            StyledItemTargetRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            StyledItemTargetRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -22339,7 +22410,7 @@ pub enum SupportedItemRefView<'m> {
     Action(&'m Action),
     ActionDirective(&'m ActionDirective),
     ActionMethod(&'m ActionMethod),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl SupportedItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SupportedItemRefView<'m> {
@@ -22354,7 +22425,7 @@ impl SupportedItemRef {
                 SupportedItemRefView::ActionMethod(model.action_method_arena.get(i.0))
             }
             SupportedItemRef::Complex(i) => {
-                SupportedItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                SupportedItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -22363,7 +22434,7 @@ impl SupportedItemRef {
             SupportedItemRef::Action(i) => EntityKey::Action(*i),
             SupportedItemRef::ActionDirective(i) => EntityKey::ActionDirective(*i),
             SupportedItemRef::ActionMethod(i) => EntityKey::ActionMethod(*i),
-            SupportedItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            SupportedItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -22389,7 +22460,7 @@ pub enum SurfaceRefView<'m> {
     SweptSurface(&'m SweptSurface),
     ToroidalSurface(&'m ToroidalSurface),
     UniformSurface(&'m UniformSurface),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl SurfaceRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SurfaceRefView<'m> {
@@ -22447,7 +22518,7 @@ impl SurfaceRef {
             SurfaceRef::UniformSurface(i) => {
                 SurfaceRefView::UniformSurface(model.uniform_surface_arena.get(i.0))
             }
-            SurfaceRef::Complex(i) => SurfaceRefView::Complex(model.complex_unit_arena.get(i.0)),
+            SurfaceRef::Complex(i) => SurfaceRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -22471,7 +22542,7 @@ impl SurfaceRef {
             SurfaceRef::SweptSurface(i) => EntityKey::SweptSurface(*i),
             SurfaceRef::ToroidalSurface(i) => EntityKey::ToroidalSurface(*i),
             SurfaceRef::UniformSurface(i) => EntityKey::UniformSurface(*i),
-            SurfaceRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            SurfaceRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -22503,7 +22574,7 @@ impl SurfaceRenderingPropertiesRef {
 pub enum SurfaceSideStyleSelectRefView<'m> {
     PreDefinedSurfaceSideStyle(&'m PreDefinedSurfaceSideStyle),
     SurfaceSideStyle(&'m SurfaceSideStyle),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl SurfaceSideStyleSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SurfaceSideStyleSelectRefView<'m> {
@@ -22519,7 +22590,7 @@ impl SurfaceSideStyleSelectRef {
                 )
             }
             SurfaceSideStyleSelectRef::Complex(i) => {
-                SurfaceSideStyleSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                SurfaceSideStyleSelectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -22529,7 +22600,7 @@ impl SurfaceSideStyleSelectRef {
                 EntityKey::PreDefinedSurfaceSideStyle(*i)
             }
             SurfaceSideStyleSelectRef::SurfaceSideStyle(i) => EntityKey::SurfaceSideStyle(*i),
-            SurfaceSideStyleSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            SurfaceSideStyleSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -22544,7 +22615,7 @@ pub enum SurfaceStyleElementSelectRefView<'m> {
     SurfaceStyleRenderingWithProperties(&'m SurfaceStyleRenderingWithProperties),
     SurfaceStyleSegmentationCurve(&'m SurfaceStyleSegmentationCurve),
     SurfaceStyleSilhouette(&'m SurfaceStyleSilhouette),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl SurfaceStyleElementSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SurfaceStyleElementSelectRefView<'m> {
@@ -22590,7 +22661,7 @@ impl SurfaceStyleElementSelectRef {
                 )
             }
             SurfaceStyleElementSelectRef::Complex(i) => {
-                SurfaceStyleElementSelectRefView::Complex(model.complex_unit_arena.get(i.0))
+                SurfaceStyleElementSelectRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -22620,7 +22691,7 @@ impl SurfaceStyleElementSelectRef {
             SurfaceStyleElementSelectRef::SurfaceStyleSilhouette(i) => {
                 EntityKey::SurfaceStyleSilhouette(*i)
             }
-            SurfaceStyleElementSelectRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            SurfaceStyleElementSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -22677,7 +22748,7 @@ pub enum TessellatedItemRefView<'m> {
     TessellatedSolid(&'m TessellatedSolid),
     TessellatedStructuredItem(&'m TessellatedStructuredItem),
     TessellatedSurfaceSet(&'m TessellatedSurfaceSet),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl TessellatedItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> TessellatedItemRefView<'m> {
@@ -22733,7 +22804,7 @@ impl TessellatedItemRef {
                 )
             }
             TessellatedItemRef::Complex(i) => {
-                TessellatedItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                TessellatedItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -22761,7 +22832,7 @@ impl TessellatedItemRef {
                 EntityKey::TessellatedStructuredItem(*i)
             }
             TessellatedItemRef::TessellatedSurfaceSet(i) => EntityKey::TessellatedSurfaceSet(*i),
-            TessellatedItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            TessellatedItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -22771,7 +22842,7 @@ pub enum TessellatedStructuredItemRefView<'m> {
     ComplexTriangulatedFace(&'m ComplexTriangulatedFace),
     TessellatedFace(&'m TessellatedFace),
     TessellatedStructuredItem(&'m TessellatedStructuredItem),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl TessellatedStructuredItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> TessellatedStructuredItemRefView<'m> {
@@ -22792,7 +22863,7 @@ impl TessellatedStructuredItemRef {
                 )
             }
             TessellatedStructuredItemRef::Complex(i) => {
-                TessellatedStructuredItemRefView::Complex(model.complex_unit_arena.get(i.0))
+                TessellatedStructuredItemRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -22805,7 +22876,7 @@ impl TessellatedStructuredItemRef {
             TessellatedStructuredItemRef::TessellatedStructuredItem(i) => {
                 EntityKey::TessellatedStructuredItem(*i)
             }
-            TessellatedStructuredItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            TessellatedStructuredItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -22817,7 +22888,7 @@ pub enum TextOrCharacterRefView<'m> {
     CompositeText(&'m CompositeText),
     DefinedCharacterGlyph(&'m DefinedCharacterGlyph),
     TextLiteral(&'m TextLiteral),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl TextOrCharacterRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> TextOrCharacterRefView<'m> {
@@ -22842,7 +22913,7 @@ impl TextOrCharacterRef {
                 TextOrCharacterRefView::TextLiteral(model.text_literal_arena.get(i.0))
             }
             TextOrCharacterRef::Complex(i) => {
-                TextOrCharacterRefView::Complex(model.complex_unit_arena.get(i.0))
+                TextOrCharacterRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -22855,7 +22926,7 @@ impl TextOrCharacterRef {
             TextOrCharacterRef::CompositeText(i) => EntityKey::CompositeText(*i),
             TextOrCharacterRef::DefinedCharacterGlyph(i) => EntityKey::DefinedCharacterGlyph(*i),
             TextOrCharacterRef::TextLiteral(i) => EntityKey::TextLiteral(*i),
-            TextOrCharacterRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            TextOrCharacterRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -22924,7 +22995,7 @@ impl ToleranceSelectRef {
 pub enum ToleranceZoneRefView<'m> {
     ToleranceZone(&'m ToleranceZone),
     ToleranceZoneWithDatum(&'m ToleranceZoneWithDatum),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ToleranceZoneRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ToleranceZoneRefView<'m> {
@@ -22938,7 +23009,7 @@ impl ToleranceZoneRef {
                 )
             }
             ToleranceZoneRef::Complex(i) => {
-                ToleranceZoneRefView::Complex(model.complex_unit_arena.get(i.0))
+                ToleranceZoneRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -22946,7 +23017,7 @@ impl ToleranceZoneRef {
         match self {
             ToleranceZoneRef::ToleranceZone(i) => EntityKey::ToleranceZone(*i),
             ToleranceZoneRef::ToleranceZoneWithDatum(i) => EntityKey::ToleranceZoneWithDatum(*i),
-            ToleranceZoneRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ToleranceZoneRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -23008,7 +23079,7 @@ pub enum ToleranceZoneTargetRefView<'m> {
     SymmetryTolerance(&'m SymmetryTolerance),
     TotalRunoutTolerance(&'m TotalRunoutTolerance),
     UnequallyDisposedGeometricTolerance(&'m UnequallyDisposedGeometricTolerance),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ToleranceZoneTargetRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ToleranceZoneTargetRefView<'m> {
@@ -23184,7 +23255,7 @@ impl ToleranceZoneTargetRef {
                 )
             }
             ToleranceZoneTargetRef::Complex(i) => {
-                ToleranceZoneTargetRefView::Complex(model.complex_unit_arena.get(i.0))
+                ToleranceZoneTargetRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -23264,7 +23335,7 @@ impl ToleranceZoneTargetRef {
             ToleranceZoneTargetRef::UnequallyDisposedGeometricTolerance(i) => {
                 EntityKey::UnequallyDisposedGeometricTolerance(*i)
             }
-            ToleranceZoneTargetRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ToleranceZoneTargetRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -23272,7 +23343,7 @@ impl ToleranceZoneTargetRef {
 #[derive(Clone, Copy, Debug)]
 pub enum TwoDirectionRepeatFactorRefView<'m> {
     TwoDirectionRepeatFactor(&'m TwoDirectionRepeatFactor),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl TwoDirectionRepeatFactorRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> TwoDirectionRepeatFactorRefView<'m> {
@@ -23283,7 +23354,7 @@ impl TwoDirectionRepeatFactorRef {
                 )
             }
             TwoDirectionRepeatFactorRef::Complex(i) => {
-                TwoDirectionRepeatFactorRefView::Complex(model.complex_unit_arena.get(i.0))
+                TwoDirectionRepeatFactorRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
@@ -23292,7 +23363,7 @@ impl TwoDirectionRepeatFactorRef {
             TwoDirectionRepeatFactorRef::TwoDirectionRepeatFactor(i) => {
                 EntityKey::TwoDirectionRepeatFactor(*i)
             }
-            TwoDirectionRepeatFactorRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            TwoDirectionRepeatFactorRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -23335,7 +23406,7 @@ pub enum UnitRefView<'m> {
     SolidAngleUnit(&'m SolidAngleUnit),
     TimeUnit(&'m TimeUnit),
     VolumeUnit(&'m VolumeUnit),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl UnitRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> UnitRefView<'m> {
@@ -23361,7 +23432,7 @@ impl UnitRef {
             }
             UnitRef::TimeUnit(i) => UnitRefView::TimeUnit(model.time_unit_arena.get(i.0)),
             UnitRef::VolumeUnit(i) => UnitRefView::VolumeUnit(model.volume_unit_arena.get(i.0)),
-            UnitRef::Complex(i) => UnitRefView::Complex(model.complex_unit_arena.get(i.0)),
+            UnitRef::Complex(i) => UnitRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -23379,7 +23450,7 @@ impl UnitRef {
             UnitRef::SolidAngleUnit(i) => EntityKey::SolidAngleUnit(*i),
             UnitRef::TimeUnit(i) => EntityKey::TimeUnit(*i),
             UnitRef::VolumeUnit(i) => EntityKey::VolumeUnit(*i),
-            UnitRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            UnitRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -23427,19 +23498,19 @@ impl ValueQualifierRef {
 #[derive(Clone, Copy, Debug)]
 pub enum VectorRefView<'m> {
     Vector(&'m Vector),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl VectorRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> VectorRefView<'m> {
         match self {
             VectorRef::Vector(i) => VectorRefView::Vector(model.vector_arena.get(i.0)),
-            VectorRef::Complex(i) => VectorRefView::Complex(model.complex_unit_arena.get(i.0)),
+            VectorRef::Complex(i) => VectorRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             VectorRef::Vector(i) => EntityKey::Vector(*i),
-            VectorRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            VectorRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -23471,7 +23542,7 @@ impl VersionedActionRequestRef {
 pub enum VertexRefView<'m> {
     Vertex(&'m Vertex),
     VertexPoint(&'m VertexPoint),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl VertexRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> VertexRefView<'m> {
@@ -23480,14 +23551,14 @@ impl VertexRef {
             VertexRef::VertexPoint(i) => {
                 VertexRefView::VertexPoint(model.vertex_point_arena.get(i.0))
             }
-            VertexRef::Complex(i) => VertexRefView::Complex(model.complex_unit_arena.get(i.0)),
+            VertexRef::Complex(i) => VertexRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             VertexRef::Vertex(i) => EntityKey::Vertex(*i),
             VertexRef::VertexPoint(i) => EntityKey::VertexPoint(*i),
-            VertexRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            VertexRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -23514,7 +23585,7 @@ impl VertexLoopRef {
 #[derive(Clone, Copy, Debug)]
 pub enum ViewVolumeRefView<'m> {
     ViewVolume(&'m ViewVolume),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl ViewVolumeRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ViewVolumeRefView<'m> {
@@ -23523,14 +23594,14 @@ impl ViewVolumeRef {
                 ViewVolumeRefView::ViewVolume(model.view_volume_arena.get(i.0))
             }
             ViewVolumeRef::Complex(i) => {
-                ViewVolumeRefView::Complex(model.complex_unit_arena.get(i.0))
+                ViewVolumeRefView::Complex(model.complex_entity_arena.get(i.0))
             }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ViewVolumeRef::ViewVolume(i) => EntityKey::ViewVolume(*i),
-            ViewVolumeRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            ViewVolumeRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -23541,7 +23612,7 @@ pub enum WorkItemRefView<'m> {
     ProductDefinitionFormationWithSpecifiedSource(
         &'m ProductDefinitionFormationWithSpecifiedSource,
     ),
-    Complex(&'m ComplexUnit),
+    Complex(&'m ComplexEntity),
 }
 impl WorkItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> WorkItemRefView<'m> {
@@ -23558,7 +23629,9 @@ impl WorkItemRef {
                         .get(i.0),
                 )
             }
-            WorkItemRef::Complex(i) => WorkItemRefView::Complex(model.complex_unit_arena.get(i.0)),
+            WorkItemRef::Complex(i) => {
+                WorkItemRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -23567,7 +23640,7 @@ impl WorkItemRef {
             WorkItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 EntityKey::ProductDefinitionFormationWithSpecifiedSource(*i)
             }
-            WorkItemRef::Complex(i) => EntityKey::ComplexUnit(*i),
+            WorkItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }

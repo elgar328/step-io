@@ -6,9 +6,9 @@
 //! required references (contexts included); read does not enforce topology.
 
 use step_io::read;
+use step_io::scene::ProductDef;
 use step_io::scene::Scene;
-use step_io::scene::product::ProductDef;
-use step_io::scene::{Contributor, Scope, Target};
+use step_io::scene::{Scope, Target};
 
 const HEADER: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\n\
 FILE_NAME('','',(''),(''),'','','');\n\
@@ -42,9 +42,11 @@ const ASSEMBLY: &str = "\
 #56=CARTESIAN_POINT('',(0.,0.,0.));\n\
 #57=AXIS2_PLACEMENT_3D('',#56,$,$);\n\
 #58=ITEM_DEFINED_TRANSFORMATION('','',#57,#55);\n\
-#59=( REPRESENTATION_RELATIONSHIP('','',#41,#51) \
+#59=( REPRESENTATION_RELATIONSHIP('','',#51,#41) \
 REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION(#58) SHAPE_REPRESENTATION_RELATIONSHIP() );\n\
-#60=CONTEXT_DEPENDENT_SHAPE_REPRESENTATION(#59,#50);\n";
+#60=CONTEXT_DEPENDENT_SHAPE_REPRESENTATION(#59,#50);\n\
+#61=PRODUCT_DEFINITION_SHAPE('','',#22);\n\
+#62=SHAPE_DEFINITION_REPRESENTATION(#61,#51);\n";
 
 fn approx(a: [f64; 3], b: [f64; 3]) -> bool {
     a.iter().zip(b).all(|(x, y)| (x - y).abs() < 1e-9)
@@ -183,6 +185,66 @@ fn surfaces_product_definition_with_associated_documents_subtype() {
 }
 
 #[test]
+fn documented_part_used_in_an_assembly_is_not_a_root() {
+    // The documented part is placed in a plain assembly: only the assembly is
+    // a root.
+    let src = format!(
+        "{HEADER}{WITH_DOCS_PART}\
+#10=PRODUCT('asm','Assembly','',(#2));\n\
+#11=PRODUCT_DEFINITION_FORMATION('1','',#10);\n\
+#12=PRODUCT_DEFINITION('design','',#11,#3);\n\
+#30=NEXT_ASSEMBLY_USAGE_OCCURRENCE('1','Part','',#12,#22,$);\n\
+{FOOTER}"
+    );
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+
+    let roots: Vec<_> = scene.root_definitions().collect();
+    assert_eq!(roots.len(), 1);
+    assert_eq!(roots[0].product().unwrap().name(), "Assembly");
+}
+
+/// Metadata on a documented part's definition reaches the product too, as it
+/// does for a plain definition, and so do the documents it lists itself.
+#[test]
+fn product_metadata_reaches_a_documented_definition() {
+    let src = format!(
+        "{HEADER}{}\
+#50=PERSON('p1','Doe','John',$,$,$);\n\
+#51=ORGANIZATION('o1','ACME',$);\n\
+#52=PERSON_AND_ORGANIZATION(#50,#51);\n\
+#53=PERSON_AND_ORGANIZATION_ROLE('creator');\n\
+#54=CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT(#52,#53,(#22));\n\
+#55=APPROVAL_STATUS('approved');\n\
+#56=APPROVAL(#55,'final');\n\
+#57=CC_DESIGN_APPROVAL(#56,(#22));\n\
+#58=DOCUMENT_TYPE('drawing');\n\
+#59=DOCUMENT('DOC-1','spec sheet','',#58);\n\
+{FOOTER}",
+        WITH_DOCS_PART.replace(",#21,#3,());", ",#21,#3,(#59));")
+    );
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let product = scene.all_products().next().expect("the product");
+
+    let roles: Vec<_> = product
+        .contributors()
+        .map(|c| c.role().to_owned())
+        .collect();
+    assert_eq!(roles, ["creator"]);
+    let statuses: Vec<_> = product.approvals().map(|a| a.status().to_owned()).collect();
+    assert_eq!(statuses, ["approved"]);
+    let documents: Vec<_> = product.documents().map(|d| d.id().to_owned()).collect();
+    assert_eq!(documents, ["DOC-1"]);
+
+    // The definition sees the same.
+    let def = def_for_product(&scene, "Part");
+    assert_eq!(def.contributors().count(), 1);
+    assert_eq!(def.approvals().count(), 1);
+    assert_eq!(def.documents().count(), 1);
+}
+
+#[test]
 fn reads_occurrence_placement_transform() {
     let src = format!("{HEADER}{ASSEMBLY}{FOOTER}");
     let (model, _rep) = read(src.as_bytes()).expect("read");
@@ -196,12 +258,12 @@ fn reads_occurrence_placement_transform() {
         "occurrence places the Part"
     );
 
-    // The placement: transform_item_2 (`to`) carries the component position.
+    // The placement: `to` is the component's position in the assembly.
     let t = occ.transform().expect("a placement transform");
     assert!(approx(t.to.origin, [10.0, 20.0, 30.0]));
     assert!(approx(t.to.axis, [0.0, 0.0, 1.0]));
     assert!(approx(t.to.ref_direction, [1.0, 0.0, 0.0]));
-    // transform_item_1 (`from`) — origin at 0 with omitted axes => STEP defaults.
+    // `from` is the component's own frame — origin at 0 with omitted axes => STEP defaults.
     assert!(approx(t.from.origin, [0.0, 0.0, 0.0]));
     assert!(approx(t.from.axis, [0.0, 0.0, 1.0]));
     assert!(approx(t.from.ref_direction, [1.0, 0.0, 0.0]));
@@ -214,8 +276,126 @@ fn reads_occurrence_placement_transform() {
     );
 }
 
+/// A one-level assembly whose part is placed at (10,20,30), turned 90° about z.
+/// `#41` is the assembly's representation, `#51` the part's; `#55` is the
+/// turned frame and `#57` the identity. `links` holds the definitions'
+/// `SHAPE_DEFINITION_REPRESENTATION`s, `rel` the `ITEM_DEFINED_TRANSFORMATION`
+/// `#58` and the placement relationship `#59`, so callers choose the order.
+fn turned_placement(links: &str, rel: &str) -> String {
+    format!(
+        "{HEADER}\
+#1=APPLICATION_CONTEXT('test');\n\
+#2=PRODUCT_CONTEXT('',#1,'mechanical');\n\
+#3=PRODUCT_DEFINITION_CONTEXT('',#1,'design');\n\
+#4=REPRESENTATION_CONTEXT('','3D');\n\
+#10=PRODUCT('asm','Assembly','',(#2));\n\
+#11=PRODUCT_DEFINITION_FORMATION('1','',#10);\n\
+#12=PRODUCT_DEFINITION('design','',#11,#3);\n\
+#20=PRODUCT('part','Part','',(#2));\n\
+#21=PRODUCT_DEFINITION_FORMATION('1','',#20);\n\
+#22=PRODUCT_DEFINITION('design','',#21,#3);\n\
+#30=NEXT_ASSEMBLY_USAGE_OCCURRENCE('1','asm-part','',#12,#22,$);\n\
+#40=PRODUCT_DEFINITION_SHAPE('','',#12);\n\
+#41=SHAPE_REPRESENTATION('',(),#4);\n\
+#50=PRODUCT_DEFINITION_SHAPE('','',#30);\n\
+#51=SHAPE_REPRESENTATION('',(),#4);\n\
+#52=CARTESIAN_POINT('',(10.,20.,30.));\n\
+#53=DIRECTION('',(0.,0.,1.));\n\
+#54=DIRECTION('',(0.,1.,0.));\n\
+#55=AXIS2_PLACEMENT_3D('',#52,#53,#54);\n\
+#56=CARTESIAN_POINT('',(0.,0.,0.));\n\
+#57=AXIS2_PLACEMENT_3D('',#56,$,$);\n\
+#60=CONTEXT_DEPENDENT_SHAPE_REPRESENTATION(#59,#50);\n\
+#61=PRODUCT_DEFINITION_SHAPE('','',#22);\n\
+{links}{rel}{FOOTER}"
+    )
+}
+
+const BOTH_LINKED: &str = "#42=SHAPE_DEFINITION_REPRESENTATION(#40,#41);\n\
+#62=SHAPE_DEFINITION_REPRESENTATION(#61,#51);\n";
+
+/// The usual order: the part's representation and frame first.
+const PART_FIRST: &str = "#58=ITEM_DEFINED_TRANSFORMATION('','',#57,#55);\n\
+#59=( REPRESENTATION_RELATIONSHIP('','',#51,#41) \
+REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION(#58) SHAPE_REPRESENTATION_RELATIONSHIP() );\n";
+
+/// The assembly's representation and frame first, as some exporters write it.
+const ASSEMBLY_FIRST: &str = "#58=ITEM_DEFINED_TRANSFORMATION('','',#55,#57);\n\
+#59=( REPRESENTATION_RELATIONSHIP('','',#41,#51) \
+REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION(#58) SHAPE_REPRESENTATION_RELATIONSHIP() );\n";
+
+fn apply(m: &[[f64; 4]; 4], p: [f64; 3]) -> [f64; 3] {
+    let row = |i: usize| m[i][0] * p[0] + m[i][1] * p[1] + m[i][2] * p[2] + m[i][3];
+    [row(0), row(1), row(2)]
+}
+
+#[test]
+fn reads_placement_in_either_relationship_order() {
+    let mut matrices = Vec::new();
+    for rel in [PART_FIRST, ASSEMBLY_FIRST] {
+        let src = turned_placement(BOTH_LINKED, rel);
+        let (model, _rep) = read(src.as_bytes()).expect("read");
+        let scene = model.scene();
+        let asm = def_for_product(&scene, "Assembly");
+        let occ = asm.occurrences().next().expect("one occurrence");
+
+        // `from` is the part's frame and `to` its place in the assembly,
+        // whichever order the relationship lists them in.
+        let t = occ.transform().expect("a placement transform");
+        assert!(approx(t.from.origin, [0.0, 0.0, 0.0]), "rel: {rel}");
+        assert!(approx(t.to.origin, [10.0, 20.0, 30.0]), "rel: {rel}");
+        assert!(approx(t.to.ref_direction, [0.0, 1.0, 0.0]), "rel: {rel}");
+
+        // The origin pins the translation; the x axis tells R from its inverse.
+        let m = t.matrix().expect("a matrix");
+        assert!(
+            approx(apply(&m, [0.0, 0.0, 0.0]), [10.0, 20.0, 30.0]),
+            "rel: {rel}"
+        );
+        assert!(
+            approx(apply(&m, [1.0, 0.0, 0.0]), [10.0, 21.0, 30.0]),
+            "rel: {rel}"
+        );
+        assert!(
+            scene.warnings().is_empty(),
+            "unexpected warnings: {:?}",
+            scene.warnings()
+        );
+        matrices.push(m);
+    }
+    assert_eq!(matrices[0], matrices[1]);
+}
+
+#[test]
+fn warns_when_placement_reps_match_no_shape_definition() {
+    // Neither definition links its shape, so the order cannot be decided: read
+    // component-first and say so.
+    let src = turned_placement("", PART_FIRST);
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let asm = def_for_product(&scene, "Assembly");
+    let occ = asm.occurrences().next().expect("one occurrence");
+
+    let t = occ.transform().expect("a placement transform");
+    assert!(approx(t.from.origin, [0.0, 0.0, 0.0]));
+    assert!(approx(t.to.origin, [10.0, 20.0, 30.0]));
+    let warnings = scene.warnings();
+    assert_eq!(warnings.len(), 1, "warnings: {warnings:?}");
+    assert!(
+        warnings[0].message.starts_with("NAUO placement:"),
+        "{}",
+        warnings[0]
+    );
+    // The warning names the occurrence, prints as its message, and asking the
+    // same occurrence again does not repeat it.
+    assert_eq!(warnings[0].entity, Some(occ.key()));
+    assert_eq!(warnings[0].to_string(), warnings[0].message);
+    let _ = occ.transform();
+    assert_eq!(scene.warnings(), warnings);
+}
+
 // A part version (formation id "RevB") with a person/organization assignment
-// (John Doe / ACME, role "creator") on the formation — the corpus-dominant
+// (John Doe / ACME, role "creator") on the formation — the most common form in real files
 // target for such assignments.
 const META: &str = "\
 #1=APPLICATION_CONTEXT('test');\n\
@@ -240,9 +420,9 @@ fn reads_version_and_contributors() {
         .all_product_definitions()
         .next()
         .expect("a definition");
-    assert_eq!(def.version(), Some("RevB"));
+    assert_eq!(def.version().map(|v| v.id()), Some("RevB"));
 
-    let contributors = def.contributors();
+    let contributors: Vec<_> = def.contributors().collect();
     assert_eq!(contributors.len(), 1, "one contributor");
     let c = contributors[0];
     assert_eq!(c.role(), "creator");
@@ -285,18 +465,14 @@ fn reads_product_level_metadata() {
     let scene = model.scene();
 
     let product = scene.all_products().next().expect("a product");
-    let mut roles: Vec<&str> = product
-        .contributors()
-        .iter()
-        .map(Contributor::role)
-        .collect();
+    let mut roles: Vec<&str> = product.contributors().map(|c| c.role()).collect();
     roles.sort_unstable();
     // Reaches all three levels (product/formation/definition), not just the
     // product key — a product-key-only scope would return "creator" alone.
     assert_eq!(roles, ["checker", "creator", "design_owner"]);
 
     // Each contributor is labelled with the tree level it was assigned at.
-    for c in &product.contributors() {
+    for c in product.contributors() {
         let expected = match c.role() {
             "creator" => Scope::Product,
             "design_owner" => Scope::Version,
@@ -312,12 +488,12 @@ fn reads_product_level_metadata() {
         .all_product_definitions()
         .next()
         .expect("a definition");
-    assert_eq!(def.contributors().len(), 3);
+    assert_eq!(def.contributors().count(), 3);
 
     // The symmetric accessors exist and are empty when nothing is assigned.
-    assert!(product.approvals().is_empty());
-    assert!(product.documents().is_empty());
-    assert!(product.security_classifications().is_empty());
+    assert!(product.approvals().next().is_none());
+    assert!(product.documents().next().is_none());
+    assert!(product.security_classifications().next().is_none());
 
     assert!(
         scene.warnings().is_empty(),
@@ -345,7 +521,7 @@ fn reads_product_versions() {
     let scene = model.scene();
 
     let product = scene.all_products().next().expect("a product");
-    let versions = product.versions();
+    let versions: Vec<_> = product.versions().collect();
     assert_eq!(versions.len(), 2, "two versions");
 
     let mut labels: Vec<(&str, Option<&str>)> =
@@ -358,7 +534,7 @@ fn reads_product_versions() {
     for v in &versions {
         let defs: Vec<_> = v.definitions().collect();
         assert_eq!(defs.len(), 1, "one definition per version");
-        assert_eq!(defs[0].version(), Some(v.id()));
+        assert_eq!(defs[0].version().map(|v| v.id()), Some(v.id()));
     }
 
     assert!(
@@ -393,7 +569,7 @@ fn describe_target(t: &Target<'_>) -> String {
     match t {
         Target::Product(p) => format!("prod:{}", p.name()),
         Target::Version(v) => format!("ver:{}", v.id()),
-        Target::Definition(d) => format!("def:{}", d.version().unwrap_or("?")),
+        Target::Definition(d) => format!("def:{}", d.version().map_or("?", |v| v.id())),
     }
 }
 
@@ -410,7 +586,7 @@ fn reads_assigned_targets() {
             .into_iter()
             .find(|c| c.role() == role)
             .expect("role");
-        let mut d: Vec<String> = c.assigned_targets().iter().map(describe_target).collect();
+        let mut d: Vec<String> = c.assigned_targets().map(|t| describe_target(&t)).collect();
         d.sort();
         d
     };
@@ -466,7 +642,7 @@ fn reads_approvals() {
         .all_product_definitions()
         .next()
         .expect("a definition");
-    let approvals = def.approvals();
+    let approvals: Vec<_> = def.approvals().collect();
     assert_eq!(approvals.len(), 1, "one approval");
     let a = approvals[0];
     assert_eq!(a.status(), "approved");
@@ -475,7 +651,7 @@ fn reads_approvals() {
     // own "final") and `assigned_scope()` are distinct concepts.
     assert_eq!(a.assigned_scope(), Scope::Version);
 
-    let approvers = a.approvers();
+    let approvers: Vec<_> = a.approvers().collect();
     assert_eq!(approvers.len(), 1, "one approver");
     let who = approvers[0];
     assert_eq!(who.role(), "approver");
@@ -499,7 +675,7 @@ fn reads_security_classification() {
         .all_product_definitions()
         .next()
         .expect("a definition");
-    let classes = def.security_classifications();
+    let classes: Vec<_> = def.security_classifications().collect();
     assert_eq!(classes.len(), 1, "one classification");
     let sc = classes[0];
     assert_eq!(sc.name(), "SC-1");
@@ -523,7 +699,7 @@ fn reads_documents() {
         .all_product_definitions()
         .next()
         .expect("a definition");
-    let docs = def.documents();
+    let docs: Vec<_> = def.documents().collect();
     assert_eq!(docs.len(), 1, "one document");
     let doc = docs[0];
     assert_eq!(doc.id(), "DOC-1");
@@ -540,8 +716,6 @@ fn reads_documents() {
 
 #[test]
 fn reads_approval_date() {
-    use step_io::scene::ApprovalDate;
-
     let src = format!("{HEADER}{APPROVAL}{FOOTER}");
     let (model, _rep) = read(src.as_bytes()).expect("read");
     let scene = model.scene();
@@ -550,16 +724,11 @@ fn reads_approval_date() {
         .all_product_definitions()
         .next()
         .expect("a definition");
-    let a = def.approvals()[0];
+    let a = def.approvals().next().expect("an approval");
+    let date = a.date().expect("a date");
     assert_eq!(
-        a.date(),
-        Some(ApprovalDate {
-            year: Some(2024),
-            month: Some(3),
-            day: Some(15),
-            hour: Some(14),
-            minute: Some(30),
-        }),
+        (date.year, date.month, date.day, date.hour, date.minute),
+        (Some(2024), Some(3), Some(15), Some(14), Some(30)),
     );
     assert!(
         scene.warnings().is_empty(),

@@ -6,105 +6,105 @@ use super::model::*;
 /// Call `f` once with the `EntityKey` of every entity in the model. The arena
 /// set matches `StepModel` exactly, so the walk is total.
 pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
-    for i in 0..model.action_arena.items.len() {
+    for i in 0..model.action_arena.items.len() as u32 {
         f(EntityKey::Action(ActionId(i)));
     }
-    for i in 0..model.action_assignment_arena.items.len() {
+    for i in 0..model.action_assignment_arena.items.len() as u32 {
         f(EntityKey::ActionAssignment(ActionAssignmentId(i)));
     }
-    for i in 0..model.action_directive_arena.items.len() {
+    for i in 0..model.action_directive_arena.items.len() as u32 {
         f(EntityKey::ActionDirective(ActionDirectiveId(i)));
     }
-    for i in 0..model.action_method_arena.items.len() {
+    for i in 0..model.action_method_arena.items.len() as u32 {
         f(EntityKey::ActionMethod(ActionMethodId(i)));
     }
-    for i in 0..model.action_method_relationship_arena.items.len() {
+    for i in 0..model.action_method_relationship_arena.items.len() as u32 {
         f(EntityKey::ActionMethodRelationship(
             ActionMethodRelationshipId(i),
         ));
     }
-    for i in 0..model.action_property_arena.items.len() {
+    for i in 0..model.action_property_arena.items.len() as u32 {
         f(EntityKey::ActionProperty(ActionPropertyId(i)));
     }
-    for i in 0..model.action_relationship_arena.items.len() {
+    for i in 0..model.action_relationship_arena.items.len() as u32 {
         f(EntityKey::ActionRelationship(ActionRelationshipId(i)));
     }
-    for i in 0..model.action_request_assignment_arena.items.len() {
+    for i in 0..model.action_request_assignment_arena.items.len() as u32 {
         f(EntityKey::ActionRequestAssignment(
             ActionRequestAssignmentId(i),
         ));
     }
-    for i in 0..model.action_request_solution_arena.items.len() {
+    for i in 0..model.action_request_solution_arena.items.len() as u32 {
         f(EntityKey::ActionRequestSolution(ActionRequestSolutionId(i)));
     }
-    for i in 0..model.action_resource_arena.items.len() {
+    for i in 0..model.action_resource_arena.items.len() as u32 {
         f(EntityKey::ActionResource(ActionResourceId(i)));
     }
-    for i in 0..model.action_resource_relationship_arena.items.len() {
+    for i in 0..model.action_resource_relationship_arena.items.len() as u32 {
         f(EntityKey::ActionResourceRelationship(
             ActionResourceRelationshipId(i),
         ));
     }
-    for i in 0..model.action_resource_requirement_arena.items.len() {
+    for i in 0..model.action_resource_requirement_arena.items.len() as u32 {
         f(EntityKey::ActionResourceRequirement(
             ActionResourceRequirementId(i),
         ));
     }
-    for i in 0..model.action_resource_type_arena.items.len() {
+    for i in 0..model.action_resource_type_arena.items.len() as u32 {
         f(EntityKey::ActionResourceType(ActionResourceTypeId(i)));
     }
-    for i in 0..model.address_arena.items.len() {
+    for i in 0..model.address_arena.items.len() as u32 {
         f(EntityKey::Address(AddressId(i)));
     }
-    for i in 0..model.advanced_brep_shape_representation_arena.items.len() {
+    for i in 0..model.advanced_brep_shape_representation_arena.items.len() as u32 {
         f(EntityKey::AdvancedBrepShapeRepresentation(
             AdvancedBrepShapeRepresentationId(i),
         ));
     }
-    for i in 0..model.advanced_face_arena.items.len() {
+    for i in 0..model.advanced_face_arena.items.len() as u32 {
         f(EntityKey::AdvancedFace(AdvancedFaceId(i)));
     }
-    for i in 0..model.all_around_shape_aspect_arena.items.len() {
+    for i in 0..model.all_around_shape_aspect_arena.items.len() as u32 {
         f(EntityKey::AllAroundShapeAspect(AllAroundShapeAspectId(i)));
     }
-    for i in 0..model.angular_location_arena.items.len() {
+    for i in 0..model.angular_location_arena.items.len() as u32 {
         f(EntityKey::AngularLocation(AngularLocationId(i)));
     }
-    for i in 0..model.angular_size_arena.items.len() {
+    for i in 0..model.angular_size_arena.items.len() as u32 {
         f(EntityKey::AngularSize(AngularSizeId(i)));
     }
-    for i in 0..model.angularity_tolerance_arena.items.len() {
+    for i in 0..model.angularity_tolerance_arena.items.len() as u32 {
         f(EntityKey::AngularityTolerance(AngularityToleranceId(i)));
     }
-    for i in 0..model.annotation_curve_occurrence_arena.items.len() {
+    for i in 0..model.annotation_curve_occurrence_arena.items.len() as u32 {
         f(EntityKey::AnnotationCurveOccurrence(
             AnnotationCurveOccurrenceId(i),
         ));
     }
-    for i in 0..model.annotation_fill_area_occurrence_arena.items.len() {
+    for i in 0..model.annotation_fill_area_occurrence_arena.items.len() as u32 {
         f(EntityKey::AnnotationFillAreaOccurrence(
             AnnotationFillAreaOccurrenceId(i),
         ));
     }
-    for i in 0..model.annotation_occurrence_arena.items.len() {
+    for i in 0..model.annotation_occurrence_arena.items.len() as u32 {
         f(EntityKey::AnnotationOccurrence(AnnotationOccurrenceId(i)));
     }
-    for i in 0..model.annotation_occurrence_associativity_arena.items.len() {
+    for i in 0..model.annotation_occurrence_associativity_arena.items.len() as u32 {
         f(EntityKey::AnnotationOccurrenceAssociativity(
             AnnotationOccurrenceAssociativityId(i),
         ));
     }
-    for i in 0..model.annotation_occurrence_relationship_arena.items.len() {
+    for i in 0..model.annotation_occurrence_relationship_arena.items.len() as u32 {
         f(EntityKey::AnnotationOccurrenceRelationship(
             AnnotationOccurrenceRelationshipId(i),
         ));
     }
-    for i in 0..model.annotation_placeholder_leader_line_arena.items.len() {
+    for i in 0..model.annotation_placeholder_leader_line_arena.items.len() as u32 {
         f(EntityKey::AnnotationPlaceholderLeaderLine(
             AnnotationPlaceholderLeaderLineId(i),
         ));
     }
-    for i in 0..model.annotation_placeholder_occurrence_arena.items.len() {
+    for i in 0..model.annotation_placeholder_occurrence_arena.items.len() as u32 {
         f(EntityKey::AnnotationPlaceholderOccurrence(
             AnnotationPlaceholderOccurrenceId(i),
         ));
@@ -112,76 +112,76 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .annotation_placeholder_occurrence_with_leader_line_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(
             AnnotationPlaceholderOccurrenceWithLeaderLineId(i),
         ));
     }
-    for i in 0..model.annotation_plane_arena.items.len() {
+    for i in 0..model.annotation_plane_arena.items.len() as u32 {
         f(EntityKey::AnnotationPlane(AnnotationPlaneId(i)));
     }
-    for i in 0..model.annotation_symbol_arena.items.len() {
+    for i in 0..model.annotation_symbol_arena.items.len() as u32 {
         f(EntityKey::AnnotationSymbol(AnnotationSymbolId(i)));
     }
-    for i in 0..model.annotation_symbol_occurrence_arena.items.len() {
+    for i in 0..model.annotation_symbol_occurrence_arena.items.len() as u32 {
         f(EntityKey::AnnotationSymbolOccurrence(
             AnnotationSymbolOccurrenceId(i),
         ));
     }
-    for i in 0..model.annotation_text_arena.items.len() {
+    for i in 0..model.annotation_text_arena.items.len() as u32 {
         f(EntityKey::AnnotationText(AnnotationTextId(i)));
     }
-    for i in 0..model.annotation_text_character_arena.items.len() {
+    for i in 0..model.annotation_text_character_arena.items.len() as u32 {
         f(EntityKey::AnnotationTextCharacter(
             AnnotationTextCharacterId(i),
         ));
     }
-    for i in 0..model.annotation_text_occurrence_arena.items.len() {
+    for i in 0..model.annotation_text_occurrence_arena.items.len() as u32 {
         f(EntityKey::AnnotationTextOccurrence(
             AnnotationTextOccurrenceId(i),
         ));
     }
-    for i in 0..model.annotation_to_annotation_leader_line_arena.items.len() {
+    for i in 0..model.annotation_to_annotation_leader_line_arena.items.len() as u32 {
         f(EntityKey::AnnotationToAnnotationLeaderLine(
             AnnotationToAnnotationLeaderLineId(i),
         ));
     }
-    for i in 0..model.annotation_to_model_leader_line_arena.items.len() {
+    for i in 0..model.annotation_to_model_leader_line_arena.items.len() as u32 {
         f(EntityKey::AnnotationToModelLeaderLine(
             AnnotationToModelLeaderLineId(i),
         ));
     }
-    for i in 0..model.apll_point_arena.items.len() {
+    for i in 0..model.apll_point_arena.items.len() as u32 {
         f(EntityKey::ApllPoint(ApllPointId(i)));
     }
-    for i in 0..model.apll_point_with_surface_arena.items.len() {
+    for i in 0..model.apll_point_with_surface_arena.items.len() as u32 {
         f(EntityKey::ApllPointWithSurface(ApllPointWithSurfaceId(i)));
     }
-    for i in 0..model.application_context_arena.items.len() {
+    for i in 0..model.application_context_arena.items.len() as u32 {
         f(EntityKey::ApplicationContext(ApplicationContextId(i)));
     }
-    for i in 0..model.application_context_element_arena.items.len() {
+    for i in 0..model.application_context_element_arena.items.len() as u32 {
         f(EntityKey::ApplicationContextElement(
             ApplicationContextElementId(i),
         ));
     }
-    for i in 0..model.application_protocol_definition_arena.items.len() {
+    for i in 0..model.application_protocol_definition_arena.items.len() as u32 {
         f(EntityKey::ApplicationProtocolDefinition(
             ApplicationProtocolDefinitionId(i),
         ));
     }
-    for i in 0..model.applied_approval_assignment_arena.items.len() {
+    for i in 0..model.applied_approval_assignment_arena.items.len() as u32 {
         f(EntityKey::AppliedApprovalAssignment(
             AppliedApprovalAssignmentId(i),
         ));
     }
-    for i in 0..model.applied_date_and_time_assignment_arena.items.len() {
+    for i in 0..model.applied_date_and_time_assignment_arena.items.len() as u32 {
         f(EntityKey::AppliedDateAndTimeAssignment(
             AppliedDateAndTimeAssignmentId(i),
         ));
     }
-    for i in 0..model.applied_document_reference_arena.items.len() {
+    for i in 0..model.applied_document_reference_arena.items.len() as u32 {
         f(EntityKey::AppliedDocumentReference(
             AppliedDocumentReferenceId(i),
         ));
@@ -189,13 +189,13 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .applied_external_identification_assignment_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::AppliedExternalIdentificationAssignment(
             AppliedExternalIdentificationAssignmentId(i),
         ));
     }
-    for i in 0..model.applied_group_assignment_arena.items.len() {
+    for i in 0..model.applied_group_assignment_arena.items.len() as u32 {
         f(EntityKey::AppliedGroupAssignment(AppliedGroupAssignmentId(
             i,
         )));
@@ -203,162 +203,162 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .applied_person_and_organization_assignment_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::AppliedPersonAndOrganizationAssignment(
             AppliedPersonAndOrganizationAssignmentId(i),
         ));
     }
-    for i in 0..model.applied_presented_item_arena.items.len() {
+    for i in 0..model.applied_presented_item_arena.items.len() as u32 {
         f(EntityKey::AppliedPresentedItem(AppliedPresentedItemId(i)));
     }
     for i in 0..model
         .applied_security_classification_assignment_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::AppliedSecurityClassificationAssignment(
             AppliedSecurityClassificationAssignmentId(i),
         ));
     }
-    for i in 0..model.approval_arena.items.len() {
+    for i in 0..model.approval_arena.items.len() as u32 {
         f(EntityKey::Approval(ApprovalId(i)));
     }
-    for i in 0..model.approval_assignment_arena.items.len() {
+    for i in 0..model.approval_assignment_arena.items.len() as u32 {
         f(EntityKey::ApprovalAssignment(ApprovalAssignmentId(i)));
     }
-    for i in 0..model.approval_date_time_arena.items.len() {
+    for i in 0..model.approval_date_time_arena.items.len() as u32 {
         f(EntityKey::ApprovalDateTime(ApprovalDateTimeId(i)));
     }
-    for i in 0..model.approval_person_organization_arena.items.len() {
+    for i in 0..model.approval_person_organization_arena.items.len() as u32 {
         f(EntityKey::ApprovalPersonOrganization(
             ApprovalPersonOrganizationId(i),
         ));
     }
-    for i in 0..model.approval_role_arena.items.len() {
+    for i in 0..model.approval_role_arena.items.len() as u32 {
         f(EntityKey::ApprovalRole(ApprovalRoleId(i)));
     }
-    for i in 0..model.approval_status_arena.items.len() {
+    for i in 0..model.approval_status_arena.items.len() as u32 {
         f(EntityKey::ApprovalStatus(ApprovalStatusId(i)));
     }
-    for i in 0..model.approximation_tolerance_arena.items.len() {
+    for i in 0..model.approximation_tolerance_arena.items.len() as u32 {
         f(EntityKey::ApproximationTolerance(ApproximationToleranceId(
             i,
         )));
     }
-    for i in 0..model.approximation_tolerance_deviation_arena.items.len() {
+    for i in 0..model.approximation_tolerance_deviation_arena.items.len() as u32 {
         f(EntityKey::ApproximationToleranceDeviation(
             ApproximationToleranceDeviationId(i),
         ));
     }
-    for i in 0..model.approximation_tolerance_parameter_arena.items.len() {
+    for i in 0..model.approximation_tolerance_parameter_arena.items.len() as u32 {
         f(EntityKey::ApproximationToleranceParameter(
             ApproximationToleranceParameterId(i),
         ));
     }
-    for i in 0..model.area_in_set_arena.items.len() {
+    for i in 0..model.area_in_set_arena.items.len() as u32 {
         f(EntityKey::AreaInSet(AreaInSetId(i)));
     }
-    for i in 0..model.area_unit_arena.items.len() {
+    for i in 0..model.area_unit_arena.items.len() as u32 {
         f(EntityKey::AreaUnit(AreaUnitId(i)));
     }
-    for i in 0..model.ascribable_state_arena.items.len() {
+    for i in 0..model.ascribable_state_arena.items.len() as u32 {
         f(EntityKey::AscribableState(AscribableStateId(i)));
     }
-    for i in 0..model.ascribable_state_relationship_arena.items.len() {
+    for i in 0..model.ascribable_state_relationship_arena.items.len() as u32 {
         f(EntityKey::AscribableStateRelationship(
             AscribableStateRelationshipId(i),
         ));
     }
-    for i in 0..model.assembly_component_usage_arena.items.len() {
+    for i in 0..model.assembly_component_usage_arena.items.len() as u32 {
         f(EntityKey::AssemblyComponentUsage(AssemblyComponentUsageId(
             i,
         )));
     }
-    for i in 0..model.auxiliary_leader_line_arena.items.len() {
+    for i in 0..model.auxiliary_leader_line_arena.items.len() as u32 {
         f(EntityKey::AuxiliaryLeaderLine(AuxiliaryLeaderLineId(i)));
     }
-    for i in 0..model.axis1_placement_arena.items.len() {
+    for i in 0..model.axis1_placement_arena.items.len() as u32 {
         f(EntityKey::Axis1Placement(Axis1PlacementId(i)));
     }
-    for i in 0..model.axis2_placement2d_arena.items.len() {
+    for i in 0..model.axis2_placement2d_arena.items.len() as u32 {
         f(EntityKey::Axis2Placement2d(Axis2Placement2dId(i)));
     }
-    for i in 0..model.axis2_placement3d_arena.items.len() {
+    for i in 0..model.axis2_placement3d_arena.items.len() as u32 {
         f(EntityKey::Axis2Placement3d(Axis2Placement3dId(i)));
     }
-    for i in 0..model.b_spline_curve_arena.items.len() {
+    for i in 0..model.b_spline_curve_arena.items.len() as u32 {
         f(EntityKey::BSplineCurve(BSplineCurveId(i)));
     }
-    for i in 0..model.b_spline_curve_with_knots_arena.items.len() {
+    for i in 0..model.b_spline_curve_with_knots_arena.items.len() as u32 {
         f(EntityKey::BSplineCurveWithKnots(BSplineCurveWithKnotsId(i)));
     }
-    for i in 0..model.b_spline_surface_arena.items.len() {
+    for i in 0..model.b_spline_surface_arena.items.len() as u32 {
         f(EntityKey::BSplineSurface(BSplineSurfaceId(i)));
     }
-    for i in 0..model.b_spline_surface_with_knots_arena.items.len() {
+    for i in 0..model.b_spline_surface_with_knots_arena.items.len() as u32 {
         f(EntityKey::BSplineSurfaceWithKnots(
             BSplineSurfaceWithKnotsId(i),
         ));
     }
-    for i in 0..model.bezier_curve_arena.items.len() {
+    for i in 0..model.bezier_curve_arena.items.len() as u32 {
         f(EntityKey::BezierCurve(BezierCurveId(i)));
     }
-    for i in 0..model.bezier_surface_arena.items.len() {
+    for i in 0..model.bezier_surface_arena.items.len() as u32 {
         f(EntityKey::BezierSurface(BezierSurfaceId(i)));
     }
-    for i in 0..model.bounded_curve_arena.items.len() {
+    for i in 0..model.bounded_curve_arena.items.len() as u32 {
         f(EntityKey::BoundedCurve(BoundedCurveId(i)));
     }
-    for i in 0..model.bounded_pcurve_arena.items.len() {
+    for i in 0..model.bounded_pcurve_arena.items.len() as u32 {
         f(EntityKey::BoundedPcurve(BoundedPcurveId(i)));
     }
-    for i in 0..model.bounded_surface_arena.items.len() {
+    for i in 0..model.bounded_surface_arena.items.len() as u32 {
         f(EntityKey::BoundedSurface(BoundedSurfaceId(i)));
     }
-    for i in 0..model.bounded_surface_curve_arena.items.len() {
+    for i in 0..model.bounded_surface_curve_arena.items.len() as u32 {
         f(EntityKey::BoundedSurfaceCurve(BoundedSurfaceCurveId(i)));
     }
-    for i in 0..model.brep_with_voids_arena.items.len() {
+    for i in 0..model.brep_with_voids_arena.items.len() as u32 {
         f(EntityKey::BrepWithVoids(BrepWithVoidsId(i)));
     }
-    for i in 0..model.calendar_date_arena.items.len() {
+    for i in 0..model.calendar_date_arena.items.len() as u32 {
         f(EntityKey::CalendarDate(CalendarDateId(i)));
     }
-    for i in 0..model.camera_image_arena.items.len() {
+    for i in 0..model.camera_image_arena.items.len() as u32 {
         f(EntityKey::CameraImage(CameraImageId(i)));
     }
-    for i in 0..model.camera_image3d_with_scale_arena.items.len() {
+    for i in 0..model.camera_image3d_with_scale_arena.items.len() as u32 {
         f(EntityKey::CameraImage3dWithScale(CameraImage3dWithScaleId(
             i,
         )));
     }
-    for i in 0..model.camera_model_arena.items.len() {
+    for i in 0..model.camera_model_arena.items.len() as u32 {
         f(EntityKey::CameraModel(CameraModelId(i)));
     }
-    for i in 0..model.camera_model_d3_arena.items.len() {
+    for i in 0..model.camera_model_d3_arena.items.len() as u32 {
         f(EntityKey::CameraModelD3(CameraModelD3Id(i)));
     }
-    for i in 0..model.camera_model_d3_multi_clipping_arena.items.len() {
+    for i in 0..model.camera_model_d3_multi_clipping_arena.items.len() as u32 {
         f(EntityKey::CameraModelD3MultiClipping(
             CameraModelD3MultiClippingId(i),
         ));
     }
-    for i in 0..model.camera_model_d3_with_hlhsr_arena.items.len() {
+    for i in 0..model.camera_model_d3_with_hlhsr_arena.items.len() as u32 {
         f(EntityKey::CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId(
             i,
         )));
     }
-    for i in 0..model.camera_usage_arena.items.len() {
+    for i in 0..model.camera_usage_arena.items.len() as u32 {
         f(EntityKey::CameraUsage(CameraUsageId(i)));
     }
-    for i in 0..model.cartesian_point_arena.items.len() {
+    for i in 0..model.cartesian_point_arena.items.len() as u32 {
         f(EntityKey::CartesianPoint(CartesianPointId(i)));
     }
-    for i in 0..model.cc_design_approval_arena.items.len() {
+    for i in 0..model.cc_design_approval_arena.items.len() as u32 {
         f(EntityKey::CcDesignApproval(CcDesignApprovalId(i)));
     }
-    for i in 0..model.cc_design_date_and_time_assignment_arena.items.len() {
+    for i in 0..model.cc_design_date_and_time_assignment_arena.items.len() as u32 {
         f(EntityKey::CcDesignDateAndTimeAssignment(
             CcDesignDateAndTimeAssignmentId(i),
         ));
@@ -366,38 +366,38 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .cc_design_person_and_organization_assignment_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::CcDesignPersonAndOrganizationAssignment(
             CcDesignPersonAndOrganizationAssignmentId(i),
         ));
     }
-    for i in 0..model.cc_design_security_classification_arena.items.len() {
+    for i in 0..model.cc_design_security_classification_arena.items.len() as u32 {
         f(EntityKey::CcDesignSecurityClassification(
             CcDesignSecurityClassificationId(i),
         ));
     }
-    for i in 0..model.centre_of_symmetry_arena.items.len() {
+    for i in 0..model.centre_of_symmetry_arena.items.len() as u32 {
         f(EntityKey::CentreOfSymmetry(CentreOfSymmetryId(i)));
     }
-    for i in 0..model.certification_arena.items.len() {
+    for i in 0..model.certification_arena.items.len() as u32 {
         f(EntityKey::Certification(CertificationId(i)));
     }
-    for i in 0..model.certification_type_arena.items.len() {
+    for i in 0..model.certification_type_arena.items.len() as u32 {
         f(EntityKey::CertificationType(CertificationTypeId(i)));
     }
-    for i in 0..model.change_arena.items.len() {
+    for i in 0..model.change_arena.items.len() as u32 {
         f(EntityKey::Change(ChangeId(i)));
     }
-    for i in 0..model.change_request_arena.items.len() {
+    for i in 0..model.change_request_arena.items.len() as u32 {
         f(EntityKey::ChangeRequest(ChangeRequestId(i)));
     }
-    for i in 0..model.character_glyph_style_outline_arena.items.len() {
+    for i in 0..model.character_glyph_style_outline_arena.items.len() as u32 {
         f(EntityKey::CharacterGlyphStyleOutline(
             CharacterGlyphStyleOutlineId(i),
         ));
     }
-    for i in 0..model.character_glyph_style_stroke_arena.items.len() {
+    for i in 0..model.character_glyph_style_stroke_arena.items.len() as u32 {
         f(EntityKey::CharacterGlyphStyleStroke(
             CharacterGlyphStyleStrokeId(i),
         ));
@@ -405,104 +405,104 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .characterized_item_within_representation_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::CharacterizedItemWithinRepresentation(
             CharacterizedItemWithinRepresentationId(i),
         ));
     }
-    for i in 0..model.characterized_object_arena.items.len() {
+    for i in 0..model.characterized_object_arena.items.len() as u32 {
         f(EntityKey::CharacterizedObject(CharacterizedObjectId(i)));
     }
-    for i in 0..model.characterized_representation_arena.items.len() {
+    for i in 0..model.characterized_representation_arena.items.len() as u32 {
         f(EntityKey::CharacterizedRepresentation(
             CharacterizedRepresentationId(i),
         ));
     }
-    for i in 0..model.circle_arena.items.len() {
+    for i in 0..model.circle_arena.items.len() as u32 {
         f(EntityKey::Circle(CircleId(i)));
     }
-    for i in 0..model.circular_runout_tolerance_arena.items.len() {
+    for i in 0..model.circular_runout_tolerance_arena.items.len() as u32 {
         f(EntityKey::CircularRunoutTolerance(
             CircularRunoutToleranceId(i),
         ));
     }
-    for i in 0..model.closed_shell_arena.items.len() {
+    for i in 0..model.closed_shell_arena.items.len() as u32 {
         f(EntityKey::ClosedShell(ClosedShellId(i)));
     }
-    for i in 0..model.coaxiality_tolerance_arena.items.len() {
+    for i in 0..model.coaxiality_tolerance_arena.items.len() as u32 {
         f(EntityKey::CoaxialityTolerance(CoaxialityToleranceId(i)));
     }
-    for i in 0..model.colour_arena.items.len() {
+    for i in 0..model.colour_arena.items.len() as u32 {
         f(EntityKey::Colour(ColourId(i)));
     }
-    for i in 0..model.colour_rgb_arena.items.len() {
+    for i in 0..model.colour_rgb_arena.items.len() as u32 {
         f(EntityKey::ColourRgb(ColourRgbId(i)));
     }
-    for i in 0..model.colour_specification_arena.items.len() {
+    for i in 0..model.colour_specification_arena.items.len() as u32 {
         f(EntityKey::ColourSpecification(ColourSpecificationId(i)));
     }
-    for i in 0..model.common_datum_arena.items.len() {
+    for i in 0..model.common_datum_arena.items.len() as u32 {
         f(EntityKey::CommonDatum(CommonDatumId(i)));
     }
-    for i in 0..model.complex_triangulated_face_arena.items.len() {
+    for i in 0..model.complex_triangulated_face_arena.items.len() as u32 {
         f(EntityKey::ComplexTriangulatedFace(
             ComplexTriangulatedFaceId(i),
         ));
     }
-    for i in 0..model.complex_triangulated_surface_set_arena.items.len() {
+    for i in 0..model.complex_triangulated_surface_set_arena.items.len() as u32 {
         f(EntityKey::ComplexTriangulatedSurfaceSet(
             ComplexTriangulatedSurfaceSetId(i),
         ));
     }
-    for i in 0..model.composite_curve_arena.items.len() {
+    for i in 0..model.composite_curve_arena.items.len() as u32 {
         f(EntityKey::CompositeCurve(CompositeCurveId(i)));
     }
-    for i in 0..model.composite_curve_segment_arena.items.len() {
+    for i in 0..model.composite_curve_segment_arena.items.len() as u32 {
         f(EntityKey::CompositeCurveSegment(CompositeCurveSegmentId(i)));
     }
-    for i in 0..model.composite_group_shape_aspect_arena.items.len() {
+    for i in 0..model.composite_group_shape_aspect_arena.items.len() as u32 {
         f(EntityKey::CompositeGroupShapeAspect(
             CompositeGroupShapeAspectId(i),
         ));
     }
-    for i in 0..model.composite_shape_aspect_arena.items.len() {
+    for i in 0..model.composite_shape_aspect_arena.items.len() as u32 {
         f(EntityKey::CompositeShapeAspect(CompositeShapeAspectId(i)));
     }
-    for i in 0..model.composite_text_arena.items.len() {
+    for i in 0..model.composite_text_arena.items.len() as u32 {
         f(EntityKey::CompositeText(CompositeTextId(i)));
     }
-    for i in 0..model.compound_representation_item_arena.items.len() {
+    for i in 0..model.compound_representation_item_arena.items.len() as u32 {
         f(EntityKey::CompoundRepresentationItem(
             CompoundRepresentationItemId(i),
         ));
     }
-    for i in 0..model.concentricity_tolerance_arena.items.len() {
+    for i in 0..model.concentricity_tolerance_arena.items.len() as u32 {
         f(EntityKey::ConcentricityTolerance(ConcentricityToleranceId(
             i,
         )));
     }
-    for i in 0..model.configuration_design_arena.items.len() {
+    for i in 0..model.configuration_design_arena.items.len() as u32 {
         f(EntityKey::ConfigurationDesign(ConfigurationDesignId(i)));
     }
-    for i in 0..model.configuration_effectivity_arena.items.len() {
+    for i in 0..model.configuration_effectivity_arena.items.len() as u32 {
         f(EntityKey::ConfigurationEffectivity(
             ConfigurationEffectivityId(i),
         ));
     }
-    for i in 0..model.configuration_item_arena.items.len() {
+    for i in 0..model.configuration_item_arena.items.len() as u32 {
         f(EntityKey::ConfigurationItem(ConfigurationItemId(i)));
     }
-    for i in 0..model.conic_arena.items.len() {
+    for i in 0..model.conic_arena.items.len() as u32 {
         f(EntityKey::Conic(ConicId(i)));
     }
-    for i in 0..model.conical_surface_arena.items.len() {
+    for i in 0..model.conical_surface_arena.items.len() as u32 {
         f(EntityKey::ConicalSurface(ConicalSurfaceId(i)));
     }
-    for i in 0..model.connected_face_set_arena.items.len() {
+    for i in 0..model.connected_face_set_arena.items.len() as u32 {
         f(EntityKey::ConnectedFaceSet(ConnectedFaceSetId(i)));
     }
-    for i in 0..model.constructive_geometry_representation_arena.items.len() {
+    for i in 0..model.constructive_geometry_representation_arena.items.len() as u32 {
         f(EntityKey::ConstructiveGeometryRepresentation(
             ConstructiveGeometryRepresentationId(i),
         ));
@@ -510,7 +510,7 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .constructive_geometry_representation_relationship_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::ConstructiveGeometryRepresentationRelationship(
             ConstructiveGeometryRepresentationRelationshipId(i),
@@ -519,7 +519,7 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .context_dependent_over_riding_styled_item_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::ContextDependentOverRidingStyledItem(
             ContextDependentOverRidingStyledItemId(i),
@@ -528,116 +528,116 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .context_dependent_shape_representation_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::ContextDependentShapeRepresentation(
             ContextDependentShapeRepresentationId(i),
         ));
     }
-    for i in 0..model.context_dependent_unit_arena.items.len() {
+    for i in 0..model.context_dependent_unit_arena.items.len() as u32 {
         f(EntityKey::ContextDependentUnit(ContextDependentUnitId(i)));
     }
-    for i in 0..model.continuous_shape_aspect_arena.items.len() {
+    for i in 0..model.continuous_shape_aspect_arena.items.len() as u32 {
         f(EntityKey::ContinuousShapeAspect(ContinuousShapeAspectId(i)));
     }
-    for i in 0..model.contract_arena.items.len() {
+    for i in 0..model.contract_arena.items.len() as u32 {
         f(EntityKey::Contract(ContractId(i)));
     }
-    for i in 0..model.contract_type_arena.items.len() {
+    for i in 0..model.contract_type_arena.items.len() as u32 {
         f(EntityKey::ContractType(ContractTypeId(i)));
     }
-    for i in 0..model.conversion_based_unit_arena.items.len() {
+    for i in 0..model.conversion_based_unit_arena.items.len() as u32 {
         f(EntityKey::ConversionBasedUnit(ConversionBasedUnitId(i)));
     }
-    for i in 0..model.coordinated_universal_time_offset_arena.items.len() {
+    for i in 0..model.coordinated_universal_time_offset_arena.items.len() as u32 {
         f(EntityKey::CoordinatedUniversalTimeOffset(
             CoordinatedUniversalTimeOffsetId(i),
         ));
     }
-    for i in 0..model.coordinates_list_arena.items.len() {
+    for i in 0..model.coordinates_list_arena.items.len() as u32 {
         f(EntityKey::CoordinatesList(CoordinatesListId(i)));
     }
-    for i in 0..model.curve_arena.items.len() {
+    for i in 0..model.curve_arena.items.len() as u32 {
         f(EntityKey::Curve(CurveId(i)));
     }
-    for i in 0..model.curve_style_arena.items.len() {
+    for i in 0..model.curve_style_arena.items.len() as u32 {
         f(EntityKey::CurveStyle(CurveStyleId(i)));
     }
-    for i in 0..model.curve_style_font_arena.items.len() {
+    for i in 0..model.curve_style_font_arena.items.len() as u32 {
         f(EntityKey::CurveStyleFont(CurveStyleFontId(i)));
     }
-    for i in 0..model.curve_style_font_and_scaling_arena.items.len() {
+    for i in 0..model.curve_style_font_and_scaling_arena.items.len() as u32 {
         f(EntityKey::CurveStyleFontAndScaling(
             CurveStyleFontAndScalingId(i),
         ));
     }
-    for i in 0..model.curve_style_font_pattern_arena.items.len() {
+    for i in 0..model.curve_style_font_pattern_arena.items.len() as u32 {
         f(EntityKey::CurveStyleFontPattern(CurveStyleFontPatternId(i)));
     }
-    for i in 0..model.curve_style_rendering_arena.items.len() {
+    for i in 0..model.curve_style_rendering_arena.items.len() as u32 {
         f(EntityKey::CurveStyleRendering(CurveStyleRenderingId(i)));
     }
-    for i in 0..model.cylindrical_surface_arena.items.len() {
+    for i in 0..model.cylindrical_surface_arena.items.len() as u32 {
         f(EntityKey::CylindricalSurface(CylindricalSurfaceId(i)));
     }
-    for i in 0..model.cylindricity_tolerance_arena.items.len() {
+    for i in 0..model.cylindricity_tolerance_arena.items.len() as u32 {
         f(EntityKey::CylindricityTolerance(CylindricityToleranceId(i)));
     }
-    for i in 0..model.date_arena.items.len() {
+    for i in 0..model.date_arena.items.len() as u32 {
         f(EntityKey::Date(DateId(i)));
     }
-    for i in 0..model.date_and_time_arena.items.len() {
+    for i in 0..model.date_and_time_arena.items.len() as u32 {
         f(EntityKey::DateAndTime(DateAndTimeId(i)));
     }
-    for i in 0..model.date_and_time_assignment_arena.items.len() {
+    for i in 0..model.date_and_time_assignment_arena.items.len() as u32 {
         f(EntityKey::DateAndTimeAssignment(DateAndTimeAssignmentId(i)));
     }
-    for i in 0..model.date_role_arena.items.len() {
+    for i in 0..model.date_role_arena.items.len() as u32 {
         f(EntityKey::DateRole(DateRoleId(i)));
     }
-    for i in 0..model.date_time_role_arena.items.len() {
+    for i in 0..model.date_time_role_arena.items.len() as u32 {
         f(EntityKey::DateTimeRole(DateTimeRoleId(i)));
     }
-    for i in 0..model.datum_arena.items.len() {
+    for i in 0..model.datum_arena.items.len() as u32 {
         f(EntityKey::Datum(DatumId(i)));
     }
-    for i in 0..model.datum_feature_arena.items.len() {
+    for i in 0..model.datum_feature_arena.items.len() as u32 {
         f(EntityKey::DatumFeature(DatumFeatureId(i)));
     }
-    for i in 0..model.datum_reference_arena.items.len() {
+    for i in 0..model.datum_reference_arena.items.len() as u32 {
         f(EntityKey::DatumReference(DatumReferenceId(i)));
     }
-    for i in 0..model.datum_reference_compartment_arena.items.len() {
+    for i in 0..model.datum_reference_compartment_arena.items.len() as u32 {
         f(EntityKey::DatumReferenceCompartment(
             DatumReferenceCompartmentId(i),
         ));
     }
-    for i in 0..model.datum_reference_element_arena.items.len() {
+    for i in 0..model.datum_reference_element_arena.items.len() as u32 {
         f(EntityKey::DatumReferenceElement(DatumReferenceElementId(i)));
     }
-    for i in 0..model.datum_reference_modifier_with_value_arena.items.len() {
+    for i in 0..model.datum_reference_modifier_with_value_arena.items.len() as u32 {
         f(EntityKey::DatumReferenceModifierWithValue(
             DatumReferenceModifierWithValueId(i),
         ));
     }
-    for i in 0..model.datum_system_arena.items.len() {
+    for i in 0..model.datum_system_arena.items.len() as u32 {
         f(EntityKey::DatumSystem(DatumSystemId(i)));
     }
-    for i in 0..model.datum_target_arena.items.len() {
+    for i in 0..model.datum_target_arena.items.len() as u32 {
         f(EntityKey::DatumTarget(DatumTargetId(i)));
     }
-    for i in 0..model.default_model_geometric_view_arena.items.len() {
+    for i in 0..model.default_model_geometric_view_arena.items.len() as u32 {
         f(EntityKey::DefaultModelGeometricView(
             DefaultModelGeometricViewId(i),
         ));
     }
-    for i in 0..model.defined_character_glyph_arena.items.len() {
+    for i in 0..model.defined_character_glyph_arena.items.len() as u32 {
         f(EntityKey::DefinedCharacterGlyph(DefinedCharacterGlyphId(i)));
     }
-    for i in 0..model.defined_symbol_arena.items.len() {
+    for i in 0..model.defined_symbol_arena.items.len() as u32 {
         f(EntityKey::DefinedSymbol(DefinedSymbolId(i)));
     }
-    for i in 0..model.definitional_representation_arena.items.len() {
+    for i in 0..model.definitional_representation_arena.items.len() as u32 {
         f(EntityKey::DefinitionalRepresentation(
             DefinitionalRepresentationId(i),
         ));
@@ -645,7 +645,7 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .definitional_representation_relationship_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::DefinitionalRepresentationRelationship(
             DefinitionalRepresentationRelationshipId(i),
@@ -654,7 +654,7 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .definitional_representation_relationship_with_same_context_arena
         .items
-        .len()
+        .len() as u32
     {
         f(
             EntityKey::DefinitionalRepresentationRelationshipWithSameContext(
@@ -662,116 +662,116 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
             ),
         );
     }
-    for i in 0..model.degenerate_toroidal_surface_arena.items.len() {
+    for i in 0..model.degenerate_toroidal_surface_arena.items.len() as u32 {
         f(EntityKey::DegenerateToroidalSurface(
             DegenerateToroidalSurfaceId(i),
         ));
     }
-    for i in 0..model.derived_shape_aspect_arena.items.len() {
+    for i in 0..model.derived_shape_aspect_arena.items.len() as u32 {
         f(EntityKey::DerivedShapeAspect(DerivedShapeAspectId(i)));
     }
-    for i in 0..model.derived_unit_arena.items.len() {
+    for i in 0..model.derived_unit_arena.items.len() as u32 {
         f(EntityKey::DerivedUnit(DerivedUnitId(i)));
     }
-    for i in 0..model.derived_unit_element_arena.items.len() {
+    for i in 0..model.derived_unit_element_arena.items.len() as u32 {
         f(EntityKey::DerivedUnitElement(DerivedUnitElementId(i)));
     }
-    for i in 0..model.description_attribute_arena.items.len() {
+    for i in 0..model.description_attribute_arena.items.len() as u32 {
         f(EntityKey::DescriptionAttribute(DescriptionAttributeId(i)));
     }
-    for i in 0..model.descriptive_representation_item_arena.items.len() {
+    for i in 0..model.descriptive_representation_item_arena.items.len() as u32 {
         f(EntityKey::DescriptiveRepresentationItem(
             DescriptiveRepresentationItemId(i),
         ));
     }
-    for i in 0..model.design_context_arena.items.len() {
+    for i in 0..model.design_context_arena.items.len() as u32 {
         f(EntityKey::DesignContext(DesignContextId(i)));
     }
     for i in 0..model
         .dimensional_characteristic_representation_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::DimensionalCharacteristicRepresentation(
             DimensionalCharacteristicRepresentationId(i),
         ));
     }
-    for i in 0..model.dimensional_exponents_arena.items.len() {
+    for i in 0..model.dimensional_exponents_arena.items.len() as u32 {
         f(EntityKey::DimensionalExponents(DimensionalExponentsId(i)));
     }
-    for i in 0..model.dimensional_location_arena.items.len() {
+    for i in 0..model.dimensional_location_arena.items.len() as u32 {
         f(EntityKey::DimensionalLocation(DimensionalLocationId(i)));
     }
-    for i in 0..model.dimensional_location_with_path_arena.items.len() {
+    for i in 0..model.dimensional_location_with_path_arena.items.len() as u32 {
         f(EntityKey::DimensionalLocationWithPath(
             DimensionalLocationWithPathId(i),
         ));
     }
-    for i in 0..model.dimensional_size_arena.items.len() {
+    for i in 0..model.dimensional_size_arena.items.len() as u32 {
         f(EntityKey::DimensionalSize(DimensionalSizeId(i)));
     }
-    for i in 0..model.dimensional_size_with_datum_feature_arena.items.len() {
+    for i in 0..model.dimensional_size_with_datum_feature_arena.items.len() as u32 {
         f(EntityKey::DimensionalSizeWithDatumFeature(
             DimensionalSizeWithDatumFeatureId(i),
         ));
     }
-    for i in 0..model.dimensional_size_with_path_arena.items.len() {
+    for i in 0..model.dimensional_size_with_path_arena.items.len() as u32 {
         f(EntityKey::DimensionalSizeWithPath(
             DimensionalSizeWithPathId(i),
         ));
     }
-    for i in 0..model.directed_dimensional_location_arena.items.len() {
+    for i in 0..model.directed_dimensional_location_arena.items.len() as u32 {
         f(EntityKey::DirectedDimensionalLocation(
             DirectedDimensionalLocationId(i),
         ));
     }
-    for i in 0..model.direction_arena.items.len() {
+    for i in 0..model.direction_arena.items.len() as u32 {
         f(EntityKey::Direction(DirectionId(i)));
     }
-    for i in 0..model.document_arena.items.len() {
+    for i in 0..model.document_arena.items.len() as u32 {
         f(EntityKey::Document(DocumentId(i)));
     }
-    for i in 0..model.document_file_arena.items.len() {
+    for i in 0..model.document_file_arena.items.len() as u32 {
         f(EntityKey::DocumentFile(DocumentFileId(i)));
     }
-    for i in 0..model.document_product_association_arena.items.len() {
+    for i in 0..model.document_product_association_arena.items.len() as u32 {
         f(EntityKey::DocumentProductAssociation(
             DocumentProductAssociationId(i),
         ));
     }
-    for i in 0..model.document_product_equivalence_arena.items.len() {
+    for i in 0..model.document_product_equivalence_arena.items.len() as u32 {
         f(EntityKey::DocumentProductEquivalence(
             DocumentProductEquivalenceId(i),
         ));
     }
-    for i in 0..model.document_reference_arena.items.len() {
+    for i in 0..model.document_reference_arena.items.len() as u32 {
         f(EntityKey::DocumentReference(DocumentReferenceId(i)));
     }
-    for i in 0..model.document_representation_type_arena.items.len() {
+    for i in 0..model.document_representation_type_arena.items.len() as u32 {
         f(EntityKey::DocumentRepresentationType(
             DocumentRepresentationTypeId(i),
         ));
     }
-    for i in 0..model.document_type_arena.items.len() {
+    for i in 0..model.document_type_arena.items.len() as u32 {
         f(EntityKey::DocumentType(DocumentTypeId(i)));
     }
-    for i in 0..model.draughting_annotation_occurrence_arena.items.len() {
+    for i in 0..model.draughting_annotation_occurrence_arena.items.len() as u32 {
         f(EntityKey::DraughtingAnnotationOccurrence(
             DraughtingAnnotationOccurrenceId(i),
         ));
     }
-    for i in 0..model.draughting_callout_arena.items.len() {
+    for i in 0..model.draughting_callout_arena.items.len() as u32 {
         f(EntityKey::DraughtingCallout(DraughtingCalloutId(i)));
     }
-    for i in 0..model.draughting_callout_relationship_arena.items.len() {
+    for i in 0..model.draughting_callout_relationship_arena.items.len() as u32 {
         f(EntityKey::DraughtingCalloutRelationship(
             DraughtingCalloutRelationshipId(i),
         ));
     }
-    for i in 0..model.draughting_model_arena.items.len() {
+    for i in 0..model.draughting_model_arena.items.len() as u32 {
         f(EntityKey::DraughtingModel(DraughtingModelId(i)));
     }
-    for i in 0..model.draughting_model_item_association_arena.items.len() {
+    for i in 0..model.draughting_model_item_association_arena.items.len() as u32 {
         f(EntityKey::DraughtingModelItemAssociation(
             DraughtingModelItemAssociationId(i),
         ));
@@ -779,128 +779,128 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .draughting_model_item_association_with_placeholder_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::DraughtingModelItemAssociationWithPlaceholder(
             DraughtingModelItemAssociationWithPlaceholderId(i),
         ));
     }
-    for i in 0..model.draughting_pre_defined_colour_arena.items.len() {
+    for i in 0..model.draughting_pre_defined_colour_arena.items.len() as u32 {
         f(EntityKey::DraughtingPreDefinedColour(
             DraughtingPreDefinedColourId(i),
         ));
     }
-    for i in 0..model.draughting_pre_defined_curve_font_arena.items.len() {
+    for i in 0..model.draughting_pre_defined_curve_font_arena.items.len() as u32 {
         f(EntityKey::DraughtingPreDefinedCurveFont(
             DraughtingPreDefinedCurveFontId(i),
         ));
     }
-    for i in 0..model.draughting_pre_defined_text_font_arena.items.len() {
+    for i in 0..model.draughting_pre_defined_text_font_arena.items.len() as u32 {
         f(EntityKey::DraughtingPreDefinedTextFont(
             DraughtingPreDefinedTextFontId(i),
         ));
     }
-    for i in 0..model.edge_arena.items.len() {
+    for i in 0..model.edge_arena.items.len() as u32 {
         f(EntityKey::Edge(EdgeId(i)));
     }
-    for i in 0..model.edge_curve_arena.items.len() {
+    for i in 0..model.edge_curve_arena.items.len() as u32 {
         f(EntityKey::EdgeCurve(EdgeCurveId(i)));
     }
-    for i in 0..model.edge_loop_arena.items.len() {
+    for i in 0..model.edge_loop_arena.items.len() as u32 {
         f(EntityKey::EdgeLoop(EdgeLoopId(i)));
     }
-    for i in 0..model.effectivity_arena.items.len() {
+    for i in 0..model.effectivity_arena.items.len() as u32 {
         f(EntityKey::Effectivity(EffectivityId(i)));
     }
-    for i in 0..model.elementary_surface_arena.items.len() {
+    for i in 0..model.elementary_surface_arena.items.len() as u32 {
         f(EntityKey::ElementarySurface(ElementarySurfaceId(i)));
     }
-    for i in 0..model.ellipse_arena.items.len() {
+    for i in 0..model.ellipse_arena.items.len() as u32 {
         f(EntityKey::Ellipse(EllipseId(i)));
     }
-    for i in 0..model.expression_arena.items.len() {
+    for i in 0..model.expression_arena.items.len() as u32 {
         f(EntityKey::Expression(ExpressionId(i)));
     }
-    for i in 0..model.external_identification_assignment_arena.items.len() {
+    for i in 0..model.external_identification_assignment_arena.items.len() as u32 {
         f(EntityKey::ExternalIdentificationAssignment(
             ExternalIdentificationAssignmentId(i),
         ));
     }
-    for i in 0..model.external_source_arena.items.len() {
+    for i in 0..model.external_source_arena.items.len() as u32 {
         f(EntityKey::ExternalSource(ExternalSourceId(i)));
     }
-    for i in 0..model.externally_defined_character_glyph_arena.items.len() {
+    for i in 0..model.externally_defined_character_glyph_arena.items.len() as u32 {
         f(EntityKey::ExternallyDefinedCharacterGlyph(
             ExternallyDefinedCharacterGlyphId(i),
         ));
     }
-    for i in 0..model.externally_defined_curve_font_arena.items.len() {
+    for i in 0..model.externally_defined_curve_font_arena.items.len() as u32 {
         f(EntityKey::ExternallyDefinedCurveFont(
             ExternallyDefinedCurveFontId(i),
         ));
     }
-    for i in 0..model.externally_defined_hatch_style_arena.items.len() {
+    for i in 0..model.externally_defined_hatch_style_arena.items.len() as u32 {
         f(EntityKey::ExternallyDefinedHatchStyle(
             ExternallyDefinedHatchStyleId(i),
         ));
     }
-    for i in 0..model.externally_defined_item_arena.items.len() {
+    for i in 0..model.externally_defined_item_arena.items.len() as u32 {
         f(EntityKey::ExternallyDefinedItem(ExternallyDefinedItemId(i)));
     }
-    for i in 0..model.externally_defined_style_arena.items.len() {
+    for i in 0..model.externally_defined_style_arena.items.len() as u32 {
         f(EntityKey::ExternallyDefinedStyle(ExternallyDefinedStyleId(
             i,
         )));
     }
-    for i in 0..model.externally_defined_symbol_arena.items.len() {
+    for i in 0..model.externally_defined_symbol_arena.items.len() as u32 {
         f(EntityKey::ExternallyDefinedSymbol(
             ExternallyDefinedSymbolId(i),
         ));
     }
-    for i in 0..model.externally_defined_text_font_arena.items.len() {
+    for i in 0..model.externally_defined_text_font_arena.items.len() as u32 {
         f(EntityKey::ExternallyDefinedTextFont(
             ExternallyDefinedTextFontId(i),
         ));
     }
-    for i in 0..model.externally_defined_tile_arena.items.len() {
+    for i in 0..model.externally_defined_tile_arena.items.len() as u32 {
         f(EntityKey::ExternallyDefinedTile(ExternallyDefinedTileId(i)));
     }
-    for i in 0..model.externally_defined_tile_style_arena.items.len() {
+    for i in 0..model.externally_defined_tile_style_arena.items.len() as u32 {
         f(EntityKey::ExternallyDefinedTileStyle(
             ExternallyDefinedTileStyleId(i),
         ));
     }
-    for i in 0..model.face_arena.items.len() {
+    for i in 0..model.face_arena.items.len() as u32 {
         f(EntityKey::Face(FaceId(i)));
     }
-    for i in 0..model.face_bound_arena.items.len() {
+    for i in 0..model.face_bound_arena.items.len() as u32 {
         f(EntityKey::FaceBound(FaceBoundId(i)));
     }
-    for i in 0..model.face_outer_bound_arena.items.len() {
+    for i in 0..model.face_outer_bound_arena.items.len() as u32 {
         f(EntityKey::FaceOuterBound(FaceOuterBoundId(i)));
     }
-    for i in 0..model.face_surface_arena.items.len() {
+    for i in 0..model.face_surface_arena.items.len() as u32 {
         f(EntityKey::FaceSurface(FaceSurfaceId(i)));
     }
     for i in 0..model
         .feature_for_datum_target_relationship_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::FeatureForDatumTargetRelationship(
             FeatureForDatumTargetRelationshipId(i),
         ));
     }
-    for i in 0..model.fill_area_style_arena.items.len() {
+    for i in 0..model.fill_area_style_arena.items.len() as u32 {
         f(EntityKey::FillAreaStyle(FillAreaStyleId(i)));
     }
-    for i in 0..model.fill_area_style_colour_arena.items.len() {
+    for i in 0..model.fill_area_style_colour_arena.items.len() as u32 {
         f(EntityKey::FillAreaStyleColour(FillAreaStyleColourId(i)));
     }
-    for i in 0..model.fill_area_style_hatching_arena.items.len() {
+    for i in 0..model.fill_area_style_hatching_arena.items.len() as u32 {
         f(EntityKey::FillAreaStyleHatching(FillAreaStyleHatchingId(i)));
     }
-    for i in 0..model.fill_area_style_tile_coloured_region_arena.items.len() {
+    for i in 0..model.fill_area_style_tile_coloured_region_arena.items.len() as u32 {
         f(EntityKey::FillAreaStyleTileColouredRegion(
             FillAreaStyleTileColouredRegionId(i),
         ));
@@ -908,7 +908,7 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .fill_area_style_tile_curve_with_style_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::FillAreaStyleTileCurveWithStyle(
             FillAreaStyleTileCurveWithStyleId(i),
@@ -917,73 +917,73 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .fill_area_style_tile_symbol_with_style_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::FillAreaStyleTileSymbolWithStyle(
             FillAreaStyleTileSymbolWithStyleId(i),
         ));
     }
-    for i in 0..model.fill_area_style_tiles_arena.items.len() {
+    for i in 0..model.fill_area_style_tiles_arena.items.len() as u32 {
         f(EntityKey::FillAreaStyleTiles(FillAreaStyleTilesId(i)));
     }
-    for i in 0..model.flatness_tolerance_arena.items.len() {
+    for i in 0..model.flatness_tolerance_arena.items.len() as u32 {
         f(EntityKey::FlatnessTolerance(FlatnessToleranceId(i)));
     }
-    for i in 0..model.founded_item_arena.items.len() {
+    for i in 0..model.founded_item_arena.items.len() as u32 {
         f(EntityKey::FoundedItem(FoundedItemId(i)));
     }
-    for i in 0..model.functionally_defined_transformation_arena.items.len() {
+    for i in 0..model.functionally_defined_transformation_arena.items.len() as u32 {
         f(EntityKey::FunctionallyDefinedTransformation(
             FunctionallyDefinedTransformationId(i),
         ));
     }
-    for i in 0..model.general_datum_reference_arena.items.len() {
+    for i in 0..model.general_datum_reference_arena.items.len() as u32 {
         f(EntityKey::GeneralDatumReference(GeneralDatumReferenceId(i)));
     }
-    for i in 0..model.general_property_arena.items.len() {
+    for i in 0..model.general_property_arena.items.len() as u32 {
         f(EntityKey::GeneralProperty(GeneralPropertyId(i)));
     }
-    for i in 0..model.general_property_association_arena.items.len() {
+    for i in 0..model.general_property_association_arena.items.len() as u32 {
         f(EntityKey::GeneralPropertyAssociation(
             GeneralPropertyAssociationId(i),
         ));
     }
-    for i in 0..model.generic_expression_arena.items.len() {
+    for i in 0..model.generic_expression_arena.items.len() as u32 {
         f(EntityKey::GenericExpression(GenericExpressionId(i)));
     }
-    for i in 0..model.generic_literal_arena.items.len() {
+    for i in 0..model.generic_literal_arena.items.len() as u32 {
         f(EntityKey::GenericLiteral(GenericLiteralId(i)));
     }
-    for i in 0..model.generic_product_definition_reference_arena.items.len() {
+    for i in 0..model.generic_product_definition_reference_arena.items.len() as u32 {
         f(EntityKey::GenericProductDefinitionReference(
             GenericProductDefinitionReferenceId(i),
         ));
     }
-    for i in 0..model.geometric_curve_set_arena.items.len() {
+    for i in 0..model.geometric_curve_set_arena.items.len() as u32 {
         f(EntityKey::GeometricCurveSet(GeometricCurveSetId(i)));
     }
-    for i in 0..model.geometric_item_specific_usage_arena.items.len() {
+    for i in 0..model.geometric_item_specific_usage_arena.items.len() as u32 {
         f(EntityKey::GeometricItemSpecificUsage(
             GeometricItemSpecificUsageId(i),
         ));
     }
-    for i in 0..model.geometric_representation_context_arena.items.len() {
+    for i in 0..model.geometric_representation_context_arena.items.len() as u32 {
         f(EntityKey::GeometricRepresentationContext(
             GeometricRepresentationContextId(i),
         ));
     }
-    for i in 0..model.geometric_representation_item_arena.items.len() {
+    for i in 0..model.geometric_representation_item_arena.items.len() as u32 {
         f(EntityKey::GeometricRepresentationItem(
             GeometricRepresentationItemId(i),
         ));
     }
-    for i in 0..model.geometric_set_arena.items.len() {
+    for i in 0..model.geometric_set_arena.items.len() as u32 {
         f(EntityKey::GeometricSet(GeometricSetId(i)));
     }
-    for i in 0..model.geometric_tolerance_arena.items.len() {
+    for i in 0..model.geometric_tolerance_arena.items.len() as u32 {
         f(EntityKey::GeometricTolerance(GeometricToleranceId(i)));
     }
-    for i in 0..model.geometric_tolerance_relationship_arena.items.len() {
+    for i in 0..model.geometric_tolerance_relationship_arena.items.len() as u32 {
         f(EntityKey::GeometricToleranceRelationship(
             GeometricToleranceRelationshipId(i),
         ));
@@ -991,7 +991,7 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .geometric_tolerance_with_datum_reference_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::GeometricToleranceWithDatumReference(
             GeometricToleranceWithDatumReferenceId(i),
@@ -1000,7 +1000,7 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .geometric_tolerance_with_defined_area_unit_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::GeometricToleranceWithDefinedAreaUnit(
             GeometricToleranceWithDefinedAreaUnitId(i),
@@ -1009,7 +1009,7 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .geometric_tolerance_with_defined_unit_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::GeometricToleranceWithDefinedUnit(
             GeometricToleranceWithDefinedUnitId(i),
@@ -1018,13 +1018,13 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .geometric_tolerance_with_maximum_tolerance_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::GeometricToleranceWithMaximumTolerance(
             GeometricToleranceWithMaximumToleranceId(i),
         ));
     }
-    for i in 0..model.geometric_tolerance_with_modifiers_arena.items.len() {
+    for i in 0..model.geometric_tolerance_with_modifiers_arena.items.len() as u32 {
         f(EntityKey::GeometricToleranceWithModifiers(
             GeometricToleranceWithModifiersId(i),
         ));
@@ -1032,7 +1032,7 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .geometrically_bounded_surface_shape_representation_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(
             GeometricallyBoundedSurfaceShapeRepresentationId(i),
@@ -1041,141 +1041,141 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .geometrically_bounded_wireframe_shape_representation_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::GeometricallyBoundedWireframeShapeRepresentation(
             GeometricallyBoundedWireframeShapeRepresentationId(i),
         ));
     }
-    for i in 0..model.global_uncertainty_assigned_context_arena.items.len() {
+    for i in 0..model.global_uncertainty_assigned_context_arena.items.len() as u32 {
         f(EntityKey::GlobalUncertaintyAssignedContext(
             GlobalUncertaintyAssignedContextId(i),
         ));
     }
-    for i in 0..model.global_unit_assigned_context_arena.items.len() {
+    for i in 0..model.global_unit_assigned_context_arena.items.len() as u32 {
         f(EntityKey::GlobalUnitAssignedContext(
             GlobalUnitAssignedContextId(i),
         ));
     }
-    for i in 0..model.group_arena.items.len() {
+    for i in 0..model.group_arena.items.len() as u32 {
         f(EntityKey::Group(GroupId(i)));
     }
-    for i in 0..model.group_assignment_arena.items.len() {
+    for i in 0..model.group_assignment_arena.items.len() as u32 {
         f(EntityKey::GroupAssignment(GroupAssignmentId(i)));
     }
-    for i in 0..model.hyperbola_arena.items.len() {
+    for i in 0..model.hyperbola_arena.items.len() as u32 {
         f(EntityKey::Hyperbola(HyperbolaId(i)));
     }
-    for i in 0..model.id_attribute_arena.items.len() {
+    for i in 0..model.id_attribute_arena.items.len() as u32 {
         f(EntityKey::IdAttribute(IdAttributeId(i)));
     }
-    for i in 0..model.identification_assignment_arena.items.len() {
+    for i in 0..model.identification_assignment_arena.items.len() as u32 {
         f(EntityKey::IdentificationAssignment(
             IdentificationAssignmentId(i),
         ));
     }
-    for i in 0..model.identification_role_arena.items.len() {
+    for i in 0..model.identification_role_arena.items.len() as u32 {
         f(EntityKey::IdentificationRole(IdentificationRoleId(i)));
     }
-    for i in 0..model.int_literal_arena.items.len() {
+    for i in 0..model.int_literal_arena.items.len() as u32 {
         f(EntityKey::IntLiteral(IntLiteralId(i)));
     }
-    for i in 0..model.integer_representation_item_arena.items.len() {
+    for i in 0..model.integer_representation_item_arena.items.len() as u32 {
         f(EntityKey::IntegerRepresentationItem(
             IntegerRepresentationItemId(i),
         ));
     }
-    for i in 0..model.intersection_curve_arena.items.len() {
+    for i in 0..model.intersection_curve_arena.items.len() as u32 {
         f(EntityKey::IntersectionCurve(IntersectionCurveId(i)));
     }
-    for i in 0..model.invisibility_arena.items.len() {
+    for i in 0..model.invisibility_arena.items.len() as u32 {
         f(EntityKey::Invisibility(InvisibilityId(i)));
     }
-    for i in 0..model.item_defined_transformation_arena.items.len() {
+    for i in 0..model.item_defined_transformation_arena.items.len() as u32 {
         f(EntityKey::ItemDefinedTransformation(
             ItemDefinedTransformationId(i),
         ));
     }
-    for i in 0..model.item_identified_representation_usage_arena.items.len() {
+    for i in 0..model.item_identified_representation_usage_arena.items.len() as u32 {
         f(EntityKey::ItemIdentifiedRepresentationUsage(
             ItemIdentifiedRepresentationUsageId(i),
         ));
     }
-    for i in 0..model.leader_curve_arena.items.len() {
+    for i in 0..model.leader_curve_arena.items.len() as u32 {
         f(EntityKey::LeaderCurve(LeaderCurveId(i)));
     }
-    for i in 0..model.leader_directed_callout_arena.items.len() {
+    for i in 0..model.leader_directed_callout_arena.items.len() as u32 {
         f(EntityKey::LeaderDirectedCallout(LeaderDirectedCalloutId(i)));
     }
-    for i in 0..model.leader_terminator_arena.items.len() {
+    for i in 0..model.leader_terminator_arena.items.len() as u32 {
         f(EntityKey::LeaderTerminator(LeaderTerminatorId(i)));
     }
-    for i in 0..model.length_measure_with_unit_arena.items.len() {
+    for i in 0..model.length_measure_with_unit_arena.items.len() as u32 {
         f(EntityKey::LengthMeasureWithUnit(LengthMeasureWithUnitId(i)));
     }
-    for i in 0..model.length_unit_arena.items.len() {
+    for i in 0..model.length_unit_arena.items.len() as u32 {
         f(EntityKey::LengthUnit(LengthUnitId(i)));
     }
-    for i in 0..model.limits_and_fits_arena.items.len() {
+    for i in 0..model.limits_and_fits_arena.items.len() as u32 {
         f(EntityKey::LimitsAndFits(LimitsAndFitsId(i)));
     }
-    for i in 0..model.line_arena.items.len() {
+    for i in 0..model.line_arena.items.len() as u32 {
         f(EntityKey::Line(LineId(i)));
     }
-    for i in 0..model.line_profile_tolerance_arena.items.len() {
+    for i in 0..model.line_profile_tolerance_arena.items.len() as u32 {
         f(EntityKey::LineProfileTolerance(LineProfileToleranceId(i)));
     }
-    for i in 0..model.literal_number_arena.items.len() {
+    for i in 0..model.literal_number_arena.items.len() as u32 {
         f(EntityKey::LiteralNumber(LiteralNumberId(i)));
     }
-    for i in 0..model.local_time_arena.items.len() {
+    for i in 0..model.local_time_arena.items.len() as u32 {
         f(EntityKey::LocalTime(LocalTimeId(i)));
     }
-    for i in 0..model.loop_arena.items.len() {
+    for i in 0..model.loop_arena.items.len() as u32 {
         f(EntityKey::Loop(LoopId(i)));
     }
-    for i in 0..model.make_from_usage_option_arena.items.len() {
+    for i in 0..model.make_from_usage_option_arena.items.len() as u32 {
         f(EntityKey::MakeFromUsageOption(MakeFromUsageOptionId(i)));
     }
-    for i in 0..model.manifold_solid_brep_arena.items.len() {
+    for i in 0..model.manifold_solid_brep_arena.items.len() as u32 {
         f(EntityKey::ManifoldSolidBrep(ManifoldSolidBrepId(i)));
     }
     for i in 0..model
         .manifold_surface_shape_representation_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::ManifoldSurfaceShapeRepresentation(
             ManifoldSurfaceShapeRepresentationId(i),
         ));
     }
-    for i in 0..model.mapped_item_arena.items.len() {
+    for i in 0..model.mapped_item_arena.items.len() as u32 {
         f(EntityKey::MappedItem(MappedItemId(i)));
     }
-    for i in 0..model.mass_measure_with_unit_arena.items.len() {
+    for i in 0..model.mass_measure_with_unit_arena.items.len() as u32 {
         f(EntityKey::MassMeasureWithUnit(MassMeasureWithUnitId(i)));
     }
-    for i in 0..model.mass_unit_arena.items.len() {
+    for i in 0..model.mass_unit_arena.items.len() as u32 {
         f(EntityKey::MassUnit(MassUnitId(i)));
     }
-    for i in 0..model.measure_qualification_arena.items.len() {
+    for i in 0..model.measure_qualification_arena.items.len() as u32 {
         f(EntityKey::MeasureQualification(MeasureQualificationId(i)));
     }
-    for i in 0..model.measure_representation_item_arena.items.len() {
+    for i in 0..model.measure_representation_item_arena.items.len() as u32 {
         f(EntityKey::MeasureRepresentationItem(
             MeasureRepresentationItemId(i),
         ));
     }
-    for i in 0..model.measure_with_unit_arena.items.len() {
+    for i in 0..model.measure_with_unit_arena.items.len() as u32 {
         f(EntityKey::MeasureWithUnit(MeasureWithUnitId(i)));
     }
-    for i in 0..model.mechanical_context_arena.items.len() {
+    for i in 0..model.mechanical_context_arena.items.len() as u32 {
         f(EntityKey::MechanicalContext(MechanicalContextId(i)));
     }
     for i in 0..model
         .mechanical_design_and_draughting_relationship_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::MechanicalDesignAndDraughtingRelationship(
             MechanicalDesignAndDraughtingRelationshipId(i),
@@ -1184,7 +1184,7 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .mechanical_design_geometric_presentation_representation_arena
         .items
-        .len()
+        .len() as u32
     {
         f(
             EntityKey::MechanicalDesignGeometricPresentationRepresentation(
@@ -1195,7 +1195,7 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .mechanical_design_presentation_representation_with_draughting_arena
         .items
-        .len()
+        .len() as u32
     {
         f(
             EntityKey::MechanicalDesignPresentationRepresentationWithDraughting(
@@ -1206,297 +1206,300 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .mechanical_design_shaded_presentation_representation_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::MechanicalDesignShadedPresentationRepresentation(
             MechanicalDesignShadedPresentationRepresentationId(i),
         ));
     }
-    for i in 0..model.model_geometric_view_arena.items.len() {
+    for i in 0..model.model_geometric_view_arena.items.len() as u32 {
         f(EntityKey::ModelGeometricView(ModelGeometricViewId(i)));
     }
-    for i in 0..model.modified_geometric_tolerance_arena.items.len() {
+    for i in 0..model.modified_geometric_tolerance_arena.items.len() as u32 {
         f(EntityKey::ModifiedGeometricTolerance(
             ModifiedGeometricToleranceId(i),
         ));
     }
-    for i in 0..model.name_attribute_arena.items.len() {
+    for i in 0..model.name_attribute_arena.items.len() as u32 {
         f(EntityKey::NameAttribute(NameAttributeId(i)));
     }
-    for i in 0..model.named_unit_arena.items.len() {
+    for i in 0..model.named_unit_arena.items.len() as u32 {
         f(EntityKey::NamedUnit(NamedUnitId(i)));
     }
-    for i in 0..model.next_assembly_usage_occurrence_arena.items.len() {
+    for i in 0..model.next_assembly_usage_occurrence_arena.items.len() as u32 {
         f(EntityKey::NextAssemblyUsageOccurrence(
             NextAssemblyUsageOccurrenceId(i),
         ));
     }
-    for i in 0..model.numeric_expression_arena.items.len() {
+    for i in 0..model.numeric_expression_arena.items.len() as u32 {
         f(EntityKey::NumericExpression(NumericExpressionId(i)));
     }
-    for i in 0..model.object_role_arena.items.len() {
+    for i in 0..model.object_role_arena.items.len() as u32 {
         f(EntityKey::ObjectRole(ObjectRoleId(i)));
     }
-    for i in 0..model.offset_surface_arena.items.len() {
+    for i in 0..model.offset_surface_arena.items.len() as u32 {
         f(EntityKey::OffsetSurface(OffsetSurfaceId(i)));
     }
-    for i in 0..model.one_direction_repeat_factor_arena.items.len() {
+    for i in 0..model.one_direction_repeat_factor_arena.items.len() as u32 {
         f(EntityKey::OneDirectionRepeatFactor(
             OneDirectionRepeatFactorId(i),
         ));
     }
-    for i in 0..model.open_shell_arena.items.len() {
+    for i in 0..model.open_shell_arena.items.len() as u32 {
         f(EntityKey::OpenShell(OpenShellId(i)));
     }
-    for i in 0..model.organization_arena.items.len() {
+    for i in 0..model.organization_arena.items.len() as u32 {
         f(EntityKey::Organization(OrganizationId(i)));
     }
-    for i in 0..model.organization_relationship_arena.items.len() {
+    for i in 0..model.organization_relationship_arena.items.len() as u32 {
         f(EntityKey::OrganizationRelationship(
             OrganizationRelationshipId(i),
         ));
     }
-    for i in 0..model.organization_role_arena.items.len() {
+    for i in 0..model.organization_role_arena.items.len() as u32 {
         f(EntityKey::OrganizationRole(OrganizationRoleId(i)));
     }
-    for i in 0..model.organization_type_arena.items.len() {
+    for i in 0..model.organization_type_arena.items.len() as u32 {
         f(EntityKey::OrganizationType(OrganizationTypeId(i)));
     }
-    for i in 0..model.organization_type_role_arena.items.len() {
+    for i in 0..model.organization_type_role_arena.items.len() as u32 {
         f(EntityKey::OrganizationTypeRole(OrganizationTypeRoleId(i)));
     }
-    for i in 0..model.organizational_address_arena.items.len() {
+    for i in 0..model.organizational_address_arena.items.len() as u32 {
         f(EntityKey::OrganizationalAddress(OrganizationalAddressId(i)));
     }
-    for i in 0..model.organizational_project_arena.items.len() {
+    for i in 0..model.organizational_project_arena.items.len() as u32 {
         f(EntityKey::OrganizationalProject(OrganizationalProjectId(i)));
     }
-    for i in 0..model.organizational_project_relationship_arena.items.len() {
+    for i in 0..model.organizational_project_relationship_arena.items.len() as u32 {
         f(EntityKey::OrganizationalProjectRelationship(
             OrganizationalProjectRelationshipId(i),
         ));
     }
-    for i in 0..model.organizational_project_role_arena.items.len() {
+    for i in 0..model.organizational_project_role_arena.items.len() as u32 {
         f(EntityKey::OrganizationalProjectRole(
             OrganizationalProjectRoleId(i),
         ));
     }
-    for i in 0..model.oriented_closed_shell_arena.items.len() {
+    for i in 0..model.oriented_closed_shell_arena.items.len() as u32 {
         f(EntityKey::OrientedClosedShell(OrientedClosedShellId(i)));
     }
-    for i in 0..model.oriented_edge_arena.items.len() {
+    for i in 0..model.oriented_edge_arena.items.len() as u32 {
         f(EntityKey::OrientedEdge(OrientedEdgeId(i)));
     }
-    for i in 0..model.over_riding_styled_item_arena.items.len() {
+    for i in 0..model.over_riding_styled_item_arena.items.len() as u32 {
         f(EntityKey::OverRidingStyledItem(OverRidingStyledItemId(i)));
     }
-    for i in 0..model.parallelism_tolerance_arena.items.len() {
+    for i in 0..model.parabola_arena.items.len() as u32 {
+        f(EntityKey::Parabola(ParabolaId(i)));
+    }
+    for i in 0..model.parallelism_tolerance_arena.items.len() as u32 {
         f(EntityKey::ParallelismTolerance(ParallelismToleranceId(i)));
     }
-    for i in 0..model.parametric_representation_context_arena.items.len() {
+    for i in 0..model.parametric_representation_context_arena.items.len() as u32 {
         f(EntityKey::ParametricRepresentationContext(
             ParametricRepresentationContextId(i),
         ));
     }
-    for i in 0..model.path_arena.items.len() {
+    for i in 0..model.path_arena.items.len() as u32 {
         f(EntityKey::Path(PathId(i)));
     }
-    for i in 0..model.pcurve_arena.items.len() {
+    for i in 0..model.pcurve_arena.items.len() as u32 {
         f(EntityKey::Pcurve(PcurveId(i)));
     }
-    for i in 0..model.perpendicularity_tolerance_arena.items.len() {
+    for i in 0..model.perpendicularity_tolerance_arena.items.len() as u32 {
         f(EntityKey::PerpendicularityTolerance(
             PerpendicularityToleranceId(i),
         ));
     }
-    for i in 0..model.person_arena.items.len() {
+    for i in 0..model.person_arena.items.len() as u32 {
         f(EntityKey::Person(PersonId(i)));
     }
-    for i in 0..model.person_and_organization_arena.items.len() {
+    for i in 0..model.person_and_organization_arena.items.len() as u32 {
         f(EntityKey::PersonAndOrganization(PersonAndOrganizationId(i)));
     }
-    for i in 0..model.person_and_organization_address_arena.items.len() {
+    for i in 0..model.person_and_organization_address_arena.items.len() as u32 {
         f(EntityKey::PersonAndOrganizationAddress(
             PersonAndOrganizationAddressId(i),
         ));
     }
-    for i in 0..model.person_and_organization_assignment_arena.items.len() {
+    for i in 0..model.person_and_organization_assignment_arena.items.len() as u32 {
         f(EntityKey::PersonAndOrganizationAssignment(
             PersonAndOrganizationAssignmentId(i),
         ));
     }
-    for i in 0..model.person_and_organization_role_arena.items.len() {
+    for i in 0..model.person_and_organization_role_arena.items.len() as u32 {
         f(EntityKey::PersonAndOrganizationRole(
             PersonAndOrganizationRoleId(i),
         ));
     }
-    for i in 0..model.personal_address_arena.items.len() {
+    for i in 0..model.personal_address_arena.items.len() as u32 {
         f(EntityKey::PersonalAddress(PersonalAddressId(i)));
     }
-    for i in 0..model.placed_datum_target_feature_arena.items.len() {
+    for i in 0..model.placed_datum_target_feature_arena.items.len() as u32 {
         f(EntityKey::PlacedDatumTargetFeature(
             PlacedDatumTargetFeatureId(i),
         ));
     }
-    for i in 0..model.placement_arena.items.len() {
+    for i in 0..model.placement_arena.items.len() as u32 {
         f(EntityKey::Placement(PlacementId(i)));
     }
-    for i in 0..model.planar_box_arena.items.len() {
+    for i in 0..model.planar_box_arena.items.len() as u32 {
         f(EntityKey::PlanarBox(PlanarBoxId(i)));
     }
-    for i in 0..model.planar_extent_arena.items.len() {
+    for i in 0..model.planar_extent_arena.items.len() as u32 {
         f(EntityKey::PlanarExtent(PlanarExtentId(i)));
     }
-    for i in 0..model.plane_arena.items.len() {
+    for i in 0..model.plane_arena.items.len() as u32 {
         f(EntityKey::Plane(PlaneId(i)));
     }
-    for i in 0..model.plane_angle_measure_with_unit_arena.items.len() {
+    for i in 0..model.plane_angle_measure_with_unit_arena.items.len() as u32 {
         f(EntityKey::PlaneAngleMeasureWithUnit(
             PlaneAngleMeasureWithUnitId(i),
         ));
     }
-    for i in 0..model.plane_angle_unit_arena.items.len() {
+    for i in 0..model.plane_angle_unit_arena.items.len() as u32 {
         f(EntityKey::PlaneAngleUnit(PlaneAngleUnitId(i)));
     }
-    for i in 0..model.plus_minus_tolerance_arena.items.len() {
+    for i in 0..model.plus_minus_tolerance_arena.items.len() as u32 {
         f(EntityKey::PlusMinusTolerance(PlusMinusToleranceId(i)));
     }
-    for i in 0..model.point_arena.items.len() {
+    for i in 0..model.point_arena.items.len() as u32 {
         f(EntityKey::Point(PointId(i)));
     }
-    for i in 0..model.point_style_arena.items.len() {
+    for i in 0..model.point_style_arena.items.len() as u32 {
         f(EntityKey::PointStyle(PointStyleId(i)));
     }
-    for i in 0..model.poly_loop_arena.items.len() {
+    for i in 0..model.poly_loop_arena.items.len() as u32 {
         f(EntityKey::PolyLoop(PolyLoopId(i)));
     }
-    for i in 0..model.polyline_arena.items.len() {
+    for i in 0..model.polyline_arena.items.len() as u32 {
         f(EntityKey::Polyline(PolylineId(i)));
     }
-    for i in 0..model.position_tolerance_arena.items.len() {
+    for i in 0..model.position_tolerance_arena.items.len() as u32 {
         f(EntityKey::PositionTolerance(PositionToleranceId(i)));
     }
-    for i in 0..model.pre_defined_character_glyph_arena.items.len() {
+    for i in 0..model.pre_defined_character_glyph_arena.items.len() as u32 {
         f(EntityKey::PreDefinedCharacterGlyph(
             PreDefinedCharacterGlyphId(i),
         ));
     }
-    for i in 0..model.pre_defined_colour_arena.items.len() {
+    for i in 0..model.pre_defined_colour_arena.items.len() as u32 {
         f(EntityKey::PreDefinedColour(PreDefinedColourId(i)));
     }
-    for i in 0..model.pre_defined_curve_font_arena.items.len() {
+    for i in 0..model.pre_defined_curve_font_arena.items.len() as u32 {
         f(EntityKey::PreDefinedCurveFont(PreDefinedCurveFontId(i)));
     }
-    for i in 0..model.pre_defined_item_arena.items.len() {
+    for i in 0..model.pre_defined_item_arena.items.len() as u32 {
         f(EntityKey::PreDefinedItem(PreDefinedItemId(i)));
     }
-    for i in 0..model.pre_defined_marker_arena.items.len() {
+    for i in 0..model.pre_defined_marker_arena.items.len() as u32 {
         f(EntityKey::PreDefinedMarker(PreDefinedMarkerId(i)));
     }
-    for i in 0..model.pre_defined_point_marker_symbol_arena.items.len() {
+    for i in 0..model.pre_defined_point_marker_symbol_arena.items.len() as u32 {
         f(EntityKey::PreDefinedPointMarkerSymbol(
             PreDefinedPointMarkerSymbolId(i),
         ));
     }
-    for i in 0..model.pre_defined_presentation_style_arena.items.len() {
+    for i in 0..model.pre_defined_presentation_style_arena.items.len() as u32 {
         f(EntityKey::PreDefinedPresentationStyle(
             PreDefinedPresentationStyleId(i),
         ));
     }
-    for i in 0..model.pre_defined_surface_side_style_arena.items.len() {
+    for i in 0..model.pre_defined_surface_side_style_arena.items.len() as u32 {
         f(EntityKey::PreDefinedSurfaceSideStyle(
             PreDefinedSurfaceSideStyleId(i),
         ));
     }
-    for i in 0..model.pre_defined_symbol_arena.items.len() {
+    for i in 0..model.pre_defined_symbol_arena.items.len() as u32 {
         f(EntityKey::PreDefinedSymbol(PreDefinedSymbolId(i)));
     }
-    for i in 0..model.pre_defined_terminator_symbol_arena.items.len() {
+    for i in 0..model.pre_defined_terminator_symbol_arena.items.len() as u32 {
         f(EntityKey::PreDefinedTerminatorSymbol(
             PreDefinedTerminatorSymbolId(i),
         ));
     }
-    for i in 0..model.pre_defined_text_font_arena.items.len() {
+    for i in 0..model.pre_defined_text_font_arena.items.len() as u32 {
         f(EntityKey::PreDefinedTextFont(PreDefinedTextFontId(i)));
     }
-    for i in 0..model.pre_defined_tile_arena.items.len() {
+    for i in 0..model.pre_defined_tile_arena.items.len() as u32 {
         f(EntityKey::PreDefinedTile(PreDefinedTileId(i)));
     }
-    for i in 0..model.precision_qualifier_arena.items.len() {
+    for i in 0..model.precision_qualifier_arena.items.len() as u32 {
         f(EntityKey::PrecisionQualifier(PrecisionQualifierId(i)));
     }
-    for i in 0..model.presentation_area_arena.items.len() {
+    for i in 0..model.presentation_area_arena.items.len() as u32 {
         f(EntityKey::PresentationArea(PresentationAreaId(i)));
     }
-    for i in 0..model.presentation_layer_assignment_arena.items.len() {
+    for i in 0..model.presentation_layer_assignment_arena.items.len() as u32 {
         f(EntityKey::PresentationLayerAssignment(
             PresentationLayerAssignmentId(i),
         ));
     }
-    for i in 0..model.presentation_representation_arena.items.len() {
+    for i in 0..model.presentation_representation_arena.items.len() as u32 {
         f(EntityKey::PresentationRepresentation(
             PresentationRepresentationId(i),
         ));
     }
-    for i in 0..model.presentation_set_arena.items.len() {
+    for i in 0..model.presentation_set_arena.items.len() as u32 {
         f(EntityKey::PresentationSet(PresentationSetId(i)));
     }
-    for i in 0..model.presentation_size_arena.items.len() {
+    for i in 0..model.presentation_size_arena.items.len() as u32 {
         f(EntityKey::PresentationSize(PresentationSizeId(i)));
     }
-    for i in 0..model.presentation_style_assignment_arena.items.len() {
+    for i in 0..model.presentation_style_assignment_arena.items.len() as u32 {
         f(EntityKey::PresentationStyleAssignment(
             PresentationStyleAssignmentId(i),
         ));
     }
-    for i in 0..model.presentation_style_by_context_arena.items.len() {
+    for i in 0..model.presentation_style_by_context_arena.items.len() as u32 {
         f(EntityKey::PresentationStyleByContext(
             PresentationStyleByContextId(i),
         ));
     }
-    for i in 0..model.presentation_view_arena.items.len() {
+    for i in 0..model.presentation_view_arena.items.len() as u32 {
         f(EntityKey::PresentationView(PresentationViewId(i)));
     }
-    for i in 0..model.presented_item_arena.items.len() {
+    for i in 0..model.presented_item_arena.items.len() as u32 {
         f(EntityKey::PresentedItem(PresentedItemId(i)));
     }
-    for i in 0..model.presented_item_representation_arena.items.len() {
+    for i in 0..model.presented_item_representation_arena.items.len() as u32 {
         f(EntityKey::PresentedItemRepresentation(
             PresentedItemRepresentationId(i),
         ));
     }
-    for i in 0..model.product_arena.items.len() {
+    for i in 0..model.product_arena.items.len() as u32 {
         f(EntityKey::Product(ProductId(i)));
     }
-    for i in 0..model.product_category_arena.items.len() {
+    for i in 0..model.product_category_arena.items.len() as u32 {
         f(EntityKey::ProductCategory(ProductCategoryId(i)));
     }
-    for i in 0..model.product_category_relationship_arena.items.len() {
+    for i in 0..model.product_category_relationship_arena.items.len() as u32 {
         f(EntityKey::ProductCategoryRelationship(
             ProductCategoryRelationshipId(i),
         ));
     }
-    for i in 0..model.product_concept_arena.items.len() {
+    for i in 0..model.product_concept_arena.items.len() as u32 {
         f(EntityKey::ProductConcept(ProductConceptId(i)));
     }
-    for i in 0..model.product_concept_context_arena.items.len() {
+    for i in 0..model.product_concept_context_arena.items.len() as u32 {
         f(EntityKey::ProductConceptContext(ProductConceptContextId(i)));
     }
-    for i in 0..model.product_concept_feature_arena.items.len() {
+    for i in 0..model.product_concept_feature_arena.items.len() as u32 {
         f(EntityKey::ProductConceptFeature(ProductConceptFeatureId(i)));
     }
-    for i in 0..model.product_concept_feature_category_arena.items.len() {
+    for i in 0..model.product_concept_feature_category_arena.items.len() as u32 {
         f(EntityKey::ProductConceptFeatureCategory(
             ProductConceptFeatureCategoryId(i),
         ));
     }
-    for i in 0..model.product_context_arena.items.len() {
+    for i in 0..model.product_context_arena.items.len() as u32 {
         f(EntityKey::ProductContext(ProductContextId(i)));
     }
-    for i in 0..model.product_definition_arena.items.len() {
+    for i in 0..model.product_definition_arena.items.len() as u32 {
         f(EntityKey::ProductDefinition(ProductDefinitionId(i)));
     }
-    for i in 0..model.product_definition_context_arena.items.len() {
+    for i in 0..model.product_definition_context_arena.items.len() as u32 {
         f(EntityKey::ProductDefinitionContext(
             ProductDefinitionContextId(i),
         ));
@@ -1504,23 +1507,23 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .product_definition_context_association_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::ProductDefinitionContextAssociation(
             ProductDefinitionContextAssociationId(i),
         ));
     }
-    for i in 0..model.product_definition_context_role_arena.items.len() {
+    for i in 0..model.product_definition_context_role_arena.items.len() as u32 {
         f(EntityKey::ProductDefinitionContextRole(
             ProductDefinitionContextRoleId(i),
         ));
     }
-    for i in 0..model.product_definition_effectivity_arena.items.len() {
+    for i in 0..model.product_definition_effectivity_arena.items.len() as u32 {
         f(EntityKey::ProductDefinitionEffectivity(
             ProductDefinitionEffectivityId(i),
         ));
     }
-    for i in 0..model.product_definition_formation_arena.items.len() {
+    for i in 0..model.product_definition_formation_arena.items.len() as u32 {
         f(EntityKey::ProductDefinitionFormation(
             ProductDefinitionFormationId(i),
         ));
@@ -1528,18 +1531,18 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .product_definition_formation_with_specified_source_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::ProductDefinitionFormationWithSpecifiedSource(
             ProductDefinitionFormationWithSpecifiedSourceId(i),
         ));
     }
-    for i in 0..model.product_definition_occurrence_arena.items.len() {
+    for i in 0..model.product_definition_occurrence_arena.items.len() as u32 {
         f(EntityKey::ProductDefinitionOccurrence(
             ProductDefinitionOccurrenceId(i),
         ));
     }
-    for i in 0..model.product_definition_relationship_arena.items.len() {
+    for i in 0..model.product_definition_relationship_arena.items.len() as u32 {
         f(EntityKey::ProductDefinitionRelationship(
             ProductDefinitionRelationshipId(i),
         ));
@@ -1547,23 +1550,23 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .product_definition_relationship_relationship_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::ProductDefinitionRelationshipRelationship(
             ProductDefinitionRelationshipRelationshipId(i),
         ));
     }
-    for i in 0..model.product_definition_shape_arena.items.len() {
+    for i in 0..model.product_definition_shape_arena.items.len() as u32 {
         f(EntityKey::ProductDefinitionShape(ProductDefinitionShapeId(
             i,
         )));
     }
-    for i in 0..model.product_definition_substitute_arena.items.len() {
+    for i in 0..model.product_definition_substitute_arena.items.len() as u32 {
         f(EntityKey::ProductDefinitionSubstitute(
             ProductDefinitionSubstituteId(i),
         ));
     }
-    for i in 0..model.product_definition_usage_arena.items.len() {
+    for i in 0..model.product_definition_usage_arena.items.len() as u32 {
         f(EntityKey::ProductDefinitionUsage(ProductDefinitionUsageId(
             i,
         )));
@@ -1571,96 +1574,96 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .product_definition_with_associated_documents_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::ProductDefinitionWithAssociatedDocuments(
             ProductDefinitionWithAssociatedDocumentsId(i),
         ));
     }
-    for i in 0..model.product_related_product_category_arena.items.len() {
+    for i in 0..model.product_related_product_category_arena.items.len() as u32 {
         f(EntityKey::ProductRelatedProductCategory(
             ProductRelatedProductCategoryId(i),
         ));
     }
-    for i in 0..model.projected_zone_definition_arena.items.len() {
+    for i in 0..model.projected_zone_definition_arena.items.len() as u32 {
         f(EntityKey::ProjectedZoneDefinition(
             ProjectedZoneDefinitionId(i),
         ));
     }
-    for i in 0..model.property_definition_arena.items.len() {
+    for i in 0..model.property_definition_arena.items.len() as u32 {
         f(EntityKey::PropertyDefinition(PropertyDefinitionId(i)));
     }
-    for i in 0..model.property_definition_relationship_arena.items.len() {
+    for i in 0..model.property_definition_relationship_arena.items.len() as u32 {
         f(EntityKey::PropertyDefinitionRelationship(
             PropertyDefinitionRelationshipId(i),
         ));
     }
-    for i in 0..model.property_definition_representation_arena.items.len() {
+    for i in 0..model.property_definition_representation_arena.items.len() as u32 {
         f(EntityKey::PropertyDefinitionRepresentation(
             PropertyDefinitionRepresentationId(i),
         ));
     }
-    for i in 0..model.qualified_representation_item_arena.items.len() {
+    for i in 0..model.qualified_representation_item_arena.items.len() as u32 {
         f(EntityKey::QualifiedRepresentationItem(
             QualifiedRepresentationItemId(i),
         ));
     }
-    for i in 0..model.quasi_uniform_curve_arena.items.len() {
+    for i in 0..model.quasi_uniform_curve_arena.items.len() as u32 {
         f(EntityKey::QuasiUniformCurve(QuasiUniformCurveId(i)));
     }
-    for i in 0..model.quasi_uniform_surface_arena.items.len() {
+    for i in 0..model.quasi_uniform_surface_arena.items.len() as u32 {
         f(EntityKey::QuasiUniformSurface(QuasiUniformSurfaceId(i)));
     }
-    for i in 0..model.ratio_measure_with_unit_arena.items.len() {
+    for i in 0..model.ratio_measure_with_unit_arena.items.len() as u32 {
         f(EntityKey::RatioMeasureWithUnit(RatioMeasureWithUnitId(i)));
     }
-    for i in 0..model.ratio_unit_arena.items.len() {
+    for i in 0..model.ratio_unit_arena.items.len() as u32 {
         f(EntityKey::RatioUnit(RatioUnitId(i)));
     }
-    for i in 0..model.rational_b_spline_curve_arena.items.len() {
+    for i in 0..model.rational_b_spline_curve_arena.items.len() as u32 {
         f(EntityKey::RationalBSplineCurve(RationalBSplineCurveId(i)));
     }
-    for i in 0..model.rational_b_spline_surface_arena.items.len() {
+    for i in 0..model.rational_b_spline_surface_arena.items.len() as u32 {
         f(EntityKey::RationalBSplineSurface(RationalBSplineSurfaceId(
             i,
         )));
     }
-    for i in 0..model.real_literal_arena.items.len() {
+    for i in 0..model.real_literal_arena.items.len() as u32 {
         f(EntityKey::RealLiteral(RealLiteralId(i)));
     }
-    for i in 0..model.real_representation_item_arena.items.len() {
+    for i in 0..model.real_representation_item_arena.items.len() as u32 {
         f(EntityKey::RealRepresentationItem(RealRepresentationItemId(
             i,
         )));
     }
-    for i in 0..model.repositioned_tessellated_item_arena.items.len() {
+    for i in 0..model.repositioned_tessellated_item_arena.items.len() as u32 {
         f(EntityKey::RepositionedTessellatedItem(
             RepositionedTessellatedItemId(i),
         ));
     }
-    for i in 0..model.representation_arena.items.len() {
+    for i in 0..model.representation_arena.items.len() as u32 {
         f(EntityKey::Representation(RepresentationId(i)));
     }
-    for i in 0..model.representation_context_arena.items.len() {
+    for i in 0..model.representation_context_arena.items.len() as u32 {
         f(EntityKey::RepresentationContext(RepresentationContextId(i)));
     }
-    for i in 0..model.representation_context_reference_arena.items.len() {
+    for i in 0..model.representation_context_reference_arena.items.len() as u32 {
         f(EntityKey::RepresentationContextReference(
             RepresentationContextReferenceId(i),
         ));
     }
-    for i in 0..model.representation_item_arena.items.len() {
+    for i in 0..model.representation_item_arena.items.len() as u32 {
         f(EntityKey::RepresentationItem(RepresentationItemId(i)));
     }
-    for i in 0..model.representation_map_arena.items.len() {
+    for i in 0..model.representation_map_arena.items.len() as u32 {
         f(EntityKey::RepresentationMap(RepresentationMapId(i)));
     }
-    for i in 0..model.representation_reference_arena.items.len() {
+    for i in 0..model.representation_reference_arena.items.len() as u32 {
         f(EntityKey::RepresentationReference(
             RepresentationReferenceId(i),
         ));
     }
-    for i in 0..model.representation_relationship_arena.items.len() {
+    for i in 0..model.representation_relationship_arena.items.len() as u32 {
         f(EntityKey::RepresentationRelationship(
             RepresentationRelationshipId(i),
         ));
@@ -1668,287 +1671,287 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .representation_relationship_with_transformation_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::RepresentationRelationshipWithTransformation(
             RepresentationRelationshipWithTransformationId(i),
         ));
     }
-    for i in 0..model.resource_property_arena.items.len() {
+    for i in 0..model.resource_property_arena.items.len() as u32 {
         f(EntityKey::ResourceProperty(ResourcePropertyId(i)));
     }
-    for i in 0..model.resource_requirement_type_arena.items.len() {
+    for i in 0..model.resource_requirement_type_arena.items.len() as u32 {
         f(EntityKey::ResourceRequirementType(
             ResourceRequirementTypeId(i),
         ));
     }
-    for i in 0..model.role_association_arena.items.len() {
+    for i in 0..model.role_association_arena.items.len() as u32 {
         f(EntityKey::RoleAssociation(RoleAssociationId(i)));
     }
-    for i in 0..model.roundness_tolerance_arena.items.len() {
+    for i in 0..model.roundness_tolerance_arena.items.len() as u32 {
         f(EntityKey::RoundnessTolerance(RoundnessToleranceId(i)));
     }
-    for i in 0..model.seam_curve_arena.items.len() {
+    for i in 0..model.seam_curve_arena.items.len() as u32 {
         f(EntityKey::SeamCurve(SeamCurveId(i)));
     }
-    for i in 0..model.security_classification_arena.items.len() {
+    for i in 0..model.security_classification_arena.items.len() as u32 {
         f(EntityKey::SecurityClassification(SecurityClassificationId(
             i,
         )));
     }
-    for i in 0..model.security_classification_assignment_arena.items.len() {
+    for i in 0..model.security_classification_assignment_arena.items.len() as u32 {
         f(EntityKey::SecurityClassificationAssignment(
             SecurityClassificationAssignmentId(i),
         ));
     }
-    for i in 0..model.security_classification_level_arena.items.len() {
+    for i in 0..model.security_classification_level_arena.items.len() as u32 {
         f(EntityKey::SecurityClassificationLevel(
             SecurityClassificationLevelId(i),
         ));
     }
-    for i in 0..model.shape_aspect_arena.items.len() {
+    for i in 0..model.shape_aspect_arena.items.len() as u32 {
         f(EntityKey::ShapeAspect(ShapeAspectId(i)));
     }
-    for i in 0..model.shape_aspect_associativity_arena.items.len() {
+    for i in 0..model.shape_aspect_associativity_arena.items.len() as u32 {
         f(EntityKey::ShapeAspectAssociativity(
             ShapeAspectAssociativityId(i),
         ));
     }
-    for i in 0..model.shape_aspect_deriving_relationship_arena.items.len() {
+    for i in 0..model.shape_aspect_deriving_relationship_arena.items.len() as u32 {
         f(EntityKey::ShapeAspectDerivingRelationship(
             ShapeAspectDerivingRelationshipId(i),
         ));
     }
-    for i in 0..model.shape_aspect_relationship_arena.items.len() {
+    for i in 0..model.shape_aspect_relationship_arena.items.len() as u32 {
         f(EntityKey::ShapeAspectRelationship(
             ShapeAspectRelationshipId(i),
         ));
     }
-    for i in 0..model.shape_definition_representation_arena.items.len() {
+    for i in 0..model.shape_definition_representation_arena.items.len() as u32 {
         f(EntityKey::ShapeDefinitionRepresentation(
             ShapeDefinitionRepresentationId(i),
         ));
     }
-    for i in 0..model.shape_dimension_representation_arena.items.len() {
+    for i in 0..model.shape_dimension_representation_arena.items.len() as u32 {
         f(EntityKey::ShapeDimensionRepresentation(
             ShapeDimensionRepresentationId(i),
         ));
     }
-    for i in 0..model.shape_representation_arena.items.len() {
+    for i in 0..model.shape_representation_arena.items.len() as u32 {
         f(EntityKey::ShapeRepresentation(ShapeRepresentationId(i)));
     }
-    for i in 0..model.shape_representation_relationship_arena.items.len() {
+    for i in 0..model.shape_representation_relationship_arena.items.len() as u32 {
         f(EntityKey::ShapeRepresentationRelationship(
             ShapeRepresentationRelationshipId(i),
         ));
     }
-    for i in 0..model.shape_representation_with_parameters_arena.items.len() {
+    for i in 0..model.shape_representation_with_parameters_arena.items.len() as u32 {
         f(EntityKey::ShapeRepresentationWithParameters(
             ShapeRepresentationWithParametersId(i),
         ));
     }
-    for i in 0..model.shell_based_surface_model_arena.items.len() {
+    for i in 0..model.shell_based_surface_model_arena.items.len() as u32 {
         f(EntityKey::ShellBasedSurfaceModel(ShellBasedSurfaceModelId(
             i,
         )));
     }
-    for i in 0..model.si_unit_arena.items.len() {
+    for i in 0..model.si_unit_arena.items.len() as u32 {
         f(EntityKey::SiUnit(SiUnitId(i)));
     }
-    for i in 0..model.simple_generic_expression_arena.items.len() {
+    for i in 0..model.simple_generic_expression_arena.items.len() as u32 {
         f(EntityKey::SimpleGenericExpression(
             SimpleGenericExpressionId(i),
         ));
     }
-    for i in 0..model.simple_numeric_expression_arena.items.len() {
+    for i in 0..model.simple_numeric_expression_arena.items.len() as u32 {
         f(EntityKey::SimpleNumericExpression(
             SimpleNumericExpressionId(i),
         ));
     }
-    for i in 0..model.solid_angle_unit_arena.items.len() {
+    for i in 0..model.solid_angle_unit_arena.items.len() as u32 {
         f(EntityKey::SolidAngleUnit(SolidAngleUnitId(i)));
     }
-    for i in 0..model.solid_model_arena.items.len() {
+    for i in 0..model.solid_model_arena.items.len() as u32 {
         f(EntityKey::SolidModel(SolidModelId(i)));
     }
-    for i in 0..model.spherical_surface_arena.items.len() {
+    for i in 0..model.spherical_surface_arena.items.len() as u32 {
         f(EntityKey::SphericalSurface(SphericalSurfaceId(i)));
     }
-    for i in 0..model.start_request_arena.items.len() {
+    for i in 0..model.start_request_arena.items.len() as u32 {
         f(EntityKey::StartRequest(StartRequestId(i)));
     }
-    for i in 0..model.start_work_arena.items.len() {
+    for i in 0..model.start_work_arena.items.len() as u32 {
         f(EntityKey::StartWork(StartWorkId(i)));
     }
-    for i in 0..model.state_observed_arena.items.len() {
+    for i in 0..model.state_observed_arena.items.len() as u32 {
         f(EntityKey::StateObserved(StateObservedId(i)));
     }
-    for i in 0..model.state_type_arena.items.len() {
+    for i in 0..model.state_type_arena.items.len() as u32 {
         f(EntityKey::StateType(StateTypeId(i)));
     }
-    for i in 0..model.straightness_tolerance_arena.items.len() {
+    for i in 0..model.straightness_tolerance_arena.items.len() as u32 {
         f(EntityKey::StraightnessTolerance(StraightnessToleranceId(i)));
     }
-    for i in 0..model.styled_item_arena.items.len() {
+    for i in 0..model.styled_item_arena.items.len() as u32 {
         f(EntityKey::StyledItem(StyledItemId(i)));
     }
-    for i in 0..model.surface_arena.items.len() {
+    for i in 0..model.surface_arena.items.len() as u32 {
         f(EntityKey::Surface(SurfaceId(i)));
     }
-    for i in 0..model.surface_curve_arena.items.len() {
+    for i in 0..model.surface_curve_arena.items.len() as u32 {
         f(EntityKey::SurfaceCurve(SurfaceCurveId(i)));
     }
-    for i in 0..model.surface_of_linear_extrusion_arena.items.len() {
+    for i in 0..model.surface_of_linear_extrusion_arena.items.len() as u32 {
         f(EntityKey::SurfaceOfLinearExtrusion(
             SurfaceOfLinearExtrusionId(i),
         ));
     }
-    for i in 0..model.surface_of_revolution_arena.items.len() {
+    for i in 0..model.surface_of_revolution_arena.items.len() as u32 {
         f(EntityKey::SurfaceOfRevolution(SurfaceOfRevolutionId(i)));
     }
-    for i in 0..model.surface_profile_tolerance_arena.items.len() {
+    for i in 0..model.surface_profile_tolerance_arena.items.len() as u32 {
         f(EntityKey::SurfaceProfileTolerance(
             SurfaceProfileToleranceId(i),
         ));
     }
-    for i in 0..model.surface_rendering_properties_arena.items.len() {
+    for i in 0..model.surface_rendering_properties_arena.items.len() as u32 {
         f(EntityKey::SurfaceRenderingProperties(
             SurfaceRenderingPropertiesId(i),
         ));
     }
-    for i in 0..model.surface_side_style_arena.items.len() {
+    for i in 0..model.surface_side_style_arena.items.len() as u32 {
         f(EntityKey::SurfaceSideStyle(SurfaceSideStyleId(i)));
     }
-    for i in 0..model.surface_style_boundary_arena.items.len() {
+    for i in 0..model.surface_style_boundary_arena.items.len() as u32 {
         f(EntityKey::SurfaceStyleBoundary(SurfaceStyleBoundaryId(i)));
     }
-    for i in 0..model.surface_style_control_grid_arena.items.len() {
+    for i in 0..model.surface_style_control_grid_arena.items.len() as u32 {
         f(EntityKey::SurfaceStyleControlGrid(
             SurfaceStyleControlGridId(i),
         ));
     }
-    for i in 0..model.surface_style_fill_area_arena.items.len() {
+    for i in 0..model.surface_style_fill_area_arena.items.len() as u32 {
         f(EntityKey::SurfaceStyleFillArea(SurfaceStyleFillAreaId(i)));
     }
-    for i in 0..model.surface_style_parameter_line_arena.items.len() {
+    for i in 0..model.surface_style_parameter_line_arena.items.len() as u32 {
         f(EntityKey::SurfaceStyleParameterLine(
             SurfaceStyleParameterLineId(i),
         ));
     }
-    for i in 0..model.surface_style_reflectance_ambient_arena.items.len() {
+    for i in 0..model.surface_style_reflectance_ambient_arena.items.len() as u32 {
         f(EntityKey::SurfaceStyleReflectanceAmbient(
             SurfaceStyleReflectanceAmbientId(i),
         ));
     }
-    for i in 0..model.surface_style_rendering_arena.items.len() {
+    for i in 0..model.surface_style_rendering_arena.items.len() as u32 {
         f(EntityKey::SurfaceStyleRendering(SurfaceStyleRenderingId(i)));
     }
     for i in 0..model
         .surface_style_rendering_with_properties_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::SurfaceStyleRenderingWithProperties(
             SurfaceStyleRenderingWithPropertiesId(i),
         ));
     }
-    for i in 0..model.surface_style_segmentation_curve_arena.items.len() {
+    for i in 0..model.surface_style_segmentation_curve_arena.items.len() as u32 {
         f(EntityKey::SurfaceStyleSegmentationCurve(
             SurfaceStyleSegmentationCurveId(i),
         ));
     }
-    for i in 0..model.surface_style_silhouette_arena.items.len() {
+    for i in 0..model.surface_style_silhouette_arena.items.len() as u32 {
         f(EntityKey::SurfaceStyleSilhouette(SurfaceStyleSilhouetteId(
             i,
         )));
     }
-    for i in 0..model.surface_style_transparent_arena.items.len() {
+    for i in 0..model.surface_style_transparent_arena.items.len() as u32 {
         f(EntityKey::SurfaceStyleTransparent(
             SurfaceStyleTransparentId(i),
         ));
     }
-    for i in 0..model.surface_style_usage_arena.items.len() {
+    for i in 0..model.surface_style_usage_arena.items.len() as u32 {
         f(EntityKey::SurfaceStyleUsage(SurfaceStyleUsageId(i)));
     }
-    for i in 0..model.swept_surface_arena.items.len() {
+    for i in 0..model.swept_surface_arena.items.len() as u32 {
         f(EntityKey::SweptSurface(SweptSurfaceId(i)));
     }
-    for i in 0..model.symbol_colour_arena.items.len() {
+    for i in 0..model.symbol_colour_arena.items.len() as u32 {
         f(EntityKey::SymbolColour(SymbolColourId(i)));
     }
-    for i in 0..model.symbol_representation_arena.items.len() {
+    for i in 0..model.symbol_representation_arena.items.len() as u32 {
         f(EntityKey::SymbolRepresentation(SymbolRepresentationId(i)));
     }
-    for i in 0..model.symbol_style_arena.items.len() {
+    for i in 0..model.symbol_style_arena.items.len() as u32 {
         f(EntityKey::SymbolStyle(SymbolStyleId(i)));
     }
-    for i in 0..model.symbol_target_arena.items.len() {
+    for i in 0..model.symbol_target_arena.items.len() as u32 {
         f(EntityKey::SymbolTarget(SymbolTargetId(i)));
     }
-    for i in 0..model.symmetry_tolerance_arena.items.len() {
+    for i in 0..model.symmetry_tolerance_arena.items.len() as u32 {
         f(EntityKey::SymmetryTolerance(SymmetryToleranceId(i)));
     }
-    for i in 0..model.terminator_symbol_arena.items.len() {
+    for i in 0..model.terminator_symbol_arena.items.len() as u32 {
         f(EntityKey::TerminatorSymbol(TerminatorSymbolId(i)));
     }
-    for i in 0..model.tessellated_annotation_occurrence_arena.items.len() {
+    for i in 0..model.tessellated_annotation_occurrence_arena.items.len() as u32 {
         f(EntityKey::TessellatedAnnotationOccurrence(
             TessellatedAnnotationOccurrenceId(i),
         ));
     }
-    for i in 0..model.tessellated_curve_set_arena.items.len() {
+    for i in 0..model.tessellated_curve_set_arena.items.len() as u32 {
         f(EntityKey::TessellatedCurveSet(TessellatedCurveSetId(i)));
     }
-    for i in 0..model.tessellated_face_arena.items.len() {
+    for i in 0..model.tessellated_face_arena.items.len() as u32 {
         f(EntityKey::TessellatedFace(TessellatedFaceId(i)));
     }
-    for i in 0..model.tessellated_geometric_set_arena.items.len() {
+    for i in 0..model.tessellated_geometric_set_arena.items.len() as u32 {
         f(EntityKey::TessellatedGeometricSet(
             TessellatedGeometricSetId(i),
         ));
     }
-    for i in 0..model.tessellated_item_arena.items.len() {
+    for i in 0..model.tessellated_item_arena.items.len() as u32 {
         f(EntityKey::TessellatedItem(TessellatedItemId(i)));
     }
-    for i in 0..model.tessellated_shape_representation_arena.items.len() {
+    for i in 0..model.tessellated_shape_representation_arena.items.len() as u32 {
         f(EntityKey::TessellatedShapeRepresentation(
             TessellatedShapeRepresentationId(i),
         ));
     }
-    for i in 0..model.tessellated_shell_arena.items.len() {
+    for i in 0..model.tessellated_shell_arena.items.len() as u32 {
         f(EntityKey::TessellatedShell(TessellatedShellId(i)));
     }
-    for i in 0..model.tessellated_solid_arena.items.len() {
+    for i in 0..model.tessellated_solid_arena.items.len() as u32 {
         f(EntityKey::TessellatedSolid(TessellatedSolidId(i)));
     }
-    for i in 0..model.tessellated_structured_item_arena.items.len() {
+    for i in 0..model.tessellated_structured_item_arena.items.len() as u32 {
         f(EntityKey::TessellatedStructuredItem(
             TessellatedStructuredItemId(i),
         ));
     }
-    for i in 0..model.tessellated_surface_set_arena.items.len() {
+    for i in 0..model.tessellated_surface_set_arena.items.len() as u32 {
         f(EntityKey::TessellatedSurfaceSet(TessellatedSurfaceSetId(i)));
     }
-    for i in 0..model.text_font_arena.items.len() {
+    for i in 0..model.text_font_arena.items.len() as u32 {
         f(EntityKey::TextFont(TextFontId(i)));
     }
-    for i in 0..model.text_literal_arena.items.len() {
+    for i in 0..model.text_literal_arena.items.len() as u32 {
         f(EntityKey::TextLiteral(TextLiteralId(i)));
     }
-    for i in 0..model.text_style_arena.items.len() {
+    for i in 0..model.text_style_arena.items.len() as u32 {
         f(EntityKey::TextStyle(TextStyleId(i)));
     }
-    for i in 0..model.text_style_for_defined_font_arena.items.len() {
+    for i in 0..model.text_style_for_defined_font_arena.items.len() as u32 {
         f(EntityKey::TextStyleForDefinedFont(
             TextStyleForDefinedFontId(i),
         ));
     }
-    for i in 0..model.text_style_with_box_characteristics_arena.items.len() {
+    for i in 0..model.text_style_with_box_characteristics_arena.items.len() as u32 {
         f(EntityKey::TextStyleWithBoxCharacteristics(
             TextStyleWithBoxCharacteristicsId(i),
         ));
     }
-    for i in 0..model.texture_style_specification_arena.items.len() {
+    for i in 0..model.texture_style_specification_arena.items.len() as u32 {
         f(EntityKey::TextureStyleSpecification(
             TextureStyleSpecificationId(i),
         ));
@@ -1956,119 +1959,119 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model
         .texture_style_tessellation_specification_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::TextureStyleTessellationSpecification(
             TextureStyleTessellationSpecificationId(i),
         ));
     }
-    for i in 0..model.time_unit_arena.items.len() {
+    for i in 0..model.time_unit_arena.items.len() as u32 {
         f(EntityKey::TimeUnit(TimeUnitId(i)));
     }
-    for i in 0..model.tolerance_value_arena.items.len() {
+    for i in 0..model.tolerance_value_arena.items.len() as u32 {
         f(EntityKey::ToleranceValue(ToleranceValueId(i)));
     }
-    for i in 0..model.tolerance_zone_arena.items.len() {
+    for i in 0..model.tolerance_zone_arena.items.len() as u32 {
         f(EntityKey::ToleranceZone(ToleranceZoneId(i)));
     }
-    for i in 0..model.tolerance_zone_definition_arena.items.len() {
+    for i in 0..model.tolerance_zone_definition_arena.items.len() as u32 {
         f(EntityKey::ToleranceZoneDefinition(
             ToleranceZoneDefinitionId(i),
         ));
     }
-    for i in 0..model.tolerance_zone_form_arena.items.len() {
+    for i in 0..model.tolerance_zone_form_arena.items.len() as u32 {
         f(EntityKey::ToleranceZoneForm(ToleranceZoneFormId(i)));
     }
-    for i in 0..model.tolerance_zone_with_datum_arena.items.len() {
+    for i in 0..model.tolerance_zone_with_datum_arena.items.len() as u32 {
         f(EntityKey::ToleranceZoneWithDatum(ToleranceZoneWithDatumId(
             i,
         )));
     }
-    for i in 0..model.topological_representation_item_arena.items.len() {
+    for i in 0..model.topological_representation_item_arena.items.len() as u32 {
         f(EntityKey::TopologicalRepresentationItem(
             TopologicalRepresentationItemId(i),
         ));
     }
-    for i in 0..model.toroidal_surface_arena.items.len() {
+    for i in 0..model.toroidal_surface_arena.items.len() as u32 {
         f(EntityKey::ToroidalSurface(ToroidalSurfaceId(i)));
     }
-    for i in 0..model.total_runout_tolerance_arena.items.len() {
+    for i in 0..model.total_runout_tolerance_arena.items.len() as u32 {
         f(EntityKey::TotalRunoutTolerance(TotalRunoutToleranceId(i)));
     }
-    for i in 0..model.trimmed_curve_arena.items.len() {
+    for i in 0..model.trimmed_curve_arena.items.len() as u32 {
         f(EntityKey::TrimmedCurve(TrimmedCurveId(i)));
     }
-    for i in 0..model.two_direction_repeat_factor_arena.items.len() {
+    for i in 0..model.two_direction_repeat_factor_arena.items.len() as u32 {
         f(EntityKey::TwoDirectionRepeatFactor(
             TwoDirectionRepeatFactorId(i),
         ));
     }
-    for i in 0..model.type_qualifier_arena.items.len() {
+    for i in 0..model.type_qualifier_arena.items.len() as u32 {
         f(EntityKey::TypeQualifier(TypeQualifierId(i)));
     }
-    for i in 0..model.uncertainty_measure_with_unit_arena.items.len() {
+    for i in 0..model.uncertainty_measure_with_unit_arena.items.len() as u32 {
         f(EntityKey::UncertaintyMeasureWithUnit(
             UncertaintyMeasureWithUnitId(i),
         ));
     }
-    for i in 0..model.uncertainty_qualifier_arena.items.len() {
+    for i in 0..model.uncertainty_qualifier_arena.items.len() as u32 {
         f(EntityKey::UncertaintyQualifier(UncertaintyQualifierId(i)));
     }
     for i in 0..model
         .unequally_disposed_geometric_tolerance_arena
         .items
-        .len()
+        .len() as u32
     {
         f(EntityKey::UnequallyDisposedGeometricTolerance(
             UnequallyDisposedGeometricToleranceId(i),
         ));
     }
-    for i in 0..model.uniform_curve_arena.items.len() {
+    for i in 0..model.uniform_curve_arena.items.len() as u32 {
         f(EntityKey::UniformCurve(UniformCurveId(i)));
     }
-    for i in 0..model.uniform_surface_arena.items.len() {
+    for i in 0..model.uniform_surface_arena.items.len() as u32 {
         f(EntityKey::UniformSurface(UniformSurfaceId(i)));
     }
-    for i in 0..model.value_format_type_qualifier_arena.items.len() {
+    for i in 0..model.value_format_type_qualifier_arena.items.len() as u32 {
         f(EntityKey::ValueFormatTypeQualifier(
             ValueFormatTypeQualifierId(i),
         ));
     }
-    for i in 0..model.value_representation_item_arena.items.len() {
+    for i in 0..model.value_representation_item_arena.items.len() as u32 {
         f(EntityKey::ValueRepresentationItem(
             ValueRepresentationItemId(i),
         ));
     }
-    for i in 0..model.vector_arena.items.len() {
+    for i in 0..model.vector_arena.items.len() as u32 {
         f(EntityKey::Vector(VectorId(i)));
     }
-    for i in 0..model.versioned_action_request_arena.items.len() {
+    for i in 0..model.versioned_action_request_arena.items.len() as u32 {
         f(EntityKey::VersionedActionRequest(VersionedActionRequestId(
             i,
         )));
     }
-    for i in 0..model.vertex_arena.items.len() {
+    for i in 0..model.vertex_arena.items.len() as u32 {
         f(EntityKey::Vertex(VertexId(i)));
     }
-    for i in 0..model.vertex_loop_arena.items.len() {
+    for i in 0..model.vertex_loop_arena.items.len() as u32 {
         f(EntityKey::VertexLoop(VertexLoopId(i)));
     }
-    for i in 0..model.vertex_point_arena.items.len() {
+    for i in 0..model.vertex_point_arena.items.len() as u32 {
         f(EntityKey::VertexPoint(VertexPointId(i)));
     }
-    for i in 0..model.vertex_shell_arena.items.len() {
+    for i in 0..model.vertex_shell_arena.items.len() as u32 {
         f(EntityKey::VertexShell(VertexShellId(i)));
     }
-    for i in 0..model.view_volume_arena.items.len() {
+    for i in 0..model.view_volume_arena.items.len() as u32 {
         f(EntityKey::ViewVolume(ViewVolumeId(i)));
     }
-    for i in 0..model.volume_unit_arena.items.len() {
+    for i in 0..model.volume_unit_arena.items.len() as u32 {
         f(EntityKey::VolumeUnit(VolumeUnitId(i)));
     }
-    for i in 0..model.wire_shell_arena.items.len() {
+    for i in 0..model.wire_shell_arena.items.len() as u32 {
         f(EntityKey::WireShell(WireShellId(i)));
     }
-    for i in 0..model.complex_unit_arena.items.len() {
-        f(EntityKey::ComplexUnit(ComplexUnitId(i)));
+    for i in 0..model.complex_entity_arena.items.len() as u32 {
+        f(EntityKey::ComplexEntity(ComplexEntityId(i)));
     }
 }

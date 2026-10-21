@@ -7,36 +7,84 @@
 //! inverting every entity's outgoing references; the enumeration underneath is
 //! generated, so no entity type is missed.
 
-use std::collections::HashMap;
-
 use crate::StepModel;
 use crate::generated::model::EntityKey;
 use crate::generated::walk::for_each_entity;
 use crate::generated::write::Writer;
 
 /// An inverse-reference index: for each entity, the entities that reference it.
+///
+/// Entities are numbered densely, kind by kind; the referrers of entity `n`
+/// are `referrers[starts[n]..starts[n + 1]]`.
 pub struct RefGraph {
-    referrers: HashMap<EntityKey, Vec<EntityKey>>,
+    /// The first number of each kind of entity, and the total at the end.
+    bases: Vec<usize>,
+    starts: Vec<usize>,
+    referrers: Vec<EntityKey>,
 }
 
 impl StepModel {
     /// Build the reverse-reference index for this model.
     ///
-    /// O(total references); builds the whole index in one pass. Build once and
-    /// reuse for many reverse queries.
+    /// O(total references): two walks over the model's references, one to
+    /// count them and one to place them. Build once and reuse for many
+    /// reverse queries.
     #[must_use]
     pub fn ref_graph(&self) -> RefGraph {
-        let writer = Writer::new(self);
-        let mut referrers: HashMap<EntityKey, Vec<EntityKey>> = HashMap::new();
+        let mut bases = vec![0; EntityKey::KINDS + 1];
+        for_each_entity(self, |key| bases[key.kind_index().0 + 1] += 1);
+        for k in 1..bases.len() {
+            bases[k] += bases[k - 1];
+        }
+        let dense = |key: EntityKey| {
+            let (kind, i) = key.kind_index();
+            bases[kind] + i as usize
+        };
+
+        // Count each entity's referrers, then turn the counts into starts.
+        let mut starts = vec![0; bases[EntityKey::KINDS] + 1];
+        let mut any = None;
         let mut deps = Vec::new();
         for_each_entity(self, |referrer| {
             deps.clear();
-            writer.deps_of(referrer, &mut deps);
+            Writer::deps_of(self, referrer, &mut deps);
             for &target in &deps {
-                referrers.entry(target).or_default().push(referrer);
+                starts[dense(target) + 1] += 1;
+                any = Some(referrer);
             }
         });
-        RefGraph { referrers }
+        for n in 1..starts.len() {
+            starts[n] += starts[n - 1];
+        }
+
+        // Place the referrers, each entity's in walk order.
+        let Some(any) = any else {
+            return RefGraph {
+                bases,
+                starts,
+                referrers: Vec::new(),
+            };
+        };
+        // Each entity's start serves as its cursor; once all are placed it
+        // holds the next entity's start, so the starts shift back by one.
+        let n = starts.len() - 1;
+        let mut referrers = vec![any; starts[n]];
+        for_each_entity(self, |referrer| {
+            deps.clear();
+            Writer::deps_of(self, referrer, &mut deps);
+            for &target in &deps {
+                let at = &mut starts[dense(target)];
+                referrers[*at] = referrer;
+                *at += 1;
+            }
+        });
+        starts.copy_within(0..n, 1);
+        starts[0] = 0;
+        RefGraph {
+            bases,
+            starts,
+            referrers,
+        }
     }
 }
 
@@ -45,6 +93,11 @@ impl RefGraph {
     /// entity-walk order.
     #[must_use]
     pub fn referrers(&self, target: EntityKey) -> &[EntityKey] {
-        self.referrers.get(&target).map_or(&[], Vec::as_slice)
+        let (kind, i) = target.kind_index();
+        let n = self.bases[kind] + i as usize;
+        if n >= self.bases[kind + 1] {
+            return &[];
+        }
+        &self.referrers[self.starts[n]..self.starts[n + 1]]
     }
 }

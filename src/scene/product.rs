@@ -14,15 +14,16 @@
 use std::collections::HashSet;
 
 use crate::generated::model as m;
-use crate::scene::geometry::Solid;
+use crate::scene::geometry::{Solid, SurfaceModel};
 use crate::scene::pmi;
+use crate::scene::sets::GeometricSet;
 use crate::scene::{Ctx, Scene};
 
 impl Scene<'_> {
     /// Every product (`PRODUCT`) in the model.
     pub fn all_products(&self) -> impl Iterator<Item = Product<'_>> + '_ {
         let cx = self.ctx();
-        (0..cx.model.product_arena.items.len()).map(move |i| Product {
+        cx.model.product_arena.indices().map(move |i| Product {
             cx,
             id: m::ProductId(i),
         })
@@ -31,15 +32,18 @@ impl Scene<'_> {
     /// Every product definition (`PRODUCT_DEFINITION`) in the model.
     pub fn all_product_definitions(&self) -> impl Iterator<Item = ProductDef<'_>> + '_ {
         let cx = self.ctx();
-        let plain = (0..cx.model.product_definition_arena.items.len()).map(move |i| ProductDef {
-            cx,
-            which: PdImpl::Plain(m::ProductDefinitionId(i)),
-        });
-        let with_docs = (0..cx
+        let plain = cx
+            .model
+            .product_definition_arena
+            .indices()
+            .map(move |i| ProductDef {
+                cx,
+                which: PdImpl::Plain(m::ProductDefinitionId(i)),
+            });
+        let with_docs = cx
             .model
             .product_definition_with_associated_documents_arena
-            .items
-            .len())
+            .indices()
             .map(move |i| ProductDef {
                 cx,
                 which: PdImpl::WithDocs(m::ProductDefinitionWithAssociatedDocumentsId(i)),
@@ -59,10 +63,7 @@ impl Scene<'_> {
                     return false;
                 };
                 let nauo = cx.model.next_assembly_usage_occurrence_arena.get(nid.0);
-                matches!(
-                    &nauo.related_product_definition,
-                    m::ProductDefinitionOrReferenceRef::ProductDefinition(d) if m::EntityKey::ProductDefinition(*d) == def.key()
-                )
+                pdor_is(&nauo.related_product_definition, def.key())
             })
         })
     }
@@ -91,15 +92,15 @@ impl<'m> Product<'m> {
     }
 
     pub fn id(&self) -> &'m str {
-        &self.raw().id
+        self.cx.model.text(self.raw().id)
     }
 
     pub fn name(&self) -> &'m str {
-        &self.raw().name
+        self.cx.model.text(self.raw().name)
     }
 
     pub fn description(&self) -> Option<&'m str> {
-        self.raw().description.as_deref()
+        self.raw().description.map(|t| self.cx.model.text(t))
     }
 
     /// The definitions of this product (reverse: a `PRODUCT_DEFINITION_FORMATION`
@@ -149,7 +150,7 @@ impl<'m> Product<'m> {
             }
             targets.push(fr);
             for &pr in rg.referrers(fr) {
-                if matches!(pr, m::EntityKey::ProductDefinition(_)) {
+                if ProductDef::from_key(self.cx, pr).is_some() {
                     targets.push(pr);
                 }
             }
@@ -159,30 +160,38 @@ impl<'m> Product<'m> {
 
     /// The people/organizations associated with this product across all its
     /// versions and definitions, each with the role they play.
-    pub fn contributors(&self) -> Vec<Contributor<'m>> {
-        contributors_of(self.cx, &self.metadata_targets())
+    pub fn contributors(&self) -> impl Iterator<Item = Contributor<'m>> + 'm {
+        contributors_of(self.cx, &self.metadata_targets()).into_iter()
     }
 
     /// The approvals anywhere in this product's tree (product, any formation, or
     /// any definition).
-    pub fn approvals(&self) -> Vec<Approval<'m>> {
-        approvals_of(self.cx, &self.metadata_targets())
+    pub fn approvals(&self) -> impl Iterator<Item = Approval<'m>> + 'm {
+        approvals_of(self.cx, &self.metadata_targets()).into_iter()
     }
 
-    /// The documents referenced anywhere in this product's tree.
-    pub fn documents(&self) -> Vec<Document<'m>> {
-        documents_of(self.cx, &self.metadata_targets())
+    /// The documents referenced anywhere in this product's tree, and those a
+    /// `..._WITH_ASSOCIATED_DOCUMENTS` definition of it lists itself.
+    pub fn documents(&self) -> impl Iterator<Item = Document<'m>> + 'm {
+        let this = self.about();
+        let mut out = documents_of(this.cx, &this.metadata_targets());
+        for def in this.definitions() {
+            def.push_listed_documents(&mut out);
+        }
+        out.into_iter()
     }
 
     /// The security classifications assigned anywhere in this product's tree.
-    pub fn security_classifications(&self) -> Vec<SecurityClassification<'m>> {
-        security_classifications_of(self.cx, &self.metadata_targets())
+    pub fn security_classifications(
+        &self,
+    ) -> impl Iterator<Item = SecurityClassification<'m>> + 'm {
+        security_classifications_of(self.cx, &self.metadata_targets()).into_iter()
     }
 
     /// This product's versions — its `PRODUCT_DEFINITION_FORMATION`s (reverse:
     /// their `of_product` is this product). Usually one; a file may carry several
     /// revisions. Navigate `version.definitions()` to group definitions by version.
-    pub fn versions(&self) -> Vec<Version<'m>> {
+    pub fn versions(&self) -> impl Iterator<Item = Version<'m>> + 'm {
         let cx = self.cx;
         let rg = cx.ref_graph();
         let mut out: Vec<Version<'m>> = Vec::new();
@@ -196,7 +205,7 @@ impl<'m> Product<'m> {
             };
             out.push(Version { cx, which });
         }
-        out
+        out.into_iter()
     }
 }
 
@@ -224,13 +233,13 @@ impl<'m> Version<'m> {
         match self.which {
             FormImpl::Plain(i) => {
                 let f = model.product_definition_formation_arena.get(i.0);
-                (&f.id, f.description.as_deref())
+                (model.text(f.id), f.description.map(|t| model.text(t)))
             }
             FormImpl::WithSource(i) => {
                 let f = model
                     .product_definition_formation_with_specified_source_arena
                     .get(i.0);
-                (&f.id, f.description.as_deref())
+                (model.text(f.id), f.description.map(|t| model.text(t)))
             }
         }
     }
@@ -248,6 +257,28 @@ impl<'m> Version<'m> {
     /// The version label (`RevB`, `1`, `A`, …).
     pub fn id(&self) -> &'m str {
         self.fields().0
+    }
+
+    /// The product this is a version of (`of_product`); `None` for a complex
+    /// product.
+    pub fn product(&self) -> Option<Product<'m>> {
+        let model = self.cx.model;
+        let of_product = match self.which {
+            FormImpl::Plain(i) => &model.product_definition_formation_arena.get(i.0).of_product,
+            FormImpl::WithSource(i) => {
+                &model
+                    .product_definition_formation_with_specified_source_arena
+                    .get(i.0)
+                    .of_product
+            }
+        };
+        match of_product {
+            m::ProductRef::Product(id) => Some(Product {
+                cx: self.cx,
+                id: *id,
+            }),
+            m::ProductRef::Complex(_) => None,
+        }
     }
 
     /// The version description, if any.
@@ -321,8 +352,8 @@ impl<'m> ProductDef<'m> {
             PdImpl::Plain(i) => {
                 let r = self.cx.model.product_definition_arena.get(i.0);
                 PdCore {
-                    id: &r.id,
-                    description: r.description.as_deref(),
+                    id: self.cx.model.text(r.id),
+                    description: r.description.map(|t| self.cx.model.text(t)),
                     formation: &r.formation,
                 }
             }
@@ -333,8 +364,8 @@ impl<'m> ProductDef<'m> {
                     .product_definition_with_associated_documents_arena
                     .get(i.0);
                 PdCore {
-                    id: &r.id,
-                    description: r.description.as_deref(),
+                    id: self.cx.model.text(r.id),
+                    description: r.description.map(|t| self.cx.model.text(t)),
                     formation: &r.formation,
                 }
             }
@@ -430,45 +461,61 @@ impl<'m> ProductDef<'m> {
     /// The b-rep solids of this definition's shape — the bridge into the geometry
     /// handles. Reverse: a `PRODUCT_DEFINITION_SHAPE` referencing this definition →
     /// a `SHAPE_DEFINITION_REPRESENTATION` referencing that shape → forward through
-    /// its representation's items to each `MANIFOLD_SOLID_BREP`. When the geometry
+    /// its representation's items to each `MANIFOLD_SOLID_BREP` or
+    /// `BREP_WITH_VOIDS`. When the geometry
     /// lives in a separate representation bridged by a plain
     /// `SHAPE_REPRESENTATION_RELATIONSHIP` (the common AP242 assembly layout), the
     /// equivalence bridge is followed to collect those solids too.
     pub fn solids(&self) -> impl Iterator<Item = Solid<'m>> + 'm {
         let cx = self.cx;
-        let rg = cx.ref_graph();
-        let me = self.key();
-        let mut out: Vec<Solid<'m>> = Vec::new();
+        let mut seen: HashSet<m::EntityKey> = HashSet::new();
+        self.shape_items()
+            .into_iter()
+            .filter_map(move |it| item_solid(cx, it))
+            .filter(move |s| seen.insert(s.key()))
+    }
+
+    /// The surface models (`SHELL_BASED_SURFACE_MODEL`) of this part, found as
+    /// [`solids`](Self::solids) are: in its shape representations and those
+    /// they are bridged to.
+    pub fn surface_models(&self) -> impl Iterator<Item = SurfaceModel<'m>> + 'm {
+        let cx = self.cx;
+        let mut seen: HashSet<m::EntityKey> = HashSet::new();
+        self.shape_items()
+            .into_iter()
+            .filter_map(move |it| item_surface_model(cx, it))
+            .filter(move |s| seen.insert(s.key()))
+    }
+
+    /// The geometric sets (`GEOMETRIC_SET`, `GEOMETRIC_CURVE_SET`) of this
+    /// part — its wireframes and sketches — found as [`solids`](Self::solids)
+    /// are.
+    pub fn geometric_sets(&self) -> impl Iterator<Item = GeometricSet<'m>> + 'm {
+        let cx = self.cx;
+        let mut seen: HashSet<m::EntityKey> = HashSet::new();
+        self.shape_items()
+            .into_iter()
+            .filter_map(move |it| GeometricSet::from_item(cx, it))
+            .filter(move |s| seen.insert(s.key()))
+    }
+
+    /// The items of every shape representation of this part, and of those
+    /// bridged to them, in order. An item shared by two representations comes
+    /// twice.
+    fn shape_items(&self) -> Vec<&'m m::RepresentationItemRef> {
+        let cx = self.cx;
+        let mut out = Vec::new();
         // Shared across every representation reached: guards relationship cycles
         // and keeps a shape-equivalence bridge from re-collecting a rep.
         let mut visited: HashSet<m::EntityKey> = HashSet::new();
-        for r in rg.referrers(me) {
-            let m::EntityKey::ProductDefinitionShape(pds_id) = r else {
-                continue;
-            };
-            let pds = cx.model.product_definition_shape_arena.get(pds_id.0);
-            if !cdef_is(&pds.definition, me) {
-                continue;
-            }
-            for s in rg.referrers(m::EntityKey::ProductDefinitionShape(*pds_id)) {
-                let m::EntityKey::ShapeDefinitionRepresentation(sdr_id) = s else {
-                    continue;
-                };
-                let sdr = cx.model.shape_definition_representation_arena.get(sdr_id.0);
-                if matches!(&sdr.definition, m::RepresentedDefinitionRef::ProductDefinitionShape(p) if *p == *pds_id)
-                {
-                    collect_solids_from_repr(cx, &sdr.used_representation, &mut out, &mut visited);
-                }
-            }
+        for rep in def_shape_reps(cx, self.key()) {
+            collect_shape_items(cx, rep, &mut out, &mut visited);
         }
-        // A brep shared by two representations could be collected twice.
-        let mut seen: HashSet<m::EntityKey> = HashSet::new();
-        out.retain(|s| seen.insert(s.key()));
-        out.into_iter()
+        out
     }
 
     /// The shape features of this part (`SHAPE_ASPECT`s whose `of_shape`
-    /// resolves to this definition). The model-wide [`Scene::features`] filtered
+    /// resolves to this definition). The model-wide [`Scene::all_features`] filtered
     /// to this part.
     pub fn features(&self) -> impl Iterator<Item = pmi::Feature<'m>> + 'm {
         pmi::features_of(self.cx, self.key()).into_iter()
@@ -476,7 +523,8 @@ impl<'m> ProductDef<'m> {
 
     /// The dimensions of this part (those whose targeted feature is on it).
     pub fn dimensions(&self) -> impl Iterator<Item = pmi::Dimension<'m>> + 'm {
-        pmi::dimensions_of(self.cx, self.key()).into_iter()
+        let this = self.about();
+        pmi::dimensions_of(this.cx, this.key()).into_iter()
     }
 
     /// The geometric tolerances of this part (those whose target — a feature or
@@ -490,28 +538,19 @@ impl<'m> ProductDef<'m> {
         pmi::datums_of(self.cx, self.key()).into_iter()
     }
 
-    /// The version identifier of this part — its `PRODUCT_DEFINITION_FORMATION.id`.
-    pub fn version(&self) -> Option<&'m str> {
-        let model = self.cx.model;
-        match self.core().formation {
-            m::ProductDefinitionFormationRef::ProductDefinitionFormation(i) => {
-                Some(&model.product_definition_formation_arena.get(i.0).id)
-            }
+    /// The version this part is a definition of — its
+    /// `PRODUCT_DEFINITION_FORMATION`. `None` for a complex formation.
+    pub fn version(&self) -> Option<Version<'m>> {
+        let which = match self.core().formation {
+            m::ProductDefinitionFormationRef::ProductDefinitionFormation(i) => FormImpl::Plain(*i),
             m::ProductDefinitionFormationRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
-                Some(
-                    &model
-                        .product_definition_formation_with_specified_source_arena
-                        .get(i.0)
-                        .id,
-                )
+                FormImpl::WithSource(*i)
             }
-            m::ProductDefinitionFormationRef::Complex(_) => None,
-        }
+            m::ProductDefinitionFormationRef::Complex(_) => return None,
+        };
+        Some(Version { cx: self.cx, which })
     }
 
-    /// The people / organizations involved with this part and their roles
-    /// (creator, design owner, supplier, …), from the person-and-organization
-    /// assignments targeting this definition, its product, or its formation.
     /// The identities a management assignment (person/org, approval, document)
     /// may target for this part: the definition, its product, and its formation.
     /// Ordered broadest-first (product, then formation, then definition) so the
@@ -538,14 +577,14 @@ impl<'m> ProductDef<'m> {
 
     /// The people/organizations assigned to this part's definition, product, or
     /// formation, each with the role they play.
-    pub fn contributors(&self) -> Vec<Contributor<'m>> {
-        contributors_of(self.cx, &self.metadata_targets())
+    pub fn contributors(&self) -> impl Iterator<Item = Contributor<'m>> + 'm {
+        contributors_of(self.cx, &self.metadata_targets()).into_iter()
     }
 
     /// The approvals on this part — the `APPROVAL`s assigned to its definition,
     /// product, or formation (each with a status, level, and approvers).
-    pub fn approvals(&self) -> Vec<Approval<'m>> {
-        approvals_of(self.cx, &self.metadata_targets())
+    pub fn approvals(&self) -> impl Iterator<Item = Approval<'m>> + 'm {
+        approvals_of(self.cx, &self.metadata_targets()).into_iter()
     }
 
     /// The documents referenced by this part — drawings, specs, standards
@@ -553,38 +592,48 @@ impl<'m> ProductDef<'m> {
     /// definition, its product, or its formation), plus, for a
     /// `..._WITH_ASSOCIATED_DOCUMENTS` definition, the documents it carries
     /// directly in `documentation_ids`.
-    pub fn documents(&self) -> Vec<Document<'m>> {
-        let mut out = documents_of(self.cx, &self.metadata_targets());
-        if let PdImpl::WithDocs(i) = self.which {
-            let raw = self
-                .cx
-                .model
-                .product_definition_with_associated_documents_arena
-                .get(i.0);
-            let scope = scope_of(self.key());
-            for dref in &raw.documentation_ids {
-                let which = match dref {
-                    m::DocumentRef::Document(i) => DocImpl::Document(*i),
-                    m::DocumentRef::DocumentFile(i) => DocImpl::DocumentFile(*i),
-                    m::DocumentRef::Complex(_) => continue,
-                };
-                let doc = Document {
-                    cx: self.cx,
-                    which,
-                    scope,
-                };
-                if !out.iter().any(|d| d.key() == doc.key()) {
-                    out.push(doc);
-                }
+    pub fn documents(&self) -> impl Iterator<Item = Document<'m>> + 'm {
+        let this = self.about();
+        let mut out = documents_of(this.cx, &this.metadata_targets());
+        this.push_listed_documents(&mut out);
+        out.into_iter()
+    }
+
+    /// Add to `out` the documents a `..._WITH_ASSOCIATED_DOCUMENTS` definition
+    /// lists in its own `documentation_ids`, skipping those already there.
+    fn push_listed_documents(&self, out: &mut Vec<Document<'m>>) {
+        let PdImpl::WithDocs(i) = self.which else {
+            return;
+        };
+        let raw = self
+            .cx
+            .model
+            .product_definition_with_associated_documents_arena
+            .get(i.0);
+        let scope = scope_of(self.key());
+        for dref in &raw.documentation_ids {
+            let which = match dref {
+                m::DocumentRef::Document(i) => DocImpl::Document(*i),
+                m::DocumentRef::DocumentFile(i) => DocImpl::DocumentFile(*i),
+                m::DocumentRef::Complex(_) => continue,
+            };
+            let doc = Document {
+                cx: self.cx,
+                which,
+                scope,
+            };
+            if !out.iter().any(|d| d.key() == doc.key()) {
+                out.push(doc);
             }
         }
-        out
     }
 
     /// The security classifications assigned to this part — its confidentiality
     /// level and why (assigned to its definition, product, or formation).
-    pub fn security_classifications(&self) -> Vec<SecurityClassification<'m>> {
-        security_classifications_of(self.cx, &self.metadata_targets())
+    pub fn security_classifications(
+        &self,
+    ) -> impl Iterator<Item = SecurityClassification<'m>> + 'm {
+        security_classifications_of(self.cx, &self.metadata_targets()).into_iter()
     }
 }
 
@@ -631,7 +680,7 @@ fn scope_of(k: m::EntityKey) -> Scope {
 /// full detail behind [`Scope`]. Unlike [`Contributor::assigned_scope`] (which
 /// answers *which level*), this names *which entity*, so multiple targets at the
 /// same level stay distinct.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum Target<'m> {
     Product(Product<'m>),
     Version(Version<'m>),
@@ -846,6 +895,17 @@ pub struct Contributor<'m> {
 }
 
 impl<'m> Contributor<'m> {
+    /// This assignment's global identity (a `Copy` key for maps /
+    /// deduplication): the person-and-organization assignment entity.
+    pub fn key(&self) -> m::EntityKey {
+        match self.which {
+            ContributorImpl::CcDesign(i) => {
+                m::EntityKey::CcDesignPersonAndOrganizationAssignment(i)
+            }
+            ContributorImpl::Applied(i) => m::EntityKey::AppliedPersonAndOrganizationAssignment(i),
+        }
+    }
+
     /// Which level of the product structure this assignment attaches to.
     pub fn assigned_scope(&self) -> Scope {
         self.scope
@@ -853,7 +913,7 @@ impl<'m> Contributor<'m> {
 
     /// The exact product-structure entities this assignment attaches to (its
     /// `items`) — versions and definitions stay distinct even at the same level.
-    pub fn assigned_targets(&self) -> Vec<Target<'m>> {
+    pub fn assigned_targets(&self) -> impl Iterator<Item = Target<'m>> + 'm {
         let cx = self.cx;
         let keys: Vec<m::EntityKey> = match self.which {
             ContributorImpl::CcDesign(i) => cx
@@ -873,7 +933,7 @@ impl<'m> Contributor<'m> {
                 .map(m::PersonAndOrganizationItemRef::entity_key)
                 .collect(),
         };
-        targets_from_keys(cx, keys.into_iter())
+        targets_from_keys(cx, keys.into_iter()).into_iter()
     }
 
     /// The assignment's person-and-organization and role ids (both refs are
@@ -902,12 +962,13 @@ impl<'m> Contributor<'m> {
     /// The role this contributor plays (`creator`, `design_owner`, …).
     pub fn role(&self) -> &'m str {
         let (_, rid) = self.ids();
-        &self
-            .cx
-            .model
-            .person_and_organization_role_arena
-            .get(rid.0)
-            .name
+        self.cx.model.text(
+            self.cx
+                .model
+                .person_and_organization_role_arena
+                .get(rid.0)
+                .name,
+        )
     }
 
     /// The person.
@@ -934,7 +995,9 @@ impl<'m> Contributor<'m> {
             .person_and_organization_arena
             .get(pao.0)
             .the_organization;
-        &self.cx.model.organization_arena.get(oid.0).name
+        self.cx
+            .model
+            .text(self.cx.model.organization_arena.get(oid.0).name)
     }
 }
 
@@ -957,17 +1020,17 @@ impl<'m> Person<'m> {
 
     /// The person's STEP `id`.
     pub fn id(&self) -> &'m str {
-        &self.raw().id
+        self.cx.model.text(self.raw().id)
     }
 
     /// The person's given name, if recorded.
     pub fn first_name(&self) -> Option<&'m str> {
-        self.raw().first_name.as_deref()
+        self.raw().first_name.map(|t| self.cx.model.text(t))
     }
 
     /// The person's family name, if recorded.
     pub fn last_name(&self) -> Option<&'m str> {
-        self.raw().last_name.as_deref()
+        self.raw().last_name.map(|t| self.cx.model.text(t))
     }
 }
 
@@ -984,8 +1047,10 @@ pub struct Placement {
     pub ref_direction: [f64; 3],
 }
 
-/// An item-defined transformation as two frames: the relative transform maps
-/// `from` (`transform_item_1`) to `to` (`transform_item_2`) — the faithful
+/// A placement as two frames: `from` is a frame in the representation being
+/// placed (a component's shape, a mapped item's source) and `to` the frame it
+/// lands on in the placing representation (the assembly's shape, the mapping
+/// target). The relative transform maps `from` to `to` — the faithful
 /// two-frame form; [`Transform::matrix`] composes them on demand.
 #[derive(Clone, Copy, Debug)]
 pub struct Transform {
@@ -1097,10 +1162,19 @@ impl<'m> Occurrence<'m> {
     /// two `AXIS2_PLACEMENT_3D` frames). A transform item that is not an
     /// `AXIS2_PLACEMENT_3D` is reported via [`Scene::warnings`](crate::scene::Scene)
     /// and yields `None` rather than a silently wrong frame.
+    ///
+    /// `from` is the frame in the component's shape and `to` the frame in the
+    /// assembly's: usually `transform_item_1` and `transform_item_2`, swapped
+    /// when the relationship names the assembly's representation as `rep_1`
+    /// (as some exporters write it). The order is decided by matching `rep_1`
+    /// and `rep_2` against both definitions' shape representations; a
+    /// relationship matching neither order is read component-first and
+    /// reported via [`Scene::warnings`](crate::scene::Scene).
     pub fn transform(&self) -> Option<Transform> {
-        let cx = self.cx;
+        let this = self.about();
+        let cx = this.cx;
         let rg = cx.ref_graph();
-        let me = self.id;
+        let me = this.id;
         for r in rg.referrers(m::EntityKey::NextAssemblyUsageOccurrence(me)) {
             let m::EntityKey::ProductDefinitionShape(pds_id) = r else {
                 continue;
@@ -1122,14 +1196,52 @@ impl<'m> Occurrence<'m> {
                 {
                     continue;
                 }
-                if let Some(idt) = idt_of_cdsr(cx, &cdsr.representation_relation) {
-                    let from = resolve_placement(cx, &idt.transform_item_1)?;
-                    let to = resolve_placement(cx, &idt.transform_item_2)?;
+                if let Some((idt, reps)) = idt_of_cdsr(cx, &cdsr.representation_relation) {
+                    let (from, to) = if this.assembly_rep_first(reps) {
+                        (&idt.transform_item_2, &idt.transform_item_1)
+                    } else {
+                        (&idt.transform_item_1, &idt.transform_item_2)
+                    };
+                    let from = resolve_placement(cx, from)?;
+                    let to = resolve_placement(cx, to)?;
                     return Some(Transform { from, to });
                 }
             }
         }
         None
+    }
+
+    /// Whether the placement relationship's reps `(rep_1, rep_2)` are the
+    /// assembly's and the component's shape representations, in that order. An
+    /// order that matches neither way is reported and read component-first.
+    fn assembly_rep_first(&self, reps: Option<(m::EntityKey, m::EntityKey)>) -> bool {
+        let cx = self.cx;
+        let shape_reps = |r: &m::ProductDefinitionOrReferenceRef| -> Vec<m::EntityKey> {
+            pdor_to_def(cx, r)
+                .map(|d| {
+                    def_shape_reps(cx, d.key())
+                        .iter()
+                        .map(|rep| rep.entity_key())
+                        .collect()
+                })
+                .unwrap_or_default()
+        };
+        if let Some((rep_1, rep_2)) = reps {
+            let component = shape_reps(&self.raw().related_product_definition);
+            let assembly = shape_reps(&self.raw().relating_product_definition);
+            if component.contains(&rep_1) && assembly.contains(&rep_2) {
+                return false;
+            }
+            if assembly.contains(&rep_1) && component.contains(&rep_2) {
+                return true;
+            }
+        }
+        cx.warn(
+            "NAUO placement: REPRESENTATION_RELATIONSHIP reps do not match the component's \
+             and the assembly's shape representations; read as rep_1 = component"
+                .to_owned(),
+        );
+        false
     }
 }
 
@@ -1145,10 +1257,13 @@ impl Scene<'_> {
     /// drawing/PMI view instancing).
     pub fn all_mapped_instances(&self) -> impl Iterator<Item = MappedInstance<'_>> + '_ {
         let cx = self.ctx();
-        (0..cx.model.mapped_item_arena.items.len()).map(move |i| MappedInstance {
-            cx,
-            id: m::MappedItemId(i),
-        })
+        cx.model
+            .mapped_item_arena
+            .indices()
+            .map(move |i| MappedInstance {
+                cx,
+                id: m::MappedItemId(i),
+            })
     }
 }
 
@@ -1166,7 +1281,7 @@ impl<'m> MappedInstance<'m> {
     }
 
     pub fn name(&self) -> &'m str {
-        &self.raw().name
+        self.cx.model.text(self.raw().name)
     }
 
     /// This instance's global identity (a `Copy` key for maps / deduplication).
@@ -1189,70 +1304,68 @@ impl<'m> MappedInstance<'m> {
     /// (a camera origin, a 2D drawing target) is reported via
     /// [`Scene::warnings`](crate::scene::Scene) and yields `None`.
     pub fn transform(&self) -> Option<Transform> {
-        let cx = self.cx;
-        let map = self.map()?;
+        let this = self.about();
+        let cx = this.cx;
+        let map = this.map()?;
         let from = resolve_placement(cx, &map.mapping_origin)?;
-        let to = resolve_placement(cx, &self.raw().mapping_target)?;
+        let to = resolve_placement(cx, &this.raw().mapping_target)?;
         Some(Transform { from, to })
     }
 
     /// The b-rep solids of the source representation — the geometry this
     /// instance stamps. A non-shape source (a presentation view) has none.
-    pub fn solids(&self) -> Vec<Solid<'m>> {
-        let cx = self.cx;
-        let Some(map) = self.map() else {
-            return Vec::new();
-        };
-        rep_items(cx, &map.mapped_representation)
+    pub fn solids(&self) -> impl Iterator<Item = Solid<'m>> + 'm {
+        let this = self.about();
+        let cx = this.cx;
+        this.map()
+            .and_then(|map| rep_items(cx, &map.mapped_representation))
             .into_iter()
             .flatten()
-            .filter_map(|it| match it {
-                m::RepresentationItemRef::ManifoldSolidBrep(id) => Some(Solid::from_id(cx, *id)),
-                m::RepresentationItemRef::BrepWithVoids(id) => Some(Solid::from_void_id(cx, *id)),
-                _ => None,
-            })
-            .collect()
+            .filter_map(move |it| item_solid(cx, it))
+    }
+
+    /// The surface models of the source representation.
+    pub fn surface_models(&self) -> impl Iterator<Item = SurfaceModel<'m>> + 'm {
+        let this = self.about();
+        let cx = this.cx;
+        this.map()
+            .and_then(|map| rep_items(cx, &map.mapped_representation))
+            .into_iter()
+            .flatten()
+            .filter_map(move |it| item_surface_model(cx, it))
+    }
+
+    /// The geometric sets of the source representation.
+    pub fn geometric_sets(&self) -> impl Iterator<Item = GeometricSet<'m>> + 'm {
+        let this = self.about();
+        let cx = this.cx;
+        this.map()
+            .and_then(|map| rep_items(cx, &map.mapped_representation))
+            .into_iter()
+            .flatten()
+            .filter_map(move |it| GeometricSet::from_item(cx, it))
     }
 
     /// Nested mapped items inside the source representation — one level of an
     /// assembly chain; walk them to traverse the instance tree.
-    pub fn mapped_children(&self) -> Vec<MappedInstance<'m>> {
-        let cx = self.cx;
-        let Some(map) = self.map() else {
-            return Vec::new();
-        };
-        rep_items(cx, &map.mapped_representation)
+    pub fn mapped_children(&self) -> impl Iterator<Item = MappedInstance<'m>> + 'm {
+        let this = self.about();
+        let cx = this.cx;
+        this.map()
+            .and_then(|map| rep_items(cx, &map.mapped_representation))
             .into_iter()
             .flatten()
-            .filter_map(|it| match it {
+            .filter_map(move |it| match it {
                 m::RepresentationItemRef::MappedItem(id) => Some(MappedInstance { cx, id: *id }),
                 _ => None,
             })
-            .collect()
     }
 }
 
-/// The `items` of a shape-carrying representation (the kinds mapped items
-/// point at in practice); other representation kinds carry no b-rep items.
+/// The `items` of a shape representation (see [`shape_rep_items`]) — what a
+/// mapped item stamps; other representation kinds carry no shape items.
 fn rep_items<'m>(cx: Ctx<'m>, r: &m::RepresentationRef) -> Option<&'m [m::RepresentationItemRef]> {
-    match r {
-        m::RepresentationRef::ShapeRepresentation(id) => {
-            Some(&cx.model.shape_representation_arena.get(id.0).items)
-        }
-        m::RepresentationRef::AdvancedBrepShapeRepresentation(id) => Some(
-            &cx.model
-                .advanced_brep_shape_representation_arena
-                .get(id.0)
-                .items,
-        ),
-        m::RepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(id) => Some(
-            &cx.model
-                .geometrically_bounded_wireframe_shape_representation_arena
-                .get(id.0)
-                .items,
-        ),
-        _ => None,
-    }
+    shape_rep_items(cx, r).map(|(_, items)| items)
 }
 
 // ---------------------------------------------------------------------------
@@ -1262,30 +1375,35 @@ fn rep_items<'m>(cx: Ctx<'m>, r: &m::RepresentationRef) -> Option<&'m [m::Repres
 /// The item-defined transformation behind a context-dependent shape
 /// representation: its `representation_relation` is the complex
 /// `(…, REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION, …)` whose operator is an
-/// `ITEM_DEFINED_TRANSFORMATION`.
+/// `ITEM_DEFINED_TRANSFORMATION`. Returned with the relationship's
+/// `(rep_1, rep_2)`.
 fn idt_of_cdsr<'m>(
     cx: Ctx<'m>,
     rr: &m::ShapeRepresentationRelationshipRef,
-) -> Option<&'m m::ItemDefinedTransformation> {
+) -> Option<(
+    &'m m::ItemDefinedTransformation,
+    Option<(m::EntityKey, m::EntityKey)>,
+)> {
     let m::ShapeRepresentationRelationshipRef::Complex(cuid) = rr else {
         return None;
     };
-    let op = cx
-        .model
-        .complex_unit_arena
-        .get(cuid.0)
-        .parts
-        .iter()
-        .find_map(|p| match p {
-            m::UnitPart::RepresentationRelationshipWithTransformation {
-                transformation_operator,
-            } => Some(transformation_operator),
-            _ => None,
-        })?;
+    let parts = &cx.model.complex_entity_arena.get(cuid.0).parts;
+    let op = parts.iter().find_map(|p| match p {
+        m::PartialEntity::RepresentationRelationshipWithTransformation {
+            transformation_operator,
+        } => Some(transformation_operator),
+        _ => None,
+    })?;
     let m::TransformationRef::ItemDefinedTransformation(id) = op else {
         return None;
     };
-    Some(cx.model.item_defined_transformation_arena.get(id.0))
+    let reps = parts.iter().find_map(|p| match p {
+        m::PartialEntity::RepresentationRelationship { rep_1, rep_2, .. } => {
+            Some((rep_1.entity_key(), rep_2.entity_key()))
+        }
+        _ => None,
+    });
+    Some((cx.model.item_defined_transformation_arena.get(id.0), reps))
 }
 
 /// Resolve a transform item to a [`Placement`]. Only `AXIS2_PLACEMENT_3D` is a
@@ -1382,45 +1500,100 @@ fn cdef_is(cd: &m::CharacterizedDefinitionRef, key: m::EntityKey) -> bool {
     }
 }
 
-/// Push every `MANIFOLD_SOLID_BREP` reachable from a representation's `items`,
-/// following plain `SHAPE_REPRESENTATION_RELATIONSHIP` (shape equivalence) to
-/// bridged representations. The common assembly export puts a component's
-/// placement in one `SHAPE_REPRESENTATION` and its geometry in a separate
-/// `ADVANCED_BREP_SHAPE_REPRESENTATION`, linked by such a relationship. The
-/// `WITH_TRANSFORMATION` variant is a complex instance (not in this arena), so
-/// occurrence placement is never followed here. `visited` guards cycles.
-fn collect_solids_from_repr<'m>(
+/// The shape representations of a definition (reverse: each
+/// `PRODUCT_DEFINITION_SHAPE` of the definition → each
+/// `SHAPE_DEFINITION_REPRESENTATION` of that shape → its `used_representation`).
+fn def_shape_reps(cx: Ctx<'_>, def: m::EntityKey) -> Vec<&m::RepresentationRef> {
+    let rg = cx.ref_graph();
+    let mut out = Vec::new();
+    for r in rg.referrers(def) {
+        let m::EntityKey::ProductDefinitionShape(pds_id) = r else {
+            continue;
+        };
+        let pds = cx.model.product_definition_shape_arena.get(pds_id.0);
+        if !cdef_is(&pds.definition, def) {
+            continue;
+        }
+        for s in rg.referrers(m::EntityKey::ProductDefinitionShape(*pds_id)) {
+            let m::EntityKey::ShapeDefinitionRepresentation(sdr_id) = s else {
+                continue;
+            };
+            let sdr = cx.model.shape_definition_representation_arena.get(sdr_id.0);
+            if matches!(&sdr.definition, m::RepresentedDefinitionRef::ProductDefinitionShape(p) if *p == *pds_id)
+            {
+                out.push(&sdr.used_representation);
+            }
+        }
+    }
+    out
+}
+
+/// The key and `items` of a shape representation this layer reads geometry
+/// from: a plain, advanced b-rep, manifold surface, or geometrically bounded
+/// surface or wireframe `SHAPE_REPRESENTATION`.
+fn shape_rep_items<'m>(
     cx: Ctx<'m>,
     r: &m::RepresentationRef,
-    out: &mut Vec<Solid<'m>>,
-    visited: &mut HashSet<m::EntityKey>,
-) {
-    let (key, items): (m::EntityKey, &[m::RepresentationItemRef]) = match r {
+) -> Option<(m::EntityKey, &'m [m::RepresentationItemRef])> {
+    let model = cx.model;
+    Some(match r {
         m::RepresentationRef::ShapeRepresentation(i) => (
             m::EntityKey::ShapeRepresentation(*i),
-            &cx.model.shape_representation_arena.get(i.0).items,
+            &model.shape_representation_arena.get(i.0).items,
         ),
         m::RepresentationRef::AdvancedBrepShapeRepresentation(i) => (
             m::EntityKey::AdvancedBrepShapeRepresentation(*i),
-            &cx.model
+            &model
                 .advanced_brep_shape_representation_arena
                 .get(i.0)
                 .items,
         ),
-        _ => return,
+        m::RepresentationRef::ManifoldSurfaceShapeRepresentation(i) => (
+            m::EntityKey::ManifoldSurfaceShapeRepresentation(*i),
+            &model
+                .manifold_surface_shape_representation_arena
+                .get(i.0)
+                .items,
+        ),
+        m::RepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => (
+            m::EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(*i),
+            &model
+                .geometrically_bounded_surface_shape_representation_arena
+                .get(i.0)
+                .items,
+        ),
+        m::RepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => (
+            m::EntityKey::GeometricallyBoundedWireframeShapeRepresentation(*i),
+            &model
+                .geometrically_bounded_wireframe_shape_representation_arena
+                .get(i.0)
+                .items,
+        ),
+        _ => return None,
+    })
+}
+
+/// Push every item of a shape representation, following plain
+/// `SHAPE_REPRESENTATION_RELATIONSHIP` (shape equivalence) to bridged
+/// representations. The common assembly export puts a component's placement in
+/// one `SHAPE_REPRESENTATION` and its geometry in a separate representation
+/// (an `ADVANCED_BREP_SHAPE_REPRESENTATION`, a manifold surface one, …), linked
+/// by such a relationship. The `WITH_TRANSFORMATION` variant is a complex
+/// instance (not in this arena), so occurrence placement is never followed
+/// here. `visited` guards cycles.
+fn collect_shape_items<'m>(
+    cx: Ctx<'m>,
+    r: &m::RepresentationRef,
+    out: &mut Vec<&'m m::RepresentationItemRef>,
+    visited: &mut HashSet<m::EntityKey>,
+) {
+    let Some((key, items)) = shape_rep_items(cx, r) else {
+        return;
     };
     if !visited.insert(key) {
         return;
     }
-    for it in items {
-        match it {
-            m::RepresentationItemRef::ManifoldSolidBrep(sid) => out.push(Solid::from_id(cx, *sid)),
-            m::RepresentationItemRef::BrepWithVoids(sid) => {
-                out.push(Solid::from_void_id(cx, *sid));
-            }
-            _ => {}
-        }
-    }
+    out.extend(items);
     // Hop across plain shape-equivalence relationships to the other endpoint.
     let rg = cx.ref_graph();
     for referrer in rg.referrers(key) {
@@ -1440,8 +1613,27 @@ fn collect_solids_from_repr<'m>(
             continue;
         };
         if let Ok(other_ref) = m::RepresentationRef::from_any(other) {
-            collect_solids_from_repr(cx, &other_ref, out, visited);
+            collect_shape_items(cx, &other_ref, out, visited);
         }
+    }
+}
+
+/// A representation item as a solid, if it is one.
+fn item_solid<'m>(cx: Ctx<'m>, it: &m::RepresentationItemRef) -> Option<Solid<'m>> {
+    match it {
+        m::RepresentationItemRef::ManifoldSolidBrep(id) => Some(Solid::from_id(cx, *id)),
+        m::RepresentationItemRef::BrepWithVoids(id) => Some(Solid::from_void_id(cx, *id)),
+        _ => None,
+    }
+}
+
+/// A representation item as a surface model, if it is one.
+fn item_surface_model<'m>(cx: Ctx<'m>, it: &m::RepresentationItemRef) -> Option<SurfaceModel<'m>> {
+    match it {
+        m::RepresentationItemRef::ShellBasedSurfaceModel(id) => {
+            Some(SurfaceModel::from_id(cx, *id))
+        }
+        _ => None,
     }
 }
 
@@ -1476,7 +1668,7 @@ impl<'m> Approval<'m> {
 
     /// The exact product-structure entities this approval is assigned to (across
     /// every assignment that carries it).
-    pub fn assigned_targets(&self) -> Vec<Target<'m>> {
+    pub fn assigned_targets(&self) -> impl Iterator<Item = Target<'m>> + 'm {
         let cx = self.cx;
         let mut keys: Vec<m::EntityKey> = Vec::new();
         for r in cx.ref_graph().referrers(self.key()) {
@@ -1500,23 +1692,25 @@ impl<'m> Approval<'m> {
                 _ => {}
             }
         }
-        targets_from_keys(cx, keys.into_iter())
+        targets_from_keys(cx, keys.into_iter()).into_iter()
     }
 
     /// The approval status name (`approved`, `not_yet_approved`, …).
     pub fn status(&self) -> &'m str {
         let m::ApprovalStatusRef::ApprovalStatus(sid) = &self.raw().status;
-        &self.cx.model.approval_status_arena.get(sid.0).name
+        self.cx
+            .model
+            .text(self.cx.model.approval_status_arena.get(sid.0).name)
     }
 
     /// The approval level.
     pub fn level(&self) -> &'m str {
-        &self.raw().level
+        self.cx.model.text(self.raw().level)
     }
 
     /// Who authorised this approval, with their role (reverse: an
     /// `APPROVAL_PERSON_ORGANIZATION` whose `authorized_approval` is this approval).
-    pub fn approvers(&self) -> Vec<Approver<'m>> {
+    pub fn approvers(&self) -> impl Iterator<Item = Approver<'m>> + 'm {
         let cx = self.cx;
         let mut out: Vec<Approver<'m>> = Vec::new();
         for r in cx.ref_graph().referrers(self.key()) {
@@ -1524,7 +1718,7 @@ impl<'m> Approval<'m> {
                 out.push(Approver { cx, id: *id });
             }
         }
-        out
+        out.into_iter()
     }
 
     /// When this approval was made (reverse: an `APPROVAL_DATE_TIME` whose
@@ -1535,8 +1729,9 @@ impl<'m> Approval<'m> {
     /// surfaced through [`Scene::warnings`](crate::scene::Scene::warnings) so the
     /// "no date" and "unreadable date" cases stay distinguishable.
     pub fn date(&self) -> Option<ApprovalDate> {
-        let cx = self.cx;
-        for r in cx.ref_graph().referrers(self.key()) {
+        let this = self.about();
+        let cx = this.cx;
+        for r in cx.ref_graph().referrers(this.key()) {
             if let m::EntityKey::ApprovalDateTime(id) = r {
                 let dt = &cx.model.approval_date_time_arena.get(id.0).date_time;
                 return resolve_datetime(cx, dt);
@@ -1551,6 +1746,7 @@ impl<'m> Approval<'m> {
 /// from the source stay `None`; seconds and time-zone are intentionally out of
 /// scope for now.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct ApprovalDate {
     pub year: Option<i64>,
     pub month: Option<i64>,
@@ -1617,6 +1813,12 @@ pub struct Approver<'m> {
 }
 
 impl<'m> Approver<'m> {
+    /// This approver's global identity (a `Copy` key for maps /
+    /// deduplication): the `APPROVAL_PERSON_ORGANIZATION`.
+    pub fn key(&self) -> m::EntityKey {
+        m::EntityKey::ApprovalPersonOrganization(self.id)
+    }
+
     fn raw(&self) -> &'m m::ApprovalPersonOrganization {
         self.cx
             .model
@@ -1627,7 +1829,9 @@ impl<'m> Approver<'m> {
     /// The approver's role (`approver`, `security_approval`, …).
     pub fn role(&self) -> &'m str {
         let m::ApprovalRoleRef::ApprovalRole(rid) = &self.raw().role;
-        &self.cx.model.approval_role_arena.get(rid.0).role
+        self.cx
+            .model
+            .text(self.cx.model.approval_role_arena.get(rid.0).role)
     }
 
     /// The approver's person, if the approver is a person or a
@@ -1668,7 +1872,11 @@ impl<'m> Approver<'m> {
             }
             m::PersonOrganizationSelectRef::Person(_) => return None,
         };
-        Some(&self.cx.model.organization_arena.get(oid.0).name)
+        Some(
+            self.cx
+                .model
+                .text(self.cx.model.organization_arena.get(oid.0).name),
+        )
     }
 }
 
@@ -1698,7 +1906,7 @@ impl<'m> Document<'m> {
 
     /// The exact product-structure entities this document is referenced from
     /// (across every `APPLIED_DOCUMENT_REFERENCE` that carries it).
-    pub fn assigned_targets(&self) -> Vec<Target<'m>> {
+    pub fn assigned_targets(&self) -> impl Iterator<Item = Target<'m>> + 'm {
         let cx = self.cx;
         let mut keys: Vec<m::EntityKey> = Vec::new();
         for r in cx.ref_graph().referrers(self.key()) {
@@ -1713,7 +1921,7 @@ impl<'m> Document<'m> {
                 );
             }
         }
-        targets_from_keys(cx, keys.into_iter())
+        targets_from_keys(cx, keys.into_iter()).into_iter()
     }
 
     /// The four shared fields (id, name, description, kind), resolved once so the
@@ -1723,11 +1931,21 @@ impl<'m> Document<'m> {
         match self.which {
             DocImpl::Document(i) => {
                 let d = model.document_arena.get(i.0);
-                (&d.id, &d.name, d.description.as_deref(), &d.kind)
+                (
+                    model.text(d.id),
+                    model.text(d.name),
+                    d.description.map(|t| model.text(t)),
+                    &d.kind,
+                )
             }
             DocImpl::DocumentFile(i) => {
                 let d = model.document_file_arena.get(i.0);
-                (&d.id, &d.name, d.description.as_deref(), &d.kind)
+                (
+                    model.text(d.id),
+                    model.text(d.name),
+                    d.description.map(|t| model.text(t)),
+                    &d.kind,
+                )
             }
         }
     }
@@ -1759,12 +1977,13 @@ impl<'m> Document<'m> {
     /// `drawing`, `specification`).
     pub fn kind(&self) -> &'m str {
         let m::DocumentTypeRef::DocumentType(tid) = self.fields().3;
-        &self
-            .cx
-            .model
-            .document_type_arena
-            .get(tid.0)
-            .product_data_type
+        self.cx.model.text(
+            self.cx
+                .model
+                .document_type_arena
+                .get(tid.0)
+                .product_data_type,
+        )
     }
 }
 
@@ -1794,7 +2013,7 @@ impl<'m> SecurityClassification<'m> {
 
     /// The exact product-structure entities this classification is assigned to
     /// (across every assignment that carries it).
-    pub fn assigned_targets(&self) -> Vec<Target<'m>> {
+    pub fn assigned_targets(&self) -> impl Iterator<Item = Target<'m>> + 'm {
         let cx = self.cx;
         let mut keys: Vec<m::EntityKey> = Vec::new();
         for r in cx.ref_graph().referrers(self.key()) {
@@ -1818,17 +2037,17 @@ impl<'m> SecurityClassification<'m> {
                 _ => {}
             }
         }
-        targets_from_keys(cx, keys.into_iter())
+        targets_from_keys(cx, keys.into_iter()).into_iter()
     }
 
     /// The classification name / identifier.
     pub fn name(&self) -> &'m str {
-        &self.raw().name
+        self.cx.model.text(self.raw().name)
     }
 
     /// Why the part is classified.
     pub fn purpose(&self) -> &'m str {
-        &self.raw().purpose
+        self.cx.model.text(self.raw().purpose)
     }
 
     /// The confidentiality level (the `name` of its `SECURITY_CLASSIFICATION_LEVEL`,
@@ -1836,11 +2055,14 @@ impl<'m> SecurityClassification<'m> {
     pub fn level(&self) -> &'m str {
         let m::SecurityClassificationLevelRef::SecurityClassificationLevel(lid) =
             &self.raw().security_level;
-        &self
-            .cx
-            .model
-            .security_classification_level_arena
-            .get(lid.0)
-            .name
+        self.cx.model.text(
+            self.cx
+                .model
+                .security_classification_level_arena
+                .get(lid.0)
+                .name,
+        )
     }
 }
+
+about_by_key!(Approval, MappedInstance, Occurrence, Product, ProductDef);

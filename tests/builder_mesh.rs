@@ -3,11 +3,13 @@
 //! Mesh/MeshGroup (including the 1-based strip winding encoding), with the
 //! group linked back to the b-rep solid it tessellates.
 
+mod common;
+
 use step_io::build::{
     CurveInput, FaceBoundInput, Frame, MeshInput, MeshNormalsInput, SurfaceInput, VoidShellNormals,
 };
-use step_io::scene::mesh::MeshNormals;
-use step_io::{StepBuilder, read};
+use step_io::scene::MeshNormals;
+use step_io::{Orientation, StepBuilder, read};
 
 fn frame(origin: [f64; 3], axis: [f64; 3], ref_dir: [f64; 3]) -> Frame {
     Frame {
@@ -34,8 +36,8 @@ fn quad_mesh() -> MeshInput {
 
 #[test]
 fn mesh_round_trips_with_solid_back_link() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("plate").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("plate");
 
     // A minimal b-rep solid (single planar face) for the mesh to link to.
     let v0 = b.vertex([0.0, 0.0, 0.0]).expect("v0");
@@ -47,11 +49,11 @@ fn mesh_round_trips_with_solid_back_link() {
     let face = b
         .face(
             SurfaceInput::Plane(frame([0.0; 3], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0])),
-            true,
+            Orientation::Forward,
             vec![FaceBoundInput::outer(vec![
-                (e0, true),
-                (e1, true),
-                (e2, true),
+                (e0, Orientation::Forward),
+                (e1, Orientation::Forward),
+                (e2, Orientation::Forward),
             ])],
         )
         .expect("face");
@@ -60,13 +62,20 @@ fn mesh_round_trips_with_solid_back_link() {
     let input = quad_mesh();
     b.mesh(part, "plate mesh", &input, Some(body.into()))
         .expect("mesh");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
-    assert_eq!(model.tessellated_shape_representation_arena.items.len(), 1);
     assert_eq!(
-        model.shape_definition_representation_arena.items.len(),
+        model
+            .all::<step_io::model::TessellatedShapeRepresentation>()
+            .len(),
+        1
+    );
+    assert_eq!(
+        model
+            .all::<step_io::model::ShapeDefinitionRepresentation>()
+            .len(),
         2,
         "shape SDR + mesh SDR"
     );
@@ -74,7 +83,7 @@ fn mesh_round_trips_with_solid_back_link() {
     let scene = model.scene();
     let groups: Vec<_> = scene.all_mesh_groups().collect();
     assert_eq!(groups.len(), 1);
-    let meshes = groups[0].meshes();
+    let meshes: Vec<_> = groups[0].meshes().collect();
     assert_eq!(meshes.len(), 1);
 
     // Exact symmetry: points and 0-based triangles come back as fed, which
@@ -95,8 +104,8 @@ fn mesh_round_trips_with_solid_back_link() {
 
 #[test]
 fn mesh_links_back_to_void_solid() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("hollow").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("hollow");
 
     // Minimal void solid: one-face outer shell + one-face void shell.
     let mut tri = |z: f64| {
@@ -108,11 +117,11 @@ fn mesh_links_back_to_void_solid() {
         let e2 = b.edge(v2, v0, CurveInput::Line).expect("e2");
         b.face(
             SurfaceInput::Plane(frame([0.0, 0.0, z], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0])),
-            true,
+            Orientation::Forward,
             vec![FaceBoundInput::outer(vec![
-                (e0, true),
-                (e1, true),
-                (e2, true),
+                (e0, Orientation::Forward),
+                (e1, Orientation::Forward),
+                (e2, Orientation::Forward),
             ])],
         )
         .expect("face")
@@ -131,7 +140,7 @@ fn mesh_links_back_to_void_solid() {
 
     b.mesh(part, "hollow mesh", &quad_mesh(), Some(body.into()))
         .expect("mesh");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -145,8 +154,8 @@ fn mesh_links_back_to_void_solid() {
 
 #[test]
 fn standalone_mesh_with_uniform_normals() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("panel").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("panel");
     b.mesh(
         part,
         "panel mesh",
@@ -158,7 +167,7 @@ fn standalone_mesh_with_uniform_normals() {
         None,
     )
     .expect("mesh");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -167,10 +176,39 @@ fn standalone_mesh_with_uniform_normals() {
     let groups: Vec<_> = scene.all_mesh_groups().collect();
     assert_eq!(groups.len(), 1);
     assert!(groups[0].solid().is_none(), "no b-rep link");
-    let meshes = groups[0].meshes();
+    let meshes: Vec<_> = groups[0].meshes().collect();
     assert_eq!(meshes[0].triangles(), vec![[0, 1, 2]]);
     assert!(matches!(
         meshes[0].normals(),
         MeshNormals::Uniform([0.0, 0.0, 1.0])
     ));
+}
+
+#[test]
+fn meshes_that_break_the_standard_are_rejected() {
+    let mut b = StepBuilder::new();
+    let part = b.part("plate");
+    let past_points = MeshInput {
+        triangles: vec![[0, 1, 4]],
+        ..quad_mesh()
+    };
+    let no_triangles = MeshInput {
+        triangles: vec![],
+        ..quad_mesh()
+    };
+    let short_normals = MeshInput {
+        normals: MeshNormalsInput::PerVertex(vec![[0.0, 0.0, 1.0]; 3]),
+        ..quad_mesh()
+    };
+    for (what, mesh) in [
+        ("an index past the points", past_points),
+        ("no triangles", no_triangles),
+        ("too few normals", short_normals),
+    ] {
+        let err = b.mesh(part, "m", &mesh, None).expect_err(what);
+        assert!(
+            matches!(err, step_io::AuthorError::InvalidInput { .. }),
+            "{what}: {err}"
+        );
+    }
 }

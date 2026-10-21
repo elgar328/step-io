@@ -1,16 +1,15 @@
 //! Crate-internal tests for the complex-instance name-set rule
 //! (`generated::author::complex_rule`).
 //!
-//! `CORPUS_COMBOS` is the full list of real complex-instance part
-//! combinations observed in the reference corpus (core / fusion360 /
-//! grabcad / abc), normalized to the model's part world (bare measure-type
+//! `REAL_COMBOS` is the full list of complex-instance part combinations
+//! observed in real files, normalized to the model's part world (bare measure-type
 //! carriers like `LENGTH_MEASURE` are value carriers, not parts, and are
 //! excluded). Every one is schema-legal, so the rule must accept them all —
 //! this pins the rule (and the profile's ONEOF export) against regressions.
 
 use crate::generated::author::{AuthorError, complex_rule};
 
-const CORPUS_COMBOS: &[&[&str]] = &[
+const REAL_COMBOS: &[&[&str]] = &[
     &[
         "BOUNDED_CURVE",
         "B_SPLINE_CURVE",
@@ -238,12 +237,12 @@ const CORPUS_COMBOS: &[&[&str]] = &[
 ];
 
 #[test]
-fn corpus_combos_all_pass_complex_rule() {
-    for combo in CORPUS_COMBOS {
+fn real_combos_all_pass_complex_rule() {
+    for combo in REAL_COMBOS {
         assert_eq!(
             complex_rule(combo),
             Ok(()),
-            "corpus combination rejected: {combo:?}"
+            "real combination rejected: {combo:?}"
         );
     }
 }

@@ -2,8 +2,9 @@
 //! positions, triangles expanded from strips/fans, normals, and the link back
 //! to the precise b-rep face.
 
-use step_io::read;
+use step_io::model::ClosedShellId;
 use step_io::scene::MeshNormals;
+use step_io::{EntityKey, Orientation, read};
 
 fn approx3(a: [f64; 3], b: [f64; 3]) -> bool {
     a.iter().zip(b).all(|(x, y)| (x - y).abs() < 1e-12)
@@ -101,6 +102,23 @@ fn meshes_expose_points_triangles_and_normals() {
 }
 
 #[test]
+fn mesh_reaches_a_linked_face_surface() {
+    let src = format!(
+        "{HEADER}{}{FOOTER}",
+        MESHES.replace("#37=ADVANCED_FACE(", "#37=FACE_SURFACE(")
+    );
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+
+    let linked = scene
+        .all_meshes()
+        .find(|m| m.name() == "linked")
+        .expect("linked");
+    let face = linked.face().expect("linked b-rep face");
+    assert_eq!(face.name(), "brep face");
+}
+
+#[test]
 fn mesh_groups_bundle_faces_and_reach_the_solid() {
     let src = format!("{HEADER}{MESHES}{FOOTER}");
     let (model, _rep) = read(src.as_bytes()).expect("read");
@@ -111,14 +129,14 @@ fn mesh_groups_bundle_faces_and_reach_the_solid() {
 
     // A tessellated solid: faces plus a direct geometric link to the b-rep.
     let a = groups.iter().find(|g| g.name() == "group A").expect("A");
-    let meshes = a.meshes();
+    let meshes: Vec<_> = a.meshes().collect();
     assert_eq!(meshes.len(), 1);
     assert_eq!(meshes[0].name(), "quad");
     assert_eq!(a.solid().expect("linked solid").name(), "the part");
 
     // A shell without a topological link: no solid.
     let b = groups.iter().find(|g| g.name() == "group B").expect("B");
-    assert_eq!(b.meshes()[0].name(), "fan");
+    assert_eq!(b.meshes().next().expect("a mesh").name(), "fan");
     assert!(b.solid().is_none());
 
     // A shell linked to a closed shell: reached back through its owner.
@@ -142,4 +160,73 @@ fn mesh_groups_bundle_faces_and_reach_the_solid() {
         "warnings: {:?}",
         scene.warnings()
     );
+}
+
+/// A solid whose outer shell is wrapped in an `ORIENTED_CLOSED_SHELL(.F.)`:
+/// the solid uses the shell reversed, and a mesh linked to the closed shell
+/// still reaches the solid back through the wrapper.
+#[test]
+fn a_reversed_outer_shell_reaches_its_solid_and_reports_its_use() {
+    let wrapped = MESHES.replace(
+        "#50=MANIFOLD_SOLID_BREP('the part',#49);",
+        "#51=ORIENTED_CLOSED_SHELL('',*,#49,.F.);\n#50=MANIFOLD_SOLID_BREP('the part',#51);",
+    );
+    let src = format!("{HEADER}{wrapped}{FOOTER}");
+    let (model, report) = read(src.as_bytes()).expect("read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    let scene = model.scene();
+
+    let solid = scene.all_solids().next().expect("the solid");
+    let (shell, shell_use) = solid.outer().expect("the outer shell");
+    assert_eq!(shell_use, Orientation::Reversed);
+    assert_eq!(shell.key(), EntityKey::ClosedShell(ClosedShellId(0)));
+    let faces: Vec<_> = shell.faces().map(|f| f.name()).collect();
+    assert_eq!(faces, ["brep face"]);
+    assert_eq!(solid.faces().count(), 1);
+    assert_eq!(solid.voids().count(), 0);
+    let face = solid.faces().next().expect("the face");
+    assert_eq!(face.solid().expect("owner solid").key(), solid.key());
+
+    let c = scene
+        .all_mesh_groups()
+        .find(|g| g.name() == "group C")
+        .expect("C");
+    assert_eq!(c.solid().expect("owner solid").key(), solid.key());
+    assert!(
+        scene.warnings().is_empty(),
+        "warnings: {:?}",
+        scene.warnings()
+    );
+}
+
+/// Display meshes and their groups carry presentation like the b-rep: a
+/// surface colour styled onto the quad and onto group A.
+#[test]
+fn meshes_and_mesh_groups_read_their_styles() {
+    let styles = "\
+#60=COLOUR_RGB('',0.25,0.5,0.75);\n\
+#61=FILL_AREA_STYLE_COLOUR('',#60);\n\
+#62=FILL_AREA_STYLE('',(#61));\n\
+#63=SURFACE_STYLE_FILL_AREA(#62);\n\
+#64=SURFACE_SIDE_STYLE('',(#63));\n\
+#65=SURFACE_STYLE_USAGE(.BOTH.,#64);\n\
+#66=PRESENTATION_STYLE_ASSIGNMENT((#65));\n\
+#67=STYLED_ITEM('',(#66),#11);\n\
+#68=STYLED_ITEM('',(#66),#80);\n\
+#69=PRESENTATION_LAYER_ASSIGNMENT('meshes','',(#11));\n";
+    let src = format!("{HEADER}{MESHES}{styles}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let quad = scene
+        .all_meshes()
+        .find(|m| m.name() == "quad")
+        .expect("quad");
+    let c = quad.color().expect("the quad is coloured");
+    assert!((c.green - 0.5).abs() < 1e-12, "{c:?}");
+    assert_eq!(quad.layer(), Some("meshes"));
+    let fan = scene.all_meshes().find(|m| m.name() == "fan").expect("fan");
+    assert!(fan.color().is_none());
+    let group = quad.group().expect("group A");
+    assert!(group.color().is_some() && group.is_visible());
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
 }

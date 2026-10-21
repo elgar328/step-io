@@ -17,7 +17,8 @@ pub struct Rgb {
     pub blue: f64,
 }
 
-/// The colour styled onto the entity `target` (a face or solid), if any.
+/// The colour styled onto the entity `target` (a face, solid, shell, surface
+/// model or mesh), if any.
 pub(crate) fn colour_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<Rgb> {
     let rg = cx.ref_graph();
     for r in rg.referrers(target) {
@@ -153,7 +154,9 @@ fn colour_to_rgb(cx: Ctx<'_>, r: &m::ColourRef) -> Option<Rgb> {
             })
         }
         m::ColourRef::DraughtingPreDefinedColour(i) => {
-            let name = &cx.model.draughting_pre_defined_colour_arena.get(i.0).name;
+            let name = cx
+                .model
+                .text(cx.model.draughting_pre_defined_colour_arena.get(i.0).name);
             predefined_rgb(name).or_else(|| {
                 cx.warn(format!("unknown pre-defined colour: {name}"));
                 None
@@ -274,7 +277,7 @@ pub(crate) fn transparency_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<f64> 
 // Layer and visibility
 // ---------------------------------------------------------------------------
 //
-// Corpus: a shape usually reaches a layer / invisibility through its STYLED_ITEM
+// In real files a shape usually reaches a layer / invisibility through its STYLED_ITEM
 // (88% / 97%), not directly. So both queries consider `target`'s "presentation
 // delegates" = the target itself plus the styled items that reference it.
 
@@ -323,7 +326,10 @@ fn referred_by_invisibility(cx: Ctx<'_>, key: m::EntityKey) -> bool {
 /// The name of the first layer `target` belongs to, if any.
 pub(crate) fn layer_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<&str> {
     let pid = *layers_of(cx, target).first()?;
-    Some(&cx.model.presentation_layer_assignment_arena.get(pid.0).name)
+    Some(
+        cx.model
+            .text(cx.model.presentation_layer_assignment_arena.get(pid.0).name),
+    )
 }
 
 /// Whether `target` is visible — i.e. no `INVISIBILITY` hides one of its styled
@@ -342,9 +348,9 @@ pub(crate) fn is_visible(cx: Ctx<'_>, target: m::EntityKey) -> bool {
 // Curve style (an edge's / curve's colour, width, and line font)
 // ---------------------------------------------------------------------------
 //
-// Corpus: curve styles apply to standalone curves (LINE / TRIMMED_CURVE / CIRCLE,
-// ~60k) — reached via the `Curve` handle — not b-rep EDGE_CURVEs (498, a
-// two-file Spatial InterOp anomaly).
+// In real files curve styles apply to standalone curves (LINE / TRIMMED_CURVE / CIRCLE)
+// — reached via the `Curve` handle — and to b-rep EDGE_CURVEs, reached via the
+// `Edge` handle.
 
 /// Reverse-walk from `target` to each presentation-style select styling it
 /// (`STYLED_ITEM` → presentation-style assignment → style), running `leaf` on
@@ -440,20 +446,24 @@ fn size_f64(cx: Ctx<'_>, r: &m::SizeSelectRef) -> Option<f64> {
 fn curve_font_name<'m>(cx: Ctx<'m>, r: &m::CurveFontOrScaledCurveFontSelectRef) -> Option<&'m str> {
     match r {
         m::CurveFontOrScaledCurveFontSelectRef::CurveStyleFont(i) => {
-            Some(&cx.model.curve_style_font_arena.get(i.0).name)
+            Some(cx.model.text(cx.model.curve_style_font_arena.get(i.0).name))
         }
-        m::CurveFontOrScaledCurveFontSelectRef::CurveStyleFontAndScaling(i) => {
-            Some(&cx.model.curve_style_font_and_scaling_arena.get(i.0).name)
-        }
-        m::CurveFontOrScaledCurveFontSelectRef::DraughtingPreDefinedCurveFont(i) => Some(
-            &cx.model
-                .draughting_pre_defined_curve_font_arena
-                .get(i.0)
-                .name,
+        m::CurveFontOrScaledCurveFontSelectRef::CurveStyleFontAndScaling(i) => Some(
+            cx.model
+                .text(cx.model.curve_style_font_and_scaling_arena.get(i.0).name),
         ),
-        m::CurveFontOrScaledCurveFontSelectRef::PreDefinedCurveFont(i) => {
-            Some(&cx.model.pre_defined_curve_font_arena.get(i.0).name)
-        }
+        m::CurveFontOrScaledCurveFontSelectRef::DraughtingPreDefinedCurveFont(i) => Some(
+            cx.model.text(
+                cx.model
+                    .draughting_pre_defined_curve_font_arena
+                    .get(i.0)
+                    .name,
+            ),
+        ),
+        m::CurveFontOrScaledCurveFontSelectRef::PreDefinedCurveFont(i) => Some(
+            cx.model
+                .text(cx.model.pre_defined_curve_font_arena.get(i.0).name),
+        ),
         // No name (externally defined) or unresolved (complex).
         m::CurveFontOrScaledCurveFontSelectRef::ExternallyDefinedCurveFont(_) => None,
         m::CurveFontOrScaledCurveFontSelectRef::Complex(_) => {
@@ -479,4 +489,13 @@ pub(crate) fn curve_width_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<f64> {
 pub(crate) fn curve_font_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<&str> {
     let cs = curve_style_of(cx, target)?;
     curve_font_name(cx, cs.curve_font.as_ref()?)
+}
+
+/// The marker colour of the point style on `target`, if any.
+pub(crate) fn point_colour_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<Rgb> {
+    let style = each_presentation_style(cx, target, |cx, s| match s {
+        m::PresentationStyleSelectRef::PointStyle(i) => Some(cx.model.point_style_arena.get(i.0)),
+        _ => None,
+    })?;
+    colour_to_rgb(cx, style.marker_colour.as_ref()?)
 }

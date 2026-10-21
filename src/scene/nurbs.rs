@@ -219,15 +219,44 @@ pub(crate) fn ellipse_to_nurbs(cx: Ctx<'_>, e: &m::Ellipse) -> Option<NurbsCurve
     }
 }
 
-/// Expand a `(distinct knots, multiplicities)` pair into a full knot vector.
-fn expand_knots(knots: &[f64], mults: &[i64]) -> Vec<f64> {
-    let mut out = Vec::new();
-    for (k, mult) in knots.iter().zip(mults) {
-        for _ in 0..(*mult).max(0) {
-            out.push(*k);
-        }
+/// The highest B-spline degree converted — OCCT's
+/// `Geom_BSplineCurve::MaxDegree()`. Evaluation cost grows with its square.
+const MAX_DEGREE: usize = 25;
+
+/// Check a B-spline's degree and knot multiplicities against its `n` control
+/// points, then expand `(distinct knots, multiplicities)` into the full knot
+/// vector of `n + degree + 1` knots. The multiplicities are summed before
+/// anything is expanded. `Err` carries the reason for the warning.
+fn expanded_knots(
+    degree: i64,
+    n: usize,
+    knots: &[f64],
+    mults: &[i64],
+) -> Result<(usize, Vec<f64>), &'static str> {
+    let degree = usize::try_from(degree)
+        .ok()
+        .filter(|d| (1..=MAX_DEGREE).contains(d))
+        .ok_or("degree out of range")?;
+    if n < degree + 1 {
+        return Err("too few control points for the degree");
     }
-    out
+    let len = n + degree + 1;
+    let mismatch = "inconsistent weight/knot count";
+    let mut total = 0usize;
+    for mult in mults.iter().take(knots.len()) {
+        total = total
+            .checked_add(usize::try_from(*mult).unwrap_or(0))
+            .filter(|t| *t <= len)
+            .ok_or(mismatch)?;
+    }
+    if total != len {
+        return Err(mismatch);
+    }
+    let mut out = Vec::with_capacity(len);
+    for (k, mult) in knots.iter().zip(mults) {
+        out.extend(std::iter::repeat_n(*k, usize::try_from(*mult).unwrap_or(0)));
+    }
+    Ok((degree, out))
 }
 
 /// Assemble a B-spline curve from its raw pieces — shared by the standalone
@@ -241,18 +270,24 @@ fn nurbs_curve_from(
     mults: &[i64],
     weights: Option<&[f64]>,
 ) -> Option<NurbsCurve> {
-    let degree = usize::try_from(degree).ok()?;
     let control_points: Vec<[f64; 3]> = cp
         .iter()
         .map(|r| point_coords(cx, r))
         .collect::<Option<_>>()?;
     let n = control_points.len();
     let weights = weights.map_or_else(|| vec![1.0; n], <[f64]>::to_vec);
-    let knots = expand_knots(knots, mults);
-    if weights.len() != n || knots.len() != n + degree + 1 {
-        cx.warn("B_SPLINE_CURVE.to_nurbs: inconsistent weight/knot count".to_owned());
-        return None;
-    }
+    let checked = if weights.len() == n {
+        expanded_knots(degree, n, knots, mults)
+    } else {
+        Err("inconsistent weight/knot count")
+    };
+    let (degree, knots) = match checked {
+        Ok(dk) => dk,
+        Err(why) => {
+            cx.warn(format!("B_SPLINE_CURVE.to_nurbs: {why}"));
+            return None;
+        }
+    };
     Some(NurbsCurve {
         degree,
         control_points,
@@ -375,10 +410,10 @@ pub(crate) fn polyline_to_nurbs(cx: Ctx<'_>, p: &m::Polyline) -> Option<NurbsCur
 /// complex is neither.
 pub(crate) fn complex_bspline_curve_to_nurbs(
     cx: Ctx<'_>,
-    parts: &[m::UnitPart],
+    parts: &[m::PartialEntity],
 ) -> Option<NurbsCurve> {
     let (degree, cp) = parts.iter().find_map(|p| match p {
-        m::UnitPart::BSplineCurve {
+        m::PartialEntity::BSplineCurve {
             degree,
             control_points_list,
             ..
@@ -386,7 +421,7 @@ pub(crate) fn complex_bspline_curve_to_nurbs(
         _ => None,
     })?;
     let explicit = parts.iter().find_map(|p| match p {
-        m::UnitPart::BSplineCurveWithKnots {
+        m::PartialEntity::BSplineCurveWithKnots {
             knots,
             knot_multiplicities,
             ..
@@ -398,16 +433,16 @@ pub(crate) fn complex_bspline_curve_to_nurbs(
         (k, m)
     } else {
         let family = parts.iter().find_map(|p| match p {
-            m::UnitPart::UniformCurve => Some(KnotFamily::Uniform),
-            m::UnitPart::QuasiUniformCurve => Some(KnotFamily::QuasiUniform),
-            m::UnitPart::BezierCurve => Some(KnotFamily::Bezier),
+            m::PartialEntity::UniformCurve => Some(KnotFamily::Uniform),
+            m::PartialEntity::QuasiUniformCurve => Some(KnotFamily::QuasiUniform),
+            m::PartialEntity::BezierCurve => Some(KnotFamily::Bezier),
             _ => None,
         })?;
         derived = family_knots(family, degree, cp.len())?;
         (&derived.0, &derived.1)
     };
     let weights = parts.iter().find_map(|p| match p {
-        m::UnitPart::RationalBSplineCurve { weights_data } => Some(weights_data.as_slice()),
+        m::PartialEntity::RationalBSplineCurve { weights_data } => Some(weights_data.as_slice()),
         _ => None,
     });
     nurbs_curve_from(cx, degree, cp, knots, mults, weights)
@@ -447,9 +482,9 @@ fn line_trim_point(
     })
 }
 
-/// The angle of a conic trim, derived geometrically from a `CARTESIAN_POINT` on
-/// the curve (unit-independent). `ParameterValue` trims are angle-unit dependent
-/// and unsupported here (→ `None`).
+/// The angle of a conic trim: from a `CARTESIAN_POINT` on the curve
+/// (unit-independent), or from a `PARAMETER_VALUE` scaled by `factor` to
+/// radians, the one `master` prefers first.
 fn conic_trim_angle(
     cx: Ctx<'_>,
     trim: &[m::TrimmingSelectRef],
@@ -546,29 +581,52 @@ fn arc_from_trims(
 ) -> Option<NurbsCurve> {
     use std::f64::consts::TAU;
     // ParameterValue trims are angles in the model's plane-angle unit.
-    let factor = crate::scene::units::units_of(cx.model)
-        .angle
-        .map_or(1.0, |u| u.to_si);
+    let factor = cx.angle_to_radians();
     let master = t.master_representation;
     let theta1 = conic_trim_angle(cx, &t.trim_1, frame, ab, factor, master)?;
     let mut theta2 = conic_trim_angle(cx, &t.trim_2, frame, ab, factor, master)?;
-    if t.sense_agreement {
-        while theta2 <= theta1 {
-            theta2 += TAU;
+    let diff = theta2 - theta1;
+    if !diff.is_finite() {
+        cx.warn("TRIMMED_CURVE.to_nurbs: non-finite conic trim angle".to_owned());
+        return None;
+    }
+    let sense = t.sense_agreement;
+    let ahead = |theta2: f64| {
+        if sense {
+            theta2 > theta1
+        } else {
+            theta2 < theta1
         }
-    } else {
-        while theta2 >= theta1 {
-            theta2 -= TAU;
+    };
+    let mut sweep = None;
+    if diff.abs() <= TAU {
+        for _ in 0..2 {
+            if ahead(theta2) {
+                break;
+            }
+            theta2 += if sense { TAU } else { -TAU };
+        }
+        // Still behind only where a turn is below the angles' precision.
+        if ahead(theta2) {
+            sweep = Some(theta2 - theta1);
         }
     }
+    // More than a turn: wind within one, a remainder within
+    // `Precision::PConfusion` (1e-9) being a full turn — as OCCT does.
+    let sweep = sweep.unwrap_or_else(|| {
+        let sign = if sense { 1.0 } else { -1.0 };
+        let r = (sign * diff).rem_euclid(TAU);
+        sign * if r <= 1e-9 { TAU } else { r }
+    });
     let (center, x, y) = frame;
     let (a, b) = ab;
-    Some(arc_nurbs(center, x, y, a, b, theta1, theta2 - theta1))
+    Some(arc_nurbs(center, x, y, a, b, theta1, sweep))
 }
 
-/// A trimmed line (→ segment), trimmed circle/ellipse (→ arc), or trimmed
-/// B-spline-family basis (→ the exact knot-inserted subcurve). Other basis
-/// curves are not yet supported (→ `None`).
+/// A trimmed line (→ segment), trimmed circle/ellipse (→ arc), trimmed
+/// parabola/hyperbola (→ the exact span), or trimmed B-spline-family basis
+/// (→ the exact knot-inserted subcurve). Other basis curves are not yet
+/// supported (→ `None`).
 pub(crate) fn trimmed_to_nurbs(cx: Ctx<'_>, t: &m::TrimmedCurve) -> Option<NurbsCurve> {
     match &t.basis_curve {
         m::CurveRef::Line(id) => {
@@ -594,6 +652,20 @@ pub(crate) fn trimmed_to_nurbs(cx: Ctx<'_>, t: &m::TrimmedCurve) -> Option<Nurbs
             let (center, x, y, _) = placement_frame_3d(cx, &e.position)?;
             arc_from_trims(cx, t, (center, x, y), (e.semi_axis_1, e.semi_axis_2))
         }
+        r @ (m::CurveRef::Parabola(_) | m::CurveRef::Hyperbola(_)) => {
+            let (conic, frame) = OpenConic::of(cx, r)?;
+            let (Some(u0), Some(u1)) = (
+                open_conic_trim_param(cx, &t.trim_1, conic, frame),
+                open_conic_trim_param(cx, &t.trim_2, conic, frame),
+            ) else {
+                cx.warn(format!(
+                    "TRIMMED_CURVE.to_nurbs: no usable trim on a {}",
+                    conic.keyword()
+                ));
+                return None;
+            };
+            open_conic_segment(cx, conic, frame, u0, u1, "TRIMMED_CURVE")
+        }
         _ => {
             let basis = trimmed_basis_nurbs(cx, &t.basis_curve)?;
             trimmed_bspline_to_nurbs(cx, t, &basis)
@@ -612,7 +684,7 @@ fn trimmed_basis_nurbs(cx: Ctx<'_>, r: &m::CurveRef) -> Option<NurbsCurve> {
             bspline_wk_to_nurbs(cx, cx.model.b_spline_curve_with_knots_arena.get(id.0))
         }
         m::CurveRef::Complex(id) => {
-            complex_bspline_curve_to_nurbs(cx, &cx.model.complex_unit_arena.get(id.0).parts)
+            complex_bspline_curve_to_nurbs(cx, &cx.model.complex_entity_arena.get(id.0).parts)
         }
         m::CurveRef::UniformCurve(id) => {
             let c = cx.model.uniform_curve_arena.get(id.0);
@@ -904,6 +976,12 @@ fn bspline_trim_param(
         m::TrimmingPreference::Cartesian => cartesian().or_else(parameter),
         _ => parameter().or_else(cartesian),
     }?;
+    let (a, b) = hc.domain();
+    let (lo, hi) = (a.min(b), a.max(b));
+    let tol = 1e-7 * (hi - lo);
+    if !(lo - tol..=hi + tol).contains(&t) {
+        return None;
+    }
     Some(snap_param(hc, t))
 }
 
@@ -1069,6 +1147,13 @@ pub(crate) fn edge_to_nurbs(
             cx.warn("EDGE_CURVE.to_nurbs: closed edge on a line".to_owned());
             return None;
         }
+        if let Some((conic, _)) = OpenConic::of(cx, r) {
+            cx.warn(format!(
+                "EDGE_CURVE.to_nurbs: closed edge on a {}",
+                conic.keyword()
+            ));
+            return None;
+        }
         return resolved_curve_to_nurbs(cx, r);
     }
     match r {
@@ -1099,6 +1184,11 @@ pub(crate) fn edge_to_nurbs(
                 p1,
                 same_sense,
             ))
+        }
+        r @ (m::CurveRef::Parabola(_) | m::CurveRef::Hyperbola(_)) => {
+            let (conic, frame) = OpenConic::of(cx, r)?;
+            let (u0, u1) = (conic.param(frame, p0), conic.param(frame, p1));
+            open_conic_segment(cx, conic, frame, u0, u1, "EDGE_CURVE")
         }
         other => {
             let whole = resolved_curve_to_nurbs(cx, other)?;
@@ -1139,6 +1229,177 @@ fn conic_edge_arc(
         }
     }
     arc_nurbs(center, x, y, ab.0, ab.1, theta1, theta2 - theta1)
+}
+
+// --- open conics: parabola, hyperbola ---
+
+/// A parabola or a hyperbola, the two conics without a closed form: a span
+/// between two parameters converts exactly. Parameters are as ISO 10303-42
+/// defines them — parabola `C + F(u² x + 2u y)`, hyperbola
+/// `C + R1 cosh(u) x + R2 sinh(u) y` (the branch along `x`).
+#[derive(Clone, Copy)]
+enum OpenConic {
+    Parabola { focal: f64 },
+    Hyperbola { semi_axis: f64, semi_imag_axis: f64 },
+}
+
+impl OpenConic {
+    /// The conic a curve reference names, with its frame; `None` for any other
+    /// curve or a placement without a 3D frame.
+    fn of(cx: Ctx<'_>, r: &m::CurveRef) -> Option<(Self, Frame)> {
+        match r {
+            m::CurveRef::Parabola(id) => {
+                let p = cx.model.parabola_arena.get(id.0);
+                let conic = OpenConic::Parabola {
+                    focal: p.focal_dist,
+                };
+                Some((conic, placement_frame_3d(cx, &p.position)?))
+            }
+            m::CurveRef::Hyperbola(id) => {
+                let h = cx.model.hyperbola_arena.get(id.0);
+                let conic = OpenConic::Hyperbola {
+                    semi_axis: h.semi_axis,
+                    semi_imag_axis: h.semi_imag_axis,
+                };
+                Some((conic, placement_frame_3d(cx, &h.position)?))
+            }
+            _ => None,
+        }
+    }
+
+    fn keyword(self) -> &'static str {
+        match self {
+            OpenConic::Parabola { .. } => "parabola",
+            OpenConic::Hyperbola { .. } => "hyperbola",
+        }
+    }
+
+    /// The parameter of the curve point level with `p` along the frame's `y`.
+    fn param(self, frame: Frame, p: [f64; 3]) -> f64 {
+        let (center, _, y, _) = frame;
+        let ly = dot(sub(p, center), y);
+        match self {
+            OpenConic::Parabola { focal } => ly / (2.0 * focal),
+            OpenConic::Hyperbola { semi_imag_axis, .. } => (ly / semi_imag_axis).asinh(),
+        }
+    }
+
+    /// The span from parameter `u0` to `u1`, exactly: a quadratic Bézier for a
+    /// parabola, rational quadratic pieces for a hyperbola. `None` when a value
+    /// is not finite (a zero focal distance, or a hyperbola parameter past
+    /// where `cosh` overflows).
+    // Piece counts convert to/from f64 for the knot vector; they are small.
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        clippy::cast_precision_loss
+    )]
+    fn segment(self, frame: Frame, u0: f64, u1: f64) -> Option<NurbsCurve> {
+        let (center, x, y, _) = frame;
+        let at = |lx: f64, ly: f64| add(center, add(scale(x, lx), scale(y, ly)));
+        let curve = match self {
+            OpenConic::Parabola { focal } => NurbsCurve {
+                degree: 2,
+                control_points: vec![
+                    at(focal * u0 * u0, focal * 2.0 * u0),
+                    at(focal * u0 * u1, focal * (u0 + u1)),
+                    at(focal * u1 * u1, focal * 2.0 * u1),
+                ],
+                weights: vec![1.0; 3],
+                knots: vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
+            },
+            OpenConic::Hyperbola {
+                semi_axis,
+                semi_imag_axis,
+            } => {
+                // cosh overflows past |u| ≈ 710; beyond that nothing is finite.
+                if !(u0.abs() < 710.0 && u1.abs() < 710.0) {
+                    return None;
+                }
+                let pieces = ((u1 - u0).abs().ceil() as usize).max(1);
+                let du = (u1 - u0) / pieces as f64;
+                let w = (du / 2.0).cosh();
+                let on = |c: f64, s: f64| at(semi_axis * c, semi_imag_axis * s);
+                let mut control_points = vec![on(u0.cosh(), u0.sinh())];
+                let mut weights = vec![1.0];
+                for k in 0..pieces {
+                    let mid = u0 + du * (k as f64 + 0.5);
+                    control_points.push(on(mid.cosh() / w, mid.sinh() / w));
+                    weights.push(w);
+                    let end = u0 + du * (k as f64 + 1.0);
+                    control_points.push(on(end.cosh(), end.sinh()));
+                    weights.push(1.0);
+                }
+                let mut knots = vec![0.0; 3];
+                for i in 1..pieces {
+                    knots.extend([i as f64; 2]);
+                }
+                knots.extend([pieces as f64; 3]);
+                NurbsCurve {
+                    degree: 2,
+                    control_points,
+                    weights,
+                    knots,
+                }
+            }
+        };
+        curve
+            .control_points
+            .iter()
+            .flatten()
+            .chain(&curve.weights)
+            .all(|v| v.is_finite())
+            .then_some(curve)
+    }
+}
+
+/// The parameter one trim of an open conic names: a `CARTESIAN_POINT` when the
+/// trim has one, else its `PARAMETER_VALUE`. The point is taken whatever
+/// `master_representation` prefers: writers disagree on the parabola's
+/// parameter (Open CASCADE writes `2F·u`), while the point is unambiguous.
+fn open_conic_trim_param(
+    cx: Ctx<'_>,
+    trim: &[m::TrimmingSelectRef],
+    conic: OpenConic,
+    frame: Frame,
+) -> Option<f64> {
+    let point = trim.iter().find_map(|s| match s {
+        m::TrimmingSelectRef::CartesianPoint(id) => {
+            let c = &cx.model.cartesian_point_arena.get(id.0).coordinates;
+            Some([
+                c.first().copied().unwrap_or(0.0),
+                c.get(1).copied().unwrap_or(0.0),
+                c.get(2).copied().unwrap_or(0.0),
+            ])
+        }
+        _ => None,
+    });
+    if let Some(p) = point {
+        return Some(conic.param(frame, p));
+    }
+    trim.iter().find_map(|s| match s {
+        m::TrimmingSelectRef::ParameterValue(v) => Some(*v),
+        _ => None,
+    })
+}
+
+/// [`OpenConic::segment`], with a warning in place of a `None`.
+fn open_conic_segment(
+    cx: Ctx<'_>,
+    conic: OpenConic,
+    frame: Frame,
+    u0: f64,
+    u1: f64,
+    what: &str,
+) -> Option<NurbsCurve> {
+    let curve = conic.segment(frame, u0, u1);
+    if curve.is_none() {
+        cx.warn(format!(
+            "{what}.to_nurbs: {} span not finite",
+            conic.keyword()
+        ));
+    }
+    curve
 }
 
 // --- composite curves (segment chains joined into one NURBS) ---
@@ -1403,11 +1664,15 @@ pub(crate) fn revolve_curve(profile: &NurbsCurve, frame: Frame) -> NurbsSurface 
 }
 
 pub(crate) fn sphere_to_nurbs(cx: Ctx<'_>, s: &m::SphericalSurface) -> Option<NurbsSurface> {
-    let Some((center, x, y, z)) = frame_of_3dref(cx, &s.position) else {
+    let Some(frame) = frame_of_3dref(cx, &s.position) else {
         cx.warn("SPHERICAL_SURFACE.to_nurbs: degenerate placement".to_owned());
         return None;
     };
-    let r = s.radius;
+    Some(sphere_nurbs(frame, s.radius))
+}
+
+/// A whole sphere of radius `r` about the frame's centre.
+fn sphere_nurbs((center, x, y, z): Frame, r: f64) -> NurbsSurface {
     let w = std::f64::consts::FRAC_1_SQRT_2;
     // A 180° meridian (south pole → +x equator → north pole), two 90° arcs.
     let profile = [
@@ -1418,16 +1683,20 @@ pub(crate) fn sphere_to_nurbs(cx: Ctx<'_>, s: &m::SphericalSurface) -> Option<Nu
         (0.0, r, 1.0),
     ];
     let knots_v = vec![0., 0., 0., 1., 1., 2., 2., 2.];
-    Some(revolve_nurbs(center, x, y, z, &profile, knots_v))
+    revolve_nurbs(center, x, y, z, &profile, knots_v)
 }
 
 pub(crate) fn torus_to_nurbs(cx: Ctx<'_>, t: &m::ToroidalSurface) -> Option<NurbsSurface> {
-    let Some((center, x, y, z)) = frame_of_3dref(cx, &t.position) else {
+    let Some(frame) = frame_of_3dref(cx, &t.position) else {
         cx.warn("TOROIDAL_SURFACE.to_nurbs: degenerate placement".to_owned());
         return None;
     };
-    let big = t.major_radius;
-    let r = t.minor_radius;
+    Some(torus_nurbs(frame, t.major_radius, t.minor_radius))
+}
+
+/// A whole torus about the frame's axis: tube radius `r` around the circle of
+/// radius `big`.
+fn torus_nurbs((center, x, y, z): Frame, big: f64, r: f64) -> NurbsSurface {
     let w = std::f64::consts::FRAC_1_SQRT_2;
     // The full tube circle in the (rho, h) half-plane, centred at (major, 0).
     let profile = [
@@ -1441,18 +1710,46 @@ pub(crate) fn torus_to_nurbs(cx: Ctx<'_>, t: &m::ToroidalSurface) -> Option<Nurb
         (big + r, -r, w),
         (big + r, 0.0, 1.0),
     ];
-    Some(revolve_nurbs(
-        center,
-        x,
-        y,
-        z,
-        &profile,
-        CIRCLE_KNOTS.to_vec(),
-    ))
+    revolve_nurbs(center, x, y, z, &profile, CIRCLE_KNOTS.to_vec())
 }
 
-/// Pass a B-spline surface with an explicit knot vector straight through,
-/// expanding both knot vectors and defaulting weights to `1.0`.
+/// The part of a degenerate torus its `select_outer` picks, on the torus's
+/// own parametrization with the profile angle narrowed: the tube circle
+/// crosses the axis where `cos v = −major / minor`, the outer lobe lies
+/// between the two crossings through `v = 0`, the inner spindle through
+/// `v = π` (on the far side of the axis, where the radius term is negative).
+/// A tube that does not reach the axis has the whole circle as its outer lobe
+/// and no spindle.
+pub(crate) fn degenerate_torus_to_nurbs(
+    cx: Ctx<'_>,
+    t: &m::DegenerateToroidalSurface,
+) -> Option<NurbsSurface> {
+    let Some(frame @ (center, x, _, z)) = frame_of_3dref(cx, &t.position) else {
+        cx.warn("DEGENERATE_TOROIDAL_SURFACE.to_nurbs: degenerate placement".to_owned());
+        return None;
+    };
+    let (big, r) = (t.major_radius, t.minor_radius);
+    let crossing = (-big / r).clamp(-1.0, 1.0).acos();
+    if crossing.is_nan() {
+        cx.warn("DEGENERATE_TOROIDAL_SURFACE.to_nurbs: degenerate radii".to_owned());
+        return None;
+    }
+    let (start, sweep) = if t.select_outer {
+        (-crossing, 2.0 * crossing)
+    } else {
+        (crossing, 2.0 * (std::f64::consts::PI - crossing))
+    };
+    if sweep <= 0.0 {
+        cx.warn(
+            "DEGENERATE_TOROIDAL_SURFACE.to_nurbs: no inner spindle (minor radius not above major)"
+                .to_owned(),
+        );
+        return None;
+    }
+    let profile = arc_nurbs(add(center, scale(x, big)), x, z, r, r, start, sweep);
+    Some(revolve_curve(&profile, frame))
+}
+
 /// Assemble a B-spline surface from its raw pieces — shared by the standalone
 /// `B_SPLINE_SURFACE_WITH_KNOTS` and the complex (rational) form. `weights` is
 /// `None` for a non-rational surface (all `1.0`). `u`/`v` are each
@@ -1465,8 +1762,6 @@ fn nurbs_surface_from(
     v: (&[f64], &[i64]),
     weights: Option<&[Vec<f64>]>,
 ) -> Option<NurbsSurface> {
-    let degree_u = usize::try_from(degrees.0).ok()?;
-    let degree_v = usize::try_from(degrees.1).ok()?;
     let control_points: Vec<Vec<[f64; 3]>> = cp
         .iter()
         .map(|row| {
@@ -1482,16 +1777,19 @@ fn nurbs_surface_from(
         return None;
     }
     let weights = weights.map_or_else(|| vec![vec![1.0; n_v]; n_u], <[Vec<f64>]>::to_vec);
-    let knots_u = expand_knots(u.0, u.1);
-    let knots_v = expand_knots(v.0, v.1);
-    if weights.len() != n_u
-        || weights.iter().any(|row| row.len() != n_v)
-        || knots_u.len() != n_u + degree_u + 1
-        || knots_v.len() != n_v + degree_v + 1
-    {
-        cx.warn("B_SPLINE_SURFACE.to_nurbs: inconsistent weight/knot count".to_owned());
-        return None;
-    }
+    let checked = if weights.len() == n_u && weights.iter().all(|row| row.len() == n_v) {
+        expanded_knots(degrees.0, n_u, u.0, u.1)
+            .and_then(|ku| Ok((ku, expanded_knots(degrees.1, n_v, v.0, v.1)?)))
+    } else {
+        Err("inconsistent weight/knot count")
+    };
+    let ((degree_u, knots_u), (degree_v, knots_v)) = match checked {
+        Ok(uv) => uv,
+        Err(why) => {
+            cx.warn(format!("B_SPLINE_SURFACE.to_nurbs: {why}"));
+            return None;
+        }
+    };
     Some(NurbsSurface {
         degree_u,
         degree_v,
@@ -1522,10 +1820,10 @@ pub(crate) fn bspline_surf_wk_to_nurbs(
 /// uniform-family marker part. `None` if the complex is neither.
 pub(crate) fn complex_bspline_surface_to_nurbs(
     cx: Ctx<'_>,
-    parts: &[m::UnitPart],
+    parts: &[m::PartialEntity],
 ) -> Option<NurbsSurface> {
     let (u_degree, v_degree, cp) = parts.iter().find_map(|p| match p {
-        m::UnitPart::BSplineSurface {
+        m::PartialEntity::BSplineSurface {
             u_degree,
             v_degree,
             control_points_list,
@@ -1534,7 +1832,7 @@ pub(crate) fn complex_bspline_surface_to_nurbs(
         _ => None,
     })?;
     let explicit = parts.iter().find_map(|p| match p {
-        m::UnitPart::BSplineSurfaceWithKnots {
+        m::PartialEntity::BSplineSurfaceWithKnots {
             u_knots,
             u_multiplicities,
             v_knots,
@@ -1548,9 +1846,9 @@ pub(crate) fn complex_bspline_surface_to_nurbs(
         ((uk, um), (vk, vm))
     } else {
         let family = parts.iter().find_map(|p| match p {
-            m::UnitPart::UniformSurface => Some(KnotFamily::Uniform),
-            m::UnitPart::QuasiUniformSurface => Some(KnotFamily::QuasiUniform),
-            m::UnitPart::BezierSurface => Some(KnotFamily::Bezier),
+            m::PartialEntity::UniformSurface => Some(KnotFamily::Uniform),
+            m::PartialEntity::QuasiUniformSurface => Some(KnotFamily::QuasiUniform),
+            m::PartialEntity::BezierSurface => Some(KnotFamily::Bezier),
             _ => None,
         })?;
         let n_v = cp.first().map_or(0, Vec::len);
@@ -1561,25 +1859,102 @@ pub(crate) fn complex_bspline_surface_to_nurbs(
         ((&derived.0.0, &derived.0.1), (&derived.1.0, &derived.1.1))
     };
     let weights = parts.iter().find_map(|p| match p {
-        m::UnitPart::RationalBSplineSurface { weights_data } => Some(weights_data.as_slice()),
+        m::PartialEntity::RationalBSplineSurface { weights_data } => Some(weights_data.as_slice()),
         _ => None,
     });
     nurbs_surface_from(cx, (u_degree, v_degree), cp, u, v, weights)
 }
 
-// --- bounded patches from a face ---
+// --- offset surfaces ---
 
-/// A finite bilinear patch of a `PLANE`, sized to the parameter-space bounding
-/// box of the face's edge vertices. The result is the *untrimmed* base surface
-/// over that box — the face's edge loops trim it separately. `points` are the
-/// face's edge-vertex world coordinates; assumes straight edges (the box is
-/// taken from vertices, so a curved edge could under-cover).
-pub(crate) fn plane_patch(
+/// A closed offset surface whole: an offset of a sphere or a torus that keeps
+/// the surface's sense (see [`offset_patch`] for the open ones). `None` for
+/// any other basis.
+pub(crate) fn offset_to_nurbs(cx: Ctx<'_>, o: &m::OffsetSurface) -> Option<NurbsSurface> {
+    let d = o.distance;
+    match &o.basis_surface {
+        m::SurfaceRef::SphericalSurface(i) => {
+            let s = cx.model.spherical_surface_arena.get(i.0);
+            let r = s.radius + d;
+            if r <= 0.0 {
+                return None;
+            }
+            Some(sphere_nurbs(offset_frame(cx, &s.position)?, r))
+        }
+        m::SurfaceRef::ToroidalSurface(i) => {
+            let t = cx.model.toroidal_surface_arena.get(i.0);
+            let (big, r) = (t.major_radius, t.minor_radius + d);
+            // A tube grown past the axis crosses itself.
+            if r <= 0.0 || r > big * (1.0 + 1e-9) {
+                return None;
+            }
+            Some(torus_nurbs(offset_frame(cx, &t.position)?, big, r))
+        }
+        _ => None,
+    }
+}
+
+fn offset_frame(cx: Ctx<'_>, position: &m::Axis2Placement3dRef) -> Option<Frame> {
+    let frame = frame_of_3dref(cx, position);
+    if frame.is_none() {
+        cx.warn("OFFSET_SURFACE.to_nurbs: degenerate basis placement".to_owned());
+    }
+    frame
+}
+
+/// An open offset surface bounded by a face, as [`plane_patch`] and
+/// [`cylinder_cone_patch`] bound their basis: an offset of a plane, a
+/// cylinder or a cone that keeps the surface's sense. The offset of a
+/// cylinder or cone is the same kind of surface on the same placement — its
+/// radius `r + d`, or `r + d / cos(semi_angle)` for a cone, the same semi-
+/// angle. `None` for any other basis.
+pub(crate) fn offset_patch(
     cx: Ctx<'_>,
-    plane: &m::Plane,
+    o: &m::OffsetSurface,
     points: &[[f64; 3]],
 ) -> Option<NurbsSurface> {
-    let (origin, x, y, _) = frame_of_3dref(cx, &plane.position)?;
+    let d = o.distance;
+    match &o.basis_surface {
+        m::SurfaceRef::Plane(i) => {
+            plane_patch(cx, &cx.model.plane_arena.get(i.0).position, d, points)
+        }
+        m::SurfaceRef::CylindricalSurface(i) => {
+            let c = cx.model.cylindrical_surface_arena.get(i.0);
+            let r = c.radius + d;
+            if r <= 0.0 {
+                return None;
+            }
+            cylinder_cone_patch(cx, &c.position, r, 0.0, points)
+        }
+        m::SurfaceRef::ConicalSurface(i) => {
+            let c = cx.model.conical_surface_arena.get(i.0);
+            let cos = (c.semi_angle * cx.angle_to_radians()).cos();
+            // Past this the offset runs through the apex.
+            if c.radius + d * cos < 0.0 {
+                return None;
+            }
+            cylinder_cone_patch(cx, &c.position, c.radius + d / cos, c.semi_angle, points)
+        }
+        _ => None,
+    }
+}
+
+// --- bounded patches from a face ---
+
+/// A finite bilinear patch of a `PLANE` at `position`, moved `offset` along
+/// its normal, sized to the parameter-space bounding box of the face's
+/// boundary points. The result is the *untrimmed* base surface over that box
+/// — the face's edge loops trim it separately. `points` are the face's
+/// boundary points in world coordinates — its edges' NURBS control points and
+/// its vertex loops' vertices — so the box covers the face.
+pub(crate) fn plane_patch(
+    cx: Ctx<'_>,
+    position: &m::Axis2Placement3dRef,
+    offset: f64,
+    points: &[[f64; 3]],
+) -> Option<NurbsSurface> {
+    let (origin, x, y, z) = frame_of_3dref(cx, position)?;
+    let origin = add(origin, scale(z, offset));
     if points.is_empty() {
         return None;
     }
@@ -1612,12 +1987,14 @@ pub(crate) fn plane_patch(
 
 /// A cylinder or cone bounded by a face into a finite ruled patch: the full
 /// circle (rational quadratic, u) swept linearly (v) between two axial levels,
-/// taken from the axial span of the face's edge vertices. `semi_angle` is `0.0`
-/// for a cylinder; for a cone the radius grows `radius + v·tan(semi_angle)`.
+/// taken from the axial span of the face's boundary points. `semi_angle`, in the
+/// model's plane-angle unit, is `0.0` for a cylinder; for a cone the radius
+/// grows `radius + v·tan(semi_angle)`.
 ///
 /// Exact within the axial span (both surfaces are ruled). The full circle
-/// over-covers a partial face — the edge loops trim it. `None` if the axial
-/// span is degenerate.
+/// over-covers a partial face — the edge loops trim it. A cone face whose
+/// boundary sits at one level reaches the apex. `None` if the axial span is
+/// degenerate.
 pub(crate) fn cylinder_cone_patch(
     cx: Ctx<'_>,
     position: &m::Axis2Placement3dRef,
@@ -1630,17 +2007,34 @@ pub(crate) fn cylinder_cone_patch(
         return None;
     }
     let (mut v_lo, mut v_hi) = (f64::MAX, f64::MIN);
+    // The boundary's radial size, and the coordinates' magnitude, for the
+    // rounding noise in `v`.
+    let (mut size, mut magnitude) = (0.0_f64, 0.0_f64);
     for p in points {
-        let v = dot(sub(*p, center), z);
+        let rel = sub(*p, center);
+        let v = dot(rel, z);
         v_lo = v_lo.min(v);
         v_hi = v_hi.max(v);
+        let radial = sub(rel, scale(z, v));
+        size = size.max(dot(radial, radial).sqrt());
+        magnitude = magnitude.max(p.iter().fold(0.0, |m, c| m.max(c.abs())));
+    }
+    // The semi-angle is in the model's plane-angle unit.
+    let slope = (semi_angle * cx.angle_to_radians()).tan();
+    if v_hi - v_lo <= 1e-9 * size + 64.0 * f64::EPSILON * magnitude {
+        // A cone face bounded at one level only closes at the apex.
+        let apex = -radius / slope;
+        if apex.is_finite() {
+            v_lo = v_lo.min(apex);
+            v_hi = v_hi.max(apex);
+        }
     }
     if v_hi - v_lo < 1e-12 {
         cx.warn("CYLINDRICAL/CONICAL face.to_nurbs: degenerate axial extent".to_owned());
         return None;
     }
-    let r_lo = radius + v_lo * semi_angle.tan();
-    let r_hi = radius + v_hi * semi_angle.tan();
+    let r_lo = radius + v_lo * slope;
+    let r_hi = radius + v_hi * slope;
     let w_u = circle_weights();
     let control_points = CIRCLE_U
         .iter()
@@ -1666,7 +2060,7 @@ pub(crate) fn cylinder_cone_patch(
 /// A `SURFACE_OF_LINEAR_EXTRUSION` bounded by a face into a finite ruled patch:
 /// the profile curve (u, already converted to NURBS) swept linearly (v) along
 /// the extrusion direction between two levels taken from the span of the face's
-/// edge vertices. Only the vector's *direction* is used — its magnitude is a
+/// boundary points. Only the vector's *direction* is used — its magnitude is a
 /// parameter scale, not an extrusion length (the surface is formally unbounded).
 ///
 /// The v-span is widened by the profile's own span along the direction (the
@@ -1720,7 +2114,7 @@ pub(crate) fn extrude_patch(
 
 /// A `LINE` profile of a surface of revolution, bounded by the face into a
 /// finite degree-1 segment (which [`revolve_curve`] then sweeps). Height and
-/// radius are rotation-invariant, so each edge vertex pins the line parameter:
+/// radius are rotation-invariant, so each boundary point pins the line parameter:
 /// via its height along the axis for a slanted line (exact), or via the radius
 /// equation for a line (nearly) perpendicular to the axis — all real roots are
 /// taken, a safe over-cover. The line vector's magnitude is a parameter scale,

@@ -28,8 +28,8 @@ the step-io columns show what step-io reads and writes.
 | ap242e1 | 1726 |
 | ap242e2 | 2122 |
 | ap242e3 | 2140 |
-| step-io (read) | 500 |
-| step-io (write) | 489 |
+| step-io (read) | 501 |
+| step-io (write) | 490 |
 
 | Entity | ap203e1 | ap203e2 | ap214e3 | ap242e1 | ap242e2 | ap242e3 | step-io (read) | step-io (write) |
 |---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
@@ -1401,7 +1401,7 @@ the step-io columns show what step-io reads and writes.
 | `pair_actuator` | x | x | o | x | x | x | x | x |
 | `pair_representation_relationship` | x | x | x | o | o | o | x | x |
 | `pair_value` | x | x | o | o | o | o | x | x |
-| `parabola` | o | o | o | o | o | o | x | x |
+| `parabola` | o | o | o | o | o | o | o | o |
 | `parallel_assembly_constraint` | x | x | x | o | o | o | x | x |
 | `parallel_assembly_constraint_with_dimension` | x | x | x | o | o | o | x | x |
 | `parallel_composed_function` | x | x | x | o | o | o | x | x |

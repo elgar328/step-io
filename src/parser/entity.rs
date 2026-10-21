@@ -9,9 +9,9 @@ use crate::parser::lexer::{LexError, Span};
 pub enum Attribute {
     Integer(i64),
     Real(f64),
-    /// String with outer quotes stripped. The `''` escape is decoded to a
-    /// single `'` by the lexer. Wide-char escapes (`\X\HH`, `\X2\...\X0\`)
-    /// are **not** decoded — that step is deferred to a later stage.
+    /// A string's value: quotes stripped and every escape decoded (`''`,
+    /// `\\`, `\X\HH`, `\X2\…\X0\`, `\X4\…\X0\`, `\S\`), with the line
+    /// breaks writers insert into long strings dropped.
     String(String),
     /// Enumeration value without the surrounding dots (e.g. `.T.` → `"T"`).
     Enum(String),
@@ -79,40 +79,39 @@ impl RawEntity {
 
 /// The complete result of parsing a Part 21 file.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct Graph {
-    /// Identified application protocol (AP family, edition, stage). The raw
-    /// `FILE_SCHEMA` string list is preserved inside [`SchemaId`](crate::parser::SchemaId) itself.
-    pub schema: super::schema::SchemaId,
+    /// Identified application protocol (AP family, edition, stage), with the
+    /// `FILE_SCHEMA` names as written.
+    pub schema: crate::SchemaId,
     /// Raw HEADER entities (`FILE_DESCRIPTION`, `FILE_NAME`, `FILE_SCHEMA`).
     pub header: Vec<RawEntity>,
-    /// DATA section entities keyed by their `#N` identifier.
-    /// `BTreeMap` gives deterministic iteration order (useful for the writer stage).
+    /// DATA section entities keyed by their `#N` identifier, in id order.
     pub entities: BTreeMap<u64, RawEntity>,
-    /// P21 edition 3 `REFERENCE` section: `#N -> "<url#anchor>"`. Each entry
-    /// is an entity id resolved externally rather than in the DATA section.
-    /// `BTreeMap` keeps the deterministic id order the writer relies on.
+    /// P21 edition 3 `REFERENCE` section: `#N -> "<url#anchor>"`, in id
+    /// order. Each entry is an entity id resolved outside the file rather
+    /// than in its DATA section.
     pub external_references: BTreeMap<u64, String>,
-    /// P21 edition 3 `ANCHOR` section: `(<name>, #N)` pairs naming an entity
-    /// (in this corpus, always an external reference). Order-preserving.
+    /// P21 edition 3 `ANCHOR` section: `(<name>, #N)` pairs naming an
+    /// entity, in file order.
     pub anchors: Vec<(String, u64)>,
-    /// Non-fatal issues observed while parsing. Lenient recoveries
-    /// (missing semicolons, empty attribute slots) and P21 edition 3
-    /// sections that step-io does not yet model land here so callers can
-    /// surface them without aborting the parse.
+    /// What the parser repaired or skipped without stopping, such as a
+    /// missing semicolon, a blank attribute slot or a SIGNATURE section.
     pub warnings: Vec<ParseWarning>,
 }
 
 /// Non-fatal issues observed during parsing.
 ///
 /// The parser admits a handful of spec-bending inputs to survive
-/// real-world STEP files; each tolerance pushes a [`ParseWarning`] so
-/// downstream stages can surface what was repaired or discarded. The
-/// IR itself never carries the non-standard form — input is normalised
-/// to a spec-conformant shape before it reaches [`Graph`].
+/// real-world STEP files; each tolerance records a [`ParseWarning`], so a
+/// caller can show what was repaired or discarded. What the parser hands on
+/// is always in the standard form.
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub enum ParseWarning {
     /// A HEADER entity is missing its terminating `;`. The next keyword
-    /// is treated as the start of the next entity; the IR shows no trace.
+    /// is treated as the start of the next entity; the parsed header shows no
+    /// trace.
     MissingHeaderSemicolon {
         entity_name: String,
         span: super::lexer::Span,
@@ -120,13 +119,50 @@ pub enum ParseWarning {
     /// An attribute position is blank — `(a, , b)` or trailing `(a, )`.
     /// The slot is normalised to [`Attribute::Unset`] (the spec form `$`).
     EmptyAttribute { span: super::lexer::Span },
-    /// A P21 edition 3 section was encountered (`ANCHOR`, `REFERENCE`,
-    /// or `SIGNATURE`) and discarded. step-io does not yet model these
-    /// sections in the IR.
+    /// A P21 edition 3 section (`ANCHOR`, `REFERENCE` or `SIGNATURE`) was
+    /// discarded. [`read`](crate::read) discards all three, as the model has
+    /// no place for them; [`parse`](crate::parser::parse) keeps `ANCHOR`
+    /// and `REFERENCE` in its [`Graph`] and discards `SIGNATURE`, or a
+    /// section whose lines it cannot read.
     Ed3SectionDiscarded {
         section: String,
         span: super::lexer::Span,
     },
+    /// A string holds an escape that cannot be decoded — a lone `\`, an
+    /// unterminated or broken `\X2\` / `\X4\` run, a `\P?\` code page other
+    /// than `A`, or an unknown directive. It is kept as written, so the value
+    /// holds the backslash as a character (and writes back as `\\`).
+    MalformedStringEscape { span: super::lexer::Span },
+    /// A string's hex escape uses lower-case digits (`\X2\c5d0\X0\`), which
+    /// Part 21 does not allow. It is decoded all the same.
+    LowercaseHexEscape { span: super::lexer::Span },
+}
+
+impl std::fmt::Display for ParseWarning {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let (span, what) = match self {
+            Self::MissingHeaderSemicolon { entity_name, span } => (
+                span,
+                format!("HEADER entity {entity_name} has no terminating ';'"),
+            ),
+            Self::EmptyAttribute { span } => (span, "blank attribute read as $".to_owned()),
+            Self::Ed3SectionDiscarded { section, span } => {
+                (span, format!("{section} section skipped (not supported)"))
+            }
+            Self::MalformedStringEscape { span } => (
+                span,
+                "string escape could not be decoded; kept as written".to_owned(),
+            ),
+            Self::LowercaseHexEscape { span } => {
+                (span, "string escape uses lower-case hex digits".to_owned())
+            }
+        };
+        write!(
+            f,
+            "warning at line {}, column {}: {what}",
+            span.line, span.column
+        )
+    }
 }
 
 impl Graph {
@@ -137,11 +173,15 @@ impl Graph {
     }
 }
 
-/// Parse error kinds specific to the Part 21 parser.
+/// Why [`read`](crate::read) or [`parse`](crate::parser::parse) could not
+/// read a file.
 ///
-/// Lexer errors are wrapped in [`Error::Lex`]; the remaining variants
-/// describe structural problems detected during parsing.
-#[derive(Debug, Clone, PartialEq)]
+/// Lexer errors are wrapped in [`Error::Lex`] and a failing input in
+/// [`Error::Io`]; the remaining variants describe structural problems detected
+/// during parsing. Each prints as a one-line message that includes the wrapped
+/// error's, so [`source`](std::error::Error::source) is always `None`.
+#[derive(Debug)]
+#[non_exhaustive]
 pub enum Error {
     /// A lexical error bubbled up from the tokenizer.
     Lex(LexError),
@@ -150,11 +190,15 @@ pub enum Error {
     /// A token was found where a different kind was expected.
     UnexpectedToken {
         expected: &'static str,
-        found: super::lexer::TokenKind,
+        /// The token found, about as written: `FOO`, `')'`, `#12`, `.T.`, a
+        /// string in quotes (cut at 40 characters); a real number as its
+        /// value.
+        found: String,
         span: Span,
     },
-    /// Two entities share the same `#N` identifier.
-    DuplicateEntityId { id: u64, span: Span },
+    /// Two entities share the same `#N` identifier: the first repeat in the
+    /// file, at `line`, of the entity at `first_line`.
+    DuplicateEntityId { id: u64, line: u32, first_line: u32 },
     /// A required HEADER entity is missing.
     MissingHeaderEntity { name: &'static str },
     /// `FILE_SCHEMA` does not contain a list of strings.
@@ -164,8 +208,14 @@ pub enum Error {
     /// A parameter is nested deeper than [`MAX_NESTING_DEPTH`] — guards against a
     /// stack overflow on adversarially deep `(((…)))` / `A(B(C(…)))` input.
     ///
-    /// [`MAX_NESTING_DEPTH`]: super::p21::MAX_NESTING_DEPTH
+    /// [`MAX_NESTING_DEPTH`]: crate::parser::MAX_NESTING_DEPTH
     NestingTooDeep { span: Span },
+    /// The file holds more than the reader can index: at most `u32::MAX`
+    /// entities, and as many reference and text slots.
+    /// `span` is the entity where reading stopped.
+    TooLarge { span: Span },
+    /// Reading the input failed, with the input's own error.
+    Io(std::io::Error),
 }
 
 impl From<LexError> for Error {
@@ -190,13 +240,16 @@ impl std::fmt::Display for Error {
                 span,
             } => write!(
                 f,
-                "parse error at line {}, column {}: expected {expected}, found {found:?}",
+                "parse error at line {}, column {}: expected {expected}, found {found}",
                 span.line, span.column,
             ),
-            Self::DuplicateEntityId { id, span } => write!(
+            Self::DuplicateEntityId {
+                id,
+                line,
+                first_line,
+            } => write!(
                 f,
-                "parse error at line {}, column {}: duplicate entity #{id}",
-                span.line, span.column,
+                "parse error at line {line}: duplicate entity #{id} (first at line {first_line})",
             ),
             Self::MissingHeaderEntity { name } => {
                 write!(f, "parse error: missing required HEADER entity {name}")
@@ -216,18 +269,17 @@ impl std::fmt::Display for Error {
                 "parse error at line {}, column {}: parameter nesting too deep",
                 span.line, span.column,
             ),
+            Self::TooLarge { span } => write!(
+                f,
+                "read error at line {}, column {}: the file is too large to read",
+                span.line, span.column,
+            ),
+            Self::Io(e) => write!(f, "read error: {e}"),
         }
     }
 }
 
-impl std::error::Error for Error {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Lex(inner) => Some(inner),
-            _ => None,
-        }
-    }
-}
+impl std::error::Error for Error {}
 
 #[cfg(test)]
 mod tests {
@@ -294,7 +346,7 @@ mod tests {
             snippet: "@".into(),
         };
         let parse_err = Error::from(lex_err.clone());
-        assert_eq!(parse_err, Error::Lex(lex_err));
+        assert!(matches!(parse_err, Error::Lex(e) if e == lex_err));
     }
 
     #[test]
@@ -349,5 +401,46 @@ mod tests {
         };
         assert_eq!(graph.get(1), Some(&entity));
         assert_eq!(graph.get(999), None);
+    }
+
+    #[test]
+    fn parse_warnings_print_as_one_line() {
+        let span = Span {
+            start: 0,
+            end: 1,
+            line: 12,
+            column: 5,
+        };
+        let cases = [
+            (
+                ParseWarning::MissingHeaderSemicolon {
+                    entity_name: "FILE_NAME".into(),
+                    span,
+                },
+                "warning at line 12, column 5: HEADER entity FILE_NAME has no terminating ';'",
+            ),
+            (
+                ParseWarning::EmptyAttribute { span },
+                "warning at line 12, column 5: blank attribute read as $",
+            ),
+            (
+                ParseWarning::Ed3SectionDiscarded {
+                    section: "ANCHOR".into(),
+                    span,
+                },
+                "warning at line 12, column 5: ANCHOR section skipped (not supported)",
+            ),
+            (
+                ParseWarning::MalformedStringEscape { span },
+                "warning at line 12, column 5: string escape could not be decoded; kept as written",
+            ),
+            (
+                ParseWarning::LowercaseHexEscape { span },
+                "warning at line 12, column 5: string escape uses lower-case hex digits",
+            ),
+        ];
+        for (warning, want) in cases {
+            assert_eq!(warning.to_string(), want);
+        }
     }
 }

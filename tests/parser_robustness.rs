@@ -4,6 +4,8 @@
 //! numbers, and synthetic-id overflow. Inline adversarial byte probes, not
 //! valid-CAD fixtures.
 
+use std::io::Read;
+
 use step_io::{Error, LexError, LexErrorKind, read};
 
 const HEADER: &str = "ISO-10303-21;\nHEADER;\n\
@@ -36,7 +38,7 @@ fn deep_nesting_is_graceful_not_stack_overflow() {
 fn normal_nesting_still_parses() {
     let body = "#1=CARTESIAN_POINT('',(0.,0.,0.));\n";
     let (_m, report) = read(doc(body).as_bytes()).expect("normal depth parses");
-    assert_eq!(report.validated, 1);
+    assert_eq!(report.entities_kept, 1);
 }
 
 /// Errors are structured (not flattened to a String): a caller can match the
@@ -98,10 +100,64 @@ fn max_u64_id_does_not_overflow_or_corrupt() {
 #1=DIRECTION('',(1.,0.,0.));\n";
     let (_m, report) = read(doc(body).as_bytes()).expect("parses without panic");
     assert_eq!(
-        report.validated + report.dropped.len(),
-        report.n_in + report.n_synth,
+        report.entities_kept + report.dropped.len(),
+        report.entities_read + report.entities_added,
         "accounting invariant"
     );
-    assert_eq!(report.validated, 2, "both entities kept (no overwrite)");
+    assert_eq!(report.entities_kept, 2, "both entities kept (no overwrite)");
     assert_eq!(report.dropped.len(), 0);
+}
+
+/// A file cut off inside a string is an unterminated string, and a token out
+/// of place is named in the message as it is written.
+#[test]
+fn errors_name_what_went_wrong() {
+    let cut = format!("{HEADER}#1=CARTESIAN_POINT('cut off");
+    let err = read(cut.as_bytes()).unwrap_err();
+    assert!(
+        matches!(
+            err,
+            Error::Lex(LexError {
+                kind: LexErrorKind::UnterminatedString,
+                ..
+            })
+        ),
+        "{err:?}"
+    );
+
+    let body = "#1=CARTESIAN_POINT('',(0.,0.,0.)) FOO;\n";
+    let err = read(doc(body).as_bytes()).unwrap_err();
+    assert!(
+        err.to_string().ends_with("expected ';', found FOO"),
+        "{err}"
+    );
+}
+
+/// A failing input is `Error::Io` holding the input's own error, so an error
+/// the input wrapped can be reached; the message says it once.
+#[test]
+fn a_failing_input_keeps_its_error() {
+    #[derive(Debug)]
+    struct Unplugged;
+    impl std::fmt::Display for Unplugged {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.write_str("drive unplugged")
+        }
+    }
+    impl std::error::Error for Unplugged {}
+    struct Failing;
+    impl std::io::Read for Failing {
+        fn read(&mut self, _: &mut [u8]) -> std::io::Result<usize> {
+            Err(std::io::Error::other(Unplugged))
+        }
+    }
+
+    let err = read(HEADER.as_bytes().chain(Failing)).unwrap_err();
+    let Error::Io(io) = &err else {
+        panic!("expected Io, got {err:?}")
+    };
+    let inner = io.get_ref().expect("the wrapped error");
+    assert!(inner.is::<Unplugged>());
+    assert_eq!(err.to_string(), "read error: drive unplugged");
+    assert!(std::error::Error::source(&err).is_none());
 }

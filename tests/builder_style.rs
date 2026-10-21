@@ -1,11 +1,13 @@
 //! Surface colour and transparency authoring through `StepBuilder::style`,
 //! read back through the Scene's presentation accessors on solids and faces.
 
-use step_io::build::Rgb;
+mod common;
+
 use step_io::build::{
     CurveInput, FaceBoundInput, Frame, StyleTarget, SurfaceInput, VoidShellNormals,
 };
-use step_io::{StepBuilder, read};
+use step_io::scene::Rgb;
+use step_io::{Orientation, StepBuilder, read};
 
 fn frame(origin: [f64; 3], axis: [f64; 3], ref_dir: [f64; 3]) -> Frame {
     Frame {
@@ -20,8 +22,8 @@ fn plate(
     b: &mut StepBuilder,
     part: step_io::build::Part,
 ) -> (
-    step_io::generated::model::AdvancedFaceId,
-    step_io::generated::model::ManifoldSolidBrepId,
+    step_io::model::AdvancedFaceId,
+    step_io::model::ManifoldSolidBrepId,
 ) {
     let v0 = b.vertex([0.0, 0.0, 0.0]).expect("v0");
     let v1 = b.vertex([1.0, 0.0, 0.0]).expect("v1");
@@ -32,11 +34,11 @@ fn plate(
     let face = b
         .face(
             SurfaceInput::Plane(frame([0.0; 3], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0])),
-            true,
+            Orientation::Forward,
             vec![FaceBoundInput::outer(vec![
-                (e0, true),
-                (e1, true),
-                (e2, true),
+                (e0, Orientation::Forward),
+                (e1, Orientation::Forward),
+                (e2, Orientation::Forward),
             ])],
         )
         .expect("face");
@@ -46,8 +48,8 @@ fn plate(
 
 #[test]
 fn solid_color_round_trips() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("plate").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("plate");
     let (_face, body) = plate(&mut b, part);
 
     let red = Rgb {
@@ -56,14 +58,13 @@ fn solid_color_round_trips() {
         blue: 0.1,
     };
     b.style(StyleTarget::Solid(body), red, None).expect("style");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
     assert_eq!(
         model
-            .mechanical_design_geometric_presentation_representation_arena
-            .items
+            .all::<step_io::model::MechanicalDesignGeometricPresentationRepresentation>()
             .len(),
         1,
         "styles anchored in one MDGPR"
@@ -78,8 +79,8 @@ fn solid_color_round_trips() {
 
 #[test]
 fn face_color_and_transparency_round_trip() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("plate").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("plate");
     let (face, _body) = plate(&mut b, part);
 
     let grey = Rgb {
@@ -89,7 +90,7 @@ fn face_color_and_transparency_round_trip() {
     };
     b.style(StyleTarget::Face(face), grey, Some(0.3))
         .expect("style");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -109,10 +110,7 @@ fn face_color_and_transparency_round_trip() {
 /// Minimal solid-with-voids: a one-face outer shell and a one-face void shell
 /// (read does not enforce topological closure, so this is enough to exercise
 /// the `BREP_WITH_VOIDS` style path).
-fn void_body(
-    b: &mut StepBuilder,
-    part: step_io::build::Part,
-) -> step_io::generated::model::BrepWithVoidsId {
+fn void_body(b: &mut StepBuilder, part: step_io::build::Part) -> step_io::model::BrepWithVoidsId {
     let mut tri = |z: f64| {
         let v0 = b.vertex([0.0, 0.0, z]).expect("v0");
         let v1 = b.vertex([1.0, 0.0, z]).expect("v1");
@@ -122,11 +120,11 @@ fn void_body(
         let e2 = b.edge(v2, v0, CurveInput::Line).expect("e2");
         b.face(
             SurfaceInput::Plane(frame([0.0, 0.0, z], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0])),
-            true,
+            Orientation::Forward,
             vec![FaceBoundInput::outer(vec![
-                (e0, true),
-                (e1, true),
-                (e2, true),
+                (e0, Orientation::Forward),
+                (e1, Orientation::Forward),
+                (e2, Orientation::Forward),
             ])],
         )
         .expect("face")
@@ -145,8 +143,8 @@ fn void_body(
 
 #[test]
 fn void_solid_color_round_trips() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("hollow").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("hollow");
     let body = void_body(&mut b, part);
 
     let red = Rgb {
@@ -156,7 +154,7 @@ fn void_solid_color_round_trips() {
     };
     b.style(StyleTarget::VoidSolid(body), red, Some(0.25))
         .expect("style");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
@@ -174,14 +172,14 @@ fn void_solid_color_round_trips() {
 
 #[test]
 fn void_solid_layer_and_hide_round_trip() {
-    let mut b = StepBuilder::new().expect("builder");
-    let part = b.part("hollow").expect("part");
+    let mut b = StepBuilder::new();
+    let part = b.part("hollow");
     let body = void_body(&mut b, part);
 
     b.layer("BODY", vec![StyleTarget::VoidSolid(body)])
         .expect("layer");
     b.hide(StyleTarget::VoidSolid(body)).expect("hide");
-    let text = b.finish().expect("finish");
+    let text = common::text(&b.finish());
 
     let (model, report) = read(text.as_bytes()).expect("re-read");
     assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
