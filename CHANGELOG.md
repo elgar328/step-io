@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Packed graph queries for entity keywords, original simple/complex record shape
+  and selected nested attributes, without allocating skipped strings or expanding
+  unrelated parameter lists. Include a synthetic raw-graph memory example.
+
+- Add lossless `parser::parse_compact` raw-graph storage with bounded byte
+  blocks, shared symbols and on-demand original-record reconstruction.
+
+### Changed
+
+- Build the raw Part 21 graph directly in its entity map, avoiding a second
+  whole-file entity buffer and its geometric allocation growth. Entity order,
+  raw values and first-duplicate diagnostics are preserved.
+
 ## [0.3.0] - 2026-10-21
 
 0.3.0 reshapes the public API: each item has one path, the model is read-only

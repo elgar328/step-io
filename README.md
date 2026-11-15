@@ -25,6 +25,10 @@ writes only modern AP242.
 
 ## Quickstart
 
+For tools that need every raw Part 21 record, `parser::parse` returns an editable
+attribute graph. `parser::parse_compact` offers lossless packed storage with
+on-demand record and selected-attribute access; see [packed graphs](docs/packed-graph.md).
+
 Reading STEP into a CAD application or viewer:
 
 ```rust,no_run

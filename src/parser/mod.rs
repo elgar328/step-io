@@ -8,12 +8,14 @@
 //! stays public for tools that want the raw Part 21 file without the schema
 //! layer — statistics, linting, anonymization, and the like.
 
+mod compact;
 pub(crate) mod entity;
 pub(crate) mod lexer;
 pub(crate) mod p21;
 pub(crate) mod schema;
 pub(crate) mod string;
 
+pub use compact::{CompactGraph, parse_compact};
 pub use entity::{Attribute, Graph, RawEntity, RawEntityPart};
 pub use lexer::Span;
 pub use p21::{MAX_NESTING_DEPTH, parse};

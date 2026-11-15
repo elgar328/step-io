@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, btree_map::Entry};
 use std::io::Read;
 
 use super::entity::{Attribute, Error, Graph, ParseWarning, RawEntity, RawEntityPart};
@@ -93,29 +93,30 @@ impl<R: Read> Parser<R> {
 
     fn parse_file(&mut self) -> Result<Graph, Error> {
         let prelude = self.read_prelude()?;
-        let mut entities = Vec::new();
-        let end = loop {
-            match self.next_entity() {
-                Ok(Some(e)) => entities.push(e),
-                Ok(None) => break self.finish(),
-                Err(e) => break Err(e),
+        let mut entities = BTreeMap::new();
+        // Retain each record only in its final map. A whole-file Vec would grow
+        // geometrically and remain live while the map is collected from it.
+        // Check duplicates in file order so the first repeat still wins over
+        // any malformed record or I/O failure that follows it.
+        while let Some(entity) = self.next_entity()? {
+            match entities.entry(entity.id()) {
+                Entry::Vacant(slot) => {
+                    slot.insert(entity);
+                }
+                Entry::Occupied(slot) => {
+                    return Err(Error::DuplicateEntityId {
+                        id: entity.id(),
+                        line: entity.span().line,
+                        first_line: slot.get().span().line,
+                    });
+                }
             }
-        };
-        // A duplicate id wins over any error after it, as if the parse had
-        // stopped there: report the first repeat in the file.
-        entities.sort_unstable_by_key(|e| (e.id(), e.span().start));
-        if let Some((first, repeat)) = first_duplicate(&entities) {
-            return Err(Error::DuplicateEntityId {
-                id: repeat.id(),
-                line: repeat.span().line,
-                first_line: first.span().line,
-            });
         }
-        let warnings = end?;
+        let warnings = self.finish()?;
         Ok(Graph {
             schema: prelude.schema,
             header: prelude.header,
-            entities: entities.into_iter().map(|e| (e.id(), e)).collect(),
+            entities,
             external_references: prelude.external_references,
             anchors: prelude.anchors,
             warnings,
@@ -710,16 +711,6 @@ impl<R: Read> Parser<R> {
     fn expect_equals(&mut self) -> Result<Span, Error> {
         Ok(self.expect(|k| matches!(k, TokenKind::Equals), "'='")?.span)
     }
-}
-
-/// In entities sorted by `(id, span.start)`, the repeat of an id that comes
-/// first in the file, with the entity it repeats.
-fn first_duplicate(sorted: &[RawEntity]) -> Option<(&RawEntity, &RawEntity)> {
-    sorted
-        .windows(2)
-        .filter(|w| w[0].id() == w[1].id())
-        .map(|w| (&w[0], &w[1]))
-        .min_by_key(|(_, e)| e.span().start)
 }
 
 #[cfg(test)]
