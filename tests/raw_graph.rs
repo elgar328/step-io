@@ -36,7 +36,10 @@ fn unordered_ids_preserve_values_spans_and_header_across_chunks() {
         panic!("simple entity expected");
     };
     assert_eq!(attributes[0], Attribute::String("a;'b".into()));
-    assert_eq!(whole.entities[&90].span().start as usize, HEADER.len());
+    assert_eq!(
+        usize::try_from(whole.entities[&90].span().start).unwrap(),
+        HEADER.len()
+    );
     for size in [1, 7, 64, 65_536] {
         let chunks = parse(Chunks(source.as_bytes(), size)).unwrap();
         assert_eq!(chunks.entities, whole.entities);

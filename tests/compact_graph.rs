@@ -145,8 +145,8 @@ fn header_warnings_and_edition_three_metadata_survive() {
          DATA;\n#7=UNKNOWN(,,'bad\\Qescape');\n{FOOTER}"
     );
     let raw = parse(source.as_bytes()).unwrap();
-    assert!(!raw.warnings.is_empty());
-    assert!(!raw.anchors.is_empty());
+    assert_ne!(raw.warnings, [] as [step_io::ParseWarning; 0]);
+    assert_ne!(raw.anchors, [] as [(String, u64); 0]);
     assert!(!raw.external_references.is_empty());
     equal(source.as_bytes(), 1);
 }
