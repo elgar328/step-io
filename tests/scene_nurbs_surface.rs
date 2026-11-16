@@ -78,9 +78,9 @@ fn sphere_becomes_rational_surface_of_revolution() {
     // Equator on +y (u=quarter).
     assert!(approx(&n.control_points[2][2], &[0., 2., 0.]));
     // The poles: every u control point collapses to a single point.
-    for i in 0..9 {
-        assert!(approx(&n.control_points[i][0], &[0., 0., -2.]), "south {i}");
-        assert!(approx(&n.control_points[i][4], &[0., 0., 2.]), "north {i}");
+    for (i, row) in n.control_points.iter().enumerate() {
+        assert!(approx(&row[0], &[0., 0., -2.]), "south {i}");
+        assert!(approx(&row[4], &[0., 0., 2.]), "north {i}");
     }
     // Weight = u-weight × v-weight.
     let w = std::f64::consts::FRAC_1_SQRT_2;
