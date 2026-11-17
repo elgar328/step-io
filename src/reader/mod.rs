@@ -1,14 +1,14 @@
 //! [`read`] — STEP source to [`StepModel`] plus a provenance [`Report`].
 //!
-//! [`read`] streams the source: it takes the entities from the
-//! [`parser`](crate::parser) one at a time, heals non-standard input in place
-//! where a safe rewrite exists, and builds each entity into the typed model
-//! right away with the generated readers, keeping only a row in the entity
-//! table and the entity's reference slots. Once the whole file is read, the
-//! drop pass decides what cannot enter the model, with a [`DropReason`], and
-//! the kept references are resolved. The [`Report`] accounts for everything
-//! that came in — kept, normalized, or dropped and why — and carries what the
-//! parser repaired on the way in.
+//! [`read`] streams the source: it takes the entities from a
+//! [`parser::Stream`](crate::parser::Stream) one at a time, heals
+//! non-standard input in place where a safe rewrite exists, and builds each
+//! entity into the typed model right away with the generated readers, keeping
+//! only a row in the entity table and the entity's reference slots. Once the
+//! whole file is read, the drop pass decides what cannot enter the model, with
+//! a [`DropReason`], and the kept references are resolved. The [`Report`]
+//! accounts for everything that came in — kept, normalized, or dropped and
+//! why — and carries what the parser repaired on the way in.
 
 use std::collections::BTreeMap;
 use std::io::Read;
@@ -21,7 +21,7 @@ use crate::generated::read::{
     ref_field_slots, ref_slots, resolve_complex_entity, resolve_entity, shrink_arenas,
     simple_index,
 };
-use crate::parser::p21::Parser;
+use crate::parser::p21::{Parser, Stream};
 use crate::parser::{Attribute, Error, ParseWarning, RawEntity, RawEntityPart};
 
 mod entity_normalize;
@@ -579,13 +579,12 @@ fn read_at_most(input: impl Read, limit: usize) -> Result<(StepModel, Report), E
     const MAX_ITERS: usize = 3;
 
     // The model has no place for the ANCHOR and REFERENCE sections.
-    let mut parser = Parser::new(input).discarding_ed3();
-    let prelude = parser.read_prelude()?;
-    let header = crate::header::from_raw(&prelude.header, prelude.schema);
+    let mut stream = Stream::open(Parser::new(input).discarding_ed3())?;
+    let header = crate::header::from_raw(stream.header(), stream.schema().clone());
     let mut scan = Scan::default();
     let end = loop {
-        match parser.next_entity() {
-            Ok(Some(ent)) => {
+        match stream.next() {
+            Some(Ok(ent)) => {
                 let at = ent.span();
                 scan.entity(ent);
                 // Like a parse error, this yields to a duplicate id before it.
@@ -596,8 +595,8 @@ fn read_at_most(input: impl Read, limit: usize) -> Result<(StepModel, Report), E
                     break Err(Error::TooLarge { span: at });
                 }
             }
-            Ok(None) => break parser.finish(),
-            Err(e) => break Err(e),
+            Some(Err(e)) => break Err(e),
+            None => break Ok(stream.take_warnings()),
         }
     };
     let Scanned {

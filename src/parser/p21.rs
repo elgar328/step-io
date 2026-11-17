@@ -1,5 +1,7 @@
 use std::collections::BTreeMap;
+use std::fmt;
 use std::io::Read;
+use std::iter::FusedIterator;
 
 use super::entity::{Attribute, Error, Graph, ParseWarning, RawEntity, RawEntityPart};
 use super::lexer::{Lexer, Span, Token, TokenKind};
@@ -16,12 +18,205 @@ use super::schema::SchemaId;
 /// escapes — those bytes decode losslessly under the fallback (every byte
 /// 0x00..0xFF maps 1:1 to U+0000..U+00FF).
 ///
+/// The [`Graph`] holds every entity, keyed by id, for a caller that looks
+/// entities up and follows references between them. To look at each entity
+/// once and let it go, [`stream`] the file instead.
+///
 /// # Errors
 ///
 /// Returns the first [`Error`] encountered, or [`Error::Io`] if `input`
-/// fails.
+/// fails. An id the file repeats is [`Error::DuplicateEntityId`], reported
+/// at its first repeat ahead of any error after it.
 pub fn parse(input: impl Read) -> Result<Graph, Error> {
-    Parser::new(input).parse()
+    let mut source = stream(input)?;
+    let mut entities = Vec::new();
+    let end = loop {
+        match source.next() {
+            Some(Ok(entity)) => entities.push((entity.id(), entity)),
+            Some(Err(e)) => break Err(e),
+            None => break Ok(()),
+        }
+    };
+    // A duplicate id wins over any error after it, as if the parse had
+    // stopped there: report the first repeat in the file.
+    entities.sort_unstable_by_key(|(id, entity)| (*id, entity.span().start));
+    if let Some((first, repeat)) = first_duplicate(&entities) {
+        return Err(Error::DuplicateEntityId {
+            id: repeat.id(),
+            line: repeat.span().line,
+            first_line: first.span().line,
+        });
+    }
+    end?;
+    let warnings = source.take_warnings();
+    let Prelude {
+        schema,
+        header,
+        external_references,
+        anchors,
+    } = source.prelude;
+    Ok(Graph {
+        schema,
+        header,
+        entities: entities.into_iter().collect(),
+        external_references,
+        anchors,
+        warnings,
+    })
+}
+
+/// In entities sorted by `(id, span.start)`, the repeat of an id that comes
+/// first in the file, with the entity it repeats.
+fn first_duplicate(sorted: &[(u64, RawEntity)]) -> Option<(&RawEntity, &RawEntity)> {
+    sorted
+        .windows(2)
+        .filter(|w| w[0].0 == w[1].0)
+        .map(|w| (&w[0].1, &w[1].1))
+        .min_by_key(|(_, e)| e.span().start)
+}
+
+/// Read a Part 21 file one DATA entity at a time, reading `input` a chunk at
+/// a time and decoding it as [`parse`] does (pass `&mut r` to keep `r`).
+///
+/// Everything before the entities — the HEADER section and the edition 3
+/// ANCHOR and REFERENCE sections — is read before this returns, and the
+/// [`Stream`] shows it. Then each item is the next entity in file order. The
+/// stream holds one entity at a time, so a large file reads in memory that
+/// does not grow with its entity count (the [`warnings`](Stream::warnings)
+/// aside). To keep every entity and look them up by id, [`parse`] the file
+/// instead.
+///
+/// ```
+/// use step_io::parser::{self, RawEntity};
+///
+/// let file = "ISO-10303-21;HEADER;FILE_DESCRIPTION((''),'2;1');\
+///     FILE_NAME('','',(''),(''),'','','');FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\
+///     ENDSEC;DATA;#1=CARTESIAN_POINT('',(0.,0.,0.));#2=DIRECTION('',(0.,0.,1.));\
+///     #3=CARTESIAN_POINT('',(1.,0.,0.));ENDSEC;END-ISO-10303-21;";
+/// let mut stream = parser::stream(file.as_bytes())?;
+/// let mut points = 0;
+/// for entity in &mut stream {
+///     let entity = entity?;
+///     if matches!(&entity, RawEntity::Simple { name, .. } if name == "CARTESIAN_POINT") {
+///         points += 1;
+///     }
+/// }
+/// assert_eq!(points, 2);
+/// assert!(stream.warnings().is_empty());
+/// # Ok::<(), step_io::Error>(())
+/// ```
+///
+/// # Errors
+///
+/// Returns the first [`Error`] up to `DATA;`, or [`Error::Io`] if `input`
+/// fails. Errors after that are the stream's items.
+pub fn stream<R: Read>(input: R) -> Result<Stream<R>, Error> {
+    Stream::open(Parser::new(input))
+}
+
+/// A Part 21 file being read one DATA entity at a time; see [`stream`].
+///
+/// Each item is the next entity in file order, or the [`Error`] that ends
+/// the file: a malformed entity, a failing input, or a file that does not end
+/// as Part 21 requires after its last entity (`ENDSEC;`, `END-ISO-10303-21;`,
+/// then nothing). After an error the stream yields `None`; a `None` with no
+/// error before it means the whole file was read and checked. A caller that
+/// stops early leaves the rest of the file unread and unchecked.
+///
+/// Unlike [`parse`], a stream does not check that each id appears only once,
+/// which would mean remembering every id so far; a caller that keeps the
+/// entities can check against its own index.
+pub struct Stream<R> {
+    parser: Parser<R>,
+    prelude: Prelude,
+    done: bool,
+}
+
+impl<R: Read> Stream<R> {
+    /// Read up to and including `DATA;` and stand at the first entity.
+    pub(crate) fn open(mut parser: Parser<R>) -> Result<Self, Error> {
+        let prelude = parser.read_prelude()?;
+        Ok(Self {
+            parser,
+            prelude,
+            done: false,
+        })
+    }
+}
+
+impl<R> Stream<R> {
+    /// Identified application protocol (AP family, edition, stage), with the
+    /// `FILE_SCHEMA` names as written.
+    #[must_use]
+    pub fn schema(&self) -> &SchemaId {
+        &self.prelude.schema
+    }
+
+    /// Raw HEADER entities (`FILE_DESCRIPTION`, `FILE_NAME`, `FILE_SCHEMA`).
+    #[must_use]
+    pub fn header(&self) -> &[RawEntity] {
+        &self.prelude.header
+    }
+
+    /// P21 edition 3 `REFERENCE` section: `#N -> "<url#anchor>"`, in id
+    /// order. Each entry is an entity id resolved outside the file rather
+    /// than in its DATA section.
+    #[must_use]
+    pub fn external_references(&self) -> &BTreeMap<u64, String> {
+        &self.prelude.external_references
+    }
+
+    /// P21 edition 3 `ANCHOR` section: `(<name>, #N)` pairs naming an
+    /// entity, in file order.
+    #[must_use]
+    pub fn anchors(&self) -> &[(String, u64)] {
+        &self.prelude.anchors
+    }
+
+    /// What the parser has repaired or skipped without stopping so far, such
+    /// as a missing semicolon or a blank attribute slot. Complete once the
+    /// stream has yielded `None` with no error before it.
+    #[must_use]
+    pub fn warnings(&self) -> &[ParseWarning] {
+        &self.parser.warnings
+    }
+
+    /// Hand over the warnings collected so far.
+    pub(crate) fn take_warnings(&mut self) -> Vec<ParseWarning> {
+        std::mem::take(&mut self.parser.warnings)
+    }
+}
+
+impl<R: Read> Iterator for Stream<R> {
+    type Item = Result<RawEntity, Error>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.done {
+            return None;
+        }
+        match self.parser.next_entity() {
+            Ok(Some(entity)) => Some(Ok(entity)),
+            Ok(None) => {
+                self.done = true;
+                self.parser.finish_trailer().err().map(Err)
+            }
+            Err(e) => {
+                self.done = true;
+                Some(Err(e))
+            }
+        }
+    }
+}
+
+impl<R: Read> FusedIterator for Stream<R> {}
+
+impl<R> fmt::Debug for Stream<R> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Stream")
+            .field("schema", &self.prelude.schema)
+            .field("done", &self.done)
+            .finish_non_exhaustive()
+    }
 }
 
 /// Everything in a Part 21 file before its DATA section's entities.
@@ -43,8 +238,8 @@ pub const MAX_NESTING_DEPTH: usize = 64;
 
 /// Recursive-descent parser for ISO 10303-21 (Part 21) files.
 ///
-/// Consumes `self` on [`Parser::parse`] because the underlying [`Lexer`] is
-/// a one-pass reader and cannot be rewound.
+/// Reads its input once, front to back, as [`Stream`] drives it: the
+/// underlying [`Lexer`] is a one-pass reader and cannot be rewound.
 pub(crate) struct Parser<R> {
     lexer: Lexer<R>,
     warnings: Vec<ParseWarning>,
@@ -77,54 +272,13 @@ impl<R: Read> Parser<R> {
         self
     }
 
-    /// Parse the entire Part 21 file and return an [`Graph`].
-    ///
-    /// # Errors
-    ///
-    /// Returns a [`Error`] on the first structural or lexical problem.
-    pub(crate) fn parse(self) -> Result<Graph, Error> {
-        let mut this = self;
-        this.parse_file()
-    }
-
     // ------------------------------------------------------------------
     // Top-level grammar
     // ------------------------------------------------------------------
 
-    fn parse_file(&mut self) -> Result<Graph, Error> {
-        let prelude = self.read_prelude()?;
-        let mut entities = Vec::new();
-        let end = loop {
-            match self.next_entity() {
-                Ok(Some(e)) => entities.push(e),
-                Ok(None) => break self.finish(),
-                Err(e) => break Err(e),
-            }
-        };
-        // A duplicate id wins over any error after it, as if the parse had
-        // stopped there: report the first repeat in the file.
-        entities.sort_unstable_by_key(|e| (e.id(), e.span().start));
-        if let Some((first, repeat)) = first_duplicate(&entities) {
-            return Err(Error::DuplicateEntityId {
-                id: repeat.id(),
-                line: repeat.span().line,
-                first_line: first.span().line,
-            });
-        }
-        let warnings = end?;
-        Ok(Graph {
-            schema: prelude.schema,
-            header: prelude.header,
-            entities: entities.into_iter().map(|e| (e.id(), e)).collect(),
-            external_references: prelude.external_references,
-            anchors: prelude.anchors,
-            warnings,
-        })
-    }
-
     /// Parse up to and including `DATA;`: the ISO line, the HEADER section,
     /// and any P21 edition 3 sections.
-    pub(crate) fn read_prelude(&mut self) -> Result<Prelude, Error> {
+    fn read_prelude(&mut self) -> Result<Prelude, Error> {
         // ISO-10303-21;
         self.expect_token_kind(&TokenKind::IsoStart, "ISO-10303-21")?;
         self.expect_semicolon()?;
@@ -159,16 +313,16 @@ impl<R: Read> Parser<R> {
 
     /// The next entity of the DATA section, in file order, or `None` at its
     /// `ENDSEC`.
-    pub(crate) fn next_entity(&mut self) -> Result<Option<RawEntity>, Error> {
+    fn next_entity(&mut self) -> Result<Option<RawEntity>, Error> {
         if matches!(self.peek_kind()?, TokenKind::EndSec) {
             return Ok(None);
         }
         self.parse_entity_instance().map(Some)
     }
 
-    /// Parse the end of the file after the last entity, and return the
-    /// warnings collected along the way.
-    pub(crate) fn finish(&mut self) -> Result<Vec<ParseWarning>, Error> {
+    /// Parse the end of the file after the last entity: `ENDSEC;`,
+    /// `END-ISO-10303-21;`, then nothing.
+    fn finish_trailer(&mut self) -> Result<(), Error> {
         // ENDSEC;
         self.expect_token_kind(&TokenKind::EndSec, "ENDSEC")?;
         self.expect_semicolon()?;
@@ -186,7 +340,7 @@ impl<R: Read> Parser<R> {
                 span: tok.span,
             });
         }
-        Ok(std::mem::take(&mut self.warnings))
+        Ok(())
     }
 
     // ------------------------------------------------------------------
@@ -710,16 +864,6 @@ impl<R: Read> Parser<R> {
     fn expect_equals(&mut self) -> Result<Span, Error> {
         Ok(self.expect(|k| matches!(k, TokenKind::Equals), "'='")?.span)
     }
-}
-
-/// In entities sorted by `(id, span.start)`, the repeat of an id that comes
-/// first in the file, with the entity it repeats.
-fn first_duplicate(sorted: &[RawEntity]) -> Option<(&RawEntity, &RawEntity)> {
-    sorted
-        .windows(2)
-        .filter(|w| w[0].id() == w[1].id())
-        .map(|w| (&w[0], &w[1]))
-        .min_by_key(|(_, e)| e.span().start)
 }
 
 #[cfg(test)]

@@ -340,6 +340,26 @@ fn duplicate_ids_are_reported_at_the_first_repeat() {
     ));
 }
 
+/// A file that does not end as Part 21 requires after its last entity is an
+/// error, with no repeated id to report ahead of it.
+#[test]
+fn a_bad_trailer_is_an_error() {
+    let body = "#1=CARTESIAN_POINT('',(0.,0.,0.));\n";
+    let src = format!("{HEADER}{body}ENDSEC;\n");
+    assert!(matches!(
+        read(src.as_bytes()),
+        Err(step_io::Error::UnexpectedEof { .. })
+    ));
+    let src = format!("{HEADER}{body}{FOOTER}#7=CARTESIAN_POINT('',(0.,0.,0.));\n");
+    assert!(matches!(
+        read(src.as_bytes()),
+        Err(step_io::Error::UnexpectedToken {
+            expected: "end of file",
+            ..
+        })
+    ));
+}
+
 /// A point with more coordinates than `LIST [1:3]` allows is dropped as a
 /// nonstandard value, and what references it cascades; a two-coordinate point
 /// is within the bounds and kept.

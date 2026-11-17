@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `parser::stream()` reads a file one raw entity at a time, in file order.
+  The `Stream` it returns is an iterator of entities and shows the header,
+  schema, `ANCHOR` and `REFERENCE` sections up front and the parser's
+  warnings so far; any error, including a file that does not end as Part 21
+  requires, is its last item. It holds one entity at a time, so apart from
+  the warnings it collects, the memory it takes does not grow with the file.
+  Unlike `parser::parse()`, it does not check that each id appears once.
+
+### Changed
+
+- `parser::parse()` gathers the file's entities in one list on the way to
+  the `Graph`, where it used to fill two, so parsing a large file takes less
+  memory at its peak.
+
 ## [0.3.0] - 2026-10-21
 
 0.3.0 reshapes the public API: each item has one path, the model is read-only

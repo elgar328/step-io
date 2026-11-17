@@ -121,9 +121,10 @@ pub enum ParseWarning {
     EmptyAttribute { span: super::lexer::Span },
     /// A P21 edition 3 section (`ANCHOR`, `REFERENCE` or `SIGNATURE`) was
     /// discarded. [`read`](crate::read) discards all three, as the model has
-    /// no place for them; [`parse`](crate::parser::parse) keeps `ANCHOR`
-    /// and `REFERENCE` in its [`Graph`] and discards `SIGNATURE`, or a
-    /// section whose lines it cannot read.
+    /// no place for them; [`parse`](crate::parser::parse) and
+    /// [`stream`](crate::parser::stream) keep `ANCHOR` and `REFERENCE` (in
+    /// the [`Graph`], or shown by the [`Stream`](crate::parser::Stream)) and
+    /// discard `SIGNATURE`, or a section whose lines they cannot read.
     Ed3SectionDiscarded {
         section: String,
         span: super::lexer::Span,
@@ -173,8 +174,8 @@ impl Graph {
     }
 }
 
-/// Why [`read`](crate::read) or [`parse`](crate::parser::parse) could not
-/// read a file.
+/// Why [`read`](crate::read), [`parse`](crate::parser::parse) or
+/// [`stream`](crate::parser::stream) could not read a file.
 ///
 /// Lexer errors are wrapped in [`Error::Lex`] and a failing input in
 /// [`Error::Io`]; the remaining variants describe structural problems detected
@@ -197,7 +198,8 @@ pub enum Error {
         span: Span,
     },
     /// Two entities share the same `#N` identifier: the first repeat in the
-    /// file, at `line`, of the entity at `first_line`.
+    /// file, at `line`, of the entity at `first_line`. A
+    /// [`Stream`](crate::parser::Stream) does not check for this.
     DuplicateEntityId { id: u64, line: u32, first_line: u32 },
     /// A required HEADER entity is missing.
     MissingHeaderEntity { name: &'static str },
