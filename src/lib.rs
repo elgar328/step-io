@@ -298,5 +298,60 @@ pub use refgraph::RefGraph;
 /// );
 /// # }
 /// ```
+///
+/// AP242's `styled_item_target` leaves out a descriptive item, which AP214
+/// lets a styled item style:
+///
+/// ```
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, style: m::PresentationStyleAssignmentId, point: m::CartesianPointId) {
+/// let _ = a.add_styled_item(
+///     "",
+///     vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
+///     m::Ap242StyledItemTargetRef::CartesianPoint(point),
+/// );
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, style: m::PresentationStyleAssignmentId, note: m::DescriptiveRepresentationItemId) {
+/// let _ = a.add_styled_item(
+///     "",
+///     vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
+///     m::Ap242StyledItemTargetRef::DescriptiveRepresentationItem(note),
+/// );
+/// # }
+/// ```
+///
+/// An over-riding styled item references the styled item it overrides, so it
+/// has a self-referencing constructor; AP242's `styled_item_target` leaves
+/// out styled items, so a plain styled item, whose only reference to one
+/// would be its `item`, has none:
+///
+/// ```
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, style: m::PresentationStyleAssignmentRef, point: m::CartesianPointId) {
+/// let name = a.text("");
+/// let _ = a.add_over_riding_styled_item_cyclic(|id| m::OverRidingStyledItem {
+///     name,
+///     styles: vec![style],
+///     item: m::StyledItemTargetOrRepresentationItemRef::CartesianPoint(point),
+///     over_ridden_style: m::StyledItemRef::OverRidingStyledItem(id),
+/// });
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, style: m::PresentationStyleAssignmentRef, point: m::CartesianPointId) {
+/// let name = a.text("");
+/// let _ = a.add_styled_item_cyclic(|_| m::StyledItem {
+///     name,
+///     styles: vec![style],
+///     item: m::StyledItemTargetOrRepresentationItemRef::CartesianPoint(point),
+/// });
+/// # }
+/// ```
 #[cfg(doctest)]
 mod ap242_narrowed_arguments {}

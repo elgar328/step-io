@@ -805,6 +805,154 @@ fn narrowed_attributes_are_checked_where_the_type_cannot() {
     );
 }
 
+/// Attributes the model takes wider, as older editions declare them, are
+/// checked against AP242's type where the argument's type cannot.
+#[test]
+fn widened_attributes_are_checked_where_the_type_cannot() {
+    let mut a = Ap242Author::new();
+    let point = a
+        .add_cartesian_point("", [0.0, 0.0, 0.0].into())
+        .expect("point");
+    let name = a.text("");
+
+    // AP242 types a tolerance magnitude as a length measure; the model, read
+    // from AP203/AP214 as well, takes any measure with unit.
+    let aspect = shape_aspect(&mut a);
+    let mm = a
+        .add_complex(vec![
+            m::PartialEntity::LengthUnit,
+            m::PartialEntity::NamedUnit { dimensions: None },
+            m::PartialEntity::SiUnit {
+                prefix: Some(m::SiPrefix::Milli),
+                name: m::SiUnitName::Metre,
+            },
+        ])
+        .expect("si length unit complex");
+    let length = a.text("LENGTH_MEASURE");
+    let plain = a
+        .add_measure_with_unit(
+            m::MeasureValue {
+                type_name: Some(length),
+                value: m::MeasureScalar::Real(0.1),
+            },
+            m::UnitRef::Complex(mm),
+        )
+        .expect("measure");
+    let tol = a.text("pos");
+    let err = a
+        .add_complex(vec![
+            m::PartialEntity::GeometricTolerance {
+                name: tol,
+                description: None,
+                magnitude: Some(m::MeasureWithUnitRef::MeasureWithUnit(plain)),
+                toleranced_shape_aspect: m::GeometricToleranceTargetRef::ShapeAspect(aspect),
+            },
+            m::PartialEntity::GeometricToleranceWithModifiers {
+                modifiers: vec![m::GeometricToleranceModifier::MaximumMaterialRequirement],
+            },
+            m::PartialEntity::PositionTolerance,
+        ])
+        .unwrap_err();
+    assert!(
+        matches!(
+            err,
+            AuthorError::NarrowedReference {
+                entity: "GEOMETRIC_TOLERANCE",
+                attribute: "magnitude"
+            }
+        ),
+        "{err:?}"
+    );
+
+    // AP242's styled_item_target leaves out a descriptive item, which AP214
+    // lets a styled item style.
+    let note = a
+        .add_descriptive_representation_item("note", "text")
+        .expect("item");
+    let style = a
+        .add_presentation_style_assignment(vec![m::PresentationStyleSelectRef::NullStyle(
+            m::NullStyle::Null,
+        )])
+        .expect("style");
+    let styled = a
+        .add_styled_item(
+            "",
+            vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
+            m::Ap242StyledItemTargetRef::CartesianPoint(point),
+        )
+        .expect("styled item");
+    let err = a
+        .add_over_riding_styled_item_cyclic(|_| m::OverRidingStyledItem {
+            name,
+            styles: vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
+            item: m::StyledItemTargetOrRepresentationItemRef::DescriptiveRepresentationItem(note),
+            over_ridden_style: m::StyledItemRef::StyledItem(styled),
+        })
+        .unwrap_err();
+    assert!(
+        matches!(
+            err,
+            AuthorError::NarrowedReference {
+                entity: "OVER_RIDING_STYLED_ITEM",
+                attribute: "item"
+            }
+        ),
+        "{err:?}"
+    );
+}
+
+/// A shape aspect of a minimal product.
+fn shape_aspect(a: &mut Ap242Author) -> m::ShapeAspectId {
+    let ac = a.add_application_context("mim").expect("ac");
+    let pc = a
+        .add_product_context(
+            "",
+            m::ApplicationContextRef::ApplicationContext(ac),
+            "mechanical",
+        )
+        .expect("pc");
+    let pdc = a
+        .add_product_definition_context(
+            "part definition",
+            m::ApplicationContextRef::ApplicationContext(ac),
+            "design",
+        )
+        .expect("pdc");
+    let product = a
+        .add_product(
+            "P1",
+            "part",
+            None,
+            vec![m::ProductContextRef::ProductContext(pc)],
+        )
+        .expect("product");
+    let pdf = a
+        .add_product_definition_formation("1", None, m::ProductRef::Product(product))
+        .expect("pdf");
+    let pd = a
+        .add_product_definition(
+            "design",
+            None,
+            m::ProductDefinitionFormationRef::ProductDefinitionFormation(pdf),
+            m::ProductDefinitionContextRef::ProductDefinitionContext(pdc),
+        )
+        .expect("pd");
+    let pds = a
+        .add_product_definition_shape(
+            "",
+            None,
+            m::CharacterizedDefinitionRef::ProductDefinition(pd),
+        )
+        .expect("pds");
+    a.add_shape_aspect(
+        "feature",
+        None,
+        m::ProductDefinitionShapeRef::ProductDefinitionShape(pds),
+        Some(m::Logical::True),
+    )
+    .expect("shape aspect")
+}
+
 /// AP242 redeclares a person-and-organization address to name exactly one
 /// organization and one person (`SET [1:1]`).
 #[test]

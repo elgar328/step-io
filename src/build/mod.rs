@@ -841,9 +841,9 @@ impl StepBuilder {
             m::PresentationStyleSelectRef::SurfaceStyleUsage(usage),
         ])?;
         let item = match target {
-            StyleTarget::Face(f) => m::StyledItemTargetRef::AdvancedFace(f),
-            StyleTarget::Solid(s) => m::StyledItemTargetRef::ManifoldSolidBrep(s),
-            StyleTarget::VoidSolid(s) => m::StyledItemTargetRef::BrepWithVoids(s),
+            StyleTarget::Face(f) => m::Ap242StyledItemTargetRef::AdvancedFace(f),
+            StyleTarget::Solid(s) => m::Ap242StyledItemTargetRef::ManifoldSolidBrep(s),
+            StyleTarget::VoidSolid(s) => m::Ap242StyledItemTargetRef::BrepWithVoids(s),
         };
         let styled = a.add_styled_item(
             "",
@@ -891,9 +891,9 @@ impl StepBuilder {
                 m::NullStyle::Null,
             )])?;
         let item = match target {
-            StyleTarget::Face(f) => m::StyledItemTargetRef::AdvancedFace(f),
-            StyleTarget::Solid(s) => m::StyledItemTargetRef::ManifoldSolidBrep(s),
-            StyleTarget::VoidSolid(s) => m::StyledItemTargetRef::BrepWithVoids(s),
+            StyleTarget::Face(f) => m::Ap242StyledItemTargetRef::AdvancedFace(f),
+            StyleTarget::Solid(s) => m::Ap242StyledItemTargetRef::ManifoldSolidBrep(s),
+            StyleTarget::VoidSolid(s) => m::Ap242StyledItemTargetRef::BrepWithVoids(s),
         };
         let styled = a.add_styled_item(
             "",

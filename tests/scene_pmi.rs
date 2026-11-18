@@ -595,6 +595,63 @@ fn reads_geometric_tolerances() {
     );
 }
 
+const AP214_HEADER: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\n\
+FILE_NAME('','',(''),(''),'','','');\n\
+FILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 3 1 1 }'));\n\
+ENDSEC;\nDATA;\n";
+
+// AP214 types a tolerance magnitude as any MEASURE_WITH_UNIT: length values
+// in two, a plane angle in the other.
+const TOL_AP214: &str = "\
+#1=APPLICATION_CONTEXT('test');\n\
+#2=PRODUCT_CONTEXT('',#1,'mechanical');\n\
+#3=PRODUCT_DEFINITION_CONTEXT('',#1,'design');\n\
+#10=PRODUCT('p','Part','',(#2));\n\
+#11=PRODUCT_DEFINITION_FORMATION('1','',#10);\n\
+#12=PRODUCT_DEFINITION('design','',#11,#3);\n\
+#13=PRODUCT_DEFINITION_SHAPE('','',#12);\n\
+#14=SHAPE_ASPECT('feature','',#13,.T.);\n\
+#22=( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+#23=( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+#40=MEASURE_WITH_UNIT(LENGTH_MEASURE(0.05),#22);\n\
+#41=FLATNESS_TOLERANCE('flat','',#40,#14);\n\
+#42=MEASURE_WITH_UNIT(PLANE_ANGLE_MEASURE(0.1),#23);\n\
+#43=STRAIGHTNESS_TOLERANCE('str','',#42,#14);\n\
+#44=MEASURE_WITH_UNIT(NON_NEGATIVE_LENGTH_MEASURE(0.02),#22);\n\
+#45=ROUNDNESS_TOLERANCE('round','',#44,#14);\n";
+
+#[test]
+fn reads_an_ap214_plain_measure_magnitude_only_as_a_length() {
+    let src = format!("{AP214_HEADER}{TOL_AP214}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let tols: Vec<_> = scene.all_tolerances().collect();
+    assert_eq!(tols.len(), 3, "every tolerance kept");
+
+    let flat = tols
+        .iter()
+        .find(|t| t.kind() == ToleranceKind::Flatness)
+        .expect("a flatness tolerance");
+    let m = flat.magnitude().expect("a length magnitude");
+    assert!((m - 0.05).abs() < 1e-9, "flatness magnitude = {m}");
+    let round = tols
+        .iter()
+        .find(|t| t.kind() == ToleranceKind::Roundness)
+        .expect("a roundness tolerance");
+    let m = round.magnitude().expect("a non-negative length magnitude");
+    assert!((m - 0.02).abs() < 1e-9, "roundness magnitude = {m}");
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+
+    let straight = tols
+        .iter()
+        .find(|t| t.kind() == ToleranceKind::Straightness)
+        .expect("a straightness tolerance");
+    assert!(straight.magnitude().is_none(), "an angle is not a length");
+    assert_eq!(scene.warnings().len(), 1);
+    assert!(scene.warnings()[0].message.contains("not a length measure"));
+}
+
 // A documented-part subtype (PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS) that
 // owns PMI: two shape aspects (hole/slot), a DATUM, and a DIMENSIONAL_SIZE on the
 // hole. Its PRODUCT_DEFINITION_SHAPE.definition points at the subtype, so this

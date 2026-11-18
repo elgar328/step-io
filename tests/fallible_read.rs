@@ -170,6 +170,25 @@ fn older_edition_form_of_a_narrowed_attribute_is_kept() {
     assert!(r.dropped.is_empty(), "{:?}", r.dropped);
 }
 
+/// AP203 and AP214 let a styled item style any representation item; AP242
+/// types it as a `styled_item_target`, which a descriptive item is not.
+/// Reading accepts what any edition allows, so the AP214 form is kept.
+#[test]
+fn older_edition_declaration_of_an_attribute_is_kept() {
+    let r = read_body(
+        "#1=DESCRIPTIVE_REPRESENTATION_ITEM('note','text');\n\
+         #2=COLOUR_RGB('',0.8,0.2,0.1);\n\
+         #3=FILL_AREA_STYLE_COLOUR('',#2);\n\
+         #4=FILL_AREA_STYLE('',(#3));\n\
+         #5=SURFACE_STYLE_FILL_AREA(#4);\n\
+         #6=SURFACE_SIDE_STYLE('',(#5));\n\
+         #7=SURFACE_STYLE_USAGE(.BOTH.,#6);\n\
+         #8=PRESENTATION_STYLE_ASSIGNMENT((#7));\n\
+         #9=STYLED_ITEM('',(#8),#1);\n",
+    );
+    assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+}
+
 /// AP242 edition 1 narrowed a tessellated shape representation's items to
 /// tessellated items; edition 2 dropped that. A PMI drawing model that is also
 /// a tessellated shape representation, holding a non-tessellated item as

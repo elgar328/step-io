@@ -267,7 +267,7 @@ macro_rules! leaf_tolerances {
             }
 
             /// `(name, magnitude)` for a dedicated-arena leaf tolerance.
-            fn dedicated_fields(&self) -> Option<(&'m str, Option<&'m m::LengthMeasureWithUnitRef>)> {
+            fn dedicated_fields(&self) -> Option<(&'m str, Option<&'m m::MeasureWithUnitRef>)> {
                 match self.which {
                     $( TolImpl::$ent(i) => {
                         let e = self.cx.model.$arena.get(i.0);
@@ -350,22 +350,21 @@ impl<'m> Tolerance<'m> {
     ///
     /// The number is raw, in the model's length unit — interpret it via
     /// [`Scene::units`], exactly as point coordinates and dimension values are
-    /// read. `None` when the tolerance carries no magnitude, or its magnitude is
-    /// a complex measure instance the walk cannot resolve (reported via
-    /// [`Scene::warnings`]).
+    /// read. AP203 and AP214 allow a plain `MEASURE_WITH_UNIT` here; its value
+    /// is taken when it is a length measure. `None` when the tolerance carries
+    /// no magnitude, or its magnitude is a complex measure instance the walk
+    /// cannot resolve or not a length (reported via [`Scene::warnings`]).
     pub fn magnitude(&self) -> Option<f64> {
         let this = self.about();
         let (_, mag) = this
             .dedicated_fields()
             .or_else(|| this.complex_geometric_tolerance())?;
-        mag.and_then(|r| length_measure_f64(this.cx, r))
+        mag.and_then(|r| tolerance_magnitude_f64(this.cx, r))
     }
 
     /// The `GEOMETRIC_TOLERANCE` supertype facet of a complex tolerance, as
     /// `(name, magnitude)`; `None` for a dedicated-arena tolerance.
-    fn complex_geometric_tolerance(
-        &self,
-    ) -> Option<(&'m str, Option<&'m m::LengthMeasureWithUnitRef>)> {
+    fn complex_geometric_tolerance(&self) -> Option<(&'m str, Option<&'m m::MeasureWithUnitRef>)> {
         let TolImpl::Complex(cuid) = self.which else {
             return None;
         };
@@ -406,20 +405,63 @@ impl<'m> Tolerance<'m> {
     }
 }
 
-/// Resolve a `LENGTH_MEASURE_WITH_UNIT` reference to its scalar value; a complex
-/// measure instance is reported and yields `None`.
-fn length_measure_f64(cx: Ctx<'_>, r: &m::LengthMeasureWithUnitRef) -> Option<f64> {
+/// Resolve a tolerance magnitude to its scalar length. AP242 types it as a
+/// `LENGTH_MEASURE_WITH_UNIT`; AP203 and AP214 allow any `MEASURE_WITH_UNIT`,
+/// whose value counts only when it is a length measure. A complex measure
+/// instance or a value of another kind is reported and yields `None`.
+fn tolerance_magnitude_f64(cx: Ctx<'_>, r: &m::MeasureWithUnitRef) -> Option<f64> {
+    let model = cx.model;
+    let length = |v: &m::MeasureValue| {
+        // Every edition's `measure_value` has these three length members.
+        let is_length = v.type_name.is_some_and(|t| {
+            let t = model.text(t);
+            [
+                "LENGTH_MEASURE",
+                "POSITIVE_LENGTH_MEASURE",
+                "NON_NEGATIVE_LENGTH_MEASURE",
+            ]
+            .iter()
+            .any(|n| t.eq_ignore_ascii_case(n))
+        });
+        if is_length {
+            Some(v.value.as_f64())
+        } else {
+            cx.warn("tolerance magnitude is not a length measure".to_owned());
+            None
+        }
+    };
     match r {
-        m::LengthMeasureWithUnitRef::LengthMeasureWithUnit(id) => Some(
-            cx.model
+        m::MeasureWithUnitRef::LengthMeasureWithUnit(id) => Some(
+            model
                 .length_measure_with_unit_arena
                 .get(id.0)
                 .value_component
                 .value
                 .as_f64(),
         ),
-        m::LengthMeasureWithUnitRef::Complex(_) => {
+        m::MeasureWithUnitRef::MeasureWithUnit(id) => {
+            length(&model.measure_with_unit_arena.get(id.0).value_component)
+        }
+        m::MeasureWithUnitRef::MeasureRepresentationItem(id) => length(
+            &model
+                .measure_representation_item_arena
+                .get(id.0)
+                .value_component,
+        ),
+        m::MeasureWithUnitRef::UncertaintyMeasureWithUnit(id) => length(
+            &model
+                .uncertainty_measure_with_unit_arena
+                .get(id.0)
+                .value_component,
+        ),
+        m::MeasureWithUnitRef::Complex(_) => {
             cx.warn("tolerance magnitude is a complex measure instance".to_owned());
+            None
+        }
+        m::MeasureWithUnitRef::MassMeasureWithUnit(_)
+        | m::MeasureWithUnitRef::PlaneAngleMeasureWithUnit(_)
+        | m::MeasureWithUnitRef::RatioMeasureWithUnit(_) => {
+            cx.warn("tolerance magnitude is not a length measure".to_owned());
             None
         }
     }

@@ -4358,14 +4358,18 @@ const FITS_STYLED_ITEM: &[&str] = &[
     "STYLED_ITEM",
     "TERMINATOR_SYMBOL",
 ];
-const FITS_STYLED_ITEM_TARGET: &[&str] = &[
+const FITS_STYLED_ITEM_TARGET_OR_REPRESENTATION_ITEM: &[&str] = &[
     "ADVANCED_BREP_SHAPE_REPRESENTATION",
     "ADVANCED_FACE",
+    "ANNOTATION_CURVE_OCCURRENCE",
+    "ANNOTATION_OCCURRENCE",
     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
     "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
     "ANNOTATION_PLANE",
+    "ANNOTATION_SYMBOL_OCCURRENCE",
     "ANNOTATION_TEXT",
     "ANNOTATION_TEXT_CHARACTER",
+    "ANNOTATION_TEXT_OCCURRENCE",
     "BEZIER_CURVE",
     "BEZIER_SURFACE",
     "BOUNDED_CURVE",
@@ -4387,11 +4391,14 @@ const FITS_STYLED_ITEM_TARGET: &[&str] = &[
     "CLOSED_SHELL",
     "COMPOSITE_CURVE",
     "COMPOSITE_TEXT",
+    "COMPOUND_REPRESENTATION_ITEM",
     "CONNECTED_FACE_SET",
+    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
     "CURVE",
     "DEFINITIONAL_REPRESENTATION",
     "DEGENERATE_TOROIDAL_SURFACE",
     "DIRECTION",
+    "DRAUGHTING_ANNOTATION_OCCURRENCE",
     "DRAUGHTING_CALLOUT",
     "DRAUGHTING_MODEL",
     "EDGE",
@@ -4412,16 +4419,21 @@ const FITS_STYLED_ITEM_TARGET: &[&str] = &[
     "GEOMETRIC_CURVE_SET",
     "GEOMETRIC_REPRESENTATION_ITEM",
     "GEOMETRIC_SET",
+    "INTEGER_REPRESENTATION_ITEM",
     "INTERSECTION_CURVE",
+    "LEADER_CURVE",
     "LEADER_DIRECTED_CALLOUT",
+    "LEADER_TERMINATOR",
     "LOOP",
     "MANIFOLD_SOLID_BREP",
     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
     "MAPPED_ITEM",
+    "MEASURE_REPRESENTATION_ITEM",
     "ONE_DIRECTION_REPEAT_FACTOR",
     "OPEN_SHELL",
     "ORIENTED_CLOSED_SHELL",
     "ORIENTED_EDGE",
+    "OVER_RIDING_STYLED_ITEM",
     "PATH",
     "PCURVE",
     "PLACEMENT",
@@ -4432,12 +4444,15 @@ const FITS_STYLED_ITEM_TARGET: &[&str] = &[
     "PRESENTATION_AREA",
     "PRESENTATION_REPRESENTATION",
     "PRESENTATION_VIEW",
+    "QUALIFIED_REPRESENTATION_ITEM",
     "QUASI_UNIFORM_CURVE",
     "QUASI_UNIFORM_SURFACE",
     "RATIONAL_B_SPLINE_CURVE",
     "RATIONAL_B_SPLINE_SURFACE",
+    "REAL_REPRESENTATION_ITEM",
     "REPOSITIONED_TESSELLATED_ITEM",
     "REPRESENTATION",
+    "REPRESENTATION_ITEM",
     "REPRESENTATION_REFERENCE",
     "SEAM_CURVE",
     "SHAPE_DIMENSION_REPRESENTATION",
@@ -4445,9 +4460,11 @@ const FITS_STYLED_ITEM_TARGET: &[&str] = &[
     "SHAPE_REPRESENTATION_WITH_PARAMETERS",
     "SHELL_BASED_SURFACE_MODEL",
     "SOLID_MODEL",
+    "STYLED_ITEM",
     "SURFACE",
     "SURFACE_CURVE",
     "SYMBOL_REPRESENTATION",
+    "TERMINATOR_SYMBOL",
     "TESSELLATED_GEOMETRIC_SET",
     "TESSELLATED_ITEM",
     "TESSELLATED_SHAPE_REPRESENTATION",
@@ -4458,6 +4475,7 @@ const FITS_STYLED_ITEM_TARGET: &[&str] = &[
     "TWO_DIRECTION_REPEAT_FACTOR",
     "UNIFORM_CURVE",
     "UNIFORM_SURFACE",
+    "VALUE_REPRESENTATION_ITEM",
     "VECTOR",
     "VERTEX",
     "VERTEX_POINT",
@@ -4772,8 +4790,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -4825,17 +4843,18 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 2,
                 name: "item",
                 allowed: &[
-                    14, 15, 24, 25, 26, 27, 29, 30, 32, 33, 34, 35, 61, 62, 63, 64, 65, 66, 67, 68,
-                    69, 70, 71, 72, 73, 74, 75, 77, 78, 79, 80, 81, 82, 84, 98, 99, 101, 107, 108,
-                    109, 113, 119, 120, 121, 122, 132, 133, 139, 155, 156, 157, 160, 175, 184, 186,
-                    192, 193, 194, 196, 197, 203, 209, 210, 211, 212, 213, 217, 218, 219, 220, 221,
-                    231, 234, 235, 243, 244, 249, 255, 260, 265, 269, 271, 272, 273, 281, 282, 283,
-                    291, 292, 293, 303, 304, 306, 309, 310, 319, 320, 321, 322, 326, 328, 329, 344,
-                    346, 351, 382, 383, 386, 387, 390, 391, 396, 403, 412, 413, 415, 416, 421, 422,
-                    429, 430, 431, 432, 447, 449, 451, 455, 456, 457, 458, 459, 460, 461, 462, 463,
-                    465, 477, 478, 480, 481, 486, 487, 490, 492, 493, 494, 495, 498,
+                    14, 15, 20, 21, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 61, 62, 63, 64,
+                    65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 77, 78, 79, 80, 81, 82, 84, 98, 99,
+                    101, 107, 108, 109, 113, 114, 119, 120, 121, 122, 124, 132, 133, 139, 155, 156,
+                    157, 160, 165, 175, 183, 184, 186, 192, 193, 194, 196, 197, 203, 209, 210, 211,
+                    212, 213, 217, 218, 219, 220, 221, 231, 234, 235, 243, 244, 249, 254, 255, 259,
+                    260, 261, 265, 269, 271, 272, 273, 277, 281, 282, 283, 291, 292, 293, 303, 304,
+                    305, 306, 309, 310, 319, 320, 321, 322, 326, 328, 329, 344, 346, 351, 381, 382,
+                    383, 386, 387, 389, 390, 391, 394, 396, 403, 412, 413, 415, 416, 421, 422, 428,
+                    429, 430, 431, 432, 447, 449, 451, 453, 454, 455, 456, 457, 458, 459, 460, 461,
+                    462, 463, 465, 477, 478, 480, 481, 486, 487, 489, 490, 492, 493, 494, 495, 498,
                 ],
-                complex_fits: FITS_STYLED_ITEM_TARGET,
+                complex_fits: FITS_STYLED_ITEM_TARGET_OR_REPRESENTATION_ITEM,
                 is_vec: false,
             },
         ],
@@ -5860,8 +5879,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -5893,8 +5912,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -6007,8 +6026,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -6146,17 +6165,18 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 2,
                 name: "item",
                 allowed: &[
-                    14, 15, 24, 25, 26, 27, 29, 30, 32, 33, 34, 35, 61, 62, 63, 64, 65, 66, 67, 68,
-                    69, 70, 71, 72, 73, 74, 75, 77, 78, 79, 80, 81, 82, 84, 98, 99, 101, 107, 108,
-                    109, 113, 119, 120, 121, 122, 132, 133, 139, 155, 156, 157, 160, 175, 184, 186,
-                    192, 193, 194, 196, 197, 203, 209, 210, 211, 212, 213, 217, 218, 219, 220, 221,
-                    231, 234, 235, 243, 244, 249, 255, 260, 265, 269, 271, 272, 273, 281, 282, 283,
-                    291, 292, 293, 303, 304, 306, 309, 310, 319, 320, 321, 322, 326, 328, 329, 344,
-                    346, 351, 382, 383, 386, 387, 390, 391, 396, 403, 412, 413, 415, 416, 421, 422,
-                    429, 430, 431, 432, 447, 449, 451, 455, 456, 457, 458, 459, 460, 461, 462, 463,
-                    465, 477, 478, 480, 481, 486, 487, 490, 492, 493, 494, 495, 498,
+                    14, 15, 20, 21, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 61, 62, 63, 64,
+                    65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 77, 78, 79, 80, 81, 82, 84, 98, 99,
+                    101, 107, 108, 109, 113, 114, 119, 120, 121, 122, 124, 132, 133, 139, 155, 156,
+                    157, 160, 165, 175, 183, 184, 186, 192, 193, 194, 196, 197, 203, 209, 210, 211,
+                    212, 213, 217, 218, 219, 220, 221, 231, 234, 235, 243, 244, 249, 254, 255, 259,
+                    260, 261, 265, 269, 271, 272, 273, 277, 281, 282, 283, 291, 292, 293, 303, 304,
+                    305, 306, 309, 310, 319, 320, 321, 322, 326, 328, 329, 344, 346, 351, 381, 382,
+                    383, 386, 387, 389, 390, 391, 394, 396, 403, 412, 413, 415, 416, 421, 422, 428,
+                    429, 430, 431, 432, 447, 449, 451, 453, 454, 455, 456, 457, 458, 459, 460, 461,
+                    462, 463, 465, 477, 478, 480, 481, 486, 487, 489, 490, 492, 493, 494, 495, 498,
                 ],
-                complex_fits: FITS_STYLED_ITEM_TARGET,
+                complex_fits: FITS_STYLED_ITEM_TARGET_OR_REPRESENTATION_ITEM,
                 is_vec: false,
             },
             RefSlot {
@@ -6296,8 +6316,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -6826,17 +6846,18 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 2,
                 name: "item",
                 allowed: &[
-                    14, 15, 24, 25, 26, 27, 29, 30, 32, 33, 34, 35, 61, 62, 63, 64, 65, 66, 67, 68,
-                    69, 70, 71, 72, 73, 74, 75, 77, 78, 79, 80, 81, 82, 84, 98, 99, 101, 107, 108,
-                    109, 113, 119, 120, 121, 122, 132, 133, 139, 155, 156, 157, 160, 175, 184, 186,
-                    192, 193, 194, 196, 197, 203, 209, 210, 211, 212, 213, 217, 218, 219, 220, 221,
-                    231, 234, 235, 243, 244, 249, 255, 260, 265, 269, 271, 272, 273, 281, 282, 283,
-                    291, 292, 293, 303, 304, 306, 309, 310, 319, 320, 321, 322, 326, 328, 329, 344,
-                    346, 351, 382, 383, 386, 387, 390, 391, 396, 403, 412, 413, 415, 416, 421, 422,
-                    429, 430, 431, 432, 447, 449, 451, 455, 456, 457, 458, 459, 460, 461, 462, 463,
-                    465, 477, 478, 480, 481, 486, 487, 490, 492, 493, 494, 495, 498,
+                    14, 15, 20, 21, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 61, 62, 63, 64,
+                    65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 77, 78, 79, 80, 81, 82, 84, 98, 99,
+                    101, 107, 108, 109, 113, 114, 119, 120, 121, 122, 124, 132, 133, 139, 155, 156,
+                    157, 160, 165, 175, 183, 184, 186, 192, 193, 194, 196, 197, 203, 209, 210, 211,
+                    212, 213, 217, 218, 219, 220, 221, 231, 234, 235, 243, 244, 249, 254, 255, 259,
+                    260, 261, 265, 269, 271, 272, 273, 277, 281, 282, 283, 291, 292, 293, 303, 304,
+                    305, 306, 309, 310, 319, 320, 321, 322, 326, 328, 329, 344, 346, 351, 381, 382,
+                    383, 386, 387, 389, 390, 391, 394, 396, 403, 412, 413, 415, 416, 421, 422, 428,
+                    429, 430, 431, 432, 447, 449, 451, 453, 454, 455, 456, 457, 458, 459, 460, 461,
+                    462, 463, 465, 477, 478, 480, 481, 486, 487, 489, 490, 492, 493, 494, 495, 498,
                 ],
-                complex_fits: FITS_STYLED_ITEM_TARGET,
+                complex_fits: FITS_STYLED_ITEM_TARGET_OR_REPRESENTATION_ITEM,
                 is_vec: false,
             },
         ],
@@ -7252,8 +7273,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -7377,8 +7398,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -7418,8 +7439,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -7444,8 +7465,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -7461,8 +7482,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 4,
                 name: "unit_size",
-                allowed: &[262, 323],
-                complex_fits: FITS_LENGTH_OR_PLANE_ANGLE_MEASURE_WITH_UNIT_SELECT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -7477,8 +7498,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -7494,8 +7515,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 4,
                 name: "unit_size",
-                allowed: &[262, 323],
-                complex_fits: FITS_LENGTH_OR_PLANE_ANGLE_MEASURE_WITH_UNIT_SELECT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
         ],
@@ -7503,8 +7524,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -7529,8 +7550,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -7844,8 +7865,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -8109,8 +8130,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -8278,17 +8299,18 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 2,
                 name: "item",
                 allowed: &[
-                    14, 15, 24, 25, 26, 27, 29, 30, 32, 33, 34, 35, 61, 62, 63, 64, 65, 66, 67, 68,
-                    69, 70, 71, 72, 73, 74, 75, 77, 78, 79, 80, 81, 82, 84, 98, 99, 101, 107, 108,
-                    109, 113, 119, 120, 121, 122, 132, 133, 139, 155, 156, 157, 160, 175, 184, 186,
-                    192, 193, 194, 196, 197, 203, 209, 210, 211, 212, 213, 217, 218, 219, 220, 221,
-                    231, 234, 235, 243, 244, 249, 255, 260, 265, 269, 271, 272, 273, 281, 282, 283,
-                    291, 292, 293, 303, 304, 306, 309, 310, 319, 320, 321, 322, 326, 328, 329, 344,
-                    346, 351, 382, 383, 386, 387, 390, 391, 396, 403, 412, 413, 415, 416, 421, 422,
-                    429, 430, 431, 432, 447, 449, 451, 455, 456, 457, 458, 459, 460, 461, 462, 463,
-                    465, 477, 478, 480, 481, 486, 487, 490, 492, 493, 494, 495, 498,
+                    14, 15, 20, 21, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 61, 62, 63, 64,
+                    65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 77, 78, 79, 80, 81, 82, 84, 98, 99,
+                    101, 107, 108, 109, 113, 114, 119, 120, 121, 122, 124, 132, 133, 139, 155, 156,
+                    157, 160, 165, 175, 183, 184, 186, 192, 193, 194, 196, 197, 203, 209, 210, 211,
+                    212, 213, 217, 218, 219, 220, 221, 231, 234, 235, 243, 244, 249, 254, 255, 259,
+                    260, 261, 265, 269, 271, 272, 273, 277, 281, 282, 283, 291, 292, 293, 303, 304,
+                    305, 306, 309, 310, 319, 320, 321, 322, 326, 328, 329, 344, 346, 351, 381, 382,
+                    383, 386, 387, 389, 390, 391, 394, 396, 403, 412, 413, 415, 416, 421, 422, 428,
+                    429, 430, 431, 432, 447, 449, 451, 453, 454, 455, 456, 457, 458, 459, 460, 461,
+                    462, 463, 465, 477, 478, 480, 481, 486, 487, 489, 490, 492, 493, 494, 495, 498,
                 ],
-                complex_fits: FITS_STYLED_ITEM_TARGET,
+                complex_fits: FITS_STYLED_ITEM_TARGET_OR_REPRESENTATION_ITEM,
                 is_vec: false,
             },
             RefSlot {
@@ -8312,8 +8334,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -8364,8 +8386,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -8542,8 +8564,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -8984,8 +9006,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 3,
                 name: "projected_length",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
         ],
@@ -9226,8 +9248,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -9536,8 +9558,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -9563,17 +9585,18 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
                 idx: 2,
                 name: "item",
                 allowed: &[
-                    14, 15, 24, 25, 26, 27, 29, 30, 32, 33, 34, 35, 61, 62, 63, 64, 65, 66, 67, 68,
-                    69, 70, 71, 72, 73, 74, 75, 77, 78, 79, 80, 81, 82, 84, 98, 99, 101, 107, 108,
-                    109, 113, 119, 120, 121, 122, 132, 133, 139, 155, 156, 157, 160, 175, 184, 186,
-                    192, 193, 194, 196, 197, 203, 209, 210, 211, 212, 213, 217, 218, 219, 220, 221,
-                    231, 234, 235, 243, 244, 249, 255, 260, 265, 269, 271, 272, 273, 281, 282, 283,
-                    291, 292, 293, 303, 304, 306, 309, 310, 319, 320, 321, 322, 326, 328, 329, 344,
-                    346, 351, 382, 383, 386, 387, 390, 391, 396, 403, 412, 413, 415, 416, 421, 422,
-                    429, 430, 431, 432, 447, 449, 451, 455, 456, 457, 458, 459, 460, 461, 462, 463,
-                    465, 477, 478, 480, 481, 486, 487, 490, 492, 493, 494, 495, 498,
+                    14, 15, 20, 21, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 61, 62, 63, 64,
+                    65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 77, 78, 79, 80, 81, 82, 84, 98, 99,
+                    101, 107, 108, 109, 113, 114, 119, 120, 121, 122, 124, 132, 133, 139, 155, 156,
+                    157, 160, 165, 175, 183, 184, 186, 192, 193, 194, 196, 197, 203, 209, 210, 211,
+                    212, 213, 217, 218, 219, 220, 221, 231, 234, 235, 243, 244, 249, 254, 255, 259,
+                    260, 261, 265, 269, 271, 272, 273, 277, 281, 282, 283, 291, 292, 293, 303, 304,
+                    305, 306, 309, 310, 319, 320, 321, 322, 326, 328, 329, 344, 346, 351, 381, 382,
+                    383, 386, 387, 389, 390, 391, 394, 396, 403, 412, 413, 415, 416, 421, 422, 428,
+                    429, 430, 431, 432, 447, 449, 451, 453, 454, 455, 456, 457, 458, 459, 460, 461,
+                    462, 463, 465, 477, 478, 480, 481, 486, 487, 489, 490, 492, 493, 494, 495, 498,
                 ],
-                complex_fits: FITS_STYLED_ITEM_TARGET,
+                complex_fits: FITS_STYLED_ITEM_TARGET_OR_REPRESENTATION_ITEM,
                 is_vec: false,
             },
         ],
@@ -9641,8 +9664,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -9803,8 +9826,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -10113,8 +10136,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -10190,8 +10213,8 @@ pub fn ref_slots(ix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -11114,8 +11137,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 2,
                 name: "magnitude",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
             RefSlot {
@@ -11146,8 +11169,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
         159 => &[RefSlot {
             idx: 0,
             name: "unit_size",
-            allowed: &[262, 323],
-            complex_fits: FITS_LENGTH_OR_PLANE_ANGLE_MEASURE_WITH_UNIT_SELECT,
+            allowed: &[262, 274, 277, 278, 323, 384, 483],
+            complex_fits: FITS_MEASURE_WITH_UNIT,
             is_vec: false,
         }],
         160 => &[RefSlot {
@@ -11601,8 +11624,8 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
             RefSlot {
                 idx: 1,
                 name: "projected_length",
-                allowed: &[262],
-                complex_fits: FITS_LENGTH_MEASURE_WITH_UNIT,
+                allowed: &[262, 274, 277, 278, 323, 384, 483],
+                complex_fits: FITS_MEASURE_WITH_UNIT,
                 is_vec: false,
             },
         ],
@@ -11808,17 +11831,18 @@ pub fn complex_ref_slots(pix: u16) -> &'static [RefSlot] {
                 idx: 1,
                 name: "item",
                 allowed: &[
-                    14, 15, 24, 25, 26, 27, 29, 30, 32, 33, 34, 35, 61, 62, 63, 64, 65, 66, 67, 68,
-                    69, 70, 71, 72, 73, 74, 75, 77, 78, 79, 80, 81, 82, 84, 98, 99, 101, 107, 108,
-                    109, 113, 119, 120, 121, 122, 132, 133, 139, 155, 156, 157, 160, 175, 184, 186,
-                    192, 193, 194, 196, 197, 203, 209, 210, 211, 212, 213, 217, 218, 219, 220, 221,
-                    231, 234, 235, 243, 244, 249, 255, 260, 265, 269, 271, 272, 273, 281, 282, 283,
-                    291, 292, 293, 303, 304, 306, 309, 310, 319, 320, 321, 322, 326, 328, 329, 344,
-                    346, 351, 382, 383, 386, 387, 390, 391, 396, 403, 412, 413, 415, 416, 421, 422,
-                    429, 430, 431, 432, 447, 449, 451, 455, 456, 457, 458, 459, 460, 461, 462, 463,
-                    465, 477, 478, 480, 481, 486, 487, 490, 492, 493, 494, 495, 498,
+                    14, 15, 20, 21, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 61, 62, 63, 64,
+                    65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 77, 78, 79, 80, 81, 82, 84, 98, 99,
+                    101, 107, 108, 109, 113, 114, 119, 120, 121, 122, 124, 132, 133, 139, 155, 156,
+                    157, 160, 165, 175, 183, 184, 186, 192, 193, 194, 196, 197, 203, 209, 210, 211,
+                    212, 213, 217, 218, 219, 220, 221, 231, 234, 235, 243, 244, 249, 254, 255, 259,
+                    260, 261, 265, 269, 271, 272, 273, 277, 281, 282, 283, 291, 292, 293, 303, 304,
+                    305, 306, 309, 310, 319, 320, 321, 322, 326, 328, 329, 344, 346, 351, 381, 382,
+                    383, 386, 387, 389, 390, 391, 394, 396, 403, 412, 413, 415, 416, 421, 422, 428,
+                    429, 430, 431, 432, 447, 449, 451, 453, 454, 455, 456, 457, 458, 459, 460, 461,
+                    462, 463, 465, 477, 478, 480, 481, 486, 487, 489, 490, 492, 493, 494, 495, 498,
                 ],
-                complex_fits: FITS_STYLED_ITEM_TARGET,
+                complex_fits: FITS_STYLED_ITEM_TARGET_OR_REPRESENTATION_ITEM,
                 is_vec: false,
             },
         ],
@@ -13522,7 +13546,7 @@ fn build_annotation_occurrence_arena(
             tt,
         ))?,
         styles: Vec::new(),
-        item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
+        item: StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(
             AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
     })
@@ -15603,7 +15627,7 @@ fn build_context_dependent_over_riding_styled_item_arena(
             tt,
         ))?,
         styles: Vec::new(),
-        item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
+        item: StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(
             AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
         over_ridden_style: StyledItemRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(
@@ -16799,7 +16823,7 @@ fn build_draughting_annotation_occurrence_arena(
             tt,
         ))?,
         styles: Vec::new(),
-        item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
+        item: StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(
             AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
     })
@@ -17788,9 +17812,7 @@ fn build_geometric_tolerance_with_defined_area_unit_arena(
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
             AllAroundShapeAspectId(u32::MAX),
         ),
-        unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(
-            LengthMeasureWithUnitId(u32::MAX),
-        ),
+        unit_size: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)),
         area_type: (match req(
             attributes,
             5,
@@ -17835,9 +17857,7 @@ fn build_geometric_tolerance_with_defined_unit_arena(
         toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(
             AllAroundShapeAspectId(u32::MAX),
         ),
-        unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(
-            LengthMeasureWithUnitId(u32::MAX),
-        ),
+        unit_size: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)),
     })
 }
 
@@ -19103,7 +19123,7 @@ fn build_over_riding_styled_item_arena(
             tt,
         ))?,
         styles: Vec::new(),
-        item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
+        item: StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(
             AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
         over_ridden_style: StyledItemRef::AnnotationCurveOccurrence(AnnotationCurveOccurrenceId(
@@ -20512,7 +20532,7 @@ fn build_projected_zone_definition_arena(
         zone: ToleranceZoneRef::ToleranceZone(ToleranceZoneId(u32::MAX)),
         boundaries: Vec::new(),
         projection_end: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)),
-        projected_length: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(
+        projected_length: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(
             u32::MAX,
         )),
     })
@@ -21492,7 +21512,7 @@ fn build_styled_item_arena(
             tt,
         ))?,
         styles: Vec::new(),
-        item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(
+        item: StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(
             AdvancedBrepShapeRepresentationId(u32::MAX),
         ),
     })
@@ -30163,8 +30183,8 @@ fn resolve_angularity_tolerance_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(
                         idmap
                             .get(as_ref_id(a, "ANGULARITY_TOLERANCE.magnitude")?)
                             .ok_or_else(|| {
@@ -30309,8 +30329,8 @@ fn resolve_annotation_occurrence_arena(
     };
     let item_v = {
         let a = req(attrs, 2, "ANNOTATION_OCCURRENCE.item")?;
-        ((|| -> Result<StyledItemTargetRef, String> {
-            Ok(StyledItemTargetRef::from_any(
+        ((|| -> Result<StyledItemTargetOrRepresentationItemRef, String> {
+            Ok(StyledItemTargetOrRepresentationItemRef::from_any(
                 idmap
                     .get(as_ref_id(a, "ANNOTATION_OCCURRENCE.item")?)
                     .ok_or_else(|| format!("ANNOTATION_OCCURRENCE.item: dangling ref"))?,
@@ -33202,8 +33222,8 @@ fn resolve_circular_runout_tolerance_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(
                         idmap
                             .get(as_ref_id(a, "CIRCULAR_RUNOUT_TOLERANCE.magnitude")?)
                             .ok_or_else(|| {
@@ -33318,8 +33338,8 @@ fn resolve_coaxiality_tolerance_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(
                         idmap
                             .get(as_ref_id(a, "COAXIALITY_TOLERANCE.magnitude")?)
                             .ok_or_else(|| {
@@ -33681,8 +33701,8 @@ fn resolve_concentricity_tolerance_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(
                         idmap
                             .get(as_ref_id(a, "CONCENTRICITY_TOLERANCE.magnitude")?)
                             .ok_or_else(|| {
@@ -34077,8 +34097,8 @@ fn resolve_context_dependent_over_riding_styled_item_arena(
     };
     let item_v = {
         let a = req(attrs, 2, "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.item")?;
-        ((|| -> Result<StyledItemTargetRef, String> {
-            Ok(StyledItemTargetRef::from_any(
+        ((|| -> Result<StyledItemTargetOrRepresentationItemRef, String> {
+            Ok(StyledItemTargetOrRepresentationItemRef::from_any(
                 idmap
                     .get(as_ref_id(
                         a,
@@ -34500,8 +34520,8 @@ fn resolve_cylindricity_tolerance_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(
                         idmap
                             .get(as_ref_id(a, "CYLINDRICITY_TOLERANCE.magnitude")?)
                             .ok_or_else(|| {
@@ -35996,8 +36016,8 @@ fn resolve_draughting_annotation_occurrence_arena(
     };
     let item_v = {
         let a = req(attrs, 2, "DRAUGHTING_ANNOTATION_OCCURRENCE.item")?;
-        ((|| -> Result<StyledItemTargetRef, String> {
-            Ok(StyledItemTargetRef::from_any(
+        ((|| -> Result<StyledItemTargetOrRepresentationItemRef, String> {
+            Ok(StyledItemTargetOrRepresentationItemRef::from_any(
                 idmap
                     .get(as_ref_id(a, "DRAUGHTING_ANNOTATION_OCCURRENCE.item")?)
                     .ok_or_else(|| {
@@ -37275,8 +37295,8 @@ fn resolve_flatness_tolerance_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(
                         idmap
                             .get(as_ref_id(a, "FLATNESS_TOLERANCE.magnitude")?)
                             .ok_or_else(|| format!("FLATNESS_TOLERANCE.magnitude: dangling ref"))?,
@@ -37609,8 +37629,8 @@ fn resolve_geometric_tolerance_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(
                         idmap
                             .get(as_ref_id(a, "GEOMETRIC_TOLERANCE.magnitude")?)
                             .ok_or_else(|| {
@@ -37698,8 +37718,8 @@ fn resolve_geometric_tolerance_with_datum_reference_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(idmap.get(as_ref_id(a, "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE.magnitude")?).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE.magnitude: dangling ref"))?).map_err(|e| format!("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE.magnitude: {e}"))?)
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(idmap.get(as_ref_id(a, "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE.magnitude")?).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE.magnitude: dangling ref"))?).map_err(|e| format!("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE.magnitude: {e}"))?)
                 })())?,
             ),
         }
@@ -37749,8 +37769,8 @@ fn resolve_geometric_tolerance_with_defined_area_unit_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(idmap.get(as_ref_id(a, "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.magnitude")?).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.magnitude: dangling ref"))?).map_err(|e| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.magnitude: {e}"))?)
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(idmap.get(as_ref_id(a, "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.magnitude")?).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.magnitude: dangling ref"))?).map_err(|e| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.magnitude: {e}"))?)
                 })())?,
             ),
         }
@@ -37771,8 +37791,8 @@ fn resolve_geometric_tolerance_with_defined_area_unit_arena(
             4,
             "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.unit_size",
         )?;
-        ((|| -> Result<LengthOrPlaneAngleMeasureWithUnitSelectRef, String> {
-            Ok(LengthOrPlaneAngleMeasureWithUnitSelectRef::from_any(
+        ((|| -> Result<MeasureWithUnitRef, String> {
+            Ok(MeasureWithUnitRef::from_any(
                 idmap
                     .get(as_ref_id(
                         a,
@@ -37827,8 +37847,8 @@ fn resolve_geometric_tolerance_with_defined_unit_arena(
             Attribute::Unset => None,
             _ => {
                 Some(
-                    ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                        Ok(LengthMeasureWithUnitRef::from_any(idmap.get(as_ref_id(a, "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.magnitude")?).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.magnitude: dangling ref"))?).map_err(|e| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.magnitude: {e}"))?)
+                    ((|| -> Result<MeasureWithUnitRef, String> {
+                        Ok(MeasureWithUnitRef::from_any(idmap.get(as_ref_id(a, "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.magnitude")?).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.magnitude: dangling ref"))?).map_err(|e| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.magnitude: {e}"))?)
                     })())?,
                 )
             }
@@ -37846,8 +37866,8 @@ fn resolve_geometric_tolerance_with_defined_unit_arena(
     };
     let unit_size_v = {
         let a = req(attrs, 4, "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.unit_size")?;
-        ((|| -> Result<LengthOrPlaneAngleMeasureWithUnitSelectRef, String> {
-            Ok(LengthOrPlaneAngleMeasureWithUnitSelectRef::from_any(
+        ((|| -> Result<MeasureWithUnitRef, String> {
+            Ok(MeasureWithUnitRef::from_any(
                 idmap
                     .get(as_ref_id(
                         a,
@@ -37887,8 +37907,8 @@ fn resolve_geometric_tolerance_with_maximum_tolerance_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(idmap.get(as_ref_id(a, "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.magnitude")?).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.magnitude: dangling ref"))?).map_err(|e| format!("GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.magnitude: {e}"))?)
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(idmap.get(as_ref_id(a, "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.magnitude")?).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.magnitude: dangling ref"))?).map_err(|e| format!("GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE.magnitude: {e}"))?)
                 })())?,
             ),
         }
@@ -37936,8 +37956,8 @@ fn resolve_geometric_tolerance_with_modifiers_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(
                         idmap
                             .get(as_ref_id(
                                 a,
@@ -38676,8 +38696,8 @@ fn resolve_line_profile_tolerance_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(
                         idmap
                             .get(as_ref_id(a, "LINE_PROFILE_TOLERANCE.magnitude")?)
                             .ok_or_else(|| {
@@ -39364,8 +39384,8 @@ fn resolve_modified_geometric_tolerance_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(
                         idmap
                             .get(as_ref_id(a, "MODIFIED_GEOMETRIC_TOLERANCE.magnitude")?)
                             .ok_or_else(|| {
@@ -39831,8 +39851,8 @@ fn resolve_over_riding_styled_item_arena(
     };
     let item_v = {
         let a = req(attrs, 2, "OVER_RIDING_STYLED_ITEM.item")?;
-        ((|| -> Result<StyledItemTargetRef, String> {
-            Ok(StyledItemTargetRef::from_any(
+        ((|| -> Result<StyledItemTargetOrRepresentationItemRef, String> {
+            Ok(StyledItemTargetOrRepresentationItemRef::from_any(
                 idmap
                     .get(as_ref_id(a, "OVER_RIDING_STYLED_ITEM.item")?)
                     .ok_or_else(|| format!("OVER_RIDING_STYLED_ITEM.item: dangling ref"))?,
@@ -39903,8 +39923,8 @@ fn resolve_parallelism_tolerance_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(
                         idmap
                             .get(as_ref_id(a, "PARALLELISM_TOLERANCE.magnitude")?)
                             .ok_or_else(|| {
@@ -40052,8 +40072,8 @@ fn resolve_perpendicularity_tolerance_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(
                         idmap
                             .get(as_ref_id(a, "PERPENDICULARITY_TOLERANCE.magnitude")?)
                             .ok_or_else(|| {
@@ -40669,8 +40689,8 @@ fn resolve_position_tolerance_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(
                         idmap
                             .get(as_ref_id(a, "POSITION_TOLERANCE.magnitude")?)
                             .ok_or_else(|| format!("POSITION_TOLERANCE.magnitude: dangling ref"))?,
@@ -41873,8 +41893,8 @@ fn resolve_projected_zone_definition_arena(
     };
     let projected_length_v = {
         let a = req(attrs, 3, "PROJECTED_ZONE_DEFINITION.projected_length")?;
-        ((|| -> Result<LengthMeasureWithUnitRef, String> {
-            Ok(LengthMeasureWithUnitRef::from_any(
+        ((|| -> Result<MeasureWithUnitRef, String> {
+            Ok(MeasureWithUnitRef::from_any(
                 idmap
                     .get(as_ref_id(a, "PROJECTED_ZONE_DEFINITION.projected_length")?)
                     .ok_or_else(|| {
@@ -42571,8 +42591,8 @@ fn resolve_roundness_tolerance_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(
                         idmap
                             .get(as_ref_id(a, "ROUNDNESS_TOLERANCE.magnitude")?)
                             .ok_or_else(|| {
@@ -43383,8 +43403,8 @@ fn resolve_straightness_tolerance_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(
                         idmap
                             .get(as_ref_id(a, "STRAIGHTNESS_TOLERANCE.magnitude")?)
                             .ok_or_else(|| {
@@ -43450,8 +43470,8 @@ fn resolve_styled_item_arena(
     };
     let item_v = {
         let a = req(attrs, 2, "STYLED_ITEM.item")?;
-        ((|| -> Result<StyledItemTargetRef, String> {
-            Ok(StyledItemTargetRef::from_any(
+        ((|| -> Result<StyledItemTargetOrRepresentationItemRef, String> {
+            Ok(StyledItemTargetOrRepresentationItemRef::from_any(
                 idmap
                     .get(as_ref_id(a, "STYLED_ITEM.item")?)
                     .ok_or_else(|| format!("STYLED_ITEM.item: dangling ref"))?,
@@ -43614,8 +43634,8 @@ fn resolve_surface_profile_tolerance_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(
                         idmap
                             .get(as_ref_id(a, "SURFACE_PROFILE_TOLERANCE.magnitude")?)
                             .ok_or_else(|| {
@@ -44188,8 +44208,8 @@ fn resolve_symmetry_tolerance_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(
                         idmap
                             .get(as_ref_id(a, "SYMMETRY_TOLERANCE.magnitude")?)
                             .ok_or_else(|| format!("SYMMETRY_TOLERANCE.magnitude: dangling ref"))?,
@@ -45111,8 +45131,8 @@ fn resolve_total_runout_tolerance_arena(
         match a {
             Attribute::Unset => None,
             _ => Some(
-                ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                    Ok(LengthMeasureWithUnitRef::from_any(
+                ((|| -> Result<MeasureWithUnitRef, String> {
+                    Ok(MeasureWithUnitRef::from_any(
                         idmap
                             .get(as_ref_id(a, "TOTAL_RUNOUT_TOLERANCE.magnitude")?)
                             .ok_or_else(|| {
@@ -45358,8 +45378,8 @@ fn resolve_unequally_disposed_geometric_tolerance_arena(
             Attribute::Unset => None,
             _ => {
                 Some(
-                    ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                        Ok(LengthMeasureWithUnitRef::from_any(idmap.get(as_ref_id(a, "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.magnitude")?).ok_or_else(|| format!("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.magnitude: dangling ref"))?).map_err(|e| format!("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.magnitude: {e}"))?)
+                    ((|| -> Result<MeasureWithUnitRef, String> {
+                        Ok(MeasureWithUnitRef::from_any(idmap.get(as_ref_id(a, "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.magnitude")?).ok_or_else(|| format!("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.magnitude: dangling ref"))?).map_err(|e| format!("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.magnitude: {e}"))?)
                     })())?,
                 )
             }
@@ -45877,7 +45897,7 @@ fn read_complex_parts_norefs(
         "GEOMETRIC_TOLERANCE" => PartialEntity::GeometricTolerance { name: (as_text(req(&p.attributes, 0, "GEOMETRIC_TOLERANCE.name")?, "GEOMETRIC_TOLERANCE.name", tt))?, description: match req(&p.attributes, 1, "GEOMETRIC_TOLERANCE.description")? { Attribute::Unset => None, other => Some((as_text(other, "GEOMETRIC_TOLERANCE.description", tt))?) }, magnitude: None, toleranced_shape_aspect: GeometricToleranceTargetRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), },
         "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE" => PartialEntity::GeometricToleranceWithDatumReference { datum_system: Vec::new(), },
         "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT" => PartialEntity::GeometricToleranceWithDefinedAreaUnit { area_type: (match req(&p.attributes, 0, "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.area_type")? { Attribute::Enum(s) => AreaUnitType::parse(s).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.area_type: bad enum {s:?}")), o => Err(format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT.area_type: expected enum, got {o:?}")) })?, second_unit_size: None, },
-        "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT" => PartialEntity::GeometricToleranceWithDefinedUnit { unit_size: LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
+        "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT" => PartialEntity::GeometricToleranceWithDefinedUnit { unit_size: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
         "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE" => PartialEntity::GeometricToleranceWithMaximumTolerance { maximum_upper_tolerance: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
         "GEOMETRIC_TOLERANCE_WITH_MODIFIERS" => PartialEntity::GeometricToleranceWithModifiers { modifiers: (match req(&p.attributes, 0, "GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers")? { Attribute::List(l) => l.iter().map(|e| match e { Attribute::Enum(s) => GeometricToleranceModifier::parse(s).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers: bad enum {s:?}")), o => Err(format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers: expected enum, got {o:?}")) }).collect::<Result<Vec<_>, String>>(), o => Err(format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers: expected list, got {o:?}")) })?, },
         "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION" => PartialEntity::GeometricallyBoundedSurfaceShapeRepresentation,
@@ -45975,7 +45995,7 @@ fn read_complex_parts_norefs(
         "PRODUCT_DEFINITION_USAGE" => PartialEntity::ProductDefinitionUsage,
         "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS" => PartialEntity::ProductDefinitionWithAssociatedDocuments { documentation_ids: Vec::new(), },
         "PRODUCT_RELATED_PRODUCT_CATEGORY" => PartialEntity::ProductRelatedProductCategory { products: Vec::new(), },
-        "PROJECTED_ZONE_DEFINITION" => PartialEntity::ProjectedZoneDefinition { projection_end: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), projected_length: LengthMeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
+        "PROJECTED_ZONE_DEFINITION" => PartialEntity::ProjectedZoneDefinition { projection_end: ShapeAspectRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), projected_length: MeasureWithUnitRef::LengthMeasureWithUnit(LengthMeasureWithUnitId(u32::MAX)), },
         "PROPERTY_DEFINITION" => PartialEntity::PropertyDefinition { name: (as_text(req(&p.attributes, 0, "PROPERTY_DEFINITION.name")?, "PROPERTY_DEFINITION.name", tt))?, description: match req(&p.attributes, 1, "PROPERTY_DEFINITION.description")? { Attribute::Unset => None, other => Some((as_text(other, "PROPERTY_DEFINITION.description", tt))?) }, definition: CharacterizedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), },
         "PROPERTY_DEFINITION_REPRESENTATION" => PartialEntity::PropertyDefinitionRepresentation { definition: RepresentedDefinitionRef::AllAroundShapeAspect(AllAroundShapeAspectId(u32::MAX)), used_representation: RepresentationRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
         "QUALIFIED_REPRESENTATION_ITEM" => PartialEntity::QualifiedRepresentationItem { qualifiers: Vec::new(), },
@@ -46015,7 +46035,7 @@ fn read_complex_parts_norefs(
         "STATE_OBSERVED" => PartialEntity::StateObserved { name: (as_text(req(&p.attributes, 0, "STATE_OBSERVED.name")?, "STATE_OBSERVED.name", tt))?, description: match req(&p.attributes, 1, "STATE_OBSERVED.description")? { Attribute::Unset => None, other => Some((as_text(other, "STATE_OBSERVED.description", tt))?) }, },
         "STATE_TYPE" => PartialEntity::StateType { name: (as_text(req(&p.attributes, 0, "STATE_TYPE.name")?, "STATE_TYPE.name", tt))?, description: match req(&p.attributes, 1, "STATE_TYPE.description")? { Attribute::Unset => None, other => Some((as_text(other, "STATE_TYPE.description", tt))?) }, },
         "STRAIGHTNESS_TOLERANCE" => PartialEntity::StraightnessTolerance,
-        "STYLED_ITEM" => PartialEntity::StyledItem { styles: Vec::new(), item: StyledItemTargetRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
+        "STYLED_ITEM" => PartialEntity::StyledItem { styles: Vec::new(), item: StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId(u32::MAX)), },
         "SURFACE" => PartialEntity::Surface,
         "SURFACE_CURVE" => PartialEntity::SurfaceCurve { curve_3d: CurveRef::BSplineCurve(BSplineCurveId(u32::MAX)), associated_geometry: Vec::new(), master_representation: (match req(&p.attributes, 2, "SURFACE_CURVE.master_representation")? { Attribute::Enum(s) => PreferredSurfaceCurveRepresentation::parse(s).ok_or_else(|| format!("SURFACE_CURVE.master_representation: bad enum {s:?}")), o => Err(format!("SURFACE_CURVE.master_representation: expected enum, got {o:?}")) })?, },
         "SURFACE_PROFILE_TOLERANCE" => PartialEntity::SurfaceProfileTolerance,
@@ -47611,8 +47631,8 @@ fn resolve_complex(
                     match a {
                         Attribute::Unset => None,
                         _ => Some(
-                            ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                                Ok(LengthMeasureWithUnitRef::from_any(
+                            ((|| -> Result<MeasureWithUnitRef, String> {
+                                Ok(MeasureWithUnitRef::from_any(
                                     idmap
                                         .get(as_ref_id(a, "GEOMETRIC_TOLERANCE.magnitude")?)
                                         .ok_or_else(|| {
@@ -47673,8 +47693,8 @@ fn resolve_complex(
                         0,
                         "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.unit_size",
                     )?;
-                    ((|| -> Result<LengthOrPlaneAngleMeasureWithUnitSelectRef, String> {
-                        Ok(LengthOrPlaneAngleMeasureWithUnitSelectRef::from_any(idmap.get(as_ref_id(a, "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.unit_size")?).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.unit_size: dangling ref"))?).map_err(|e| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.unit_size: {e}"))?)
+                    ((|| -> Result<MeasureWithUnitRef, String> {
+                        Ok(MeasureWithUnitRef::from_any(idmap.get(as_ref_id(a, "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.unit_size")?).ok_or_else(|| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.unit_size: dangling ref"))?).map_err(|e| format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.unit_size: {e}"))?)
                     })())?
                 };
             }
@@ -48512,8 +48532,8 @@ fn resolve_complex(
                         1,
                         "PROJECTED_ZONE_DEFINITION.projected_length",
                     )?;
-                    ((|| -> Result<LengthMeasureWithUnitRef, String> {
-                        Ok(LengthMeasureWithUnitRef::from_any(
+                    ((|| -> Result<MeasureWithUnitRef, String> {
+                        Ok(MeasureWithUnitRef::from_any(
                             idmap
                                 .get(as_ref_id(a, "PROJECTED_ZONE_DEFINITION.projected_length")?)
                                 .ok_or_else(|| {
@@ -48835,8 +48855,8 @@ fn resolve_complex(
                 };
                 *item = {
                     let a = req(&p.attributes, 1, "STYLED_ITEM.item")?;
-                    ((|| -> Result<StyledItemTargetRef, String> {
-                        Ok(StyledItemTargetRef::from_any(
+                    ((|| -> Result<StyledItemTargetOrRepresentationItemRef, String> {
+                        Ok(StyledItemTargetOrRepresentationItemRef::from_any(
                             idmap
                                 .get(as_ref_id(a, "STYLED_ITEM.item")?)
                                 .ok_or_else(|| format!("STYLED_ITEM.item: dangling ref"))?,

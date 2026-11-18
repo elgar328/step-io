@@ -21885,713 +21885,358 @@ impl<'a> Writer<'a> {
         }
     }
 
-    fn id_of_ref_styled_item_target(&self, r: &StyledItemTargetRef) -> u64 {
+    fn id_of_ref_styled_item_target_or_representation_item(
+        &self,
+        r: &StyledItemTargetOrRepresentationItemRef,
+    ) -> u64 {
         match r {
-            StyledItemTargetRef::AdvancedBrepShapeRepresentation(i) => {
-                self.advanced_brep_shape_representation_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::AdvancedFace(i) => {
-                self.advanced_face_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::AnnotationPlaceholderLeaderLine(i) => {
-                self.annotation_placeholder_leader_line_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::AnnotationPlaceholderOccurrence(i) => {
-                self.annotation_placeholder_occurrence_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self
-                .annotation_placeholder_occurrence_with_leader_line_ids[i.0 as usize]
-                .expect("dep id assigned"),
-            StyledItemTargetRef::AnnotationPlane(i) => {
-                self.annotation_plane_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::AnnotationText(i) => {
-                self.annotation_text_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::AnnotationTextCharacter(i) => {
-                self.annotation_text_character_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::AnnotationToAnnotationLeaderLine(i) => self
-                .annotation_to_annotation_leader_line_ids[i.0 as usize]
-                .expect("dep id assigned"),
-            StyledItemTargetRef::AnnotationToModelLeaderLine(i) => {
-                self.annotation_to_model_leader_line_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::ApllPoint(i) => {
-                self.apll_point_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::ApllPointWithSurface(i) => {
-                self.apll_point_with_surface_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::AuxiliaryLeaderLine(i) => {
-                self.auxiliary_leader_line_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Axis1Placement(i) => {
-                self.axis1_placement_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Axis2Placement2d(i) => {
-                self.axis2_placement2d_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Axis2Placement3d(i) => {
-                self.axis2_placement3d_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::BSplineCurve(i) => {
-                self.b_spline_curve_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::BSplineCurveWithKnots(i) => {
-                self.b_spline_curve_with_knots_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::BSplineSurface(i) => {
-                self.b_spline_surface_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::BSplineSurfaceWithKnots(i) => {
-                self.b_spline_surface_with_knots_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::BezierCurve(i) => {
-                self.bezier_curve_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::BezierSurface(i) => {
-                self.bezier_surface_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::BoundedCurve(i) => {
-                self.bounded_curve_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::BoundedPcurve(i) => {
-                self.bounded_pcurve_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::BoundedSurface(i) => {
-                self.bounded_surface_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::BoundedSurfaceCurve(i) => {
-                self.bounded_surface_curve_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::BrepWithVoids(i) => {
-                self.brep_with_voids_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::CameraImage(i) => {
-                self.camera_image_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::CameraImage3dWithScale(i) => {
-                self.camera_image3d_with_scale_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::CameraModel(i) => {
-                self.camera_model_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::CameraModelD3(i) => {
-                self.camera_model_d3_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::CameraModelD3MultiClipping(i) => {
-                self.camera_model_d3_multi_clipping_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::CameraModelD3WithHlhsr(i) => {
-                self.camera_model_d3_with_hlhsr_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::CartesianPoint(i) => {
-                self.cartesian_point_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::CharacterizedRepresentation(i) => {
-                self.characterized_representation_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Circle(i) => {
-                self.circle_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::ClosedShell(i) => {
-                self.closed_shell_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::ComplexTriangulatedFace(i) => {
-                self.complex_triangulated_face_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::ComplexTriangulatedSurfaceSet(i) => {
-                self.complex_triangulated_surface_set_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::CompositeCurve(i) => {
-                self.composite_curve_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::CompositeText(i) => {
-                self.composite_text_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Conic(i) => self.conic_ids[i.0 as usize].expect("dep id assigned"),
-            StyledItemTargetRef::ConicalSurface(i) => {
-                self.conical_surface_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::ConnectedFaceSet(i) => {
-                self.connected_face_set_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::ConstructiveGeometryRepresentation(i) => self
-                .constructive_geometry_representation_ids[i.0 as usize]
-                .expect("dep id assigned"),
-            StyledItemTargetRef::CoordinatesList(i) => {
-                self.coordinates_list_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Curve(i) => self.curve_ids[i.0 as usize].expect("dep id assigned"),
-            StyledItemTargetRef::CylindricalSurface(i) => {
-                self.cylindrical_surface_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::DefinedCharacterGlyph(i) => {
-                self.defined_character_glyph_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::DefinedSymbol(i) => {
-                self.defined_symbol_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::DefinitionalRepresentation(i) => {
-                self.definitional_representation_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::DegenerateToroidalSurface(i) => {
-                self.degenerate_toroidal_surface_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Direction(i) => {
-                self.direction_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::DraughtingCallout(i) => {
-                self.draughting_callout_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::DraughtingModel(i) => {
-                self.draughting_model_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Edge(i) => self.edge_ids[i.0 as usize].expect("dep id assigned"),
-            StyledItemTargetRef::EdgeCurve(i) => {
-                self.edge_curve_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::EdgeLoop(i) => {
-                self.edge_loop_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::ElementarySurface(i) => {
-                self.elementary_surface_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Ellipse(i) => {
-                self.ellipse_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::ExternallyDefinedHatchStyle(i) => {
-                self.externally_defined_hatch_style_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::ExternallyDefinedTileStyle(i) => {
-                self.externally_defined_tile_style_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Face(i) => self.face_ids[i.0 as usize].expect("dep id assigned"),
-            StyledItemTargetRef::FaceBound(i) => {
-                self.face_bound_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::FaceOuterBound(i) => {
-                self.face_outer_bound_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::FaceSurface(i) => {
-                self.face_surface_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::FillAreaStyleHatching(i) => {
-                self.fill_area_style_hatching_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::FillAreaStyleTileColouredRegion(i) => self
-                .fill_area_style_tile_coloured_region_ids[i.0 as usize]
-                .expect("dep id assigned"),
-            StyledItemTargetRef::FillAreaStyleTileCurveWithStyle(i) => self
-                .fill_area_style_tile_curve_with_style_ids[i.0 as usize]
-                .expect("dep id assigned"),
-            StyledItemTargetRef::FillAreaStyleTileSymbolWithStyle(i) => self
-                .fill_area_style_tile_symbol_with_style_ids[i.0 as usize]
-                .expect("dep id assigned"),
-            StyledItemTargetRef::FillAreaStyleTiles(i) => {
-                self.fill_area_style_tiles_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::GeometricCurveSet(i) => {
-                self.geometric_curve_set_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::GeometricRepresentationItem(i) => {
-                self.geometric_representation_item_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::GeometricSet(i) => {
-                self.geometric_set_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self
-                .geometrically_bounded_surface_shape_representation_ids[i.0 as usize]
-                .expect("dep id assigned"),
-            StyledItemTargetRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self
-                .geometrically_bounded_wireframe_shape_representation_ids[i.0 as usize]
-                .expect("dep id assigned"),
-            StyledItemTargetRef::Hyperbola(i) => {
-                self.hyperbola_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::IntersectionCurve(i) => {
-                self.intersection_curve_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::LeaderDirectedCallout(i) => {
-                self.leader_directed_callout_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Line(i) => self.line_ids[i.0 as usize].expect("dep id assigned"),
-            StyledItemTargetRef::Loop(i) => self.loop_ids[i.0 as usize].expect("dep id assigned"),
-            StyledItemTargetRef::ManifoldSolidBrep(i) => {
-                self.manifold_solid_brep_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::ManifoldSurfaceShapeRepresentation(i) => self
-                .manifold_surface_shape_representation_ids[i.0 as usize]
-                .expect("dep id assigned"),
-            StyledItemTargetRef::MappedItem(i) => {
-                self.mapped_item_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::MechanicalDesignGeometricPresentationRepresentation(i) => self
-                .mechanical_design_geometric_presentation_representation_ids[i.0 as usize]
-                .expect("dep id assigned"),
-            StyledItemTargetRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
-                self.mechanical_design_presentation_representation_with_draughting_ids[i.0 as usize]
-                    .expect("dep id assigned")
-            }
-            StyledItemTargetRef::MechanicalDesignShadedPresentationRepresentation(i) => self
-                .mechanical_design_shaded_presentation_representation_ids[i.0 as usize]
-                .expect("dep id assigned"),
-            StyledItemTargetRef::OffsetSurface(i) => {
-                self.offset_surface_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::OneDirectionRepeatFactor(i) => {
-                self.one_direction_repeat_factor_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::OpenShell(i) => {
-                self.open_shell_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::OrientedClosedShell(i) => {
-                self.oriented_closed_shell_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::OrientedEdge(i) => {
-                self.oriented_edge_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Parabola(i) => {
-                self.parabola_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Path(i) => self.path_ids[i.0 as usize].expect("dep id assigned"),
-            StyledItemTargetRef::Pcurve(i) => {
-                self.pcurve_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Placement(i) => {
-                self.placement_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::PlanarBox(i) => {
-                self.planar_box_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::PlanarExtent(i) => {
-                self.planar_extent_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Plane(i) => self.plane_ids[i.0 as usize].expect("dep id assigned"),
-            StyledItemTargetRef::Point(i) => self.point_ids[i.0 as usize].expect("dep id assigned"),
-            StyledItemTargetRef::PolyLoop(i) => {
-                self.poly_loop_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Polyline(i) => {
-                self.polyline_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::PresentationArea(i) => {
-                self.presentation_area_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::PresentationRepresentation(i) => {
-                self.presentation_representation_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::PresentationView(i) => {
-                self.presentation_view_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::QuasiUniformCurve(i) => {
-                self.quasi_uniform_curve_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::QuasiUniformSurface(i) => {
-                self.quasi_uniform_surface_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::RationalBSplineCurve(i) => {
-                self.rational_b_spline_curve_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::RationalBSplineSurface(i) => {
-                self.rational_b_spline_surface_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::RepositionedTessellatedItem(i) => {
-                self.repositioned_tessellated_item_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Representation(i) => {
-                self.representation_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::RepresentationReference(i) => {
-                self.representation_reference_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::SeamCurve(i) => {
-                self.seam_curve_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::ShapeDimensionRepresentation(i) => {
-                self.shape_dimension_representation_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::ShapeRepresentation(i) => {
-                self.shape_representation_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::ShapeRepresentationWithParameters(i) => self
-                .shape_representation_with_parameters_ids[i.0 as usize]
-                .expect("dep id assigned"),
-            StyledItemTargetRef::ShellBasedSurfaceModel(i) => {
-                self.shell_based_surface_model_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::SolidModel(i) => {
-                self.solid_model_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::SphericalSurface(i) => {
-                self.spherical_surface_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Surface(i) => {
-                self.surface_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::SurfaceCurve(i) => {
-                self.surface_curve_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::SurfaceOfLinearExtrusion(i) => {
-                self.surface_of_linear_extrusion_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::SurfaceOfRevolution(i) => {
-                self.surface_of_revolution_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::SweptSurface(i) => {
-                self.swept_surface_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::SymbolRepresentation(i) => {
-                self.symbol_representation_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::SymbolTarget(i) => {
-                self.symbol_target_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::TessellatedCurveSet(i) => {
-                self.tessellated_curve_set_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::TessellatedFace(i) => {
-                self.tessellated_face_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::TessellatedGeometricSet(i) => {
-                self.tessellated_geometric_set_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::TessellatedItem(i) => {
-                self.tessellated_item_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::TessellatedShapeRepresentation(i) => {
-                self.tessellated_shape_representation_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::TessellatedShell(i) => {
-                self.tessellated_shell_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::TessellatedSolid(i) => {
-                self.tessellated_solid_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::TessellatedStructuredItem(i) => {
-                self.tessellated_structured_item_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::TessellatedSurfaceSet(i) => {
-                self.tessellated_surface_set_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::TextLiteral(i) => {
-                self.text_literal_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::TopologicalRepresentationItem(i) => {
-                self.topological_representation_item_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::ToroidalSurface(i) => {
-                self.toroidal_surface_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::TrimmedCurve(i) => {
-                self.trimmed_curve_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::TwoDirectionRepeatFactor(i) => {
-                self.two_direction_repeat_factor_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::UniformCurve(i) => {
-                self.uniform_curve_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::UniformSurface(i) => {
-                self.uniform_surface_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Vector(i) => {
-                self.vector_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Vertex(i) => {
-                self.vertex_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::VertexLoop(i) => {
-                self.vertex_loop_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::VertexPoint(i) => {
-                self.vertex_point_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::VertexShell(i) => {
-                self.vertex_shell_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::WireShell(i) => {
-                self.wire_shell_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::Complex(i) => {
-                self.complex_ids[i.0 as usize].expect("dep id assigned")
-            }
-        }
+        StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(i) => self.advanced_brep_shape_representation_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::AdvancedFace(i) => self.advanced_face_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::AnnotationCurveOccurrence(i) => self.annotation_curve_occurrence_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::AnnotationOccurrence(i) => self.annotation_occurrence_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderLeaderLine(i) => self.annotation_placeholder_leader_line_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderOccurrence(i) => self.annotation_placeholder_occurrence_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self.annotation_placeholder_occurrence_with_leader_line_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::AnnotationPlane(i) => self.annotation_plane_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::AnnotationSymbolOccurrence(i) => self.annotation_symbol_occurrence_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::AnnotationText(i) => self.annotation_text_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::AnnotationTextCharacter(i) => self.annotation_text_character_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::AnnotationTextOccurrence(i) => self.annotation_text_occurrence_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::AnnotationToAnnotationLeaderLine(i) => self.annotation_to_annotation_leader_line_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::AnnotationToModelLeaderLine(i) => self.annotation_to_model_leader_line_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ApllPoint(i) => self.apll_point_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ApllPointWithSurface(i) => self.apll_point_with_surface_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::AuxiliaryLeaderLine(i) => self.auxiliary_leader_line_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Axis1Placement(i) => self.axis1_placement_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Axis2Placement2d(i) => self.axis2_placement2d_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Axis2Placement3d(i) => self.axis2_placement3d_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::BSplineCurve(i) => self.b_spline_curve_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::BSplineCurveWithKnots(i) => self.b_spline_curve_with_knots_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::BSplineSurface(i) => self.b_spline_surface_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::BSplineSurfaceWithKnots(i) => self.b_spline_surface_with_knots_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::BezierCurve(i) => self.bezier_curve_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::BezierSurface(i) => self.bezier_surface_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::BoundedCurve(i) => self.bounded_curve_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::BoundedPcurve(i) => self.bounded_pcurve_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::BoundedSurface(i) => self.bounded_surface_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::BoundedSurfaceCurve(i) => self.bounded_surface_curve_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::BrepWithVoids(i) => self.brep_with_voids_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::CameraImage(i) => self.camera_image_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::CameraImage3dWithScale(i) => self.camera_image3d_with_scale_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::CameraModel(i) => self.camera_model_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::CameraModelD3(i) => self.camera_model_d3_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::CameraModelD3MultiClipping(i) => self.camera_model_d3_multi_clipping_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::CameraModelD3WithHlhsr(i) => self.camera_model_d3_with_hlhsr_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::CartesianPoint(i) => self.cartesian_point_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::CharacterizedRepresentation(i) => self.characterized_representation_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Circle(i) => self.circle_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ClosedShell(i) => self.closed_shell_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedFace(i) => self.complex_triangulated_face_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedSurfaceSet(i) => self.complex_triangulated_surface_set_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::CompositeCurve(i) => self.composite_curve_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::CompositeText(i) => self.composite_text_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::CompoundRepresentationItem(i) => self.compound_representation_item_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Conic(i) => self.conic_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ConicalSurface(i) => self.conical_surface_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ConnectedFaceSet(i) => self.connected_face_set_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ConstructiveGeometryRepresentation(i) => self.constructive_geometry_representation_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ContextDependentOverRidingStyledItem(i) => self.context_dependent_over_riding_styled_item_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::CoordinatesList(i) => self.coordinates_list_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Curve(i) => self.curve_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::CylindricalSurface(i) => self.cylindrical_surface_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::DefinedCharacterGlyph(i) => self.defined_character_glyph_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::DefinedSymbol(i) => self.defined_symbol_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::DefinitionalRepresentation(i) => self.definitional_representation_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::DegenerateToroidalSurface(i) => self.degenerate_toroidal_surface_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::DescriptiveRepresentationItem(i) => self.descriptive_representation_item_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Direction(i) => self.direction_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::DraughtingAnnotationOccurrence(i) => self.draughting_annotation_occurrence_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::DraughtingCallout(i) => self.draughting_callout_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::DraughtingModel(i) => self.draughting_model_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Edge(i) => self.edge_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::EdgeCurve(i) => self.edge_curve_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::EdgeLoop(i) => self.edge_loop_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ElementarySurface(i) => self.elementary_surface_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Ellipse(i) => self.ellipse_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(i) => self.externally_defined_hatch_style_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(i) => self.externally_defined_tile_style_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Face(i) => self.face_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::FaceBound(i) => self.face_bound_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::FaceOuterBound(i) => self.face_outer_bound_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::FaceSurface(i) => self.face_surface_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::FillAreaStyleHatching(i) => self.fill_area_style_hatching_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileColouredRegion(i) => self.fill_area_style_tile_coloured_region_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileCurveWithStyle(i) => self.fill_area_style_tile_curve_with_style_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileSymbolWithStyle(i) => self.fill_area_style_tile_symbol_with_style_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::FillAreaStyleTiles(i) => self.fill_area_style_tiles_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::GeometricCurveSet(i) => self.geometric_curve_set_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::GeometricRepresentationItem(i) => self.geometric_representation_item_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::GeometricSet(i) => self.geometric_set_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self.geometrically_bounded_surface_shape_representation_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self.geometrically_bounded_wireframe_shape_representation_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Hyperbola(i) => self.hyperbola_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::IntegerRepresentationItem(i) => self.integer_representation_item_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::IntersectionCurve(i) => self.intersection_curve_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::LeaderCurve(i) => self.leader_curve_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::LeaderDirectedCallout(i) => self.leader_directed_callout_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::LeaderTerminator(i) => self.leader_terminator_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Line(i) => self.line_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Loop(i) => self.loop_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ManifoldSolidBrep(i) => self.manifold_solid_brep_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ManifoldSurfaceShapeRepresentation(i) => self.manifold_surface_shape_representation_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::MappedItem(i) => self.mapped_item_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::MeasureRepresentationItem(i) => self.measure_representation_item_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => self.mechanical_design_geometric_presentation_representation_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => self.mechanical_design_presentation_representation_with_draughting_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::MechanicalDesignShadedPresentationRepresentation(i) => self.mechanical_design_shaded_presentation_representation_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::OffsetSurface(i) => self.offset_surface_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::OneDirectionRepeatFactor(i) => self.one_direction_repeat_factor_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::OpenShell(i) => self.open_shell_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::OrientedClosedShell(i) => self.oriented_closed_shell_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::OrientedEdge(i) => self.oriented_edge_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::OverRidingStyledItem(i) => self.over_riding_styled_item_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Parabola(i) => self.parabola_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Path(i) => self.path_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Pcurve(i) => self.pcurve_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Placement(i) => self.placement_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::PlanarBox(i) => self.planar_box_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::PlanarExtent(i) => self.planar_extent_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Plane(i) => self.plane_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Point(i) => self.point_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::PolyLoop(i) => self.poly_loop_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Polyline(i) => self.polyline_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::PresentationArea(i) => self.presentation_area_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::PresentationRepresentation(i) => self.presentation_representation_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::PresentationView(i) => self.presentation_view_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::QualifiedRepresentationItem(i) => self.qualified_representation_item_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::QuasiUniformCurve(i) => self.quasi_uniform_curve_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::QuasiUniformSurface(i) => self.quasi_uniform_surface_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::RationalBSplineCurve(i) => self.rational_b_spline_curve_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::RationalBSplineSurface(i) => self.rational_b_spline_surface_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::RealRepresentationItem(i) => self.real_representation_item_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::RepositionedTessellatedItem(i) => self.repositioned_tessellated_item_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Representation(i) => self.representation_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::RepresentationItem(i) => self.representation_item_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::RepresentationReference(i) => self.representation_reference_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::SeamCurve(i) => self.seam_curve_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ShapeDimensionRepresentation(i) => self.shape_dimension_representation_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ShapeRepresentation(i) => self.shape_representation_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ShapeRepresentationWithParameters(i) => self.shape_representation_with_parameters_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ShellBasedSurfaceModel(i) => self.shell_based_surface_model_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::SolidModel(i) => self.solid_model_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::SphericalSurface(i) => self.spherical_surface_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::StyledItem(i) => self.styled_item_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Surface(i) => self.surface_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::SurfaceCurve(i) => self.surface_curve_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::SurfaceOfLinearExtrusion(i) => self.surface_of_linear_extrusion_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::SurfaceOfRevolution(i) => self.surface_of_revolution_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::SweptSurface(i) => self.swept_surface_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::SymbolRepresentation(i) => self.symbol_representation_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::SymbolTarget(i) => self.symbol_target_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::TerminatorSymbol(i) => self.terminator_symbol_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::TessellatedAnnotationOccurrence(i) => self.tessellated_annotation_occurrence_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::TessellatedCurveSet(i) => self.tessellated_curve_set_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::TessellatedFace(i) => self.tessellated_face_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::TessellatedGeometricSet(i) => self.tessellated_geometric_set_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::TessellatedItem(i) => self.tessellated_item_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::TessellatedShapeRepresentation(i) => self.tessellated_shape_representation_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::TessellatedShell(i) => self.tessellated_shell_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::TessellatedSolid(i) => self.tessellated_solid_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::TessellatedStructuredItem(i) => self.tessellated_structured_item_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::TessellatedSurfaceSet(i) => self.tessellated_surface_set_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::TextLiteral(i) => self.text_literal_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::TopologicalRepresentationItem(i) => self.topological_representation_item_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ToroidalSurface(i) => self.toroidal_surface_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::TrimmedCurve(i) => self.trimmed_curve_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::TwoDirectionRepeatFactor(i) => self.two_direction_repeat_factor_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::UniformCurve(i) => self.uniform_curve_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::UniformSurface(i) => self.uniform_surface_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ValueRepresentationItem(i) => self.value_representation_item_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Vector(i) => self.vector_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Vertex(i) => self.vertex_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::VertexLoop(i) => self.vertex_loop_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::VertexPoint(i) => self.vertex_point_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::VertexShell(i) => self.vertex_shell_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::WireShell(i) => self.wire_shell_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::Complex(i) => self.complex_ids[i.0 as usize].expect("dep id assigned"),
+    }
     }
 
-    fn deps_ref_styled_item_target(r: &StyledItemTargetRef, out: &mut Vec<EntityKey>) {
+    fn deps_ref_styled_item_target_or_representation_item(
+        r: &StyledItemTargetOrRepresentationItemRef,
+        out: &mut Vec<EntityKey>,
+    ) {
         match r {
-            StyledItemTargetRef::AdvancedBrepShapeRepresentation(i) => {
-                out.push(EntityKey::AdvancedBrepShapeRepresentation(*i))
-            }
-            StyledItemTargetRef::AdvancedFace(i) => out.push(EntityKey::AdvancedFace(*i)),
-            StyledItemTargetRef::AnnotationPlaceholderLeaderLine(i) => {
-                out.push(EntityKey::AnnotationPlaceholderLeaderLine(*i))
-            }
-            StyledItemTargetRef::AnnotationPlaceholderOccurrence(i) => {
-                out.push(EntityKey::AnnotationPlaceholderOccurrence(*i))
-            }
-            StyledItemTargetRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
-                out.push(EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
-            }
-            StyledItemTargetRef::AnnotationPlane(i) => out.push(EntityKey::AnnotationPlane(*i)),
-            StyledItemTargetRef::AnnotationText(i) => out.push(EntityKey::AnnotationText(*i)),
-            StyledItemTargetRef::AnnotationTextCharacter(i) => {
-                out.push(EntityKey::AnnotationTextCharacter(*i))
-            }
-            StyledItemTargetRef::AnnotationToAnnotationLeaderLine(i) => {
-                out.push(EntityKey::AnnotationToAnnotationLeaderLine(*i))
-            }
-            StyledItemTargetRef::AnnotationToModelLeaderLine(i) => {
-                out.push(EntityKey::AnnotationToModelLeaderLine(*i))
-            }
-            StyledItemTargetRef::ApllPoint(i) => out.push(EntityKey::ApllPoint(*i)),
-            StyledItemTargetRef::ApllPointWithSurface(i) => {
-                out.push(EntityKey::ApllPointWithSurface(*i))
-            }
-            StyledItemTargetRef::AuxiliaryLeaderLine(i) => {
-                out.push(EntityKey::AuxiliaryLeaderLine(*i))
-            }
-            StyledItemTargetRef::Axis1Placement(i) => out.push(EntityKey::Axis1Placement(*i)),
-            StyledItemTargetRef::Axis2Placement2d(i) => out.push(EntityKey::Axis2Placement2d(*i)),
-            StyledItemTargetRef::Axis2Placement3d(i) => out.push(EntityKey::Axis2Placement3d(*i)),
-            StyledItemTargetRef::BSplineCurve(i) => out.push(EntityKey::BSplineCurve(*i)),
-            StyledItemTargetRef::BSplineCurveWithKnots(i) => {
-                out.push(EntityKey::BSplineCurveWithKnots(*i))
-            }
-            StyledItemTargetRef::BSplineSurface(i) => out.push(EntityKey::BSplineSurface(*i)),
-            StyledItemTargetRef::BSplineSurfaceWithKnots(i) => {
-                out.push(EntityKey::BSplineSurfaceWithKnots(*i))
-            }
-            StyledItemTargetRef::BezierCurve(i) => out.push(EntityKey::BezierCurve(*i)),
-            StyledItemTargetRef::BezierSurface(i) => out.push(EntityKey::BezierSurface(*i)),
-            StyledItemTargetRef::BoundedCurve(i) => out.push(EntityKey::BoundedCurve(*i)),
-            StyledItemTargetRef::BoundedPcurve(i) => out.push(EntityKey::BoundedPcurve(*i)),
-            StyledItemTargetRef::BoundedSurface(i) => out.push(EntityKey::BoundedSurface(*i)),
-            StyledItemTargetRef::BoundedSurfaceCurve(i) => {
-                out.push(EntityKey::BoundedSurfaceCurve(*i))
-            }
-            StyledItemTargetRef::BrepWithVoids(i) => out.push(EntityKey::BrepWithVoids(*i)),
-            StyledItemTargetRef::CameraImage(i) => out.push(EntityKey::CameraImage(*i)),
-            StyledItemTargetRef::CameraImage3dWithScale(i) => {
-                out.push(EntityKey::CameraImage3dWithScale(*i))
-            }
-            StyledItemTargetRef::CameraModel(i) => out.push(EntityKey::CameraModel(*i)),
-            StyledItemTargetRef::CameraModelD3(i) => out.push(EntityKey::CameraModelD3(*i)),
-            StyledItemTargetRef::CameraModelD3MultiClipping(i) => {
-                out.push(EntityKey::CameraModelD3MultiClipping(*i))
-            }
-            StyledItemTargetRef::CameraModelD3WithHlhsr(i) => {
-                out.push(EntityKey::CameraModelD3WithHlhsr(*i))
-            }
-            StyledItemTargetRef::CartesianPoint(i) => out.push(EntityKey::CartesianPoint(*i)),
-            StyledItemTargetRef::CharacterizedRepresentation(i) => {
-                out.push(EntityKey::CharacterizedRepresentation(*i))
-            }
-            StyledItemTargetRef::Circle(i) => out.push(EntityKey::Circle(*i)),
-            StyledItemTargetRef::ClosedShell(i) => out.push(EntityKey::ClosedShell(*i)),
-            StyledItemTargetRef::ComplexTriangulatedFace(i) => {
-                out.push(EntityKey::ComplexTriangulatedFace(*i))
-            }
-            StyledItemTargetRef::ComplexTriangulatedSurfaceSet(i) => {
-                out.push(EntityKey::ComplexTriangulatedSurfaceSet(*i))
-            }
-            StyledItemTargetRef::CompositeCurve(i) => out.push(EntityKey::CompositeCurve(*i)),
-            StyledItemTargetRef::CompositeText(i) => out.push(EntityKey::CompositeText(*i)),
-            StyledItemTargetRef::Conic(i) => out.push(EntityKey::Conic(*i)),
-            StyledItemTargetRef::ConicalSurface(i) => out.push(EntityKey::ConicalSurface(*i)),
-            StyledItemTargetRef::ConnectedFaceSet(i) => out.push(EntityKey::ConnectedFaceSet(*i)),
-            StyledItemTargetRef::ConstructiveGeometryRepresentation(i) => {
-                out.push(EntityKey::ConstructiveGeometryRepresentation(*i))
-            }
-            StyledItemTargetRef::CoordinatesList(i) => out.push(EntityKey::CoordinatesList(*i)),
-            StyledItemTargetRef::Curve(i) => out.push(EntityKey::Curve(*i)),
-            StyledItemTargetRef::CylindricalSurface(i) => {
-                out.push(EntityKey::CylindricalSurface(*i))
-            }
-            StyledItemTargetRef::DefinedCharacterGlyph(i) => {
-                out.push(EntityKey::DefinedCharacterGlyph(*i))
-            }
-            StyledItemTargetRef::DefinedSymbol(i) => out.push(EntityKey::DefinedSymbol(*i)),
-            StyledItemTargetRef::DefinitionalRepresentation(i) => {
-                out.push(EntityKey::DefinitionalRepresentation(*i))
-            }
-            StyledItemTargetRef::DegenerateToroidalSurface(i) => {
-                out.push(EntityKey::DegenerateToroidalSurface(*i))
-            }
-            StyledItemTargetRef::Direction(i) => out.push(EntityKey::Direction(*i)),
-            StyledItemTargetRef::DraughtingCallout(i) => out.push(EntityKey::DraughtingCallout(*i)),
-            StyledItemTargetRef::DraughtingModel(i) => out.push(EntityKey::DraughtingModel(*i)),
-            StyledItemTargetRef::Edge(i) => out.push(EntityKey::Edge(*i)),
-            StyledItemTargetRef::EdgeCurve(i) => out.push(EntityKey::EdgeCurve(*i)),
-            StyledItemTargetRef::EdgeLoop(i) => out.push(EntityKey::EdgeLoop(*i)),
-            StyledItemTargetRef::ElementarySurface(i) => out.push(EntityKey::ElementarySurface(*i)),
-            StyledItemTargetRef::Ellipse(i) => out.push(EntityKey::Ellipse(*i)),
-            StyledItemTargetRef::ExternallyDefinedHatchStyle(i) => {
-                out.push(EntityKey::ExternallyDefinedHatchStyle(*i))
-            }
-            StyledItemTargetRef::ExternallyDefinedTileStyle(i) => {
-                out.push(EntityKey::ExternallyDefinedTileStyle(*i))
-            }
-            StyledItemTargetRef::Face(i) => out.push(EntityKey::Face(*i)),
-            StyledItemTargetRef::FaceBound(i) => out.push(EntityKey::FaceBound(*i)),
-            StyledItemTargetRef::FaceOuterBound(i) => out.push(EntityKey::FaceOuterBound(*i)),
-            StyledItemTargetRef::FaceSurface(i) => out.push(EntityKey::FaceSurface(*i)),
-            StyledItemTargetRef::FillAreaStyleHatching(i) => {
-                out.push(EntityKey::FillAreaStyleHatching(*i))
-            }
-            StyledItemTargetRef::FillAreaStyleTileColouredRegion(i) => {
-                out.push(EntityKey::FillAreaStyleTileColouredRegion(*i))
-            }
-            StyledItemTargetRef::FillAreaStyleTileCurveWithStyle(i) => {
-                out.push(EntityKey::FillAreaStyleTileCurveWithStyle(*i))
-            }
-            StyledItemTargetRef::FillAreaStyleTileSymbolWithStyle(i) => {
-                out.push(EntityKey::FillAreaStyleTileSymbolWithStyle(*i))
-            }
-            StyledItemTargetRef::FillAreaStyleTiles(i) => {
-                out.push(EntityKey::FillAreaStyleTiles(*i))
-            }
-            StyledItemTargetRef::GeometricCurveSet(i) => out.push(EntityKey::GeometricCurveSet(*i)),
-            StyledItemTargetRef::GeometricRepresentationItem(i) => {
-                out.push(EntityKey::GeometricRepresentationItem(*i))
-            }
-            StyledItemTargetRef::GeometricSet(i) => out.push(EntityKey::GeometricSet(*i)),
-            StyledItemTargetRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => out.push(
-                EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(*i),
-            ),
-            StyledItemTargetRef::GeometricallyBoundedWireframeShapeRepresentation(i) => out.push(
-                EntityKey::GeometricallyBoundedWireframeShapeRepresentation(*i),
-            ),
-            StyledItemTargetRef::Hyperbola(i) => out.push(EntityKey::Hyperbola(*i)),
-            StyledItemTargetRef::IntersectionCurve(i) => out.push(EntityKey::IntersectionCurve(*i)),
-            StyledItemTargetRef::LeaderDirectedCallout(i) => {
-                out.push(EntityKey::LeaderDirectedCallout(*i))
-            }
-            StyledItemTargetRef::Line(i) => out.push(EntityKey::Line(*i)),
-            StyledItemTargetRef::Loop(i) => out.push(EntityKey::Loop(*i)),
-            StyledItemTargetRef::ManifoldSolidBrep(i) => out.push(EntityKey::ManifoldSolidBrep(*i)),
-            StyledItemTargetRef::ManifoldSurfaceShapeRepresentation(i) => {
-                out.push(EntityKey::ManifoldSurfaceShapeRepresentation(*i))
-            }
-            StyledItemTargetRef::MappedItem(i) => out.push(EntityKey::MappedItem(*i)),
-            StyledItemTargetRef::MechanicalDesignGeometricPresentationRepresentation(i) => {
-                out.push(EntityKey::MechanicalDesignGeometricPresentationRepresentation(*i))
-            }
-            StyledItemTargetRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
-                out.push(EntityKey::MechanicalDesignPresentationRepresentationWithDraughting(*i))
-            }
-            StyledItemTargetRef::MechanicalDesignShadedPresentationRepresentation(i) => out.push(
-                EntityKey::MechanicalDesignShadedPresentationRepresentation(*i),
-            ),
-            StyledItemTargetRef::OffsetSurface(i) => out.push(EntityKey::OffsetSurface(*i)),
-            StyledItemTargetRef::OneDirectionRepeatFactor(i) => {
-                out.push(EntityKey::OneDirectionRepeatFactor(*i))
-            }
-            StyledItemTargetRef::OpenShell(i) => out.push(EntityKey::OpenShell(*i)),
-            StyledItemTargetRef::OrientedClosedShell(i) => {
-                out.push(EntityKey::OrientedClosedShell(*i))
-            }
-            StyledItemTargetRef::OrientedEdge(i) => out.push(EntityKey::OrientedEdge(*i)),
-            StyledItemTargetRef::Parabola(i) => out.push(EntityKey::Parabola(*i)),
-            StyledItemTargetRef::Path(i) => out.push(EntityKey::Path(*i)),
-            StyledItemTargetRef::Pcurve(i) => out.push(EntityKey::Pcurve(*i)),
-            StyledItemTargetRef::Placement(i) => out.push(EntityKey::Placement(*i)),
-            StyledItemTargetRef::PlanarBox(i) => out.push(EntityKey::PlanarBox(*i)),
-            StyledItemTargetRef::PlanarExtent(i) => out.push(EntityKey::PlanarExtent(*i)),
-            StyledItemTargetRef::Plane(i) => out.push(EntityKey::Plane(*i)),
-            StyledItemTargetRef::Point(i) => out.push(EntityKey::Point(*i)),
-            StyledItemTargetRef::PolyLoop(i) => out.push(EntityKey::PolyLoop(*i)),
-            StyledItemTargetRef::Polyline(i) => out.push(EntityKey::Polyline(*i)),
-            StyledItemTargetRef::PresentationArea(i) => out.push(EntityKey::PresentationArea(*i)),
-            StyledItemTargetRef::PresentationRepresentation(i) => {
-                out.push(EntityKey::PresentationRepresentation(*i))
-            }
-            StyledItemTargetRef::PresentationView(i) => out.push(EntityKey::PresentationView(*i)),
-            StyledItemTargetRef::QuasiUniformCurve(i) => out.push(EntityKey::QuasiUniformCurve(*i)),
-            StyledItemTargetRef::QuasiUniformSurface(i) => {
-                out.push(EntityKey::QuasiUniformSurface(*i))
-            }
-            StyledItemTargetRef::RationalBSplineCurve(i) => {
-                out.push(EntityKey::RationalBSplineCurve(*i))
-            }
-            StyledItemTargetRef::RationalBSplineSurface(i) => {
-                out.push(EntityKey::RationalBSplineSurface(*i))
-            }
-            StyledItemTargetRef::RepositionedTessellatedItem(i) => {
-                out.push(EntityKey::RepositionedTessellatedItem(*i))
-            }
-            StyledItemTargetRef::Representation(i) => out.push(EntityKey::Representation(*i)),
-            StyledItemTargetRef::RepresentationReference(i) => {
-                out.push(EntityKey::RepresentationReference(*i))
-            }
-            StyledItemTargetRef::SeamCurve(i) => out.push(EntityKey::SeamCurve(*i)),
-            StyledItemTargetRef::ShapeDimensionRepresentation(i) => {
-                out.push(EntityKey::ShapeDimensionRepresentation(*i))
-            }
-            StyledItemTargetRef::ShapeRepresentation(i) => {
-                out.push(EntityKey::ShapeRepresentation(*i))
-            }
-            StyledItemTargetRef::ShapeRepresentationWithParameters(i) => {
-                out.push(EntityKey::ShapeRepresentationWithParameters(*i))
-            }
-            StyledItemTargetRef::ShellBasedSurfaceModel(i) => {
-                out.push(EntityKey::ShellBasedSurfaceModel(*i))
-            }
-            StyledItemTargetRef::SolidModel(i) => out.push(EntityKey::SolidModel(*i)),
-            StyledItemTargetRef::SphericalSurface(i) => out.push(EntityKey::SphericalSurface(*i)),
-            StyledItemTargetRef::Surface(i) => out.push(EntityKey::Surface(*i)),
-            StyledItemTargetRef::SurfaceCurve(i) => out.push(EntityKey::SurfaceCurve(*i)),
-            StyledItemTargetRef::SurfaceOfLinearExtrusion(i) => {
-                out.push(EntityKey::SurfaceOfLinearExtrusion(*i))
-            }
-            StyledItemTargetRef::SurfaceOfRevolution(i) => {
-                out.push(EntityKey::SurfaceOfRevolution(*i))
-            }
-            StyledItemTargetRef::SweptSurface(i) => out.push(EntityKey::SweptSurface(*i)),
-            StyledItemTargetRef::SymbolRepresentation(i) => {
-                out.push(EntityKey::SymbolRepresentation(*i))
-            }
-            StyledItemTargetRef::SymbolTarget(i) => out.push(EntityKey::SymbolTarget(*i)),
-            StyledItemTargetRef::TessellatedCurveSet(i) => {
-                out.push(EntityKey::TessellatedCurveSet(*i))
-            }
-            StyledItemTargetRef::TessellatedFace(i) => out.push(EntityKey::TessellatedFace(*i)),
-            StyledItemTargetRef::TessellatedGeometricSet(i) => {
-                out.push(EntityKey::TessellatedGeometricSet(*i))
-            }
-            StyledItemTargetRef::TessellatedItem(i) => out.push(EntityKey::TessellatedItem(*i)),
-            StyledItemTargetRef::TessellatedShapeRepresentation(i) => {
-                out.push(EntityKey::TessellatedShapeRepresentation(*i))
-            }
-            StyledItemTargetRef::TessellatedShell(i) => out.push(EntityKey::TessellatedShell(*i)),
-            StyledItemTargetRef::TessellatedSolid(i) => out.push(EntityKey::TessellatedSolid(*i)),
-            StyledItemTargetRef::TessellatedStructuredItem(i) => {
-                out.push(EntityKey::TessellatedStructuredItem(*i))
-            }
-            StyledItemTargetRef::TessellatedSurfaceSet(i) => {
-                out.push(EntityKey::TessellatedSurfaceSet(*i))
-            }
-            StyledItemTargetRef::TextLiteral(i) => out.push(EntityKey::TextLiteral(*i)),
-            StyledItemTargetRef::TopologicalRepresentationItem(i) => {
-                out.push(EntityKey::TopologicalRepresentationItem(*i))
-            }
-            StyledItemTargetRef::ToroidalSurface(i) => out.push(EntityKey::ToroidalSurface(*i)),
-            StyledItemTargetRef::TrimmedCurve(i) => out.push(EntityKey::TrimmedCurve(*i)),
-            StyledItemTargetRef::TwoDirectionRepeatFactor(i) => {
-                out.push(EntityKey::TwoDirectionRepeatFactor(*i))
-            }
-            StyledItemTargetRef::UniformCurve(i) => out.push(EntityKey::UniformCurve(*i)),
-            StyledItemTargetRef::UniformSurface(i) => out.push(EntityKey::UniformSurface(*i)),
-            StyledItemTargetRef::Vector(i) => out.push(EntityKey::Vector(*i)),
-            StyledItemTargetRef::Vertex(i) => out.push(EntityKey::Vertex(*i)),
-            StyledItemTargetRef::VertexLoop(i) => out.push(EntityKey::VertexLoop(*i)),
-            StyledItemTargetRef::VertexPoint(i) => out.push(EntityKey::VertexPoint(*i)),
-            StyledItemTargetRef::VertexShell(i) => out.push(EntityKey::VertexShell(*i)),
-            StyledItemTargetRef::WireShell(i) => out.push(EntityKey::WireShell(*i)),
-            StyledItemTargetRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
-        }
+        StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(i) => out.push(EntityKey::AdvancedBrepShapeRepresentation(*i)),
+        StyledItemTargetOrRepresentationItemRef::AdvancedFace(i) => out.push(EntityKey::AdvancedFace(*i)),
+        StyledItemTargetOrRepresentationItemRef::AnnotationCurveOccurrence(i) => out.push(EntityKey::AnnotationCurveOccurrence(*i)),
+        StyledItemTargetOrRepresentationItemRef::AnnotationOccurrence(i) => out.push(EntityKey::AnnotationOccurrence(*i)),
+        StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderLeaderLine(i) => out.push(EntityKey::AnnotationPlaceholderLeaderLine(*i)),
+        StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderOccurrence(i) => out.push(EntityKey::AnnotationPlaceholderOccurrence(*i)),
+        StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => out.push(EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)),
+        StyledItemTargetOrRepresentationItemRef::AnnotationPlane(i) => out.push(EntityKey::AnnotationPlane(*i)),
+        StyledItemTargetOrRepresentationItemRef::AnnotationSymbolOccurrence(i) => out.push(EntityKey::AnnotationSymbolOccurrence(*i)),
+        StyledItemTargetOrRepresentationItemRef::AnnotationText(i) => out.push(EntityKey::AnnotationText(*i)),
+        StyledItemTargetOrRepresentationItemRef::AnnotationTextCharacter(i) => out.push(EntityKey::AnnotationTextCharacter(*i)),
+        StyledItemTargetOrRepresentationItemRef::AnnotationTextOccurrence(i) => out.push(EntityKey::AnnotationTextOccurrence(*i)),
+        StyledItemTargetOrRepresentationItemRef::AnnotationToAnnotationLeaderLine(i) => out.push(EntityKey::AnnotationToAnnotationLeaderLine(*i)),
+        StyledItemTargetOrRepresentationItemRef::AnnotationToModelLeaderLine(i) => out.push(EntityKey::AnnotationToModelLeaderLine(*i)),
+        StyledItemTargetOrRepresentationItemRef::ApllPoint(i) => out.push(EntityKey::ApllPoint(*i)),
+        StyledItemTargetOrRepresentationItemRef::ApllPointWithSurface(i) => out.push(EntityKey::ApllPointWithSurface(*i)),
+        StyledItemTargetOrRepresentationItemRef::AuxiliaryLeaderLine(i) => out.push(EntityKey::AuxiliaryLeaderLine(*i)),
+        StyledItemTargetOrRepresentationItemRef::Axis1Placement(i) => out.push(EntityKey::Axis1Placement(*i)),
+        StyledItemTargetOrRepresentationItemRef::Axis2Placement2d(i) => out.push(EntityKey::Axis2Placement2d(*i)),
+        StyledItemTargetOrRepresentationItemRef::Axis2Placement3d(i) => out.push(EntityKey::Axis2Placement3d(*i)),
+        StyledItemTargetOrRepresentationItemRef::BSplineCurve(i) => out.push(EntityKey::BSplineCurve(*i)),
+        StyledItemTargetOrRepresentationItemRef::BSplineCurveWithKnots(i) => out.push(EntityKey::BSplineCurveWithKnots(*i)),
+        StyledItemTargetOrRepresentationItemRef::BSplineSurface(i) => out.push(EntityKey::BSplineSurface(*i)),
+        StyledItemTargetOrRepresentationItemRef::BSplineSurfaceWithKnots(i) => out.push(EntityKey::BSplineSurfaceWithKnots(*i)),
+        StyledItemTargetOrRepresentationItemRef::BezierCurve(i) => out.push(EntityKey::BezierCurve(*i)),
+        StyledItemTargetOrRepresentationItemRef::BezierSurface(i) => out.push(EntityKey::BezierSurface(*i)),
+        StyledItemTargetOrRepresentationItemRef::BoundedCurve(i) => out.push(EntityKey::BoundedCurve(*i)),
+        StyledItemTargetOrRepresentationItemRef::BoundedPcurve(i) => out.push(EntityKey::BoundedPcurve(*i)),
+        StyledItemTargetOrRepresentationItemRef::BoundedSurface(i) => out.push(EntityKey::BoundedSurface(*i)),
+        StyledItemTargetOrRepresentationItemRef::BoundedSurfaceCurve(i) => out.push(EntityKey::BoundedSurfaceCurve(*i)),
+        StyledItemTargetOrRepresentationItemRef::BrepWithVoids(i) => out.push(EntityKey::BrepWithVoids(*i)),
+        StyledItemTargetOrRepresentationItemRef::CameraImage(i) => out.push(EntityKey::CameraImage(*i)),
+        StyledItemTargetOrRepresentationItemRef::CameraImage3dWithScale(i) => out.push(EntityKey::CameraImage3dWithScale(*i)),
+        StyledItemTargetOrRepresentationItemRef::CameraModel(i) => out.push(EntityKey::CameraModel(*i)),
+        StyledItemTargetOrRepresentationItemRef::CameraModelD3(i) => out.push(EntityKey::CameraModelD3(*i)),
+        StyledItemTargetOrRepresentationItemRef::CameraModelD3MultiClipping(i) => out.push(EntityKey::CameraModelD3MultiClipping(*i)),
+        StyledItemTargetOrRepresentationItemRef::CameraModelD3WithHlhsr(i) => out.push(EntityKey::CameraModelD3WithHlhsr(*i)),
+        StyledItemTargetOrRepresentationItemRef::CartesianPoint(i) => out.push(EntityKey::CartesianPoint(*i)),
+        StyledItemTargetOrRepresentationItemRef::CharacterizedRepresentation(i) => out.push(EntityKey::CharacterizedRepresentation(*i)),
+        StyledItemTargetOrRepresentationItemRef::Circle(i) => out.push(EntityKey::Circle(*i)),
+        StyledItemTargetOrRepresentationItemRef::ClosedShell(i) => out.push(EntityKey::ClosedShell(*i)),
+        StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedFace(i) => out.push(EntityKey::ComplexTriangulatedFace(*i)),
+        StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedSurfaceSet(i) => out.push(EntityKey::ComplexTriangulatedSurfaceSet(*i)),
+        StyledItemTargetOrRepresentationItemRef::CompositeCurve(i) => out.push(EntityKey::CompositeCurve(*i)),
+        StyledItemTargetOrRepresentationItemRef::CompositeText(i) => out.push(EntityKey::CompositeText(*i)),
+        StyledItemTargetOrRepresentationItemRef::CompoundRepresentationItem(i) => out.push(EntityKey::CompoundRepresentationItem(*i)),
+        StyledItemTargetOrRepresentationItemRef::Conic(i) => out.push(EntityKey::Conic(*i)),
+        StyledItemTargetOrRepresentationItemRef::ConicalSurface(i) => out.push(EntityKey::ConicalSurface(*i)),
+        StyledItemTargetOrRepresentationItemRef::ConnectedFaceSet(i) => out.push(EntityKey::ConnectedFaceSet(*i)),
+        StyledItemTargetOrRepresentationItemRef::ConstructiveGeometryRepresentation(i) => out.push(EntityKey::ConstructiveGeometryRepresentation(*i)),
+        StyledItemTargetOrRepresentationItemRef::ContextDependentOverRidingStyledItem(i) => out.push(EntityKey::ContextDependentOverRidingStyledItem(*i)),
+        StyledItemTargetOrRepresentationItemRef::CoordinatesList(i) => out.push(EntityKey::CoordinatesList(*i)),
+        StyledItemTargetOrRepresentationItemRef::Curve(i) => out.push(EntityKey::Curve(*i)),
+        StyledItemTargetOrRepresentationItemRef::CylindricalSurface(i) => out.push(EntityKey::CylindricalSurface(*i)),
+        StyledItemTargetOrRepresentationItemRef::DefinedCharacterGlyph(i) => out.push(EntityKey::DefinedCharacterGlyph(*i)),
+        StyledItemTargetOrRepresentationItemRef::DefinedSymbol(i) => out.push(EntityKey::DefinedSymbol(*i)),
+        StyledItemTargetOrRepresentationItemRef::DefinitionalRepresentation(i) => out.push(EntityKey::DefinitionalRepresentation(*i)),
+        StyledItemTargetOrRepresentationItemRef::DegenerateToroidalSurface(i) => out.push(EntityKey::DegenerateToroidalSurface(*i)),
+        StyledItemTargetOrRepresentationItemRef::DescriptiveRepresentationItem(i) => out.push(EntityKey::DescriptiveRepresentationItem(*i)),
+        StyledItemTargetOrRepresentationItemRef::Direction(i) => out.push(EntityKey::Direction(*i)),
+        StyledItemTargetOrRepresentationItemRef::DraughtingAnnotationOccurrence(i) => out.push(EntityKey::DraughtingAnnotationOccurrence(*i)),
+        StyledItemTargetOrRepresentationItemRef::DraughtingCallout(i) => out.push(EntityKey::DraughtingCallout(*i)),
+        StyledItemTargetOrRepresentationItemRef::DraughtingModel(i) => out.push(EntityKey::DraughtingModel(*i)),
+        StyledItemTargetOrRepresentationItemRef::Edge(i) => out.push(EntityKey::Edge(*i)),
+        StyledItemTargetOrRepresentationItemRef::EdgeCurve(i) => out.push(EntityKey::EdgeCurve(*i)),
+        StyledItemTargetOrRepresentationItemRef::EdgeLoop(i) => out.push(EntityKey::EdgeLoop(*i)),
+        StyledItemTargetOrRepresentationItemRef::ElementarySurface(i) => out.push(EntityKey::ElementarySurface(*i)),
+        StyledItemTargetOrRepresentationItemRef::Ellipse(i) => out.push(EntityKey::Ellipse(*i)),
+        StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(i) => out.push(EntityKey::ExternallyDefinedHatchStyle(*i)),
+        StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(i) => out.push(EntityKey::ExternallyDefinedTileStyle(*i)),
+        StyledItemTargetOrRepresentationItemRef::Face(i) => out.push(EntityKey::Face(*i)),
+        StyledItemTargetOrRepresentationItemRef::FaceBound(i) => out.push(EntityKey::FaceBound(*i)),
+        StyledItemTargetOrRepresentationItemRef::FaceOuterBound(i) => out.push(EntityKey::FaceOuterBound(*i)),
+        StyledItemTargetOrRepresentationItemRef::FaceSurface(i) => out.push(EntityKey::FaceSurface(*i)),
+        StyledItemTargetOrRepresentationItemRef::FillAreaStyleHatching(i) => out.push(EntityKey::FillAreaStyleHatching(*i)),
+        StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileColouredRegion(i) => out.push(EntityKey::FillAreaStyleTileColouredRegion(*i)),
+        StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileCurveWithStyle(i) => out.push(EntityKey::FillAreaStyleTileCurveWithStyle(*i)),
+        StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileSymbolWithStyle(i) => out.push(EntityKey::FillAreaStyleTileSymbolWithStyle(*i)),
+        StyledItemTargetOrRepresentationItemRef::FillAreaStyleTiles(i) => out.push(EntityKey::FillAreaStyleTiles(*i)),
+        StyledItemTargetOrRepresentationItemRef::GeometricCurveSet(i) => out.push(EntityKey::GeometricCurveSet(*i)),
+        StyledItemTargetOrRepresentationItemRef::GeometricRepresentationItem(i) => out.push(EntityKey::GeometricRepresentationItem(*i)),
+        StyledItemTargetOrRepresentationItemRef::GeometricSet(i) => out.push(EntityKey::GeometricSet(*i)),
+        StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => out.push(EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(*i)),
+        StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => out.push(EntityKey::GeometricallyBoundedWireframeShapeRepresentation(*i)),
+        StyledItemTargetOrRepresentationItemRef::Hyperbola(i) => out.push(EntityKey::Hyperbola(*i)),
+        StyledItemTargetOrRepresentationItemRef::IntegerRepresentationItem(i) => out.push(EntityKey::IntegerRepresentationItem(*i)),
+        StyledItemTargetOrRepresentationItemRef::IntersectionCurve(i) => out.push(EntityKey::IntersectionCurve(*i)),
+        StyledItemTargetOrRepresentationItemRef::LeaderCurve(i) => out.push(EntityKey::LeaderCurve(*i)),
+        StyledItemTargetOrRepresentationItemRef::LeaderDirectedCallout(i) => out.push(EntityKey::LeaderDirectedCallout(*i)),
+        StyledItemTargetOrRepresentationItemRef::LeaderTerminator(i) => out.push(EntityKey::LeaderTerminator(*i)),
+        StyledItemTargetOrRepresentationItemRef::Line(i) => out.push(EntityKey::Line(*i)),
+        StyledItemTargetOrRepresentationItemRef::Loop(i) => out.push(EntityKey::Loop(*i)),
+        StyledItemTargetOrRepresentationItemRef::ManifoldSolidBrep(i) => out.push(EntityKey::ManifoldSolidBrep(*i)),
+        StyledItemTargetOrRepresentationItemRef::ManifoldSurfaceShapeRepresentation(i) => out.push(EntityKey::ManifoldSurfaceShapeRepresentation(*i)),
+        StyledItemTargetOrRepresentationItemRef::MappedItem(i) => out.push(EntityKey::MappedItem(*i)),
+        StyledItemTargetOrRepresentationItemRef::MeasureRepresentationItem(i) => out.push(EntityKey::MeasureRepresentationItem(*i)),
+        StyledItemTargetOrRepresentationItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => out.push(EntityKey::MechanicalDesignGeometricPresentationRepresentation(*i)),
+        StyledItemTargetOrRepresentationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => out.push(EntityKey::MechanicalDesignPresentationRepresentationWithDraughting(*i)),
+        StyledItemTargetOrRepresentationItemRef::MechanicalDesignShadedPresentationRepresentation(i) => out.push(EntityKey::MechanicalDesignShadedPresentationRepresentation(*i)),
+        StyledItemTargetOrRepresentationItemRef::OffsetSurface(i) => out.push(EntityKey::OffsetSurface(*i)),
+        StyledItemTargetOrRepresentationItemRef::OneDirectionRepeatFactor(i) => out.push(EntityKey::OneDirectionRepeatFactor(*i)),
+        StyledItemTargetOrRepresentationItemRef::OpenShell(i) => out.push(EntityKey::OpenShell(*i)),
+        StyledItemTargetOrRepresentationItemRef::OrientedClosedShell(i) => out.push(EntityKey::OrientedClosedShell(*i)),
+        StyledItemTargetOrRepresentationItemRef::OrientedEdge(i) => out.push(EntityKey::OrientedEdge(*i)),
+        StyledItemTargetOrRepresentationItemRef::OverRidingStyledItem(i) => out.push(EntityKey::OverRidingStyledItem(*i)),
+        StyledItemTargetOrRepresentationItemRef::Parabola(i) => out.push(EntityKey::Parabola(*i)),
+        StyledItemTargetOrRepresentationItemRef::Path(i) => out.push(EntityKey::Path(*i)),
+        StyledItemTargetOrRepresentationItemRef::Pcurve(i) => out.push(EntityKey::Pcurve(*i)),
+        StyledItemTargetOrRepresentationItemRef::Placement(i) => out.push(EntityKey::Placement(*i)),
+        StyledItemTargetOrRepresentationItemRef::PlanarBox(i) => out.push(EntityKey::PlanarBox(*i)),
+        StyledItemTargetOrRepresentationItemRef::PlanarExtent(i) => out.push(EntityKey::PlanarExtent(*i)),
+        StyledItemTargetOrRepresentationItemRef::Plane(i) => out.push(EntityKey::Plane(*i)),
+        StyledItemTargetOrRepresentationItemRef::Point(i) => out.push(EntityKey::Point(*i)),
+        StyledItemTargetOrRepresentationItemRef::PolyLoop(i) => out.push(EntityKey::PolyLoop(*i)),
+        StyledItemTargetOrRepresentationItemRef::Polyline(i) => out.push(EntityKey::Polyline(*i)),
+        StyledItemTargetOrRepresentationItemRef::PresentationArea(i) => out.push(EntityKey::PresentationArea(*i)),
+        StyledItemTargetOrRepresentationItemRef::PresentationRepresentation(i) => out.push(EntityKey::PresentationRepresentation(*i)),
+        StyledItemTargetOrRepresentationItemRef::PresentationView(i) => out.push(EntityKey::PresentationView(*i)),
+        StyledItemTargetOrRepresentationItemRef::QualifiedRepresentationItem(i) => out.push(EntityKey::QualifiedRepresentationItem(*i)),
+        StyledItemTargetOrRepresentationItemRef::QuasiUniformCurve(i) => out.push(EntityKey::QuasiUniformCurve(*i)),
+        StyledItemTargetOrRepresentationItemRef::QuasiUniformSurface(i) => out.push(EntityKey::QuasiUniformSurface(*i)),
+        StyledItemTargetOrRepresentationItemRef::RationalBSplineCurve(i) => out.push(EntityKey::RationalBSplineCurve(*i)),
+        StyledItemTargetOrRepresentationItemRef::RationalBSplineSurface(i) => out.push(EntityKey::RationalBSplineSurface(*i)),
+        StyledItemTargetOrRepresentationItemRef::RealRepresentationItem(i) => out.push(EntityKey::RealRepresentationItem(*i)),
+        StyledItemTargetOrRepresentationItemRef::RepositionedTessellatedItem(i) => out.push(EntityKey::RepositionedTessellatedItem(*i)),
+        StyledItemTargetOrRepresentationItemRef::Representation(i) => out.push(EntityKey::Representation(*i)),
+        StyledItemTargetOrRepresentationItemRef::RepresentationItem(i) => out.push(EntityKey::RepresentationItem(*i)),
+        StyledItemTargetOrRepresentationItemRef::RepresentationReference(i) => out.push(EntityKey::RepresentationReference(*i)),
+        StyledItemTargetOrRepresentationItemRef::SeamCurve(i) => out.push(EntityKey::SeamCurve(*i)),
+        StyledItemTargetOrRepresentationItemRef::ShapeDimensionRepresentation(i) => out.push(EntityKey::ShapeDimensionRepresentation(*i)),
+        StyledItemTargetOrRepresentationItemRef::ShapeRepresentation(i) => out.push(EntityKey::ShapeRepresentation(*i)),
+        StyledItemTargetOrRepresentationItemRef::ShapeRepresentationWithParameters(i) => out.push(EntityKey::ShapeRepresentationWithParameters(*i)),
+        StyledItemTargetOrRepresentationItemRef::ShellBasedSurfaceModel(i) => out.push(EntityKey::ShellBasedSurfaceModel(*i)),
+        StyledItemTargetOrRepresentationItemRef::SolidModel(i) => out.push(EntityKey::SolidModel(*i)),
+        StyledItemTargetOrRepresentationItemRef::SphericalSurface(i) => out.push(EntityKey::SphericalSurface(*i)),
+        StyledItemTargetOrRepresentationItemRef::StyledItem(i) => out.push(EntityKey::StyledItem(*i)),
+        StyledItemTargetOrRepresentationItemRef::Surface(i) => out.push(EntityKey::Surface(*i)),
+        StyledItemTargetOrRepresentationItemRef::SurfaceCurve(i) => out.push(EntityKey::SurfaceCurve(*i)),
+        StyledItemTargetOrRepresentationItemRef::SurfaceOfLinearExtrusion(i) => out.push(EntityKey::SurfaceOfLinearExtrusion(*i)),
+        StyledItemTargetOrRepresentationItemRef::SurfaceOfRevolution(i) => out.push(EntityKey::SurfaceOfRevolution(*i)),
+        StyledItemTargetOrRepresentationItemRef::SweptSurface(i) => out.push(EntityKey::SweptSurface(*i)),
+        StyledItemTargetOrRepresentationItemRef::SymbolRepresentation(i) => out.push(EntityKey::SymbolRepresentation(*i)),
+        StyledItemTargetOrRepresentationItemRef::SymbolTarget(i) => out.push(EntityKey::SymbolTarget(*i)),
+        StyledItemTargetOrRepresentationItemRef::TerminatorSymbol(i) => out.push(EntityKey::TerminatorSymbol(*i)),
+        StyledItemTargetOrRepresentationItemRef::TessellatedAnnotationOccurrence(i) => out.push(EntityKey::TessellatedAnnotationOccurrence(*i)),
+        StyledItemTargetOrRepresentationItemRef::TessellatedCurveSet(i) => out.push(EntityKey::TessellatedCurveSet(*i)),
+        StyledItemTargetOrRepresentationItemRef::TessellatedFace(i) => out.push(EntityKey::TessellatedFace(*i)),
+        StyledItemTargetOrRepresentationItemRef::TessellatedGeometricSet(i) => out.push(EntityKey::TessellatedGeometricSet(*i)),
+        StyledItemTargetOrRepresentationItemRef::TessellatedItem(i) => out.push(EntityKey::TessellatedItem(*i)),
+        StyledItemTargetOrRepresentationItemRef::TessellatedShapeRepresentation(i) => out.push(EntityKey::TessellatedShapeRepresentation(*i)),
+        StyledItemTargetOrRepresentationItemRef::TessellatedShell(i) => out.push(EntityKey::TessellatedShell(*i)),
+        StyledItemTargetOrRepresentationItemRef::TessellatedSolid(i) => out.push(EntityKey::TessellatedSolid(*i)),
+        StyledItemTargetOrRepresentationItemRef::TessellatedStructuredItem(i) => out.push(EntityKey::TessellatedStructuredItem(*i)),
+        StyledItemTargetOrRepresentationItemRef::TessellatedSurfaceSet(i) => out.push(EntityKey::TessellatedSurfaceSet(*i)),
+        StyledItemTargetOrRepresentationItemRef::TextLiteral(i) => out.push(EntityKey::TextLiteral(*i)),
+        StyledItemTargetOrRepresentationItemRef::TopologicalRepresentationItem(i) => out.push(EntityKey::TopologicalRepresentationItem(*i)),
+        StyledItemTargetOrRepresentationItemRef::ToroidalSurface(i) => out.push(EntityKey::ToroidalSurface(*i)),
+        StyledItemTargetOrRepresentationItemRef::TrimmedCurve(i) => out.push(EntityKey::TrimmedCurve(*i)),
+        StyledItemTargetOrRepresentationItemRef::TwoDirectionRepeatFactor(i) => out.push(EntityKey::TwoDirectionRepeatFactor(*i)),
+        StyledItemTargetOrRepresentationItemRef::UniformCurve(i) => out.push(EntityKey::UniformCurve(*i)),
+        StyledItemTargetOrRepresentationItemRef::UniformSurface(i) => out.push(EntityKey::UniformSurface(*i)),
+        StyledItemTargetOrRepresentationItemRef::ValueRepresentationItem(i) => out.push(EntityKey::ValueRepresentationItem(*i)),
+        StyledItemTargetOrRepresentationItemRef::Vector(i) => out.push(EntityKey::Vector(*i)),
+        StyledItemTargetOrRepresentationItemRef::Vertex(i) => out.push(EntityKey::Vertex(*i)),
+        StyledItemTargetOrRepresentationItemRef::VertexLoop(i) => out.push(EntityKey::VertexLoop(*i)),
+        StyledItemTargetOrRepresentationItemRef::VertexPoint(i) => out.push(EntityKey::VertexPoint(*i)),
+        StyledItemTargetOrRepresentationItemRef::VertexShell(i) => out.push(EntityKey::VertexShell(*i)),
+        StyledItemTargetOrRepresentationItemRef::WireShell(i) => out.push(EntityKey::WireShell(*i)),
+        StyledItemTargetOrRepresentationItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
+    }
     }
 
     fn id_of_ref_supported_item(&self, r: &SupportedItemRef) -> u64 {
@@ -23700,7 +23345,7 @@ impl<'a> Writer<'a> {
             EntityKey::AngularityTolerance(id) => {
                 let it = model.angularity_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
                 for e in &it.datum_system {
@@ -23719,7 +23364,7 @@ impl<'a> Writer<'a> {
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
-                Self::deps_ref_styled_item_target(&it.item, out);
+                Self::deps_ref_styled_item_target_or_representation_item(&it.item, out);
             }
             EntityKey::AnnotationOccurrenceAssociativity(id) => {
                 let it = model.annotation_occurrence_associativity_arena.get(id.0);
@@ -24153,7 +23798,7 @@ impl<'a> Writer<'a> {
             EntityKey::CircularRunoutTolerance(id) => {
                 let it = model.circular_runout_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
                 for e in &it.datum_system {
@@ -24169,7 +23814,7 @@ impl<'a> Writer<'a> {
             EntityKey::CoaxialityTolerance(id) => {
                 let it = model.coaxiality_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
                 for e in &it.datum_system {
@@ -24225,7 +23870,7 @@ impl<'a> Writer<'a> {
             EntityKey::ConcentricityTolerance(id) => {
                 let it = model.concentricity_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
                 for e in &it.datum_system {
@@ -24285,7 +23930,7 @@ impl<'a> Writer<'a> {
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
-                Self::deps_ref_styled_item_target(&it.item, out);
+                Self::deps_ref_styled_item_target_or_representation_item(&it.item, out);
                 Self::deps_ref_styled_item(&it.over_ridden_style, out);
                 for e in &it.style_context {
                     Self::deps_ref_style_context_select(e, out);
@@ -24351,7 +23996,7 @@ impl<'a> Writer<'a> {
             EntityKey::CylindricityTolerance(id) => {
                 let it = model.cylindricity_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
             }
@@ -24550,7 +24195,7 @@ impl<'a> Writer<'a> {
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
-                Self::deps_ref_styled_item_target(&it.item, out);
+                Self::deps_ref_styled_item_target_or_representation_item(&it.item, out);
             }
             EntityKey::DraughtingCallout(id) => {
                 let it = model.draughting_callout_arena.get(id.0);
@@ -24727,7 +24372,7 @@ impl<'a> Writer<'a> {
             EntityKey::FlatnessTolerance(id) => {
                 let it = model.flatness_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
             }
@@ -24778,7 +24423,7 @@ impl<'a> Writer<'a> {
             EntityKey::GeometricTolerance(id) => {
                 let it = model.geometric_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
             }
@@ -24792,7 +24437,7 @@ impl<'a> Writer<'a> {
                     .geometric_tolerance_with_datum_reference_arena
                     .get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
                 for e in &it.datum_system {
@@ -24804,10 +24449,10 @@ impl<'a> Writer<'a> {
                     .geometric_tolerance_with_defined_area_unit_arena
                     .get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
-                Self::deps_ref_length_or_plane_angle_measure_with_unit_select(&it.unit_size, out);
+                Self::deps_ref_measure_with_unit(&it.unit_size, out);
                 if let Some(r) = &it.second_unit_size {
                     Self::deps_ref_length_or_plane_angle_measure_with_unit_select(r, out);
                 }
@@ -24815,17 +24460,17 @@ impl<'a> Writer<'a> {
             EntityKey::GeometricToleranceWithDefinedUnit(id) => {
                 let it = model.geometric_tolerance_with_defined_unit_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
-                Self::deps_ref_length_or_plane_angle_measure_with_unit_select(&it.unit_size, out);
+                Self::deps_ref_measure_with_unit(&it.unit_size, out);
             }
             EntityKey::GeometricToleranceWithMaximumTolerance(id) => {
                 let it = model
                     .geometric_tolerance_with_maximum_tolerance_arena
                     .get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
                 Self::deps_ref_length_measure_with_unit(&it.maximum_upper_tolerance, out);
@@ -24833,7 +24478,7 @@ impl<'a> Writer<'a> {
             EntityKey::GeometricToleranceWithModifiers(id) => {
                 let it = model.geometric_tolerance_with_modifiers_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
             }
@@ -24952,7 +24597,7 @@ impl<'a> Writer<'a> {
             EntityKey::LineProfileTolerance(id) => {
                 let it = model.line_profile_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
             }
@@ -25056,7 +24701,7 @@ impl<'a> Writer<'a> {
             EntityKey::ModifiedGeometricTolerance(id) => {
                 let it = model.modified_geometric_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
             }
@@ -25134,7 +24779,7 @@ impl<'a> Writer<'a> {
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
-                Self::deps_ref_styled_item_target(&it.item, out);
+                Self::deps_ref_styled_item_target_or_representation_item(&it.item, out);
                 Self::deps_ref_styled_item(&it.over_ridden_style, out);
             }
             EntityKey::Parabola(id) => {
@@ -25144,7 +24789,7 @@ impl<'a> Writer<'a> {
             EntityKey::ParallelismTolerance(id) => {
                 let it = model.parallelism_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
                 for e in &it.datum_system {
@@ -25166,7 +24811,7 @@ impl<'a> Writer<'a> {
             EntityKey::PerpendicularityTolerance(id) => {
                 let it = model.perpendicularity_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
                 for e in &it.datum_system {
@@ -25258,7 +24903,7 @@ impl<'a> Writer<'a> {
             EntityKey::PositionTolerance(id) => {
                 let it = model.position_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
             }
@@ -25447,7 +25092,7 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_shape_aspect(e, out);
                 }
                 Self::deps_ref_shape_aspect(&it.projection_end, out);
-                Self::deps_ref_length_measure_with_unit(&it.projected_length, out);
+                Self::deps_ref_measure_with_unit(&it.projected_length, out);
             }
             EntityKey::PropertyDefinition(id) => {
                 let it = model.property_definition_arena.get(id.0);
@@ -25556,7 +25201,7 @@ impl<'a> Writer<'a> {
             EntityKey::RoundnessTolerance(id) => {
                 let it = model.roundness_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
             }
@@ -25663,7 +25308,7 @@ impl<'a> Writer<'a> {
             EntityKey::StraightnessTolerance(id) => {
                 let it = model.straightness_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
             }
@@ -25672,7 +25317,7 @@ impl<'a> Writer<'a> {
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
-                Self::deps_ref_styled_item_target(&it.item, out);
+                Self::deps_ref_styled_item_target_or_representation_item(&it.item, out);
             }
             EntityKey::Surface(_) => {}
             EntityKey::SurfaceCurve(id) => {
@@ -25695,7 +25340,7 @@ impl<'a> Writer<'a> {
             EntityKey::SurfaceProfileTolerance(id) => {
                 let it = model.surface_profile_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
             }
@@ -25778,7 +25423,7 @@ impl<'a> Writer<'a> {
             EntityKey::SymmetryTolerance(id) => {
                 let it = model.symmetry_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
                 for e in &it.datum_system {
@@ -25910,7 +25555,7 @@ impl<'a> Writer<'a> {
             EntityKey::TotalRunoutTolerance(id) => {
                 let it = model.total_runout_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
                 for e in &it.datum_system {
@@ -25941,7 +25586,7 @@ impl<'a> Writer<'a> {
             EntityKey::UnequallyDisposedGeometricTolerance(id) => {
                 let it = model.unequally_disposed_geometric_tolerance_arena.get(id.0);
                 if let Some(r) = &it.magnitude {
-                    Self::deps_ref_length_measure_with_unit(r, out);
+                    Self::deps_ref_measure_with_unit(r, out);
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
                 Self::deps_ref_length_measure_with_unit(&it.displacement, out);
@@ -26442,7 +26087,7 @@ impl<'a> Writer<'a> {
                             ..
                         } => {
                             if let Some(r) = magnitude {
-                                Self::deps_ref_length_measure_with_unit(r, out);
+                                Self::deps_ref_measure_with_unit(r, out);
                             }
                             Self::deps_ref_geometric_tolerance_target(toleranced_shape_aspect, out);
                         }
@@ -26465,9 +26110,7 @@ impl<'a> Writer<'a> {
                             }
                         }
                         PartialEntity::GeometricToleranceWithDefinedUnit { unit_size, .. } => {
-                            Self::deps_ref_length_or_plane_angle_measure_with_unit_select(
-                                unit_size, out,
-                            );
+                            Self::deps_ref_measure_with_unit(unit_size, out);
                         }
                         PartialEntity::GeometricToleranceWithMaximumTolerance {
                             maximum_upper_tolerance,
@@ -26703,7 +26346,7 @@ impl<'a> Writer<'a> {
                             ..
                         } => {
                             Self::deps_ref_shape_aspect(projection_end, out);
-                            Self::deps_ref_length_measure_with_unit(projected_length, out);
+                            Self::deps_ref_measure_with_unit(projected_length, out);
                         }
                         PartialEntity::PropertyDefinition { definition, .. } => {
                             Self::deps_ref_characterized_definition(definition, out);
@@ -26791,7 +26434,7 @@ impl<'a> Writer<'a> {
                             for e in styles {
                                 Self::deps_ref_presentation_style_assignment(e, out);
                             }
-                            Self::deps_ref_styled_item_target(item, out);
+                            Self::deps_ref_styled_item_target_or_representation_item(item, out);
                         }
                         PartialEntity::SurfaceCurve {
                             curve_3d,
@@ -27284,7 +26927,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -27340,7 +26983,10 @@ impl<'a> Writer<'a> {
                             .collect::<Vec<_>>()
                             .join(",")
                     ),
-                    format!("#{}", self.id_of_ref_styled_item_target(&it.item)),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_styled_item_target_or_representation_item(&it.item)
+                    ),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -28749,7 +28395,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -28795,7 +28441,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -29075,7 +28721,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -29234,7 +28880,10 @@ impl<'a> Writer<'a> {
                             .collect::<Vec<_>>()
                             .join(",")
                     ),
-                    format!("#{}", self.id_of_ref_styled_item_target(&it.item)),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_styled_item_target_or_representation_item(&it.item)
+                    ),
                     format!("#{}", self.id_of_ref_styled_item(&it.over_ridden_style)),
                     format!(
                         "({})",
@@ -29475,7 +29124,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -30173,7 +29822,10 @@ impl<'a> Writer<'a> {
                             .collect::<Vec<_>>()
                             .join(",")
                     ),
-                    format!("#{}", self.id_of_ref_styled_item_target(&it.item)),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_styled_item_target_or_representation_item(&it.item)
+                    ),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -30724,7 +30376,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -30938,7 +30590,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -30980,7 +30632,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -31012,19 +30664,14 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
                         "#{}",
                         self.id_of_ref_geometric_tolerance_target(&it.toleranced_shape_aspect)
                     ),
-                    format!(
-                        "#{}",
-                        self.id_of_ref_length_or_plane_angle_measure_with_unit_select(
-                            &it.unit_size
-                        )
-                    ),
+                    format!("#{}", self.id_of_ref_measure_with_unit(&it.unit_size)),
                     it.area_type.token().to_string(),
                     match &it.second_unit_size {
                         Some(r) => format!(
@@ -31050,19 +30697,14 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
                         "#{}",
                         self.id_of_ref_geometric_tolerance_target(&it.toleranced_shape_aspect)
                     ),
-                    format!(
-                        "#{}",
-                        self.id_of_ref_length_or_plane_angle_measure_with_unit_select(
-                            &it.unit_size
-                        )
-                    ),
+                    format!("#{}", self.id_of_ref_measure_with_unit(&it.unit_size)),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -31080,7 +30722,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -31116,7 +30758,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -31534,7 +31176,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -31859,7 +31501,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -32216,7 +31858,10 @@ impl<'a> Writer<'a> {
                             .collect::<Vec<_>>()
                             .join(",")
                     ),
-                    format!("#{}", self.id_of_ref_styled_item_target(&it.item)),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_styled_item_target_or_representation_item(&it.item)
+                    ),
                     format!("#{}", self.id_of_ref_styled_item(&it.over_ridden_style)),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -32243,7 +31888,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -32313,7 +31958,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -32737,7 +32382,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -33448,7 +33093,7 @@ impl<'a> Writer<'a> {
                     format!("#{}", self.id_of_ref_shape_aspect(&it.projection_end)),
                     format!(
                         "#{}",
-                        self.id_of_ref_length_measure_with_unit(&it.projected_length)
+                        self.id_of_ref_measure_with_unit(&it.projected_length)
                     ),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -33872,7 +33517,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -34255,7 +33900,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -34282,7 +33927,10 @@ impl<'a> Writer<'a> {
                             .collect::<Vec<_>>()
                             .join(",")
                     ),
-                    format!("#{}", self.id_of_ref_styled_item_target(&it.item)),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_styled_item_target_or_representation_item(&it.item)
+                    ),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -34345,7 +33993,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -34580,7 +34228,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -35015,7 +34663,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -35126,7 +34774,7 @@ impl<'a> Writer<'a> {
                         None => "$".to_string(),
                     },
                     match &it.magnitude {
-                        Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)),
+                        Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)),
                         None => "$".to_string(),
                     },
                     format!(
@@ -35493,10 +35141,10 @@ impl<'a> Writer<'a> {
                 PartialEntity::GeometricRepresentationContext { coordinate_space_dimension, .. } => { let a: Vec<String> = vec![format!("{}", coordinate_space_dimension)]; format!("GEOMETRIC_REPRESENTATION_CONTEXT({})", a.join(",")) },
                 PartialEntity::GeometricRepresentationItem => "GEOMETRIC_REPRESENTATION_ITEM()".to_string(),
                 PartialEntity::GeometricSet { elements, .. } => { let a: Vec<String> = vec![format!("({})", elements.iter().map(|e| format!("#{}", self.id_of_ref_geometric_set_select(e))).collect::<Vec<_>>().join(","))]; format!("GEOMETRIC_SET({})", a.join(",")) },
-                PartialEntity::GeometricTolerance { name, description, magnitude, toleranced_shape_aspect, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match magnitude { Some(r) => format!("#{}", self.id_of_ref_length_measure_with_unit(r)), None => "$".to_string() }, format!("#{}", self.id_of_ref_geometric_tolerance_target(toleranced_shape_aspect))]; format!("GEOMETRIC_TOLERANCE({})", a.join(",")) },
+                PartialEntity::GeometricTolerance { name, description, magnitude, toleranced_shape_aspect, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match magnitude { Some(r) => format!("#{}", self.id_of_ref_measure_with_unit(r)), None => "$".to_string() }, format!("#{}", self.id_of_ref_geometric_tolerance_target(toleranced_shape_aspect))]; format!("GEOMETRIC_TOLERANCE({})", a.join(",")) },
                 PartialEntity::GeometricToleranceWithDatumReference { datum_system, .. } => { let a: Vec<String> = vec![format!("({})", datum_system.iter().map(|e| format!("#{}", self.id_of_ref_datum_system_or_reference(e))).collect::<Vec<_>>().join(","))]; format!("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE({})", a.join(",")) },
                 PartialEntity::GeometricToleranceWithDefinedAreaUnit { area_type, second_unit_size, .. } => { let a: Vec<String> = vec![area_type.token().to_string(), match second_unit_size { Some(r) => format!("#{}", self.id_of_ref_length_or_plane_angle_measure_with_unit_select(r)), None => "$".to_string() }]; format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT({})", a.join(",")) },
-                PartialEntity::GeometricToleranceWithDefinedUnit { unit_size, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_length_or_plane_angle_measure_with_unit_select(unit_size))]; format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT({})", a.join(",")) },
+                PartialEntity::GeometricToleranceWithDefinedUnit { unit_size, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_measure_with_unit(unit_size))]; format!("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT({})", a.join(",")) },
                 PartialEntity::GeometricToleranceWithMaximumTolerance { maximum_upper_tolerance, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_length_measure_with_unit(maximum_upper_tolerance))]; format!("GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE({})", a.join(",")) },
                 PartialEntity::GeometricToleranceWithModifiers { modifiers, .. } => { let a: Vec<String> = vec![format!("({})", modifiers.iter().map(|e| e.token().to_string()).collect::<Vec<_>>().join(","))]; format!("GEOMETRIC_TOLERANCE_WITH_MODIFIERS({})", a.join(",")) },
                 PartialEntity::GeometricallyBoundedSurfaceShapeRepresentation => "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION()".to_string(),
@@ -35594,7 +35242,7 @@ impl<'a> Writer<'a> {
                 PartialEntity::ProductDefinitionUsage => "PRODUCT_DEFINITION_USAGE()".to_string(),
                 PartialEntity::ProductDefinitionWithAssociatedDocuments { documentation_ids, .. } => { let a: Vec<String> = vec![format!("({})", documentation_ids.iter().map(|e| format!("#{}", self.id_of_ref_document(e))).collect::<Vec<_>>().join(","))]; format!("PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS({})", a.join(",")) },
                 PartialEntity::ProductRelatedProductCategory { products, .. } => { let a: Vec<String> = vec![format!("({})", products.iter().map(|e| format!("#{}", self.id_of_ref_product(e))).collect::<Vec<_>>().join(","))]; format!("PRODUCT_RELATED_PRODUCT_CATEGORY({})", a.join(",")) },
-                PartialEntity::ProjectedZoneDefinition { projection_end, projected_length, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_shape_aspect(projection_end)), format!("#{}", self.id_of_ref_length_measure_with_unit(projected_length))]; format!("PROJECTED_ZONE_DEFINITION({})", a.join(",")) },
+                PartialEntity::ProjectedZoneDefinition { projection_end, projected_length, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_shape_aspect(projection_end)), format!("#{}", self.id_of_ref_measure_with_unit(projected_length))]; format!("PROJECTED_ZONE_DEFINITION({})", a.join(",")) },
                 PartialEntity::PropertyDefinition { name, description, definition, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_characterized_definition(definition))]; format!("PROPERTY_DEFINITION({})", a.join(",")) },
                 PartialEntity::PropertyDefinitionRepresentation { definition, used_representation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_represented_definition(definition)), format!("#{}", self.id_of_ref_representation(used_representation))]; format!("PROPERTY_DEFINITION_REPRESENTATION({})", a.join(",")) },
                 PartialEntity::QualifiedRepresentationItem { qualifiers, .. } => { let a: Vec<String> = vec![format!("({})", qualifiers.iter().map(|e| format!("#{}", self.id_of_ref_value_qualifier(e))).collect::<Vec<_>>().join(","))]; format!("QUALIFIED_REPRESENTATION_ITEM({})", a.join(",")) },
@@ -35634,7 +35282,7 @@ impl<'a> Writer<'a> {
                 PartialEntity::StateObserved { name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("STATE_OBSERVED({})", a.join(",")) },
                 PartialEntity::StateType { name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("STATE_TYPE({})", a.join(",")) },
                 PartialEntity::StraightnessTolerance => "STRAIGHTNESS_TOLERANCE()".to_string(),
-                PartialEntity::StyledItem { styles, item, .. } => { let a: Vec<String> = vec![format!("({})", styles.iter().map(|e| format!("#{}", self.id_of_ref_presentation_style_assignment(e))).collect::<Vec<_>>().join(",")), format!("#{}", self.id_of_ref_styled_item_target(item))]; format!("STYLED_ITEM({})", a.join(",")) },
+                PartialEntity::StyledItem { styles, item, .. } => { let a: Vec<String> = vec![format!("({})", styles.iter().map(|e| format!("#{}", self.id_of_ref_presentation_style_assignment(e))).collect::<Vec<_>>().join(",")), format!("#{}", self.id_of_ref_styled_item_target_or_representation_item(item))]; format!("STYLED_ITEM({})", a.join(",")) },
                 PartialEntity::Surface => "SURFACE()".to_string(),
                 PartialEntity::SurfaceCurve { curve_3d, associated_geometry, master_representation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve(curve_3d)), format!("({})", associated_geometry.iter().map(|e| format!("#{}", self.id_of_ref_pcurve_or_surface(e))).collect::<Vec<_>>().join(",")), master_representation.token().to_string()]; format!("SURFACE_CURVE({})", a.join(",")) },
                 PartialEntity::SurfaceProfileTolerance => "SURFACE_PROFILE_TOLERANCE()".to_string(),

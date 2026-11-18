@@ -12,17 +12,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AuthorError::NarrowedReference` reports a reference AP242 narrows in an
   entity that names a type the narrower attribute does not allow, where the
   argument's type cannot rule it out: in `add_complex`, and in a
-  self-referencing constructor (`add_applied_group_assignment_cyclic`).
+  self-referencing constructor (`add_applied_group_assignment_cyclic`,
+  `add_over_riding_styled_item_cyclic`,
+  `add_context_dependent_over_riding_styled_item_cyclic`).
 - `Ap242ApprovedItemRef`, `Ap242ConstructiveGeometryRepresentationRef`,
   `Ap242DerivedShapeAspectRef`, `Ap242DraughtingModelItemSelectRef`,
   `Ap242GroupableItemRef`,
   `Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef`,
   `Ap242MechanicalDesignShadedPresentationRepresentationItemsRef`,
-  `Ap242ShapeDimensionRepresentationItemRef`, `Ap242ShapeRepresentationRef`
-  and `Ap242ShapeRepresentationWithParametersItemsRef`: what AP242 edition 2
+  `Ap242ShapeDimensionRepresentationItemRef`, `Ap242ShapeRepresentationRef`,
+  `Ap242ShapeRepresentationWithParametersItemsRef` and
+  `Ap242StyledItemTargetRef`: what AP242 edition 2
   allows where the model, read from every edition, allows more. Each converts
-  into the model's reference with `From`, as does `PropertyDefinitionRef` into
-  `RepresentedDefinitionRef`.
+  into the model's reference with `From`, as do `PropertyDefinitionRef` into
+  `RepresentedDefinitionRef`, and `LengthMeasureWithUnitRef` and
+  `LengthOrPlaneAngleMeasureWithUnitSelectRef` into `MeasureWithUnitRef`.
+- `StyledItemTargetOrRepresentationItemRef`: what a styled item's `item` takes
+  in the model — AP242's `styled_item_target` or, as AP203 and AP214 allow,
+  any representation item.
 
 ### Changed
 
@@ -42,6 +49,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `Ap242ConstructiveGeometryRepresentationRef`
   - `add_cc_design_approval`: `items` takes `Ap242ApprovedItemRef`s
   - `add_applied_group_assignment`: `items` takes `Ap242GroupableItemRef`s
+  - `add_styled_item`, `add_over_riding_styled_item`,
+    `add_context_dependent_over_riding_styled_item`,
+    `add_annotation_occurrence` and `add_draughting_annotation_occurrence`:
+    `item` takes an `Ap242StyledItemTargetRef`
 - `add_complex` and the self-referencing constructors check the same
   narrowings at run time, and `add_person_and_organization_address` takes
   exactly one organization and one person, as AP242 requires.
@@ -65,6 +76,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `AnnotationPlaceholderOccurrence(WithLeaderLine)::item`:
     `GeometricSetRef`; `TessellatedAnnotationOccurrence::item`:
     `TessellatedGeometricSetRef`
+- Attributes an older STEP edition declares wider than AP242 now have the
+  wider type in the model, so reading keeps what any edition allows; the
+  `Ap242Author` constructors still take AP242's type:
+  - `magnitude` of every geometric tolerance (and of the
+    `GEOMETRIC_TOLERANCE` part): `Option<MeasureWithUnitRef>`, as AP203 and
+    AP214 declare it, where AP242 takes a length measure
+  - `GeometricToleranceWithDefinedUnit` and
+    `GeometricToleranceWithDefinedAreaUnit` `unit_size`, and
+    `ProjectedZoneDefinition::projected_length`: `MeasureWithUnitRef`
+  - `item` of `StyledItem`, `OverRidingStyledItem`,
+    `ContextDependentOverRidingStyledItem`, `AnnotationOccurrence` and
+    `DraughtingAnnotationOccurrence` (and of the `STYLED_ITEM` part):
+    `StyledItemTargetOrRepresentationItemRef`
 
 ### Removed
 
@@ -76,6 +100,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `add_annotation_symbol_cyclic` constructors, and their variants in
   `EntityKey`, `PartialEntity` and the reference enums that listed them are
   gone.
+- `StyledItemTargetRef`, replaced by `StyledItemTargetOrRepresentationItemRef`
+  in the model and `Ap242StyledItemTargetRef` in the constructors.
 
 ### Fixed
 
@@ -94,6 +120,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   type. Such an entity used to be kept, and the reference went missing from
   the scene without a report: a face's surface read as `Other`, or a loop or
   edge was left out.
+- `read()` keeps a geometric tolerance whose magnitude, unit size or
+  projected length is a plain `MEASURE_WITH_UNIT`, and a styled item that
+  styles a representation item outside AP242's `styled_item_target`, as AP203
+  and AP214 allow. Both used to be dropped as a `NonstandardReference`.
+- `Tolerance::magnitude` reads a magnitude given as a plain
+  `MEASURE_WITH_UNIT` when its value is a length measure.
 
 ## [0.3.1] - 2026-11-18
 
