@@ -16,10 +16,10 @@ use std::io::Read;
 use crate::generated::generic_normalize;
 use crate::generated::model::{StepModel, TextDedup};
 use crate::generated::read::{
-    COMPLEX_PART_NAMES, RefSlot, SIMPLE_NAMES, build_complex_entity, build_entity,
-    complex_part_index, complex_ref_field_slots, complex_ref_slots, finalize_arenas,
-    ref_field_slots, ref_slots, resolve_complex_entity, resolve_entity, shrink_arenas,
-    simple_index,
+    COMPLEX_PART_NAMES, ComplexNarrowing, RefSlot, SIMPLE_NAMES, build_complex_entity,
+    build_entity, complex_narrowings, complex_part_index, complex_ref_field_slots,
+    complex_ref_slots, finalize_arenas, ref_field_slots, ref_slots, resolve_complex_entity,
+    resolve_entity, shrink_arenas, simple_index,
 };
 use crate::parser::p21::{Parser, Stream};
 use crate::parser::{Attribute, Error, ParseWarning, RawEntity, RawEntityPart};
@@ -324,14 +324,18 @@ struct Scanned {
     parse_warnings: Vec<ParseWarning>,
 }
 
-/// Whether a complex entity, named by its sorted part names as `(A+B+C)`,
-/// has a part in `fits` (sorted), so that a slot admitting `fits` admits it.
-fn complex_fits(name: &str, fits: &[&str]) -> bool {
+/// The part names of a complex entity named by them, sorted, as `(A+B+C)`.
+fn part_names(name: &str) -> impl Iterator<Item = &str> {
     name.strip_prefix('(')
         .and_then(|n| n.strip_suffix(')'))
         .unwrap_or(name)
         .split('+')
-        .any(|part| fits.binary_search(&part).is_ok())
+}
+
+/// Whether a complex entity, named by its sorted part names as `(A+B+C)`,
+/// has a part in `fits` (sorted), so that a slot admitting `fits` admits it.
+fn complex_fits(name: &str, fits: &[&str]) -> bool {
+    part_names(name).any(|part| fits.binary_search(&part).is_ok())
 }
 
 /// Slot-aware nonstandard-ref check: does any ref slot of the entity in `row`
@@ -346,6 +350,9 @@ fn nonstd_ref(
     buf: &mut Vec<u64>,
 ) -> Option<String> {
     let mut found = None;
+    // The parts of a complex `row`, read from its name when a slot has
+    // narrowings by other parts to check.
+    let mut parts: Option<Vec<&str>> = None;
     refs.slot_refs(row.refs, buf, |pix, idx, ids| {
         let (ename, slots): (&str, &[RefSlot]) = match row.member {
             Member::Simple(ix) => (
@@ -364,6 +371,22 @@ fn nonstd_ref(
         let Some(rs) = slots.iter().find(|rs| rs.idx == idx as usize) else {
             return false;
         };
+        // Another part of a complex row may narrow this slot (a redeclaration
+        // every edition shares); each one held applies too.
+        let narrowings: &[ComplexNarrowing] = match row.member {
+            Member::Complex => complex_narrowings(pix, idx as usize),
+            _ => &[],
+        };
+        let held: &[&str] = if narrowings.is_empty() {
+            &[]
+        } else {
+            parts.get_or_insert_with(|| part_names(labels.of(row)).collect())
+        };
+        let applies = |n: &&ComplexNarrowing| {
+            COMPLEX_PART_NAMES
+                .get(usize::from(n.by))
+                .is_some_and(|by| held.contains(by))
+        };
         for &r in ids {
             let Some(tp) = table.pos(r) else {
                 continue;
@@ -372,8 +395,21 @@ fn nonstd_ref(
             let admitted = match target.member {
                 // Not in the closure: cascade / unimplemented handles it.
                 Member::Out | Member::Rejected => continue,
-                Member::Complex => complex_fits(labels.of(target), rs.complex_fits),
-                Member::Simple(t) => rs.allowed.binary_search(&t).is_ok(),
+                Member::Complex => {
+                    let label = labels.of(target);
+                    complex_fits(label, rs.complex_fits)
+                        && narrowings
+                            .iter()
+                            .filter(applies)
+                            .all(|n| complex_fits(label, n.fits))
+                }
+                Member::Simple(t) => {
+                    rs.allowed.binary_search(&t).is_ok()
+                        && narrowings
+                            .iter()
+                            .filter(applies)
+                            .all(|n| n.allowed.binary_search(&t).is_ok())
+                }
             };
             if !admitted {
                 found = Some(format!(

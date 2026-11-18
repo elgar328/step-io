@@ -131,6 +131,23 @@ fn narrowed_attribute_drops_a_wider_reference() {
     assert!(dropped_kind(&r, 3).is_none(), "#3 must survive: {r:?}");
 }
 
+/// The same narrowing made by one part of a complex instance holds for the
+/// attribute another part declares: `PRESENTATION_REPRESENTATION` narrows
+/// `REPRESENTATION.context_of_items`, so `#4` over a plain context is dropped
+/// and `#3` over a geometric one is kept.
+#[test]
+fn narrowing_by_one_complex_part_holds_for_another() {
+    let r = read_body(
+        "#1=CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2=(GEOMETRIC_REPRESENTATION_CONTEXT(3)REPRESENTATION_CONTEXT('',''));\n\
+         #3=(PRESENTATION_REPRESENTATION()REPRESENTATION('',(#1),#2));\n\
+         #5=REPRESENTATION_CONTEXT('','');\n\
+         #4=(PRESENTATION_REPRESENTATION()REPRESENTATION('',(#1),#5));\n",
+    );
+    assert_eq!(dropped_kind(&r, 4), Some(&DropKind::NonstandardReference));
+    assert!(dropped_kind(&r, 3).is_none(), "#3 must survive: {r:?}");
+}
+
 /// AP214 lets a shape definition representation describe a shape aspect
 /// directly; only AP242 narrows `definition` to a property definition. Reading
 /// accepts what any edition allows, so the aspect form is kept.

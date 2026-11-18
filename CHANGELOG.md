@@ -47,6 +47,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   names a type the narrower attribute does not allow, and reports it as a
   `NonstandardReference`. Such an entity used to be kept, with a reference the
   standard does not allow.
+- The same holds inside a complex entity: when one part narrows an attribute
+  another part declares, and every edition shares that narrowing, `read()`
+  drops the entity if the reference falls outside it (for example
+  `(PRESENTATION_REPRESENTATION REPRESENTATION)` over a context that is not
+  geometric).
 - `read()` drops an entity whose reference points at a complex entity none
   of whose parts the schema allows there, and reports it as a
   `NonstandardReference`, as it already did for a simple entity of the wrong

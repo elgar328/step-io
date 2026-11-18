@@ -994,6 +994,36 @@ fn read_int_measure_value(a: &Attribute, ctx: &str, tt: &mut TextIn<'_>) -> Resu
         ir.parts.iter().enumerate().map(|(i, p)| (i, &p.fields)),
     );
 
+    // ---- complex-part redeclarations of another part's attribute ----
+    // A complex instance holding part `by` must satisfy `by`'s narrowing of the
+    // attribute at `idx` of part `owner` (both COMPLEX_PART_NAMES indices).
+    // Only redeclarations every edition shares are listed, so no legal input
+    // of any edition is refused.
+    s.push_str("#[derive(Clone, Copy)]\npub struct ComplexNarrowing { pub owner: u16, pub idx: usize, pub by: u16, pub allowed: &'static [u16], pub fits: &'static [&'static str] }\n\n");
+    let rows: Vec<String> = ir
+        .complex_narrowings
+        .iter()
+        .map(|n| {
+            let allowed: Vec<String> = n.allowed.iter().map(usize::to_string).collect();
+            let fits: Vec<String> = n.fits.iter().map(|f| format!("{f:?}")).collect();
+            format!(
+                "ComplexNarrowing{{owner:{},idx:{},by:{},allowed:&[{}],fits:&[{}]}}",
+                n.owner,
+                n.idx,
+                n.by,
+                allowed.join(","),
+                fits.join(",")
+            )
+        })
+        .collect();
+    writeln!(
+        s,
+        "const COMPLEX_NARROWINGS: &[ComplexNarrowing] = &[{}];",
+        rows.join(",")
+    )
+    .unwrap();
+    s.push_str("/// The narrowings other parts may make of attribute `idx` of part `owner`.\npub fn complex_narrowings(owner: u16, idx: usize) -> &'static [ComplexNarrowing] {\n    let start = COMPLEX_NARROWINGS.partition_point(|n| (n.owner, n.idx) < (owner, idx));\n    let end = COMPLEX_NARROWINGS.partition_point(|n| (n.owner, n.idx) <= (owner, idx));\n    &COMPLEX_NARROWINGS[start..end]\n}\n\n");
+
     // ---- attribute positions resolved in pass 2 ----
     // The reader keeps these slots (and any other slot holding a reference)
     // of each entity for resolving once the whole file is read.

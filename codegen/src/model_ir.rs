@@ -48,6 +48,21 @@ pub struct PartEnt {
     pub fields: Vec<Field>,
 }
 
+/// One complex-part redeclaration of another part's attribute.
+#[derive(Debug, Clone)]
+pub struct ComplexNarrowing {
+    /// Index in `ModelIr::parts` of the part that declares the attribute.
+    pub owner: usize,
+    /// The attribute's position among the owner's own fields.
+    pub idx: usize,
+    /// Index in `ModelIr::parts` of the part that redeclares it.
+    pub by: usize,
+    /// Indices in `ModelIr::simples` of the simple entities it admits, sorted.
+    pub allowed: Vec<usize>,
+    /// The complex parts (UPPER names) that make a complex target fit, sorted.
+    pub fits: Vec<String>,
+}
+
 /// A discriminated ref enum over the concrete leaf entities a ref-target can be.
 #[derive(Debug, Clone)]
 pub struct RefEnum {
@@ -89,6 +104,10 @@ pub struct GenEnum {
 pub struct ModelIr {
     pub simples: Vec<SimpleEnt>,
     pub parts: Vec<PartEnt>,
+    /// Redeclarations by one complex part of an attribute another part owns,
+    /// that every edition shares (`union_safe`): a complex instance holding
+    /// both parts must satisfy them on read. Sorted by (owner, idx).
+    pub complex_narrowings: Vec<ComplexNarrowing>,
     pub ref_enums: BTreeMap<String, RefEnum>, // keyed by ref-target ty name
     pub enums: BTreeMap<String, GenEnum>,     // keyed by ENUM alias
     /// True when any complex part-bag instances exist (units).
@@ -455,9 +474,19 @@ impl ModelIr {
             }
         }
 
+        let complex_narrowings = complex_narrowings(
+            schema,
+            res,
+            closure,
+            &children,
+            complex_parts,
+            &simples,
+            &parts,
+        );
         ModelIr {
             simples,
             parts,
+            complex_narrowings,
             ref_enums,
             enums,
             has_part_bag,
@@ -585,4 +614,74 @@ fn build_enum(res: &Resolver, alias: &str) -> Option<GenEnum> {
             .map(|m| (m.to_uppercase(), pascal(m)))
             .collect(),
     })
+}
+
+/// The union-safe redeclarations one complex part makes of an attribute
+/// another complex part owns (see `ModelIr::complex_narrowings`).
+fn complex_narrowings(
+    schema: &Schema,
+    res: &Resolver,
+    closure: &BTreeSet<String>,
+    children: &BTreeMap<String, Vec<String>>,
+    complex_parts: &BTreeSet<String>,
+    simples: &[SimpleEnt],
+    parts: &[PartEnt],
+) -> Vec<ComplexNarrowing> {
+    let part_index = |name: &str| parts.iter().position(|p| p.name.eq_ignore_ascii_case(name));
+    let simple_index = |name: &str| {
+        simples
+            .iter()
+            .position(|e| e.name.eq_ignore_ascii_case(name))
+    };
+    let mut out = Vec::new();
+    for by_name in complex_parts {
+        let Some(ent) = schema.entity.get(by_name) else {
+            continue;
+        };
+        for r in &ent.redeclared_attrs {
+            let (Some(owner_name), Some(true)) = (r.owner.as_deref(), r.union_safe) else {
+                continue;
+            };
+            if owner_name == by_name || !complex_parts.contains(owner_name) {
+                continue;
+            }
+            let (Some(owner), Some(by)) = (part_index(owner_name), part_index(by_name)) else {
+                continue;
+            };
+            let Some(idx) = schema
+                .own_attrs(owner_name)
+                .iter()
+                .position(|a| a.name == r.name)
+            else {
+                continue;
+            };
+            let (_, inner) = strip_optional(&r.ty);
+            let target = match res.classify(inner, 0) {
+                Kind::Ref(t) => t,
+                Kind::Vec(k) => match *k {
+                    Kind::Ref(t) => t,
+                    _ => continue,
+                },
+                _ => continue,
+            };
+            let leaves = subtypes_in_closure(schema, res, closure, children, &target);
+            let mut allowed: Vec<usize> = leaves.iter().filter_map(|l| simple_index(l)).collect();
+            allowed.sort_unstable();
+            let mut fits: Vec<String> = leaves
+                .iter()
+                .filter(|l| complex_parts.contains(*l))
+                .map(|l| l.to_uppercase())
+                .collect();
+            fits.sort_unstable();
+            out.push(ComplexNarrowing {
+                owner,
+                idx,
+                by,
+                allowed,
+                fits,
+            });
+        }
+    }
+    out.sort_by_key(|n| (n.owner, n.idx, n.by));
+    out
 }
