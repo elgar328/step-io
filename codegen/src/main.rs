@@ -3,6 +3,7 @@
 //! schema-faithful model + generic 2-pass read + topo write into step-io's
 //! `src/generated/`. Run: `cargo run -p codegen`.
 
+mod author_narrow;
 mod classify;
 mod coverage;
 mod emit;
@@ -119,19 +120,6 @@ fn main() {
 
     // Emit into step-io's own `src/generated`, where the parser types are reached
     // as `crate::` (the generated code lives inside step-io).
-    let dir = format!("{root}/src/generated");
-    let crate_path = "crate";
-    std::fs::create_dir_all(&dir).expect("mkdir generated");
-    write_fmt(&format!("{dir}/model.rs"), &emit::emit_model(&ir));
-    write_fmt(&format!("{dir}/read.rs"), &emit::emit_read(&ir, crate_path));
-    write_fmt(&format!("{dir}/write.rs"), &emit::emit_write(&ir));
-    write_fmt(&format!("{dir}/walk.rs"), &emit::emit_walk(&ir));
-    write_fmt(&format!("{dir}/resolve.rs"), &emit::emit_resolvers(&ir));
-    write_fmt(
-        &format!("{dir}/generic_normalize.rs"),
-        &emit::emit_normalize(&ir, crate_path),
-    );
-
     // Output profile (legal set / downgrade / header), baked from the vendored
     // schema/ap242e2.toml. AP242 ed2 is the single output schema (step-io
     // reads all APs but always writes ed2); its FILE_SCHEMA identity is baked
@@ -148,14 +136,48 @@ fn main() {
             (*prefix, *variant, p)
         })
         .collect();
+    // The output schema read as a schema of its own (entities, attributes
+    // with every redeclaration, SELECTs), for where it is narrower than the
+    // model.
+    let e2_schema: Schema = toml::from_str(
+        &std::fs::read_to_string(format!("{root}/schema/{}.toml", profile_specs[0].2))
+            .expect("read output profile"),
+    )
+    .expect("parse output profile as a schema");
+    let legal: BTreeSet<String> = parsed[0]
+        .2
+        .entity
+        .keys()
+        .map(|k| k.to_uppercase())
+        .collect();
+    let narrowing = author_narrow::AuthorNarrowing::build(&ir, &e2_schema, &legal);
+    for line in narrowing.report() {
+        eprintln!("codegen: narrow {line}");
+    }
     let targets: Vec<(&str, &str, &schema::ProfileToml)> =
         parsed.iter().map(|(a, b, c)| (*a, *b, c)).collect();
+    let dir = format!("{root}/src/generated");
+    let crate_path = "crate";
+    std::fs::create_dir_all(&dir).expect("mkdir generated");
+    write_fmt(
+        &format!("{dir}/model.rs"),
+        &emit::emit_model(&ir, &narrowing),
+    );
+    write_fmt(&format!("{dir}/read.rs"), &emit::emit_read(&ir, crate_path));
+    write_fmt(&format!("{dir}/write.rs"), &emit::emit_write(&ir));
+    write_fmt(&format!("{dir}/walk.rs"), &emit::emit_walk(&ir));
+    write_fmt(&format!("{dir}/resolve.rs"), &emit::emit_resolvers(&ir));
+    write_fmt(
+        &format!("{dir}/generic_normalize.rs"),
+        &emit::emit_normalize(&ir, crate_path),
+    );
+
     write_fmt(&format!("{dir}/schema.rs"), &emit::emit_schema(&targets));
 
     // Strict AP242 authoring layer: constructors only for AP242-legal entities.
     write_fmt(
         &format!("{dir}/author.rs"),
-        &emit::emit_author(&ir, &parsed[0].2, &schema),
+        &emit::emit_author(&ir, &parsed[0].2, &schema, &narrowing),
     );
 
     write_fmt(

@@ -104,6 +104,38 @@
 //! and rules for combining types, though not its `WHERE` rules — so there is
 //! no loss report to check afterwards.
 //!
+//! The model reads every edition, so some of its reference types are wider
+//! than AP242 edition 2 allows: an attribute a subtype narrows
+//! (`SELF\supertype.attribute : narrower;`) only from AP242 on, or a SELECT
+//! with members AP242 dropped. There a constructor takes a narrower type and
+//! stores it as the model's, so a reference AP242 does not allow does not
+//! compile:
+//!
+//! ```
+//! # use step_io::{Ap242Author, model as m};
+//! # fn f(a: &mut Ap242Author, shape: m::ProductDefinitionShapeId, rep: m::ShapeRepresentationId) {
+//! a.add_shape_definition_representation(
+//!     m::PropertyDefinitionRef::ProductDefinitionShape(shape),
+//!     m::Ap242ShapeRepresentationRef::ShapeRepresentation(rep),
+//! );
+//! # }
+//! ```
+//!
+//! ```compile_fail
+//! # use step_io::{Ap242Author, model as m};
+//! # fn f(a: &mut Ap242Author, aspect: m::ShapeAspectId, rep: m::ShapeRepresentationId) {
+//! // AP214 lets a shape aspect have a shape representation; AP242 does not.
+//! a.add_shape_definition_representation(
+//!     m::RepresentedDefinitionRef::ShapeAspect(aspect),
+//!     m::Ap242ShapeRepresentationRef::ShapeRepresentation(rep),
+//! );
+//! # }
+//! ```
+//!
+//! Where an argument's type cannot rule it out — a complex instance's parts,
+//! the struct a self-referencing constructor takes — the check runs on
+//! insertion and returns [`AuthorError::NarrowedReference`].
+//!
 //! [`StepBuilder`] is the convenience layer on top, covering what exports
 //! touch most: parts and b-rep topology (vertex → edge → face → solid, over
 //! analytic surfaces or NURBS), assembly instances with placements, display

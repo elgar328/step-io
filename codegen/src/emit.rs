@@ -181,7 +181,7 @@ macro_rules! entity {
 }
 "#;
 
-pub fn emit_model(ir: &ModelIr) -> String {
+pub fn emit_model(ir: &ModelIr, narrowing: &crate::author_narrow::AuthorNarrowing) -> String {
     let mut s = String::from(HEADER);
     s.push_str("//! The schema-faithful model — [`StepModel`], one arena per entity type.\n//! Public as `step_io::model`, whose docs describe it.\n\n");
 
@@ -493,6 +493,7 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
     for re in refs {
         emit_ref_enum(&mut s, re);
     }
+    emit_author_ref_enums(&mut s, ir, narrowing);
 
     // Simple structs.
     for se in &ir.simples {
@@ -785,6 +786,64 @@ fn emit_ref_enum(s: &mut String, re: &RefEnum) {
     )
     .unwrap();
     writeln!(s, "    }} }}\n}}\n").unwrap();
+}
+
+/// The reference enums `Ap242Author` takes where AP242 edition 2 is narrower
+/// than the model, and the conversions into the model's enums.
+fn emit_author_ref_enums(
+    s: &mut String,
+    ir: &ModelIr,
+    narrowing: &crate::author_narrow::AuthorNarrowing,
+) {
+    for (rust, (e2_type, re)) in &narrowing.new_enums {
+        writeln!(
+            s,
+            "/// A reference to what AP242 edition 2 allows as `{e2_type}`, where the\n/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)\n/// takes it and stores it as the model's wider reference.\n#[derive(Debug, Clone, PartialEq)]\npub enum {rust} {{"
+        )
+        .unwrap();
+        for (variant, target) in &re.simple_arms {
+            writeln!(s, "    {variant}({target}Id),").unwrap();
+        }
+        if re.has_complex {
+            writeln!(s, "    Complex(ComplexEntityId),").unwrap();
+        }
+        writeln!(s, "}}\n").unwrap();
+    }
+    for (narrow, wide) in &narrowing.conversions {
+        let n = narrowing
+            .new_enums
+            .get(narrow)
+            .map(|(_, re)| re)
+            .or_else(|| ir.ref_enums.values().find(|re| re.rust == *narrow))
+            .expect("narrow enum");
+        let w = ir
+            .ref_enums
+            .values()
+            .find(|re| re.rust == *wide)
+            .expect("wide enum");
+        writeln!(s, "impl From<{narrow}> for {wide} {{\n    fn from(r: {narrow}) -> Self {{\n        match r {{").unwrap();
+        for (variant, target) in &n.simple_arms {
+            let to = w
+                .simple_arms
+                .iter()
+                .find(|(_, t)| t == target)
+                .unwrap_or_else(|| panic!("{narrow}::{variant} has no arm in {wide}"));
+            writeln!(
+                s,
+                "            {narrow}::{variant}(i) => {wide}::{}(i),",
+                to.0
+            )
+            .unwrap();
+        }
+        if n.has_complex {
+            assert!(
+                w.has_complex,
+                "{narrow} holds complex entities, {wide} does not"
+            );
+            writeln!(s, "            {narrow}::Complex(i) => {wide}::Complex(i),").unwrap();
+        }
+        writeln!(s, "        }}\n    }}\n}}\n").unwrap();
+    }
 }
 
 /// snake_case plural-ish arena field name for a struct rust name.
@@ -2876,6 +2935,7 @@ pub fn emit_author(
     ir: &ModelIr,
     profile: &crate::schema::ProfileToml,
     schema: &crate::schema::Schema,
+    narrowing: &crate::author_narrow::AuthorNarrowing,
 ) -> String {
     let legal: std::collections::BTreeSet<String> =
         profile.entity.keys().map(|k| k.to_uppercase()).collect();
@@ -2919,6 +2979,15 @@ pub enum AuthorError {
     /// Builder input breaks a rule of the standard: a B-spline whose knots do
     /// not fit its degree and control points, a mesh index past its points.
     InvalidInput { reason: &'static str },
+    /// A reference AP242 narrows in `entity` (a `SELF\\supertype.attribute`
+    /// redeclaration, or a SELECT with fewer members than other editions')
+    /// names a type the narrower attribute does not allow. Raised where the
+    /// type of the argument cannot rule it out: a complex instance's parts,
+    /// and a self-referencing constructor's struct.
+    NarrowedReference {
+        entity: &'static str,
+        attribute: &'static str,
+    },
 }
 
 impl std::fmt::Display for AuthorError {
@@ -2953,6 +3022,9 @@ impl std::fmt::Display for AuthorError {
                 write!(f, "{entity}.{attribute}: not a finite number")
             }
             AuthorError::InvalidInput { reason } => write!(f, "invalid input: {reason}"),
+            AuthorError::NarrowedReference { entity, attribute } => {
+                write!(f, "{entity}.{attribute}: a reference AP242 does not allow there")
+            }
         }
     }
 }
@@ -3019,12 +3091,18 @@ impl Ap242Author {
         }
         generated += 1;
         let params = idents(&se.fields);
+        let narrow_of = |f: &Field| narrowing.params.get(&(se.rust.clone(), f.name.clone()));
         let mut sig = String::new();
         for (ident, f) in &params {
             if f.derived {
                 continue;
             }
-            write!(sig, ", {ident}: {}", author_param_type(ir, f)).unwrap();
+            let ty = author_param_type(ir, f);
+            let ty = match narrow_of(f) {
+                Some(n) => replace_type_name(&ty, &n.wide, &n.narrow),
+                None => ty,
+            };
+            write!(sig, ", {ident}: {ty}").unwrap();
         }
         writeln!(s, "\n    /// `{}` — strict AP242 constructor.", se.name).unwrap();
         writeln!(
@@ -3038,6 +3116,7 @@ impl Ap242Author {
             if f.derived {
                 continue;
             }
+            let f = &with_e2_bounds(f, narrowing.bounds.get(&(se.rust.clone(), f.name.clone())));
             s.push_str(&author_card_check(&se.name, &f.name, ident, f, false));
             s.push_str(&author_finite_check(
                 &se.name,
@@ -3057,6 +3136,14 @@ impl Ap242Author {
                 "&self.model",
                 0,
             );
+            // A narrower argument is checked as its own type.
+            let check = match narrow_of(f) {
+                Some(n) => check.replace(
+                    &format!("check_{}(", snake_name(&n.wide)),
+                    &format!("check_{}(", snake_name(&n.narrow)),
+                ),
+                None => check,
+            };
             s.push_str(&check);
         }
         for (ident, f) in &params {
@@ -3077,7 +3164,20 @@ impl Ap242Author {
                 continue;
             }
             let plain = ident.trim_start_matches("r#");
-            if plain == ident {
+            if narrow_of(f).is_some() {
+                // Store the narrower argument as the model's wider reference.
+                let conv = match (&f.kind, f.optional || f.derivable) {
+                    (Kind::Vec(_), false) => {
+                        format!("{ident}.into_iter().map(Into::into).collect()")
+                    }
+                    (Kind::Vec(_), true) => {
+                        format!("{ident}.map(|v| v.into_iter().map(Into::into).collect())")
+                    }
+                    (_, false) => format!("{ident}.into()"),
+                    (_, true) => format!("{ident}.map(Into::into)"),
+                };
+                write!(s, " {plain}: {conv},").unwrap();
+            } else if plain == ident {
                 write!(s, " {ident},").unwrap();
             } else {
                 write!(s, " {plain}: {ident},").unwrap();
@@ -3129,6 +3229,10 @@ impl Ap242Author {
                 continue;
             }
             let expr = format!("model.{}.items[id as usize].{ident}", arena_field(&se.rust));
+            let f = &with_e2_bounds(f, narrowing.bounds.get(&(se.rust.clone(), f.name.clone())));
+            if let Some(n) = narrowing.cyclic.get(&(se.rust.clone(), f.name.clone())) {
+                cyclic_checks.push_str(&narrowed_check(ir, n, f, &expr, false, &se.name));
+            }
             cyclic_checks.push_str(&author_card_check(&se.name, &f.name, &expr, f, false));
             cyclic_checks.push_str(&author_finite_check(
                 &se.name,
@@ -3166,6 +3270,7 @@ impl Ap242Author {
         for p in &parts {
             check_partial_entity(&self.model, p)?;
         }
+        check_complex_narrowings(&self.model, &parts)?;
         parts.sort_by(|a, b| part_name(a).cmp(part_name(b)));
         Ok(ComplexEntityId(self.model.complex_entity_arena.push(ComplexEntity { parts })))
     }
@@ -3181,11 +3286,12 @@ impl Ap242Author {
 
     if ir.has_part_bag {
         emit_author_complex(ir, &legal, profile, schema, &mut s);
+        emit_complex_narrowings(ir, narrowing, &mut s);
     }
 
     // Reference checks, one per ref enum: legality is decided at generation
     // time (a static match arm), bounds at run time.
-    emit_author_ref_checks(ir, &legal, &mut s);
+    emit_author_ref_checks(ir, narrowing, &legal, &mut s);
     s
 }
 
@@ -3193,7 +3299,7 @@ impl Ap242Author {
 /// level into aggregate SELECT members) has an arm targeting `se` itself —
 /// i.e. a self-reference is type-representable, so the entity gets an
 /// `add_*_cyclic` variant.
-fn self_ref_capable(ir: &ModelIr, se: &SimpleEnt) -> bool {
+pub(crate) fn self_ref_capable(ir: &ModelIr, se: &SimpleEnt) -> bool {
     fn kind_hits(ir: &ModelIr, k: &Kind, rust: &str) -> bool {
         match k {
             Kind::Ref(t) => {
@@ -3452,10 +3558,118 @@ pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
     s.push_str("        _ => {}\n    }\n    Ok(())\n}\n\n");
 }
 
+/// `ty` with the type name `from` replaced by `to` (whole names only).
+fn replace_type_name(ty: &str, from: &str, to: &str) -> String {
+    ty.split_inclusive(['<', '>', ' ', ','])
+        .map(|piece| {
+            let name = piece.trim_end_matches(['<', '>', ' ', ',']);
+            if name == from {
+                format!("{to}{}", &piece[name.len()..])
+            } else {
+                piece.to_string()
+            }
+        })
+        .collect()
+}
+
+/// `f` with AP242 edition 2's outer aggregate bounds, where they differ.
+fn with_e2_bounds(f: &Field, bounds: Option<&(u32, Option<u32>)>) -> Field {
+    let mut f = f.clone();
+    if let Some(&(min, max)) = bounds {
+        f.min = min;
+        f.max = max;
+    }
+    f
+}
+
+/// Code returning `NarrowedReference` unless the reference(s) at `expr`
+/// (a model-typed field `f`) are among `n`'s arms or complex parts.
+fn narrowed_check(
+    ir: &ModelIr,
+    n: &crate::author_narrow::RuntimeNarrowing,
+    f: &Field,
+    expr: &str,
+    expr_is_ref: bool,
+    entity_upper: &str,
+) -> String {
+    let w = &n.wide;
+    let wide = ir
+        .ref_enums
+        .values()
+        .find(|re| re.rust == *w)
+        .expect("wide enum");
+    let arms: Vec<String> = wide
+        .simple_arms
+        .iter()
+        .filter(|(_, t)| n.allowed.contains(t))
+        .map(|(v, _)| format!("{w}::{v}(_)"))
+        .collect();
+    let err = format!(
+        "return Err(AuthorError::NarrowedReference {{ entity: {entity_upper:?}, attribute: {:?} }})",
+        f.name
+    );
+    let fits: Vec<String> = n.fits.iter().map(|p| format!("{p:?}")).collect();
+    let complex = if wide.has_complex {
+        format!(
+            "{w}::Complex(i) => {{ if !model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| [{}].contains(&part_name(p)))) {{ {err} }} }}\n",
+            fits.join(", ")
+        )
+    } else {
+        String::new()
+    };
+    let ok = if arms.is_empty() {
+        String::new()
+    } else {
+        format!("{} => {{}}\n", arms.join(" | "))
+    };
+    let one = |v: &str| format!("match {v} {{\n{ok}{complex}_ => {err},\n}}\n");
+    let amp = if expr_is_ref { "" } else { "&" };
+    let body = match f.kind {
+        Kind::Vec(_) => format!("for v in x.iter() {{\n{}}}\n", one("v")),
+        _ => one("x"),
+    };
+    if f.optional || f.derivable {
+        format!("        if let Some(x) = {amp}{expr} {{\n{body}        }}\n")
+    } else {
+        format!("        {{ let x = {amp}{expr};\n{body}        }}\n")
+    }
+}
+
+/// `check_complex_narrowings`: for each AP242 edition 2 narrowing of a
+/// complex part's field that holds when the instance has part `by`.
+fn emit_complex_narrowings(
+    ir: &ModelIr,
+    narrowing: &crate::author_narrow::AuthorNarrowing,
+    s: &mut String,
+) {
+    s.push_str("fn check_complex_narrowings(model: &StepModel, parts: &[PartialEntity]) -> Result<(), AuthorError> {\n");
+    for c in &narrowing.complex {
+        let owner = ir
+            .parts
+            .iter()
+            .find(|p| p.rust == c.owner)
+            .expect("owner part");
+        let by = ir.parts.iter().find(|p| p.rust == c.by).expect("by part");
+        let (ident, f) = idents(&owner.fields)
+            .into_iter()
+            .nth(c.idx)
+            .expect("owner field");
+        let check = narrowed_check(ir, &c.check, f, &ident, true, &by.name);
+        writeln!(
+            s,
+            "    if parts.iter().any(|p| matches!(p, PartialEntity::{} {{ .. }})) {{\n        for p in parts {{\n            if let PartialEntity::{} {{ {ident}, .. }} = p {{\n{check}            }}\n        }}\n    }}",
+            c.by, c.owner
+        )
+        .unwrap();
+    }
+    s.push_str("    Ok(())\n}\n\n");
+}
+
 /// Reference checks, one per ref enum: legality decided at generation time
 /// (a static match arm), bounds at run time.
 fn emit_author_ref_checks(
     ir: &ModelIr,
+    narrowing: &crate::author_narrow::AuthorNarrowing,
     legal: &std::collections::BTreeSet<String>,
     s: &mut String,
 ) {
@@ -3464,7 +3678,8 @@ fn emit_author_ref_checks(
         .iter()
         .map(|se| (se.rust.as_str(), se.name.as_str()))
         .collect();
-    for (target, re) in &ir.ref_enums {
+    let new_enums = narrowing.new_enums.iter().map(|(_, (t, re))| (t, re));
+    for (target, re) in ir.ref_enums.iter().chain(new_enums) {
         let r = &re.rust;
         writeln!(
             s,

@@ -7,7 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `AuthorError::NarrowedReference` reports a reference AP242 narrows in an
+  entity that names a type the narrower attribute does not allow, where the
+  argument's type cannot rule it out: in `add_complex`, and in a
+  self-referencing constructor (`add_applied_group_assignment_cyclic`).
+- `Ap242ApprovedItemRef`, `Ap242ConstructiveGeometryRepresentationRef`,
+  `Ap242DerivedShapeAspectRef`, `Ap242DraughtingModelItemSelectRef`,
+  `Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef`,
+  `Ap242MechanicalDesignShadedPresentationRepresentationItemsRef`,
+  `Ap242ShapeDimensionRepresentationItemRef`, `Ap242ShapeRepresentationRef`
+  and `Ap242ShapeRepresentationWithParametersItemsRef`: what AP242 edition 2
+  allows where the model, read from every edition, allows more. Each converts
+  into the model's reference with `From`.
+
 ### Changed
+
+- `Ap242Author` constructors take AP242 edition 2's narrower reference type
+  where the model's is wider, and store it as the model's:
+  - `add_shape_definition_representation`: `definition` takes a
+    `PropertyDefinitionRef`, `used_representation` an
+    `Ap242ShapeRepresentationRef`
+  - `add_draughting_model`, `add_mechanical_design_geometric_presentation_representation`,
+    `add_mechanical_design_shaded_presentation_representation`,
+    `add_shape_dimension_representation` and
+    `add_shape_representation_with_parameters`: `items` takes the matching
+    `Ap242…Ref`
+  - `add_shape_aspect_deriving_relationship`: `relating_shape_aspect` takes an
+    `Ap242DerivedShapeAspectRef`
+  - `add_constructive_geometry_representation_relationship`: `rep_2` takes an
+    `Ap242ConstructiveGeometryRepresentationRef`
+  - `add_cc_design_approval`: `items` takes `Ap242ApprovedItemRef`s
+- `add_complex` and the self-referencing constructors check the same
+  narrowings at run time, and `add_person_and_organization_address` takes
+  exactly one organization and one person, as AP242 requires.
 
 - Attributes that every STEP edition narrows with a redeclaration
   (`SELF\supertype.attribute : narrower;`) now have the narrower type in the

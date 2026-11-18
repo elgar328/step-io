@@ -15555,6 +15555,498 @@ impl WorkItemRef {
     }
 }
 
+/// A reference to what AP242 edition 2 allows as `approved_item`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242ApprovedItemRef {
+    Certification(CertificationId),
+    Change(ChangeId),
+    ChangeRequest(ChangeRequestId),
+    ConfigurationEffectivity(ConfigurationEffectivityId),
+    ConfigurationItem(ConfigurationItemId),
+    Contract(ContractId),
+    Product(ProductId),
+    SecurityClassification(SecurityClassificationId),
+    StartRequest(StartRequestId),
+    StartWork(StartWorkId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows as `constructive_geometry_representation`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242ConstructiveGeometryRepresentationRef {
+    ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
+}
+
+/// A reference to what AP242 edition 2 allows as `derived_shape_aspect`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242DerivedShapeAspectRef {
+    CentreOfSymmetry(CentreOfSymmetryId),
+    DerivedShapeAspect(DerivedShapeAspectId),
+}
+
+/// A reference to what AP242 edition 2 allows as `draughting_model_item_select`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242DraughtingModelItemSelectRef {
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlane(AnnotationPlaneId),
+    AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
+    AnnotationText(AnnotationTextId),
+    AnnotationTextCharacter(AnnotationTextCharacterId),
+    AnnotationTextOccurrence(AnnotationTextOccurrenceId),
+    Axis2Placement2d(Axis2Placement2dId),
+    Axis2Placement3d(Axis2Placement3dId),
+    CameraImage(CameraImageId),
+    CameraImage3dWithScale(CameraImage3dWithScaleId),
+    CameraModel(CameraModelId),
+    CameraModelD3(CameraModelD3Id),
+    CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
+    CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
+    ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
+    DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrenceId),
+    DraughtingCallout(DraughtingCalloutId),
+    LeaderCurve(LeaderCurveId),
+    LeaderDirectedCallout(LeaderDirectedCalloutId),
+    LeaderTerminator(LeaderTerminatorId),
+    MappedItem(MappedItemId),
+    OverRidingStyledItem(OverRidingStyledItemId),
+    StyledItem(StyledItemId),
+    TerminatorSymbol(TerminatorSymbolId),
+    TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows as `mechanical_design_geometric_presentation_representation_items`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef {
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlane(AnnotationPlaneId),
+    AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
+    AnnotationText(AnnotationTextId),
+    AnnotationTextCharacter(AnnotationTextCharacterId),
+    AnnotationTextOccurrence(AnnotationTextOccurrenceId),
+    Axis2Placement2d(Axis2Placement2dId),
+    Axis2Placement3d(Axis2Placement3dId),
+    CameraImage(CameraImageId),
+    CameraImage3dWithScale(CameraImage3dWithScaleId),
+    CameraModelD3(CameraModelD3Id),
+    CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
+    CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
+    ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
+    DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrenceId),
+    LeaderCurve(LeaderCurveId),
+    LeaderTerminator(LeaderTerminatorId),
+    MappedItem(MappedItemId),
+    OverRidingStyledItem(OverRidingStyledItemId),
+    StyledItem(StyledItemId),
+    TerminatorSymbol(TerminatorSymbolId),
+    TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows as `mechanical_design_shaded_presentation_representation_items`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242MechanicalDesignShadedPresentationRepresentationItemsRef {
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlane(AnnotationPlaneId),
+    AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
+    AnnotationText(AnnotationTextId),
+    AnnotationTextCharacter(AnnotationTextCharacterId),
+    AnnotationTextOccurrence(AnnotationTextOccurrenceId),
+    Axis2Placement2d(Axis2Placement2dId),
+    Axis2Placement3d(Axis2Placement3dId),
+    CameraImage(CameraImageId),
+    CameraImage3dWithScale(CameraImage3dWithScaleId),
+    CameraModelD3(CameraModelD3Id),
+    CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
+    CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
+    ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
+    DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrenceId),
+    LeaderCurve(LeaderCurveId),
+    LeaderTerminator(LeaderTerminatorId),
+    MappedItem(MappedItemId),
+    OverRidingStyledItem(OverRidingStyledItemId),
+    StyledItem(StyledItemId),
+    TerminatorSymbol(TerminatorSymbolId),
+    TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows as `shape_dimension_representation_item`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242ShapeDimensionRepresentationItemRef {
+    Axis1Placement(Axis1PlacementId),
+    Axis2Placement2d(Axis2Placement2dId),
+    Axis2Placement3d(Axis2Placement3dId),
+    CompoundRepresentationItem(CompoundRepresentationItemId),
+    DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
+    MeasureRepresentationItem(MeasureRepresentationItemId),
+    Placement(PlacementId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows as `shape_representation`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242ShapeRepresentationRef {
+    AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
+    GeometricallyBoundedSurfaceShapeRepresentation(
+        GeometricallyBoundedSurfaceShapeRepresentationId,
+    ),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        GeometricallyBoundedWireframeShapeRepresentationId,
+    ),
+    ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
+    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
+    ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
+    TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows as `shape_representation_with_parameters_items`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242ShapeRepresentationWithParametersItemsRef {
+    Axis1Placement(Axis1PlacementId),
+    Axis2Placement2d(Axis2Placement2dId),
+    Axis2Placement3d(Axis2Placement3dId),
+    DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
+    Direction(DirectionId),
+    MeasureRepresentationItem(MeasureRepresentationItemId),
+    Placement(PlacementId),
+    Complex(ComplexEntityId),
+}
+
+impl From<Ap242ApprovedItemRef> for ApprovedItemRef {
+    fn from(r: Ap242ApprovedItemRef) -> Self {
+        match r {
+            Ap242ApprovedItemRef::Certification(i) => ApprovedItemRef::Certification(i),
+            Ap242ApprovedItemRef::Change(i) => ApprovedItemRef::Change(i),
+            Ap242ApprovedItemRef::ChangeRequest(i) => ApprovedItemRef::ChangeRequest(i),
+            Ap242ApprovedItemRef::ConfigurationEffectivity(i) => {
+                ApprovedItemRef::ConfigurationEffectivity(i)
+            }
+            Ap242ApprovedItemRef::ConfigurationItem(i) => ApprovedItemRef::ConfigurationItem(i),
+            Ap242ApprovedItemRef::Contract(i) => ApprovedItemRef::Contract(i),
+            Ap242ApprovedItemRef::Product(i) => ApprovedItemRef::Product(i),
+            Ap242ApprovedItemRef::SecurityClassification(i) => {
+                ApprovedItemRef::SecurityClassification(i)
+            }
+            Ap242ApprovedItemRef::StartRequest(i) => ApprovedItemRef::StartRequest(i),
+            Ap242ApprovedItemRef::StartWork(i) => ApprovedItemRef::StartWork(i),
+            Ap242ApprovedItemRef::Complex(i) => ApprovedItemRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242ConstructiveGeometryRepresentationRef>
+    for RepresentationOrRepresentationReferenceRef
+{
+    fn from(r: Ap242ConstructiveGeometryRepresentationRef) -> Self {
+        match r {
+            Ap242ConstructiveGeometryRepresentationRef::ConstructiveGeometryRepresentation(i) => {
+                RepresentationOrRepresentationReferenceRef::ConstructiveGeometryRepresentation(i)
+            }
+        }
+    }
+}
+
+impl From<Ap242DerivedShapeAspectRef> for ShapeAspectRef {
+    fn from(r: Ap242DerivedShapeAspectRef) -> Self {
+        match r {
+            Ap242DerivedShapeAspectRef::CentreOfSymmetry(i) => ShapeAspectRef::CentreOfSymmetry(i),
+            Ap242DerivedShapeAspectRef::DerivedShapeAspect(i) => {
+                ShapeAspectRef::DerivedShapeAspect(i)
+            }
+        }
+    }
+}
+
+impl From<Ap242DraughtingModelItemSelectRef> for RepresentationItemRef {
+    fn from(r: Ap242DraughtingModelItemSelectRef) -> Self {
+        match r {
+            Ap242DraughtingModelItemSelectRef::AnnotationCurveOccurrence(i) => {
+                RepresentationItemRef::AnnotationCurveOccurrence(i)
+            }
+            Ap242DraughtingModelItemSelectRef::AnnotationOccurrence(i) => {
+                RepresentationItemRef::AnnotationOccurrence(i)
+            }
+            Ap242DraughtingModelItemSelectRef::AnnotationPlaceholderOccurrence(i) => {
+                RepresentationItemRef::AnnotationPlaceholderOccurrence(i)
+            }
+            Ap242DraughtingModelItemSelectRef::AnnotationPlane(i) => {
+                RepresentationItemRef::AnnotationPlane(i)
+            }
+            Ap242DraughtingModelItemSelectRef::AnnotationSymbolOccurrence(i) => {
+                RepresentationItemRef::AnnotationSymbolOccurrence(i)
+            }
+            Ap242DraughtingModelItemSelectRef::AnnotationText(i) => {
+                RepresentationItemRef::AnnotationText(i)
+            }
+            Ap242DraughtingModelItemSelectRef::AnnotationTextCharacter(i) => {
+                RepresentationItemRef::AnnotationTextCharacter(i)
+            }
+            Ap242DraughtingModelItemSelectRef::AnnotationTextOccurrence(i) => {
+                RepresentationItemRef::AnnotationTextOccurrence(i)
+            }
+            Ap242DraughtingModelItemSelectRef::Axis2Placement2d(i) => {
+                RepresentationItemRef::Axis2Placement2d(i)
+            }
+            Ap242DraughtingModelItemSelectRef::Axis2Placement3d(i) => {
+                RepresentationItemRef::Axis2Placement3d(i)
+            }
+            Ap242DraughtingModelItemSelectRef::CameraImage(i) => {
+                RepresentationItemRef::CameraImage(i)
+            }
+            Ap242DraughtingModelItemSelectRef::CameraImage3dWithScale(i) => {
+                RepresentationItemRef::CameraImage3dWithScale(i)
+            }
+            Ap242DraughtingModelItemSelectRef::CameraModel(i) => {
+                RepresentationItemRef::CameraModel(i)
+            }
+            Ap242DraughtingModelItemSelectRef::CameraModelD3(i) => {
+                RepresentationItemRef::CameraModelD3(i)
+            }
+            Ap242DraughtingModelItemSelectRef::CameraModelD3MultiClipping(i) => {
+                RepresentationItemRef::CameraModelD3MultiClipping(i)
+            }
+            Ap242DraughtingModelItemSelectRef::CameraModelD3WithHlhsr(i) => {
+                RepresentationItemRef::CameraModelD3WithHlhsr(i)
+            }
+            Ap242DraughtingModelItemSelectRef::ContextDependentOverRidingStyledItem(i) => {
+                RepresentationItemRef::ContextDependentOverRidingStyledItem(i)
+            }
+            Ap242DraughtingModelItemSelectRef::DraughtingAnnotationOccurrence(i) => {
+                RepresentationItemRef::DraughtingAnnotationOccurrence(i)
+            }
+            Ap242DraughtingModelItemSelectRef::DraughtingCallout(i) => {
+                RepresentationItemRef::DraughtingCallout(i)
+            }
+            Ap242DraughtingModelItemSelectRef::LeaderCurve(i) => {
+                RepresentationItemRef::LeaderCurve(i)
+            }
+            Ap242DraughtingModelItemSelectRef::LeaderDirectedCallout(i) => {
+                RepresentationItemRef::LeaderDirectedCallout(i)
+            }
+            Ap242DraughtingModelItemSelectRef::LeaderTerminator(i) => {
+                RepresentationItemRef::LeaderTerminator(i)
+            }
+            Ap242DraughtingModelItemSelectRef::MappedItem(i) => {
+                RepresentationItemRef::MappedItem(i)
+            }
+            Ap242DraughtingModelItemSelectRef::OverRidingStyledItem(i) => {
+                RepresentationItemRef::OverRidingStyledItem(i)
+            }
+            Ap242DraughtingModelItemSelectRef::StyledItem(i) => {
+                RepresentationItemRef::StyledItem(i)
+            }
+            Ap242DraughtingModelItemSelectRef::TerminatorSymbol(i) => {
+                RepresentationItemRef::TerminatorSymbol(i)
+            }
+            Ap242DraughtingModelItemSelectRef::TessellatedAnnotationOccurrence(i) => {
+                RepresentationItemRef::TessellatedAnnotationOccurrence(i)
+            }
+            Ap242DraughtingModelItemSelectRef::Complex(i) => RepresentationItemRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef>
+    for RepresentationItemRef
+{
+    fn from(r: Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef) -> Self {
+        match r {
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::AnnotationCurveOccurrence(i) => RepresentationItemRef::AnnotationCurveOccurrence(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::AnnotationOccurrence(i) => RepresentationItemRef::AnnotationOccurrence(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::AnnotationPlaceholderOccurrence(i) => RepresentationItemRef::AnnotationPlaceholderOccurrence(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::AnnotationPlane(i) => RepresentationItemRef::AnnotationPlane(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::AnnotationSymbolOccurrence(i) => RepresentationItemRef::AnnotationSymbolOccurrence(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::AnnotationText(i) => RepresentationItemRef::AnnotationText(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::AnnotationTextCharacter(i) => RepresentationItemRef::AnnotationTextCharacter(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::AnnotationTextOccurrence(i) => RepresentationItemRef::AnnotationTextOccurrence(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::Axis2Placement2d(i) => RepresentationItemRef::Axis2Placement2d(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::Axis2Placement3d(i) => RepresentationItemRef::Axis2Placement3d(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::CameraImage(i) => RepresentationItemRef::CameraImage(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::CameraImage3dWithScale(i) => RepresentationItemRef::CameraImage3dWithScale(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::CameraModelD3(i) => RepresentationItemRef::CameraModelD3(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::CameraModelD3MultiClipping(i) => RepresentationItemRef::CameraModelD3MultiClipping(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::CameraModelD3WithHlhsr(i) => RepresentationItemRef::CameraModelD3WithHlhsr(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::ContextDependentOverRidingStyledItem(i) => RepresentationItemRef::ContextDependentOverRidingStyledItem(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::DraughtingAnnotationOccurrence(i) => RepresentationItemRef::DraughtingAnnotationOccurrence(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::LeaderCurve(i) => RepresentationItemRef::LeaderCurve(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::LeaderTerminator(i) => RepresentationItemRef::LeaderTerminator(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::MappedItem(i) => RepresentationItemRef::MappedItem(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::OverRidingStyledItem(i) => RepresentationItemRef::OverRidingStyledItem(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::StyledItem(i) => RepresentationItemRef::StyledItem(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::TerminatorSymbol(i) => RepresentationItemRef::TerminatorSymbol(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::TessellatedAnnotationOccurrence(i) => RepresentationItemRef::TessellatedAnnotationOccurrence(i),
+            Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::Complex(i) => RepresentationItemRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242MechanicalDesignShadedPresentationRepresentationItemsRef> for RepresentationItemRef {
+    fn from(r: Ap242MechanicalDesignShadedPresentationRepresentationItemsRef) -> Self {
+        match r {
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::AnnotationCurveOccurrence(i) => RepresentationItemRef::AnnotationCurveOccurrence(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::AnnotationOccurrence(i) => RepresentationItemRef::AnnotationOccurrence(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::AnnotationPlaceholderOccurrence(i) => RepresentationItemRef::AnnotationPlaceholderOccurrence(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::AnnotationPlane(i) => RepresentationItemRef::AnnotationPlane(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::AnnotationSymbolOccurrence(i) => RepresentationItemRef::AnnotationSymbolOccurrence(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::AnnotationText(i) => RepresentationItemRef::AnnotationText(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::AnnotationTextCharacter(i) => RepresentationItemRef::AnnotationTextCharacter(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::AnnotationTextOccurrence(i) => RepresentationItemRef::AnnotationTextOccurrence(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::Axis2Placement2d(i) => RepresentationItemRef::Axis2Placement2d(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::Axis2Placement3d(i) => RepresentationItemRef::Axis2Placement3d(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::CameraImage(i) => RepresentationItemRef::CameraImage(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::CameraImage3dWithScale(i) => RepresentationItemRef::CameraImage3dWithScale(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::CameraModelD3(i) => RepresentationItemRef::CameraModelD3(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::CameraModelD3MultiClipping(i) => RepresentationItemRef::CameraModelD3MultiClipping(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::CameraModelD3WithHlhsr(i) => RepresentationItemRef::CameraModelD3WithHlhsr(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::ContextDependentOverRidingStyledItem(i) => RepresentationItemRef::ContextDependentOverRidingStyledItem(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::DraughtingAnnotationOccurrence(i) => RepresentationItemRef::DraughtingAnnotationOccurrence(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::LeaderCurve(i) => RepresentationItemRef::LeaderCurve(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::LeaderTerminator(i) => RepresentationItemRef::LeaderTerminator(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::MappedItem(i) => RepresentationItemRef::MappedItem(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::OverRidingStyledItem(i) => RepresentationItemRef::OverRidingStyledItem(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::StyledItem(i) => RepresentationItemRef::StyledItem(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::TerminatorSymbol(i) => RepresentationItemRef::TerminatorSymbol(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::TessellatedAnnotationOccurrence(i) => RepresentationItemRef::TessellatedAnnotationOccurrence(i),
+            Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::Complex(i) => RepresentationItemRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242ShapeDimensionRepresentationItemRef> for RepresentationItemRef {
+    fn from(r: Ap242ShapeDimensionRepresentationItemRef) -> Self {
+        match r {
+            Ap242ShapeDimensionRepresentationItemRef::Axis1Placement(i) => {
+                RepresentationItemRef::Axis1Placement(i)
+            }
+            Ap242ShapeDimensionRepresentationItemRef::Axis2Placement2d(i) => {
+                RepresentationItemRef::Axis2Placement2d(i)
+            }
+            Ap242ShapeDimensionRepresentationItemRef::Axis2Placement3d(i) => {
+                RepresentationItemRef::Axis2Placement3d(i)
+            }
+            Ap242ShapeDimensionRepresentationItemRef::CompoundRepresentationItem(i) => {
+                RepresentationItemRef::CompoundRepresentationItem(i)
+            }
+            Ap242ShapeDimensionRepresentationItemRef::DescriptiveRepresentationItem(i) => {
+                RepresentationItemRef::DescriptiveRepresentationItem(i)
+            }
+            Ap242ShapeDimensionRepresentationItemRef::MeasureRepresentationItem(i) => {
+                RepresentationItemRef::MeasureRepresentationItem(i)
+            }
+            Ap242ShapeDimensionRepresentationItemRef::Placement(i) => {
+                RepresentationItemRef::Placement(i)
+            }
+            Ap242ShapeDimensionRepresentationItemRef::Complex(i) => {
+                RepresentationItemRef::Complex(i)
+            }
+        }
+    }
+}
+
+impl From<Ap242ShapeRepresentationRef> for RepresentationRef {
+    fn from(r: Ap242ShapeRepresentationRef) -> Self {
+        match r {
+            Ap242ShapeRepresentationRef::AdvancedBrepShapeRepresentation(i) => {
+                RepresentationRef::AdvancedBrepShapeRepresentation(i)
+            }
+            Ap242ShapeRepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                RepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i)
+            }
+            Ap242ShapeRepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                RepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i)
+            }
+            Ap242ShapeRepresentationRef::ManifoldSurfaceShapeRepresentation(i) => {
+                RepresentationRef::ManifoldSurfaceShapeRepresentation(i)
+            }
+            Ap242ShapeRepresentationRef::ShapeDimensionRepresentation(i) => {
+                RepresentationRef::ShapeDimensionRepresentation(i)
+            }
+            Ap242ShapeRepresentationRef::ShapeRepresentation(i) => {
+                RepresentationRef::ShapeRepresentation(i)
+            }
+            Ap242ShapeRepresentationRef::ShapeRepresentationWithParameters(i) => {
+                RepresentationRef::ShapeRepresentationWithParameters(i)
+            }
+            Ap242ShapeRepresentationRef::TessellatedShapeRepresentation(i) => {
+                RepresentationRef::TessellatedShapeRepresentation(i)
+            }
+            Ap242ShapeRepresentationRef::Complex(i) => RepresentationRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242ShapeRepresentationWithParametersItemsRef> for RepresentationItemRef {
+    fn from(r: Ap242ShapeRepresentationWithParametersItemsRef) -> Self {
+        match r {
+            Ap242ShapeRepresentationWithParametersItemsRef::Axis1Placement(i) => {
+                RepresentationItemRef::Axis1Placement(i)
+            }
+            Ap242ShapeRepresentationWithParametersItemsRef::Axis2Placement2d(i) => {
+                RepresentationItemRef::Axis2Placement2d(i)
+            }
+            Ap242ShapeRepresentationWithParametersItemsRef::Axis2Placement3d(i) => {
+                RepresentationItemRef::Axis2Placement3d(i)
+            }
+            Ap242ShapeRepresentationWithParametersItemsRef::DescriptiveRepresentationItem(i) => {
+                RepresentationItemRef::DescriptiveRepresentationItem(i)
+            }
+            Ap242ShapeRepresentationWithParametersItemsRef::Direction(i) => {
+                RepresentationItemRef::Direction(i)
+            }
+            Ap242ShapeRepresentationWithParametersItemsRef::MeasureRepresentationItem(i) => {
+                RepresentationItemRef::MeasureRepresentationItem(i)
+            }
+            Ap242ShapeRepresentationWithParametersItemsRef::Placement(i) => {
+                RepresentationItemRef::Placement(i)
+            }
+            Ap242ShapeRepresentationWithParametersItemsRef::Complex(i) => {
+                RepresentationItemRef::Complex(i)
+            }
+        }
+    }
+}
+
+impl From<PropertyDefinitionRef> for RepresentedDefinitionRef {
+    fn from(r: PropertyDefinitionRef) -> Self {
+        match r {
+            PropertyDefinitionRef::ProductDefinitionShape(i) => {
+                RepresentedDefinitionRef::ProductDefinitionShape(i)
+            }
+            PropertyDefinitionRef::PropertyDefinition(i) => {
+                RepresentedDefinitionRef::PropertyDefinition(i)
+            }
+            PropertyDefinitionRef::Complex(i) => RepresentedDefinitionRef::Complex(i),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Action {
     pub name: Text,

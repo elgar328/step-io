@@ -1893,7 +1893,7 @@ impl StepBuilder {
                 "",
                 self.styles
                     .iter()
-                    .map(|&s| m::RepresentationItemRef::StyledItem(s))
+                    .map(|&s| m::Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef::StyledItem(s))
                     .collect(),
                 m::RepresentationContextRef::Complex(self.ctx),
             )?;
@@ -1932,19 +1932,19 @@ fn bind_part(
             m::RepresentationContextRef::Complex(ctx),
         )?;
         (
-            m::RepresentationRef::AdvancedBrepShapeRepresentation(id),
+            m::Ap242ShapeRepresentationRef::AdvancedBrepShapeRepresentation(id),
             m::RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(id),
         )
     } else {
         let id =
             a.add_shape_representation("", items, m::RepresentationContextRef::Complex(ctx))?;
         (
-            m::RepresentationRef::ShapeRepresentation(id),
+            m::Ap242ShapeRepresentationRef::ShapeRepresentation(id),
             m::RepresentationOrRepresentationReferenceRef::ShapeRepresentation(id),
         )
     };
     a.add_shape_definition_representation(
-        m::RepresentedDefinitionRef::ProductDefinitionShape(part.shape),
+        m::PropertyDefinitionRef::ProductDefinitionShape(part.shape),
         rep,
     )?;
 
@@ -1960,8 +1960,8 @@ fn bind_part(
             m::RepresentationContextRef::Complex(ctx),
         )?;
         a.add_shape_definition_representation(
-            m::RepresentedDefinitionRef::ProductDefinitionShape(part.shape),
-            m::RepresentationRef::TessellatedShapeRepresentation(tsr),
+            m::PropertyDefinitionRef::ProductDefinitionShape(part.shape),
+            m::Ap242ShapeRepresentationRef::TessellatedShapeRepresentation(tsr),
         )?;
     }
     Ok(rep_or_ref)

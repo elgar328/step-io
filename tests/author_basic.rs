@@ -748,3 +748,122 @@ fn triangle_strips_keep_their_bounds() {
     );
     face(&mut a, vec![1, 2, 3]).expect("a strip of three points");
 }
+
+/// AP242 narrows some attributes more than older editions do, and the model,
+/// read from every edition, keeps the wider type. Where an argument's type
+/// cannot rule a wider value out — a complex instance's parts, the struct a
+/// self-referencing constructor takes — the check runs on insertion.
+#[test]
+fn narrowed_attributes_are_checked_where_the_type_cannot() {
+    let mut a = Ap242Author::new();
+    let plain = a.add_representation_context("ctx", "3D").expect("context");
+    let point = a
+        .add_cartesian_point("", [0.0, 0.0, 0.0].into())
+        .expect("point");
+    let name = a.text("");
+    // PRESENTATION_REPRESENTATION narrows REPRESENTATION.context_of_items to a
+    // geometric context.
+    let err = a
+        .add_complex(vec![
+            m::PartialEntity::PresentationRepresentation,
+            m::PartialEntity::Representation {
+                name,
+                items: vec![m::RepresentationItemRef::CartesianPoint(point)],
+                context_of_items: m::RepresentationContextRef::RepresentationContext(plain),
+            },
+        ])
+        .unwrap_err();
+    assert!(
+        matches!(
+            err,
+            AuthorError::NarrowedReference {
+                entity: "PRESENTATION_REPRESENTATION",
+                attribute: "context_of_items"
+            }
+        ),
+        "{err:?}"
+    );
+
+    // AP242's groupable_item drops ACTION_METHOD, which older editions allow.
+    let group = a.add_group("g", None).expect("group");
+    let method = a.add_action_method("m", None, "", "").expect("method");
+    let err = a
+        .add_applied_group_assignment_cyclic(|_| m::AppliedGroupAssignment {
+            assigned_group: m::GroupRef::Group(group),
+            items: vec![m::GroupableItemRef::ActionMethod(method)],
+        })
+        .unwrap_err();
+    assert!(
+        matches!(
+            err,
+            AuthorError::NarrowedReference {
+                entity: "APPLIED_GROUP_ASSIGNMENT",
+                attribute: "items"
+            }
+        ),
+        "{err:?}"
+    );
+}
+
+/// AP242 redeclares a person-and-organization address to name exactly one
+/// organization and one person (`SET [1:1]`).
+#[test]
+fn ap242_aggregate_bounds_apply() {
+    let mut a = Ap242Author::new();
+    let o1 = a.add_organization(None, "a", None).expect("organization");
+    let o2 = a.add_organization(None, "b", None).expect("organization");
+    let p = a
+        .add_person("p", None, None, None, None, None)
+        .expect("person");
+    let err = a
+        .add_person_and_organization_address(
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            vec![
+                m::OrganizationRef::Organization(o1),
+                m::OrganizationRef::Organization(o2),
+            ],
+            None,
+            vec![m::PersonRef::Person(p)],
+            None,
+        )
+        .unwrap_err();
+    assert!(
+        matches!(
+            err,
+            AuthorError::Cardinality {
+                attribute: "organizations",
+                got: 2,
+                min: 1,
+                max: Some(1),
+                ..
+            }
+        ),
+        "{err:?}"
+    );
+}
+
+/// A narrower argument converts into the model's wider reference, a complex
+/// entity included.
+#[test]
+fn narrower_arguments_convert_into_the_model_type() {
+    let r: m::RepresentationRef =
+        m::Ap242ShapeRepresentationRef::ShapeRepresentation(m::ShapeRepresentationId(3)).into();
+    assert_eq!(
+        r,
+        m::RepresentationRef::ShapeRepresentation(m::ShapeRepresentationId(3))
+    );
+    let r: m::RepresentationRef =
+        m::Ap242ShapeRepresentationRef::Complex(m::ComplexEntityId(1)).into();
+    assert_eq!(r, m::RepresentationRef::Complex(m::ComplexEntityId(1)));
+}
