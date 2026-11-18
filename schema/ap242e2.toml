@@ -2144,10 +2144,55 @@ parents = ["a3m_equivalence_criterion"]
 is_abstract = true
 own_attrs = []
 
+[[entity.a3m_equivalence_criterion_for_assembly.redeclared_attrs]]
+name = "comparing_element_types"
+ty = "LIST [1:?] OF a3ma_element_type_name"
+owner = "a3m_equivalence_criterion"
+
+[[entity.a3m_equivalence_criterion_for_assembly.redeclared_attrs]]
+name = "compared_element_types"
+ty = "LIST [1:?] OF a3ma_element_type_name"
+owner = "a3m_equivalence_criterion"
+
+[[entity.a3m_equivalence_criterion_for_assembly.redeclared_attrs]]
+name = "measured_data_type"
+ty = "a3ma_measured_data_type_name"
+owner = "a3m_equivalence_criterion"
+
+[[entity.a3m_equivalence_criterion_for_assembly.redeclared_attrs]]
+name = "detected_difference_types"
+ty = "LIST [1:?] OF a3ma_detected_difference_type_name"
+owner = "a3m_equivalence_criterion"
+
 [entity.a3m_equivalence_criterion_for_shape]
 parents = ["a3m_equivalence_criterion"]
 is_abstract = true
 own_attrs = []
+
+[[entity.a3m_equivalence_criterion_for_shape.redeclared_attrs]]
+name = "comparing_element_types"
+ty = "LIST [1:?] OF a3ms_element_type_name"
+owner = "a3m_equivalence_criterion"
+
+[[entity.a3m_equivalence_criterion_for_shape.redeclared_attrs]]
+name = "compared_element_types"
+ty = "LIST [1:?] OF a3ms_element_type_name"
+owner = "a3m_equivalence_criterion"
+
+[[entity.a3m_equivalence_criterion_for_shape.redeclared_attrs]]
+name = "measured_data_type"
+ty = "a3ms_measured_data_type_name"
+owner = "a3m_equivalence_criterion"
+
+[[entity.a3m_equivalence_criterion_for_shape.redeclared_attrs]]
+name = "detected_difference_types"
+ty = "LIST [1:?] OF a3ms_detected_difference_type_name"
+owner = "a3m_equivalence_criterion"
+
+[[entity.a3m_equivalence_criterion_for_shape.redeclared_attrs]]
+name = "accuracy_types"
+ty = "LIST OF a3ms_accuracy_type_name"
+owner = "a3m_equivalence_criterion"
 
 [entity.a3m_equivalence_criterion_of_assembly_data_structure]
 parents = ["a3m_equivalence_criterion_for_assembly"]
@@ -2158,6 +2203,11 @@ own_attrs = []
 parents = ["a3m_equivalence_criterion_for_assembly"]
 is_abstract = true
 own_attrs = []
+
+[[entity.a3m_equivalence_criterion_of_component_property_difference.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_logical_test"
+owner = "a3m_equivalence_criterion"
 
 [entity.a3m_equivalence_criterion_of_detailed_assembly_data_content]
 parents = ["a3m_equivalence_criterion_for_assembly"]
@@ -2263,15 +2313,40 @@ parents = ["representation_item_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.a3ma_assembly_and_shape_criteria_relationship.redeclared_attrs]]
+name = "relating_representation_item"
+ty = "different_component_shape"
+owner = "representation_item_relationship"
+
+[[entity.a3ma_assembly_and_shape_criteria_relationship.redeclared_attrs]]
+name = "related_representation_item"
+ty = "a3m_equivalence_criterion_for_shape"
+owner = "representation_item_relationship"
+
 [entity.a3ma_equivalence_criterion_assessment_threshold_relationship]
 parents = ["representation_item_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.a3ma_equivalence_criterion_assessment_threshold_relationship.redeclared_attrs]]
+name = "relating_representation_item"
+ty = "different_placement_of_component"
+owner = "representation_item_relationship"
+
+[[entity.a3ma_equivalence_criterion_assessment_threshold_relationship.redeclared_attrs]]
+name = "related_representation_item"
+ty = "shape_data_quality_lower_value_limit"
+owner = "representation_item_relationship"
+
 [entity.a3ma_equivalence_inspection_result]
 parents = ["data_equivalence_inspection_result"]
 is_abstract = false
 own_attrs = []
+
+[[entity.a3ma_equivalence_inspection_result.redeclared_attrs]]
+name = "criterion_inspected"
+ty = "a3m_equivalence_criterion_for_assembly"
+owner = "data_equivalence_inspection_result"
 
 [entity.a3ma_length_measure_and_context_dependent_measure_pair]
 parents = ["compound_representation_item"]
@@ -2286,10 +2361,25 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.a3ms_equivalence_criterion_with_specified_elements.redeclared_attrs]]
+name = "comparing_specified_elements"
+ty = "SET [1:?] OF a3ms_inspected_equivalence_element_select"
+owner = "a3m_equivalence_criterion_with_specified_elements"
+
+[[entity.a3ms_equivalence_criterion_with_specified_elements.redeclared_attrs]]
+name = "compared_specified_elements"
+ty = "SET [1:?] OF a3ms_inspected_equivalence_element_select"
+owner = "a3m_equivalence_criterion_with_specified_elements"
+
 [entity.a3ms_equivalence_inspection_result]
 parents = ["data_equivalence_inspection_result"]
 is_abstract = false
 own_attrs = []
+
+[[entity.a3ms_equivalence_inspection_result.redeclared_attrs]]
+name = "criterion_inspected"
+ty = "a3m_equivalence_criterion_for_shape"
+owner = "data_equivalence_inspection_result"
 
 [entity.abrupt_change_of_surface_normal]
 parents = ["geometry_with_local_irregularity"]
@@ -2302,6 +2392,11 @@ ty = "length_measure"
 [[entity.abrupt_change_of_surface_normal.own_attrs]]
 name = "test_point_distance_tolerance"
 ty = "length_measure"
+
+[[entity.abrupt_change_of_surface_normal.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.abs_function]
 parents = ["unary_function_call"]
@@ -2843,10 +2938,20 @@ is_abstract = false
 name = "items"
 ty = "SET [1:1] OF analysed_item"
 
+[[entity.analysis_item.redeclared_attrs]]
+name = "assigned_group"
+ty = "analysis_assignment"
+owner = "group_assignment"
+
 [entity.analysis_model]
 parents = ["representation"]
 is_abstract = false
 own_attrs = []
+
+[[entity.analysis_model.redeclared_attrs]]
+name = "context_of_items"
+ty = "analysis_representation_context"
+owner = "representation"
 
 [entity.analysis_representation_context]
 parents = ["representation_context"]
@@ -2877,15 +2982,27 @@ own_attrs = []
 [[entity.angle_direction_reference.redeclared_attrs]]
 name = "relating_representation_item"
 ty = "orientation_basis_select"
+owner = "representation_item_relationship"
 
 [[entity.angle_direction_reference.redeclared_attrs]]
 name = "related_representation_item"
 ty = "angle_direction_reference_select"
+owner = "representation_item_relationship"
 
 [entity.angle_geometric_constraint]
 parents = ["explicit_geometric_constraint"]
 is_abstract = false
 own_attrs = []
+
+[[entity.angle_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:?] OF linear_geometry_constraint_element"
+owner = "explicit_constraint"
+
+[[entity.angle_geometric_constraint.redeclared_attrs]]
+name = "reference_elements"
+ty = "SET [0:1] OF linear_geometry_constraint_element"
+owner = "explicit_constraint"
 
 [entity.angular_dimension]
 parents = ["dimension_curve_directed_callout"]
@@ -2921,6 +3038,7 @@ own_attrs = []
 [[entity.annotation_curve_occurrence.redeclared_attrs]]
 name = "item"
 ty = "curve_or_curve_set"
+owner = "styled_item"
 
 [entity.annotation_fill_area]
 parents = ["geometric_representation_item"]
@@ -2937,6 +3055,11 @@ is_abstract = false
 [[entity.annotation_fill_area_occurrence.own_attrs]]
 name = "fill_style_target"
 ty = "point"
+
+[[entity.annotation_fill_area_occurrence.redeclared_attrs]]
+name = "item"
+ty = "annotation_fill_area"
+owner = "styled_item"
 
 [entity.annotation_occurrence]
 parents = ["styled_item"]
@@ -2982,6 +3105,11 @@ ty = "annotation_placeholder_occurrence_role"
 name = "line_spacing"
 ty = "positive_length_measure"
 
+[[entity.annotation_placeholder_occurrence.redeclared_attrs]]
+name = "item"
+ty = "geometric_set"
+owner = "styled_item"
+
 [entity.annotation_plane]
 parents = [
     "annotation_occurrence",
@@ -2996,11 +3124,17 @@ ty = "OPTIONAL SET [1:?] OF annotation_plane_element"
 [[entity.annotation_plane.redeclared_attrs]]
 name = "item"
 ty = "plane_or_planar_box"
+owner = "styled_item"
 
 [entity.annotation_point_occurrence]
 parents = ["annotation_occurrence"]
 is_abstract = false
 own_attrs = []
+
+[[entity.annotation_point_occurrence.redeclared_attrs]]
+name = "item"
+ty = "point"
+owner = "styled_item"
 
 [entity.annotation_subfigure_occurrence]
 parents = ["annotation_symbol_occurrence"]
@@ -3012,6 +3146,16 @@ parents = ["mapped_item"]
 is_abstract = false
 own_attrs = []
 
+[[entity.annotation_symbol.redeclared_attrs]]
+name = "mapping_source"
+ty = "symbol_representation_map"
+owner = "mapped_item"
+
+[[entity.annotation_symbol.redeclared_attrs]]
+name = "mapping_target"
+ty = "symbol_target"
+owner = "mapped_item"
+
 [entity.annotation_symbol_occurrence]
 parents = ["annotation_occurrence"]
 is_abstract = false
@@ -3020,6 +3164,7 @@ own_attrs = []
 [[entity.annotation_symbol_occurrence.redeclared_attrs]]
 name = "item"
 ty = "annotation_symbol_occurrence_item"
+owner = "styled_item"
 
 [entity.annotation_text]
 parents = ["mapped_item"]
@@ -3029,6 +3174,7 @@ own_attrs = []
 [[entity.annotation_text.redeclared_attrs]]
 name = "mapping_target"
 ty = "axis2_placement"
+owner = "mapped_item"
 
 [entity.annotation_text_character]
 parents = ["mapped_item"]
@@ -3041,6 +3187,7 @@ ty = "text_alignment"
 [[entity.annotation_text_character.redeclared_attrs]]
 name = "mapping_target"
 ty = "axis2_placement"
+owner = "mapped_item"
 
 [entity.annotation_text_occurrence]
 parents = ["annotation_occurrence"]
@@ -3050,11 +3197,22 @@ own_attrs = []
 [[entity.annotation_text_occurrence.redeclared_attrs]]
 name = "item"
 ty = "annotation_text_occurrence_item"
+owner = "styled_item"
 
 [entity.ap242_assignment_object_relationship]
 parents = ["assignment_object_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.ap242_assignment_object_relationship.redeclared_attrs]]
+name = "related"
+ty = "ap242_assignment_object_select"
+owner = "assignment_object_relationship"
+
+[[entity.ap242_assignment_object_relationship.redeclared_attrs]]
+name = "relating"
+ty = "ap242_assignment_object_select"
+owner = "assignment_object_relationship"
 
 [entity.apex]
 parents = ["derived_shape_aspect"]
@@ -3159,6 +3317,11 @@ is_abstract = false
 name = "items"
 ty = "SET [1:?] OF attribute_classification_item"
 
+[[entity.applied_attribute_classification_assignment.redeclared_attrs]]
+name = "assigned_class"
+ty = "class"
+owner = "attribute_classification_assignment"
+
 [entity.applied_certification_assignment]
 parents = ["certification_assignment"]
 is_abstract = false
@@ -3179,6 +3342,16 @@ ty = "SET [1:?] OF classification_item"
 parents = ["classification_assignment_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.applied_classification_assignment_relationship.redeclared_attrs]]
+name = "related"
+ty = "applied_classification_assignment"
+owner = "classification_assignment_relationship"
+
+[[entity.applied_classification_assignment_relationship.redeclared_attrs]]
+name = "relating"
+ty = "applied_classification_assignment"
+owner = "classification_assignment_relationship"
 
 [entity.applied_contract_assignment]
 parents = ["contract_assignment"]
@@ -3216,6 +3389,16 @@ ty = "SET [1:?] OF description_item"
 parents = ["description_text_assignment_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.applied_description_text_assignment_relationship.redeclared_attrs]]
+name = "related"
+ty = "applied_description_text_assignment"
+owner = "description_text_assignment_relationship"
+
+[[entity.applied_description_text_assignment_relationship.redeclared_attrs]]
+name = "relating"
+ty = "applied_description_text_assignment"
+owner = "description_text_assignment_relationship"
 
 [entity.applied_directed_action_assignment]
 parents = ["directed_action_assignment"]
@@ -3269,6 +3452,16 @@ ty = "SET [1:?] OF external_identification_item"
 parents = ["external_identification_assignment_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.applied_external_identification_assignment_relationship.redeclared_attrs]]
+name = "related"
+ty = "applied_external_identification_assignment"
+owner = "external_identification_assignment_relationship"
+
+[[entity.applied_external_identification_assignment_relationship.redeclared_attrs]]
+name = "relating"
+ty = "applied_external_identification_assignment"
+owner = "external_identification_assignment_relationship"
 
 [entity.applied_group_assignment]
 parents = ["group_assignment"]
@@ -3501,6 +3694,11 @@ parents = ["half_space_2d"]
 is_abstract = false
 own_attrs = []
 
+[[entity.area_with_outer_boundary.redeclared_attrs]]
+name = "base_curve"
+ty = "composite_curve"
+owner = "half_space_2d"
+
 [entity.array_placement_group]
 parents = ["assembly_group_component"]
 is_abstract = false
@@ -3607,6 +3805,16 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.assembly_group_component_definition_placement_link.redeclared_attrs]]
+name = "relating_product_definition"
+ty = "assembly_component"
+owner = "product_definition_relationship"
+
+[[entity.assembly_group_component_definition_placement_link.redeclared_attrs]]
+name = "related_product_definition"
+ty = "assembly_component"
+owner = "product_definition_relationship"
+
 [entity.assembly_joint]
 parents = ["component_feature_joint"]
 is_abstract = false
@@ -3622,6 +3830,11 @@ parents = ["shape_aspect_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.assembly_shape_constraint_item_relationship.redeclared_attrs]]
+name = "relating_shape_aspect"
+ty = "assembly_shape_constraint"
+owner = "shape_aspect_relationship"
+
 [entity.assembly_shape_joint]
 parents = ["shape_aspect"]
 is_abstract = false
@@ -3632,6 +3845,11 @@ parents = ["shape_aspect_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.assembly_shape_joint_item_relationship.redeclared_attrs]]
+name = "relating_shape_aspect"
+ty = "assembly_shape_joint"
+owner = "shape_aspect_relationship"
+
 [entity.assigned_analysis]
 parents = ["group_assignment"]
 is_abstract = false
@@ -3640,6 +3858,11 @@ is_abstract = false
 name = "items"
 ty = "SET [1:1] OF product_definition_formation"
 
+[[entity.assigned_analysis.redeclared_attrs]]
+name = "assigned_group"
+ty = "analysis_assignment"
+owner = "group_assignment"
+
 [entity.assigned_requirement]
 parents = ["group_assignment"]
 is_abstract = false
@@ -3647,6 +3870,11 @@ is_abstract = false
 [[entity.assigned_requirement.own_attrs]]
 name = "items"
 ty = "SET [1:1] OF product_definition"
+
+[[entity.assigned_requirement.redeclared_attrs]]
+name = "assigned_group"
+ty = "requirement_assignment"
+owner = "group_assignment"
 
 [entity.assignment_object_relationship]
 is_abstract = false
@@ -3709,10 +3937,30 @@ parents = ["product_definition_formation_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.attachment_slot_design_to_planned.redeclared_attrs]]
+name = "relating_product_definition_formation"
+ty = "attachment_slot_design"
+owner = "product_definition_formation_relationship"
+
+[[entity.attachment_slot_design_to_planned.redeclared_attrs]]
+name = "related_product_definition_formation"
+ty = "attachment_slot_as_planned"
+owner = "product_definition_formation_relationship"
+
 [entity.attachment_slot_design_to_realized]
 parents = ["product_definition_formation_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.attachment_slot_design_to_realized.redeclared_attrs]]
+name = "relating_product_definition_formation"
+ty = "attachment_slot_design"
+owner = "product_definition_formation_relationship"
+
+[[entity.attachment_slot_design_to_realized.redeclared_attrs]]
+name = "related_product_definition_formation"
+ty = "attachment_slot_as_realized"
+owner = "product_definition_formation_relationship"
 
 [entity.attachment_slot_on_product]
 parents = ["product_definition_relationship"]
@@ -3723,6 +3971,16 @@ own_attrs = []
 parents = ["product_definition_formation_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.attachment_slot_planned_to_realized.redeclared_attrs]]
+name = "relating_product_definition_formation"
+ty = "attachment_slot_as_planned"
+owner = "product_definition_formation_relationship"
+
+[[entity.attachment_slot_planned_to_realized.redeclared_attrs]]
+name = "related_product_definition_formation"
+ty = "attachment_slot_as_realized"
+owner = "product_definition_formation_relationship"
 
 [entity.attribute_assertion]
 parents = [
@@ -3755,6 +4013,11 @@ is_abstract = false
 [[entity.attribute_language_assignment.own_attrs]]
 name = "items"
 ty = "SET [1:?] OF attribute_language_item"
+
+[[entity.attribute_language_assignment.redeclared_attrs]]
+name = "assigned_class"
+ty = "language"
+owner = "attribute_classification_assignment"
 
 [entity.attribute_value_assignment]
 is_abstract = true
@@ -3907,6 +4170,11 @@ is_abstract = false
 [[entity.b_spline_function.own_attrs]]
 name = "basis"
 ty = "LIST [1:?] OF b_spline_basis"
+
+[[entity.b_spline_function.redeclared_attrs]]
+name = "operand"
+ty = "maths_function"
+owner = "unary_generic_expression"
 
 [entity.b_spline_surface]
 parents = ["bounded_surface"]
@@ -4122,6 +4390,11 @@ ty = "maths_value"
 name = "order"
 ty = "ordering_type"
 
+[[entity.basic_sparse_matrix.redeclared_attrs]]
+name = "operands"
+ty = "LIST [3:3] OF maths_function"
+owner = "multiple_arity_generic_expression"
+
 [entity.bead]
 parents = ["feature_definition"]
 is_abstract = false
@@ -4165,6 +4438,16 @@ parents = [
 is_abstract = true
 own_attrs = []
 
+[[entity.binary_assembly_constraint.redeclared_attrs]]
+name = "rep_1"
+ty = "representative_shape_representation"
+owner = "representation_relationship"
+
+[[entity.binary_assembly_constraint.redeclared_attrs]]
+name = "rep_2"
+ty = "representative_shape_representation"
+owner = "representation_relationship"
+
 [entity.binary_boolean_expression]
 parents = [
     "boolean_expression",
@@ -4201,6 +4484,11 @@ parents = [
 ]
 is_abstract = true
 own_attrs = []
+
+[[entity.binary_numeric_expression.redeclared_attrs]]
+name = "operands"
+ty = "LIST [2:2] OF numeric_expression"
+owner = "binary_generic_expression"
 
 [entity.binary_representation_item]
 parents = ["representation_item"]
@@ -4306,10 +4594,12 @@ own_attrs = []
 [[entity.boolean_result_2d.redeclared_attrs]]
 name = "first_operand"
 ty = "boolean_operand_2d"
+owner = "boolean_result"
 
 [[entity.boolean_result_2d.redeclared_attrs]]
 name = "second_operand"
 ty = "boolean_operand_2d"
+owner = "boolean_result"
 
 [entity.boolean_variable]
 parents = [
@@ -4428,6 +4718,11 @@ is_abstract = false
 name = "items"
 ty = "SET [1:1] OF product_definition_or_breakdown_element_usage"
 
+[[entity.breakdown_element_group_assignment.redeclared_attrs]]
+name = "assigned_group"
+ty = "product_definition_element_relationship"
+owner = "group_assignment"
+
 [entity.breakdown_element_realization]
 parents = [
     "characterized_object",
@@ -4475,6 +4770,16 @@ ty = "month_in_year_number"
 parents = ["mapped_item"]
 is_abstract = false
 own_attrs = []
+
+[[entity.camera_image.redeclared_attrs]]
+name = "mapping_source"
+ty = "camera_usage"
+owner = "mapped_item"
+
+[[entity.camera_image.redeclared_attrs]]
+name = "mapping_target"
+ty = "planar_box"
+owner = "mapped_item"
 
 [entity.camera_image_2d_with_scale]
 parents = ["camera_image"]
@@ -4559,6 +4864,11 @@ ty = "SET [1:?] OF light_source"
 parents = ["representation_map"]
 is_abstract = false
 own_attrs = []
+
+[[entity.camera_usage.redeclared_attrs]]
+name = "mapping_origin"
+ty = "camera_model"
+owner = "representation_map"
 
 [entity.capacitance_measure_with_unit]
 parents = ["measure_with_unit"]
@@ -4780,6 +5090,16 @@ parents = ["group_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.change_composition_relationship.redeclared_attrs]]
+name = "relating_group"
+ty = "change_group"
+owner = "group_relationship"
+
+[[entity.change_composition_relationship.redeclared_attrs]]
+name = "related_group"
+ty = "change_element"
+owner = "group_relationship"
+
 [entity.change_element]
 parents = [
     "group",
@@ -4793,6 +5113,16 @@ parents = ["group_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.change_element_sequence.redeclared_attrs]]
+name = "relating_group"
+ty = "change_element"
+owner = "group_relationship"
+
+[[entity.change_element_sequence.redeclared_attrs]]
+name = "related_group"
+ty = "change_element"
+owner = "group_relationship"
+
 [entity.change_group]
 parents = ["group"]
 is_abstract = false
@@ -4805,6 +5135,11 @@ is_abstract = false
 [[entity.change_group_assignment.own_attrs]]
 name = "item"
 ty = "change_relationship_select"
+
+[[entity.change_group_assignment.redeclared_attrs]]
+name = "assigned_group"
+ty = "change_group"
+owner = "group_assignment"
 
 [entity.change_request]
 parents = ["action_request_assignment"]
@@ -5164,6 +5499,16 @@ parents = ["explicit_geometric_constraint"]
 is_abstract = false
 own_attrs = []
 
+[[entity.coaxial_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:?] OF axial_geometry_constraint_element"
+owner = "explicit_constraint"
+
+[[entity.coaxial_geometric_constraint.redeclared_attrs]]
+name = "reference_elements"
+ty = "SET [0:1] OF axial_geometry_constraint_element"
+owner = "explicit_constraint"
+
 [entity.coaxiality_tolerance]
 parents = ["geometric_tolerance_with_datum_reference"]
 is_abstract = false
@@ -5189,25 +5534,65 @@ parents = ["product_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.collection_relationship.redeclared_attrs]]
+name = "relating_product"
+ty = "collection"
+owner = "product_relationship"
+
+[[entity.collection_relationship.redeclared_attrs]]
+name = "related_product"
+ty = "collection"
+owner = "product_relationship"
+
 [entity.collection_version]
 parents = ["product_definition_formation"]
 is_abstract = false
 own_attrs = []
+
+[[entity.collection_version.redeclared_attrs]]
+name = "of_product"
+ty = "collection"
+owner = "product_definition_formation"
 
 [entity.collection_version_relationship]
 parents = ["product_definition_formation_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.collection_version_relationship.redeclared_attrs]]
+name = "relating_product_definition_formation"
+ty = "collection_version"
+owner = "product_definition_formation_relationship"
+
+[[entity.collection_version_relationship.redeclared_attrs]]
+name = "related_product_definition_formation"
+ty = "collection_version"
+owner = "product_definition_formation_relationship"
+
 [entity.collection_version_sequence_relationship]
 parents = ["product_definition_formation_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.collection_version_sequence_relationship.redeclared_attrs]]
+name = "relating_product_definition_formation"
+ty = "collection_version"
+owner = "product_definition_formation_relationship"
+
+[[entity.collection_version_sequence_relationship.redeclared_attrs]]
+name = "related_product_definition_formation"
+ty = "collection_version"
+owner = "product_definition_formation_relationship"
+
 [entity.collection_view_definition]
 parents = ["product_definition"]
 is_abstract = false
 own_attrs = []
+
+[[entity.collection_view_definition.redeclared_attrs]]
+name = "formation"
+ty = "collection_version"
+owner = "product_definition"
 
 [entity.colour]
 is_abstract = false
@@ -5257,6 +5642,11 @@ parents = [
 ]
 is_abstract = true
 own_attrs = []
+
+[[entity.comparison_expression.redeclared_attrs]]
+name = "operands"
+ty = "LIST [2:2] OF expression"
+owner = "binary_generic_expression"
 
 [entity.comparison_greater]
 parents = ["comparison_expression"]
@@ -5384,6 +5774,11 @@ parents = ["shape_aspect"]
 is_abstract = false
 own_attrs = []
 
+[[entity.component_feature.redeclared_attrs]]
+name = "of_shape"
+ty = "assembly_component"
+owner = "shape_aspect"
+
 [entity.component_feature_joint]
 parents = [
     "shape_aspect_relationship",
@@ -5392,10 +5787,30 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.component_feature_joint.redeclared_attrs]]
+name = "relating_shape_aspect"
+ty = "component_feature"
+owner = "shape_aspect_relationship"
+
+[[entity.component_feature_joint.redeclared_attrs]]
+name = "related_shape_aspect"
+ty = "component_feature"
+owner = "shape_aspect_relationship"
+
 [entity.component_feature_relationship]
 parents = ["shape_aspect_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.component_feature_relationship.redeclared_attrs]]
+name = "relating_shape_aspect"
+ty = "component_feature"
+owner = "shape_aspect_relationship"
+
+[[entity.component_feature_relationship.redeclared_attrs]]
+name = "related_shape_aspect"
+ty = "component_feature"
+owner = "shape_aspect_relationship"
 
 [entity.component_mating_constraint_condition]
 parents = ["shape_aspect"]
@@ -5570,6 +5985,11 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.concat_expression.redeclared_attrs]]
+name = "operands"
+ty = "LIST [2:?] OF string_expression"
+owner = "multiple_arity_generic_expression"
+
 [entity.concentricity_tolerance]
 parents = ["geometric_tolerance_with_datum_reference"]
 is_abstract = false
@@ -5739,6 +6159,11 @@ is_abstract = false
 name = "items"
 ty = "SET [1:?] OF configured_effectivity_context_item"
 
+[[entity.configured_effectivity_context_assignment.redeclared_attrs]]
+name = "assigned_effectivity_assignment"
+ty = "configured_effectivity_assignment"
+owner = "effectivity_context_assignment"
+
 [entity.conic]
 parents = ["curve"]
 is_abstract = false
@@ -5787,6 +6212,11 @@ ty = "SET [1:?] OF edge"
 parents = ["representation"]
 is_abstract = false
 own_attrs = []
+
+[[entity.connected_edge_with_length_set_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF connected_edge_with_length_set_items"
+owner = "representation"
 
 [entity.connected_face_set]
 parents = ["topological_representation_item"]
@@ -5843,6 +6273,11 @@ parents = ["shape_aspect_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.connectivity_definition_item_relationship.redeclared_attrs]]
+name = "relating_shape_aspect"
+ty = "connectivity_definition"
+owner = "shape_aspect_relationship"
+
 [entity.constant_function]
 parents = [
     "maths_function",
@@ -5871,6 +6306,16 @@ parents = ["representation_relationship_with_transformation"]
 is_abstract = false
 own_attrs = []
 
+[[entity.constrained_kinematic_motion_representation.redeclared_attrs]]
+name = "rep_1"
+ty = "representative_shape_representation"
+owner = "representation_relationship"
+
+[[entity.constrained_kinematic_motion_representation.redeclared_attrs]]
+name = "rep_2"
+ty = "representative_shape_representation"
+owner = "representation_relationship"
+
 [entity.constructive_geometry_representation]
 parents = ["representation"]
 is_abstract = false
@@ -5884,6 +6329,12 @@ own_attrs = []
 [[entity.constructive_geometry_representation_relationship.redeclared_attrs]]
 name = "rep_1"
 ty = "constructive_geometry_representation_or_shape_representation"
+owner = "representation_relationship"
+
+[[entity.constructive_geometry_representation_relationship.redeclared_attrs]]
+name = "rep_2"
+ty = "constructive_geometry_representation"
+owner = "representation_relationship"
 
 [entity.contact_feature]
 parents = ["shape_aspect"]
@@ -5900,10 +6351,30 @@ parents = ["shape_feature_definition_fit_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.contact_feature_definition_fit_relationship.redeclared_attrs]]
+name = "relating_object"
+ty = "contact_feature_definition"
+owner = "characterized_object_relationship"
+
+[[entity.contact_feature_definition_fit_relationship.redeclared_attrs]]
+name = "related_object"
+ty = "contact_feature_definition"
+owner = "characterized_object_relationship"
+
 [entity.contact_feature_fit_relationship]
 parents = ["shape_feature_fit_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.contact_feature_fit_relationship.redeclared_attrs]]
+name = "relating_shape_aspect"
+ty = "contact_feature"
+owner = "shape_aspect_relationship"
+
+[[entity.contact_feature_fit_relationship.redeclared_attrs]]
+name = "related_shape_aspect"
+ty = "contact_feature"
+owner = "shape_aspect_relationship"
 
 [entity.contact_ratio_representation]
 parents = ["representation"]
@@ -5922,6 +6393,11 @@ is_abstract = false
 [[entity.containing_message.own_attrs]]
 name = "items"
 ty = "SET [1:1] OF structured_message"
+
+[[entity.containing_message.redeclared_attrs]]
+name = "assigned_group"
+ty = "message_contents_group"
+owner = "group_assignment"
 
 [entity.context_dependent_invisibility]
 parents = ["invisibility"]
@@ -6108,6 +6584,11 @@ parents = ["shape_aspect_occurrence"]
 is_abstract = false
 own_attrs = []
 
+[[entity.counterbore_hole_occurrence.redeclared_attrs]]
+name = "definition"
+ty = "counterbore_hole_definition"
+owner = "shape_aspect_occurrence"
+
 [entity.counterbore_hole_occurrence_in_assembly]
 parents = ["counterbore_hole_occurrence"]
 is_abstract = false
@@ -6156,6 +6637,11 @@ ty = "boolean"
 parents = ["shape_aspect_occurrence"]
 is_abstract = false
 own_attrs = []
+
+[[entity.counterdrill_hole_occurrence.redeclared_attrs]]
+name = "definition"
+ty = "counterdrill_hole_definition"
+owner = "shape_aspect_occurrence"
 
 [entity.counterdrill_hole_occurrence_in_assembly]
 parents = ["counterdrill_hole_occurrence"]
@@ -6209,6 +6695,11 @@ ty = "boolean"
 parents = ["shape_aspect_occurrence"]
 is_abstract = false
 own_attrs = []
+
+[[entity.countersink_hole_occurrence.redeclared_attrs]]
+name = "definition"
+ty = "countersink_hole_definition"
+owner = "shape_aspect_occurrence"
 
 [entity.countersink_hole_occurrence_in_assembly]
 parents = ["countersink_hole_occurrence"]
@@ -6277,6 +6768,11 @@ parents = ["shape_representation"]
 is_abstract = false
 own_attrs = []
 
+[[entity.csg_2d_shape_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF csg_2d_shape_select"
+owner = "representation"
+
 [entity.csg_primitive_solid_2d]
 parents = ["csg_solid_2d"]
 is_abstract = false
@@ -6285,6 +6781,7 @@ own_attrs = []
 [[entity.csg_primitive_solid_2d.redeclared_attrs]]
 name = "tree_root_expression"
 ty = "bounded_primitive_2d"
+owner = "csg_solid"
 
 [entity.csg_shape_representation]
 parents = ["shape_representation"]
@@ -6307,11 +6804,17 @@ own_attrs = []
 [[entity.csg_solid_2d.redeclared_attrs]]
 name = "tree_root_expression"
 ty = "csg_select_2d"
+owner = "csg_solid"
 
 [entity.cubic_bezier_tessellated_edge]
 parents = ["tessellated_edge"]
 is_abstract = false
 own_attrs = []
+
+[[entity.cubic_bezier_tessellated_edge.redeclared_attrs]]
+name = "line_strip"
+ty = "LIST [4:?] OF integer"
+owner = "tessellated_edge"
 
 [entity.cubic_bezier_triangulated_face]
 parents = ["tessellated_face"]
@@ -6347,6 +6850,11 @@ parents = ["measure_with_unit"]
 is_abstract = false
 own_attrs = []
 
+[[entity.currency_measure_with_unit.redeclared_attrs]]
+name = "unit_component"
+ty = "currency"
+owner = "measure_with_unit"
+
 [entity.current_change_element_assignment]
 parents = ["group_assignment"]
 is_abstract = false
@@ -6358,6 +6866,7 @@ ty = "SET [1:?] OF change_management_object"
 [[entity.current_change_element_assignment.redeclared_attrs]]
 name = "assigned_group"
 ty = "current_element_assignment_select"
+owner = "group_assignment"
 
 [entity.curve]
 parents = ["geometric_representation_item"]
@@ -6426,10 +6935,25 @@ is_abstract = false
 name = "near_points"
 ty = "SET [0:4] OF near_point_relationship"
 
+[[entity.curve_distance_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:2] OF curve"
+owner = "explicit_constraint"
+
+[[entity.curve_distance_geometric_constraint.redeclared_attrs]]
+name = "reference_elements"
+ty = "SET [0:4] OF point_curve_or_surface_constraint_element"
+owner = "explicit_constraint"
+
 [entity.curve_length_geometric_constraint]
 parents = ["explicit_geometric_constraint"]
 is_abstract = false
 own_attrs = []
+
+[[entity.curve_length_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:?] OF bounded_curve"
+owner = "explicit_constraint"
 
 [entity.curve_replica]
 parents = ["curve"]
@@ -6458,6 +6982,11 @@ is_abstract = false
 [[entity.curve_smoothness_geometric_constraint.own_attrs]]
 name = "smoothness"
 ty = "transition_code"
+
+[[entity.curve_smoothness_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:1] OF curve_segment_set"
+owner = "explicit_constraint"
 
 [entity.curve_style]
 parents = ["founded_item"]
@@ -6550,10 +7079,20 @@ parents = ["overcomplex_geometry"]
 is_abstract = false
 own_attrs = []
 
+[[entity.curve_with_excessive_segments.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.curve_with_small_curvature_radius]
 parents = ["geometry_with_local_near_degeneracy"]
 is_abstract = false
 own_attrs = []
+
+[[entity.curve_with_small_curvature_radius.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.cyclide_segment_solid]
 parents = ["geometric_representation_item"]
@@ -6604,6 +7143,11 @@ ty = "length_measure"
 [[entity.cylindrical_pair_value.own_attrs]]
 name = "actual_rotation"
 ty = "plane_angle_measure"
+
+[[entity.cylindrical_pair_value.redeclared_attrs]]
+name = "applies_to_pair"
+ty = "cylindrical_pair"
+owner = "pair_value"
 
 [entity.cylindrical_pair_with_range]
 parents = ["cylindrical_pair"]
@@ -6912,6 +7456,16 @@ parents = ["representation_item_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.data_quality_criterion_measurement_association.redeclared_attrs]]
+name = "relating_representation_item"
+ty = "data_quality_criterion"
+owner = "representation_item_relationship"
+
+[[entity.data_quality_criterion_measurement_association.redeclared_attrs]]
+name = "related_representation_item"
+ty = "data_quality_measurement_requirement"
+owner = "representation_item_relationship"
+
 [entity.data_quality_definition]
 is_abstract = false
 
@@ -7026,6 +7580,16 @@ own_attrs = []
 parents = ["representation_item_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.data_quality_report_measurement_association.redeclared_attrs]]
+name = "relating_representation_item"
+ty = "data_quality_measurement_requirement"
+owner = "representation_item_relationship"
+
+[[entity.data_quality_report_measurement_association.redeclared_attrs]]
+name = "related_representation_item"
+ty = "data_quality_inspection_report"
+owner = "representation_item_relationship"
 
 [entity.data_quality_report_request]
 is_abstract = true
@@ -7273,6 +7837,11 @@ ty = "boolean"
 name = "upper_limit_pos_infinity"
 ty = "boolean"
 
+[[entity.definite_integral_function.redeclared_attrs]]
+name = "operand"
+ty = "maths_function"
+owner = "unary_generic_expression"
+
 [entity.definitional_product_definition_usage]
 parents = ["product_definition_usage"]
 is_abstract = false
@@ -7474,25 +8043,50 @@ parents = ["a3m_equivalence_criterion_of_detailed_assembly_data_content"]
 is_abstract = false
 own_attrs = []
 
+[[entity.different_angle_of_assembly_constraint.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_numerical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.different_assembly_centroid]
 parents = ["a3m_equivalence_criterion_of_representative_assembly_property_value"]
 is_abstract = false
 own_attrs = []
+
+[[entity.different_assembly_centroid.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_numerical_test"
+owner = "a3m_equivalence_criterion"
 
 [entity.different_assembly_centroid_using_notional_solid]
 parents = ["a3m_equivalence_criterion_of_representative_assembly_property_value"]
 is_abstract = false
 own_attrs = []
 
+[[entity.different_assembly_centroid_using_notional_solid.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_numerical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.different_assembly_constraint_type]
 parents = ["a3m_equivalence_criterion_of_detailed_assembly_data_content"]
 is_abstract = false
 own_attrs = []
 
+[[entity.different_assembly_constraint_type.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_logical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.different_assembly_volume]
 parents = ["a3m_equivalence_criterion_of_representative_assembly_property_value"]
 is_abstract = false
 own_attrs = []
+
+[[entity.different_assembly_volume.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_numerical_test"
+owner = "a3m_equivalence_criterion"
 
 [entity.different_bounding_box]
 parents = [
@@ -7502,6 +8096,11 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.different_bounding_box.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_numerical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.different_centroid]
 parents = [
     "a3m_equivalence_criterion_of_representative_shape_property_value",
@@ -7510,10 +8109,20 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.different_centroid.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_numerical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.different_component_identification_via_multi_level_reference]
 parents = ["a3m_equivalence_criterion_of_assembly_data_structure"]
 is_abstract = false
 own_attrs = []
+
+[[entity.different_component_identification_via_multi_level_reference.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_logical_test"
+owner = "a3m_equivalence_criterion"
 
 [entity.different_component_shape]
 parents = ["a3m_equivalence_criterion_of_component_property_difference"]
@@ -7525,6 +8134,11 @@ parents = ["a3m_equivalence_criterion_of_detailed_assembly_data_content"]
 is_abstract = false
 own_attrs = []
 
+[[entity.different_component_type.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_logical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.different_curve_length]
 parents = [
     "a3m_equivalence_criterion_of_representative_shape_property_value",
@@ -7533,45 +8147,90 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.different_curve_length.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_numerical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.different_length_of_assembly_constraint]
 parents = ["a3m_equivalence_criterion_of_detailed_assembly_data_content"]
 is_abstract = false
 own_attrs = []
+
+[[entity.different_length_of_assembly_constraint.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_numerical_test"
+owner = "a3m_equivalence_criterion"
 
 [entity.different_number_of_closed_shell]
 parents = ["a3m_equivalence_criterion_of_representative_shape_property_value"]
 is_abstract = false
 own_attrs = []
 
+[[entity.different_number_of_closed_shell.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_logical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.different_number_of_components]
 parents = ["a3m_equivalence_criterion_of_representative_assembly_property_value"]
 is_abstract = false
 own_attrs = []
+
+[[entity.different_number_of_components.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_logical_test"
+owner = "a3m_equivalence_criterion"
 
 [entity.different_number_of_geometric_elements]
 parents = ["a3m_equivalence_criterion_of_representative_shape_property_value"]
 is_abstract = false
 own_attrs = []
 
+[[entity.different_number_of_geometric_elements.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_logical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.different_number_of_geometric_elements_wireframe_model]
 parents = ["a3m_equivalence_criterion_of_representative_shape_property_value"]
 is_abstract = false
 own_attrs = []
+
+[[entity.different_number_of_geometric_elements_wireframe_model.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_logical_test"
+owner = "a3m_equivalence_criterion"
 
 [entity.different_number_of_topological_elements]
 parents = ["a3m_equivalence_criterion_of_representative_shape_property_value"]
 is_abstract = false
 own_attrs = []
 
+[[entity.different_number_of_topological_elements.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_logical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.different_number_of_topological_elements_wireframe_model]
 parents = ["a3m_equivalence_criterion_of_representative_shape_property_value"]
 is_abstract = false
 own_attrs = []
 
+[[entity.different_number_of_topological_elements_wireframe_model.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_logical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.different_placement_of_component]
 parents = ["a3m_equivalence_criterion_of_detailed_assembly_data_content"]
 is_abstract = false
 own_attrs = []
+
+[[entity.different_placement_of_component.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_numerical_test"
+owner = "a3m_equivalence_criterion"
 
 [entity.different_surface_area]
 parents = [
@@ -7581,6 +8240,11 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.different_surface_area.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_numerical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.different_surface_normal]
 parents = [
     "a3m_equivalence_criterion_of_detailed_shape_data_content",
@@ -7589,6 +8253,11 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.different_surface_normal.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_numerical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.different_volume]
 parents = [
     "a3m_equivalence_criterion_of_representative_shape_property_value",
@@ -7596,6 +8265,11 @@ parents = [
 ]
 is_abstract = false
 own_attrs = []
+
+[[entity.different_volume.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_numerical_test"
+owner = "a3m_equivalence_criterion"
 
 [entity.dimension_callout]
 parents = ["draughting_callout"]
@@ -7634,6 +8308,16 @@ ty = "dimension_extent_usage"
 parents = ["annotation_occurrence_associativity"]
 is_abstract = false
 own_attrs = []
+
+[[entity.dimension_curve_terminator_to_projection_curve_associativity.redeclared_attrs]]
+name = "relating_annotation_occurrence"
+ty = "dimension_curve_terminator"
+owner = "annotation_occurrence_relationship"
+
+[[entity.dimension_curve_terminator_to_projection_curve_associativity.redeclared_attrs]]
+name = "related_annotation_occurrence"
+ty = "projection_curve"
+owner = "annotation_occurrence_relationship"
 
 [entity.dimension_pair]
 parents = ["draughting_callout_relationship"]
@@ -7805,6 +8489,11 @@ parents = ["erroneous_topology"]
 is_abstract = false
 own_attrs = []
 
+[[entity.disconnected_face_set.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.discontinuous_geometry]
 parents = ["inapt_geometry"]
 is_abstract = true
@@ -7854,6 +8543,11 @@ is_abstract = false
 [[entity.document_identifier_assignment.own_attrs]]
 name = "items"
 ty = "SET [1:?] OF document_identifier_assigned_item"
+
+[[entity.document_identifier_assignment.redeclared_attrs]]
+name = "assigned_group"
+ty = "document_identifier"
+owner = "group_assignment"
 
 [entity.document_product_association]
 is_abstract = false
@@ -8034,6 +8728,11 @@ parents = ["representation"]
 is_abstract = false
 own_attrs = []
 
+[[entity.draughting_model.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF draughting_model_item_select"
+owner = "representation"
+
 [entity.draughting_model_item_association]
 parents = ["item_identified_representation_usage"]
 is_abstract = false
@@ -8042,14 +8741,17 @@ own_attrs = []
 [[entity.draughting_model_item_association.redeclared_attrs]]
 name = "definition"
 ty = "draughting_model_item_definition"
+owner = "item_identified_representation_usage"
 
 [[entity.draughting_model_item_association.redeclared_attrs]]
 name = "used_representation"
 ty = "annotation_representation_select"
+owner = "item_identified_representation_usage"
 
 [[entity.draughting_model_item_association.redeclared_attrs]]
 name = "identified_item"
 ty = "draughting_model_item_association_select"
+owner = "item_identified_representation_usage"
 
 [entity.draughting_model_item_association_with_placeholder]
 parents = ["draughting_model_item_association"]
@@ -8062,6 +8764,17 @@ ty = "annotation_placeholder_occurrence"
 [[entity.draughting_model_item_association_with_placeholder.redeclared_attrs]]
 name = "definition"
 ty = "draughting_model_item_definition"
+owner = "item_identified_representation_usage"
+
+[[entity.draughting_model_item_association_with_placeholder.redeclared_attrs]]
+name = "used_representation"
+ty = "draughting_model"
+owner = "item_identified_representation_usage"
+
+[[entity.draughting_model_item_association_with_placeholder.redeclared_attrs]]
+name = "identified_item"
+ty = "draughting_callout"
+owner = "item_identified_representation_usage"
 
 [entity.draughting_pre_defined_colour]
 parents = ["pre_defined_colour"]
@@ -8091,10 +8804,20 @@ parents = ["symbol_representation"]
 is_abstract = false
 own_attrs = []
 
+[[entity.draughting_subfigure_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF draughting_subfigure_representation_item"
+owner = "representation"
+
 [entity.draughting_symbol_representation]
 parents = ["symbol_representation"]
 is_abstract = false
 own_attrs = []
+
+[[entity.draughting_symbol_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF draughting_symbol_representation_item"
+owner = "representation"
 
 [entity.draughting_text_literal_with_delineation]
 parents = ["text_literal_with_delineation"]
@@ -8326,6 +9049,11 @@ parents = ["overcomplex_topology_and_geometry_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.edge_with_excessive_segments.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.edge_with_length]
 parents = ["edge"]
 is_abstract = false
@@ -8540,6 +9268,11 @@ is_abstract = false
 name = "width_tolerance"
 ty = "length_measure"
 
+[[entity.entirely_narrow_face.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.entirely_narrow_solid]
 parents = ["inapt_manifold_solid_brep"]
 is_abstract = false
@@ -8548,6 +9281,11 @@ is_abstract = false
 name = "width_tolerance"
 ty = "length_measure"
 
+[[entity.entirely_narrow_solid.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.entirely_narrow_surface]
 parents = ["nearly_degenerate_geometry"]
 is_abstract = false
@@ -8555,6 +9293,11 @@ is_abstract = false
 [[entity.entirely_narrow_surface.own_attrs]]
 name = "width_tolerance"
 ty = "length_measure"
+
+[[entity.entirely_narrow_surface.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.entity_assertion]
 parents = ["fact_type"]
@@ -8595,6 +9338,16 @@ parents = ["defined_constraint"]
 is_abstract = false
 own_attrs = []
 
+[[entity.equal_parameter_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:?] OF variational_parameter"
+owner = "explicit_constraint"
+
+[[entity.equal_parameter_constraint.redeclared_attrs]]
+name = "reference_elements"
+ty = "SET [0:1] OF variational_parameter"
+owner = "explicit_constraint"
+
 [entity.equals_expression]
 parents = ["binary_boolean_expression"]
 is_abstract = false
@@ -8628,10 +9381,20 @@ parents = ["erroneous_geometry"]
 is_abstract = false
 own_attrs = []
 
+[[entity.erroneous_b_spline_curve_definition.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.erroneous_b_spline_surface_definition]
 parents = ["erroneous_geometry"]
 is_abstract = false
 own_attrs = []
+
+[[entity.erroneous_b_spline_surface_definition.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.erroneous_data]
 parents = ["shape_data_quality_criterion"]
@@ -8763,10 +9526,20 @@ parents = ["overcomplex_geometry"]
 is_abstract = false
 own_attrs = []
 
+[[entity.excessively_high_degree_curve.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.excessively_high_degree_surface]
 parents = ["overcomplex_geometry"]
 is_abstract = false
 own_attrs = []
+
+[[entity.excessively_high_degree_surface.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.exclusive_product_concept_feature_category]
 parents = ["product_concept_feature_category"]
@@ -8823,25 +9596,65 @@ parents = [
 is_abstract = true
 own_attrs = []
 
+[[entity.explicit_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:?] OF geometric_representation_item"
+owner = "explicit_constraint"
+
+[[entity.explicit_geometric_constraint.redeclared_attrs]]
+name = "reference_elements"
+ty = "SET OF geometric_representation_item"
+owner = "explicit_constraint"
+
 [entity.explicit_procedural_geometric_representation_item_relationship]
 parents = ["explicit_procedural_representation_item_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.explicit_procedural_geometric_representation_item_relationship.redeclared_attrs]]
+name = "relating_representation_item"
+ty = "procedural_shape_representation_sequence"
+owner = "representation_item_relationship"
+
+[[entity.explicit_procedural_geometric_representation_item_relationship.redeclared_attrs]]
+name = "related_representation_item"
+ty = "geometric_representation_item"
+owner = "representation_item_relationship"
 
 [entity.explicit_procedural_representation_item_relationship]
 parents = ["representation_item_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.explicit_procedural_representation_item_relationship.redeclared_attrs]]
+name = "relating_representation_item"
+ty = "procedural_representation_sequence"
+owner = "representation_item_relationship"
+
 [entity.explicit_procedural_representation_relationship]
 parents = ["representation_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.explicit_procedural_representation_relationship.redeclared_attrs]]
+name = "rep_1"
+ty = "procedural_representation"
+owner = "representation_relationship"
+
 [entity.explicit_procedural_shape_representation_relationship]
 parents = ["explicit_procedural_representation_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.explicit_procedural_shape_representation_relationship.redeclared_attrs]]
+name = "rep_1"
+ty = "procedural_shape_representation"
+owner = "representation_relationship"
+
+[[entity.explicit_procedural_shape_representation_relationship.redeclared_attrs]]
+name = "rep_2"
+ty = "shape_representation"
+owner = "representation_relationship"
 
 [entity.explicit_round_hole]
 parents = ["round_hole"]
@@ -9028,6 +9841,11 @@ parents = ["data_quality_inspection_instance_report_item"]
 is_abstract = false
 own_attrs = []
 
+[[entity.externally_conditioned_data_quality_inspection_instance_report_item.redeclared_attrs]]
+name = "inspected_elements"
+ty = "SET [1:?] OF inspected_ecdq_element_select"
+owner = "data_quality_inspection_instance_report_item"
+
 [entity.externally_conditioned_data_quality_inspection_result]
 parents = ["data_quality_inspection_result"]
 is_abstract = false
@@ -9179,6 +9997,11 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.externally_defined_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF externally_defined_representation_item"
+owner = "representation"
+
 [entity.externally_defined_representation_item]
 parents = [
     "representation_item",
@@ -9255,6 +10078,11 @@ ty = "measured_value_select"
 parents = ["geometry_with_local_irregularity"]
 is_abstract = false
 own_attrs = []
+
+[[entity.extreme_patch_width_variation.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.extruded_area_solid]
 parents = ["swept_area_solid"]
@@ -9391,6 +10219,11 @@ parents = ["overcomplex_topology_and_geometry_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.face_surface_with_excessive_patches_in_one_direction.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.faceted_brep]
 parents = ["manifold_solid_brep"]
 is_abstract = false
@@ -9438,6 +10271,11 @@ own_attrs = []
 parents = ["shape_aspect_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.feature_for_datum_target_relationship.redeclared_attrs]]
+name = "related_shape_aspect"
+ty = "datum_target"
+owner = "shape_aspect_relationship"
 
 [entity.feature_in_panel]
 parents = ["feature_definition"]
@@ -9629,6 +10467,11 @@ parents = ["explicit_geometric_constraint"]
 is_abstract = false
 own_attrs = []
 
+[[entity.fixed_element_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:?] OF geometric_constraint_element"
+owner = "explicit_constraint"
+
 [entity.fixed_instance_attribute_set]
 parents = ["variational_representation_item"]
 is_abstract = false
@@ -9705,6 +10548,11 @@ parents = ["inapt_topology"]
 is_abstract = false
 own_attrs = []
 
+[[entity.free_edge.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.free_form_assignment]
 parents = ["free_form_constraint"]
 is_abstract = false
@@ -9718,6 +10566,16 @@ is_abstract = true
 name = "constraining_expression"
 ty = "expression"
 
+[[entity.free_form_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:?] OF variational_parameter"
+owner = "explicit_constraint"
+
+[[entity.free_form_constraint.redeclared_attrs]]
+name = "reference_elements"
+ty = "SET OF variational_parameter"
+owner = "explicit_constraint"
+
 [entity.free_form_relation]
 parents = ["free_form_constraint"]
 is_abstract = false
@@ -9730,6 +10588,16 @@ is_abstract = false
 [[entity.free_kinematic_motion_representation.own_attrs]]
 name = "motion"
 ty = "kinematic_path"
+
+[[entity.free_kinematic_motion_representation.redeclared_attrs]]
+name = "rep_1"
+ty = "representative_shape_representation"
+owner = "representation_relationship"
+
+[[entity.free_kinematic_motion_representation.redeclared_attrs]]
+name = "rep_2"
+ty = "representative_shape_representation"
+owner = "representation_relationship"
 
 [entity.free_variable_semantics]
 parents = ["variable_semantics"]
@@ -9825,15 +10693,30 @@ parents = ["non_smooth_geometry_transition_across_edge"]
 is_abstract = false
 own_attrs = []
 
+[[entity.g1_discontinuity_between_adjacent_faces.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.g1_discontinuous_curve]
 parents = ["discontinuous_geometry"]
 is_abstract = false
 own_attrs = []
 
+[[entity.g1_discontinuous_curve.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.g1_discontinuous_surface]
 parents = ["discontinuous_geometry"]
 is_abstract = false
 own_attrs = []
+
+[[entity.g1_discontinuous_surface.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.g2_discontinuity_between_adjacent_faces]
 parents = ["non_smooth_geometry_transition_across_edge"]
@@ -9847,6 +10730,11 @@ ty = "shape_data_quality_assessment_by_numerical_test"
 name = "flat_curvature_radius_tolerance"
 ty = "length_measure"
 
+[[entity.g2_discontinuity_between_adjacent_faces.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.g2_discontinuous_curve]
 parents = ["discontinuous_geometry"]
 is_abstract = false
@@ -9858,6 +10746,11 @@ ty = "shape_data_quality_assessment_by_numerical_test"
 [[entity.g2_discontinuous_curve.own_attrs]]
 name = "flat_curvature_radius_tolerance"
 ty = "length_measure"
+
+[[entity.g2_discontinuous_curve.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.g2_discontinuous_surface]
 parents = ["discontinuous_geometry"]
@@ -9871,35 +10764,70 @@ ty = "shape_data_quality_assessment_by_numerical_test"
 name = "flat_curvature_radius_tolerance"
 ty = "length_measure"
 
+[[entity.g2_discontinuous_surface.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.gap_between_adjacent_edges_in_loop]
 parents = ["geometric_gap_in_topology"]
 is_abstract = false
 own_attrs = []
+
+[[entity.gap_between_adjacent_edges_in_loop.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.gap_between_edge_and_base_surface]
 parents = ["geometric_gap_in_topology"]
 is_abstract = false
 own_attrs = []
 
+[[entity.gap_between_edge_and_base_surface.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.gap_between_faces_related_to_an_edge]
 parents = ["geometric_gap_in_topology"]
 is_abstract = false
 own_attrs = []
+
+[[entity.gap_between_faces_related_to_an_edge.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.gap_between_pcurves_related_to_an_edge]
 parents = ["geometric_gap_in_topology"]
 is_abstract = false
 own_attrs = []
 
+[[entity.gap_between_pcurves_related_to_an_edge.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.gap_between_vertex_and_base_surface]
 parents = ["geometric_gap_in_topology"]
 is_abstract = false
 own_attrs = []
 
+[[entity.gap_between_vertex_and_base_surface.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.gap_between_vertex_and_edge]
 parents = ["geometric_gap_in_topology"]
 is_abstract = false
 own_attrs = []
+
+[[entity.gap_between_vertex_and_edge.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.gear]
 parents = ["feature_definition"]
@@ -9937,6 +10865,11 @@ is_abstract = false
 [[entity.gear_pair_value.own_attrs]]
 name = "actual_rotation_1"
 ty = "plane_angle_measure"
+
+[[entity.gear_pair_value.redeclared_attrs]]
+name = "applies_to_pair"
+ty = "gear_pair"
+owner = "pair_value"
 
 [entity.gear_pair_with_range]
 parents = ["gear_pair"]
@@ -9977,6 +10910,11 @@ is_abstract = false
 [[entity.general_linear_function.own_attrs]]
 name = "sum_index"
 ty = "one_or_two"
+
+[[entity.general_linear_function.redeclared_attrs]]
+name = "operand"
+ty = "maths_function"
+owner = "unary_generic_expression"
 
 [entity.general_material_property]
 parents = ["general_property"]
@@ -10134,14 +11072,17 @@ own_attrs = []
 [[entity.geometric_item_specific_usage.redeclared_attrs]]
 name = "definition"
 ty = "geometric_item_specific_usage_select"
+owner = "item_identified_representation_usage"
 
 [[entity.geometric_item_specific_usage.redeclared_attrs]]
 name = "used_representation"
 ty = "shape_model"
+owner = "item_identified_representation_usage"
 
 [[entity.geometric_item_specific_usage.redeclared_attrs]]
 name = "identified_item"
 ty = "geometric_model_item"
+owner = "item_identified_representation_usage"
 
 [entity.geometric_model_element_relationship]
 parents = [
@@ -10150,6 +11091,16 @@ parents = [
 ]
 is_abstract = false
 own_attrs = []
+
+[[entity.geometric_model_element_relationship.redeclared_attrs]]
+name = "relating_representation_item"
+ty = "geometric_representation_item"
+owner = "representation_item_relationship"
+
+[[entity.geometric_model_element_relationship.redeclared_attrs]]
+name = "related_representation_item"
+ty = "geometric_representation_item"
+owner = "representation_item_relationship"
 
 [entity.geometric_representation_context]
 parents = ["representation_context"]
@@ -10440,6 +11391,16 @@ parents = ["context_dependent_over_riding_styled_item"]
 is_abstract = false
 own_attrs = []
 
+[[entity.hidden_element_over_riding_styled_item.redeclared_attrs]]
+name = "style_context"
+ty = "LIST [1:1] OF presentation_view"
+owner = "context_dependent_over_riding_styled_item"
+
+[[entity.hidden_element_over_riding_styled_item.redeclared_attrs]]
+name = "item"
+ty = "camera_image"
+owner = "styled_item"
+
 [entity.hierarchical_interface_connection]
 parents = ["interface_connection"]
 is_abstract = false
@@ -10453,6 +11414,11 @@ is_abstract = false
 name = "approximation_tolerance"
 ty = "length_measure"
 
+[[entity.high_degree_axi_symmetric_surface.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.high_degree_conic]
 parents = ["overcomplex_geometry"]
 is_abstract = false
@@ -10460,6 +11426,11 @@ is_abstract = false
 [[entity.high_degree_conic.own_attrs]]
 name = "approximation_tolerance"
 ty = "length_measure"
+
+[[entity.high_degree_conic.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.high_degree_linear_curve]
 parents = ["overcomplex_geometry"]
@@ -10469,6 +11440,11 @@ is_abstract = false
 name = "approximation_tolerance"
 ty = "length_measure"
 
+[[entity.high_degree_linear_curve.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.high_degree_planar_surface]
 parents = ["overcomplex_geometry"]
 is_abstract = false
@@ -10476,6 +11452,11 @@ is_abstract = false
 [[entity.high_degree_planar_surface.own_attrs]]
 name = "approximation_tolerance"
 ty = "length_measure"
+
+[[entity.high_degree_planar_surface.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.high_order_kinematic_pair]
 parents = ["kinematic_pair"]
@@ -10502,6 +11483,11 @@ is_abstract = false
 [[entity.homogeneous_linear_function.own_attrs]]
 name = "sum_index"
 ty = "one_or_two"
+
+[[entity.homogeneous_linear_function.redeclared_attrs]]
+name = "operand"
+ty = "maths_function"
+owner = "unary_generic_expression"
 
 [entity.homokinetic_pair]
 parents = ["universal_pair"]
@@ -10594,6 +11580,16 @@ own_attrs = []
 parents = ["representation_item_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.implicit_explicit_positioned_sketch_relationship.redeclared_attrs]]
+name = "relating_representation_item"
+ty = "repositioned_neutral_sketch"
+owner = "representation_item_relationship"
+
+[[entity.implicit_explicit_positioned_sketch_relationship.redeclared_attrs]]
+name = "related_representation_item"
+ty = "positioned_sketch"
+owner = "representation_item_relationship"
 
 [entity.implicit_intersection_curve]
 parents = ["implicit_planar_curve"]
@@ -10797,6 +11793,16 @@ is_abstract = false
 name = "near_points"
 ty = "SET OF near_point_relationship"
 
+[[entity.incidence_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:?] OF geometric_constraint_element"
+owner = "explicit_constraint"
+
+[[entity.incidence_geometric_constraint.redeclared_attrs]]
+name = "reference_elements"
+ty = "SET OF geometric_constraint_element"
+owner = "explicit_constraint"
+
 [entity.included_text_block]
 parents = ["mapped_item"]
 is_abstract = false
@@ -10811,6 +11817,11 @@ own_attrs = []
 parents = ["erroneous_topology"]
 is_abstract = false
 own_attrs = []
+
+[[entity.inconsistent_adjacent_face_normals.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.inconsistent_curve_transition_code]
 parents = ["erroneous_geometry"]
@@ -10832,6 +11843,11 @@ ty = "length_measure"
 name = "flat_curvature_radius_tolerance"
 ty = "length_measure"
 
+[[entity.inconsistent_curve_transition_code.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.inconsistent_edge_and_curve_directions]
 parents = ["erroneous_topology_and_geometry_relationship"]
 is_abstract = false
@@ -10839,6 +11855,11 @@ is_abstract = false
 [[entity.inconsistent_edge_and_curve_directions.own_attrs]]
 name = "distance_tolerance"
 ty = "length_measure"
+
+[[entity.inconsistent_edge_and_curve_directions.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.inconsistent_element_reference]
 parents = ["externally_conditioned_data_quality_criterion"]
@@ -10850,10 +11871,20 @@ parents = ["erroneous_topology_and_geometry_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.inconsistent_face_and_closed_shell_normals.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.inconsistent_face_and_surface_normals]
 parents = ["erroneous_topology_and_geometry_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.inconsistent_face_and_surface_normals.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.inconsistent_surface_transition_code]
 parents = ["erroneous_geometry"]
@@ -10874,6 +11905,11 @@ ty = "length_measure"
 [[entity.inconsistent_surface_transition_code.own_attrs]]
 name = "flat_curvature_radius_tolerance"
 ty = "length_measure"
+
+[[entity.inconsistent_surface_transition_code.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.index_expression]
 parents = [
@@ -10899,15 +11935,30 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.indirectly_selected_shape_elements.redeclared_attrs]]
+name = "indirectly_picked_items"
+ty = "SET [1:?] OF shape_representation_item"
+owner = "indirectly_selected_elements"
+
 [entity.indistinct_curve_knots]
 parents = ["geometry_with_local_near_degeneracy"]
 is_abstract = false
 own_attrs = []
 
+[[entity.indistinct_curve_knots.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.indistinct_surface_knots]
 parents = ["geometry_with_local_near_degeneracy"]
 is_abstract = false
 own_attrs = []
+
+[[entity.indistinct_surface_knots.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.inductance_measure_with_unit]
 parents = ["measure_with_unit"]
@@ -10973,6 +12024,7 @@ own_attrs = []
 [[entity.int_literal.redeclared_attrs]]
 name = "the_value"
 ty = "integer"
+owner = "literal_number"
 
 [entity.int_numeric_variable]
 parents = ["numeric_variable"]
@@ -11062,10 +12114,30 @@ parents = ["product_definition_formation_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.interface_connector_design_to_planned.redeclared_attrs]]
+name = "relating_product_definition_formation"
+ty = "interface_connector_design"
+owner = "product_definition_formation_relationship"
+
+[[entity.interface_connector_design_to_planned.redeclared_attrs]]
+name = "related_product_definition_formation"
+ty = "interface_connector_as_planned"
+owner = "product_definition_formation_relationship"
+
 [entity.interface_connector_design_to_realized]
 parents = ["product_definition_formation_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.interface_connector_design_to_realized.redeclared_attrs]]
+name = "relating_product_definition_formation"
+ty = "interface_connector_design"
+owner = "product_definition_formation_relationship"
+
+[[entity.interface_connector_design_to_realized.redeclared_attrs]]
+name = "related_product_definition_formation"
+ty = "interface_connector_as_realized"
+owner = "product_definition_formation_relationship"
 
 [entity.interface_connector_occurrence]
 parents = ["group"]
@@ -11076,6 +12148,16 @@ own_attrs = []
 parents = ["product_definition_formation_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.interface_connector_planned_to_realized.redeclared_attrs]]
+name = "relating_product_definition_formation"
+ty = "interface_connector_as_planned"
+owner = "product_definition_formation_relationship"
+
+[[entity.interface_connector_planned_to_realized.redeclared_attrs]]
+name = "related_product_definition_formation"
+ty = "interface_connector_as_realized"
+owner = "product_definition_formation_relationship"
 
 [entity.interface_connector_version]
 parents = ["product_definition_formation"]
@@ -11112,6 +12194,16 @@ parents = ["representation"]
 is_abstract = false
 own_attrs = []
 
+[[entity.interpolated_configuration_representation.redeclared_attrs]]
+name = "context_of_items"
+ty = "geometric_representation_context_with_parameter"
+owner = "representation"
+
+[[entity.interpolated_configuration_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF interpolated_configuration_sequence"
+owner = "representation"
+
 [entity.interpolated_configuration_segment]
 parents = ["founded_item"]
 is_abstract = false
@@ -11144,6 +12236,11 @@ is_abstract = false
 name = "interference_tolerance"
 ty = "length_measure"
 
+[[entity.intersecting_connected_face_sets.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.intersecting_loops_in_face]
 parents = ["erroneous_topology_and_geometry_relationship"]
 is_abstract = false
@@ -11152,6 +12249,11 @@ is_abstract = false
 name = "interference_tolerance"
 ty = "length_measure"
 
+[[entity.intersecting_loops_in_face.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.intersecting_shells_in_solid]
 parents = ["erroneous_manifold_solid_brep"]
 is_abstract = false
@@ -11159,6 +12261,11 @@ is_abstract = false
 [[entity.intersecting_shells_in_solid.own_attrs]]
 name = "interference_tolerance"
 ty = "length_measure"
+
+[[entity.intersecting_shells_in_solid.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.intersection_curve]
 parents = ["surface_curve"]
@@ -11235,6 +12342,11 @@ is_abstract = false
 name = "item"
 ty = "geometric_representation_item"
 
+[[entity.item_link_motion_relationship.redeclared_attrs]]
+name = "rep_1"
+ty = "shape_representation"
+owner = "representation_relationship"
+
 [entity.joggle]
 parents = ["feature_definition"]
 is_abstract = false
@@ -11283,6 +12395,16 @@ parents = ["edge"]
 is_abstract = false
 own_attrs = []
 
+[[entity.kinematic_joint.redeclared_attrs]]
+name = "edge_start"
+ty = "kinematic_link"
+owner = "edge"
+
+[[entity.kinematic_joint.redeclared_attrs]]
+name = "edge_end"
+ty = "kinematic_link"
+owner = "edge"
+
 [entity.kinematic_link]
 parents = ["vertex"]
 is_abstract = false
@@ -11296,15 +12418,40 @@ is_abstract = true
 name = "represented_link"
 ty = "kinematic_link"
 
+[[entity.kinematic_link_representation.redeclared_attrs]]
+name = "context_of_items"
+ty = "geometric_representation_context"
+owner = "representation"
+
+[[entity.kinematic_link_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF kinematic_link_representation_items"
+owner = "representation"
+
 [entity.kinematic_link_representation_association]
 parents = ["representation_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.kinematic_link_representation_association.redeclared_attrs]]
+name = "rep_1"
+ty = "kinematic_link_representation"
+owner = "representation_relationship"
+
+[[entity.kinematic_link_representation_association.redeclared_attrs]]
+name = "rep_2"
+ty = "shape_representation"
+owner = "representation_relationship"
+
 [entity.kinematic_loop]
 parents = ["edge_loop"]
 is_abstract = false
 own_attrs = []
+
+[[entity.kinematic_loop.redeclared_attrs]]
+name = "edge_list"
+ty = "LIST [1:?] OF oriented_joint"
+owner = "path"
 
 [entity.kinematic_pair]
 parents = [
@@ -11320,10 +12467,12 @@ ty = "kinematic_joint"
 [[entity.kinematic_pair.redeclared_attrs]]
 name = "transform_item_1"
 ty = "rigid_placement"
+owner = "item_defined_transformation"
 
 [[entity.kinematic_pair.redeclared_attrs]]
 name = "transform_item_2"
 ty = "rigid_placement"
+owner = "item_defined_transformation"
 
 [entity.kinematic_path]
 parents = ["geometric_representation_item"]
@@ -11342,6 +12491,11 @@ parents = ["kinematic_path"]
 is_abstract = false
 own_attrs = []
 
+[[entity.kinematic_path_defined_by_curves.redeclared_attrs]]
+name = "segments"
+ty = "LIST [1:?] OF curve_based_path_with_orientation"
+owner = "kinematic_path"
+
 [entity.kinematic_path_defined_by_nodes]
 parents = ["kinematic_path"]
 is_abstract = false
@@ -11349,6 +12503,11 @@ is_abstract = false
 [[entity.kinematic_path_defined_by_nodes.own_attrs]]
 name = "placement_start"
 ty = "placement"
+
+[[entity.kinematic_path_defined_by_nodes.redeclared_attrs]]
+name = "segments"
+ty = "LIST [1:?] OF path_node"
+owner = "kinematic_path"
 
 [entity.kinematic_path_segment]
 parents = ["founded_item"]
@@ -11367,6 +12526,11 @@ parents = ["property_definition_representation"]
 is_abstract = true
 own_attrs = []
 
+[[entity.kinematic_property_definition_representation.redeclared_attrs]]
+name = "definition"
+ty = "product_definition_kinematics"
+owner = "property_definition_representation"
+
 [entity.kinematic_property_mechanism_representation]
 parents = ["kinematic_property_definition_representation"]
 is_abstract = false
@@ -11374,6 +12538,11 @@ is_abstract = false
 [[entity.kinematic_property_mechanism_representation.own_attrs]]
 name = "base"
 ty = "kinematic_link_representation"
+
+[[entity.kinematic_property_mechanism_representation.redeclared_attrs]]
+name = "used_representation"
+ty = "mechanism_representation"
+owner = "property_definition_representation"
 
 [entity.kinematic_property_topology_representation]
 parents = ["kinematic_property_definition_representation"]
@@ -11386,6 +12555,7 @@ ty = "kinematic_link"
 [[entity.kinematic_property_topology_representation.redeclared_attrs]]
 name = "used_representation"
 ty = "kinematic_topology_representation_select"
+owner = "property_definition_representation"
 
 [entity.kinematic_topology_directed_structure]
 parents = ["representation"]
@@ -11395,6 +12565,11 @@ is_abstract = false
 name = "parent"
 ty = "kinematic_topology_structure"
 
+[[entity.kinematic_topology_directed_structure.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF oriented_joint"
+owner = "representation"
+
 [entity.kinematic_topology_network_structure]
 parents = ["representation"]
 is_abstract = false
@@ -11403,10 +12578,20 @@ is_abstract = false
 name = "parent"
 ty = "kinematic_topology_structure"
 
+[[entity.kinematic_topology_network_structure.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF kinematic_loop"
+owner = "representation"
+
 [entity.kinematic_topology_structure]
 parents = ["representation"]
 is_abstract = false
 own_attrs = []
+
+[[entity.kinematic_topology_structure.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF kinematic_joint"
+owner = "representation"
 
 [entity.kinematic_topology_substructure]
 parents = ["kinematic_topology_structure"]
@@ -11476,6 +12661,11 @@ parents = [
 ]
 is_abstract = false
 own_attrs = []
+
+[[entity.length_function.redeclared_attrs]]
+name = "operand"
+ty = "string_expression"
+owner = "unary_generic_expression"
 
 [entity.length_measure_with_unit]
 parents = ["measure_with_unit"]
@@ -11601,6 +12791,16 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.linear_array_component_definition_link.redeclared_attrs]]
+name = "relating_product_definition"
+ty = "linear_array_placement_group_component"
+owner = "product_definition_relationship"
+
+[[entity.linear_array_component_definition_link.redeclared_attrs]]
+name = "related_product_definition"
+ty = "linear_array_placement_group_component"
+owner = "product_definition_relationship"
+
 [entity.linear_array_placement_group_component]
 parents = ["array_placement_group"]
 is_abstract = false
@@ -11657,6 +12857,11 @@ is_abstract = false
 name = "first"
 ty = "integer"
 
+[[entity.linearized_table_function.redeclared_attrs]]
+name = "operand"
+ty = "maths_function"
+owner = "unary_generic_expression"
+
 [entity.link_motion_relationship]
 parents = [
     "definitional_representation_relationship",
@@ -11668,11 +12873,32 @@ own_attrs = []
 [[entity.link_motion_relationship.redeclared_attrs]]
 name = "rep_1"
 ty = "link_or_shape_representation"
+owner = "representation_relationship"
+
+[[entity.link_motion_relationship.redeclared_attrs]]
+name = "rep_2"
+ty = "link_motion_representation_along_path"
+owner = "representation_relationship"
+
+[[entity.link_motion_relationship.redeclared_attrs]]
+name = "transformation_operator"
+ty = "link_motion_transformation"
+owner = "representation_relationship_with_transformation"
 
 [entity.link_motion_representation_along_path]
 parents = ["representation"]
 is_abstract = false
 own_attrs = []
+
+[[entity.link_motion_representation_along_path.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF kinematic_path"
+owner = "representation"
+
+[[entity.link_motion_representation_along_path.redeclared_attrs]]
+name = "context_of_items"
+ty = "geometric_representation_context_with_parameter"
+owner = "representation"
 
 [entity.link_motion_transformation]
 parents = ["item_defined_transformation"]
@@ -11682,6 +12908,12 @@ own_attrs = []
 [[entity.link_motion_transformation.redeclared_attrs]]
 name = "transform_item_1"
 ty = "rigid_placement"
+owner = "item_defined_transformation"
+
+[[entity.link_motion_transformation.redeclared_attrs]]
+name = "transform_item_2"
+ty = "kinematic_path"
+owner = "item_defined_transformation"
 
 [entity.listed_complex_number_data]
 parents = [
@@ -11999,6 +13231,11 @@ parents = ["compound_representation_item"]
 is_abstract = false
 own_attrs = []
 
+[[entity.location_in_aggregate_representation_item.redeclared_attrs]]
+name = "item_element"
+ty = "location_in_aggregate_item"
+owner = "compound_representation_item"
+
 [entity.location_relationship]
 is_abstract = false
 
@@ -12193,6 +13430,11 @@ ty = "plane_angle_measure"
 [[entity.low_order_kinematic_pair_value.own_attrs]]
 name = "actual_rotation_z"
 ty = "plane_angle_measure"
+
+[[entity.low_order_kinematic_pair_value.redeclared_attrs]]
+name = "applies_to_pair"
+ty = "low_order_kinematic_pair"
+owner = "pair_value"
 
 [entity.low_order_kinematic_pair_with_motion_coupling]
 parents = ["kinematic_pair"]
@@ -12519,6 +13761,11 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.mating_material.redeclared_attrs]]
+name = "definition"
+ty = "product_definition_usage_relationship"
+owner = "property_definition"
+
 [entity.mating_material_items]
 parents = ["group_assignment"]
 is_abstract = false
@@ -12526,6 +13773,11 @@ is_abstract = false
 [[entity.mating_material_items.own_attrs]]
 name = "items"
 ty = "SET [1:?] OF product_definition"
+
+[[entity.mating_material_items.redeclared_attrs]]
+name = "assigned_group"
+ty = "mating_material"
+owner = "group_assignment"
 
 [entity.maximum_function]
 parents = ["multiple_arity_function_call"]
@@ -12583,40 +13835,72 @@ own_attrs = []
 [[entity.mechanical_design_and_draughting_relationship.redeclared_attrs]]
 name = "rep_1"
 ty = "mechanical_design_and_draughting_relationship_select"
+owner = "representation_relationship"
 
 [[entity.mechanical_design_and_draughting_relationship.redeclared_attrs]]
 name = "rep_2"
 ty = "mechanical_design_and_draughting_relationship_select"
+owner = "representation_relationship"
 
 [entity.mechanical_design_geometric_presentation_area]
 parents = ["presentation_area"]
 is_abstract = false
 own_attrs = []
 
+[[entity.mechanical_design_geometric_presentation_area.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF mechanical_design_geometric_presentation_area_items"
+owner = "representation"
+
 [entity.mechanical_design_geometric_presentation_representation]
 parents = ["representation"]
 is_abstract = false
 own_attrs = []
+
+[[entity.mechanical_design_geometric_presentation_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF mechanical_design_geometric_presentation_representation_items"
+owner = "representation"
 
 [entity.mechanical_design_presentation_representation_with_draughting]
 parents = ["representation"]
 is_abstract = false
 own_attrs = []
 
+[[entity.mechanical_design_presentation_representation_with_draughting.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF camera_model_d3"
+owner = "representation"
+
 [entity.mechanical_design_requirement_item_association]
 parents = ["pmi_requirement_item_association"]
 is_abstract = false
 own_attrs = []
+
+[[entity.mechanical_design_requirement_item_association.redeclared_attrs]]
+name = "requirement"
+ty = "requirement_assignment"
+owner = "pmi_requirement_item_association"
 
 [entity.mechanical_design_shaded_presentation_area]
 parents = ["presentation_area"]
 is_abstract = false
 own_attrs = []
 
+[[entity.mechanical_design_shaded_presentation_area.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF mechanical_design_shaded_presentation_area_items"
+owner = "representation"
+
 [entity.mechanical_design_shaded_presentation_representation]
 parents = ["representation"]
 is_abstract = false
 own_attrs = []
+
+[[entity.mechanical_design_shaded_presentation_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF mechanical_design_shaded_presentation_representation_items"
+owner = "representation"
 
 [entity.mechanism_representation]
 parents = ["representation"]
@@ -12626,6 +13910,16 @@ is_abstract = false
 name = "represented_topology"
 ty = "kinematic_topology_representation_select"
 
+[[entity.mechanism_representation.redeclared_attrs]]
+name = "context_of_items"
+ty = "geometric_representation_context"
+owner = "representation"
+
+[[entity.mechanism_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF pair_representation_relationship"
+owner = "representation"
+
 [entity.mechanism_state_representation]
 parents = ["representation"]
 is_abstract = false
@@ -12634,6 +13928,11 @@ is_abstract = false
 name = "represented_mechanism"
 ty = "mechanism_representation"
 
+[[entity.mechanism_state_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF pair_value"
+owner = "representation"
+
 [entity.message_contents_assignment]
 parents = ["group_assignment"]
 is_abstract = false
@@ -12641,6 +13940,11 @@ is_abstract = false
 [[entity.message_contents_assignment.own_attrs]]
 name = "items"
 ty = "SET [1:?] OF representation"
+
+[[entity.message_contents_assignment.redeclared_attrs]]
+name = "assigned_group"
+ty = "message_contents_group"
+owner = "group_assignment"
 
 [entity.message_contents_group]
 parents = ["group"]
@@ -12652,6 +13956,16 @@ parents = ["product_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.message_relationship.redeclared_attrs]]
+name = "relating_product"
+ty = "structured_message"
+owner = "product_relationship"
+
+[[entity.message_relationship.redeclared_attrs]]
+name = "related_product"
+ty = "structured_message"
+owner = "product_relationship"
+
 [entity.min_and_major_ply_orientation_basis]
 parents = [
     "representation_item_relationship",
@@ -12659,6 +13973,16 @@ parents = [
 ]
 is_abstract = false
 own_attrs = []
+
+[[entity.min_and_major_ply_orientation_basis.redeclared_attrs]]
+name = "relating_representation_item"
+ty = "axis2_placement_3d"
+owner = "representation_item_relationship"
+
+[[entity.min_and_major_ply_orientation_basis.redeclared_attrs]]
+name = "related_representation_item"
+ty = "axis2_placement_3d"
+owner = "representation_item_relationship"
 
 [entity.minimum_function]
 parents = ["multiple_arity_function_call"]
@@ -12683,6 +14007,11 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.mismatch_of_arcwise_connected_curves.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_numerical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.mismatch_of_arcwise_connected_surfaces]
 parents = [
     "a3m_equivalence_criterion_of_detailed_shape_data_content",
@@ -12690,6 +14019,11 @@ parents = [
 ]
 is_abstract = false
 own_attrs = []
+
+[[entity.mismatch_of_arcwise_connected_surfaces.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_numerical_test"
+owner = "a3m_equivalence_criterion"
 
 [entity.mismatch_of_arcwise_connected_surfaces_boundary]
 parents = [
@@ -12699,60 +14033,120 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.mismatch_of_arcwise_connected_surfaces_boundary.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_numerical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.mismatch_of_component]
 parents = ["a3m_equivalence_criterion_of_assembly_data_structure"]
 is_abstract = false
 own_attrs = []
+
+[[entity.mismatch_of_component.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_logical_test"
+owner = "a3m_equivalence_criterion"
 
 [entity.mismatch_of_edges]
 parents = ["a3m_equivalence_criterion_of_shape_data_structure"]
 is_abstract = false
 own_attrs = []
 
+[[entity.mismatch_of_edges.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_logical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.mismatch_of_faces]
 parents = ["a3m_equivalence_criterion_of_shape_data_structure"]
 is_abstract = false
 own_attrs = []
+
+[[entity.mismatch_of_faces.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_logical_test"
+owner = "a3m_equivalence_criterion"
 
 [entity.mismatch_of_point_cloud_and_related_geometry]
 parents = ["a3m_equivalence_criterion_of_detailed_shape_data_content"]
 is_abstract = false
 own_attrs = []
 
+[[entity.mismatch_of_point_cloud_and_related_geometry.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_numerical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.mismatch_of_points]
 parents = ["a3m_equivalence_criterion_of_detailed_shape_data_content"]
 is_abstract = false
 own_attrs = []
+
+[[entity.mismatch_of_points.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_numerical_test"
+owner = "a3m_equivalence_criterion"
 
 [entity.mismatch_of_underlying_edge_geometry]
 parents = ["a3m_equivalence_criterion_of_detailed_shape_data_content"]
 is_abstract = false
 own_attrs = []
 
+[[entity.mismatch_of_underlying_edge_geometry.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_logical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.mismatch_of_underlying_face_geometry]
 parents = ["a3m_equivalence_criterion_of_detailed_shape_data_content"]
 is_abstract = false
 own_attrs = []
+
+[[entity.mismatch_of_underlying_face_geometry.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_logical_test"
+owner = "a3m_equivalence_criterion"
 
 [entity.missing_assembly_constraint]
 parents = ["a3m_equivalence_criterion_of_assembly_data_structure"]
 is_abstract = false
 own_attrs = []
 
+[[entity.missing_assembly_constraint.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_logical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.missing_component]
 parents = ["a3m_equivalence_criterion_of_assembly_data_structure"]
 is_abstract = false
 own_attrs = []
+
+[[entity.missing_component.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_logical_test"
+owner = "a3m_equivalence_criterion"
 
 [entity.missing_edge]
 parents = ["a3m_equivalence_criterion_of_shape_data_structure"]
 is_abstract = false
 own_attrs = []
 
+[[entity.missing_edge.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_logical_test"
+owner = "a3m_equivalence_criterion"
+
 [entity.missing_face]
 parents = ["a3m_equivalence_criterion_of_shape_data_structure"]
 is_abstract = false
 own_attrs = []
+
+[[entity.missing_face.redeclared_attrs]]
+name = "assessment_specification"
+ty = "a3m_equivalence_assessment_by_logical_test"
+owner = "a3m_equivalence_criterion"
 
 [entity.mod_expression]
 parents = ["binary_numeric_expression"]
@@ -12763,6 +14157,16 @@ own_attrs = []
 parents = ["characterized_item_within_representation"]
 is_abstract = false
 own_attrs = []
+
+[[entity.model_geometric_view.redeclared_attrs]]
+name = "rep"
+ty = "draughting_model"
+owner = "characterized_item_within_representation"
+
+[[entity.model_geometric_view.redeclared_attrs]]
+name = "item"
+ty = "camera_model"
+owner = "characterized_item_within_representation"
 
 [entity.modified_geometric_tolerance]
 parents = ["geometric_tolerance"]
@@ -12836,6 +14240,11 @@ parents = [
 is_abstract = true
 own_attrs = []
 
+[[entity.multiple_arity_boolean_expression.redeclared_attrs]]
+name = "operands"
+ty = "LIST [2:?] OF boolean_expression"
+owner = "multiple_arity_generic_expression"
+
 [entity.multiple_arity_function_call]
 parents = ["multiple_arity_numeric_expression"]
 is_abstract = true
@@ -12857,30 +14266,60 @@ parents = [
 is_abstract = true
 own_attrs = []
 
+[[entity.multiple_arity_numeric_expression.redeclared_attrs]]
+name = "operands"
+ty = "LIST [2:?] OF numeric_expression"
+owner = "multiple_arity_generic_expression"
+
 [entity.multiply_defined_cartesian_points]
 parents = ["multiply_defined_geometry"]
 is_abstract = false
 own_attrs = []
+
+[[entity.multiply_defined_cartesian_points.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.multiply_defined_curves]
 parents = ["multiply_defined_geometry"]
 is_abstract = false
 own_attrs = []
 
+[[entity.multiply_defined_curves.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.multiply_defined_directions]
 parents = ["multiply_defined_geometry"]
 is_abstract = false
 own_attrs = []
+
+[[entity.multiply_defined_directions.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.multiply_defined_edges]
 parents = ["topology_related_to_multiply_defined_geometry"]
 is_abstract = false
 own_attrs = []
 
+[[entity.multiply_defined_edges.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.multiply_defined_faces]
 parents = ["topology_related_to_multiply_defined_geometry"]
 is_abstract = false
 own_attrs = []
+
+[[entity.multiply_defined_faces.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.multiply_defined_geometry]
 parents = ["inapt_geometry"]
@@ -12895,20 +14334,40 @@ is_abstract = false
 name = "assessment_specification_2"
 ty = "shape_data_quality_assessment_by_numerical_test"
 
+[[entity.multiply_defined_placements.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.multiply_defined_solids]
 parents = ["inapt_manifold_solid_brep"]
 is_abstract = false
 own_attrs = []
+
+[[entity.multiply_defined_solids.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.multiply_defined_surfaces]
 parents = ["multiply_defined_geometry"]
 is_abstract = false
 own_attrs = []
 
+[[entity.multiply_defined_surfaces.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.multiply_defined_vertices]
 parents = ["topology_related_to_multiply_defined_geometry"]
 is_abstract = false
 own_attrs = []
+
+[[entity.multiply_defined_vertices.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.name_assignment]
 is_abstract = true
@@ -12943,6 +14402,11 @@ is_abstract = false
 name = "width_tolerance"
 ty = "length_measure"
 
+[[entity.narrow_surface_patch.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.near_point_relationship]
 parents = ["representation_item_relationship"]
 is_abstract = false
@@ -12951,6 +14415,12 @@ own_attrs = []
 [[entity.near_point_relationship.redeclared_attrs]]
 name = "relating_representation_item"
 ty = "curve_or_surface_constraint_element"
+owner = "representation_item_relationship"
+
+[[entity.near_point_relationship.redeclared_attrs]]
+name = "related_representation_item"
+ty = "point"
+owner = "representation_item_relationship"
 
 [entity.nearly_degenerate_geometry]
 parents = ["inapt_geometry"]
@@ -12962,10 +14432,20 @@ parents = ["geometry_with_local_near_degeneracy"]
 is_abstract = false
 own_attrs = []
 
+[[entity.nearly_degenerate_surface_boundary.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.nearly_degenerate_surface_patch]
 parents = ["geometry_with_local_near_degeneracy"]
 is_abstract = false
 own_attrs = []
+
+[[entity.nearly_degenerate_surface_patch.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.neutral_sketch_representation]
 parents = ["shape_representation"]
@@ -12974,6 +14454,11 @@ is_abstract = false
 [[entity.neutral_sketch_representation.own_attrs]]
 name = "neutral_sketch_semantics"
 ty = "curves_or_area"
+
+[[entity.neutral_sketch_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF sketch_element_select"
+owner = "representation"
 
 [entity.next_assembly_usage_occurrence]
 parents = ["assembly_component_usage"]
@@ -13005,10 +14490,20 @@ parents = ["inapt_topology"]
 is_abstract = false
 own_attrs = []
 
+[[entity.non_manifold_at_edge.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.non_manifold_at_vertex]
 parents = ["inapt_topology"]
 is_abstract = false
 own_attrs = []
+
+[[entity.non_manifold_at_vertex.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.non_manifold_surface_shape_representation]
 parents = ["shape_representation"]
@@ -13034,6 +14529,11 @@ own_attrs = []
 parents = ["unary_boolean_expression"]
 is_abstract = false
 own_attrs = []
+
+[[entity.not_expression.redeclared_attrs]]
+name = "operand"
+ty = "boolean_expression"
+owner = "unary_generic_expression"
 
 [entity.null_representation_item]
 parents = ["representation_item"]
@@ -13076,6 +14576,11 @@ ty = "OPTIONAL text"
 parents = ["unary_boolean_expression"]
 is_abstract = false
 own_attrs = []
+
+[[entity.odd_function.redeclared_attrs]]
+name = "operand"
+ty = "numeric_expression"
+owner = "unary_generic_expression"
 
 [entity.offset_curve_2d]
 parents = ["curve"]
@@ -13142,10 +14647,20 @@ parents = ["erroneous_topology"]
 is_abstract = false
 own_attrs = []
 
+[[entity.open_closed_shell.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.open_edge_loop]
 parents = ["erroneous_topology"]
 is_abstract = false
 own_attrs = []
+
+[[entity.open_edge_loop.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.open_path]
 parents = ["path"]
@@ -13394,6 +14909,11 @@ parents = ["oriented_edge"]
 is_abstract = false
 own_attrs = []
 
+[[entity.oriented_joint.redeclared_attrs]]
+name = "edge_element"
+ty = "kinematic_joint"
+owner = "oriented_edge"
+
 [entity.oriented_open_shell]
 parents = ["open_shell"]
 is_abstract = false
@@ -13466,6 +14986,11 @@ parents = ["inapt_topology"]
 is_abstract = false
 own_attrs = []
 
+[[entity.over_used_vertex.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.overcomplex_geometry]
 parents = ["inapt_geometry"]
 is_abstract = true
@@ -13493,6 +15018,21 @@ parents = [
 ]
 is_abstract = false
 own_attrs = []
+
+[[entity.pair_representation_relationship.redeclared_attrs]]
+name = "rep_1"
+ty = "kinematic_link_representation"
+owner = "representation_relationship"
+
+[[entity.pair_representation_relationship.redeclared_attrs]]
+name = "rep_2"
+ty = "kinematic_link_representation"
+owner = "representation_relationship"
+
+[[entity.pair_representation_relationship.redeclared_attrs]]
+name = "transformation_operator"
+ty = "kinematic_pair"
+owner = "representation_relationship_with_transformation"
 
 [entity.pair_value]
 parents = ["geometric_representation_item"]
@@ -13550,6 +15090,16 @@ parents = ["explicit_geometric_constraint"]
 is_abstract = false
 own_attrs = []
 
+[[entity.parallel_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:?] OF linear_geometry_constraint_element"
+owner = "explicit_constraint"
+
+[[entity.parallel_geometric_constraint.redeclared_attrs]]
+name = "reference_elements"
+ty = "SET [0:1] OF linear_geometry_constraint_element"
+owner = "explicit_constraint"
+
 [entity.parallel_offset]
 parents = ["derived_shape_aspect"]
 is_abstract = false
@@ -13565,6 +15115,16 @@ is_abstract = false
 [[entity.parallel_offset_geometric_constraint.own_attrs]]
 name = "offset_type"
 ty = "parallel_offset_type"
+
+[[entity.parallel_offset_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:?] OF curve_or_surface_constraint_element"
+owner = "explicit_constraint"
+
+[[entity.parallel_offset_geometric_constraint.redeclared_attrs]]
+name = "reference_elements"
+ty = "SET [0:1] OF curve_or_surface_constraint_element"
+owner = "explicit_constraint"
 
 [entity.parallelism_tolerance]
 parents = ["geometric_tolerance_with_datum_reference"]
@@ -13613,6 +15173,11 @@ ty = "LIST [1:?] OF input_selector"
 name = "extension"
 ty = "extension_options"
 
+[[entity.partial_derivative_function.redeclared_attrs]]
+name = "operand"
+ty = "maths_function"
+owner = "unary_generic_expression"
+
 [entity.partial_document_with_structured_text_representation_assignment]
 parents = [
     "applied_document_usage_constraint_assignment",
@@ -13629,6 +15194,11 @@ is_abstract = false
 name = "interference_tolerance"
 ty = "length_measure"
 
+[[entity.partly_overlapping_curves.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.partly_overlapping_edges]
 parents = ["topology_related_to_overlapping_geometry"]
 is_abstract = false
@@ -13636,6 +15206,11 @@ is_abstract = false
 [[entity.partly_overlapping_edges.own_attrs]]
 name = "interference_tolerance"
 ty = "length_measure"
+
+[[entity.partly_overlapping_edges.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.partly_overlapping_faces]
 parents = ["topology_related_to_overlapping_geometry"]
@@ -13645,6 +15220,11 @@ is_abstract = false
 name = "interference_tolerance"
 ty = "length_measure"
 
+[[entity.partly_overlapping_faces.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.partly_overlapping_solids]
 parents = ["inapt_manifold_solid_brep"]
 is_abstract = false
@@ -13653,6 +15233,11 @@ is_abstract = false
 name = "interference_tolerance"
 ty = "length_measure"
 
+[[entity.partly_overlapping_solids.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.partly_overlapping_surfaces]
 parents = ["overlapping_geometry"]
 is_abstract = false
@@ -13660,6 +15245,11 @@ is_abstract = false
 [[entity.partly_overlapping_surfaces.own_attrs]]
 name = "interference_tolerance"
 ty = "length_measure"
+
+[[entity.partly_overlapping_surfaces.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.path]
 parents = ["topological_representation_item"]
@@ -13694,6 +15284,16 @@ ty = "placement"
 parents = ["definitional_representation"]
 is_abstract = false
 own_attrs = []
+
+[[entity.path_parameter_representation.redeclared_attrs]]
+name = "context_of_items"
+ty = "path_parameter_representation_context"
+owner = "representation"
+
+[[entity.path_parameter_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF bounded_curve"
+owner = "representation"
 
 [entity.path_parameter_representation_context]
 parents = [
@@ -13756,6 +15356,16 @@ parents = ["explicit_geometric_constraint"]
 is_abstract = false
 own_attrs = []
 
+[[entity.perpendicular_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:?] OF linear_geometry_constraint_element"
+owner = "explicit_constraint"
+
+[[entity.perpendicular_geometric_constraint.redeclared_attrs]]
+name = "reference_elements"
+ty = "SET [0:2] OF linear_geometry_constraint_element"
+owner = "explicit_constraint"
+
 [entity.perpendicular_to]
 parents = ["derived_shape_aspect"]
 is_abstract = false
@@ -13811,6 +15421,16 @@ parents = [
 ]
 is_abstract = false
 own_attrs = []
+
+[[entity.person_and_organization_address.redeclared_attrs]]
+name = "organizations"
+ty = "SET [1:1] OF organization"
+owner = "organizational_address"
+
+[[entity.person_and_organization_address.redeclared_attrs]]
+name = "people"
+ty = "SET [1:1] OF person"
+owner = "personal_address"
 
 [entity.person_and_organization_assignment]
 is_abstract = true
@@ -13891,6 +15511,11 @@ own_attrs = []
 parents = ["presentation_view"]
 is_abstract = false
 own_attrs = []
+
+[[entity.picture_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [2:?] OF picture_representation_item_select"
+owner = "representation"
 
 [entity.picture_representation_item]
 parents = ["bytes_representation_item"]
@@ -13983,6 +15608,11 @@ ty = "length_measure"
 [[entity.planar_pair_value.own_attrs]]
 name = "actual_translation_y"
 ty = "length_measure"
+
+[[entity.planar_pair_value.redeclared_attrs]]
+name = "applies_to_pair"
+ty = "planar_pair"
+owner = "pair_value"
 
 [entity.planar_pair_with_range]
 parents = ["planar_pair"]
@@ -14077,6 +15707,11 @@ parents = ["representation"]
 is_abstract = false
 own_attrs = []
 
+[[entity.ply_angle_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:1] OF measure_representation_item"
+owner = "representation"
+
 [entity.ply_laminate_sequence_definition]
 parents = ["product_definition"]
 is_abstract = false
@@ -14091,6 +15726,16 @@ own_attrs = []
 parents = ["representation_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.ply_orientation_angle.redeclared_attrs]]
+name = "rep_1"
+ty = "reinforcement_orientation_basis"
+owner = "representation_relationship"
+
+[[entity.ply_orientation_angle.redeclared_attrs]]
+name = "rep_2"
+ty = "ply_angle_representation"
+owner = "representation_relationship"
 
 [entity.pmi_requirement_item_association]
 parents = ["item_identified_representation_usage"]
@@ -14135,6 +15780,11 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.point_and_vector.redeclared_attrs]]
+name = "item_element"
+ty = "point_and_vector_members"
+owner = "compound_representation_item"
+
 [entity.point_array]
 parents = [
     "compound_representation_item",
@@ -14142,6 +15792,11 @@ parents = [
 ]
 is_abstract = false
 own_attrs = []
+
+[[entity.point_array.redeclared_attrs]]
+name = "item_element"
+ty = "point_array_members"
+owner = "compound_representation_item"
 
 [entity.point_cloud_dataset]
 parents = ["scanned_data_item"]
@@ -14191,6 +15846,16 @@ ty = "LIST [2:?] OF point_cloud_dataset"
 parents = ["explicit_geometric_constraint"]
 is_abstract = false
 own_attrs = []
+
+[[entity.point_distance_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:?] OF point"
+owner = "explicit_constraint"
+
+[[entity.point_distance_geometric_constraint.redeclared_attrs]]
+name = "reference_elements"
+ty = "SET [0:4] OF point_curve_or_surface_constraint_element"
+owner = "explicit_constraint"
 
 [entity.point_in_volume]
 parents = ["point"]
@@ -14264,6 +15929,11 @@ ty = "point_on_curve"
 name = "input_orientation"
 ty = "spatial_rotation"
 
+[[entity.point_on_planar_curve_pair_value.redeclared_attrs]]
+name = "applies_to_pair"
+ty = "point_on_planar_curve_pair"
+owner = "pair_value"
+
 [entity.point_on_planar_curve_pair_with_range]
 parents = ["point_on_planar_curve_pair"]
 is_abstract = false
@@ -14332,6 +16002,11 @@ ty = "point_on_surface"
 name = "input_orientation"
 ty = "spatial_rotation"
 
+[[entity.point_on_surface_pair_value.redeclared_attrs]]
+name = "applies_to_pair"
+ty = "point_on_surface_pair"
+owner = "pair_value"
+
 [entity.point_on_surface_pair_with_range]
 parents = ["point_on_surface_pair"]
 is_abstract = false
@@ -14372,10 +16047,20 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.point_path.redeclared_attrs]]
+name = "item_element"
+ty = "point_path_members"
+owner = "compound_representation_item"
+
 [entity.point_placement_shape_representation]
 parents = ["shape_representation"]
 is_abstract = false
 own_attrs = []
+
+[[entity.point_placement_shape_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF point_placement_shape_representation_item"
+owner = "representation"
 
 [entity.point_replica]
 parents = ["point"]
@@ -14642,6 +16327,11 @@ parents = ["representation"]
 is_abstract = false
 own_attrs = []
 
+[[entity.presentation_representation.redeclared_attrs]]
+name = "context_of_items"
+ty = "geometric_representation_context"
+owner = "representation"
+
 [entity.presentation_set]
 is_abstract = false
 own_attrs = []
@@ -14714,6 +16404,7 @@ ty = "SET [1:?] OF change_management_object"
 [[entity.previous_change_element_assignment.redeclared_attrs]]
 name = "assigned_group"
 ty = "previous_element_assignment_select"
+owner = "group_assignment"
 
 [entity.primitive_2d]
 parents = ["geometric_representation_item"]
@@ -14731,6 +16422,7 @@ own_attrs = []
 [[entity.primitive_2d_with_inner_boundary.redeclared_attrs]]
 name = "item_element"
 ty = "compound_inner_area_boundary"
+owner = "compound_representation_item"
 
 [entity.prismatic_pair]
 parents = ["low_order_kinematic_pair"]
@@ -14744,6 +16436,11 @@ is_abstract = false
 [[entity.prismatic_pair_value.own_attrs]]
 name = "actual_translation"
 ty = "length_measure"
+
+[[entity.prismatic_pair_value.redeclared_attrs]]
+name = "applies_to_pair"
+ty = "prismatic_pair"
+owner = "pair_value"
 
 [entity.prismatic_pair_with_range]
 parents = ["prismatic_pair"]
@@ -14761,6 +16458,11 @@ ty = "OPTIONAL length_measure"
 parents = ["representation"]
 is_abstract = false
 own_attrs = []
+
+[[entity.procedural_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF procedural_representation_sequence"
+owner = "representation"
 
 [entity.procedural_representation_sequence]
 parents = ["representation_item"]
@@ -14786,6 +16488,11 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.procedural_shape_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF procedural_shape_representation_sequence"
+owner = "representation"
+
 [entity.procedural_shape_representation_sequence]
 parents = [
     "geometric_representation_item",
@@ -14793,6 +16500,11 @@ parents = [
 ]
 is_abstract = false
 own_attrs = []
+
+[[entity.procedural_shape_representation_sequence.redeclared_attrs]]
+name = "elements"
+ty = "LIST [1:?] OF shape_representation_item"
+owner = "procedural_representation_sequence"
 
 [entity.procedural_solid_representation_sequence]
 parents = ["procedural_shape_representation_sequence"]
@@ -14982,6 +16694,11 @@ is_abstract = false
 [[entity.product_concept_feature_category_usage.own_attrs]]
 name = "items"
 ty = "SET [1:?] OF category_usage_item"
+
+[[entity.product_concept_feature_category_usage.redeclared_attrs]]
+name = "assigned_group"
+ty = "product_concept_feature_category"
+owner = "group_assignment"
 
 [entity.product_concept_relationship]
 is_abstract = false
@@ -15176,10 +16893,20 @@ is_abstract = false
 name = "items"
 ty = "SET [1:1] OF product_definition_or_product_definition_relationship"
 
+[[entity.product_definition_group_assignment.redeclared_attrs]]
+name = "assigned_group"
+ty = "product_definition_element_relationship"
+owner = "group_assignment"
+
 [entity.product_definition_kinematics]
 parents = ["property_definition"]
 is_abstract = false
 own_attrs = []
+
+[[entity.product_definition_kinematics.redeclared_attrs]]
+name = "definition"
+ty = "product_definition"
+owner = "property_definition"
 
 [entity.product_definition_occurrence]
 is_abstract = false
@@ -15303,6 +17030,11 @@ parents = ["property_definition"]
 is_abstract = false
 own_attrs = []
 
+[[entity.product_definition_relationship_kinematics.redeclared_attrs]]
+name = "definition"
+ty = "product_definition_relationship"
+owner = "property_definition"
+
 [entity.product_definition_relationship_relationship]
 is_abstract = false
 
@@ -15350,6 +17082,7 @@ ty = "product_definition_occurrence_or_reference"
 [[entity.product_definition_specified_occurrence.redeclared_attrs]]
 name = "definition"
 ty = "product_definition_occurrence_or_reference"
+owner = "product_definition_occurrence"
 
 [entity.product_definition_substitute]
 is_abstract = false
@@ -15375,6 +17108,16 @@ own_attrs = []
 parents = ["product_definition_relationship_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.product_definition_usage_relationship.redeclared_attrs]]
+name = "relating"
+ty = "product_definition_usage"
+owner = "product_definition_relationship_relationship"
+
+[[entity.product_definition_usage_relationship.redeclared_attrs]]
+name = "related"
+ty = "product_definition_usage"
+owner = "product_definition_relationship_relationship"
 
 [entity.product_definition_with_associated_documents]
 parents = ["product_definition"]
@@ -15407,6 +17150,11 @@ is_abstract = false
 name = "attributes"
 ty = "SET [1:1] OF attribute_select"
 
+[[entity.product_group_attribute_assignment.redeclared_attrs]]
+name = "assigned_group"
+ty = "product_group_attributes"
+owner = "group_assignment"
+
 [entity.product_group_attribute_set]
 parents = ["group_assignment"]
 is_abstract = false
@@ -15414,6 +17162,11 @@ is_abstract = false
 [[entity.product_group_attribute_set.own_attrs]]
 name = "product_group_attributes"
 ty = "SET [1:1] OF product_group_attributes"
+
+[[entity.product_group_attribute_set.redeclared_attrs]]
+name = "assigned_group"
+ty = "product_group"
+owner = "group_assignment"
 
 [entity.product_group_attributes]
 parents = ["group"]
@@ -15444,6 +17197,11 @@ is_abstract = false
 name = "product_group_rules"
 ty = "SET [1:1] OF product_group_rules"
 
+[[entity.product_group_membership_rules.redeclared_attrs]]
+name = "assigned_group"
+ty = "product_group"
+owner = "group_assignment"
+
 [entity.product_group_purpose]
 parents = ["descriptive_representation_item"]
 is_abstract = false
@@ -15467,6 +17225,11 @@ is_abstract = false
 name = "product_group_rules"
 ty = "SET [1:?] OF product_group_rule"
 
+[[entity.product_group_rule_assignment.redeclared_attrs]]
+name = "assigned_group"
+ty = "product_group_rules"
+owner = "group_assignment"
+
 [entity.product_group_rules]
 parents = ["group"]
 is_abstract = false
@@ -15479,6 +17242,11 @@ parents = [
 ]
 is_abstract = false
 own_attrs = []
+
+[[entity.product_identification.redeclared_attrs]]
+name = "item_concept"
+ty = "product_class"
+owner = "configuration_item"
 
 [entity.product_in_attachment_slot]
 parents = ["product_definition_relationship"]
@@ -15743,6 +17511,11 @@ is_abstract = false
 name = "actual_displacement"
 ty = "length_measure"
 
+[[entity.rack_and_pinion_pair_value.redeclared_attrs]]
+name = "applies_to_pair"
+ty = "rack_and_pinion_pair"
+owner = "pair_value"
+
 [entity.rack_and_pinion_pair_with_range]
 parents = ["rack_and_pinion_pair"]
 is_abstract = false
@@ -15774,6 +17547,11 @@ own_attrs = []
 parents = ["explicit_geometric_constraint"]
 is_abstract = false
 own_attrs = []
+
+[[entity.radius_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:?] OF radial_geometry_constraint_element"
+owner = "explicit_constraint"
 
 [entity.range_characteristic]
 parents = [
@@ -15857,6 +17635,11 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.rationalize_function.redeclared_attrs]]
+name = "operand"
+ty = "maths_function"
+owner = "unary_generic_expression"
+
 [entity.real_defined_function]
 parents = ["numeric_defined_function"]
 is_abstract = true
@@ -15900,6 +17683,7 @@ own_attrs = []
 [[entity.real_literal.redeclared_attrs]]
 name = "the_value"
 ty = "real"
+owner = "literal_number"
 
 [entity.real_numeric_variable]
 parents = ["numeric_variable"]
@@ -16060,10 +17844,20 @@ is_abstract = false
 name = "starting_indices"
 ty = "LIST [1:?] OF integer"
 
+[[entity.reindexed_array_function.redeclared_attrs]]
+name = "operand"
+ty = "maths_function"
+owner = "unary_generic_expression"
+
 [entity.reinforcement_orientation_basis]
 parents = ["representation"]
 is_abstract = false
 own_attrs = []
+
+[[entity.reinforcement_orientation_basis.redeclared_attrs]]
+name = "items"
+ty = "SET [1:1] OF basis_11_direction_member"
+owner = "representation"
 
 [entity.relative_event_occurrence]
 parents = ["event_occurrence"]
@@ -16108,6 +17902,11 @@ ty = "repackage_options"
 [[entity.repackaging_function.own_attrs]]
 name = "selected_output"
 ty = "nonnegative_integer"
+
+[[entity.repackaging_function.redeclared_attrs]]
+name = "operand"
+ty = "maths_function"
+owner = "unary_generic_expression"
 
 [entity.reparametrised_composite_curve_segment]
 parents = ["composite_curve_segment"]
@@ -16267,6 +18066,11 @@ is_abstract = false
 name = "items"
 ty = "SET [1:1] OF requirement_assigned_item"
 
+[[entity.requirement_assigned_object.redeclared_attrs]]
+name = "assigned_group"
+ty = "requirement_assignment"
+owner = "group_assignment"
+
 [entity.requirement_assignment]
 parents = [
     "characterized_object",
@@ -16356,6 +18160,11 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.restriction_function.redeclared_attrs]]
+name = "operand"
+ty = "maths_space"
+owner = "unary_generic_expression"
+
 [entity.resulting_path]
 parents = ["link_motion_representation_along_path"]
 is_abstract = false
@@ -16381,6 +18190,11 @@ is_abstract = false
 [[entity.revolute_pair_value.own_attrs]]
 name = "actual_rotation"
 ty = "plane_angle_measure"
+
+[[entity.revolute_pair_value.redeclared_attrs]]
+name = "applies_to_pair"
+ty = "revolute_pair"
+owner = "pair_value"
 
 [entity.revolute_pair_with_range]
 parents = ["revolute_pair"]
@@ -16518,6 +18332,16 @@ parents = ["action_method_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.right_to_usage_association.redeclared_attrs]]
+name = "relating_method"
+ty = "information_usage_right"
+owner = "action_method_relationship"
+
+[[entity.right_to_usage_association.redeclared_attrs]]
+name = "related_method"
+ty = "information_right"
+owner = "action_method_relationship"
+
 [entity.rigid_link_representation]
 parents = ["kinematic_link_representation"]
 is_abstract = false
@@ -16552,6 +18376,11 @@ is_abstract = false
 name = "actual_point_on_curve_1"
 ty = "point_on_curve"
 
+[[entity.rolling_curve_pair_value.redeclared_attrs]]
+name = "applies_to_pair"
+ty = "rolling_curve_pair"
+owner = "pair_value"
+
 [entity.rolling_surface_pair]
 parents = ["surface_pair"]
 is_abstract = false
@@ -16568,6 +18397,11 @@ ty = "point_on_surface"
 [[entity.rolling_surface_pair_value.own_attrs]]
 name = "actual_rotation"
 ty = "plane_angle_measure"
+
+[[entity.rolling_surface_pair_value.redeclared_attrs]]
+name = "applies_to_pair"
+ty = "rolling_surface_pair"
+owner = "pair_value"
 
 [entity.rotation_about_direction]
 parents = ["geometric_representation_item"]
@@ -16605,6 +18439,11 @@ own_attrs = []
 parents = ["compound_representation_item"]
 is_abstract = false
 own_attrs = []
+
+[[entity.row_representation_item.redeclared_attrs]]
+name = "item_element"
+ty = "list_representation_item"
+owner = "compound_representation_item"
 
 [entity.row_value]
 parents = ["compound_representation_item"]
@@ -16703,6 +18542,11 @@ is_abstract = false
 name = "items"
 ty = "SET [1:1] OF product_definition"
 
+[[entity.satisfied_requirement.redeclared_attrs]]
+name = "assigned_group"
+ty = "satisfies_requirement"
+owner = "group_assignment"
+
 [entity.satisfies_requirement]
 parents = ["group"]
 is_abstract = false
@@ -16715,6 +18559,11 @@ is_abstract = false
 [[entity.satisfying_item.own_attrs]]
 name = "items"
 ty = "SET [1:1] OF requirement_satisfaction_item"
+
+[[entity.satisfying_item.redeclared_attrs]]
+name = "assigned_group"
+ty = "satisfies_requirement"
+owner = "group_assignment"
 
 [entity.scalar_variable]
 parents = ["abstract_variable"]
@@ -16737,6 +18586,11 @@ ty = "SET [1:?] OF scanned_data_item"
 parents = ["shape_representation"]
 is_abstract = false
 own_attrs = []
+
+[[entity.scan_data_shape_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF scanned_data_item"
+owner = "representation"
 
 [entity.scanned_data_item]
 parents = ["geometric_representation_item"]
@@ -16779,6 +18633,11 @@ is_abstract = false
 [[entity.screw_pair_value.own_attrs]]
 name = "actual_rotation"
 ty = "plane_angle_measure"
+
+[[entity.screw_pair_value.redeclared_attrs]]
+name = "applies_to_pair"
+ty = "screw_pair"
+owner = "pair_value"
 
 [entity.screw_pair_with_range]
 parents = ["screw_pair"]
@@ -16881,6 +18740,11 @@ ty = "real"
 name = "interference_tolerance"
 ty = "length_measure"
 
+[[entity.self_intersecting_curve.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.self_intersecting_geometry]
 parents = ["inapt_geometry"]
 is_abstract = true
@@ -16898,6 +18762,11 @@ ty = "real"
 name = "interference_tolerance"
 ty = "length_measure"
 
+[[entity.self_intersecting_loop.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.self_intersecting_shell]
 parents = ["topology_related_to_self_intersecting_geometry"]
 is_abstract = false
@@ -16910,6 +18779,11 @@ ty = "real"
 name = "interference_tolerance"
 ty = "length_measure"
 
+[[entity.self_intersecting_shell.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.self_intersecting_surface]
 parents = ["self_intersecting_geometry"]
 is_abstract = false
@@ -16921,6 +18795,11 @@ ty = "real"
 [[entity.self_intersecting_surface.own_attrs]]
 name = "interference_tolerance"
 ty = "length_measure"
+
+[[entity.self_intersecting_surface.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.serial_numbered_effectivity]
 parents = ["effectivity"]
@@ -16941,6 +18820,11 @@ parents = [
 ]
 is_abstract = false
 own_attrs = []
+
+[[entity.series_composed_function.redeclared_attrs]]
+name = "operands"
+ty = "LIST [2:?] OF maths_function"
+owner = "multiple_arity_generic_expression"
 
 [entity.shape_aspect]
 is_abstract = false
@@ -16970,6 +18854,11 @@ own_attrs = []
 parents = ["shape_aspect_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.shape_aspect_deriving_relationship.redeclared_attrs]]
+name = "relating_shape_aspect"
+ty = "derived_shape_aspect"
+owner = "shape_aspect_relationship"
 
 [entity.shape_aspect_occurrence]
 parents = ["shape_aspect"]
@@ -17062,6 +18951,16 @@ parents = ["shape_representation_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.shape_data_quality_inspected_shape_and_result_relationship.redeclared_attrs]]
+name = "rep_1"
+ty = "shape_representation"
+owner = "representation_relationship"
+
+[[entity.shape_data_quality_inspected_shape_and_result_relationship.redeclared_attrs]]
+name = "rep_2"
+ty = "shape_data_quality_inspection_result_representation"
+owner = "representation_relationship"
+
 [entity.shape_data_quality_inspection_criterion_report]
 parents = ["data_quality_inspection_criterion_report"]
 is_abstract = false
@@ -17075,6 +18974,11 @@ parents = ["data_quality_inspection_instance_report"]
 is_abstract = false
 own_attrs = []
 
+[[entity.shape_data_quality_inspection_instance_report.redeclared_attrs]]
+name = "inspected_instances"
+ty = "LIST [1:?] OF shape_data_quality_inspection_instance_report_item"
+owner = "data_quality_inspection_instance_report"
+
 [entity.shape_data_quality_inspection_instance_report_item]
 parents = ["data_quality_inspection_instance_report_item"]
 is_abstract = false
@@ -17083,10 +18987,20 @@ is_abstract = false
 name = "measured_value"
 ty = "measured_value_select"
 
+[[entity.shape_data_quality_inspection_instance_report_item.redeclared_attrs]]
+name = "inspected_elements"
+ty = "SET [1:?] OF inspected_shape_element_select"
+owner = "data_quality_inspection_instance_report_item"
+
 [entity.shape_data_quality_inspection_result]
 parents = ["data_quality_inspection_result"]
 is_abstract = false
 own_attrs = []
+
+[[entity.shape_data_quality_inspection_result.redeclared_attrs]]
+name = "criterion_inspected"
+ty = "shape_data_quality_criterion"
+owner = "data_quality_inspection_result"
 
 [entity.shape_data_quality_inspection_result_representation]
 parents = ["data_quality_inspection_result_representation"]
@@ -17126,10 +19040,25 @@ parents = ["property_definition_representation"]
 is_abstract = false
 own_attrs = []
 
+[[entity.shape_definition_representation.redeclared_attrs]]
+name = "definition"
+ty = "property_definition"
+owner = "property_definition_representation"
+
+[[entity.shape_definition_representation.redeclared_attrs]]
+name = "used_representation"
+ty = "shape_representation"
+owner = "property_definition_representation"
+
 [entity.shape_dimension_representation]
 parents = ["shape_representation"]
 is_abstract = false
 own_attrs = []
+
+[[entity.shape_dimension_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF shape_dimension_representation_item"
+owner = "representation"
 
 [entity.shape_feature_definition]
 parents = ["feature_definition"]
@@ -17156,6 +19085,16 @@ parents = [
 ]
 is_abstract = false
 own_attrs = []
+
+[[entity.shape_feature_definition_relationship.redeclared_attrs]]
+name = "relating_object"
+ty = "shape_feature_definition"
+owner = "characterized_object_relationship"
+
+[[entity.shape_feature_definition_relationship.redeclared_attrs]]
+name = "related_object"
+ty = "shape_feature_definition"
+owner = "characterized_object_relationship"
 
 [entity.shape_feature_fit_relationship]
 parents = [
@@ -17215,6 +19154,11 @@ parents = ["shape_representation"]
 is_abstract = false
 own_attrs = []
 
+[[entity.shape_representation_with_parameters.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF shape_representation_with_parameters_items"
+owner = "representation"
+
 [entity.shape_summary_request_with_representative_value]
 parents = ["summary_report_request"]
 is_abstract = false
@@ -17258,15 +19202,30 @@ parents = ["nearly_degenerate_geometry"]
 is_abstract = false
 own_attrs = []
 
+[[entity.short_length_curve.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.short_length_curve_segment]
 parents = ["geometry_with_local_near_degeneracy"]
 is_abstract = false
 own_attrs = []
 
+[[entity.short_length_curve_segment.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.short_length_edge]
 parents = ["topology_related_to_nearly_degenerate_geometry"]
 is_abstract = false
 own_attrs = []
+
+[[entity.short_length_edge.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.si_absorbed_dose_unit]
 parents = [
@@ -17491,6 +19450,11 @@ parents = ["csg_2d_shape_representation"]
 is_abstract = false
 own_attrs = []
 
+[[entity.single_area_csg_2d_shape_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF csg_2d_area_select"
+owner = "representation"
+
 [entity.single_boundary_csg_2d_shape_representation]
 parents = ["single_area_csg_2d_shape_representation"]
 is_abstract = false
@@ -17500,6 +19464,11 @@ own_attrs = []
 parents = ["property_definition"]
 is_abstract = false
 own_attrs = []
+
+[[entity.single_property_is_definition.redeclared_attrs]]
+name = "definition"
+ty = "product_definition"
+owner = "property_definition"
 
 [entity.single_texture_style_tessellation_specification]
 parents = ["texture_style_tessellation_specification"]
@@ -17529,6 +19498,16 @@ is_abstract = false
 name = "distance_value"
 ty = "non_negative_length_measure"
 
+[[entity.skew_line_distance_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:2] OF line"
+owner = "explicit_constraint"
+
+[[entity.skew_line_distance_geometric_constraint.redeclared_attrs]]
+name = "reference_elements"
+ty = "SET [0:1] OF line"
+owner = "explicit_constraint"
+
 [entity.slash_expression]
 parents = ["binary_numeric_expression"]
 is_abstract = false
@@ -17551,6 +19530,11 @@ ty = "point_on_curve"
 name = "actual_point_on_curve_2"
 ty = "point_on_curve"
 
+[[entity.sliding_curve_pair_value.redeclared_attrs]]
+name = "applies_to_pair"
+ty = "sliding_curve_pair"
+owner = "pair_value"
+
 [entity.sliding_surface_pair]
 parents = ["surface_pair"]
 is_abstract = false
@@ -17572,6 +19556,11 @@ ty = "point_on_surface"
 name = "actual_rotation"
 ty = "plane_angle_measure"
 
+[[entity.sliding_surface_pair_value.redeclared_attrs]]
+name = "applies_to_pair"
+ty = "sliding_surface_pair"
+owner = "pair_value"
+
 [entity.slot]
 parents = ["feature_definition"]
 is_abstract = false
@@ -17587,20 +19576,40 @@ parents = ["topology_related_to_nearly_degenerate_geometry"]
 is_abstract = false
 own_attrs = []
 
+[[entity.small_area_face.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.small_area_surface]
 parents = ["nearly_degenerate_geometry"]
 is_abstract = false
 own_attrs = []
+
+[[entity.small_area_surface.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.small_area_surface_patch]
 parents = ["geometry_with_local_near_degeneracy"]
 is_abstract = false
 own_attrs = []
 
+[[entity.small_area_surface_patch.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.small_volume_solid]
 parents = ["inapt_manifold_solid_brep"]
 is_abstract = false
 own_attrs = []
+
+[[entity.small_volume_solid.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.smeared_material_definition]
 parents = ["zone_structural_makeup"]
@@ -17767,6 +19776,11 @@ ty = "positive_length_measure"
 parents = ["inapt_manifold_solid_brep"]
 is_abstract = false
 own_attrs = []
+
+[[entity.solid_with_excessive_number_of_voids.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.solid_with_flat_bottom_round_hole]
 parents = ["solid_with_stepped_round_hole"]
@@ -18046,6 +20060,11 @@ parents = ["erroneous_manifold_solid_brep"]
 is_abstract = false
 own_attrs = []
 
+[[entity.solid_with_wrong_number_of_voids.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.source_for_requirement]
 parents = ["group_assignment"]
 is_abstract = false
@@ -18054,6 +20073,11 @@ is_abstract = false
 name = "items"
 ty = "SET [1:1] OF requirement_source_item"
 
+[[entity.source_for_requirement.redeclared_attrs]]
+name = "assigned_group"
+ty = "requirement_source"
+owner = "group_assignment"
+
 [entity.sourced_requirement]
 parents = ["group_assignment"]
 is_abstract = false
@@ -18061,6 +20085,11 @@ is_abstract = false
 [[entity.sourced_requirement.own_attrs]]
 name = "items"
 ty = "SET [1:1] OF product_definition"
+
+[[entity.sourced_requirement.redeclared_attrs]]
+name = "assigned_group"
+ty = "requirement_source"
+owner = "group_assignment"
 
 [entity.specification_definition]
 parents = ["product_definition"]
@@ -18112,6 +20141,7 @@ ty = "spatial_rotation"
 [[entity.spherical_pair_value.redeclared_attrs]]
 name = "applies_to_pair"
 ty = "spherical_pair_select"
+owner = "pair_value"
 
 [entity.spherical_pair_with_pin]
 parents = ["low_order_kinematic_pair"]
@@ -18219,15 +20249,30 @@ parents = ["counterbore_hole_definition"]
 is_abstract = false
 own_attrs = []
 
+[[entity.spotface_hole_definition.redeclared_attrs]]
+name = "counterbore"
+ty = "LIST [1:?] OF spotface_definition"
+owner = "counterbore_hole_definition"
+
 [entity.spotface_occurrence]
 parents = ["counterbore_hole_occurrence"]
 is_abstract = false
 own_attrs = []
 
+[[entity.spotface_occurrence.redeclared_attrs]]
+name = "definition"
+ty = "spotface_hole_definition"
+owner = "shape_aspect_occurrence"
+
 [entity.spotface_occurrence_in_assembly]
 parents = ["counterbore_hole_occurrence_in_assembly"]
 is_abstract = false
 own_attrs = []
+
+[[entity.spotface_occurrence_in_assembly.redeclared_attrs]]
+name = "definition"
+ty = "spotface_hole_definition"
+owner = "shape_aspect_occurrence"
 
 [entity.sql_mappable_defined_function]
 parents = ["defined_function"]
@@ -18446,10 +20491,20 @@ parents = ["steep_geometry_transition_across_edge"]
 is_abstract = false
 own_attrs = []
 
+[[entity.steep_angle_between_adjacent_edges.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.steep_angle_between_adjacent_faces]
 parents = ["steep_geometry_transition_across_edge"]
 is_abstract = false
 own_attrs = []
+
+[[entity.steep_angle_between_adjacent_faces.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.steep_geometry_transition_across_edge]
 parents = ["inapt_topology_and_geometry_relationship"]
@@ -18526,6 +20581,11 @@ parents = ["representation"]
 is_abstract = false
 own_attrs = []
 
+[[entity.structured_text_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF string_representation_item_select"
+owner = "representation"
+
 [entity.styled_item]
 parents = ["representation_item"]
 is_abstract = false
@@ -18553,6 +20613,7 @@ ty = "LIST [1:?] OF LIST [3:4] OF unsigned_8_bit_integer"
 [[entity.styled_tessellated_item_with_colours.redeclared_attrs]]
 name = "item"
 ty = "tessellated_surface_item"
+owner = "styled_item"
 
 [entity.su_parameters]
 parents = ["geometric_representation_item"]
@@ -18713,6 +20774,16 @@ is_abstract = false
 name = "near_points"
 ty = "SET [0:4] OF near_point_relationship"
 
+[[entity.surface_distance_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:2] OF surface"
+owner = "explicit_constraint"
+
+[[entity.surface_distance_geometric_constraint.redeclared_attrs]]
+name = "reference_elements"
+ty = "SET [0:4] OF point_curve_or_surface_constraint_element"
+owner = "explicit_constraint"
+
 [entity.surface_of_linear_extrusion]
 parents = ["swept_surface"]
 is_abstract = false
@@ -18845,6 +20916,11 @@ ty = "transition_code"
 name = "v_smoothness"
 ty = "transition_code"
 
+[[entity.surface_smoothness_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:1] OF surface_patch_set"
+owner = "explicit_constraint"
+
 [entity.surface_style_boundary]
 parents = ["founded_item"]
 is_abstract = false
@@ -18976,10 +21052,20 @@ parents = ["overcomplex_geometry"]
 is_abstract = false
 own_attrs = []
 
+[[entity.surface_with_excessive_patches_in_one_direction.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.surface_with_small_curvature_radius]
 parents = ["geometry_with_local_near_degeneracy"]
 is_abstract = false
 own_attrs = []
+
+[[entity.surface_with_small_curvature_radius.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.surfaced_open_shell]
 parents = ["open_shell"]
@@ -18998,6 +21084,16 @@ ty = "curve_bounded_surface"
 parents = ["explicit_geometric_constraint"]
 is_abstract = false
 own_attrs = []
+
+[[entity.swept_curve_surface_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:?] OF surface"
+owner = "explicit_constraint"
+
+[[entity.swept_curve_surface_geometric_constraint.redeclared_attrs]]
+name = "reference_elements"
+ty = "SET [1:1] OF swept_surface_or_solid"
+owner = "explicit_constraint"
 
 [entity.swept_disk_solid]
 parents = ["solid_model"]
@@ -19036,6 +21132,16 @@ parents = ["explicit_geometric_constraint"]
 is_abstract = false
 own_attrs = []
 
+[[entity.swept_point_curve_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:?] OF curve"
+owner = "explicit_constraint"
+
+[[entity.swept_point_curve_geometric_constraint.redeclared_attrs]]
+name = "reference_elements"
+ty = "SET [1:1] OF swept_face_solid"
+owner = "explicit_constraint"
+
 [entity.swept_surface]
 parents = ["surface"]
 is_abstract = false
@@ -19067,8 +21173,14 @@ is_abstract = false
 own_attrs = []
 
 [[entity.symbol_representation_map.redeclared_attrs]]
+name = "mapped_representation"
+ty = "symbol_representation"
+owner = "representation_map"
+
+[[entity.symbol_representation_map.redeclared_attrs]]
 name = "mapping_origin"
 ty = "axis2_placement"
+owner = "representation_map"
 
 [entity.symbol_style]
 parents = ["founded_item"]
@@ -19139,6 +21251,11 @@ is_abstract = false
 name = "mirror_element"
 ty = "linear_geometry_constraint_element"
 
+[[entity.symmetry_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [2:2] OF geometric_representation_item"
+owner = "explicit_constraint"
+
 [entity.symmetry_tolerance]
 parents = ["geometric_tolerance_with_datum_reference"]
 is_abstract = false
@@ -19204,6 +21321,16 @@ ty = "SET OF near_point_relationship"
 name = "tangent_contact"
 ty = "tangent_contact_type"
 
+[[entity.tangent_geometric_constraint.redeclared_attrs]]
+name = "constrained_elements"
+ty = "SET [1:?] OF curve_or_surface_constraint_element"
+owner = "explicit_constraint"
+
+[[entity.tangent_geometric_constraint.redeclared_attrs]]
+name = "reference_elements"
+ty = "SET OF curve_or_surface_constraint_element"
+owner = "explicit_constraint"
+
 [entity.taper]
 parents = ["shape_aspect"]
 is_abstract = false
@@ -19236,6 +21363,11 @@ ty = "annotation_curve_occurrence"
 parents = ["annotation_occurrence"]
 is_abstract = false
 own_attrs = []
+
+[[entity.tessellated_annotation_occurrence.redeclared_attrs]]
+name = "item"
+ty = "tessellated_geometric_set"
+owner = "styled_item"
 
 [entity.tessellated_connecting_edge]
 parents = ["tessellated_edge"]
@@ -19546,6 +21678,11 @@ ty = "planar_extent"
 parents = ["representation"]
 is_abstract = false
 own_attrs = []
+
+[[entity.text_string_representation.redeclared_attrs]]
+name = "items"
+ty = "SET [1:?] OF text_string_representation_item"
+owner = "representation"
 
 [entity.text_style]
 parents = ["founded_item"]
@@ -19890,6 +22027,12 @@ own_attrs = []
 [[entity.transformation_with_derived_angle.redeclared_attrs]]
 name = "transform_item_1"
 ty = "angle_direction_reference_with_a2p3d_select"
+owner = "item_defined_transformation"
+
+[[entity.transformation_with_derived_angle.redeclared_attrs]]
+name = "transform_item_2"
+ty = "axis2_placement_3d"
+owner = "item_defined_transformation"
 
 [entity.transition_feature]
 parents = ["shape_aspect"]
@@ -20031,6 +22174,11 @@ parents = [
 is_abstract = true
 own_attrs = []
 
+[[entity.unary_numeric_expression.redeclared_attrs]]
+name = "operand"
+ty = "numeric_expression"
+owner = "unary_generic_expression"
+
 [entity.unbound_parameter_environment]
 parents = ["environment"]
 is_abstract = false
@@ -20089,6 +22237,11 @@ is_abstract = false
 [[entity.unconstrained_pair_value.own_attrs]]
 name = "actual_placement"
 ty = "axis2_placement_3d"
+
+[[entity.unconstrained_pair_value.redeclared_attrs]]
+name = "applies_to_pair"
+ty = "unconstrained_pair"
+owner = "pair_value"
 
 [entity.unequally_disposed_geometric_tolerance]
 parents = ["geometric_tolerance"]
@@ -20153,6 +22306,11 @@ ty = "plane_angle_measure"
 name = "second_rotation_angle"
 ty = "plane_angle_measure"
 
+[[entity.universal_pair_value.redeclared_attrs]]
+name = "applies_to_pair"
+ty = "universal_pair"
+owner = "pair_value"
+
 [entity.universal_pair_with_range]
 parents = ["universal_pair"]
 is_abstract = false
@@ -20178,6 +22336,11 @@ parents = ["overcomplex_topology_and_geometry_relationship"]
 is_abstract = false
 own_attrs = []
 
+[[entity.unused_patches.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.unused_shape_element]
 parents = ["externally_conditioned_data_quality_criterion"]
 is_abstract = false
@@ -20187,6 +22350,16 @@ own_attrs = []
 parents = ["action_method_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.usage_association.redeclared_attrs]]
+name = "relating_method"
+ty = "information_usage_right"
+owner = "action_method_relationship"
+
+[[entity.usage_association.redeclared_attrs]]
+name = "related_method"
+ty = "information_usage_right"
+owner = "action_method_relationship"
 
 [entity.user_defined_11]
 parents = ["representation_item"]
@@ -20229,6 +22402,11 @@ ty = "SET [1:?] OF representation_item"
 parents = ["user_selected_elements"]
 is_abstract = false
 own_attrs = []
+
+[[entity.user_selected_shape_elements.redeclared_attrs]]
+name = "picked_items"
+ty = "SET [1:?] OF shape_representation_item"
+owner = "user_selected_elements"
 
 [entity.validation]
 parents = ["group"]
@@ -20277,6 +22455,11 @@ parents = [
 is_abstract = false
 own_attrs = []
 
+[[entity.value_function.redeclared_attrs]]
+name = "operand"
+ty = "string_expression"
+owner = "unary_generic_expression"
+
 [entity.value_range]
 parents = ["compound_representation_item"]
 is_abstract = false
@@ -20314,6 +22497,11 @@ is_abstract = false
 [[entity.variational_current_representation_relationship.own_attrs]]
 name = "current_result"
 ty = "representation"
+
+[[entity.variational_current_representation_relationship.redeclared_attrs]]
+name = "rep_1"
+ty = "variational_representation"
+owner = "representation_relationship"
 
 [entity.variational_parameter]
 parents = [
@@ -20384,6 +22572,16 @@ own_attrs = []
 parents = ["group_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.verification_relationship.redeclared_attrs]]
+name = "relating_group"
+ty = "verification"
+owner = "group_relationship"
+
+[[entity.verification_relationship.redeclared_attrs]]
+name = "related_group"
+ty = "verification"
+owner = "group_relationship"
 
 [entity.versioned_action_request]
 is_abstract = false
@@ -20612,20 +22810,40 @@ parents = ["erroneous_manifold_solid_brep"]
 is_abstract = false
 own_attrs = []
 
+[[entity.wrongly_oriented_void.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.wrongly_placed_loop]
 parents = ["erroneous_topology_and_geometry_relationship"]
 is_abstract = false
 own_attrs = []
+
+[[entity.wrongly_placed_loop.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.wrongly_placed_void]
 parents = ["erroneous_manifold_solid_brep"]
 is_abstract = false
 own_attrs = []
 
+[[entity.wrongly_placed_void.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_logical_test"
+owner = "shape_data_quality_criterion"
+
 [entity.xor_expression]
 parents = ["binary_boolean_expression"]
 is_abstract = false
 own_attrs = []
+
+[[entity.xor_expression.redeclared_attrs]]
+name = "operands"
+ty = "LIST [2:2] OF boolean_expression"
+owner = "binary_generic_expression"
 
 [entity.year_month]
 parents = ["date"]
@@ -20639,6 +22857,11 @@ ty = "month_in_year_number"
 parents = ["geometry_with_local_irregularity"]
 is_abstract = false
 own_attrs = []
+
+[[entity.zero_surface_normal.redeclared_attrs]]
+name = "assessment_specification"
+ty = "shape_data_quality_assessment_by_numerical_test"
+owner = "shape_data_quality_criterion"
 
 [entity.zone_breakdown_context]
 parents = ["breakdown_context"]

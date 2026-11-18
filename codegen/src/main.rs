@@ -43,6 +43,7 @@ fn main() {
     }
     let exclude: BTreeSet<String> = coverage.exclude.iter().cloned().collect();
     let closure = build_closure(&schema, &res, &seeds, &exclude);
+    report_closure_change(&format!("{root}/docs/entities.md"), &closure);
 
     // Complex-part entities = closure entities flagged is_complex_part in
     // universal.toml (auto-derived from EXPRESS ANDOR; replaces the former hand
@@ -195,5 +196,31 @@ fn write_fmt(path: &str, body: &str) {
         if std::fs::read_to_string(path).unwrap_or_default() == before {
             return;
         }
+    }
+}
+
+/// Print the entities the closure gains and loses against the read column of
+/// the committed `docs/entities.md`, so a schema or coverage change that moves
+/// the support boundary is seen before it lands.
+fn report_closure_change(matrix: &str, closure: &BTreeSet<String>) {
+    let Ok(text) = std::fs::read_to_string(matrix) else {
+        return;
+    };
+    let before: BTreeSet<String> = text
+        .lines()
+        .filter_map(|l| {
+            let mut cols = l.split('|').map(str::trim);
+            cols.next();
+            let name = cols.next()?.strip_prefix('`')?.strip_suffix('`')?;
+            let cols: Vec<&str> = cols.collect();
+            // `| name | 6 schema columns | read | write |`
+            (cols.len() >= 9 && cols[6] == "o").then(|| name.to_string())
+        })
+        .collect();
+    let added: Vec<&String> = closure.difference(&before).collect();
+    let removed: Vec<&String> = before.difference(closure).collect();
+    if !added.is_empty() || !removed.is_empty() {
+        eprintln!("codegen: closure +{} {added:?}", added.len());
+        eprintln!("codegen: closure -{} {removed:?}", removed.len());
     }
 }

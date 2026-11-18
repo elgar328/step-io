@@ -114,6 +114,45 @@ fn wrong_type_complex_ref_drops_only_offender() {
     }
 }
 
+/// Every edition narrows a presentation's context to a geometric one
+/// (`SELF\representation.context_of_items : geometric_representation_context`).
+/// `#4` names a plain context and is dropped as a wrong-type reference; `#3`,
+/// over a geometric context, is kept.
+#[test]
+fn narrowed_attribute_drops_a_wider_reference() {
+    let r = read_body(
+        "#1=CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2=(GEOMETRIC_REPRESENTATION_CONTEXT(3)REPRESENTATION_CONTEXT('',''));\n\
+         #3=PRESENTATION_VIEW('',(#1),#2);\n\
+         #5=REPRESENTATION_CONTEXT('','');\n\
+         #4=PRESENTATION_VIEW('',(#1),#5);\n",
+    );
+    assert_eq!(dropped_kind(&r, 4), Some(&DropKind::NonstandardReference));
+    assert!(dropped_kind(&r, 3).is_none(), "#3 must survive: {r:?}");
+}
+
+/// AP214 lets a shape definition representation describe a shape aspect
+/// directly; only AP242 narrows `definition` to a property definition. Reading
+/// accepts what any edition allows, so the aspect form is kept.
+#[test]
+fn older_edition_form_of_a_narrowed_attribute_is_kept() {
+    let r = read_body(
+        "#1=APPLICATION_CONTEXT('test');\n\
+         #2=PRODUCT_CONTEXT('',#1,'mechanical');\n\
+         #3=PRODUCT_DEFINITION_CONTEXT('',#1,'design');\n\
+         #10=PRODUCT('p','Part','',(#2));\n\
+         #11=PRODUCT_DEFINITION_FORMATION('1','',#10);\n\
+         #12=PRODUCT_DEFINITION('design','',#11,#3);\n\
+         #13=PRODUCT_DEFINITION_SHAPE('','',#12);\n\
+         #20=CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #36=REPRESENTATION_CONTEXT('','3D');\n\
+         #37=SHAPE_REPRESENTATION('',(#20),#36);\n\
+         #40=SHAPE_ASPECT('hole','',#13,.T.);\n\
+         #50=SHAPE_DEFINITION_REPRESENTATION(#40,#37);\n",
+    );
+    assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+}
+
 /// A fully valid body drops nothing and keeps everything.
 #[test]
 fn valid_body_keeps_all() {

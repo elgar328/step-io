@@ -7,8 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Attributes that every STEP edition narrows with a redeclaration
+  (`SELF\supertype.attribute : narrower;`) now have the narrower type in the
+  model, so both reading and `Ap242Author` take only what the schema allows
+  there:
+  - `PresentationArea`, `PresentationRepresentation` and `PresentationView`
+    `context_of_items`: `GeometricRepresentationContextRef`
+  - `ModelGeometricView` and `DefaultModelGeometricView` `rep`:
+    `DraughtingModelRef`; `item`: `CameraModelRef`
+  - `CameraImage` and `CameraImage3dWithScale` `mapping_source`:
+    `CameraUsageRef`; `mapping_target`: `PlanarBoxRef`
+  - `CameraUsage::mapping_origin`: `CameraModelRef`
+  - `MechanicalDesignPresentationRepresentationWithDraughting::items`:
+    `Vec<CameraModelD3Ref>`
+  - `DraughtingModelItemAssociationWithPlaceholder` `used_representation`:
+    `DraughtingModelRef`; `identified_item`: `DraughtingCalloutRef`
+  - `FeatureForDatumTargetRelationship::related_shape_aspect`:
+    `DatumTargetRef`
+  - `AnnotationPlaceholderOccurrence(WithLeaderLine)::item`:
+    `GeometricSetRef`; `TessellatedAnnotationOccurrence::item`:
+    `TessellatedGeometricSetRef`
+
+### Removed
+
+- `ANNOTATION_FILL_AREA_OCCURRENCE` and `ANNOTATION_SYMBOL` are no longer
+  modeled. Every edition requires them to reference types step-io does not
+  model (`ANNOTATION_FILL_AREA`, `SYMBOL_REPRESENTATION_MAP`), so a standard
+  instance was already dropped when read. Their model types, the
+  `add_annotation_fill_area_occurrence`, `add_annotation_symbol` and
+  `add_annotation_symbol_cyclic` constructors, and their variants in
+  `EntityKey`, `PartialEntity` and the reference enums that listed them are
+  gone.
+
 ### Fixed
 
+- `read()` drops an entity whose reference in one of the attributes above
+  names a type the narrower attribute does not allow, and reports it as a
+  `NonstandardReference`. Such an entity used to be kept, with a reference the
+  standard does not allow.
 - `read()` drops an entity whose reference points at a complex entity none
   of whose parts the schema allows there, and reports it as a
   `NonstandardReference`, as it already did for a simple entity of the wrong

@@ -81,11 +81,6 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
             AnnotationCurveOccurrenceId(i),
         ));
     }
-    for i in 0..model.annotation_fill_area_occurrence_arena.items.len() as u32 {
-        f(EntityKey::AnnotationFillAreaOccurrence(
-            AnnotationFillAreaOccurrenceId(i),
-        ));
-    }
     for i in 0..model.annotation_occurrence_arena.items.len() as u32 {
         f(EntityKey::AnnotationOccurrence(AnnotationOccurrenceId(i)));
     }
@@ -120,9 +115,6 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     }
     for i in 0..model.annotation_plane_arena.items.len() as u32 {
         f(EntityKey::AnnotationPlane(AnnotationPlaneId(i)));
-    }
-    for i in 0..model.annotation_symbol_arena.items.len() as u32 {
-        f(EntityKey::AnnotationSymbol(AnnotationSymbolId(i)));
     }
     for i in 0..model.annotation_symbol_occurrence_arena.items.len() as u32 {
         f(EntityKey::AnnotationSymbolOccurrence(

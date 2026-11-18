@@ -30,6 +30,14 @@ exclude = [
     # closure that way. The non-standard property_definition.definition=#general_property
     # input (general_property is not a characterized_definition member) is no longer
     # a panic — the slot-aware drop pass classifies it as a nonstandard-reference drop.
+    #
+    # Every edition narrows these two to a type outside the closure
+    # (annotation_fill_area_occurrence.item -> annotation_fill_area,
+    # annotation_symbol.mapping_source -> symbol_representation_map), so an
+    # instance can only be valid with that type modeled. Neither occurs in the
+    # corpus; excluding them keeps the boundary instead of pulling the targets in.
+    "annotation_fill_area_occurrence",
+    "annotation_symbol",
 ]
 
 [cover]

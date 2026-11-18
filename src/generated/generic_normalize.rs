@@ -789,36 +789,6 @@ fn simple_slots(n: &str) -> &'static [Slot] {
                 r3: 0,
             },
         ],
-        "ANNOTATION_FILL_AREA_OCCURRENCE" => &[
-            Slot {
-                k: Sk::Str,
-                req: true,
-                der: false,
-                swire: None,
-                r3: 0,
-            },
-            Slot {
-                k: Sk::Vec,
-                req: true,
-                der: false,
-                swire: None,
-                r3: 0,
-            },
-            Slot {
-                k: Sk::Ref,
-                req: true,
-                der: false,
-                swire: None,
-                r3: 0,
-            },
-            Slot {
-                k: Sk::Ref,
-                req: true,
-                der: false,
-                swire: None,
-                r3: 0,
-            },
-        ],
         "ANNOTATION_OCCURRENCE" => &[
             Slot {
                 k: Sk::Str,
@@ -1024,29 +994,6 @@ fn simple_slots(n: &str) -> &'static [Slot] {
             Slot {
                 k: Sk::Vec,
                 req: false,
-                der: false,
-                swire: None,
-                r3: 0,
-            },
-        ],
-        "ANNOTATION_SYMBOL" => &[
-            Slot {
-                k: Sk::Str,
-                req: true,
-                der: false,
-                swire: None,
-                r3: 0,
-            },
-            Slot {
-                k: Sk::Ref,
-                req: true,
-                der: false,
-                swire: None,
-                r3: 0,
-            },
-            Slot {
-                k: Sk::Ref,
-                req: true,
                 der: false,
                 swire: None,
                 r3: 0,
@@ -11961,13 +11908,6 @@ fn part_slots(n: &str) -> &'static [Slot] {
         "ADVANCED_BREP_SHAPE_REPRESENTATION" => &[],
         "ADVANCED_FACE" => &[],
         "ANNOTATION_CURVE_OCCURRENCE" => &[],
-        "ANNOTATION_FILL_AREA_OCCURRENCE" => &[Slot {
-            k: Sk::Ref,
-            req: true,
-            der: false,
-            swire: None,
-            r3: 0,
-        }],
         "ANNOTATION_OCCURRENCE" => &[],
         "ANNOTATION_OCCURRENCE_ASSOCIATIVITY" => &[],
         "ANNOTATION_OCCURRENCE_RELATIONSHIP" => &[
@@ -12030,7 +11970,6 @@ fn part_slots(n: &str) -> &'static [Slot] {
             swire: None,
             r3: 0,
         }],
-        "ANNOTATION_SYMBOL" => &[],
         "ANNOTATION_SYMBOL_OCCURRENCE" => &[],
         "ANNOTATION_TEXT" => &[],
         "ANNOTATION_TEXT_CHARACTER" => &[Slot {

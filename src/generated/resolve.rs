@@ -128,7 +128,6 @@ impl AnnotationCurveOccurrenceRef {
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationOccurrenceRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
     AnnotationPlaceholderOccurrenceWithLeaderLine(
@@ -150,11 +149,6 @@ impl AnnotationOccurrenceRef {
             AnnotationOccurrenceRef::AnnotationCurveOccurrence(i) => {
                 AnnotationOccurrenceRefView::AnnotationCurveOccurrence(
                     model.annotation_curve_occurrence_arena.get(i.0),
-                )
-            }
-            AnnotationOccurrenceRef::AnnotationFillAreaOccurrence(i) => {
-                AnnotationOccurrenceRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
                 )
             }
             AnnotationOccurrenceRef::AnnotationOccurrence(i) => {
@@ -219,9 +213,6 @@ impl AnnotationOccurrenceRef {
         match self {
             AnnotationOccurrenceRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
-            }
-            AnnotationOccurrenceRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
             }
             AnnotationOccurrenceRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             AnnotationOccurrenceRef::AnnotationPlaceholderOccurrence(i) => {
@@ -333,7 +324,6 @@ impl AnnotationPlaceholderOccurrenceRef {
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationPlaneElementRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
     AnnotationPlaceholderOccurrenceWithLeaderLine(
@@ -360,11 +350,6 @@ impl AnnotationPlaneElementRef {
             AnnotationPlaneElementRef::AnnotationCurveOccurrence(i) => {
                 AnnotationPlaneElementRefView::AnnotationCurveOccurrence(
                     model.annotation_curve_occurrence_arena.get(i.0),
-                )
-            }
-            AnnotationPlaneElementRef::AnnotationFillAreaOccurrence(i) => {
-                AnnotationPlaneElementRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
                 )
             }
             AnnotationPlaneElementRef::AnnotationOccurrence(i) => {
@@ -456,9 +441,6 @@ impl AnnotationPlaneElementRef {
         match self {
             AnnotationPlaneElementRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
-            }
-            AnnotationPlaneElementRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
             }
             AnnotationPlaneElementRef::AnnotationOccurrence(i) => {
                 EntityKey::AnnotationOccurrence(*i)
@@ -598,35 +580,21 @@ impl AnnotationSymbolOccurrenceRef {
 
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationSymbolOccurrenceItemRefView<'m> {
-    AnnotationSymbol(&'m AnnotationSymbol),
     DefinedSymbol(&'m DefinedSymbol),
-    Complex(&'m ComplexEntity),
 }
 impl AnnotationSymbolOccurrenceItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationSymbolOccurrenceItemRefView<'m> {
         match self {
-            AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(i) => {
-                AnnotationSymbolOccurrenceItemRefView::AnnotationSymbol(
-                    model.annotation_symbol_arena.get(i.0),
-                )
-            }
             AnnotationSymbolOccurrenceItemRef::DefinedSymbol(i) => {
                 AnnotationSymbolOccurrenceItemRefView::DefinedSymbol(
                     model.defined_symbol_arena.get(i.0),
                 )
             }
-            AnnotationSymbolOccurrenceItemRef::Complex(i) => {
-                AnnotationSymbolOccurrenceItemRefView::Complex(model.complex_entity_arena.get(i.0))
-            }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
-            AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(i) => {
-                EntityKey::AnnotationSymbol(*i)
-            }
             AnnotationSymbolOccurrenceItemRef::DefinedSymbol(i) => EntityKey::DefinedSymbol(*i),
-            AnnotationSymbolOccurrenceItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -760,7 +728,6 @@ pub enum ApprovalItemRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
     AngularLocation(&'m AngularLocation),
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
@@ -768,7 +735,6 @@ pub enum ApprovalItemRefView<'m> {
         &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
     ),
     AnnotationPlane(&'m AnnotationPlane),
-    AnnotationSymbol(&'m AnnotationSymbol),
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     AnnotationText(&'m AnnotationText),
     AnnotationTextCharacter(&'m AnnotationTextCharacter),
@@ -1048,11 +1014,6 @@ impl ApprovalItemRef {
                     model.annotation_curve_occurrence_arena.get(i.0),
                 )
             }
-            ApprovalItemRef::AnnotationFillAreaOccurrence(i) => {
-                ApprovalItemRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
-                )
-            }
             ApprovalItemRef::AnnotationOccurrence(i) => ApprovalItemRefView::AnnotationOccurrence(
                 model.annotation_occurrence_arena.get(i.0),
             ),
@@ -1075,9 +1036,6 @@ impl ApprovalItemRef {
             }
             ApprovalItemRef::AnnotationPlane(i) => {
                 ApprovalItemRefView::AnnotationPlane(model.annotation_plane_arena.get(i.0))
-            }
-            ApprovalItemRef::AnnotationSymbol(i) => {
-                ApprovalItemRefView::AnnotationSymbol(model.annotation_symbol_arena.get(i.0))
             }
             ApprovalItemRef::AnnotationSymbolOccurrence(i) => {
                 ApprovalItemRefView::AnnotationSymbolOccurrence(
@@ -1962,9 +1920,6 @@ impl ApprovalItemRef {
             ApprovalItemRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
             }
-            ApprovalItemRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
-            }
             ApprovalItemRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             ApprovalItemRef::AnnotationPlaceholderLeaderLine(i) => {
                 EntityKey::AnnotationPlaceholderLeaderLine(*i)
@@ -1976,7 +1931,6 @@ impl ApprovalItemRef {
                 EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)
             }
             ApprovalItemRef::AnnotationPlane(i) => EntityKey::AnnotationPlane(*i),
-            ApprovalItemRef::AnnotationSymbol(i) => EntityKey::AnnotationSymbol(*i),
             ApprovalItemRef::AnnotationSymbolOccurrence(i) => {
                 EntityKey::AnnotationSymbolOccurrence(*i)
             }
@@ -2559,6 +2513,91 @@ impl Axis2Placement3dRef {
 }
 
 #[derive(Clone, Copy, Debug)]
+pub enum CameraModelRefView<'m> {
+    CameraModel(&'m CameraModel),
+    CameraModelD3(&'m CameraModelD3),
+    CameraModelD3MultiClipping(&'m CameraModelD3MultiClipping),
+    CameraModelD3WithHlhsr(&'m CameraModelD3WithHlhsr),
+    Complex(&'m ComplexEntity),
+}
+impl CameraModelRef {
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> CameraModelRefView<'m> {
+        match self {
+            CameraModelRef::CameraModel(i) => {
+                CameraModelRefView::CameraModel(model.camera_model_arena.get(i.0))
+            }
+            CameraModelRef::CameraModelD3(i) => {
+                CameraModelRefView::CameraModelD3(model.camera_model_d3_arena.get(i.0))
+            }
+            CameraModelRef::CameraModelD3MultiClipping(i) => {
+                CameraModelRefView::CameraModelD3MultiClipping(
+                    model.camera_model_d3_multi_clipping_arena.get(i.0),
+                )
+            }
+            CameraModelRef::CameraModelD3WithHlhsr(i) => {
+                CameraModelRefView::CameraModelD3WithHlhsr(
+                    model.camera_model_d3_with_hlhsr_arena.get(i.0),
+                )
+            }
+            CameraModelRef::Complex(i) => {
+                CameraModelRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            CameraModelRef::CameraModel(i) => EntityKey::CameraModel(*i),
+            CameraModelRef::CameraModelD3(i) => EntityKey::CameraModelD3(*i),
+            CameraModelRef::CameraModelD3MultiClipping(i) => {
+                EntityKey::CameraModelD3MultiClipping(*i)
+            }
+            CameraModelRef::CameraModelD3WithHlhsr(i) => EntityKey::CameraModelD3WithHlhsr(*i),
+            CameraModelRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum CameraModelD3RefView<'m> {
+    CameraModelD3(&'m CameraModelD3),
+    CameraModelD3MultiClipping(&'m CameraModelD3MultiClipping),
+    CameraModelD3WithHlhsr(&'m CameraModelD3WithHlhsr),
+    Complex(&'m ComplexEntity),
+}
+impl CameraModelD3Ref {
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> CameraModelD3RefView<'m> {
+        match self {
+            CameraModelD3Ref::CameraModelD3(i) => {
+                CameraModelD3RefView::CameraModelD3(model.camera_model_d3_arena.get(i.0))
+            }
+            CameraModelD3Ref::CameraModelD3MultiClipping(i) => {
+                CameraModelD3RefView::CameraModelD3MultiClipping(
+                    model.camera_model_d3_multi_clipping_arena.get(i.0),
+                )
+            }
+            CameraModelD3Ref::CameraModelD3WithHlhsr(i) => {
+                CameraModelD3RefView::CameraModelD3WithHlhsr(
+                    model.camera_model_d3_with_hlhsr_arena.get(i.0),
+                )
+            }
+            CameraModelD3Ref::Complex(i) => {
+                CameraModelD3RefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            CameraModelD3Ref::CameraModelD3(i) => EntityKey::CameraModelD3(*i),
+            CameraModelD3Ref::CameraModelD3MultiClipping(i) => {
+                EntityKey::CameraModelD3MultiClipping(*i)
+            }
+            CameraModelD3Ref::CameraModelD3WithHlhsr(i) => EntityKey::CameraModelD3WithHlhsr(*i),
+            CameraModelD3Ref::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
 pub enum CameraModelD3MultiClippingIntersectionSelectRefView<'m> {
     Plane(&'m Plane),
 }
@@ -2578,6 +2617,30 @@ impl CameraModelD3MultiClippingIntersectionSelectRef {
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CameraModelD3MultiClippingIntersectionSelectRef::Plane(i) => EntityKey::Plane(*i),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum CameraUsageRefView<'m> {
+    CameraUsage(&'m CameraUsage),
+    Complex(&'m ComplexEntity),
+}
+impl CameraUsageRef {
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> CameraUsageRefView<'m> {
+        match self {
+            CameraUsageRef::CameraUsage(i) => {
+                CameraUsageRefView::CameraUsage(model.camera_usage_arena.get(i.0))
+            }
+            CameraUsageRef::Complex(i) => {
+                CameraUsageRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            CameraUsageRef::CameraUsage(i) => EntityKey::CameraUsage(*i),
+            CameraUsageRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -5461,6 +5524,37 @@ impl DatumSystemOrReferenceRef {
 }
 
 #[derive(Clone, Copy, Debug)]
+pub enum DatumTargetRefView<'m> {
+    DatumTarget(&'m DatumTarget),
+    PlacedDatumTargetFeature(&'m PlacedDatumTargetFeature),
+    Complex(&'m ComplexEntity),
+}
+impl DatumTargetRef {
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> DatumTargetRefView<'m> {
+        match self {
+            DatumTargetRef::DatumTarget(i) => {
+                DatumTargetRefView::DatumTarget(model.datum_target_arena.get(i.0))
+            }
+            DatumTargetRef::PlacedDatumTargetFeature(i) => {
+                DatumTargetRefView::PlacedDatumTargetFeature(
+                    model.placed_datum_target_feature_arena.get(i.0),
+                )
+            }
+            DatumTargetRef::Complex(i) => {
+                DatumTargetRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            DatumTargetRef::DatumTarget(i) => EntityKey::DatumTarget(*i),
+            DatumTargetRef::PlacedDatumTargetFeature(i) => EntityKey::PlacedDatumTargetFeature(*i),
+            DatumTargetRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
 pub enum DefinedGlyphSelectRefView<'m> {
     ExternallyDefinedCharacterGlyph(&'m ExternallyDefinedCharacterGlyph),
     PreDefinedCharacterGlyph(&'m PreDefinedCharacterGlyph),
@@ -6235,7 +6329,6 @@ pub enum DocumentReferenceItemRefView<'m> {
     AngularLocation(&'m AngularLocation),
     AngularSize(&'m AngularSize),
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
@@ -6243,7 +6336,6 @@ pub enum DocumentReferenceItemRefView<'m> {
         &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
     ),
     AnnotationPlane(&'m AnnotationPlane),
-    AnnotationSymbol(&'m AnnotationSymbol),
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     AnnotationText(&'m AnnotationText),
     AnnotationTextCharacter(&'m AnnotationTextCharacter),
@@ -6530,13 +6622,11 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::AngularLocation(i) => DocumentReferenceItemRefView::AngularLocation(model.angular_location_arena.get(i.0)),
             DocumentReferenceItemRef::AngularSize(i) => DocumentReferenceItemRefView::AngularSize(model.angular_size_arena.get(i.0)),
             DocumentReferenceItemRef::AnnotationCurveOccurrence(i) => DocumentReferenceItemRefView::AnnotationCurveOccurrence(model.annotation_curve_occurrence_arena.get(i.0)),
-            DocumentReferenceItemRef::AnnotationFillAreaOccurrence(i) => DocumentReferenceItemRefView::AnnotationFillAreaOccurrence(model.annotation_fill_area_occurrence_arena.get(i.0)),
             DocumentReferenceItemRef::AnnotationOccurrence(i) => DocumentReferenceItemRefView::AnnotationOccurrence(model.annotation_occurrence_arena.get(i.0)),
             DocumentReferenceItemRef::AnnotationPlaceholderLeaderLine(i) => DocumentReferenceItemRefView::AnnotationPlaceholderLeaderLine(model.annotation_placeholder_leader_line_arena.get(i.0)),
             DocumentReferenceItemRef::AnnotationPlaceholderOccurrence(i) => DocumentReferenceItemRefView::AnnotationPlaceholderOccurrence(model.annotation_placeholder_occurrence_arena.get(i.0)),
             DocumentReferenceItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => DocumentReferenceItemRefView::AnnotationPlaceholderOccurrenceWithLeaderLine(model.annotation_placeholder_occurrence_with_leader_line_arena.get(i.0)),
             DocumentReferenceItemRef::AnnotationPlane(i) => DocumentReferenceItemRefView::AnnotationPlane(model.annotation_plane_arena.get(i.0)),
-            DocumentReferenceItemRef::AnnotationSymbol(i) => DocumentReferenceItemRefView::AnnotationSymbol(model.annotation_symbol_arena.get(i.0)),
             DocumentReferenceItemRef::AnnotationSymbolOccurrence(i) => DocumentReferenceItemRefView::AnnotationSymbolOccurrence(model.annotation_symbol_occurrence_arena.get(i.0)),
             DocumentReferenceItemRef::AnnotationText(i) => DocumentReferenceItemRefView::AnnotationText(model.annotation_text_arena.get(i.0)),
             DocumentReferenceItemRef::AnnotationTextCharacter(i) => DocumentReferenceItemRefView::AnnotationTextCharacter(model.annotation_text_character_arena.get(i.0)),
@@ -6815,9 +6905,6 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
             }
-            DocumentReferenceItemRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
-            }
             DocumentReferenceItemRef::AnnotationOccurrence(i) => {
                 EntityKey::AnnotationOccurrence(*i)
             }
@@ -6831,7 +6918,6 @@ impl DocumentReferenceItemRef {
                 EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)
             }
             DocumentReferenceItemRef::AnnotationPlane(i) => EntityKey::AnnotationPlane(*i),
-            DocumentReferenceItemRef::AnnotationSymbol(i) => EntityKey::AnnotationSymbol(*i),
             DocumentReferenceItemRef::AnnotationSymbolOccurrence(i) => {
                 EntityKey::AnnotationSymbolOccurrence(*i)
             }
@@ -7386,7 +7472,6 @@ impl DraughtingCalloutRef {
 #[derive(Clone, Copy, Debug)]
 pub enum DraughtingCalloutElementRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
     AnnotationPlaceholderOccurrenceWithLeaderLine(
         &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
@@ -7405,11 +7490,6 @@ impl DraughtingCalloutElementRef {
             DraughtingCalloutElementRef::AnnotationCurveOccurrence(i) => {
                 DraughtingCalloutElementRefView::AnnotationCurveOccurrence(
                     model.annotation_curve_occurrence_arena.get(i.0),
-                )
-            }
-            DraughtingCalloutElementRef::AnnotationFillAreaOccurrence(i) => {
-                DraughtingCalloutElementRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
                 )
             }
             DraughtingCalloutElementRef::AnnotationPlaceholderOccurrence(i) => {
@@ -7462,9 +7542,6 @@ impl DraughtingCalloutElementRef {
             DraughtingCalloutElementRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
             }
-            DraughtingCalloutElementRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
-            }
             DraughtingCalloutElementRef::AnnotationPlaceholderOccurrence(i) => {
                 EntityKey::AnnotationPlaceholderOccurrence(*i)
             }
@@ -7489,9 +7566,32 @@ impl DraughtingCalloutElementRef {
 }
 
 #[derive(Clone, Copy, Debug)]
+pub enum DraughtingModelRefView<'m> {
+    DraughtingModel(&'m DraughtingModel),
+    Complex(&'m ComplexEntity),
+}
+impl DraughtingModelRef {
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> DraughtingModelRefView<'m> {
+        match self {
+            DraughtingModelRef::DraughtingModel(i) => {
+                DraughtingModelRefView::DraughtingModel(model.draughting_model_arena.get(i.0))
+            }
+            DraughtingModelRef::Complex(i) => {
+                DraughtingModelRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            DraughtingModelRef::DraughtingModel(i) => EntityKey::DraughtingModel(*i),
+            DraughtingModelRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
 pub enum DraughtingModelItemAssociationSelectRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
     AnnotationPlaceholderOccurrenceWithLeaderLine(
@@ -7516,7 +7616,6 @@ impl DraughtingModelItemAssociationSelectRef {
     ) -> DraughtingModelItemAssociationSelectRefView<'m> {
         match self {
             DraughtingModelItemAssociationSelectRef::AnnotationCurveOccurrence(i) => DraughtingModelItemAssociationSelectRefView::AnnotationCurveOccurrence(model.annotation_curve_occurrence_arena.get(i.0)),
-            DraughtingModelItemAssociationSelectRef::AnnotationFillAreaOccurrence(i) => DraughtingModelItemAssociationSelectRefView::AnnotationFillAreaOccurrence(model.annotation_fill_area_occurrence_arena.get(i.0)),
             DraughtingModelItemAssociationSelectRef::AnnotationOccurrence(i) => DraughtingModelItemAssociationSelectRefView::AnnotationOccurrence(model.annotation_occurrence_arena.get(i.0)),
             DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrence(i) => DraughtingModelItemAssociationSelectRefView::AnnotationPlaceholderOccurrence(model.annotation_placeholder_occurrence_arena.get(i.0)),
             DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => DraughtingModelItemAssociationSelectRefView::AnnotationPlaceholderOccurrenceWithLeaderLine(model.annotation_placeholder_occurrence_with_leader_line_arena.get(i.0)),
@@ -7536,7 +7635,6 @@ impl DraughtingModelItemAssociationSelectRef {
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DraughtingModelItemAssociationSelectRef::AnnotationCurveOccurrence(i) => EntityKey::AnnotationCurveOccurrence(*i),
-            DraughtingModelItemAssociationSelectRef::AnnotationFillAreaOccurrence(i) => EntityKey::AnnotationFillAreaOccurrence(*i),
             DraughtingModelItemAssociationSelectRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrence(i) => EntityKey::AnnotationPlaceholderOccurrence(*i),
             DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i),
@@ -8135,7 +8233,6 @@ pub enum ExternalIdentificationItemRefView<'m> {
     AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
     AdvancedFace(&'m AdvancedFace),
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
@@ -8143,7 +8240,6 @@ pub enum ExternalIdentificationItemRefView<'m> {
         &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
     ),
     AnnotationPlane(&'m AnnotationPlane),
-    AnnotationSymbol(&'m AnnotationSymbol),
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     AnnotationText(&'m AnnotationText),
     AnnotationTextCharacter(&'m AnnotationTextCharacter),
@@ -8387,13 +8483,11 @@ impl ExternalIdentificationItemRef {
             ExternalIdentificationItemRef::AdvancedBrepShapeRepresentation(i) => ExternalIdentificationItemRefView::AdvancedBrepShapeRepresentation(model.advanced_brep_shape_representation_arena.get(i.0)),
             ExternalIdentificationItemRef::AdvancedFace(i) => ExternalIdentificationItemRefView::AdvancedFace(model.advanced_face_arena.get(i.0)),
             ExternalIdentificationItemRef::AnnotationCurveOccurrence(i) => ExternalIdentificationItemRefView::AnnotationCurveOccurrence(model.annotation_curve_occurrence_arena.get(i.0)),
-            ExternalIdentificationItemRef::AnnotationFillAreaOccurrence(i) => ExternalIdentificationItemRefView::AnnotationFillAreaOccurrence(model.annotation_fill_area_occurrence_arena.get(i.0)),
             ExternalIdentificationItemRef::AnnotationOccurrence(i) => ExternalIdentificationItemRefView::AnnotationOccurrence(model.annotation_occurrence_arena.get(i.0)),
             ExternalIdentificationItemRef::AnnotationPlaceholderLeaderLine(i) => ExternalIdentificationItemRefView::AnnotationPlaceholderLeaderLine(model.annotation_placeholder_leader_line_arena.get(i.0)),
             ExternalIdentificationItemRef::AnnotationPlaceholderOccurrence(i) => ExternalIdentificationItemRefView::AnnotationPlaceholderOccurrence(model.annotation_placeholder_occurrence_arena.get(i.0)),
             ExternalIdentificationItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => ExternalIdentificationItemRefView::AnnotationPlaceholderOccurrenceWithLeaderLine(model.annotation_placeholder_occurrence_with_leader_line_arena.get(i.0)),
             ExternalIdentificationItemRef::AnnotationPlane(i) => ExternalIdentificationItemRefView::AnnotationPlane(model.annotation_plane_arena.get(i.0)),
-            ExternalIdentificationItemRef::AnnotationSymbol(i) => ExternalIdentificationItemRefView::AnnotationSymbol(model.annotation_symbol_arena.get(i.0)),
             ExternalIdentificationItemRef::AnnotationSymbolOccurrence(i) => ExternalIdentificationItemRefView::AnnotationSymbolOccurrence(model.annotation_symbol_occurrence_arena.get(i.0)),
             ExternalIdentificationItemRef::AnnotationText(i) => ExternalIdentificationItemRefView::AnnotationText(model.annotation_text_arena.get(i.0)),
             ExternalIdentificationItemRef::AnnotationTextCharacter(i) => ExternalIdentificationItemRefView::AnnotationTextCharacter(model.annotation_text_character_arena.get(i.0)),
@@ -8625,13 +8719,11 @@ impl ExternalIdentificationItemRef {
             ExternalIdentificationItemRef::AdvancedBrepShapeRepresentation(i) => EntityKey::AdvancedBrepShapeRepresentation(*i),
             ExternalIdentificationItemRef::AdvancedFace(i) => EntityKey::AdvancedFace(*i),
             ExternalIdentificationItemRef::AnnotationCurveOccurrence(i) => EntityKey::AnnotationCurveOccurrence(*i),
-            ExternalIdentificationItemRef::AnnotationFillAreaOccurrence(i) => EntityKey::AnnotationFillAreaOccurrence(*i),
             ExternalIdentificationItemRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             ExternalIdentificationItemRef::AnnotationPlaceholderLeaderLine(i) => EntityKey::AnnotationPlaceholderLeaderLine(*i),
             ExternalIdentificationItemRef::AnnotationPlaceholderOccurrence(i) => EntityKey::AnnotationPlaceholderOccurrence(*i),
             ExternalIdentificationItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i),
             ExternalIdentificationItemRef::AnnotationPlane(i) => EntityKey::AnnotationPlane(*i),
-            ExternalIdentificationItemRef::AnnotationSymbol(i) => EntityKey::AnnotationSymbol(*i),
             ExternalIdentificationItemRef::AnnotationSymbolOccurrence(i) => EntityKey::AnnotationSymbolOccurrence(*i),
             ExternalIdentificationItemRef::AnnotationText(i) => EntityKey::AnnotationText(*i),
             ExternalIdentificationItemRef::AnnotationTextCharacter(i) => EntityKey::AnnotationTextCharacter(*i),
@@ -10308,6 +10400,63 @@ impl GeometricModelItemRef {
 }
 
 #[derive(Clone, Copy, Debug)]
+pub enum GeometricRepresentationContextRefView<'m> {
+    GeometricRepresentationContext(&'m GeometricRepresentationContext),
+    Complex(&'m ComplexEntity),
+}
+impl GeometricRepresentationContextRef {
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricRepresentationContextRefView<'m> {
+        match self {
+            GeometricRepresentationContextRef::GeometricRepresentationContext(i) => {
+                GeometricRepresentationContextRefView::GeometricRepresentationContext(
+                    model.geometric_representation_context_arena.get(i.0),
+                )
+            }
+            GeometricRepresentationContextRef::Complex(i) => {
+                GeometricRepresentationContextRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            GeometricRepresentationContextRef::GeometricRepresentationContext(i) => {
+                EntityKey::GeometricRepresentationContext(*i)
+            }
+            GeometricRepresentationContextRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum GeometricSetRefView<'m> {
+    GeometricCurveSet(&'m GeometricCurveSet),
+    GeometricSet(&'m GeometricSet),
+    Complex(&'m ComplexEntity),
+}
+impl GeometricSetRef {
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricSetRefView<'m> {
+        match self {
+            GeometricSetRef::GeometricCurveSet(i) => {
+                GeometricSetRefView::GeometricCurveSet(model.geometric_curve_set_arena.get(i.0))
+            }
+            GeometricSetRef::GeometricSet(i) => {
+                GeometricSetRefView::GeometricSet(model.geometric_set_arena.get(i.0))
+            }
+            GeometricSetRef::Complex(i) => {
+                GeometricSetRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            GeometricSetRef::GeometricCurveSet(i) => EntityKey::GeometricCurveSet(*i),
+            GeometricSetRef::GeometricSet(i) => EntityKey::GeometricSet(*i),
+            GeometricSetRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
 pub enum GeometricSetSelectRefView<'m> {
     AnnotationText(&'m AnnotationText),
     ApllPoint(&'m ApllPoint),
@@ -11099,7 +11248,6 @@ pub enum GroupableItemRefView<'m> {
     AllAroundShapeAspect(&'m AllAroundShapeAspect),
     AngularLocation(&'m AngularLocation),
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
@@ -11107,7 +11255,6 @@ pub enum GroupableItemRefView<'m> {
         &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
     ),
     AnnotationPlane(&'m AnnotationPlane),
-    AnnotationSymbol(&'m AnnotationSymbol),
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     AnnotationText(&'m AnnotationText),
     AnnotationTextCharacter(&'m AnnotationTextCharacter),
@@ -11434,11 +11581,6 @@ impl GroupableItemRef {
                     model.annotation_curve_occurrence_arena.get(i.0),
                 )
             }
-            GroupableItemRef::AnnotationFillAreaOccurrence(i) => {
-                GroupableItemRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
-                )
-            }
             GroupableItemRef::AnnotationOccurrence(i) => {
                 GroupableItemRefView::AnnotationOccurrence(
                     model.annotation_occurrence_arena.get(i.0),
@@ -11463,9 +11605,6 @@ impl GroupableItemRef {
             }
             GroupableItemRef::AnnotationPlane(i) => {
                 GroupableItemRefView::AnnotationPlane(model.annotation_plane_arena.get(i.0))
-            }
-            GroupableItemRef::AnnotationSymbol(i) => {
-                GroupableItemRefView::AnnotationSymbol(model.annotation_symbol_arena.get(i.0))
             }
             GroupableItemRef::AnnotationSymbolOccurrence(i) => {
                 GroupableItemRefView::AnnotationSymbolOccurrence(
@@ -12575,9 +12714,6 @@ impl GroupableItemRef {
             GroupableItemRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
             }
-            GroupableItemRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
-            }
             GroupableItemRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             GroupableItemRef::AnnotationPlaceholderLeaderLine(i) => {
                 EntityKey::AnnotationPlaceholderLeaderLine(*i)
@@ -12589,7 +12725,6 @@ impl GroupableItemRef {
                 EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)
             }
             GroupableItemRef::AnnotationPlane(i) => EntityKey::AnnotationPlane(*i),
-            GroupableItemRef::AnnotationSymbol(i) => EntityKey::AnnotationSymbol(*i),
             GroupableItemRef::AnnotationSymbolOccurrence(i) => {
                 EntityKey::AnnotationSymbolOccurrence(*i)
             }
@@ -13883,7 +14018,6 @@ impl IdentificationRoleRef {
 pub enum InvisibleItemRefView<'m> {
     AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
     AnnotationPlaceholderOccurrenceWithLeaderLine(
@@ -13945,11 +14079,6 @@ impl InvisibleItemRef {
             InvisibleItemRef::AnnotationCurveOccurrence(i) => {
                 InvisibleItemRefView::AnnotationCurveOccurrence(
                     model.annotation_curve_occurrence_arena.get(i.0),
-                )
-            }
-            InvisibleItemRef::AnnotationFillAreaOccurrence(i) => {
-                InvisibleItemRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
                 )
             }
             InvisibleItemRef::AnnotationOccurrence(i) => {
@@ -14136,9 +14265,6 @@ impl InvisibleItemRef {
             }
             InvisibleItemRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
-            }
-            InvisibleItemRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
             }
             InvisibleItemRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             InvisibleItemRef::AnnotationPlaceholderOccurrence(i) => {
@@ -14497,7 +14623,6 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
 pub enum LayeredItemRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
@@ -14505,7 +14630,6 @@ pub enum LayeredItemRefView<'m> {
         &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
     ),
     AnnotationPlane(&'m AnnotationPlane),
-    AnnotationSymbol(&'m AnnotationSymbol),
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     AnnotationText(&'m AnnotationText),
     AnnotationTextCharacter(&'m AnnotationTextCharacter),
@@ -14662,11 +14786,6 @@ impl LayeredItemRef {
                     model.annotation_curve_occurrence_arena.get(i.0),
                 )
             }
-            LayeredItemRef::AnnotationFillAreaOccurrence(i) => {
-                LayeredItemRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
-                )
-            }
             LayeredItemRef::AnnotationOccurrence(i) => {
                 LayeredItemRefView::AnnotationOccurrence(model.annotation_occurrence_arena.get(i.0))
             }
@@ -14689,9 +14808,6 @@ impl LayeredItemRef {
             }
             LayeredItemRef::AnnotationPlane(i) => {
                 LayeredItemRefView::AnnotationPlane(model.annotation_plane_arena.get(i.0))
-            }
-            LayeredItemRef::AnnotationSymbol(i) => {
-                LayeredItemRefView::AnnotationSymbol(model.annotation_symbol_arena.get(i.0))
             }
             LayeredItemRef::AnnotationSymbolOccurrence(i) => {
                 LayeredItemRefView::AnnotationSymbolOccurrence(
@@ -15181,9 +15297,6 @@ impl LayeredItemRef {
             LayeredItemRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
             }
-            LayeredItemRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
-            }
             LayeredItemRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             LayeredItemRef::AnnotationPlaceholderLeaderLine(i) => {
                 EntityKey::AnnotationPlaceholderLeaderLine(*i)
@@ -15195,7 +15308,6 @@ impl LayeredItemRef {
                 EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)
             }
             LayeredItemRef::AnnotationPlane(i) => EntityKey::AnnotationPlane(*i),
-            LayeredItemRef::AnnotationSymbol(i) => EntityKey::AnnotationSymbol(*i),
             LayeredItemRef::AnnotationSymbolOccurrence(i) => {
                 EntityKey::AnnotationSymbolOccurrence(*i)
             }
@@ -17832,7 +17944,6 @@ impl RepresentationContextReferenceRef {
 pub enum RepresentationItemRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
@@ -17840,7 +17951,6 @@ pub enum RepresentationItemRefView<'m> {
         &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
     ),
     AnnotationPlane(&'m AnnotationPlane),
-    AnnotationSymbol(&'m AnnotationSymbol),
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     AnnotationText(&'m AnnotationText),
     AnnotationTextCharacter(&'m AnnotationTextCharacter),
@@ -17994,11 +18104,6 @@ impl RepresentationItemRef {
                     model.annotation_curve_occurrence_arena.get(i.0),
                 )
             }
-            RepresentationItemRef::AnnotationFillAreaOccurrence(i) => {
-                RepresentationItemRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
-                )
-            }
             RepresentationItemRef::AnnotationOccurrence(i) => {
                 RepresentationItemRefView::AnnotationOccurrence(
                     model.annotation_occurrence_arena.get(i.0),
@@ -18023,9 +18128,6 @@ impl RepresentationItemRef {
             }
             RepresentationItemRef::AnnotationPlane(i) => {
                 RepresentationItemRefView::AnnotationPlane(model.annotation_plane_arena.get(i.0))
-            }
-            RepresentationItemRef::AnnotationSymbol(i) => {
-                RepresentationItemRefView::AnnotationSymbol(model.annotation_symbol_arena.get(i.0))
             }
             RepresentationItemRef::AnnotationSymbolOccurrence(i) => {
                 RepresentationItemRefView::AnnotationSymbolOccurrence(
@@ -18580,9 +18682,6 @@ impl RepresentationItemRef {
             RepresentationItemRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
             }
-            RepresentationItemRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
-            }
             RepresentationItemRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             RepresentationItemRef::AnnotationPlaceholderLeaderLine(i) => {
                 EntityKey::AnnotationPlaceholderLeaderLine(*i)
@@ -18594,7 +18693,6 @@ impl RepresentationItemRef {
                 EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)
             }
             RepresentationItemRef::AnnotationPlane(i) => EntityKey::AnnotationPlane(*i),
-            RepresentationItemRef::AnnotationSymbol(i) => EntityKey::AnnotationSymbol(*i),
             RepresentationItemRef::AnnotationSymbolOccurrence(i) => {
                 EntityKey::AnnotationSymbolOccurrence(*i)
             }
@@ -20007,7 +20105,6 @@ pub enum StyleContextSelectRefView<'m> {
     AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
     AdvancedFace(&'m AdvancedFace),
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
@@ -20015,7 +20112,6 @@ pub enum StyleContextSelectRefView<'m> {
         &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
     ),
     AnnotationPlane(&'m AnnotationPlane),
-    AnnotationSymbol(&'m AnnotationSymbol),
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     AnnotationText(&'m AnnotationText),
     AnnotationTextCharacter(&'m AnnotationTextCharacter),
@@ -20219,11 +20315,6 @@ impl StyleContextSelectRef {
                     model.annotation_curve_occurrence_arena.get(i.0),
                 )
             }
-            StyleContextSelectRef::AnnotationFillAreaOccurrence(i) => {
-                StyleContextSelectRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
-                )
-            }
             StyleContextSelectRef::AnnotationOccurrence(i) => {
                 StyleContextSelectRefView::AnnotationOccurrence(
                     model.annotation_occurrence_arena.get(i.0),
@@ -20248,9 +20339,6 @@ impl StyleContextSelectRef {
             }
             StyleContextSelectRef::AnnotationPlane(i) => {
                 StyleContextSelectRefView::AnnotationPlane(model.annotation_plane_arena.get(i.0))
-            }
-            StyleContextSelectRef::AnnotationSymbol(i) => {
-                StyleContextSelectRefView::AnnotationSymbol(model.annotation_symbol_arena.get(i.0))
             }
             StyleContextSelectRef::AnnotationSymbolOccurrence(i) => {
                 StyleContextSelectRefView::AnnotationSymbolOccurrence(
@@ -20971,9 +21059,6 @@ impl StyleContextSelectRef {
             StyleContextSelectRef::AnnotationCurveOccurrence(i) => {
                 EntityKey::AnnotationCurveOccurrence(*i)
             }
-            StyleContextSelectRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
-            }
             StyleContextSelectRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             StyleContextSelectRef::AnnotationPlaceholderLeaderLine(i) => {
                 EntityKey::AnnotationPlaceholderLeaderLine(*i)
@@ -20985,7 +21070,6 @@ impl StyleContextSelectRef {
                 EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)
             }
             StyleContextSelectRef::AnnotationPlane(i) => EntityKey::AnnotationPlane(*i),
-            StyleContextSelectRef::AnnotationSymbol(i) => EntityKey::AnnotationSymbol(*i),
             StyleContextSelectRef::AnnotationSymbolOccurrence(i) => {
                 EntityKey::AnnotationSymbolOccurrence(*i)
             }
@@ -21285,7 +21369,6 @@ impl StyleContextSelectRef {
 #[derive(Clone, Copy, Debug)]
 pub enum StyledItemRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
-    AnnotationFillAreaOccurrence(&'m AnnotationFillAreaOccurrence),
     AnnotationOccurrence(&'m AnnotationOccurrence),
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
     AnnotationPlaceholderOccurrenceWithLeaderLine(
@@ -21310,11 +21393,6 @@ impl StyledItemRef {
             StyledItemRef::AnnotationCurveOccurrence(i) => {
                 StyledItemRefView::AnnotationCurveOccurrence(
                     model.annotation_curve_occurrence_arena.get(i.0),
-                )
-            }
-            StyledItemRef::AnnotationFillAreaOccurrence(i) => {
-                StyledItemRefView::AnnotationFillAreaOccurrence(
-                    model.annotation_fill_area_occurrence_arena.get(i.0),
                 )
             }
             StyledItemRef::AnnotationOccurrence(i) => {
@@ -21385,9 +21463,6 @@ impl StyledItemRef {
     pub fn entity_key(&self) -> EntityKey {
         match self {
             StyledItemRef::AnnotationCurveOccurrence(i) => EntityKey::AnnotationCurveOccurrence(*i),
-            StyledItemRef::AnnotationFillAreaOccurrence(i) => {
-                EntityKey::AnnotationFillAreaOccurrence(*i)
-            }
             StyledItemRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
             StyledItemRef::AnnotationPlaceholderOccurrence(i) => {
                 EntityKey::AnnotationPlaceholderOccurrence(*i)
@@ -21429,7 +21504,6 @@ pub enum StyledItemTargetRefView<'m> {
         &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
     ),
     AnnotationPlane(&'m AnnotationPlane),
-    AnnotationSymbol(&'m AnnotationSymbol),
     AnnotationText(&'m AnnotationText),
     AnnotationTextCharacter(&'m AnnotationTextCharacter),
     AnnotationToAnnotationLeaderLine(&'m AnnotationToAnnotationLeaderLine),
@@ -21614,9 +21688,6 @@ impl StyledItemTargetRef {
             }
             StyledItemTargetRef::AnnotationPlane(i) => {
                 StyledItemTargetRefView::AnnotationPlane(model.annotation_plane_arena.get(i.0))
-            }
-            StyledItemTargetRef::AnnotationSymbol(i) => {
-                StyledItemTargetRefView::AnnotationSymbol(model.annotation_symbol_arena.get(i.0))
             }
             StyledItemTargetRef::AnnotationText(i) => {
                 StyledItemTargetRefView::AnnotationText(model.annotation_text_arena.get(i.0))
@@ -22187,7 +22258,6 @@ impl StyledItemTargetRef {
                 EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)
             }
             StyledItemTargetRef::AnnotationPlane(i) => EntityKey::AnnotationPlane(*i),
-            StyledItemTargetRef::AnnotationSymbol(i) => EntityKey::AnnotationSymbol(*i),
             StyledItemTargetRef::AnnotationText(i) => EntityKey::AnnotationText(*i),
             StyledItemTargetRef::AnnotationTextCharacter(i) => {
                 EntityKey::AnnotationTextCharacter(*i)
@@ -22730,6 +22800,34 @@ impl SymbolTargetRef {
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SymbolTargetRef::SymbolTarget(i) => EntityKey::SymbolTarget(*i),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum TessellatedGeometricSetRefView<'m> {
+    TessellatedGeometricSet(&'m TessellatedGeometricSet),
+    Complex(&'m ComplexEntity),
+}
+impl TessellatedGeometricSetRef {
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> TessellatedGeometricSetRefView<'m> {
+        match self {
+            TessellatedGeometricSetRef::TessellatedGeometricSet(i) => {
+                TessellatedGeometricSetRefView::TessellatedGeometricSet(
+                    model.tessellated_geometric_set_arena.get(i.0),
+                )
+            }
+            TessellatedGeometricSetRef::Complex(i) => {
+                TessellatedGeometricSetRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            TessellatedGeometricSetRef::TessellatedGeometricSet(i) => {
+                EntityKey::TessellatedGeometricSet(*i)
+            }
+            TessellatedGeometricSetRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }

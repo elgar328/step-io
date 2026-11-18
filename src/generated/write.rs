@@ -84,7 +84,6 @@ pub struct Writer<'a> {
     angular_size_ids: Vec<Option<u64>>,
     angularity_tolerance_ids: Vec<Option<u64>>,
     annotation_curve_occurrence_ids: Vec<Option<u64>>,
-    annotation_fill_area_occurrence_ids: Vec<Option<u64>>,
     annotation_occurrence_ids: Vec<Option<u64>>,
     annotation_occurrence_associativity_ids: Vec<Option<u64>>,
     annotation_occurrence_relationship_ids: Vec<Option<u64>>,
@@ -92,7 +91,6 @@ pub struct Writer<'a> {
     annotation_placeholder_occurrence_ids: Vec<Option<u64>>,
     annotation_placeholder_occurrence_with_leader_line_ids: Vec<Option<u64>>,
     annotation_plane_ids: Vec<Option<u64>>,
-    annotation_symbol_ids: Vec<Option<u64>>,
     annotation_symbol_occurrence_ids: Vec<Option<u64>>,
     annotation_text_ids: Vec<Option<u64>>,
     annotation_text_character_ids: Vec<Option<u64>>,
@@ -630,13 +628,6 @@ impl<'a> Writer<'a> {
                     .items
                     .len()
             ],
-            annotation_fill_area_occurrence_ids: vec![
-                None;
-                model
-                    .annotation_fill_area_occurrence_arena
-                    .items
-                    .len()
-            ],
             annotation_occurrence_ids: vec![None; model.annotation_occurrence_arena.items.len()],
             annotation_occurrence_associativity_ids: vec![
                 None;
@@ -674,7 +665,6 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             annotation_plane_ids: vec![None; model.annotation_plane_arena.items.len()],
-            annotation_symbol_ids: vec![None; model.annotation_symbol_arena.items.len()],
             annotation_symbol_occurrence_ids: vec![
                 None;
                 model
@@ -2313,9 +2303,6 @@ impl<'a> Writer<'a> {
             EntityKey::AnnotationCurveOccurrence(i) => {
                 self.annotation_curve_occurrence_ids[i.0 as usize]
             }
-            EntityKey::AnnotationFillAreaOccurrence(i) => {
-                self.annotation_fill_area_occurrence_ids[i.0 as usize]
-            }
             EntityKey::AnnotationOccurrence(i) => self.annotation_occurrence_ids[i.0 as usize],
             EntityKey::AnnotationOccurrenceAssociativity(i) => {
                 self.annotation_occurrence_associativity_ids[i.0 as usize]
@@ -2333,7 +2320,6 @@ impl<'a> Writer<'a> {
                 self.annotation_placeholder_occurrence_with_leader_line_ids[i.0 as usize]
             }
             EntityKey::AnnotationPlane(i) => self.annotation_plane_ids[i.0 as usize],
-            EntityKey::AnnotationSymbol(i) => self.annotation_symbol_ids[i.0 as usize],
             EntityKey::AnnotationSymbolOccurrence(i) => {
                 self.annotation_symbol_occurrence_ids[i.0 as usize]
             }
@@ -3224,9 +3210,6 @@ impl<'a> Writer<'a> {
             EntityKey::AnnotationCurveOccurrence(i) => {
                 self.annotation_curve_occurrence_ids[i.0 as usize] = Some(n)
             }
-            EntityKey::AnnotationFillAreaOccurrence(i) => {
-                self.annotation_fill_area_occurrence_ids[i.0 as usize] = Some(n)
-            }
             EntityKey::AnnotationOccurrence(i) => {
                 self.annotation_occurrence_ids[i.0 as usize] = Some(n)
             }
@@ -3246,7 +3229,6 @@ impl<'a> Writer<'a> {
                 self.annotation_placeholder_occurrence_with_leader_line_ids[i.0 as usize] = Some(n)
             }
             EntityKey::AnnotationPlane(i) => self.annotation_plane_ids[i.0 as usize] = Some(n),
-            EntityKey::AnnotationSymbol(i) => self.annotation_symbol_ids[i.0 as usize] = Some(n),
             EntityKey::AnnotationSymbolOccurrence(i) => {
                 self.annotation_symbol_occurrence_ids[i.0 as usize] = Some(n)
             }
@@ -4363,9 +4345,6 @@ impl<'a> Writer<'a> {
             AnnotationOccurrenceRef::AnnotationCurveOccurrence(i) => {
                 self.annotation_curve_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
-            AnnotationOccurrenceRef::AnnotationFillAreaOccurrence(i) => {
-                self.annotation_fill_area_occurrence_ids[i.0 as usize].expect("dep id assigned")
-            }
             AnnotationOccurrenceRef::AnnotationOccurrence(i) => {
                 self.annotation_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -4409,9 +4388,6 @@ impl<'a> Writer<'a> {
         match r {
             AnnotationOccurrenceRef::AnnotationCurveOccurrence(i) => {
                 out.push(EntityKey::AnnotationCurveOccurrence(*i))
-            }
-            AnnotationOccurrenceRef::AnnotationFillAreaOccurrence(i) => {
-                out.push(EntityKey::AnnotationFillAreaOccurrence(*i))
             }
             AnnotationOccurrenceRef::AnnotationOccurrence(i) => {
                 out.push(EntityKey::AnnotationOccurrence(*i))
@@ -4526,9 +4502,6 @@ impl<'a> Writer<'a> {
             AnnotationPlaneElementRef::AnnotationCurveOccurrence(i) => {
                 self.annotation_curve_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
-            AnnotationPlaneElementRef::AnnotationFillAreaOccurrence(i) => {
-                self.annotation_fill_area_occurrence_ids[i.0 as usize].expect("dep id assigned")
-            }
             AnnotationPlaneElementRef::AnnotationOccurrence(i) => {
                 self.annotation_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -4587,9 +4560,6 @@ impl<'a> Writer<'a> {
         match r {
             AnnotationPlaneElementRef::AnnotationCurveOccurrence(i) => {
                 out.push(EntityKey::AnnotationCurveOccurrence(*i))
-            }
-            AnnotationPlaneElementRef::AnnotationFillAreaOccurrence(i) => {
-                out.push(EntityKey::AnnotationFillAreaOccurrence(*i))
             }
             AnnotationPlaneElementRef::AnnotationOccurrence(i) => {
                 out.push(EntityKey::AnnotationOccurrence(*i))
@@ -4688,14 +4658,8 @@ impl<'a> Writer<'a> {
         r: &AnnotationSymbolOccurrenceItemRef,
     ) -> u64 {
         match r {
-            AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(i) => {
-                self.annotation_symbol_ids[i.0 as usize].expect("dep id assigned")
-            }
             AnnotationSymbolOccurrenceItemRef::DefinedSymbol(i) => {
                 self.defined_symbol_ids[i.0 as usize].expect("dep id assigned")
-            }
-            AnnotationSymbolOccurrenceItemRef::Complex(i) => {
-                self.complex_ids[i.0 as usize].expect("dep id assigned")
             }
         }
     }
@@ -4705,13 +4669,9 @@ impl<'a> Writer<'a> {
         out: &mut Vec<EntityKey>,
     ) {
         match r {
-            AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(i) => {
-                out.push(EntityKey::AnnotationSymbol(*i))
-            }
             AnnotationSymbolOccurrenceItemRef::DefinedSymbol(i) => {
                 out.push(EntityKey::DefinedSymbol(*i))
             }
-            AnnotationSymbolOccurrenceItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -4863,9 +4823,6 @@ impl<'a> Writer<'a> {
             ApprovalItemRef::AnnotationCurveOccurrence(i) => {
                 self.annotation_curve_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
-            ApprovalItemRef::AnnotationFillAreaOccurrence(i) => {
-                self.annotation_fill_area_occurrence_ids[i.0 as usize].expect("dep id assigned")
-            }
             ApprovalItemRef::AnnotationOccurrence(i) => {
                 self.annotation_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -4880,9 +4837,6 @@ impl<'a> Writer<'a> {
                 .expect("dep id assigned"),
             ApprovalItemRef::AnnotationPlane(i) => {
                 self.annotation_plane_ids[i.0 as usize].expect("dep id assigned")
-            }
-            ApprovalItemRef::AnnotationSymbol(i) => {
-                self.annotation_symbol_ids[i.0 as usize].expect("dep id assigned")
             }
             ApprovalItemRef::AnnotationSymbolOccurrence(i) => {
                 self.annotation_symbol_occurrence_ids[i.0 as usize].expect("dep id assigned")
@@ -5538,9 +5492,6 @@ impl<'a> Writer<'a> {
             ApprovalItemRef::AnnotationCurveOccurrence(i) => {
                 out.push(EntityKey::AnnotationCurveOccurrence(*i))
             }
-            ApprovalItemRef::AnnotationFillAreaOccurrence(i) => {
-                out.push(EntityKey::AnnotationFillAreaOccurrence(*i))
-            }
             ApprovalItemRef::AnnotationOccurrence(i) => {
                 out.push(EntityKey::AnnotationOccurrence(*i))
             }
@@ -5554,7 +5505,6 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
             }
             ApprovalItemRef::AnnotationPlane(i) => out.push(EntityKey::AnnotationPlane(*i)),
-            ApprovalItemRef::AnnotationSymbol(i) => out.push(EntityKey::AnnotationSymbol(*i)),
             ApprovalItemRef::AnnotationSymbolOccurrence(i) => {
                 out.push(EntityKey::AnnotationSymbolOccurrence(*i))
             }
@@ -6178,6 +6128,84 @@ impl<'a> Writer<'a> {
             CameraModelD3MultiClippingIntersectionSelectRef::Plane(i) => {
                 out.push(EntityKey::Plane(*i))
             }
+        }
+    }
+
+    fn id_of_ref_camera_model_d3(&self, r: &CameraModelD3Ref) -> u64 {
+        match r {
+            CameraModelD3Ref::CameraModelD3(i) => {
+                self.camera_model_d3_ids[i.0 as usize].expect("dep id assigned")
+            }
+            CameraModelD3Ref::CameraModelD3MultiClipping(i) => {
+                self.camera_model_d3_multi_clipping_ids[i.0 as usize].expect("dep id assigned")
+            }
+            CameraModelD3Ref::CameraModelD3WithHlhsr(i) => {
+                self.camera_model_d3_with_hlhsr_ids[i.0 as usize].expect("dep id assigned")
+            }
+            CameraModelD3Ref::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_camera_model_d3(r: &CameraModelD3Ref, out: &mut Vec<EntityKey>) {
+        match r {
+            CameraModelD3Ref::CameraModelD3(i) => out.push(EntityKey::CameraModelD3(*i)),
+            CameraModelD3Ref::CameraModelD3MultiClipping(i) => {
+                out.push(EntityKey::CameraModelD3MultiClipping(*i))
+            }
+            CameraModelD3Ref::CameraModelD3WithHlhsr(i) => {
+                out.push(EntityKey::CameraModelD3WithHlhsr(*i))
+            }
+            CameraModelD3Ref::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
+        }
+    }
+
+    fn id_of_ref_camera_model(&self, r: &CameraModelRef) -> u64 {
+        match r {
+            CameraModelRef::CameraModel(i) => {
+                self.camera_model_ids[i.0 as usize].expect("dep id assigned")
+            }
+            CameraModelRef::CameraModelD3(i) => {
+                self.camera_model_d3_ids[i.0 as usize].expect("dep id assigned")
+            }
+            CameraModelRef::CameraModelD3MultiClipping(i) => {
+                self.camera_model_d3_multi_clipping_ids[i.0 as usize].expect("dep id assigned")
+            }
+            CameraModelRef::CameraModelD3WithHlhsr(i) => {
+                self.camera_model_d3_with_hlhsr_ids[i.0 as usize].expect("dep id assigned")
+            }
+            CameraModelRef::Complex(i) => self.complex_ids[i.0 as usize].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_camera_model(r: &CameraModelRef, out: &mut Vec<EntityKey>) {
+        match r {
+            CameraModelRef::CameraModel(i) => out.push(EntityKey::CameraModel(*i)),
+            CameraModelRef::CameraModelD3(i) => out.push(EntityKey::CameraModelD3(*i)),
+            CameraModelRef::CameraModelD3MultiClipping(i) => {
+                out.push(EntityKey::CameraModelD3MultiClipping(*i))
+            }
+            CameraModelRef::CameraModelD3WithHlhsr(i) => {
+                out.push(EntityKey::CameraModelD3WithHlhsr(*i))
+            }
+            CameraModelRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
+        }
+    }
+
+    fn id_of_ref_camera_usage(&self, r: &CameraUsageRef) -> u64 {
+        match r {
+            CameraUsageRef::CameraUsage(i) => {
+                self.camera_usage_ids[i.0 as usize].expect("dep id assigned")
+            }
+            CameraUsageRef::Complex(i) => self.complex_ids[i.0 as usize].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_camera_usage(r: &CameraUsageRef, out: &mut Vec<EntityKey>) {
+        match r {
+            CameraUsageRef::CameraUsage(i) => out.push(EntityKey::CameraUsage(*i)),
+            CameraUsageRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -6988,9 +7016,6 @@ impl<'a> Writer<'a> {
             CompoundItemDefinitionRef::AnnotationCurveOccurrence(i) => {
                 self.annotation_curve_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
-            CompoundItemDefinitionRef::AnnotationFillAreaOccurrence(i) => {
-                self.annotation_fill_area_occurrence_ids[i.0 as usize].expect("dep id assigned")
-            }
             CompoundItemDefinitionRef::AnnotationOccurrence(i) => {
                 self.annotation_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -7005,9 +7030,6 @@ impl<'a> Writer<'a> {
                 .expect("dep id assigned"),
             CompoundItemDefinitionRef::AnnotationPlane(i) => {
                 self.annotation_plane_ids[i.0 as usize].expect("dep id assigned")
-            }
-            CompoundItemDefinitionRef::AnnotationSymbol(i) => {
-                self.annotation_symbol_ids[i.0 as usize].expect("dep id assigned")
             }
             CompoundItemDefinitionRef::AnnotationSymbolOccurrence(i) => {
                 self.annotation_symbol_occurrence_ids[i.0 as usize].expect("dep id assigned")
@@ -7447,9 +7469,6 @@ impl<'a> Writer<'a> {
             CompoundItemDefinitionRef::AnnotationCurveOccurrence(i) => {
                 out.push(EntityKey::AnnotationCurveOccurrence(*i))
             }
-            CompoundItemDefinitionRef::AnnotationFillAreaOccurrence(i) => {
-                out.push(EntityKey::AnnotationFillAreaOccurrence(*i))
-            }
             CompoundItemDefinitionRef::AnnotationOccurrence(i) => {
                 out.push(EntityKey::AnnotationOccurrence(*i))
             }
@@ -7464,9 +7483,6 @@ impl<'a> Writer<'a> {
             }
             CompoundItemDefinitionRef::AnnotationPlane(i) => {
                 out.push(EntityKey::AnnotationPlane(*i))
-            }
-            CompoundItemDefinitionRef::AnnotationSymbol(i) => {
-                out.push(EntityKey::AnnotationSymbol(*i))
             }
             CompoundItemDefinitionRef::AnnotationSymbolOccurrence(i) => {
                 out.push(EntityKey::AnnotationSymbolOccurrence(*i))
@@ -9126,6 +9142,28 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_datum_target(&self, r: &DatumTargetRef) -> u64 {
+        match r {
+            DatumTargetRef::DatumTarget(i) => {
+                self.datum_target_ids[i.0 as usize].expect("dep id assigned")
+            }
+            DatumTargetRef::PlacedDatumTargetFeature(i) => {
+                self.placed_datum_target_feature_ids[i.0 as usize].expect("dep id assigned")
+            }
+            DatumTargetRef::Complex(i) => self.complex_ids[i.0 as usize].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_datum_target(r: &DatumTargetRef, out: &mut Vec<EntityKey>) {
+        match r {
+            DatumTargetRef::DatumTarget(i) => out.push(EntityKey::DatumTarget(*i)),
+            DatumTargetRef::PlacedDatumTargetFeature(i) => {
+                out.push(EntityKey::PlacedDatumTargetFeature(*i))
+            }
+            DatumTargetRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
+        }
+    }
+
     fn id_of_ref_defined_glyph_select(&self, r: &DefinedGlyphSelectRef) -> u64 {
         match r {
             DefinedGlyphSelectRef::ExternallyDefinedCharacterGlyph(i) => {
@@ -9706,9 +9744,6 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::AnnotationCurveOccurrence(i) => {
                 self.annotation_curve_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
-            DocumentReferenceItemRef::AnnotationFillAreaOccurrence(i) => {
-                self.annotation_fill_area_occurrence_ids[i.0 as usize].expect("dep id assigned")
-            }
             DocumentReferenceItemRef::AnnotationOccurrence(i) => {
                 self.annotation_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -9723,9 +9758,6 @@ impl<'a> Writer<'a> {
                 .expect("dep id assigned"),
             DocumentReferenceItemRef::AnnotationPlane(i) => {
                 self.annotation_plane_ids[i.0 as usize].expect("dep id assigned")
-            }
-            DocumentReferenceItemRef::AnnotationSymbol(i) => {
-                self.annotation_symbol_ids[i.0 as usize].expect("dep id assigned")
             }
             DocumentReferenceItemRef::AnnotationSymbolOccurrence(i) => {
                 self.annotation_symbol_occurrence_ids[i.0 as usize].expect("dep id assigned")
@@ -10526,9 +10558,6 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::AnnotationCurveOccurrence(i) => {
                 out.push(EntityKey::AnnotationCurveOccurrence(*i))
             }
-            DocumentReferenceItemRef::AnnotationFillAreaOccurrence(i) => {
-                out.push(EntityKey::AnnotationFillAreaOccurrence(*i))
-            }
             DocumentReferenceItemRef::AnnotationOccurrence(i) => {
                 out.push(EntityKey::AnnotationOccurrence(*i))
             }
@@ -10543,9 +10572,6 @@ impl<'a> Writer<'a> {
             }
             DocumentReferenceItemRef::AnnotationPlane(i) => {
                 out.push(EntityKey::AnnotationPlane(*i))
-            }
-            DocumentReferenceItemRef::AnnotationSymbol(i) => {
-                out.push(EntityKey::AnnotationSymbol(*i))
             }
             DocumentReferenceItemRef::AnnotationSymbolOccurrence(i) => {
                 out.push(EntityKey::AnnotationSymbolOccurrence(*i))
@@ -11158,9 +11184,6 @@ impl<'a> Writer<'a> {
             DraughtingCalloutElementRef::AnnotationCurveOccurrence(i) => {
                 self.annotation_curve_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
-            DraughtingCalloutElementRef::AnnotationFillAreaOccurrence(i) => {
-                self.annotation_fill_area_occurrence_ids[i.0 as usize].expect("dep id assigned")
-            }
             DraughtingCalloutElementRef::AnnotationPlaceholderOccurrence(i) => {
                 self.annotation_placeholder_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -11198,9 +11221,6 @@ impl<'a> Writer<'a> {
         match r {
             DraughtingCalloutElementRef::AnnotationCurveOccurrence(i) => {
                 out.push(EntityKey::AnnotationCurveOccurrence(*i))
-            }
-            DraughtingCalloutElementRef::AnnotationFillAreaOccurrence(i) => {
-                out.push(EntityKey::AnnotationFillAreaOccurrence(*i))
             }
             DraughtingCalloutElementRef::AnnotationPlaceholderOccurrence(i) => {
                 out.push(EntityKey::AnnotationPlaceholderOccurrence(*i))
@@ -11260,7 +11280,6 @@ impl<'a> Writer<'a> {
     ) -> u64 {
         match r {
         DraughtingModelItemAssociationSelectRef::AnnotationCurveOccurrence(i) => self.annotation_curve_occurrence_ids[i.0 as usize].expect("dep id assigned"),
-        DraughtingModelItemAssociationSelectRef::AnnotationFillAreaOccurrence(i) => self.annotation_fill_area_occurrence_ids[i.0 as usize].expect("dep id assigned"),
         DraughtingModelItemAssociationSelectRef::AnnotationOccurrence(i) => self.annotation_occurrence_ids[i.0 as usize].expect("dep id assigned"),
         DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrence(i) => self.annotation_placeholder_occurrence_ids[i.0 as usize].expect("dep id assigned"),
         DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self.annotation_placeholder_occurrence_with_leader_line_ids[i.0 as usize].expect("dep id assigned"),
@@ -11284,7 +11303,6 @@ impl<'a> Writer<'a> {
     ) {
         match r {
         DraughtingModelItemAssociationSelectRef::AnnotationCurveOccurrence(i) => out.push(EntityKey::AnnotationCurveOccurrence(*i)),
-        DraughtingModelItemAssociationSelectRef::AnnotationFillAreaOccurrence(i) => out.push(EntityKey::AnnotationFillAreaOccurrence(*i)),
         DraughtingModelItemAssociationSelectRef::AnnotationOccurrence(i) => out.push(EntityKey::AnnotationOccurrence(*i)),
         DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrence(i) => out.push(EntityKey::AnnotationPlaceholderOccurrence(*i)),
         DraughtingModelItemAssociationSelectRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => out.push(EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)),
@@ -11686,6 +11704,24 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_draughting_model(&self, r: &DraughtingModelRef) -> u64 {
+        match r {
+            DraughtingModelRef::DraughtingModel(i) => {
+                self.draughting_model_ids[i.0 as usize].expect("dep id assigned")
+            }
+            DraughtingModelRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_draughting_model(r: &DraughtingModelRef, out: &mut Vec<EntityKey>) {
+        match r {
+            DraughtingModelRef::DraughtingModel(i) => out.push(EntityKey::DraughtingModel(*i)),
+            DraughtingModelRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
+        }
+    }
+
     fn id_of_ref_edge(&self, r: &EdgeRef) -> u64 {
         match r {
             EdgeRef::Edge(i) => self.edge_ids[i.0 as usize].expect("dep id assigned"),
@@ -11716,13 +11752,11 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::AdvancedBrepShapeRepresentation(i) => self.advanced_brep_shape_representation_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::AdvancedFace(i) => self.advanced_face_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::AnnotationCurveOccurrence(i) => self.annotation_curve_occurrence_ids[i.0 as usize].expect("dep id assigned"),
-        ExternalIdentificationItemRef::AnnotationFillAreaOccurrence(i) => self.annotation_fill_area_occurrence_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::AnnotationOccurrence(i) => self.annotation_occurrence_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::AnnotationPlaceholderLeaderLine(i) => self.annotation_placeholder_leader_line_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::AnnotationPlaceholderOccurrence(i) => self.annotation_placeholder_occurrence_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self.annotation_placeholder_occurrence_with_leader_line_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::AnnotationPlane(i) => self.annotation_plane_ids[i.0 as usize].expect("dep id assigned"),
-        ExternalIdentificationItemRef::AnnotationSymbol(i) => self.annotation_symbol_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::AnnotationSymbolOccurrence(i) => self.annotation_symbol_occurrence_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::AnnotationText(i) => self.annotation_text_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::AnnotationTextCharacter(i) => self.annotation_text_character_ids[i.0 as usize].expect("dep id assigned"),
@@ -11958,13 +11992,11 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::AdvancedBrepShapeRepresentation(i) => out.push(EntityKey::AdvancedBrepShapeRepresentation(*i)),
         ExternalIdentificationItemRef::AdvancedFace(i) => out.push(EntityKey::AdvancedFace(*i)),
         ExternalIdentificationItemRef::AnnotationCurveOccurrence(i) => out.push(EntityKey::AnnotationCurveOccurrence(*i)),
-        ExternalIdentificationItemRef::AnnotationFillAreaOccurrence(i) => out.push(EntityKey::AnnotationFillAreaOccurrence(*i)),
         ExternalIdentificationItemRef::AnnotationOccurrence(i) => out.push(EntityKey::AnnotationOccurrence(*i)),
         ExternalIdentificationItemRef::AnnotationPlaceholderLeaderLine(i) => out.push(EntityKey::AnnotationPlaceholderLeaderLine(*i)),
         ExternalIdentificationItemRef::AnnotationPlaceholderOccurrence(i) => out.push(EntityKey::AnnotationPlaceholderOccurrence(*i)),
         ExternalIdentificationItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => out.push(EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)),
         ExternalIdentificationItemRef::AnnotationPlane(i) => out.push(EntityKey::AnnotationPlane(*i)),
-        ExternalIdentificationItemRef::AnnotationSymbol(i) => out.push(EntityKey::AnnotationSymbol(*i)),
         ExternalIdentificationItemRef::AnnotationSymbolOccurrence(i) => out.push(EntityKey::AnnotationSymbolOccurrence(*i)),
         ExternalIdentificationItemRef::AnnotationText(i) => out.push(EntityKey::AnnotationText(*i)),
         ExternalIdentificationItemRef::AnnotationTextCharacter(i) => out.push(EntityKey::AnnotationTextCharacter(*i)),
@@ -13283,6 +13315,52 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_geometric_representation_context(
+        &self,
+        r: &GeometricRepresentationContextRef,
+    ) -> u64 {
+        match r {
+            GeometricRepresentationContextRef::GeometricRepresentationContext(i) => {
+                self.geometric_representation_context_ids[i.0 as usize].expect("dep id assigned")
+            }
+            GeometricRepresentationContextRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_geometric_representation_context(
+        r: &GeometricRepresentationContextRef,
+        out: &mut Vec<EntityKey>,
+    ) {
+        match r {
+            GeometricRepresentationContextRef::GeometricRepresentationContext(i) => {
+                out.push(EntityKey::GeometricRepresentationContext(*i))
+            }
+            GeometricRepresentationContextRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
+        }
+    }
+
+    fn id_of_ref_geometric_set(&self, r: &GeometricSetRef) -> u64 {
+        match r {
+            GeometricSetRef::GeometricCurveSet(i) => {
+                self.geometric_curve_set_ids[i.0 as usize].expect("dep id assigned")
+            }
+            GeometricSetRef::GeometricSet(i) => {
+                self.geometric_set_ids[i.0 as usize].expect("dep id assigned")
+            }
+            GeometricSetRef::Complex(i) => self.complex_ids[i.0 as usize].expect("dep id assigned"),
+        }
+    }
+
+    fn deps_ref_geometric_set(r: &GeometricSetRef, out: &mut Vec<EntityKey>) {
+        match r {
+            GeometricSetRef::GeometricCurveSet(i) => out.push(EntityKey::GeometricCurveSet(*i)),
+            GeometricSetRef::GeometricSet(i) => out.push(EntityKey::GeometricSet(*i)),
+            GeometricSetRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
+        }
+    }
+
     fn id_of_ref_geometric_set_select(&self, r: &GeometricSetSelectRef) -> u64 {
         match r {
             GeometricSetSelectRef::AnnotationText(i) => {
@@ -13895,9 +13973,6 @@ impl<'a> Writer<'a> {
             GroupableItemRef::AnnotationCurveOccurrence(i) => {
                 self.annotation_curve_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
-            GroupableItemRef::AnnotationFillAreaOccurrence(i) => {
-                self.annotation_fill_area_occurrence_ids[i.0 as usize].expect("dep id assigned")
-            }
             GroupableItemRef::AnnotationOccurrence(i) => {
                 self.annotation_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -13912,9 +13987,6 @@ impl<'a> Writer<'a> {
                 .expect("dep id assigned"),
             GroupableItemRef::AnnotationPlane(i) => {
                 self.annotation_plane_ids[i.0 as usize].expect("dep id assigned")
-            }
-            GroupableItemRef::AnnotationSymbol(i) => {
-                self.annotation_symbol_ids[i.0 as usize].expect("dep id assigned")
             }
             GroupableItemRef::AnnotationSymbolOccurrence(i) => {
                 self.annotation_symbol_occurrence_ids[i.0 as usize].expect("dep id assigned")
@@ -14739,9 +14811,6 @@ impl<'a> Writer<'a> {
             GroupableItemRef::AnnotationCurveOccurrence(i) => {
                 out.push(EntityKey::AnnotationCurveOccurrence(*i))
             }
-            GroupableItemRef::AnnotationFillAreaOccurrence(i) => {
-                out.push(EntityKey::AnnotationFillAreaOccurrence(*i))
-            }
             GroupableItemRef::AnnotationOccurrence(i) => {
                 out.push(EntityKey::AnnotationOccurrence(*i))
             }
@@ -14755,7 +14824,6 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
             }
             GroupableItemRef::AnnotationPlane(i) => out.push(EntityKey::AnnotationPlane(*i)),
-            GroupableItemRef::AnnotationSymbol(i) => out.push(EntityKey::AnnotationSymbol(*i)),
             GroupableItemRef::AnnotationSymbolOccurrence(i) => {
                 out.push(EntityKey::AnnotationSymbolOccurrence(*i))
             }
@@ -15923,9 +15991,6 @@ impl<'a> Writer<'a> {
             InvisibleItemRef::AnnotationCurveOccurrence(i) => {
                 self.annotation_curve_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
-            InvisibleItemRef::AnnotationFillAreaOccurrence(i) => {
-                self.annotation_fill_area_occurrence_ids[i.0 as usize].expect("dep id assigned")
-            }
             InvisibleItemRef::AnnotationOccurrence(i) => {
                 self.annotation_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -16047,9 +16112,6 @@ impl<'a> Writer<'a> {
             }
             InvisibleItemRef::AnnotationCurveOccurrence(i) => {
                 out.push(EntityKey::AnnotationCurveOccurrence(*i))
-            }
-            InvisibleItemRef::AnnotationFillAreaOccurrence(i) => {
-                out.push(EntityKey::AnnotationFillAreaOccurrence(*i))
             }
             InvisibleItemRef::AnnotationOccurrence(i) => {
                 out.push(EntityKey::AnnotationOccurrence(*i))
@@ -16339,13 +16401,11 @@ impl<'a> Writer<'a> {
         match r {
         ItemIdentifiedRepresentationUsageSelectRef::AdvancedFace(i) => self.advanced_face_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationCurveOccurrence(i) => self.annotation_curve_occurrence_ids[i.0 as usize].expect("dep id assigned"),
-        ItemIdentifiedRepresentationUsageSelectRef::AnnotationFillAreaOccurrence(i) => self.annotation_fill_area_occurrence_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationOccurrence(i) => self.annotation_occurrence_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderLeaderLine(i) => self.annotation_placeholder_leader_line_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderOccurrence(i) => self.annotation_placeholder_occurrence_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => self.annotation_placeholder_occurrence_with_leader_line_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlane(i) => self.annotation_plane_ids[i.0 as usize].expect("dep id assigned"),
-        ItemIdentifiedRepresentationUsageSelectRef::AnnotationSymbol(i) => self.annotation_symbol_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationSymbolOccurrence(i) => self.annotation_symbol_occurrence_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationText(i) => self.annotation_text_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationTextCharacter(i) => self.annotation_text_character_ids[i.0 as usize].expect("dep id assigned"),
@@ -16499,13 +16559,11 @@ impl<'a> Writer<'a> {
         match r {
         ItemIdentifiedRepresentationUsageSelectRef::AdvancedFace(i) => out.push(EntityKey::AdvancedFace(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationCurveOccurrence(i) => out.push(EntityKey::AnnotationCurveOccurrence(*i)),
-        ItemIdentifiedRepresentationUsageSelectRef::AnnotationFillAreaOccurrence(i) => out.push(EntityKey::AnnotationFillAreaOccurrence(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationOccurrence(i) => out.push(EntityKey::AnnotationOccurrence(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderLeaderLine(i) => out.push(EntityKey::AnnotationPlaceholderLeaderLine(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderOccurrence(i) => out.push(EntityKey::AnnotationPlaceholderOccurrence(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => out.push(EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlane(i) => out.push(EntityKey::AnnotationPlane(*i)),
-        ItemIdentifiedRepresentationUsageSelectRef::AnnotationSymbol(i) => out.push(EntityKey::AnnotationSymbol(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationSymbolOccurrence(i) => out.push(EntityKey::AnnotationSymbolOccurrence(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationText(i) => out.push(EntityKey::AnnotationText(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationTextCharacter(i) => out.push(EntityKey::AnnotationTextCharacter(*i)),
@@ -16660,9 +16718,6 @@ impl<'a> Writer<'a> {
             LayeredItemRef::AnnotationCurveOccurrence(i) => {
                 self.annotation_curve_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
-            LayeredItemRef::AnnotationFillAreaOccurrence(i) => {
-                self.annotation_fill_area_occurrence_ids[i.0 as usize].expect("dep id assigned")
-            }
             LayeredItemRef::AnnotationOccurrence(i) => {
                 self.annotation_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -16677,9 +16732,6 @@ impl<'a> Writer<'a> {
                 .expect("dep id assigned"),
             LayeredItemRef::AnnotationPlane(i) => {
                 self.annotation_plane_ids[i.0 as usize].expect("dep id assigned")
-            }
-            LayeredItemRef::AnnotationSymbol(i) => {
-                self.annotation_symbol_ids[i.0 as usize].expect("dep id assigned")
             }
             LayeredItemRef::AnnotationSymbolOccurrence(i) => {
                 self.annotation_symbol_occurrence_ids[i.0 as usize].expect("dep id assigned")
@@ -17090,9 +17142,6 @@ impl<'a> Writer<'a> {
             LayeredItemRef::AnnotationCurveOccurrence(i) => {
                 out.push(EntityKey::AnnotationCurveOccurrence(*i))
             }
-            LayeredItemRef::AnnotationFillAreaOccurrence(i) => {
-                out.push(EntityKey::AnnotationFillAreaOccurrence(*i))
-            }
             LayeredItemRef::AnnotationOccurrence(i) => {
                 out.push(EntityKey::AnnotationOccurrence(*i))
             }
@@ -17106,7 +17155,6 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
             }
             LayeredItemRef::AnnotationPlane(i) => out.push(EntityKey::AnnotationPlane(*i)),
-            LayeredItemRef::AnnotationSymbol(i) => out.push(EntityKey::AnnotationSymbol(*i)),
             LayeredItemRef::AnnotationSymbolOccurrence(i) => {
                 out.push(EntityKey::AnnotationSymbolOccurrence(*i))
             }
@@ -19096,9 +19144,6 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::AnnotationCurveOccurrence(i) => {
                 self.annotation_curve_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
-            RepresentationItemRef::AnnotationFillAreaOccurrence(i) => {
-                self.annotation_fill_area_occurrence_ids[i.0 as usize].expect("dep id assigned")
-            }
             RepresentationItemRef::AnnotationOccurrence(i) => {
                 self.annotation_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -19113,9 +19158,6 @@ impl<'a> Writer<'a> {
                 .expect("dep id assigned"),
             RepresentationItemRef::AnnotationPlane(i) => {
                 self.annotation_plane_ids[i.0 as usize].expect("dep id assigned")
-            }
-            RepresentationItemRef::AnnotationSymbol(i) => {
-                self.annotation_symbol_ids[i.0 as usize].expect("dep id assigned")
             }
             RepresentationItemRef::AnnotationSymbolOccurrence(i) => {
                 self.annotation_symbol_occurrence_ids[i.0 as usize].expect("dep id assigned")
@@ -19539,9 +19581,6 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::AnnotationCurveOccurrence(i) => {
                 out.push(EntityKey::AnnotationCurveOccurrence(*i))
             }
-            RepresentationItemRef::AnnotationFillAreaOccurrence(i) => {
-                out.push(EntityKey::AnnotationFillAreaOccurrence(*i))
-            }
             RepresentationItemRef::AnnotationOccurrence(i) => {
                 out.push(EntityKey::AnnotationOccurrence(*i))
             }
@@ -19555,7 +19594,6 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
             }
             RepresentationItemRef::AnnotationPlane(i) => out.push(EntityKey::AnnotationPlane(*i)),
-            RepresentationItemRef::AnnotationSymbol(i) => out.push(EntityKey::AnnotationSymbol(*i)),
             RepresentationItemRef::AnnotationSymbolOccurrence(i) => {
                 out.push(EntityKey::AnnotationSymbolOccurrence(*i))
             }
@@ -20867,9 +20905,6 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::AnnotationCurveOccurrence(i) => {
                 self.annotation_curve_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
-            StyleContextSelectRef::AnnotationFillAreaOccurrence(i) => {
-                self.annotation_fill_area_occurrence_ids[i.0 as usize].expect("dep id assigned")
-            }
             StyleContextSelectRef::AnnotationOccurrence(i) => {
                 self.annotation_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -20884,9 +20919,6 @@ impl<'a> Writer<'a> {
                 .expect("dep id assigned"),
             StyleContextSelectRef::AnnotationPlane(i) => {
                 self.annotation_plane_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyleContextSelectRef::AnnotationSymbol(i) => {
-                self.annotation_symbol_ids[i.0 as usize].expect("dep id assigned")
             }
             StyleContextSelectRef::AnnotationSymbolOccurrence(i) => {
                 self.annotation_symbol_occurrence_ids[i.0 as usize].expect("dep id assigned")
@@ -21407,9 +21439,6 @@ impl<'a> Writer<'a> {
             StyleContextSelectRef::AnnotationCurveOccurrence(i) => {
                 out.push(EntityKey::AnnotationCurveOccurrence(*i))
             }
-            StyleContextSelectRef::AnnotationFillAreaOccurrence(i) => {
-                out.push(EntityKey::AnnotationFillAreaOccurrence(*i))
-            }
             StyleContextSelectRef::AnnotationOccurrence(i) => {
                 out.push(EntityKey::AnnotationOccurrence(*i))
             }
@@ -21423,7 +21452,6 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
             }
             StyleContextSelectRef::AnnotationPlane(i) => out.push(EntityKey::AnnotationPlane(*i)),
-            StyleContextSelectRef::AnnotationSymbol(i) => out.push(EntityKey::AnnotationSymbol(*i)),
             StyleContextSelectRef::AnnotationSymbolOccurrence(i) => {
                 out.push(EntityKey::AnnotationSymbolOccurrence(*i))
             }
@@ -21774,9 +21802,6 @@ impl<'a> Writer<'a> {
             StyledItemRef::AnnotationCurveOccurrence(i) => {
                 self.annotation_curve_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
-            StyledItemRef::AnnotationFillAreaOccurrence(i) => {
-                self.annotation_fill_area_occurrence_ids[i.0 as usize].expect("dep id assigned")
-            }
             StyledItemRef::AnnotationOccurrence(i) => {
                 self.annotation_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -21827,9 +21852,6 @@ impl<'a> Writer<'a> {
         match r {
             StyledItemRef::AnnotationCurveOccurrence(i) => {
                 out.push(EntityKey::AnnotationCurveOccurrence(*i))
-            }
-            StyledItemRef::AnnotationFillAreaOccurrence(i) => {
-                out.push(EntityKey::AnnotationFillAreaOccurrence(*i))
             }
             StyledItemRef::AnnotationOccurrence(i) => out.push(EntityKey::AnnotationOccurrence(*i)),
             StyledItemRef::AnnotationPlaceholderOccurrence(i) => {
@@ -21882,9 +21904,6 @@ impl<'a> Writer<'a> {
                 .expect("dep id assigned"),
             StyledItemTargetRef::AnnotationPlane(i) => {
                 self.annotation_plane_ids[i.0 as usize].expect("dep id assigned")
-            }
-            StyledItemTargetRef::AnnotationSymbol(i) => {
-                self.annotation_symbol_ids[i.0 as usize].expect("dep id assigned")
             }
             StyledItemTargetRef::AnnotationText(i) => {
                 self.annotation_text_ids[i.0 as usize].expect("dep id assigned")
@@ -22317,7 +22336,6 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
             }
             StyledItemTargetRef::AnnotationPlane(i) => out.push(EntityKey::AnnotationPlane(*i)),
-            StyledItemTargetRef::AnnotationSymbol(i) => out.push(EntityKey::AnnotationSymbol(*i)),
             StyledItemTargetRef::AnnotationText(i) => out.push(EntityKey::AnnotationText(*i)),
             StyledItemTargetRef::AnnotationTextCharacter(i) => {
                 out.push(EntityKey::AnnotationTextCharacter(*i))
@@ -22827,6 +22845,29 @@ impl<'a> Writer<'a> {
     fn deps_ref_symbol_target(r: &SymbolTargetRef, out: &mut Vec<EntityKey>) {
         match r {
             SymbolTargetRef::SymbolTarget(i) => out.push(EntityKey::SymbolTarget(*i)),
+        }
+    }
+
+    fn id_of_ref_tessellated_geometric_set(&self, r: &TessellatedGeometricSetRef) -> u64 {
+        match r {
+            TessellatedGeometricSetRef::TessellatedGeometricSet(i) => {
+                self.tessellated_geometric_set_ids[i.0 as usize].expect("dep id assigned")
+            }
+            TessellatedGeometricSetRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_tessellated_geometric_set(
+        r: &TessellatedGeometricSetRef,
+        out: &mut Vec<EntityKey>,
+    ) {
+        match r {
+            TessellatedGeometricSetRef::TessellatedGeometricSet(i) => {
+                out.push(EntityKey::TessellatedGeometricSet(*i))
+            }
+            TessellatedGeometricSetRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -23673,14 +23714,6 @@ impl<'a> Writer<'a> {
                 }
                 Self::deps_ref_curve_or_curve_set(&it.item, out);
             }
-            EntityKey::AnnotationFillAreaOccurrence(id) => {
-                let it = model.annotation_fill_area_occurrence_arena.get(id.0);
-                for e in &it.styles {
-                    Self::deps_ref_presentation_style_assignment(e, out);
-                }
-                Self::deps_ref_styled_item_target(&it.item, out);
-                Self::deps_ref_point(&it.fill_style_target, out);
-            }
             EntityKey::AnnotationOccurrence(id) => {
                 let it = model.annotation_occurrence_arena.get(id.0);
                 for e in &it.styles {
@@ -23709,7 +23742,7 @@ impl<'a> Writer<'a> {
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
-                Self::deps_ref_styled_item_target(&it.item, out);
+                Self::deps_ref_geometric_set(&it.item, out);
             }
             EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(id) => {
                 let it = model
@@ -23718,7 +23751,7 @@ impl<'a> Writer<'a> {
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
-                Self::deps_ref_styled_item_target(&it.item, out);
+                Self::deps_ref_geometric_set(&it.item, out);
                 for e in &it.leader_line {
                     Self::deps_ref_annotation_placeholder_leader_line(e, out);
                 }
@@ -23734,11 +23767,6 @@ impl<'a> Writer<'a> {
                         Self::deps_ref_annotation_plane_element(e, out);
                     }
                 }
-            }
-            EntityKey::AnnotationSymbol(id) => {
-                let it = model.annotation_symbol_arena.get(id.0);
-                Self::deps_ref_representation_map(&it.mapping_source, out);
-                Self::deps_ref_representation_item(&it.mapping_target, out);
             }
             EntityKey::AnnotationSymbolOccurrence(id) => {
                 let it = model.annotation_symbol_occurrence_arena.get(id.0);
@@ -24007,13 +24035,13 @@ impl<'a> Writer<'a> {
             EntityKey::CalendarDate(_) => {}
             EntityKey::CameraImage(id) => {
                 let it = model.camera_image_arena.get(id.0);
-                Self::deps_ref_representation_map(&it.mapping_source, out);
-                Self::deps_ref_representation_item(&it.mapping_target, out);
+                Self::deps_ref_camera_usage(&it.mapping_source, out);
+                Self::deps_ref_planar_box(&it.mapping_target, out);
             }
             EntityKey::CameraImage3dWithScale(id) => {
                 let it = model.camera_image3d_with_scale_arena.get(id.0);
-                Self::deps_ref_representation_map(&it.mapping_source, out);
-                Self::deps_ref_representation_item(&it.mapping_target, out);
+                Self::deps_ref_camera_usage(&it.mapping_source, out);
+                Self::deps_ref_planar_box(&it.mapping_target, out);
             }
             EntityKey::CameraModel(_) => {}
             EntityKey::CameraModelD3(id) => {
@@ -24036,7 +24064,7 @@ impl<'a> Writer<'a> {
             }
             EntityKey::CameraUsage(id) => {
                 let it = model.camera_usage_arena.get(id.0);
-                Self::deps_ref_representation_item(&it.mapping_origin, out);
+                Self::deps_ref_camera_model(&it.mapping_origin, out);
                 Self::deps_ref_representation(&it.mapped_representation, out);
             }
             EntityKey::CartesianPoint(_) => {}
@@ -24389,8 +24417,8 @@ impl<'a> Writer<'a> {
             }
             EntityKey::DefaultModelGeometricView(id) => {
                 let it = model.default_model_geometric_view_arena.get(id.0);
-                Self::deps_ref_representation_item(&it.item, out);
-                Self::deps_ref_representation(&it.rep, out);
+                Self::deps_ref_camera_model(&it.item, out);
+                Self::deps_ref_draughting_model(&it.rep, out);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
             }
             EntityKey::DefinedCharacterGlyph(id) => {
@@ -24553,8 +24581,8 @@ impl<'a> Writer<'a> {
                     .draughting_model_item_association_with_placeholder_arena
                     .get(id.0);
                 Self::deps_ref_draughting_model_item_definition(&it.definition, out);
-                Self::deps_ref_annotation_representation_select(&it.used_representation, out);
-                Self::deps_ref_draughting_model_item_association_select(&it.identified_item, out);
+                Self::deps_ref_draughting_model(&it.used_representation, out);
+                Self::deps_ref_draughting_callout(&it.identified_item, out);
                 Self::deps_ref_annotation_placeholder_occurrence(&it.annotation_placeholder, out);
             }
             EntityKey::DraughtingPreDefinedColour(_) => {}
@@ -24657,7 +24685,7 @@ impl<'a> Writer<'a> {
             EntityKey::FeatureForDatumTargetRelationship(id) => {
                 let it = model.feature_for_datum_target_relationship_arena.get(id.0);
                 Self::deps_ref_shape_aspect(&it.relating_shape_aspect, out);
-                Self::deps_ref_shape_aspect(&it.related_shape_aspect, out);
+                Self::deps_ref_datum_target(&it.related_shape_aspect, out);
             }
             EntityKey::FillAreaStyle(id) => {
                 let it = model.fill_area_style_arena.get(id.0);
@@ -25007,7 +25035,7 @@ impl<'a> Writer<'a> {
                     .mechanical_design_presentation_representation_with_draughting_arena
                     .get(id.0);
                 for e in &it.items {
-                    Self::deps_ref_representation_item(e, out);
+                    Self::deps_ref_camera_model_d3(e, out);
                 }
                 Self::deps_ref_representation_context(&it.context_of_items, out);
             }
@@ -25022,8 +25050,8 @@ impl<'a> Writer<'a> {
             }
             EntityKey::ModelGeometricView(id) => {
                 let it = model.model_geometric_view_arena.get(id.0);
-                Self::deps_ref_representation_item(&it.item, out);
-                Self::deps_ref_representation(&it.rep, out);
+                Self::deps_ref_camera_model(&it.item, out);
+                Self::deps_ref_draughting_model(&it.rep, out);
             }
             EntityKey::ModifiedGeometricTolerance(id) => {
                 let it = model.modified_geometric_tolerance_arena.get(id.0);
@@ -25252,7 +25280,7 @@ impl<'a> Writer<'a> {
                 for e in &it.items {
                     Self::deps_ref_representation_item(e, out);
                 }
-                Self::deps_ref_representation_context(&it.context_of_items, out);
+                Self::deps_ref_geometric_representation_context(&it.context_of_items, out);
             }
             EntityKey::PresentationLayerAssignment(id) => {
                 let it = model.presentation_layer_assignment_arena.get(id.0);
@@ -25265,7 +25293,7 @@ impl<'a> Writer<'a> {
                 for e in &it.items {
                     Self::deps_ref_representation_item(e, out);
                 }
-                Self::deps_ref_representation_context(&it.context_of_items, out);
+                Self::deps_ref_geometric_representation_context(&it.context_of_items, out);
             }
             EntityKey::PresentationSet(_) => {}
             EntityKey::PresentationSize(id) => {
@@ -25291,7 +25319,7 @@ impl<'a> Writer<'a> {
                 for e in &it.items {
                     Self::deps_ref_representation_item(e, out);
                 }
-                Self::deps_ref_representation_context(&it.context_of_items, out);
+                Self::deps_ref_geometric_representation_context(&it.context_of_items, out);
             }
             EntityKey::PresentedItem(_) => {}
             EntityKey::PresentedItemRepresentation(id) => {
@@ -25770,7 +25798,7 @@ impl<'a> Writer<'a> {
                 for e in &it.styles {
                     Self::deps_ref_presentation_style_assignment(e, out);
                 }
-                Self::deps_ref_styled_item_target(&it.item, out);
+                Self::deps_ref_tessellated_geometric_set(&it.item, out);
             }
             EntityKey::TessellatedCurveSet(id) => {
                 let it = model.tessellated_curve_set_arena.get(id.0);
@@ -26011,11 +26039,6 @@ impl<'a> Writer<'a> {
                             for e in operations {
                                 Self::deps_ref_characterized_action_definition(e, out);
                             }
-                        }
-                        PartialEntity::AnnotationFillAreaOccurrence {
-                            fill_style_target, ..
-                        } => {
-                            Self::deps_ref_point(fill_style_target, out);
                         }
                         PartialEntity::AnnotationOccurrenceRelationship {
                             relating_annotation_occurrence,
@@ -27300,28 +27323,6 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
-            EntityKey::AnnotationFillAreaOccurrence(id) => {
-                let it = self.model.annotation_fill_area_occurrence_arena.get(id.0);
-                let n = self.get_id(any).expect("id assigned");
-                let kw = Self::name_of(any);
-                let attrs: Vec<String> = vec![
-                    step_str(self.model.text(it.name)),
-                    format!(
-                        "({})",
-                        it.styles
-                            .iter()
-                            .map(|e| format!(
-                                "#{}",
-                                self.id_of_ref_presentation_style_assignment(e)
-                            ))
-                            .collect::<Vec<_>>()
-                            .join(",")
-                    ),
-                    format!("#{}", self.id_of_ref_styled_item_target(&it.item)),
-                    format!("#{}", self.id_of_ref_point(&it.fill_style_target)),
-                ];
-                format!("#{n} = {kw}({});\n", attrs.join(","))
-            }
             EntityKey::AnnotationOccurrence(id) => {
                 let it = self.model.annotation_occurrence_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -27422,7 +27423,7 @@ impl<'a> Writer<'a> {
                             .collect::<Vec<_>>()
                             .join(",")
                     ),
-                    format!("#{}", self.id_of_ref_styled_item_target(&it.item)),
+                    format!("#{}", self.id_of_ref_geometric_set(&it.item)),
                     it.role.token().to_string(),
                     real(it.line_spacing),
                 ];
@@ -27448,7 +27449,7 @@ impl<'a> Writer<'a> {
                             .collect::<Vec<_>>()
                             .join(",")
                     ),
-                    format!("#{}", self.id_of_ref_styled_item_target(&it.item)),
+                    format!("#{}", self.id_of_ref_geometric_set(&it.item)),
                     it.role.token().to_string(),
                     real(it.line_spacing),
                     format!(
@@ -27493,20 +27494,6 @@ impl<'a> Writer<'a> {
                         ),
                         None => "$".to_string(),
                     },
-                ];
-                format!("#{n} = {kw}({});\n", attrs.join(","))
-            }
-            EntityKey::AnnotationSymbol(id) => {
-                let it = self.model.annotation_symbol_arena.get(id.0);
-                let n = self.get_id(any).expect("id assigned");
-                let kw = Self::name_of(any);
-                let attrs: Vec<String> = vec![
-                    step_str(self.model.text(it.name)),
-                    format!("#{}", self.id_of_ref_representation_map(&it.mapping_source)),
-                    format!(
-                        "#{}",
-                        self.id_of_ref_representation_item(&it.mapping_target)
-                    ),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -28392,11 +28379,8 @@ impl<'a> Writer<'a> {
                 let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(self.model.text(it.name)),
-                    format!("#{}", self.id_of_ref_representation_map(&it.mapping_source)),
-                    format!(
-                        "#{}",
-                        self.id_of_ref_representation_item(&it.mapping_target)
-                    ),
+                    format!("#{}", self.id_of_ref_camera_usage(&it.mapping_source)),
+                    format!("#{}", self.id_of_ref_planar_box(&it.mapping_target)),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -28406,11 +28390,8 @@ impl<'a> Writer<'a> {
                 let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
                     step_str(self.model.text(it.name)),
-                    format!("#{}", self.id_of_ref_representation_map(&it.mapping_source)),
-                    format!(
-                        "#{}",
-                        self.id_of_ref_representation_item(&it.mapping_target)
-                    ),
+                    format!("#{}", self.id_of_ref_camera_usage(&it.mapping_source)),
+                    format!("#{}", self.id_of_ref_planar_box(&it.mapping_target)),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -28487,10 +28468,7 @@ impl<'a> Writer<'a> {
                 let n = self.get_id(any).expect("id assigned");
                 let kw = Self::name_of(any);
                 let attrs: Vec<String> = vec![
-                    format!(
-                        "#{}",
-                        self.id_of_ref_representation_item(&it.mapping_origin)
-                    ),
+                    format!("#{}", self.id_of_ref_camera_model(&it.mapping_origin)),
                     format!(
                         "#{}",
                         self.id_of_ref_representation(&it.mapped_representation)
@@ -29741,8 +29719,8 @@ impl<'a> Writer<'a> {
                         Some(x) => step_str(self.model.text(*x)),
                         None => "$".to_string(),
                     },
-                    format!("#{}", self.id_of_ref_representation_item(&it.item)),
-                    format!("#{}", self.id_of_ref_representation(&it.rep)),
+                    format!("#{}", self.id_of_ref_camera_model(&it.item)),
+                    format!("#{}", self.id_of_ref_draughting_model(&it.rep)),
                     step_str(self.model.text(it.name_1)),
                     match &it.description_1 {
                         Some(x) => step_str(self.model.text(*x)),
@@ -30301,13 +30279,11 @@ impl<'a> Writer<'a> {
                     ),
                     format!(
                         "#{}",
-                        self.id_of_ref_annotation_representation_select(&it.used_representation)
+                        self.id_of_ref_draughting_model(&it.used_representation)
                     ),
                     format!(
                         "#{}",
-                        self.id_of_ref_draughting_model_item_association_select(
-                            &it.identified_item
-                        )
+                        self.id_of_ref_draughting_callout(&it.identified_item)
                     ),
                     format!(
                         "#{}",
@@ -30612,7 +30588,7 @@ impl<'a> Writer<'a> {
                         "#{}",
                         self.id_of_ref_shape_aspect(&it.relating_shape_aspect)
                     ),
-                    format!("#{}", self.id_of_ref_shape_aspect(&it.related_shape_aspect)),
+                    format!("#{}", self.id_of_ref_datum_target(&it.related_shape_aspect)),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -31822,7 +31798,7 @@ impl<'a> Writer<'a> {
                         "({})",
                         it.items
                             .iter()
-                            .map(|e| format!("#{}", self.id_of_ref_representation_item(e)))
+                            .map(|e| format!("#{}", self.id_of_ref_camera_model_d3(e)))
                             .collect::<Vec<_>>()
                             .join(",")
                     ),
@@ -31867,8 +31843,8 @@ impl<'a> Writer<'a> {
                         Some(x) => step_str(self.model.text(*x)),
                         None => "$".to_string(),
                     },
-                    format!("#{}", self.id_of_ref_representation_item(&it.item)),
-                    format!("#{}", self.id_of_ref_representation(&it.rep)),
+                    format!("#{}", self.id_of_ref_camera_model(&it.item)),
+                    format!("#{}", self.id_of_ref_draughting_model(&it.rep)),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -32878,7 +32854,7 @@ impl<'a> Writer<'a> {
                     ),
                     format!(
                         "#{}",
-                        self.id_of_ref_representation_context(&it.context_of_items)
+                        self.id_of_ref_geometric_representation_context(&it.context_of_items)
                     ),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -32917,7 +32893,7 @@ impl<'a> Writer<'a> {
                     ),
                     format!(
                         "#{}",
-                        self.id_of_ref_representation_context(&it.context_of_items)
+                        self.id_of_ref_geometric_representation_context(&it.context_of_items)
                     ),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -33001,7 +32977,7 @@ impl<'a> Writer<'a> {
                     ),
                     format!(
                         "#{}",
-                        self.id_of_ref_representation_context(&it.context_of_items)
+                        self.id_of_ref_geometric_representation_context(&it.context_of_items)
                     ),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -34667,7 +34643,7 @@ impl<'a> Writer<'a> {
                             .collect::<Vec<_>>()
                             .join(",")
                     ),
-                    format!("#{}", self.id_of_ref_styled_item_target(&it.item)),
+                    format!("#{}", self.id_of_ref_tessellated_geometric_set(&it.item)),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -35372,14 +35348,12 @@ impl<'a> Writer<'a> {
                 PartialEntity::AdvancedBrepShapeRepresentation => "ADVANCED_BREP_SHAPE_REPRESENTATION()".to_string(),
                 PartialEntity::AdvancedFace => "ADVANCED_FACE()".to_string(),
                 PartialEntity::AnnotationCurveOccurrence => "ANNOTATION_CURVE_OCCURRENCE()".to_string(),
-                PartialEntity::AnnotationFillAreaOccurrence { fill_style_target, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_point(fill_style_target))]; format!("ANNOTATION_FILL_AREA_OCCURRENCE({})", a.join(",")) },
                 PartialEntity::AnnotationOccurrence => "ANNOTATION_OCCURRENCE()".to_string(),
                 PartialEntity::AnnotationOccurrenceAssociativity => "ANNOTATION_OCCURRENCE_ASSOCIATIVITY()".to_string(),
                 PartialEntity::AnnotationOccurrenceRelationship { name, description, relating_annotation_occurrence, related_annotation_occurrence, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), step_str(self.model.text(*description)), format!("#{}", self.id_of_ref_annotation_occurrence(relating_annotation_occurrence)), format!("#{}", self.id_of_ref_annotation_occurrence(related_annotation_occurrence))]; format!("ANNOTATION_OCCURRENCE_RELATIONSHIP({})", a.join(",")) },
                 PartialEntity::AnnotationPlaceholderOccurrence { role, line_spacing, .. } => { let a: Vec<String> = vec![role.token().to_string(), real(*line_spacing)]; format!("ANNOTATION_PLACEHOLDER_OCCURRENCE({})", a.join(",")) },
                 PartialEntity::AnnotationPlaceholderOccurrenceWithLeaderLine { leader_line, .. } => { let a: Vec<String> = vec![format!("({})", leader_line.iter().map(|e| format!("#{}", self.id_of_ref_annotation_placeholder_leader_line(e))).collect::<Vec<_>>().join(","))]; format!("ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE({})", a.join(",")) },
                 PartialEntity::AnnotationPlane { elements, .. } => { let a: Vec<String> = vec![match elements { Some(v) => format!("({})", v.iter().map(|e| format!("#{}", self.id_of_ref_annotation_plane_element(e))).collect::<Vec<_>>().join(",")), None => "$".to_string() }]; format!("ANNOTATION_PLANE({})", a.join(",")) },
-                PartialEntity::AnnotationSymbol => "ANNOTATION_SYMBOL()".to_string(),
                 PartialEntity::AnnotationSymbolOccurrence => "ANNOTATION_SYMBOL_OCCURRENCE()".to_string(),
                 PartialEntity::AnnotationText => "ANNOTATION_TEXT()".to_string(),
                 PartialEntity::AnnotationTextCharacter { alignment, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*alignment))]; format!("ANNOTATION_TEXT_CHARACTER({})", a.join(",")) },
@@ -35732,7 +35706,6 @@ impl<'a> Writer<'a> {
             EntityKey::AngularSize(_) => "ANGULAR_SIZE",
             EntityKey::AngularityTolerance(_) => "ANGULARITY_TOLERANCE",
             EntityKey::AnnotationCurveOccurrence(_) => "ANNOTATION_CURVE_OCCURRENCE",
-            EntityKey::AnnotationFillAreaOccurrence(_) => "ANNOTATION_FILL_AREA_OCCURRENCE",
             EntityKey::AnnotationOccurrence(_) => "ANNOTATION_OCCURRENCE",
             EntityKey::AnnotationOccurrenceAssociativity(_) => {
                 "ANNOTATION_OCCURRENCE_ASSOCIATIVITY"
@@ -35744,7 +35717,6 @@ impl<'a> Writer<'a> {
                 "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE"
             }
             EntityKey::AnnotationPlane(_) => "ANNOTATION_PLANE",
-            EntityKey::AnnotationSymbol(_) => "ANNOTATION_SYMBOL",
             EntityKey::AnnotationSymbolOccurrence(_) => "ANNOTATION_SYMBOL_OCCURRENCE",
             EntityKey::AnnotationText(_) => "ANNOTATION_TEXT",
             EntityKey::AnnotationTextCharacter(_) => "ANNOTATION_TEXT_CHARACTER",
@@ -36387,11 +36359,6 @@ impl<'a> Writer<'a> {
                 AnnotationCurveOccurrenceId(i),
             ));
         }
-        for i in 0..self.model.annotation_fill_area_occurrence_arena.items.len() as u32 {
-            roots.push(EntityKey::AnnotationFillAreaOccurrence(
-                AnnotationFillAreaOccurrenceId(i),
-            ));
-        }
         for i in 0..self.model.annotation_occurrence_arena.items.len() as u32 {
             roots.push(EntityKey::AnnotationOccurrence(AnnotationOccurrenceId(i)));
         }
@@ -36447,9 +36414,6 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.annotation_plane_arena.items.len() as u32 {
             roots.push(EntityKey::AnnotationPlane(AnnotationPlaneId(i)));
-        }
-        for i in 0..self.model.annotation_symbol_arena.items.len() as u32 {
-            roots.push(EntityKey::AnnotationSymbol(AnnotationSymbolId(i)));
         }
         for i in 0..self.model.annotation_symbol_occurrence_arena.items.len() as u32 {
             roots.push(EntityKey::AnnotationSymbolOccurrence(

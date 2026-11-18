@@ -34,7 +34,9 @@ pub struct Entity {
     pub is_complex_part: bool,
     #[serde(default)]
     pub own_attrs: Vec<Attr>,
-    /// `SELF\super.attr : type` scalar-primitive narrowings, applied in-place.
+    /// `SELF\super.attr : type` redeclarations (scalar retypes, SELECT and
+    /// reference narrowings), applied in place over the attribute `owner`
+    /// declares.
     #[serde(default)]
     pub redeclared_attrs: Vec<Attr>,
     /// Raw EXPRESS DERIVE targets (universal.toml): each `"super.attr"` (a
@@ -52,23 +54,56 @@ pub struct Entity {
 impl Schema {
     /// Full attribute list in Part21 positional order: inherited attrs first
     /// (each parent chain deepest-ancestor-first, parents left-to-right), then
-    /// the entity's own attrs. Scalar redeclares applied last as in-place
-    /// type overrides.
+    /// the entity's own attrs. Redeclarations are applied last as in-place
+    /// type overrides, each on the attribute its `owner` declares; a nearer
+    /// one (applied later) narrows a farther one.
     pub fn flattened_attrs(&self, ent_name: &str) -> Vec<Attr> {
-        let mut out: Vec<Attr> = Vec::new();
-        let mut redeclared: Vec<&Attr> = Vec::new();
+        let mut out: Vec<(&str, Attr)> = Vec::new();
+        let mut redeclared: Vec<(&str, &Attr)> = Vec::new();
         let mut visited = BTreeSet::new();
         self.collect_inherited(ent_name, &mut visited, &mut out, &mut redeclared);
-        if let Some(ent) = self.entity.get(ent_name) {
-            out.extend(ent.own_attrs.iter().cloned());
-            redeclared.extend(ent.redeclared_attrs.iter());
+        if let Some((name, ent)) = self.entity.get_key_value(ent_name) {
+            out.extend(ent.own_attrs.iter().map(|a| (name.as_str(), a.clone())));
+            redeclared.extend(ent.redeclared_attrs.iter().map(|r| (name.as_str(), r)));
         }
-        for r in redeclared {
-            if let Some(a) = out.iter_mut().find(|a| a.name == r.name) {
-                a.ty.clone_from(&r.ty);
+        let mut by: Vec<Option<&str>> = vec![None; out.len()];
+        for (redeclarer, r) in redeclared {
+            let slot = out.iter().position(|(origin, a)| {
+                a.name == r.name && r.owner.as_deref().is_none_or(|o| o == *origin)
+            });
+            if let Some(i) = slot {
+                if let Some(prev) = by[i] {
+                    assert!(
+                        out[i].1.ty == r.ty || self.is_ancestor(prev, redeclarer),
+                        "{ent_name}.{}: unrelated redeclarations by {prev} and {redeclarer}",
+                        r.name
+                    );
+                }
+                out[i].1.ty.clone_from(&r.ty);
+                by[i] = Some(redeclarer);
             }
         }
-        out
+        out.into_iter().map(|(_, a)| a).collect()
+    }
+
+    /// Whether `ancestor` is a (transitive) supertype of `entity`.
+    fn is_ancestor(&self, ancestor: &str, entity: &str) -> bool {
+        let mut stack = vec![entity];
+        let mut seen = BTreeSet::new();
+        while let Some(n) = stack.pop() {
+            if !seen.insert(n) {
+                continue;
+            }
+            if let Some(e) = self.entity.get(n) {
+                for p in &e.parents {
+                    if p == ancestor {
+                        return true;
+                    }
+                    stack.push(p);
+                }
+            }
+        }
+        false
     }
 
     /// An entity's OWN attributes only (no inheritance flattening). Used by the
@@ -80,12 +115,14 @@ impl Schema {
             .unwrap_or_default()
     }
 
+    /// Collect `ent_name`'s inherited attributes and redeclarations, each with
+    /// the entity it comes from.
     pub fn collect_inherited<'a>(
         &'a self,
         ent_name: &str,
         visited: &mut BTreeSet<String>,
-        out: &mut Vec<Attr>,
-        redeclared: &mut Vec<&'a Attr>,
+        out: &mut Vec<(&'a str, Attr)>,
+        redeclared: &mut Vec<(&'a str, &'a Attr)>,
     ) {
         let Some(ent) = self.entity.get(ent_name) else {
             return; // dangling parent reference — skip
@@ -95,9 +132,9 @@ impl Schema {
                 continue; // diamond: shared ancestor already collected
             }
             self.collect_inherited(parent, visited, out, redeclared);
-            if let Some(p) = self.entity.get(parent) {
-                out.extend(p.own_attrs.iter().cloned());
-                redeclared.extend(p.redeclared_attrs.iter());
+            if let Some((name, p)) = self.entity.get_key_value(parent) {
+                out.extend(p.own_attrs.iter().map(|a| (name.as_str(), a.clone())));
+                redeclared.extend(p.redeclared_attrs.iter().map(|r| (name.as_str(), r)));
             }
         }
     }
@@ -107,6 +144,14 @@ impl Schema {
 pub struct Attr {
     pub name: String,
     pub ty: String,
+    /// For a redeclaration, the entity that declares the attribute.
+    #[serde(default)]
+    pub owner: Option<String>,
+    /// For a redeclaration, whether every edition's type for the attribute
+    /// falls inside it, so reading may enforce it on any instance.
+    #[serde(default)]
+    #[allow(dead_code)] // read by the complex-instance narrowing table
+    pub union_safe: Option<bool>,
 }
 
 #[derive(Deserialize)]

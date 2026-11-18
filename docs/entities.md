@@ -28,8 +28,8 @@ the step-io columns show what step-io reads and writes.
 | ap242e1 | 1726 |
 | ap242e2 | 2122 |
 | ap242e3 | 2140 |
-| step-io (read) | 501 |
-| step-io (write) | 490 |
+| step-io (read) | 499 |
+| step-io (write) | 488 |
 
 | Entity | ap203e1 | ap203e2 | ap214e3 | ap242e1 | ap242e2 | ap242e3 | step-io (read) | step-io (write) |
 |---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
@@ -123,7 +123,7 @@ the step-io columns show what step-io reads and writes.
 | `angularity_tolerance` | x | o | o | o | o | o | o | o |
 | `annotation_curve_occurrence` | x | o | o | o | o | o | o | o |
 | `annotation_fill_area` | x | o | o | o | o | o | x | x |
-| `annotation_fill_area_occurrence` | x | o | o | o | o | o | o | o |
+| `annotation_fill_area_occurrence` | x | o | o | o | o | o | x | x |
 | `annotation_occurrence` | x | o | o | o | o | o | o | o |
 | `annotation_occurrence_associativity` | x | o | o | o | o | o | o | o |
 | `annotation_occurrence_relationship` | x | o | o | o | o | o | o | o |
@@ -133,7 +133,7 @@ the step-io columns show what step-io reads and writes.
 | `annotation_plane` | x | o | o | o | o | o | o | o |
 | `annotation_point_occurrence` | x | x | x | x | o | o | x | x |
 | `annotation_subfigure_occurrence` | x | o | o | o | o | o | x | x |
-| `annotation_symbol` | x | o | o | o | o | o | o | o |
+| `annotation_symbol` | x | o | o | o | o | o | x | x |
 | `annotation_symbol_occurrence` | x | o | o | o | o | o | o | o |
 | `annotation_text` | x | o | o | o | o | o | o | o |
 | `annotation_text_character` | x | o | o | o | o | o | o | o |

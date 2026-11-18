@@ -1332,8 +1332,6 @@ pub struct AngularityToleranceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationCurveOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationFillAreaOccurrenceId(pub u32);
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationOccurrenceAssociativityId(pub u32);
@@ -1347,8 +1345,6 @@ pub struct AnnotationPlaceholderOccurrenceId(pub u32);
 pub struct AnnotationPlaceholderOccurrenceWithLeaderLineId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationPlaneId(pub u32);
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct AnnotationSymbolId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationSymbolOccurrenceId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -2317,7 +2313,6 @@ pub enum EntityKey {
     AngularSize(AngularSizeId),
     AngularityTolerance(AngularityToleranceId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
-    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationOccurrenceAssociativity(AnnotationOccurrenceAssociativityId),
     AnnotationOccurrenceRelationship(AnnotationOccurrenceRelationshipId),
@@ -2325,7 +2320,6 @@ pub enum EntityKey {
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
-    AnnotationSymbol(AnnotationSymbolId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationText(AnnotationTextId),
     AnnotationTextCharacter(AnnotationTextCharacterId),
@@ -2816,7 +2810,7 @@ pub enum EntityKey {
 
 impl EntityKey {
     /// How many kinds of key there are.
-    pub(crate) const KINDS: usize = 502;
+    pub(crate) const KINDS: usize = 500;
 
     /// The key's kind, numbered in declaration order, and its arena index.
     pub(crate) fn kind_index(self) -> (usize, u32) {
@@ -2842,487 +2836,485 @@ impl EntityKey {
             EntityKey::AngularSize(i) => (18, i.0),
             EntityKey::AngularityTolerance(i) => (19, i.0),
             EntityKey::AnnotationCurveOccurrence(i) => (20, i.0),
-            EntityKey::AnnotationFillAreaOccurrence(i) => (21, i.0),
-            EntityKey::AnnotationOccurrence(i) => (22, i.0),
-            EntityKey::AnnotationOccurrenceAssociativity(i) => (23, i.0),
-            EntityKey::AnnotationOccurrenceRelationship(i) => (24, i.0),
-            EntityKey::AnnotationPlaceholderLeaderLine(i) => (25, i.0),
-            EntityKey::AnnotationPlaceholderOccurrence(i) => (26, i.0),
-            EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => (27, i.0),
-            EntityKey::AnnotationPlane(i) => (28, i.0),
-            EntityKey::AnnotationSymbol(i) => (29, i.0),
-            EntityKey::AnnotationSymbolOccurrence(i) => (30, i.0),
-            EntityKey::AnnotationText(i) => (31, i.0),
-            EntityKey::AnnotationTextCharacter(i) => (32, i.0),
-            EntityKey::AnnotationTextOccurrence(i) => (33, i.0),
-            EntityKey::AnnotationToAnnotationLeaderLine(i) => (34, i.0),
-            EntityKey::AnnotationToModelLeaderLine(i) => (35, i.0),
-            EntityKey::ApllPoint(i) => (36, i.0),
-            EntityKey::ApllPointWithSurface(i) => (37, i.0),
-            EntityKey::ApplicationContext(i) => (38, i.0),
-            EntityKey::ApplicationContextElement(i) => (39, i.0),
-            EntityKey::ApplicationProtocolDefinition(i) => (40, i.0),
-            EntityKey::AppliedApprovalAssignment(i) => (41, i.0),
-            EntityKey::AppliedDateAndTimeAssignment(i) => (42, i.0),
-            EntityKey::AppliedDocumentReference(i) => (43, i.0),
-            EntityKey::AppliedExternalIdentificationAssignment(i) => (44, i.0),
-            EntityKey::AppliedGroupAssignment(i) => (45, i.0),
-            EntityKey::AppliedPersonAndOrganizationAssignment(i) => (46, i.0),
-            EntityKey::AppliedPresentedItem(i) => (47, i.0),
-            EntityKey::AppliedSecurityClassificationAssignment(i) => (48, i.0),
-            EntityKey::Approval(i) => (49, i.0),
-            EntityKey::ApprovalAssignment(i) => (50, i.0),
-            EntityKey::ApprovalDateTime(i) => (51, i.0),
-            EntityKey::ApprovalPersonOrganization(i) => (52, i.0),
-            EntityKey::ApprovalRole(i) => (53, i.0),
-            EntityKey::ApprovalStatus(i) => (54, i.0),
-            EntityKey::ApproximationTolerance(i) => (55, i.0),
-            EntityKey::ApproximationToleranceDeviation(i) => (56, i.0),
-            EntityKey::ApproximationToleranceParameter(i) => (57, i.0),
-            EntityKey::AreaInSet(i) => (58, i.0),
-            EntityKey::AreaUnit(i) => (59, i.0),
-            EntityKey::AscribableState(i) => (60, i.0),
-            EntityKey::AscribableStateRelationship(i) => (61, i.0),
-            EntityKey::AssemblyComponentUsage(i) => (62, i.0),
-            EntityKey::AuxiliaryLeaderLine(i) => (63, i.0),
-            EntityKey::Axis1Placement(i) => (64, i.0),
-            EntityKey::Axis2Placement2d(i) => (65, i.0),
-            EntityKey::Axis2Placement3d(i) => (66, i.0),
-            EntityKey::BSplineCurve(i) => (67, i.0),
-            EntityKey::BSplineCurveWithKnots(i) => (68, i.0),
-            EntityKey::BSplineSurface(i) => (69, i.0),
-            EntityKey::BSplineSurfaceWithKnots(i) => (70, i.0),
-            EntityKey::BezierCurve(i) => (71, i.0),
-            EntityKey::BezierSurface(i) => (72, i.0),
-            EntityKey::BoundedCurve(i) => (73, i.0),
-            EntityKey::BoundedPcurve(i) => (74, i.0),
-            EntityKey::BoundedSurface(i) => (75, i.0),
-            EntityKey::BoundedSurfaceCurve(i) => (76, i.0),
-            EntityKey::BrepWithVoids(i) => (77, i.0),
-            EntityKey::CalendarDate(i) => (78, i.0),
-            EntityKey::CameraImage(i) => (79, i.0),
-            EntityKey::CameraImage3dWithScale(i) => (80, i.0),
-            EntityKey::CameraModel(i) => (81, i.0),
-            EntityKey::CameraModelD3(i) => (82, i.0),
-            EntityKey::CameraModelD3MultiClipping(i) => (83, i.0),
-            EntityKey::CameraModelD3WithHlhsr(i) => (84, i.0),
-            EntityKey::CameraUsage(i) => (85, i.0),
-            EntityKey::CartesianPoint(i) => (86, i.0),
-            EntityKey::CcDesignApproval(i) => (87, i.0),
-            EntityKey::CcDesignDateAndTimeAssignment(i) => (88, i.0),
-            EntityKey::CcDesignPersonAndOrganizationAssignment(i) => (89, i.0),
-            EntityKey::CcDesignSecurityClassification(i) => (90, i.0),
-            EntityKey::CentreOfSymmetry(i) => (91, i.0),
-            EntityKey::Certification(i) => (92, i.0),
-            EntityKey::CertificationType(i) => (93, i.0),
-            EntityKey::Change(i) => (94, i.0),
-            EntityKey::ChangeRequest(i) => (95, i.0),
-            EntityKey::CharacterGlyphStyleOutline(i) => (96, i.0),
-            EntityKey::CharacterGlyphStyleStroke(i) => (97, i.0),
-            EntityKey::CharacterizedItemWithinRepresentation(i) => (98, i.0),
-            EntityKey::CharacterizedObject(i) => (99, i.0),
-            EntityKey::CharacterizedRepresentation(i) => (100, i.0),
-            EntityKey::Circle(i) => (101, i.0),
-            EntityKey::CircularRunoutTolerance(i) => (102, i.0),
-            EntityKey::ClosedShell(i) => (103, i.0),
-            EntityKey::CoaxialityTolerance(i) => (104, i.0),
-            EntityKey::Colour(i) => (105, i.0),
-            EntityKey::ColourRgb(i) => (106, i.0),
-            EntityKey::ColourSpecification(i) => (107, i.0),
-            EntityKey::CommonDatum(i) => (108, i.0),
-            EntityKey::ComplexTriangulatedFace(i) => (109, i.0),
-            EntityKey::ComplexTriangulatedSurfaceSet(i) => (110, i.0),
-            EntityKey::CompositeCurve(i) => (111, i.0),
-            EntityKey::CompositeCurveSegment(i) => (112, i.0),
-            EntityKey::CompositeGroupShapeAspect(i) => (113, i.0),
-            EntityKey::CompositeShapeAspect(i) => (114, i.0),
-            EntityKey::CompositeText(i) => (115, i.0),
-            EntityKey::CompoundRepresentationItem(i) => (116, i.0),
-            EntityKey::ConcentricityTolerance(i) => (117, i.0),
-            EntityKey::ConfigurationDesign(i) => (118, i.0),
-            EntityKey::ConfigurationEffectivity(i) => (119, i.0),
-            EntityKey::ConfigurationItem(i) => (120, i.0),
-            EntityKey::Conic(i) => (121, i.0),
-            EntityKey::ConicalSurface(i) => (122, i.0),
-            EntityKey::ConnectedFaceSet(i) => (123, i.0),
-            EntityKey::ConstructiveGeometryRepresentation(i) => (124, i.0),
-            EntityKey::ConstructiveGeometryRepresentationRelationship(i) => (125, i.0),
-            EntityKey::ContextDependentOverRidingStyledItem(i) => (126, i.0),
-            EntityKey::ContextDependentShapeRepresentation(i) => (127, i.0),
-            EntityKey::ContextDependentUnit(i) => (128, i.0),
-            EntityKey::ContinuousShapeAspect(i) => (129, i.0),
-            EntityKey::Contract(i) => (130, i.0),
-            EntityKey::ContractType(i) => (131, i.0),
-            EntityKey::ConversionBasedUnit(i) => (132, i.0),
-            EntityKey::CoordinatedUniversalTimeOffset(i) => (133, i.0),
-            EntityKey::CoordinatesList(i) => (134, i.0),
-            EntityKey::Curve(i) => (135, i.0),
-            EntityKey::CurveStyle(i) => (136, i.0),
-            EntityKey::CurveStyleFont(i) => (137, i.0),
-            EntityKey::CurveStyleFontAndScaling(i) => (138, i.0),
-            EntityKey::CurveStyleFontPattern(i) => (139, i.0),
-            EntityKey::CurveStyleRendering(i) => (140, i.0),
-            EntityKey::CylindricalSurface(i) => (141, i.0),
-            EntityKey::CylindricityTolerance(i) => (142, i.0),
-            EntityKey::Date(i) => (143, i.0),
-            EntityKey::DateAndTime(i) => (144, i.0),
-            EntityKey::DateAndTimeAssignment(i) => (145, i.0),
-            EntityKey::DateRole(i) => (146, i.0),
-            EntityKey::DateTimeRole(i) => (147, i.0),
-            EntityKey::Datum(i) => (148, i.0),
-            EntityKey::DatumFeature(i) => (149, i.0),
-            EntityKey::DatumReference(i) => (150, i.0),
-            EntityKey::DatumReferenceCompartment(i) => (151, i.0),
-            EntityKey::DatumReferenceElement(i) => (152, i.0),
-            EntityKey::DatumReferenceModifierWithValue(i) => (153, i.0),
-            EntityKey::DatumSystem(i) => (154, i.0),
-            EntityKey::DatumTarget(i) => (155, i.0),
-            EntityKey::DefaultModelGeometricView(i) => (156, i.0),
-            EntityKey::DefinedCharacterGlyph(i) => (157, i.0),
-            EntityKey::DefinedSymbol(i) => (158, i.0),
-            EntityKey::DefinitionalRepresentation(i) => (159, i.0),
-            EntityKey::DefinitionalRepresentationRelationship(i) => (160, i.0),
-            EntityKey::DefinitionalRepresentationRelationshipWithSameContext(i) => (161, i.0),
-            EntityKey::DegenerateToroidalSurface(i) => (162, i.0),
-            EntityKey::DerivedShapeAspect(i) => (163, i.0),
-            EntityKey::DerivedUnit(i) => (164, i.0),
-            EntityKey::DerivedUnitElement(i) => (165, i.0),
-            EntityKey::DescriptionAttribute(i) => (166, i.0),
-            EntityKey::DescriptiveRepresentationItem(i) => (167, i.0),
-            EntityKey::DesignContext(i) => (168, i.0),
-            EntityKey::DimensionalCharacteristicRepresentation(i) => (169, i.0),
-            EntityKey::DimensionalExponents(i) => (170, i.0),
-            EntityKey::DimensionalLocation(i) => (171, i.0),
-            EntityKey::DimensionalLocationWithPath(i) => (172, i.0),
-            EntityKey::DimensionalSize(i) => (173, i.0),
-            EntityKey::DimensionalSizeWithDatumFeature(i) => (174, i.0),
-            EntityKey::DimensionalSizeWithPath(i) => (175, i.0),
-            EntityKey::DirectedDimensionalLocation(i) => (176, i.0),
-            EntityKey::Direction(i) => (177, i.0),
-            EntityKey::Document(i) => (178, i.0),
-            EntityKey::DocumentFile(i) => (179, i.0),
-            EntityKey::DocumentProductAssociation(i) => (180, i.0),
-            EntityKey::DocumentProductEquivalence(i) => (181, i.0),
-            EntityKey::DocumentReference(i) => (182, i.0),
-            EntityKey::DocumentRepresentationType(i) => (183, i.0),
-            EntityKey::DocumentType(i) => (184, i.0),
-            EntityKey::DraughtingAnnotationOccurrence(i) => (185, i.0),
-            EntityKey::DraughtingCallout(i) => (186, i.0),
-            EntityKey::DraughtingCalloutRelationship(i) => (187, i.0),
-            EntityKey::DraughtingModel(i) => (188, i.0),
-            EntityKey::DraughtingModelItemAssociation(i) => (189, i.0),
-            EntityKey::DraughtingModelItemAssociationWithPlaceholder(i) => (190, i.0),
-            EntityKey::DraughtingPreDefinedColour(i) => (191, i.0),
-            EntityKey::DraughtingPreDefinedCurveFont(i) => (192, i.0),
-            EntityKey::DraughtingPreDefinedTextFont(i) => (193, i.0),
-            EntityKey::Edge(i) => (194, i.0),
-            EntityKey::EdgeCurve(i) => (195, i.0),
-            EntityKey::EdgeLoop(i) => (196, i.0),
-            EntityKey::Effectivity(i) => (197, i.0),
-            EntityKey::ElementarySurface(i) => (198, i.0),
-            EntityKey::Ellipse(i) => (199, i.0),
-            EntityKey::Expression(i) => (200, i.0),
-            EntityKey::ExternalIdentificationAssignment(i) => (201, i.0),
-            EntityKey::ExternalSource(i) => (202, i.0),
-            EntityKey::ExternallyDefinedCharacterGlyph(i) => (203, i.0),
-            EntityKey::ExternallyDefinedCurveFont(i) => (204, i.0),
-            EntityKey::ExternallyDefinedHatchStyle(i) => (205, i.0),
-            EntityKey::ExternallyDefinedItem(i) => (206, i.0),
-            EntityKey::ExternallyDefinedStyle(i) => (207, i.0),
-            EntityKey::ExternallyDefinedSymbol(i) => (208, i.0),
-            EntityKey::ExternallyDefinedTextFont(i) => (209, i.0),
-            EntityKey::ExternallyDefinedTile(i) => (210, i.0),
-            EntityKey::ExternallyDefinedTileStyle(i) => (211, i.0),
-            EntityKey::Face(i) => (212, i.0),
-            EntityKey::FaceBound(i) => (213, i.0),
-            EntityKey::FaceOuterBound(i) => (214, i.0),
-            EntityKey::FaceSurface(i) => (215, i.0),
-            EntityKey::FeatureForDatumTargetRelationship(i) => (216, i.0),
-            EntityKey::FillAreaStyle(i) => (217, i.0),
-            EntityKey::FillAreaStyleColour(i) => (218, i.0),
-            EntityKey::FillAreaStyleHatching(i) => (219, i.0),
-            EntityKey::FillAreaStyleTileColouredRegion(i) => (220, i.0),
-            EntityKey::FillAreaStyleTileCurveWithStyle(i) => (221, i.0),
-            EntityKey::FillAreaStyleTileSymbolWithStyle(i) => (222, i.0),
-            EntityKey::FillAreaStyleTiles(i) => (223, i.0),
-            EntityKey::FlatnessTolerance(i) => (224, i.0),
-            EntityKey::FoundedItem(i) => (225, i.0),
-            EntityKey::FunctionallyDefinedTransformation(i) => (226, i.0),
-            EntityKey::GeneralDatumReference(i) => (227, i.0),
-            EntityKey::GeneralProperty(i) => (228, i.0),
-            EntityKey::GeneralPropertyAssociation(i) => (229, i.0),
-            EntityKey::GenericExpression(i) => (230, i.0),
-            EntityKey::GenericLiteral(i) => (231, i.0),
-            EntityKey::GenericProductDefinitionReference(i) => (232, i.0),
-            EntityKey::GeometricCurveSet(i) => (233, i.0),
-            EntityKey::GeometricItemSpecificUsage(i) => (234, i.0),
-            EntityKey::GeometricRepresentationContext(i) => (235, i.0),
-            EntityKey::GeometricRepresentationItem(i) => (236, i.0),
-            EntityKey::GeometricSet(i) => (237, i.0),
-            EntityKey::GeometricTolerance(i) => (238, i.0),
-            EntityKey::GeometricToleranceRelationship(i) => (239, i.0),
-            EntityKey::GeometricToleranceWithDatumReference(i) => (240, i.0),
-            EntityKey::GeometricToleranceWithDefinedAreaUnit(i) => (241, i.0),
-            EntityKey::GeometricToleranceWithDefinedUnit(i) => (242, i.0),
-            EntityKey::GeometricToleranceWithMaximumTolerance(i) => (243, i.0),
-            EntityKey::GeometricToleranceWithModifiers(i) => (244, i.0),
-            EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(i) => (245, i.0),
-            EntityKey::GeometricallyBoundedWireframeShapeRepresentation(i) => (246, i.0),
-            EntityKey::GlobalUncertaintyAssignedContext(i) => (247, i.0),
-            EntityKey::GlobalUnitAssignedContext(i) => (248, i.0),
-            EntityKey::Group(i) => (249, i.0),
-            EntityKey::GroupAssignment(i) => (250, i.0),
-            EntityKey::Hyperbola(i) => (251, i.0),
-            EntityKey::IdAttribute(i) => (252, i.0),
-            EntityKey::IdentificationAssignment(i) => (253, i.0),
-            EntityKey::IdentificationRole(i) => (254, i.0),
-            EntityKey::IntLiteral(i) => (255, i.0),
-            EntityKey::IntegerRepresentationItem(i) => (256, i.0),
-            EntityKey::IntersectionCurve(i) => (257, i.0),
-            EntityKey::Invisibility(i) => (258, i.0),
-            EntityKey::ItemDefinedTransformation(i) => (259, i.0),
-            EntityKey::ItemIdentifiedRepresentationUsage(i) => (260, i.0),
-            EntityKey::LeaderCurve(i) => (261, i.0),
-            EntityKey::LeaderDirectedCallout(i) => (262, i.0),
-            EntityKey::LeaderTerminator(i) => (263, i.0),
-            EntityKey::LengthMeasureWithUnit(i) => (264, i.0),
-            EntityKey::LengthUnit(i) => (265, i.0),
-            EntityKey::LimitsAndFits(i) => (266, i.0),
-            EntityKey::Line(i) => (267, i.0),
-            EntityKey::LineProfileTolerance(i) => (268, i.0),
-            EntityKey::LiteralNumber(i) => (269, i.0),
-            EntityKey::LocalTime(i) => (270, i.0),
-            EntityKey::Loop(i) => (271, i.0),
-            EntityKey::MakeFromUsageOption(i) => (272, i.0),
-            EntityKey::ManifoldSolidBrep(i) => (273, i.0),
-            EntityKey::ManifoldSurfaceShapeRepresentation(i) => (274, i.0),
-            EntityKey::MappedItem(i) => (275, i.0),
-            EntityKey::MassMeasureWithUnit(i) => (276, i.0),
-            EntityKey::MassUnit(i) => (277, i.0),
-            EntityKey::MeasureQualification(i) => (278, i.0),
-            EntityKey::MeasureRepresentationItem(i) => (279, i.0),
-            EntityKey::MeasureWithUnit(i) => (280, i.0),
-            EntityKey::MechanicalContext(i) => (281, i.0),
-            EntityKey::MechanicalDesignAndDraughtingRelationship(i) => (282, i.0),
-            EntityKey::MechanicalDesignGeometricPresentationRepresentation(i) => (283, i.0),
-            EntityKey::MechanicalDesignPresentationRepresentationWithDraughting(i) => (284, i.0),
-            EntityKey::MechanicalDesignShadedPresentationRepresentation(i) => (285, i.0),
-            EntityKey::ModelGeometricView(i) => (286, i.0),
-            EntityKey::ModifiedGeometricTolerance(i) => (287, i.0),
-            EntityKey::NameAttribute(i) => (288, i.0),
-            EntityKey::NamedUnit(i) => (289, i.0),
-            EntityKey::NextAssemblyUsageOccurrence(i) => (290, i.0),
-            EntityKey::NumericExpression(i) => (291, i.0),
-            EntityKey::ObjectRole(i) => (292, i.0),
-            EntityKey::OffsetSurface(i) => (293, i.0),
-            EntityKey::OneDirectionRepeatFactor(i) => (294, i.0),
-            EntityKey::OpenShell(i) => (295, i.0),
-            EntityKey::Organization(i) => (296, i.0),
-            EntityKey::OrganizationRelationship(i) => (297, i.0),
-            EntityKey::OrganizationRole(i) => (298, i.0),
-            EntityKey::OrganizationType(i) => (299, i.0),
-            EntityKey::OrganizationTypeRole(i) => (300, i.0),
-            EntityKey::OrganizationalAddress(i) => (301, i.0),
-            EntityKey::OrganizationalProject(i) => (302, i.0),
-            EntityKey::OrganizationalProjectRelationship(i) => (303, i.0),
-            EntityKey::OrganizationalProjectRole(i) => (304, i.0),
-            EntityKey::OrientedClosedShell(i) => (305, i.0),
-            EntityKey::OrientedEdge(i) => (306, i.0),
-            EntityKey::OverRidingStyledItem(i) => (307, i.0),
-            EntityKey::Parabola(i) => (308, i.0),
-            EntityKey::ParallelismTolerance(i) => (309, i.0),
-            EntityKey::ParametricRepresentationContext(i) => (310, i.0),
-            EntityKey::Path(i) => (311, i.0),
-            EntityKey::Pcurve(i) => (312, i.0),
-            EntityKey::PerpendicularityTolerance(i) => (313, i.0),
-            EntityKey::Person(i) => (314, i.0),
-            EntityKey::PersonAndOrganization(i) => (315, i.0),
-            EntityKey::PersonAndOrganizationAddress(i) => (316, i.0),
-            EntityKey::PersonAndOrganizationAssignment(i) => (317, i.0),
-            EntityKey::PersonAndOrganizationRole(i) => (318, i.0),
-            EntityKey::PersonalAddress(i) => (319, i.0),
-            EntityKey::PlacedDatumTargetFeature(i) => (320, i.0),
-            EntityKey::Placement(i) => (321, i.0),
-            EntityKey::PlanarBox(i) => (322, i.0),
-            EntityKey::PlanarExtent(i) => (323, i.0),
-            EntityKey::Plane(i) => (324, i.0),
-            EntityKey::PlaneAngleMeasureWithUnit(i) => (325, i.0),
-            EntityKey::PlaneAngleUnit(i) => (326, i.0),
-            EntityKey::PlusMinusTolerance(i) => (327, i.0),
-            EntityKey::Point(i) => (328, i.0),
-            EntityKey::PointStyle(i) => (329, i.0),
-            EntityKey::PolyLoop(i) => (330, i.0),
-            EntityKey::Polyline(i) => (331, i.0),
-            EntityKey::PositionTolerance(i) => (332, i.0),
-            EntityKey::PreDefinedCharacterGlyph(i) => (333, i.0),
-            EntityKey::PreDefinedColour(i) => (334, i.0),
-            EntityKey::PreDefinedCurveFont(i) => (335, i.0),
-            EntityKey::PreDefinedItem(i) => (336, i.0),
-            EntityKey::PreDefinedMarker(i) => (337, i.0),
-            EntityKey::PreDefinedPointMarkerSymbol(i) => (338, i.0),
-            EntityKey::PreDefinedPresentationStyle(i) => (339, i.0),
-            EntityKey::PreDefinedSurfaceSideStyle(i) => (340, i.0),
-            EntityKey::PreDefinedSymbol(i) => (341, i.0),
-            EntityKey::PreDefinedTerminatorSymbol(i) => (342, i.0),
-            EntityKey::PreDefinedTextFont(i) => (343, i.0),
-            EntityKey::PreDefinedTile(i) => (344, i.0),
-            EntityKey::PrecisionQualifier(i) => (345, i.0),
-            EntityKey::PresentationArea(i) => (346, i.0),
-            EntityKey::PresentationLayerAssignment(i) => (347, i.0),
-            EntityKey::PresentationRepresentation(i) => (348, i.0),
-            EntityKey::PresentationSet(i) => (349, i.0),
-            EntityKey::PresentationSize(i) => (350, i.0),
-            EntityKey::PresentationStyleAssignment(i) => (351, i.0),
-            EntityKey::PresentationStyleByContext(i) => (352, i.0),
-            EntityKey::PresentationView(i) => (353, i.0),
-            EntityKey::PresentedItem(i) => (354, i.0),
-            EntityKey::PresentedItemRepresentation(i) => (355, i.0),
-            EntityKey::Product(i) => (356, i.0),
-            EntityKey::ProductCategory(i) => (357, i.0),
-            EntityKey::ProductCategoryRelationship(i) => (358, i.0),
-            EntityKey::ProductConcept(i) => (359, i.0),
-            EntityKey::ProductConceptContext(i) => (360, i.0),
-            EntityKey::ProductConceptFeature(i) => (361, i.0),
-            EntityKey::ProductConceptFeatureCategory(i) => (362, i.0),
-            EntityKey::ProductContext(i) => (363, i.0),
-            EntityKey::ProductDefinition(i) => (364, i.0),
-            EntityKey::ProductDefinitionContext(i) => (365, i.0),
-            EntityKey::ProductDefinitionContextAssociation(i) => (366, i.0),
-            EntityKey::ProductDefinitionContextRole(i) => (367, i.0),
-            EntityKey::ProductDefinitionEffectivity(i) => (368, i.0),
-            EntityKey::ProductDefinitionFormation(i) => (369, i.0),
-            EntityKey::ProductDefinitionFormationWithSpecifiedSource(i) => (370, i.0),
-            EntityKey::ProductDefinitionOccurrence(i) => (371, i.0),
-            EntityKey::ProductDefinitionRelationship(i) => (372, i.0),
-            EntityKey::ProductDefinitionRelationshipRelationship(i) => (373, i.0),
-            EntityKey::ProductDefinitionShape(i) => (374, i.0),
-            EntityKey::ProductDefinitionSubstitute(i) => (375, i.0),
-            EntityKey::ProductDefinitionUsage(i) => (376, i.0),
-            EntityKey::ProductDefinitionWithAssociatedDocuments(i) => (377, i.0),
-            EntityKey::ProductRelatedProductCategory(i) => (378, i.0),
-            EntityKey::ProjectedZoneDefinition(i) => (379, i.0),
-            EntityKey::PropertyDefinition(i) => (380, i.0),
-            EntityKey::PropertyDefinitionRelationship(i) => (381, i.0),
-            EntityKey::PropertyDefinitionRepresentation(i) => (382, i.0),
-            EntityKey::QualifiedRepresentationItem(i) => (383, i.0),
-            EntityKey::QuasiUniformCurve(i) => (384, i.0),
-            EntityKey::QuasiUniformSurface(i) => (385, i.0),
-            EntityKey::RatioMeasureWithUnit(i) => (386, i.0),
-            EntityKey::RatioUnit(i) => (387, i.0),
-            EntityKey::RationalBSplineCurve(i) => (388, i.0),
-            EntityKey::RationalBSplineSurface(i) => (389, i.0),
-            EntityKey::RealLiteral(i) => (390, i.0),
-            EntityKey::RealRepresentationItem(i) => (391, i.0),
-            EntityKey::RepositionedTessellatedItem(i) => (392, i.0),
-            EntityKey::Representation(i) => (393, i.0),
-            EntityKey::RepresentationContext(i) => (394, i.0),
-            EntityKey::RepresentationContextReference(i) => (395, i.0),
-            EntityKey::RepresentationItem(i) => (396, i.0),
-            EntityKey::RepresentationMap(i) => (397, i.0),
-            EntityKey::RepresentationReference(i) => (398, i.0),
-            EntityKey::RepresentationRelationship(i) => (399, i.0),
-            EntityKey::RepresentationRelationshipWithTransformation(i) => (400, i.0),
-            EntityKey::ResourceProperty(i) => (401, i.0),
-            EntityKey::ResourceRequirementType(i) => (402, i.0),
-            EntityKey::RoleAssociation(i) => (403, i.0),
-            EntityKey::RoundnessTolerance(i) => (404, i.0),
-            EntityKey::SeamCurve(i) => (405, i.0),
-            EntityKey::SecurityClassification(i) => (406, i.0),
-            EntityKey::SecurityClassificationAssignment(i) => (407, i.0),
-            EntityKey::SecurityClassificationLevel(i) => (408, i.0),
-            EntityKey::ShapeAspect(i) => (409, i.0),
-            EntityKey::ShapeAspectAssociativity(i) => (410, i.0),
-            EntityKey::ShapeAspectDerivingRelationship(i) => (411, i.0),
-            EntityKey::ShapeAspectRelationship(i) => (412, i.0),
-            EntityKey::ShapeDefinitionRepresentation(i) => (413, i.0),
-            EntityKey::ShapeDimensionRepresentation(i) => (414, i.0),
-            EntityKey::ShapeRepresentation(i) => (415, i.0),
-            EntityKey::ShapeRepresentationRelationship(i) => (416, i.0),
-            EntityKey::ShapeRepresentationWithParameters(i) => (417, i.0),
-            EntityKey::ShellBasedSurfaceModel(i) => (418, i.0),
-            EntityKey::SiUnit(i) => (419, i.0),
-            EntityKey::SimpleGenericExpression(i) => (420, i.0),
-            EntityKey::SimpleNumericExpression(i) => (421, i.0),
-            EntityKey::SolidAngleUnit(i) => (422, i.0),
-            EntityKey::SolidModel(i) => (423, i.0),
-            EntityKey::SphericalSurface(i) => (424, i.0),
-            EntityKey::StartRequest(i) => (425, i.0),
-            EntityKey::StartWork(i) => (426, i.0),
-            EntityKey::StateObserved(i) => (427, i.0),
-            EntityKey::StateType(i) => (428, i.0),
-            EntityKey::StraightnessTolerance(i) => (429, i.0),
-            EntityKey::StyledItem(i) => (430, i.0),
-            EntityKey::Surface(i) => (431, i.0),
-            EntityKey::SurfaceCurve(i) => (432, i.0),
-            EntityKey::SurfaceOfLinearExtrusion(i) => (433, i.0),
-            EntityKey::SurfaceOfRevolution(i) => (434, i.0),
-            EntityKey::SurfaceProfileTolerance(i) => (435, i.0),
-            EntityKey::SurfaceRenderingProperties(i) => (436, i.0),
-            EntityKey::SurfaceSideStyle(i) => (437, i.0),
-            EntityKey::SurfaceStyleBoundary(i) => (438, i.0),
-            EntityKey::SurfaceStyleControlGrid(i) => (439, i.0),
-            EntityKey::SurfaceStyleFillArea(i) => (440, i.0),
-            EntityKey::SurfaceStyleParameterLine(i) => (441, i.0),
-            EntityKey::SurfaceStyleReflectanceAmbient(i) => (442, i.0),
-            EntityKey::SurfaceStyleRendering(i) => (443, i.0),
-            EntityKey::SurfaceStyleRenderingWithProperties(i) => (444, i.0),
-            EntityKey::SurfaceStyleSegmentationCurve(i) => (445, i.0),
-            EntityKey::SurfaceStyleSilhouette(i) => (446, i.0),
-            EntityKey::SurfaceStyleTransparent(i) => (447, i.0),
-            EntityKey::SurfaceStyleUsage(i) => (448, i.0),
-            EntityKey::SweptSurface(i) => (449, i.0),
-            EntityKey::SymbolColour(i) => (450, i.0),
-            EntityKey::SymbolRepresentation(i) => (451, i.0),
-            EntityKey::SymbolStyle(i) => (452, i.0),
-            EntityKey::SymbolTarget(i) => (453, i.0),
-            EntityKey::SymmetryTolerance(i) => (454, i.0),
-            EntityKey::TerminatorSymbol(i) => (455, i.0),
-            EntityKey::TessellatedAnnotationOccurrence(i) => (456, i.0),
-            EntityKey::TessellatedCurveSet(i) => (457, i.0),
-            EntityKey::TessellatedFace(i) => (458, i.0),
-            EntityKey::TessellatedGeometricSet(i) => (459, i.0),
-            EntityKey::TessellatedItem(i) => (460, i.0),
-            EntityKey::TessellatedShapeRepresentation(i) => (461, i.0),
-            EntityKey::TessellatedShell(i) => (462, i.0),
-            EntityKey::TessellatedSolid(i) => (463, i.0),
-            EntityKey::TessellatedStructuredItem(i) => (464, i.0),
-            EntityKey::TessellatedSurfaceSet(i) => (465, i.0),
-            EntityKey::TextFont(i) => (466, i.0),
-            EntityKey::TextLiteral(i) => (467, i.0),
-            EntityKey::TextStyle(i) => (468, i.0),
-            EntityKey::TextStyleForDefinedFont(i) => (469, i.0),
-            EntityKey::TextStyleWithBoxCharacteristics(i) => (470, i.0),
-            EntityKey::TextureStyleSpecification(i) => (471, i.0),
-            EntityKey::TextureStyleTessellationSpecification(i) => (472, i.0),
-            EntityKey::TimeUnit(i) => (473, i.0),
-            EntityKey::ToleranceValue(i) => (474, i.0),
-            EntityKey::ToleranceZone(i) => (475, i.0),
-            EntityKey::ToleranceZoneDefinition(i) => (476, i.0),
-            EntityKey::ToleranceZoneForm(i) => (477, i.0),
-            EntityKey::ToleranceZoneWithDatum(i) => (478, i.0),
-            EntityKey::TopologicalRepresentationItem(i) => (479, i.0),
-            EntityKey::ToroidalSurface(i) => (480, i.0),
-            EntityKey::TotalRunoutTolerance(i) => (481, i.0),
-            EntityKey::TrimmedCurve(i) => (482, i.0),
-            EntityKey::TwoDirectionRepeatFactor(i) => (483, i.0),
-            EntityKey::TypeQualifier(i) => (484, i.0),
-            EntityKey::UncertaintyMeasureWithUnit(i) => (485, i.0),
-            EntityKey::UncertaintyQualifier(i) => (486, i.0),
-            EntityKey::UnequallyDisposedGeometricTolerance(i) => (487, i.0),
-            EntityKey::UniformCurve(i) => (488, i.0),
-            EntityKey::UniformSurface(i) => (489, i.0),
-            EntityKey::ValueFormatTypeQualifier(i) => (490, i.0),
-            EntityKey::ValueRepresentationItem(i) => (491, i.0),
-            EntityKey::Vector(i) => (492, i.0),
-            EntityKey::VersionedActionRequest(i) => (493, i.0),
-            EntityKey::Vertex(i) => (494, i.0),
-            EntityKey::VertexLoop(i) => (495, i.0),
-            EntityKey::VertexPoint(i) => (496, i.0),
-            EntityKey::VertexShell(i) => (497, i.0),
-            EntityKey::ViewVolume(i) => (498, i.0),
-            EntityKey::VolumeUnit(i) => (499, i.0),
-            EntityKey::WireShell(i) => (500, i.0),
-            EntityKey::ComplexEntity(i) => (501, i.0),
+            EntityKey::AnnotationOccurrence(i) => (21, i.0),
+            EntityKey::AnnotationOccurrenceAssociativity(i) => (22, i.0),
+            EntityKey::AnnotationOccurrenceRelationship(i) => (23, i.0),
+            EntityKey::AnnotationPlaceholderLeaderLine(i) => (24, i.0),
+            EntityKey::AnnotationPlaceholderOccurrence(i) => (25, i.0),
+            EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => (26, i.0),
+            EntityKey::AnnotationPlane(i) => (27, i.0),
+            EntityKey::AnnotationSymbolOccurrence(i) => (28, i.0),
+            EntityKey::AnnotationText(i) => (29, i.0),
+            EntityKey::AnnotationTextCharacter(i) => (30, i.0),
+            EntityKey::AnnotationTextOccurrence(i) => (31, i.0),
+            EntityKey::AnnotationToAnnotationLeaderLine(i) => (32, i.0),
+            EntityKey::AnnotationToModelLeaderLine(i) => (33, i.0),
+            EntityKey::ApllPoint(i) => (34, i.0),
+            EntityKey::ApllPointWithSurface(i) => (35, i.0),
+            EntityKey::ApplicationContext(i) => (36, i.0),
+            EntityKey::ApplicationContextElement(i) => (37, i.0),
+            EntityKey::ApplicationProtocolDefinition(i) => (38, i.0),
+            EntityKey::AppliedApprovalAssignment(i) => (39, i.0),
+            EntityKey::AppliedDateAndTimeAssignment(i) => (40, i.0),
+            EntityKey::AppliedDocumentReference(i) => (41, i.0),
+            EntityKey::AppliedExternalIdentificationAssignment(i) => (42, i.0),
+            EntityKey::AppliedGroupAssignment(i) => (43, i.0),
+            EntityKey::AppliedPersonAndOrganizationAssignment(i) => (44, i.0),
+            EntityKey::AppliedPresentedItem(i) => (45, i.0),
+            EntityKey::AppliedSecurityClassificationAssignment(i) => (46, i.0),
+            EntityKey::Approval(i) => (47, i.0),
+            EntityKey::ApprovalAssignment(i) => (48, i.0),
+            EntityKey::ApprovalDateTime(i) => (49, i.0),
+            EntityKey::ApprovalPersonOrganization(i) => (50, i.0),
+            EntityKey::ApprovalRole(i) => (51, i.0),
+            EntityKey::ApprovalStatus(i) => (52, i.0),
+            EntityKey::ApproximationTolerance(i) => (53, i.0),
+            EntityKey::ApproximationToleranceDeviation(i) => (54, i.0),
+            EntityKey::ApproximationToleranceParameter(i) => (55, i.0),
+            EntityKey::AreaInSet(i) => (56, i.0),
+            EntityKey::AreaUnit(i) => (57, i.0),
+            EntityKey::AscribableState(i) => (58, i.0),
+            EntityKey::AscribableStateRelationship(i) => (59, i.0),
+            EntityKey::AssemblyComponentUsage(i) => (60, i.0),
+            EntityKey::AuxiliaryLeaderLine(i) => (61, i.0),
+            EntityKey::Axis1Placement(i) => (62, i.0),
+            EntityKey::Axis2Placement2d(i) => (63, i.0),
+            EntityKey::Axis2Placement3d(i) => (64, i.0),
+            EntityKey::BSplineCurve(i) => (65, i.0),
+            EntityKey::BSplineCurveWithKnots(i) => (66, i.0),
+            EntityKey::BSplineSurface(i) => (67, i.0),
+            EntityKey::BSplineSurfaceWithKnots(i) => (68, i.0),
+            EntityKey::BezierCurve(i) => (69, i.0),
+            EntityKey::BezierSurface(i) => (70, i.0),
+            EntityKey::BoundedCurve(i) => (71, i.0),
+            EntityKey::BoundedPcurve(i) => (72, i.0),
+            EntityKey::BoundedSurface(i) => (73, i.0),
+            EntityKey::BoundedSurfaceCurve(i) => (74, i.0),
+            EntityKey::BrepWithVoids(i) => (75, i.0),
+            EntityKey::CalendarDate(i) => (76, i.0),
+            EntityKey::CameraImage(i) => (77, i.0),
+            EntityKey::CameraImage3dWithScale(i) => (78, i.0),
+            EntityKey::CameraModel(i) => (79, i.0),
+            EntityKey::CameraModelD3(i) => (80, i.0),
+            EntityKey::CameraModelD3MultiClipping(i) => (81, i.0),
+            EntityKey::CameraModelD3WithHlhsr(i) => (82, i.0),
+            EntityKey::CameraUsage(i) => (83, i.0),
+            EntityKey::CartesianPoint(i) => (84, i.0),
+            EntityKey::CcDesignApproval(i) => (85, i.0),
+            EntityKey::CcDesignDateAndTimeAssignment(i) => (86, i.0),
+            EntityKey::CcDesignPersonAndOrganizationAssignment(i) => (87, i.0),
+            EntityKey::CcDesignSecurityClassification(i) => (88, i.0),
+            EntityKey::CentreOfSymmetry(i) => (89, i.0),
+            EntityKey::Certification(i) => (90, i.0),
+            EntityKey::CertificationType(i) => (91, i.0),
+            EntityKey::Change(i) => (92, i.0),
+            EntityKey::ChangeRequest(i) => (93, i.0),
+            EntityKey::CharacterGlyphStyleOutline(i) => (94, i.0),
+            EntityKey::CharacterGlyphStyleStroke(i) => (95, i.0),
+            EntityKey::CharacterizedItemWithinRepresentation(i) => (96, i.0),
+            EntityKey::CharacterizedObject(i) => (97, i.0),
+            EntityKey::CharacterizedRepresentation(i) => (98, i.0),
+            EntityKey::Circle(i) => (99, i.0),
+            EntityKey::CircularRunoutTolerance(i) => (100, i.0),
+            EntityKey::ClosedShell(i) => (101, i.0),
+            EntityKey::CoaxialityTolerance(i) => (102, i.0),
+            EntityKey::Colour(i) => (103, i.0),
+            EntityKey::ColourRgb(i) => (104, i.0),
+            EntityKey::ColourSpecification(i) => (105, i.0),
+            EntityKey::CommonDatum(i) => (106, i.0),
+            EntityKey::ComplexTriangulatedFace(i) => (107, i.0),
+            EntityKey::ComplexTriangulatedSurfaceSet(i) => (108, i.0),
+            EntityKey::CompositeCurve(i) => (109, i.0),
+            EntityKey::CompositeCurveSegment(i) => (110, i.0),
+            EntityKey::CompositeGroupShapeAspect(i) => (111, i.0),
+            EntityKey::CompositeShapeAspect(i) => (112, i.0),
+            EntityKey::CompositeText(i) => (113, i.0),
+            EntityKey::CompoundRepresentationItem(i) => (114, i.0),
+            EntityKey::ConcentricityTolerance(i) => (115, i.0),
+            EntityKey::ConfigurationDesign(i) => (116, i.0),
+            EntityKey::ConfigurationEffectivity(i) => (117, i.0),
+            EntityKey::ConfigurationItem(i) => (118, i.0),
+            EntityKey::Conic(i) => (119, i.0),
+            EntityKey::ConicalSurface(i) => (120, i.0),
+            EntityKey::ConnectedFaceSet(i) => (121, i.0),
+            EntityKey::ConstructiveGeometryRepresentation(i) => (122, i.0),
+            EntityKey::ConstructiveGeometryRepresentationRelationship(i) => (123, i.0),
+            EntityKey::ContextDependentOverRidingStyledItem(i) => (124, i.0),
+            EntityKey::ContextDependentShapeRepresentation(i) => (125, i.0),
+            EntityKey::ContextDependentUnit(i) => (126, i.0),
+            EntityKey::ContinuousShapeAspect(i) => (127, i.0),
+            EntityKey::Contract(i) => (128, i.0),
+            EntityKey::ContractType(i) => (129, i.0),
+            EntityKey::ConversionBasedUnit(i) => (130, i.0),
+            EntityKey::CoordinatedUniversalTimeOffset(i) => (131, i.0),
+            EntityKey::CoordinatesList(i) => (132, i.0),
+            EntityKey::Curve(i) => (133, i.0),
+            EntityKey::CurveStyle(i) => (134, i.0),
+            EntityKey::CurveStyleFont(i) => (135, i.0),
+            EntityKey::CurveStyleFontAndScaling(i) => (136, i.0),
+            EntityKey::CurveStyleFontPattern(i) => (137, i.0),
+            EntityKey::CurveStyleRendering(i) => (138, i.0),
+            EntityKey::CylindricalSurface(i) => (139, i.0),
+            EntityKey::CylindricityTolerance(i) => (140, i.0),
+            EntityKey::Date(i) => (141, i.0),
+            EntityKey::DateAndTime(i) => (142, i.0),
+            EntityKey::DateAndTimeAssignment(i) => (143, i.0),
+            EntityKey::DateRole(i) => (144, i.0),
+            EntityKey::DateTimeRole(i) => (145, i.0),
+            EntityKey::Datum(i) => (146, i.0),
+            EntityKey::DatumFeature(i) => (147, i.0),
+            EntityKey::DatumReference(i) => (148, i.0),
+            EntityKey::DatumReferenceCompartment(i) => (149, i.0),
+            EntityKey::DatumReferenceElement(i) => (150, i.0),
+            EntityKey::DatumReferenceModifierWithValue(i) => (151, i.0),
+            EntityKey::DatumSystem(i) => (152, i.0),
+            EntityKey::DatumTarget(i) => (153, i.0),
+            EntityKey::DefaultModelGeometricView(i) => (154, i.0),
+            EntityKey::DefinedCharacterGlyph(i) => (155, i.0),
+            EntityKey::DefinedSymbol(i) => (156, i.0),
+            EntityKey::DefinitionalRepresentation(i) => (157, i.0),
+            EntityKey::DefinitionalRepresentationRelationship(i) => (158, i.0),
+            EntityKey::DefinitionalRepresentationRelationshipWithSameContext(i) => (159, i.0),
+            EntityKey::DegenerateToroidalSurface(i) => (160, i.0),
+            EntityKey::DerivedShapeAspect(i) => (161, i.0),
+            EntityKey::DerivedUnit(i) => (162, i.0),
+            EntityKey::DerivedUnitElement(i) => (163, i.0),
+            EntityKey::DescriptionAttribute(i) => (164, i.0),
+            EntityKey::DescriptiveRepresentationItem(i) => (165, i.0),
+            EntityKey::DesignContext(i) => (166, i.0),
+            EntityKey::DimensionalCharacteristicRepresentation(i) => (167, i.0),
+            EntityKey::DimensionalExponents(i) => (168, i.0),
+            EntityKey::DimensionalLocation(i) => (169, i.0),
+            EntityKey::DimensionalLocationWithPath(i) => (170, i.0),
+            EntityKey::DimensionalSize(i) => (171, i.0),
+            EntityKey::DimensionalSizeWithDatumFeature(i) => (172, i.0),
+            EntityKey::DimensionalSizeWithPath(i) => (173, i.0),
+            EntityKey::DirectedDimensionalLocation(i) => (174, i.0),
+            EntityKey::Direction(i) => (175, i.0),
+            EntityKey::Document(i) => (176, i.0),
+            EntityKey::DocumentFile(i) => (177, i.0),
+            EntityKey::DocumentProductAssociation(i) => (178, i.0),
+            EntityKey::DocumentProductEquivalence(i) => (179, i.0),
+            EntityKey::DocumentReference(i) => (180, i.0),
+            EntityKey::DocumentRepresentationType(i) => (181, i.0),
+            EntityKey::DocumentType(i) => (182, i.0),
+            EntityKey::DraughtingAnnotationOccurrence(i) => (183, i.0),
+            EntityKey::DraughtingCallout(i) => (184, i.0),
+            EntityKey::DraughtingCalloutRelationship(i) => (185, i.0),
+            EntityKey::DraughtingModel(i) => (186, i.0),
+            EntityKey::DraughtingModelItemAssociation(i) => (187, i.0),
+            EntityKey::DraughtingModelItemAssociationWithPlaceholder(i) => (188, i.0),
+            EntityKey::DraughtingPreDefinedColour(i) => (189, i.0),
+            EntityKey::DraughtingPreDefinedCurveFont(i) => (190, i.0),
+            EntityKey::DraughtingPreDefinedTextFont(i) => (191, i.0),
+            EntityKey::Edge(i) => (192, i.0),
+            EntityKey::EdgeCurve(i) => (193, i.0),
+            EntityKey::EdgeLoop(i) => (194, i.0),
+            EntityKey::Effectivity(i) => (195, i.0),
+            EntityKey::ElementarySurface(i) => (196, i.0),
+            EntityKey::Ellipse(i) => (197, i.0),
+            EntityKey::Expression(i) => (198, i.0),
+            EntityKey::ExternalIdentificationAssignment(i) => (199, i.0),
+            EntityKey::ExternalSource(i) => (200, i.0),
+            EntityKey::ExternallyDefinedCharacterGlyph(i) => (201, i.0),
+            EntityKey::ExternallyDefinedCurveFont(i) => (202, i.0),
+            EntityKey::ExternallyDefinedHatchStyle(i) => (203, i.0),
+            EntityKey::ExternallyDefinedItem(i) => (204, i.0),
+            EntityKey::ExternallyDefinedStyle(i) => (205, i.0),
+            EntityKey::ExternallyDefinedSymbol(i) => (206, i.0),
+            EntityKey::ExternallyDefinedTextFont(i) => (207, i.0),
+            EntityKey::ExternallyDefinedTile(i) => (208, i.0),
+            EntityKey::ExternallyDefinedTileStyle(i) => (209, i.0),
+            EntityKey::Face(i) => (210, i.0),
+            EntityKey::FaceBound(i) => (211, i.0),
+            EntityKey::FaceOuterBound(i) => (212, i.0),
+            EntityKey::FaceSurface(i) => (213, i.0),
+            EntityKey::FeatureForDatumTargetRelationship(i) => (214, i.0),
+            EntityKey::FillAreaStyle(i) => (215, i.0),
+            EntityKey::FillAreaStyleColour(i) => (216, i.0),
+            EntityKey::FillAreaStyleHatching(i) => (217, i.0),
+            EntityKey::FillAreaStyleTileColouredRegion(i) => (218, i.0),
+            EntityKey::FillAreaStyleTileCurveWithStyle(i) => (219, i.0),
+            EntityKey::FillAreaStyleTileSymbolWithStyle(i) => (220, i.0),
+            EntityKey::FillAreaStyleTiles(i) => (221, i.0),
+            EntityKey::FlatnessTolerance(i) => (222, i.0),
+            EntityKey::FoundedItem(i) => (223, i.0),
+            EntityKey::FunctionallyDefinedTransformation(i) => (224, i.0),
+            EntityKey::GeneralDatumReference(i) => (225, i.0),
+            EntityKey::GeneralProperty(i) => (226, i.0),
+            EntityKey::GeneralPropertyAssociation(i) => (227, i.0),
+            EntityKey::GenericExpression(i) => (228, i.0),
+            EntityKey::GenericLiteral(i) => (229, i.0),
+            EntityKey::GenericProductDefinitionReference(i) => (230, i.0),
+            EntityKey::GeometricCurveSet(i) => (231, i.0),
+            EntityKey::GeometricItemSpecificUsage(i) => (232, i.0),
+            EntityKey::GeometricRepresentationContext(i) => (233, i.0),
+            EntityKey::GeometricRepresentationItem(i) => (234, i.0),
+            EntityKey::GeometricSet(i) => (235, i.0),
+            EntityKey::GeometricTolerance(i) => (236, i.0),
+            EntityKey::GeometricToleranceRelationship(i) => (237, i.0),
+            EntityKey::GeometricToleranceWithDatumReference(i) => (238, i.0),
+            EntityKey::GeometricToleranceWithDefinedAreaUnit(i) => (239, i.0),
+            EntityKey::GeometricToleranceWithDefinedUnit(i) => (240, i.0),
+            EntityKey::GeometricToleranceWithMaximumTolerance(i) => (241, i.0),
+            EntityKey::GeometricToleranceWithModifiers(i) => (242, i.0),
+            EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(i) => (243, i.0),
+            EntityKey::GeometricallyBoundedWireframeShapeRepresentation(i) => (244, i.0),
+            EntityKey::GlobalUncertaintyAssignedContext(i) => (245, i.0),
+            EntityKey::GlobalUnitAssignedContext(i) => (246, i.0),
+            EntityKey::Group(i) => (247, i.0),
+            EntityKey::GroupAssignment(i) => (248, i.0),
+            EntityKey::Hyperbola(i) => (249, i.0),
+            EntityKey::IdAttribute(i) => (250, i.0),
+            EntityKey::IdentificationAssignment(i) => (251, i.0),
+            EntityKey::IdentificationRole(i) => (252, i.0),
+            EntityKey::IntLiteral(i) => (253, i.0),
+            EntityKey::IntegerRepresentationItem(i) => (254, i.0),
+            EntityKey::IntersectionCurve(i) => (255, i.0),
+            EntityKey::Invisibility(i) => (256, i.0),
+            EntityKey::ItemDefinedTransformation(i) => (257, i.0),
+            EntityKey::ItemIdentifiedRepresentationUsage(i) => (258, i.0),
+            EntityKey::LeaderCurve(i) => (259, i.0),
+            EntityKey::LeaderDirectedCallout(i) => (260, i.0),
+            EntityKey::LeaderTerminator(i) => (261, i.0),
+            EntityKey::LengthMeasureWithUnit(i) => (262, i.0),
+            EntityKey::LengthUnit(i) => (263, i.0),
+            EntityKey::LimitsAndFits(i) => (264, i.0),
+            EntityKey::Line(i) => (265, i.0),
+            EntityKey::LineProfileTolerance(i) => (266, i.0),
+            EntityKey::LiteralNumber(i) => (267, i.0),
+            EntityKey::LocalTime(i) => (268, i.0),
+            EntityKey::Loop(i) => (269, i.0),
+            EntityKey::MakeFromUsageOption(i) => (270, i.0),
+            EntityKey::ManifoldSolidBrep(i) => (271, i.0),
+            EntityKey::ManifoldSurfaceShapeRepresentation(i) => (272, i.0),
+            EntityKey::MappedItem(i) => (273, i.0),
+            EntityKey::MassMeasureWithUnit(i) => (274, i.0),
+            EntityKey::MassUnit(i) => (275, i.0),
+            EntityKey::MeasureQualification(i) => (276, i.0),
+            EntityKey::MeasureRepresentationItem(i) => (277, i.0),
+            EntityKey::MeasureWithUnit(i) => (278, i.0),
+            EntityKey::MechanicalContext(i) => (279, i.0),
+            EntityKey::MechanicalDesignAndDraughtingRelationship(i) => (280, i.0),
+            EntityKey::MechanicalDesignGeometricPresentationRepresentation(i) => (281, i.0),
+            EntityKey::MechanicalDesignPresentationRepresentationWithDraughting(i) => (282, i.0),
+            EntityKey::MechanicalDesignShadedPresentationRepresentation(i) => (283, i.0),
+            EntityKey::ModelGeometricView(i) => (284, i.0),
+            EntityKey::ModifiedGeometricTolerance(i) => (285, i.0),
+            EntityKey::NameAttribute(i) => (286, i.0),
+            EntityKey::NamedUnit(i) => (287, i.0),
+            EntityKey::NextAssemblyUsageOccurrence(i) => (288, i.0),
+            EntityKey::NumericExpression(i) => (289, i.0),
+            EntityKey::ObjectRole(i) => (290, i.0),
+            EntityKey::OffsetSurface(i) => (291, i.0),
+            EntityKey::OneDirectionRepeatFactor(i) => (292, i.0),
+            EntityKey::OpenShell(i) => (293, i.0),
+            EntityKey::Organization(i) => (294, i.0),
+            EntityKey::OrganizationRelationship(i) => (295, i.0),
+            EntityKey::OrganizationRole(i) => (296, i.0),
+            EntityKey::OrganizationType(i) => (297, i.0),
+            EntityKey::OrganizationTypeRole(i) => (298, i.0),
+            EntityKey::OrganizationalAddress(i) => (299, i.0),
+            EntityKey::OrganizationalProject(i) => (300, i.0),
+            EntityKey::OrganizationalProjectRelationship(i) => (301, i.0),
+            EntityKey::OrganizationalProjectRole(i) => (302, i.0),
+            EntityKey::OrientedClosedShell(i) => (303, i.0),
+            EntityKey::OrientedEdge(i) => (304, i.0),
+            EntityKey::OverRidingStyledItem(i) => (305, i.0),
+            EntityKey::Parabola(i) => (306, i.0),
+            EntityKey::ParallelismTolerance(i) => (307, i.0),
+            EntityKey::ParametricRepresentationContext(i) => (308, i.0),
+            EntityKey::Path(i) => (309, i.0),
+            EntityKey::Pcurve(i) => (310, i.0),
+            EntityKey::PerpendicularityTolerance(i) => (311, i.0),
+            EntityKey::Person(i) => (312, i.0),
+            EntityKey::PersonAndOrganization(i) => (313, i.0),
+            EntityKey::PersonAndOrganizationAddress(i) => (314, i.0),
+            EntityKey::PersonAndOrganizationAssignment(i) => (315, i.0),
+            EntityKey::PersonAndOrganizationRole(i) => (316, i.0),
+            EntityKey::PersonalAddress(i) => (317, i.0),
+            EntityKey::PlacedDatumTargetFeature(i) => (318, i.0),
+            EntityKey::Placement(i) => (319, i.0),
+            EntityKey::PlanarBox(i) => (320, i.0),
+            EntityKey::PlanarExtent(i) => (321, i.0),
+            EntityKey::Plane(i) => (322, i.0),
+            EntityKey::PlaneAngleMeasureWithUnit(i) => (323, i.0),
+            EntityKey::PlaneAngleUnit(i) => (324, i.0),
+            EntityKey::PlusMinusTolerance(i) => (325, i.0),
+            EntityKey::Point(i) => (326, i.0),
+            EntityKey::PointStyle(i) => (327, i.0),
+            EntityKey::PolyLoop(i) => (328, i.0),
+            EntityKey::Polyline(i) => (329, i.0),
+            EntityKey::PositionTolerance(i) => (330, i.0),
+            EntityKey::PreDefinedCharacterGlyph(i) => (331, i.0),
+            EntityKey::PreDefinedColour(i) => (332, i.0),
+            EntityKey::PreDefinedCurveFont(i) => (333, i.0),
+            EntityKey::PreDefinedItem(i) => (334, i.0),
+            EntityKey::PreDefinedMarker(i) => (335, i.0),
+            EntityKey::PreDefinedPointMarkerSymbol(i) => (336, i.0),
+            EntityKey::PreDefinedPresentationStyle(i) => (337, i.0),
+            EntityKey::PreDefinedSurfaceSideStyle(i) => (338, i.0),
+            EntityKey::PreDefinedSymbol(i) => (339, i.0),
+            EntityKey::PreDefinedTerminatorSymbol(i) => (340, i.0),
+            EntityKey::PreDefinedTextFont(i) => (341, i.0),
+            EntityKey::PreDefinedTile(i) => (342, i.0),
+            EntityKey::PrecisionQualifier(i) => (343, i.0),
+            EntityKey::PresentationArea(i) => (344, i.0),
+            EntityKey::PresentationLayerAssignment(i) => (345, i.0),
+            EntityKey::PresentationRepresentation(i) => (346, i.0),
+            EntityKey::PresentationSet(i) => (347, i.0),
+            EntityKey::PresentationSize(i) => (348, i.0),
+            EntityKey::PresentationStyleAssignment(i) => (349, i.0),
+            EntityKey::PresentationStyleByContext(i) => (350, i.0),
+            EntityKey::PresentationView(i) => (351, i.0),
+            EntityKey::PresentedItem(i) => (352, i.0),
+            EntityKey::PresentedItemRepresentation(i) => (353, i.0),
+            EntityKey::Product(i) => (354, i.0),
+            EntityKey::ProductCategory(i) => (355, i.0),
+            EntityKey::ProductCategoryRelationship(i) => (356, i.0),
+            EntityKey::ProductConcept(i) => (357, i.0),
+            EntityKey::ProductConceptContext(i) => (358, i.0),
+            EntityKey::ProductConceptFeature(i) => (359, i.0),
+            EntityKey::ProductConceptFeatureCategory(i) => (360, i.0),
+            EntityKey::ProductContext(i) => (361, i.0),
+            EntityKey::ProductDefinition(i) => (362, i.0),
+            EntityKey::ProductDefinitionContext(i) => (363, i.0),
+            EntityKey::ProductDefinitionContextAssociation(i) => (364, i.0),
+            EntityKey::ProductDefinitionContextRole(i) => (365, i.0),
+            EntityKey::ProductDefinitionEffectivity(i) => (366, i.0),
+            EntityKey::ProductDefinitionFormation(i) => (367, i.0),
+            EntityKey::ProductDefinitionFormationWithSpecifiedSource(i) => (368, i.0),
+            EntityKey::ProductDefinitionOccurrence(i) => (369, i.0),
+            EntityKey::ProductDefinitionRelationship(i) => (370, i.0),
+            EntityKey::ProductDefinitionRelationshipRelationship(i) => (371, i.0),
+            EntityKey::ProductDefinitionShape(i) => (372, i.0),
+            EntityKey::ProductDefinitionSubstitute(i) => (373, i.0),
+            EntityKey::ProductDefinitionUsage(i) => (374, i.0),
+            EntityKey::ProductDefinitionWithAssociatedDocuments(i) => (375, i.0),
+            EntityKey::ProductRelatedProductCategory(i) => (376, i.0),
+            EntityKey::ProjectedZoneDefinition(i) => (377, i.0),
+            EntityKey::PropertyDefinition(i) => (378, i.0),
+            EntityKey::PropertyDefinitionRelationship(i) => (379, i.0),
+            EntityKey::PropertyDefinitionRepresentation(i) => (380, i.0),
+            EntityKey::QualifiedRepresentationItem(i) => (381, i.0),
+            EntityKey::QuasiUniformCurve(i) => (382, i.0),
+            EntityKey::QuasiUniformSurface(i) => (383, i.0),
+            EntityKey::RatioMeasureWithUnit(i) => (384, i.0),
+            EntityKey::RatioUnit(i) => (385, i.0),
+            EntityKey::RationalBSplineCurve(i) => (386, i.0),
+            EntityKey::RationalBSplineSurface(i) => (387, i.0),
+            EntityKey::RealLiteral(i) => (388, i.0),
+            EntityKey::RealRepresentationItem(i) => (389, i.0),
+            EntityKey::RepositionedTessellatedItem(i) => (390, i.0),
+            EntityKey::Representation(i) => (391, i.0),
+            EntityKey::RepresentationContext(i) => (392, i.0),
+            EntityKey::RepresentationContextReference(i) => (393, i.0),
+            EntityKey::RepresentationItem(i) => (394, i.0),
+            EntityKey::RepresentationMap(i) => (395, i.0),
+            EntityKey::RepresentationReference(i) => (396, i.0),
+            EntityKey::RepresentationRelationship(i) => (397, i.0),
+            EntityKey::RepresentationRelationshipWithTransformation(i) => (398, i.0),
+            EntityKey::ResourceProperty(i) => (399, i.0),
+            EntityKey::ResourceRequirementType(i) => (400, i.0),
+            EntityKey::RoleAssociation(i) => (401, i.0),
+            EntityKey::RoundnessTolerance(i) => (402, i.0),
+            EntityKey::SeamCurve(i) => (403, i.0),
+            EntityKey::SecurityClassification(i) => (404, i.0),
+            EntityKey::SecurityClassificationAssignment(i) => (405, i.0),
+            EntityKey::SecurityClassificationLevel(i) => (406, i.0),
+            EntityKey::ShapeAspect(i) => (407, i.0),
+            EntityKey::ShapeAspectAssociativity(i) => (408, i.0),
+            EntityKey::ShapeAspectDerivingRelationship(i) => (409, i.0),
+            EntityKey::ShapeAspectRelationship(i) => (410, i.0),
+            EntityKey::ShapeDefinitionRepresentation(i) => (411, i.0),
+            EntityKey::ShapeDimensionRepresentation(i) => (412, i.0),
+            EntityKey::ShapeRepresentation(i) => (413, i.0),
+            EntityKey::ShapeRepresentationRelationship(i) => (414, i.0),
+            EntityKey::ShapeRepresentationWithParameters(i) => (415, i.0),
+            EntityKey::ShellBasedSurfaceModel(i) => (416, i.0),
+            EntityKey::SiUnit(i) => (417, i.0),
+            EntityKey::SimpleGenericExpression(i) => (418, i.0),
+            EntityKey::SimpleNumericExpression(i) => (419, i.0),
+            EntityKey::SolidAngleUnit(i) => (420, i.0),
+            EntityKey::SolidModel(i) => (421, i.0),
+            EntityKey::SphericalSurface(i) => (422, i.0),
+            EntityKey::StartRequest(i) => (423, i.0),
+            EntityKey::StartWork(i) => (424, i.0),
+            EntityKey::StateObserved(i) => (425, i.0),
+            EntityKey::StateType(i) => (426, i.0),
+            EntityKey::StraightnessTolerance(i) => (427, i.0),
+            EntityKey::StyledItem(i) => (428, i.0),
+            EntityKey::Surface(i) => (429, i.0),
+            EntityKey::SurfaceCurve(i) => (430, i.0),
+            EntityKey::SurfaceOfLinearExtrusion(i) => (431, i.0),
+            EntityKey::SurfaceOfRevolution(i) => (432, i.0),
+            EntityKey::SurfaceProfileTolerance(i) => (433, i.0),
+            EntityKey::SurfaceRenderingProperties(i) => (434, i.0),
+            EntityKey::SurfaceSideStyle(i) => (435, i.0),
+            EntityKey::SurfaceStyleBoundary(i) => (436, i.0),
+            EntityKey::SurfaceStyleControlGrid(i) => (437, i.0),
+            EntityKey::SurfaceStyleFillArea(i) => (438, i.0),
+            EntityKey::SurfaceStyleParameterLine(i) => (439, i.0),
+            EntityKey::SurfaceStyleReflectanceAmbient(i) => (440, i.0),
+            EntityKey::SurfaceStyleRendering(i) => (441, i.0),
+            EntityKey::SurfaceStyleRenderingWithProperties(i) => (442, i.0),
+            EntityKey::SurfaceStyleSegmentationCurve(i) => (443, i.0),
+            EntityKey::SurfaceStyleSilhouette(i) => (444, i.0),
+            EntityKey::SurfaceStyleTransparent(i) => (445, i.0),
+            EntityKey::SurfaceStyleUsage(i) => (446, i.0),
+            EntityKey::SweptSurface(i) => (447, i.0),
+            EntityKey::SymbolColour(i) => (448, i.0),
+            EntityKey::SymbolRepresentation(i) => (449, i.0),
+            EntityKey::SymbolStyle(i) => (450, i.0),
+            EntityKey::SymbolTarget(i) => (451, i.0),
+            EntityKey::SymmetryTolerance(i) => (452, i.0),
+            EntityKey::TerminatorSymbol(i) => (453, i.0),
+            EntityKey::TessellatedAnnotationOccurrence(i) => (454, i.0),
+            EntityKey::TessellatedCurveSet(i) => (455, i.0),
+            EntityKey::TessellatedFace(i) => (456, i.0),
+            EntityKey::TessellatedGeometricSet(i) => (457, i.0),
+            EntityKey::TessellatedItem(i) => (458, i.0),
+            EntityKey::TessellatedShapeRepresentation(i) => (459, i.0),
+            EntityKey::TessellatedShell(i) => (460, i.0),
+            EntityKey::TessellatedSolid(i) => (461, i.0),
+            EntityKey::TessellatedStructuredItem(i) => (462, i.0),
+            EntityKey::TessellatedSurfaceSet(i) => (463, i.0),
+            EntityKey::TextFont(i) => (464, i.0),
+            EntityKey::TextLiteral(i) => (465, i.0),
+            EntityKey::TextStyle(i) => (466, i.0),
+            EntityKey::TextStyleForDefinedFont(i) => (467, i.0),
+            EntityKey::TextStyleWithBoxCharacteristics(i) => (468, i.0),
+            EntityKey::TextureStyleSpecification(i) => (469, i.0),
+            EntityKey::TextureStyleTessellationSpecification(i) => (470, i.0),
+            EntityKey::TimeUnit(i) => (471, i.0),
+            EntityKey::ToleranceValue(i) => (472, i.0),
+            EntityKey::ToleranceZone(i) => (473, i.0),
+            EntityKey::ToleranceZoneDefinition(i) => (474, i.0),
+            EntityKey::ToleranceZoneForm(i) => (475, i.0),
+            EntityKey::ToleranceZoneWithDatum(i) => (476, i.0),
+            EntityKey::TopologicalRepresentationItem(i) => (477, i.0),
+            EntityKey::ToroidalSurface(i) => (478, i.0),
+            EntityKey::TotalRunoutTolerance(i) => (479, i.0),
+            EntityKey::TrimmedCurve(i) => (480, i.0),
+            EntityKey::TwoDirectionRepeatFactor(i) => (481, i.0),
+            EntityKey::TypeQualifier(i) => (482, i.0),
+            EntityKey::UncertaintyMeasureWithUnit(i) => (483, i.0),
+            EntityKey::UncertaintyQualifier(i) => (484, i.0),
+            EntityKey::UnequallyDisposedGeometricTolerance(i) => (485, i.0),
+            EntityKey::UniformCurve(i) => (486, i.0),
+            EntityKey::UniformSurface(i) => (487, i.0),
+            EntityKey::ValueFormatTypeQualifier(i) => (488, i.0),
+            EntityKey::ValueRepresentationItem(i) => (489, i.0),
+            EntityKey::Vector(i) => (490, i.0),
+            EntityKey::VersionedActionRequest(i) => (491, i.0),
+            EntityKey::Vertex(i) => (492, i.0),
+            EntityKey::VertexLoop(i) => (493, i.0),
+            EntityKey::VertexPoint(i) => (494, i.0),
+            EntityKey::VertexShell(i) => (495, i.0),
+            EntityKey::ViewVolume(i) => (496, i.0),
+            EntityKey::VolumeUnit(i) => (497, i.0),
+            EntityKey::WireShell(i) => (498, i.0),
+            EntityKey::ComplexEntity(i) => (499, i.0),
         }
     }
 
@@ -3354,7 +3346,6 @@ impl EntityKey {
             EntityKey::AngularSize(_) => Some("ANGULAR_SIZE"),
             EntityKey::AngularityTolerance(_) => Some("ANGULARITY_TOLERANCE"),
             EntityKey::AnnotationCurveOccurrence(_) => Some("ANNOTATION_CURVE_OCCURRENCE"),
-            EntityKey::AnnotationFillAreaOccurrence(_) => Some("ANNOTATION_FILL_AREA_OCCURRENCE"),
             EntityKey::AnnotationOccurrence(_) => Some("ANNOTATION_OCCURRENCE"),
             EntityKey::AnnotationOccurrenceAssociativity(_) => {
                 Some("ANNOTATION_OCCURRENCE_ASSOCIATIVITY")
@@ -3372,7 +3363,6 @@ impl EntityKey {
                 Some("ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE")
             }
             EntityKey::AnnotationPlane(_) => Some("ANNOTATION_PLANE"),
-            EntityKey::AnnotationSymbol(_) => Some("ANNOTATION_SYMBOL"),
             EntityKey::AnnotationSymbolOccurrence(_) => Some("ANNOTATION_SYMBOL_OCCURRENCE"),
             EntityKey::AnnotationText(_) => Some("ANNOTATION_TEXT"),
             EntityKey::AnnotationTextCharacter(_) => Some("ANNOTATION_TEXT_CHARACTER"),
@@ -4071,7 +4061,6 @@ impl AnnotationCurveOccurrenceRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationOccurrenceRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
-    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
@@ -4089,7 +4078,6 @@ impl AnnotationOccurrenceRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
-            EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
             EntityKey::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
             EntityKey::AnnotationPlaceholderOccurrence(i) => {
                 Ok(Self::AnnotationPlaceholderOccurrence(i))
@@ -4168,7 +4156,6 @@ impl AnnotationPlaceholderOccurrenceRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationPlaneElementRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
-    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
@@ -4191,7 +4178,6 @@ impl AnnotationPlaneElementRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
-            EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
             EntityKey::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
             EntityKey::AnnotationPlaceholderOccurrence(i) => {
                 Ok(Self::AnnotationPlaceholderOccurrence(i))
@@ -4251,16 +4237,12 @@ impl AnnotationRepresentationSelectRef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationSymbolOccurrenceItemRef {
-    AnnotationSymbol(AnnotationSymbolId),
     DefinedSymbol(DefinedSymbolId),
-    Complex(ComplexEntityId),
 }
 impl AnnotationSymbolOccurrenceItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
-            EntityKey::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
             EntityKey::DefinedSymbol(i) => Ok(Self::DefinedSymbol(i)),
-            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
             other => Err(format!(
                 "expected AnnotationSymbolOccurrenceItemRef target, got {other:?}"
             )),
@@ -4356,13 +4338,11 @@ pub enum ApprovalItemRef {
     AdvancedFace(AdvancedFaceId),
     AngularLocation(AngularLocationId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
-    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
-    AnnotationSymbol(AnnotationSymbolId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationText(AnnotationTextId),
     AnnotationTextCharacter(AnnotationTextCharacterId),
@@ -4616,7 +4596,6 @@ impl ApprovalItemRef {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
-            EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
             EntityKey::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
             EntityKey::AnnotationPlaceholderLeaderLine(i) => {
                 Ok(Self::AnnotationPlaceholderLeaderLine(i))
@@ -4628,7 +4607,6 @@ impl ApprovalItemRef {
                 Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
             EntityKey::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
-            EntityKey::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
             EntityKey::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
             EntityKey::AnnotationText(i) => Ok(Self::AnnotationText(i)),
             EntityKey::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
@@ -5085,6 +5063,61 @@ impl CameraModelD3MultiClippingIntersectionSelectRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum CameraModelD3Ref {
+    CameraModelD3(CameraModelD3Id),
+    CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
+    CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
+    Complex(ComplexEntityId),
+}
+impl CameraModelD3Ref {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
+        match a {
+            EntityKey::CameraModelD3(i) => Ok(Self::CameraModelD3(i)),
+            EntityKey::CameraModelD3MultiClipping(i) => Ok(Self::CameraModelD3MultiClipping(i)),
+            EntityKey::CameraModelD3WithHlhsr(i) => Ok(Self::CameraModelD3WithHlhsr(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected CameraModelD3Ref target, got {other:?}")),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CameraModelRef {
+    CameraModel(CameraModelId),
+    CameraModelD3(CameraModelD3Id),
+    CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
+    CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
+    Complex(ComplexEntityId),
+}
+impl CameraModelRef {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
+        match a {
+            EntityKey::CameraModel(i) => Ok(Self::CameraModel(i)),
+            EntityKey::CameraModelD3(i) => Ok(Self::CameraModelD3(i)),
+            EntityKey::CameraModelD3MultiClipping(i) => Ok(Self::CameraModelD3MultiClipping(i)),
+            EntityKey::CameraModelD3WithHlhsr(i) => Ok(Self::CameraModelD3WithHlhsr(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected CameraModelRef target, got {other:?}")),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CameraUsageRef {
+    CameraUsage(CameraUsageId),
+    Complex(ComplexEntityId),
+}
+impl CameraUsageRef {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
+        match a {
+            EntityKey::CameraUsage(i) => Ok(Self::CameraUsage(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected CameraUsageRef target, got {other:?}")),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum CartesianPointRef {
     ApllPoint(ApllPointId),
     ApllPointWithSurface(ApllPointWithSurfaceId),
@@ -5524,13 +5557,11 @@ impl CompositeCurveSegmentRef {
 pub enum CompoundItemDefinitionRef {
     AdvancedFace(AdvancedFaceId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
-    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
-    AnnotationSymbol(AnnotationSymbolId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationText(AnnotationTextId),
     AnnotationTextCharacter(AnnotationTextCharacterId),
@@ -5680,7 +5711,6 @@ impl CompoundItemDefinitionRef {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
-            EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
             EntityKey::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
             EntityKey::AnnotationPlaceholderLeaderLine(i) => {
                 Ok(Self::AnnotationPlaceholderLeaderLine(i))
@@ -5692,7 +5722,6 @@ impl CompoundItemDefinitionRef {
                 Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
             EntityKey::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
-            EntityKey::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
             EntityKey::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
             EntityKey::AnnotationText(i) => Ok(Self::AnnotationText(i)),
             EntityKey::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
@@ -6745,6 +6774,23 @@ impl DatumSystemRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum DatumTargetRef {
+    DatumTarget(DatumTargetId),
+    PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
+    Complex(ComplexEntityId),
+}
+impl DatumTargetRef {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
+        match a {
+            EntityKey::DatumTarget(i) => Ok(Self::DatumTarget(i)),
+            EntityKey::PlacedDatumTargetFeature(i) => Ok(Self::PlacedDatumTargetFeature(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected DatumTargetRef target, got {other:?}")),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum DefinedGlyphSelectRef {
     ExternallyDefinedCharacterGlyph(ExternallyDefinedCharacterGlyphId),
     PreDefinedCharacterGlyph(PreDefinedCharacterGlyphId),
@@ -7154,13 +7200,11 @@ pub enum DocumentReferenceItemRef {
     AngularLocation(AngularLocationId),
     AngularSize(AngularSizeId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
-    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
-    AnnotationSymbol(AnnotationSymbolId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationText(AnnotationTextId),
     AnnotationTextCharacter(AnnotationTextCharacterId),
@@ -7447,7 +7491,6 @@ impl DocumentReferenceItemRef {
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
             EntityKey::AngularSize(i) => Ok(Self::AngularSize(i)),
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
-            EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
             EntityKey::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
             EntityKey::AnnotationPlaceholderLeaderLine(i) => {
                 Ok(Self::AnnotationPlaceholderLeaderLine(i))
@@ -7459,7 +7502,6 @@ impl DocumentReferenceItemRef {
                 Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
             EntityKey::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
-            EntityKey::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
             EntityKey::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
             EntityKey::AnnotationText(i) => Ok(Self::AnnotationText(i)),
             EntityKey::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
@@ -7818,7 +7860,6 @@ impl DocumentTypeRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum DraughtingCalloutElementRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
-    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
@@ -7833,7 +7874,6 @@ impl DraughtingCalloutElementRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
-            EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
             EntityKey::AnnotationPlaceholderOccurrence(i) => {
                 Ok(Self::AnnotationPlaceholderOccurrence(i))
             }
@@ -7878,7 +7918,6 @@ impl DraughtingCalloutRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum DraughtingModelItemAssociationSelectRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
-    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
@@ -7898,7 +7937,6 @@ impl DraughtingModelItemAssociationSelectRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
-            EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
             EntityKey::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
             EntityKey::AnnotationPlaceholderOccurrence(i) => {
                 Ok(Self::AnnotationPlaceholderOccurrence(i))
@@ -8086,6 +8124,21 @@ impl DraughtingModelItemDefinitionRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum DraughtingModelRef {
+    DraughtingModel(DraughtingModelId),
+    Complex(ComplexEntityId),
+}
+impl DraughtingModelRef {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
+        match a {
+            EntityKey::DraughtingModel(i) => Ok(Self::DraughtingModel(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected DraughtingModelRef target, got {other:?}")),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum EdgeRef {
     Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
@@ -8114,13 +8167,11 @@ pub enum ExternalIdentificationItemRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     AdvancedFace(AdvancedFaceId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
-    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
-    AnnotationSymbol(AnnotationSymbolId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationText(AnnotationTextId),
     AnnotationTextCharacter(AnnotationTextCharacterId),
@@ -8364,7 +8415,6 @@ impl ExternalIdentificationItemRef {
             }
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
-            EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
             EntityKey::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
             EntityKey::AnnotationPlaceholderLeaderLine(i) => {
                 Ok(Self::AnnotationPlaceholderLeaderLine(i))
@@ -8376,7 +8426,6 @@ impl ExternalIdentificationItemRef {
                 Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
             EntityKey::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
-            EntityKey::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
             EntityKey::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
             EntityKey::AnnotationText(i) => Ok(Self::AnnotationText(i)),
             EntityKey::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
@@ -9218,6 +9267,42 @@ impl GeometricModelItemRef {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum GeometricRepresentationContextRef {
+    GeometricRepresentationContext(GeometricRepresentationContextId),
+    Complex(ComplexEntityId),
+}
+impl GeometricRepresentationContextRef {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
+        match a {
+            EntityKey::GeometricRepresentationContext(i) => {
+                Ok(Self::GeometricRepresentationContext(i))
+            }
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected GeometricRepresentationContextRef target, got {other:?}"
+            )),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum GeometricSetRef {
+    GeometricCurveSet(GeometricCurveSetId),
+    GeometricSet(GeometricSetId),
+    Complex(ComplexEntityId),
+}
+impl GeometricSetRef {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
+        match a {
+            EntityKey::GeometricCurveSet(i) => Ok(Self::GeometricCurveSet(i)),
+            EntityKey::GeometricSet(i) => Ok(Self::GeometricSet(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
+            other => Err(format!("expected GeometricSetRef target, got {other:?}")),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum GeometricSetSelectRef {
     AnnotationText(AnnotationTextId),
     ApllPoint(ApllPointId),
@@ -9510,13 +9595,11 @@ pub enum GroupableItemRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
     AngularLocation(AngularLocationId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
-    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
-    AnnotationSymbol(AnnotationSymbolId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationText(AnnotationTextId),
     AnnotationTextCharacter(AnnotationTextCharacterId),
@@ -9823,7 +9906,6 @@ impl GroupableItemRef {
             EntityKey::AllAroundShapeAspect(i) => Ok(Self::AllAroundShapeAspect(i)),
             EntityKey::AngularLocation(i) => Ok(Self::AngularLocation(i)),
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
-            EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
             EntityKey::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
             EntityKey::AnnotationPlaceholderLeaderLine(i) => {
                 Ok(Self::AnnotationPlaceholderLeaderLine(i))
@@ -9835,7 +9917,6 @@ impl GroupableItemRef {
                 Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
             EntityKey::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
-            EntityKey::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
             EntityKey::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
             EntityKey::AnnotationText(i) => Ok(Self::AnnotationText(i)),
             EntityKey::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
@@ -10508,7 +10589,6 @@ impl IdentificationRoleRef {
 pub enum InvisibleItemRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
-    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
@@ -10564,7 +10644,6 @@ impl InvisibleItemRef {
                 Ok(Self::AdvancedBrepShapeRepresentation(i))
             }
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
-            EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
             EntityKey::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
             EntityKey::AnnotationPlaceholderOccurrence(i) => {
                 Ok(Self::AnnotationPlaceholderOccurrence(i))
@@ -10847,13 +10926,11 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
 pub enum ItemIdentifiedRepresentationUsageSelectRef {
     AdvancedFace(AdvancedFaceId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
-    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
-    AnnotationSymbol(AnnotationSymbolId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationText(AnnotationTextId),
     AnnotationTextCharacter(AnnotationTextCharacterId),
@@ -11003,7 +11080,6 @@ impl ItemIdentifiedRepresentationUsageSelectRef {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
-            EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
             EntityKey::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
             EntityKey::AnnotationPlaceholderLeaderLine(i) => {
                 Ok(Self::AnnotationPlaceholderLeaderLine(i))
@@ -11015,7 +11091,6 @@ impl ItemIdentifiedRepresentationUsageSelectRef {
                 Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
             EntityKey::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
-            EntityKey::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
             EntityKey::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
             EntityKey::AnnotationText(i) => Ok(Self::AnnotationText(i)),
             EntityKey::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
@@ -11188,13 +11263,11 @@ impl ItemIdentifiedRepresentationUsageSelectRef {
 pub enum LayeredItemRef {
     AdvancedFace(AdvancedFaceId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
-    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
-    AnnotationSymbol(AnnotationSymbolId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationText(AnnotationTextId),
     AnnotationTextCharacter(AnnotationTextCharacterId),
@@ -11345,7 +11418,6 @@ impl LayeredItemRef {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
-            EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
             EntityKey::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
             EntityKey::AnnotationPlaceholderLeaderLine(i) => {
                 Ok(Self::AnnotationPlaceholderLeaderLine(i))
@@ -11357,7 +11429,6 @@ impl LayeredItemRef {
                 Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
             EntityKey::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
-            EntityKey::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
             EntityKey::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
             EntityKey::AnnotationText(i) => Ok(Self::AnnotationText(i)),
             EntityKey::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
@@ -12855,13 +12926,11 @@ impl RepresentationContextReferenceRef {
 pub enum RepresentationItemRef {
     AdvancedFace(AdvancedFaceId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
-    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
-    AnnotationSymbol(AnnotationSymbolId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationText(AnnotationTextId),
     AnnotationTextCharacter(AnnotationTextCharacterId),
@@ -13009,7 +13078,6 @@ impl RepresentationItemRef {
         match a {
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
-            EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
             EntityKey::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
             EntityKey::AnnotationPlaceholderLeaderLine(i) => {
                 Ok(Self::AnnotationPlaceholderLeaderLine(i))
@@ -13021,7 +13089,6 @@ impl RepresentationItemRef {
                 Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
             EntityKey::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
-            EntityKey::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
             EntityKey::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
             EntityKey::AnnotationText(i) => Ok(Self::AnnotationText(i)),
             EntityKey::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
@@ -13977,13 +14044,11 @@ pub enum StyleContextSelectRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     AdvancedFace(AdvancedFaceId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
-    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
-    AnnotationSymbol(AnnotationSymbolId),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
     AnnotationText(AnnotationTextId),
     AnnotationTextCharacter(AnnotationTextCharacterId),
@@ -14179,7 +14244,6 @@ impl StyleContextSelectRef {
             }
             EntityKey::AdvancedFace(i) => Ok(Self::AdvancedFace(i)),
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
-            EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
             EntityKey::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
             EntityKey::AnnotationPlaceholderLeaderLine(i) => {
                 Ok(Self::AnnotationPlaceholderLeaderLine(i))
@@ -14191,7 +14255,6 @@ impl StyleContextSelectRef {
                 Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
             EntityKey::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
-            EntityKey::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
             EntityKey::AnnotationSymbolOccurrence(i) => Ok(Self::AnnotationSymbolOccurrence(i)),
             EntityKey::AnnotationText(i) => Ok(Self::AnnotationText(i)),
             EntityKey::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
@@ -14428,7 +14491,6 @@ impl StyleContextSelectRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum StyledItemRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
-    AnnotationFillAreaOccurrence(AnnotationFillAreaOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
@@ -14449,7 +14511,6 @@ impl StyledItemRef {
     pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
         match a {
             EntityKey::AnnotationCurveOccurrence(i) => Ok(Self::AnnotationCurveOccurrence(i)),
-            EntityKey::AnnotationFillAreaOccurrence(i) => Ok(Self::AnnotationFillAreaOccurrence(i)),
             EntityKey::AnnotationOccurrence(i) => Ok(Self::AnnotationOccurrence(i)),
             EntityKey::AnnotationPlaceholderOccurrence(i) => {
                 Ok(Self::AnnotationPlaceholderOccurrence(i))
@@ -14488,7 +14549,6 @@ pub enum StyledItemTargetRef {
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
     AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLineId),
     AnnotationPlane(AnnotationPlaneId),
-    AnnotationSymbol(AnnotationSymbolId),
     AnnotationText(AnnotationTextId),
     AnnotationTextCharacter(AnnotationTextCharacterId),
     AnnotationToAnnotationLeaderLine(AnnotationToAnnotationLeaderLineId),
@@ -14660,7 +14720,6 @@ impl StyledItemTargetRef {
                 Ok(Self::AnnotationPlaceholderOccurrenceWithLeaderLine(i))
             }
             EntityKey::AnnotationPlane(i) => Ok(Self::AnnotationPlane(i)),
-            EntityKey::AnnotationSymbol(i) => Ok(Self::AnnotationSymbol(i)),
             EntityKey::AnnotationText(i) => Ok(Self::AnnotationText(i)),
             EntityKey::AnnotationTextCharacter(i) => Ok(Self::AnnotationTextCharacter(i)),
             EntityKey::AnnotationToAnnotationLeaderLine(i) => {
@@ -15004,6 +15063,23 @@ impl SymbolTargetRef {
         match a {
             EntityKey::SymbolTarget(i) => Ok(Self::SymbolTarget(i)),
             other => Err(format!("expected SymbolTargetRef target, got {other:?}")),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum TessellatedGeometricSetRef {
+    TessellatedGeometricSet(TessellatedGeometricSetId),
+    Complex(ComplexEntityId),
+}
+impl TessellatedGeometricSetRef {
+    pub(crate) fn from_any(a: EntityKey) -> Result<Self, String> {
+        match a {
+            EntityKey::TessellatedGeometricSet(i) => Ok(Self::TessellatedGeometricSet(i)),
+            EntityKey::ComplexEntity(i) => Ok(Self::Complex(i)),
+            other => Err(format!(
+                "expected TessellatedGeometricSetRef target, got {other:?}"
+            )),
         }
     }
 }
@@ -15643,14 +15719,6 @@ pub struct AnnotationCurveOccurrence {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct AnnotationFillAreaOccurrence {
-    pub name: Text,
-    pub styles: Vec<PresentationStyleAssignmentRef>,
-    pub item: StyledItemTargetRef,
-    pub fill_style_target: PointRef,
-}
-
-#[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationOccurrence {
     pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
@@ -15683,7 +15751,7 @@ pub struct AnnotationPlaceholderLeaderLine {
 pub struct AnnotationPlaceholderOccurrence {
     pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
-    pub item: StyledItemTargetRef,
+    pub item: GeometricSetRef,
     pub role: AnnotationPlaceholderOccurrenceRole,
     pub line_spacing: f64,
 }
@@ -15692,7 +15760,7 @@ pub struct AnnotationPlaceholderOccurrence {
 pub struct AnnotationPlaceholderOccurrenceWithLeaderLine {
     pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
-    pub item: StyledItemTargetRef,
+    pub item: GeometricSetRef,
     pub role: AnnotationPlaceholderOccurrenceRole,
     pub line_spacing: f64,
     pub leader_line: Vec<AnnotationPlaceholderLeaderLineRef>,
@@ -15704,13 +15772,6 @@ pub struct AnnotationPlane {
     pub styles: Vec<PresentationStyleAssignmentRef>,
     pub item: PlaneOrPlanarBoxRef,
     pub elements: Option<Vec<AnnotationPlaneElementRef>>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct AnnotationSymbol {
-    pub name: Text,
-    pub mapping_source: RepresentationMapRef,
-    pub mapping_target: RepresentationItemRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -16073,15 +16134,15 @@ pub struct CalendarDate {
 #[derive(Debug, Clone, PartialEq)]
 pub struct CameraImage {
     pub name: Text,
-    pub mapping_source: RepresentationMapRef,
-    pub mapping_target: RepresentationItemRef,
+    pub mapping_source: CameraUsageRef,
+    pub mapping_target: PlanarBoxRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CameraImage3dWithScale {
     pub name: Text,
-    pub mapping_source: RepresentationMapRef,
-    pub mapping_target: RepresentationItemRef,
+    pub mapping_source: CameraUsageRef,
+    pub mapping_target: PlanarBoxRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -16114,7 +16175,7 @@ pub struct CameraModelD3WithHlhsr {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CameraUsage {
-    pub mapping_origin: RepresentationItemRef,
+    pub mapping_origin: CameraModelRef,
     pub mapped_representation: RepresentationRef,
 }
 
@@ -16612,8 +16673,8 @@ pub struct DatumTarget {
 pub struct DefaultModelGeometricView {
     pub name: Text,
     pub description: Option<Text>,
-    pub item: RepresentationItemRef,
-    pub rep: RepresentationRef,
+    pub item: CameraModelRef,
+    pub rep: DraughtingModelRef,
     pub name_1: Text,
     pub description_1: Option<Text>,
     pub of_shape: ProductDefinitionShapeRef,
@@ -16867,8 +16928,8 @@ pub struct DraughtingModelItemAssociationWithPlaceholder {
     pub name: Text,
     pub description: Option<Text>,
     pub definition: DraughtingModelItemDefinitionRef,
-    pub used_representation: AnnotationRepresentationSelectRef,
-    pub identified_item: DraughtingModelItemAssociationSelectRef,
+    pub used_representation: DraughtingModelRef,
+    pub identified_item: DraughtingCalloutRef,
     pub annotation_placeholder: AnnotationPlaceholderOccurrenceRef,
 }
 
@@ -17032,7 +17093,7 @@ pub struct FeatureForDatumTargetRelationship {
     pub name: Text,
     pub description: Option<Text>,
     pub relating_shape_aspect: ShapeAspectRef,
-    pub related_shape_aspect: ShapeAspectRef,
+    pub related_shape_aspect: DatumTargetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -17502,7 +17563,7 @@ pub struct MechanicalDesignGeometricPresentationRepresentation {
 #[derive(Debug, Clone, PartialEq)]
 pub struct MechanicalDesignPresentationRepresentationWithDraughting {
     pub name: Text,
-    pub items: Vec<RepresentationItemRef>,
+    pub items: Vec<CameraModelD3Ref>,
     pub context_of_items: RepresentationContextRef,
 }
 
@@ -17517,8 +17578,8 @@ pub struct MechanicalDesignShadedPresentationRepresentation {
 pub struct ModelGeometricView {
     pub name: Text,
     pub description: Option<Text>,
-    pub item: RepresentationItemRef,
-    pub rep: RepresentationRef,
+    pub item: CameraModelRef,
+    pub rep: DraughtingModelRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -17939,7 +18000,7 @@ pub struct PrecisionQualifier {
 pub struct PresentationArea {
     pub name: Text,
     pub items: Vec<RepresentationItemRef>,
-    pub context_of_items: RepresentationContextRef,
+    pub context_of_items: GeometricRepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -17953,7 +18014,7 @@ pub struct PresentationLayerAssignment {
 pub struct PresentationRepresentation {
     pub name: Text,
     pub items: Vec<RepresentationItemRef>,
-    pub context_of_items: RepresentationContextRef,
+    pub context_of_items: GeometricRepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -17980,7 +18041,7 @@ pub struct PresentationStyleByContext {
 pub struct PresentationView {
     pub name: Text,
     pub items: Vec<RepresentationItemRef>,
-    pub context_of_items: RepresentationContextRef,
+    pub context_of_items: GeometricRepresentationContextRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -18677,7 +18738,7 @@ pub struct TerminatorSymbol {
 pub struct TessellatedAnnotationOccurrence {
     pub name: Text,
     pub styles: Vec<PresentationStyleAssignmentRef>,
-    pub item: StyledItemTargetRef,
+    pub item: TessellatedGeometricSetRef,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -19046,9 +19107,6 @@ pub enum PartialEntity {
     AdvancedBrepShapeRepresentation,
     AdvancedFace,
     AnnotationCurveOccurrence,
-    AnnotationFillAreaOccurrence {
-        fill_style_target: PointRef,
-    },
     AnnotationOccurrence,
     AnnotationOccurrenceAssociativity,
     AnnotationOccurrenceRelationship {
@@ -19067,7 +19125,6 @@ pub enum PartialEntity {
     AnnotationPlane {
         elements: Option<Vec<AnnotationPlaneElementRef>>,
     },
-    AnnotationSymbol,
     AnnotationSymbolOccurrence,
     AnnotationText,
     AnnotationTextCharacter {
@@ -19967,7 +20024,6 @@ pub struct StepModel {
     pub(crate) angular_size_arena: Arena<AngularSize>,
     pub(crate) angularity_tolerance_arena: Arena<AngularityTolerance>,
     pub(crate) annotation_curve_occurrence_arena: Arena<AnnotationCurveOccurrence>,
-    pub(crate) annotation_fill_area_occurrence_arena: Arena<AnnotationFillAreaOccurrence>,
     pub(crate) annotation_occurrence_arena: Arena<AnnotationOccurrence>,
     pub(crate) annotation_occurrence_associativity_arena: Arena<AnnotationOccurrenceAssociativity>,
     pub(crate) annotation_occurrence_relationship_arena: Arena<AnnotationOccurrenceRelationship>,
@@ -19976,7 +20032,6 @@ pub struct StepModel {
     pub(crate) annotation_placeholder_occurrence_with_leader_line_arena:
         Arena<AnnotationPlaceholderOccurrenceWithLeaderLine>,
     pub(crate) annotation_plane_arena: Arena<AnnotationPlane>,
-    pub(crate) annotation_symbol_arena: Arena<AnnotationSymbol>,
     pub(crate) annotation_symbol_occurrence_arena: Arena<AnnotationSymbolOccurrence>,
     pub(crate) annotation_text_arena: Arena<AnnotationText>,
     pub(crate) annotation_text_character_arena: Arena<AnnotationTextCharacter>,
@@ -20647,11 +20702,6 @@ entity!(
     annotation_curve_occurrence_arena
 );
 entity!(
-    AnnotationFillAreaOccurrence,
-    AnnotationFillAreaOccurrenceId,
-    annotation_fill_area_occurrence_arena
-);
-entity!(
     AnnotationOccurrence,
     AnnotationOccurrenceId,
     annotation_occurrence_arena
@@ -20682,11 +20732,6 @@ entity!(
     annotation_placeholder_occurrence_with_leader_line_arena
 );
 entity!(AnnotationPlane, AnnotationPlaneId, annotation_plane_arena);
-entity!(
-    AnnotationSymbol,
-    AnnotationSymbolId,
-    annotation_symbol_arena
-);
 entity!(
     AnnotationSymbolOccurrence,
     AnnotationSymbolOccurrenceId,

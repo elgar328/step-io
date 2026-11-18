@@ -737,35 +737,6 @@ impl Ap242Author {
         ))
     }
 
-    /// `ANNOTATION_FILL_AREA_OCCURRENCE` — strict AP242 constructor.
-    pub fn add_annotation_fill_area_occurrence(
-        &mut self,
-        name: &str,
-        styles: Vec<PresentationStyleAssignmentRef>,
-        item: StyledItemTargetRef,
-        fill_style_target: PointRef,
-    ) -> Result<AnnotationFillAreaOccurrenceId, AuthorError> {
-        for e0 in &styles {
-            check_presentation_style_assignment_ref(&self.model, e0)?;
-        }
-        check_styled_item_target_ref(&self.model, &item)?;
-        check_point_ref(&self.model, &fill_style_target)?;
-        let name = {
-            let v = name;
-            self.text(v)
-        };
-        Ok(AnnotationFillAreaOccurrenceId(
-            self.model
-                .annotation_fill_area_occurrence_arena
-                .push(AnnotationFillAreaOccurrence {
-                    name,
-                    styles,
-                    item,
-                    fill_style_target,
-                }),
-        ))
-    }
-
     /// `ANNOTATION_OCCURRENCE` — strict AP242 constructor.
     pub fn add_annotation_occurrence(
         &mut self,
@@ -853,14 +824,14 @@ impl Ap242Author {
         &mut self,
         name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
-        item: StyledItemTargetRef,
+        item: GeometricSetRef,
         role: AnnotationPlaceholderOccurrenceRole,
         line_spacing: f64,
     ) -> Result<AnnotationPlaceholderOccurrenceId, AuthorError> {
         for e0 in &styles {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
-        check_styled_item_target_ref(&self.model, &item)?;
+        check_geometric_set_ref(&self.model, &item)?;
         if !line_spacing.is_finite() {
             return Err(AuthorError::NonFiniteReal {
                 entity: "ANNOTATION_PLACEHOLDER_OCCURRENCE",
@@ -922,28 +893,6 @@ impl Ap242Author {
                 styles,
                 item,
                 elements,
-            },
-        )))
-    }
-
-    /// `ANNOTATION_SYMBOL` — strict AP242 constructor.
-    pub fn add_annotation_symbol(
-        &mut self,
-        name: &str,
-        mapping_source: RepresentationMapRef,
-        mapping_target: RepresentationItemRef,
-    ) -> Result<AnnotationSymbolId, AuthorError> {
-        check_representation_map_ref(&self.model, &mapping_source)?;
-        check_representation_item_ref(&self.model, &mapping_target)?;
-        let name = {
-            let v = name;
-            self.text(v)
-        };
-        Ok(AnnotationSymbolId(self.model.annotation_symbol_arena.push(
-            AnnotationSymbol {
-                name,
-                mapping_source,
-                mapping_target,
             },
         )))
     }
@@ -2233,11 +2182,11 @@ impl Ap242Author {
     pub fn add_camera_image(
         &mut self,
         name: &str,
-        mapping_source: RepresentationMapRef,
-        mapping_target: RepresentationItemRef,
+        mapping_source: CameraUsageRef,
+        mapping_target: PlanarBoxRef,
     ) -> Result<CameraImageId, AuthorError> {
-        check_representation_map_ref(&self.model, &mapping_source)?;
-        check_representation_item_ref(&self.model, &mapping_target)?;
+        check_camera_usage_ref(&self.model, &mapping_source)?;
+        check_planar_box_ref(&self.model, &mapping_target)?;
         let name = {
             let v = name;
             self.text(v)
@@ -2255,11 +2204,11 @@ impl Ap242Author {
     pub fn add_camera_image3d_with_scale(
         &mut self,
         name: &str,
-        mapping_source: RepresentationMapRef,
-        mapping_target: RepresentationItemRef,
+        mapping_source: CameraUsageRef,
+        mapping_target: PlanarBoxRef,
     ) -> Result<CameraImage3dWithScaleId, AuthorError> {
-        check_representation_map_ref(&self.model, &mapping_source)?;
-        check_representation_item_ref(&self.model, &mapping_target)?;
+        check_camera_usage_ref(&self.model, &mapping_source)?;
+        check_planar_box_ref(&self.model, &mapping_target)?;
         let name = {
             let v = name;
             self.text(v)
@@ -2378,10 +2327,10 @@ impl Ap242Author {
     /// `CAMERA_USAGE` — strict AP242 constructor.
     pub fn add_camera_usage(
         &mut self,
-        mapping_origin: RepresentationItemRef,
+        mapping_origin: CameraModelRef,
         mapped_representation: RepresentationRef,
     ) -> Result<CameraUsageId, AuthorError> {
-        check_representation_item_ref(&self.model, &mapping_origin)?;
+        check_camera_model_ref(&self.model, &mapping_origin)?;
         check_representation_ref(&self.model, &mapped_representation)?;
         Ok(CameraUsageId(self.model.camera_usage_arena.push(
             CameraUsage {
@@ -4373,14 +4322,14 @@ impl Ap242Author {
         &mut self,
         name: &str,
         description: Option<&str>,
-        item: RepresentationItemRef,
-        rep: RepresentationRef,
+        item: CameraModelRef,
+        rep: DraughtingModelRef,
         name_1: &str,
         description_1: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
     ) -> Result<DefaultModelGeometricViewId, AuthorError> {
-        check_representation_item_ref(&self.model, &item)?;
-        check_representation_ref(&self.model, &rep)?;
+        check_camera_model_ref(&self.model, &item)?;
+        check_draughting_model_ref(&self.model, &rep)?;
         check_product_definition_shape_ref(&self.model, &of_shape)?;
         let name = {
             let v = name;
@@ -5332,13 +5281,13 @@ impl Ap242Author {
         name: &str,
         description: Option<&str>,
         definition: DraughtingModelItemDefinitionRef,
-        used_representation: AnnotationRepresentationSelectRef,
-        identified_item: DraughtingModelItemAssociationSelectRef,
+        used_representation: DraughtingModelRef,
+        identified_item: DraughtingCalloutRef,
         annotation_placeholder: AnnotationPlaceholderOccurrenceRef,
     ) -> Result<DraughtingModelItemAssociationWithPlaceholderId, AuthorError> {
         check_draughting_model_item_definition_ref(&self.model, &definition)?;
-        check_annotation_representation_select_ref(&self.model, &used_representation)?;
-        check_draughting_model_item_association_select_ref(&self.model, &identified_item)?;
+        check_draughting_model_ref(&self.model, &used_representation)?;
+        check_draughting_callout_ref(&self.model, &identified_item)?;
         check_annotation_placeholder_occurrence_ref(&self.model, &annotation_placeholder)?;
         let name = {
             let v = name;
@@ -5849,10 +5798,10 @@ impl Ap242Author {
         name: &str,
         description: Option<&str>,
         relating_shape_aspect: ShapeAspectRef,
-        related_shape_aspect: ShapeAspectRef,
+        related_shape_aspect: DatumTargetRef,
     ) -> Result<FeatureForDatumTargetRelationshipId, AuthorError> {
         check_shape_aspect_ref(&self.model, &relating_shape_aspect)?;
-        check_shape_aspect_ref(&self.model, &related_shape_aspect)?;
+        check_datum_target_ref(&self.model, &related_shape_aspect)?;
         let name = {
             let v = name;
             self.text(v)
@@ -7661,7 +7610,7 @@ impl Ap242Author {
     pub fn add_mechanical_design_presentation_representation_with_draughting(
         &mut self,
         name: &str,
-        items: Vec<RepresentationItemRef>,
+        items: Vec<CameraModelD3Ref>,
         context_of_items: RepresentationContextRef,
     ) -> Result<MechanicalDesignPresentationRepresentationWithDraughtingId, AuthorError> {
         {
@@ -7677,7 +7626,7 @@ impl Ap242Author {
             }
         }
         for e0 in &items {
-            check_representation_item_ref(&self.model, e0)?;
+            check_camera_model_d3_ref(&self.model, e0)?;
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
@@ -7738,11 +7687,11 @@ impl Ap242Author {
         &mut self,
         name: &str,
         description: Option<&str>,
-        item: RepresentationItemRef,
-        rep: RepresentationRef,
+        item: CameraModelRef,
+        rep: DraughtingModelRef,
     ) -> Result<ModelGeometricViewId, AuthorError> {
-        check_representation_item_ref(&self.model, &item)?;
-        check_representation_ref(&self.model, &rep)?;
+        check_camera_model_ref(&self.model, &item)?;
+        check_draughting_model_ref(&self.model, &rep)?;
         let name = {
             let v = name;
             self.text(v)
@@ -9264,7 +9213,7 @@ impl Ap242Author {
         &mut self,
         name: &str,
         items: Vec<RepresentationItemRef>,
-        context_of_items: RepresentationContextRef,
+        context_of_items: GeometricRepresentationContextRef,
     ) -> Result<PresentationAreaId, AuthorError> {
         {
             let x = &items;
@@ -9281,7 +9230,7 @@ impl Ap242Author {
         for e0 in &items {
             check_representation_item_ref(&self.model, e0)?;
         }
-        check_representation_context_ref(&self.model, &context_of_items)?;
+        check_geometric_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
             self.text(v)
@@ -9341,7 +9290,7 @@ impl Ap242Author {
         &mut self,
         name: &str,
         items: Vec<RepresentationItemRef>,
-        context_of_items: RepresentationContextRef,
+        context_of_items: GeometricRepresentationContextRef,
     ) -> Result<PresentationRepresentationId, AuthorError> {
         {
             let x = &items;
@@ -9358,7 +9307,7 @@ impl Ap242Author {
         for e0 in &items {
             check_representation_item_ref(&self.model, e0)?;
         }
-        check_representation_context_ref(&self.model, &context_of_items)?;
+        check_geometric_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
             self.text(v)
@@ -9460,7 +9409,7 @@ impl Ap242Author {
         &mut self,
         name: &str,
         items: Vec<RepresentationItemRef>,
-        context_of_items: RepresentationContextRef,
+        context_of_items: GeometricRepresentationContextRef,
     ) -> Result<PresentationViewId, AuthorError> {
         {
             let x = &items;
@@ -9477,7 +9426,7 @@ impl Ap242Author {
         for e0 in &items {
             check_representation_item_ref(&self.model, e0)?;
         }
-        check_representation_context_ref(&self.model, &context_of_items)?;
+        check_geometric_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
             self.text(v)
@@ -12102,12 +12051,12 @@ impl Ap242Author {
         &mut self,
         name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
-        item: StyledItemTargetRef,
+        item: TessellatedGeometricSetRef,
     ) -> Result<TessellatedAnnotationOccurrenceId, AuthorError> {
         for e0 in &styles {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
-        check_styled_item_target_ref(&self.model, &item)?;
+        check_tessellated_geometric_set_ref(&self.model, &item)?;
         let name = {
             let v = name;
             self.text(v)
@@ -13401,32 +13350,6 @@ impl Ap242Author {
         })))
     }
 
-    /// `ANNOTATION_PLACEHOLDER_OCCURRENCE` — self-referencing variant: the closure receives the id
-    /// this entity will get, so a field may reference the entity itself.
-    /// Validation runs after insertion; on error the insertion is rolled back.
-    pub fn add_annotation_placeholder_occurrence_cyclic(
-        &mut self,
-        build: impl FnOnce(AnnotationPlaceholderOccurrenceId) -> AnnotationPlaceholderOccurrence,
-    ) -> Result<AnnotationPlaceholderOccurrenceId, AuthorError> {
-        let id = AnnotationPlaceholderOccurrenceId(
-            self.model
-                .annotation_placeholder_occurrence_arena
-                .items
-                .len() as u32,
-        );
-        self.model
-            .annotation_placeholder_occurrence_arena
-            .push(build(id));
-        if let Err(e) = cyclic_check_annotation_placeholder_occurrence(&self.model, id.0) {
-            self.model
-                .annotation_placeholder_occurrence_arena
-                .items
-                .pop();
-            return Err(e);
-        }
-        Ok(id)
-    }
-
     /// `ANNOTATION_PLANE` — self-referencing variant: the closure receives the id
     /// this entity will get, so a field may reference the entity itself.
     /// Validation runs after insertion; on error the insertion is rolled back.
@@ -13438,22 +13361,6 @@ impl Ap242Author {
         self.model.annotation_plane_arena.push(build(id));
         if let Err(e) = cyclic_check_annotation_plane(&self.model, id.0) {
             self.model.annotation_plane_arena.items.pop();
-            return Err(e);
-        }
-        Ok(id)
-    }
-
-    /// `ANNOTATION_SYMBOL` — self-referencing variant: the closure receives the id
-    /// this entity will get, so a field may reference the entity itself.
-    /// Validation runs after insertion; on error the insertion is rolled back.
-    pub fn add_annotation_symbol_cyclic(
-        &mut self,
-        build: impl FnOnce(AnnotationSymbolId) -> AnnotationSymbol,
-    ) -> Result<AnnotationSymbolId, AuthorError> {
-        let id = AnnotationSymbolId(self.model.annotation_symbol_arena.items.len() as u32);
-        self.model.annotation_symbol_arena.push(build(id));
-        if let Err(e) = cyclic_check_annotation_symbol(&self.model, id.0) {
-            self.model.annotation_symbol_arena.items.pop();
             return Err(e);
         }
         Ok(id)
@@ -13605,39 +13512,6 @@ impl Ap242Author {
         self.model.bounded_surface_curve_arena.push(build(id));
         if let Err(e) = cyclic_check_bounded_surface_curve(&self.model, id.0) {
             self.model.bounded_surface_curve_arena.items.pop();
-            return Err(e);
-        }
-        Ok(id)
-    }
-
-    /// `CAMERA_IMAGE` — self-referencing variant: the closure receives the id
-    /// this entity will get, so a field may reference the entity itself.
-    /// Validation runs after insertion; on error the insertion is rolled back.
-    pub fn add_camera_image_cyclic(
-        &mut self,
-        build: impl FnOnce(CameraImageId) -> CameraImage,
-    ) -> Result<CameraImageId, AuthorError> {
-        let id = CameraImageId(self.model.camera_image_arena.items.len() as u32);
-        self.model.camera_image_arena.push(build(id));
-        if let Err(e) = cyclic_check_camera_image(&self.model, id.0) {
-            self.model.camera_image_arena.items.pop();
-            return Err(e);
-        }
-        Ok(id)
-    }
-
-    /// `CAMERA_IMAGE_3D_WITH_SCALE` — self-referencing variant: the closure receives the id
-    /// this entity will get, so a field may reference the entity itself.
-    /// Validation runs after insertion; on error the insertion is rolled back.
-    pub fn add_camera_image3d_with_scale_cyclic(
-        &mut self,
-        build: impl FnOnce(CameraImage3dWithScaleId) -> CameraImage3dWithScale,
-    ) -> Result<CameraImage3dWithScaleId, AuthorError> {
-        let id =
-            CameraImage3dWithScaleId(self.model.camera_image3d_with_scale_arena.items.len() as u32);
-        self.model.camera_image3d_with_scale_arena.push(build(id));
-        if let Err(e) = cyclic_check_camera_image3d_with_scale(&self.model, id.0) {
-            self.model.camera_image3d_with_scale_arena.items.pop();
             return Err(e);
         }
         Ok(id)
@@ -13973,29 +13847,6 @@ impl Ap242Author {
     }
 }
 
-fn cyclic_check_annotation_placeholder_occurrence(
-    model: &StepModel,
-    id: u32,
-) -> Result<(), AuthorError> {
-    for e0 in &model.annotation_placeholder_occurrence_arena.items[id as usize].styles {
-        check_presentation_style_assignment_ref(model, e0)?;
-    }
-    check_styled_item_target_ref(
-        model,
-        &model.annotation_placeholder_occurrence_arena.items[id as usize].item,
-    )?;
-    if !model.annotation_placeholder_occurrence_arena.items[id as usize]
-        .line_spacing
-        .is_finite()
-    {
-        return Err(AuthorError::NonFiniteReal {
-            entity: "ANNOTATION_PLACEHOLDER_OCCURRENCE",
-            attribute: "line_spacing",
-        });
-    }
-    Ok(())
-}
-
 fn cyclic_check_annotation_plane(model: &StepModel, id: u32) -> Result<(), AuthorError> {
     for e0 in &model.annotation_plane_arena.items[id as usize].styles {
         check_presentation_style_assignment_ref(model, e0)?;
@@ -14017,18 +13868,6 @@ fn cyclic_check_annotation_plane(model: &StepModel, id: u32) -> Result<(), Autho
             check_annotation_plane_element_ref(model, e0)?;
         }
     }
-    Ok(())
-}
-
-fn cyclic_check_annotation_symbol(model: &StepModel, id: u32) -> Result<(), AuthorError> {
-    check_representation_map_ref(
-        model,
-        &model.annotation_symbol_arena.items[id as usize].mapping_source,
-    )?;
-    check_representation_item_ref(
-        model,
-        &model.annotation_symbol_arena.items[id as usize].mapping_target,
-    )?;
     Ok(())
 }
 
@@ -14212,30 +14051,6 @@ fn cyclic_check_bounded_surface_curve(model: &StepModel, id: u32) -> Result<(), 
     for e0 in &model.bounded_surface_curve_arena.items[id as usize].associated_geometry {
         check_pcurve_or_surface_ref(model, e0)?;
     }
-    Ok(())
-}
-
-fn cyclic_check_camera_image(model: &StepModel, id: u32) -> Result<(), AuthorError> {
-    check_representation_map_ref(
-        model,
-        &model.camera_image_arena.items[id as usize].mapping_source,
-    )?;
-    check_representation_item_ref(
-        model,
-        &model.camera_image_arena.items[id as usize].mapping_target,
-    )?;
-    Ok(())
-}
-
-fn cyclic_check_camera_image3d_with_scale(model: &StepModel, id: u32) -> Result<(), AuthorError> {
-    check_representation_map_ref(
-        model,
-        &model.camera_image3d_with_scale_arena.items[id as usize].mapping_source,
-    )?;
-    check_representation_item_ref(
-        model,
-        &model.camera_image3d_with_scale_arena.items[id as usize].mapping_target,
-    )?;
     Ok(())
 }
 
@@ -14565,7 +14380,6 @@ fn part_name(p: &PartialEntity) -> &'static str {
         PartialEntity::AdvancedBrepShapeRepresentation => "ADVANCED_BREP_SHAPE_REPRESENTATION",
         PartialEntity::AdvancedFace => "ADVANCED_FACE",
         PartialEntity::AnnotationCurveOccurrence => "ANNOTATION_CURVE_OCCURRENCE",
-        PartialEntity::AnnotationFillAreaOccurrence { .. } => "ANNOTATION_FILL_AREA_OCCURRENCE",
         PartialEntity::AnnotationOccurrence => "ANNOTATION_OCCURRENCE",
         PartialEntity::AnnotationOccurrenceAssociativity => "ANNOTATION_OCCURRENCE_ASSOCIATIVITY",
         PartialEntity::AnnotationOccurrenceRelationship { .. } => {
@@ -14578,7 +14392,6 @@ fn part_name(p: &PartialEntity) -> &'static str {
             "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE"
         }
         PartialEntity::AnnotationPlane { .. } => "ANNOTATION_PLANE",
-        PartialEntity::AnnotationSymbol => "ANNOTATION_SYMBOL",
         PartialEntity::AnnotationSymbolOccurrence => "ANNOTATION_SYMBOL_OCCURRENCE",
         PartialEntity::AnnotationText => "ANNOTATION_TEXT",
         PartialEntity::AnnotationTextCharacter { .. } => "ANNOTATION_TEXT_CHARACTER",
@@ -15012,15 +14825,6 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
         ],
     ),
     (
-        "ANNOTATION_FILL_AREA_OCCURRENCE",
-        true,
-        &[
-            "ANNOTATION_OCCURRENCE",
-            "REPRESENTATION_ITEM",
-            "STYLED_ITEM",
-        ],
-    ),
-    (
         "ANNOTATION_OCCURRENCE",
         true,
         &["REPRESENTATION_ITEM", "STYLED_ITEM"],
@@ -15061,11 +14865,6 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "REPRESENTATION_ITEM",
             "STYLED_ITEM",
         ],
-    ),
-    (
-        "ANNOTATION_SYMBOL",
-        true,
-        &["MAPPED_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "ANNOTATION_SYMBOL_OCCURRENCE",
@@ -16469,13 +16268,11 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
 static ONEOF_GROUPS: &[&[&[&str]]] = &[
     &[
         &["ANNOTATION_CURVE_OCCURRENCE"],
-        &["ANNOTATION_FILL_AREA_OCCURRENCE"],
         &["ANNOTATION_TEXT_OCCURRENCE"],
         &["ANNOTATION_SYMBOL_OCCURRENCE"],
     ],
     &[
         &["ANNOTATION_CURVE_OCCURRENCE"],
-        &["ANNOTATION_FILL_AREA_OCCURRENCE"],
         &["ANNOTATION_PLANE"],
         &["ANNOTATION_SYMBOL_OCCURRENCE"],
         &["ANNOTATION_TEXT_OCCURRENCE"],
@@ -16791,11 +16588,6 @@ fn check_partial_entity(model: &StepModel, p: &PartialEntity) -> Result<(), Auth
             for e0 in operations {
                 check_characterized_action_definition_ref(model, e0)?;
             }
-        }
-        PartialEntity::AnnotationFillAreaOccurrence {
-            fill_style_target, ..
-        } => {
-            check_point_ref(model, fill_style_target)?;
         }
         PartialEntity::AnnotationOccurrenceRelationship {
             relating_annotation_occurrence,
@@ -18829,13 +18621,6 @@ fn check_annotation_occurrence_ref(
                 });
             }
         }
-        AnnotationOccurrenceRef::AnnotationFillAreaOccurrence(i) => {
-            if i.0 as usize >= model.annotation_fill_area_occurrence_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_FILL_AREA_OCCURRENCE",
-                });
-            }
-        }
         AnnotationOccurrenceRef::AnnotationOccurrence(i) => {
             if i.0 as usize >= model.annotation_occurrence_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
@@ -18918,7 +18703,6 @@ fn check_annotation_occurrence_ref(
             if !c.parts.iter().any(|p| {
                 [
                     "ANNOTATION_CURVE_OCCURRENCE",
-                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
@@ -19013,13 +18797,6 @@ fn check_annotation_plane_element_ref(
             if i.0 as usize >= model.annotation_curve_occurrence_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ANNOTATION_CURVE_OCCURRENCE",
-                });
-            }
-        }
-        AnnotationPlaneElementRef::AnnotationFillAreaOccurrence(i) => {
-            if i.0 as usize >= model.annotation_fill_area_occurrence_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_FILL_AREA_OCCURRENCE",
                 });
             }
         }
@@ -19145,7 +18922,6 @@ fn check_annotation_plane_element_ref(
             if !c.parts.iter().any(|p| {
                 [
                     "ANNOTATION_CURVE_OCCURRENCE",
-                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
@@ -19277,31 +19053,10 @@ fn check_annotation_symbol_occurrence_item_ref(
     r: &AnnotationSymbolOccurrenceItemRef,
 ) -> Result<(), AuthorError> {
     match r {
-        AnnotationSymbolOccurrenceItemRef::AnnotationSymbol(i) => {
-            if i.0 as usize >= model.annotation_symbol_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_SYMBOL",
-                });
-            }
-        }
         AnnotationSymbolOccurrenceItemRef::DefinedSymbol(i) => {
             if i.0 as usize >= model.defined_symbol_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "DEFINED_SYMBOL",
-                });
-            }
-        }
-        AnnotationSymbolOccurrenceItemRef::Complex(i) => {
-            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
-                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
-            };
-            if !c
-                .parts
-                .iter()
-                .any(|p| ["ANNOTATION_SYMBOL"].contains(&part_name(p)))
-            {
-                return Err(AuthorError::InvalidComplex {
-                    reason: "not a ANNOTATION_SYMBOL_OCCURRENCE_ITEM",
                 });
             }
         }
@@ -19477,13 +19232,6 @@ fn check_approval_item_ref(model: &StepModel, r: &ApprovalItemRef) -> Result<(),
                 });
             }
         }
-        ApprovalItemRef::AnnotationFillAreaOccurrence(i) => {
-            if i.0 as usize >= model.annotation_fill_area_occurrence_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_FILL_AREA_OCCURRENCE",
-                });
-            }
-        }
         ApprovalItemRef::AnnotationOccurrence(i) => {
             if i.0 as usize >= model.annotation_occurrence_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
@@ -19512,13 +19260,6 @@ fn check_approval_item_ref(model: &StepModel, r: &ApprovalItemRef) -> Result<(),
             if i.0 as usize >= model.annotation_plane_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ANNOTATION_PLANE",
-                });
-            }
-        }
-        ApprovalItemRef::AnnotationSymbol(i) => {
-            if i.0 as usize >= model.annotation_symbol_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_SYMBOL",
                 });
             }
         }
@@ -21129,12 +20870,10 @@ fn check_approval_item_ref(model: &StepModel, r: &ApprovalItemRef) -> Result<(),
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
-                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
-                    "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
@@ -21517,6 +21256,100 @@ fn check_axis2_placement3d_ref(
     }
     Ok(())
 }
+fn check_camera_model_ref(model: &StepModel, r: &CameraModelRef) -> Result<(), AuthorError> {
+    match r {
+        CameraModelRef::CameraModel(i) => {
+            if i.0 as usize >= model.camera_model_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_MODEL",
+                });
+            }
+        }
+        CameraModelRef::CameraModelD3(i) => {
+            if i.0 as usize >= model.camera_model_d3_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_MODEL_D3",
+                });
+            }
+        }
+        CameraModelRef::CameraModelD3MultiClipping(i) => {
+            if i.0 as usize >= model.camera_model_d3_multi_clipping_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_MODEL_D3_MULTI_CLIPPING",
+                });
+            }
+        }
+        CameraModelRef::CameraModelD3WithHlhsr(i) => {
+            if i.0 as usize >= model.camera_model_d3_with_hlhsr_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_MODEL_D3_WITH_HLHSR",
+                });
+            }
+        }
+        CameraModelRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c.parts.iter().any(|p| {
+                [
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
+                ]
+                .contains(&part_name(p))
+            }) {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not a CAMERA_MODEL",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_camera_model_d3_ref(model: &StepModel, r: &CameraModelD3Ref) -> Result<(), AuthorError> {
+    match r {
+        CameraModelD3Ref::CameraModelD3(i) => {
+            if i.0 as usize >= model.camera_model_d3_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_MODEL_D3",
+                });
+            }
+        }
+        CameraModelD3Ref::CameraModelD3MultiClipping(i) => {
+            if i.0 as usize >= model.camera_model_d3_multi_clipping_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_MODEL_D3_MULTI_CLIPPING",
+                });
+            }
+        }
+        CameraModelD3Ref::CameraModelD3WithHlhsr(i) => {
+            if i.0 as usize >= model.camera_model_d3_with_hlhsr_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_MODEL_D3_WITH_HLHSR",
+                });
+            }
+        }
+        CameraModelD3Ref::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c.parts.iter().any(|p| {
+                [
+                    "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
+                ]
+                .contains(&part_name(p))
+            }) {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not a CAMERA_MODEL_D3",
+                });
+            }
+        }
+    }
+    Ok(())
+}
 fn check_camera_model_d3_multi_clipping_intersection_select_ref(
     model: &StepModel,
     r: &CameraModelD3MultiClippingIntersectionSelectRef,
@@ -21525,6 +21358,32 @@ fn check_camera_model_d3_multi_clipping_intersection_select_ref(
         CameraModelD3MultiClippingIntersectionSelectRef::Plane(i) => {
             if i.0 as usize >= model.plane_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "PLANE" });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_camera_usage_ref(model: &StepModel, r: &CameraUsageRef) -> Result<(), AuthorError> {
+    match r {
+        CameraUsageRef::CameraUsage(i) => {
+            if i.0 as usize >= model.camera_usage_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_USAGE",
+                });
+            }
+        }
+        CameraUsageRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c
+                .parts
+                .iter()
+                .any(|p| ["CAMERA_USAGE"].contains(&part_name(p)))
+            {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not a CAMERA_USAGE",
+                });
             }
         }
     }
@@ -22697,13 +22556,6 @@ fn check_compound_item_definition_ref(
                 });
             }
         }
-        CompoundItemDefinitionRef::AnnotationFillAreaOccurrence(i) => {
-            if i.0 as usize >= model.annotation_fill_area_occurrence_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_FILL_AREA_OCCURRENCE",
-                });
-            }
-        }
         CompoundItemDefinitionRef::AnnotationOccurrence(i) => {
             if i.0 as usize >= model.annotation_occurrence_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
@@ -22732,13 +22584,6 @@ fn check_compound_item_definition_ref(
             if i.0 as usize >= model.annotation_plane_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ANNOTATION_PLANE",
-                });
-            }
-        }
-        CompoundItemDefinitionRef::AnnotationSymbol(i) => {
-            if i.0 as usize >= model.annotation_symbol_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_SYMBOL",
                 });
             }
         }
@@ -23711,12 +23556,10 @@ fn check_compound_item_definition_ref(
                 [
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
-                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
-                    "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
@@ -25811,6 +25654,39 @@ fn check_datum_system_or_reference_ref(
     }
     Ok(())
 }
+fn check_datum_target_ref(model: &StepModel, r: &DatumTargetRef) -> Result<(), AuthorError> {
+    match r {
+        DatumTargetRef::DatumTarget(i) => {
+            if i.0 as usize >= model.datum_target_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DATUM_TARGET",
+                });
+            }
+        }
+        DatumTargetRef::PlacedDatumTargetFeature(i) => {
+            if i.0 as usize >= model.placed_datum_target_feature_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PLACED_DATUM_TARGET_FEATURE",
+                });
+            }
+        }
+        DatumTargetRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c
+                .parts
+                .iter()
+                .any(|p| ["DATUM_TARGET", "PLACED_DATUM_TARGET_FEATURE"].contains(&part_name(p)))
+            {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not a DATUM_TARGET",
+                });
+            }
+        }
+    }
+    Ok(())
+}
 fn check_defined_glyph_select_ref(
     model: &StepModel,
     r: &DefinedGlyphSelectRef,
@@ -26850,13 +26726,6 @@ fn check_document_reference_item_ref(
                 });
             }
         }
-        DocumentReferenceItemRef::AnnotationFillAreaOccurrence(i) => {
-            if i.0 as usize >= model.annotation_fill_area_occurrence_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_FILL_AREA_OCCURRENCE",
-                });
-            }
-        }
         DocumentReferenceItemRef::AnnotationOccurrence(i) => {
             if i.0 as usize >= model.annotation_occurrence_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
@@ -26885,13 +26754,6 @@ fn check_document_reference_item_ref(
             if i.0 as usize >= model.annotation_plane_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ANNOTATION_PLANE",
-                });
-            }
-        }
-        DocumentReferenceItemRef::AnnotationSymbol(i) => {
-            if i.0 as usize >= model.annotation_symbol_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_SYMBOL",
                 });
             }
         }
@@ -28724,12 +28586,10 @@ fn check_document_reference_item_ref(
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
-                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
-                    "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
@@ -28980,13 +28840,6 @@ fn check_draughting_callout_element_ref(
                 });
             }
         }
-        DraughtingCalloutElementRef::AnnotationFillAreaOccurrence(i) => {
-            if i.0 as usize >= model.annotation_fill_area_occurrence_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_FILL_AREA_OCCURRENCE",
-                });
-            }
-        }
         DraughtingCalloutElementRef::AnnotationPlaceholderOccurrence(i) => {
             if i.0 as usize >= model.annotation_placeholder_occurrence_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
@@ -29048,7 +28901,6 @@ fn check_draughting_callout_element_ref(
             if !c.parts.iter().any(|p| {
                 [
                     "ANNOTATION_CURVE_OCCURRENCE",
-                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
@@ -29067,6 +28919,35 @@ fn check_draughting_callout_element_ref(
     }
     Ok(())
 }
+fn check_draughting_model_ref(
+    model: &StepModel,
+    r: &DraughtingModelRef,
+) -> Result<(), AuthorError> {
+    match r {
+        DraughtingModelRef::DraughtingModel(i) => {
+            if i.0 as usize >= model.draughting_model_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DRAUGHTING_MODEL",
+                });
+            }
+        }
+        DraughtingModelRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c
+                .parts
+                .iter()
+                .any(|p| ["DRAUGHTING_MODEL"].contains(&part_name(p)))
+            {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not a DRAUGHTING_MODEL",
+                });
+            }
+        }
+    }
+    Ok(())
+}
 fn check_draughting_model_item_association_select_ref(
     model: &StepModel,
     r: &DraughtingModelItemAssociationSelectRef,
@@ -29076,13 +28957,6 @@ fn check_draughting_model_item_association_select_ref(
             if i.0 as usize >= model.annotation_curve_occurrence_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ANNOTATION_CURVE_OCCURRENCE",
-                });
-            }
-        }
-        DraughtingModelItemAssociationSelectRef::AnnotationFillAreaOccurrence(i) => {
-            if i.0 as usize >= model.annotation_fill_area_occurrence_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_FILL_AREA_OCCURRENCE",
                 });
             }
         }
@@ -29184,7 +29058,6 @@ fn check_draughting_model_item_association_select_ref(
             if !c.parts.iter().any(|p| {
                 [
                     "ANNOTATION_CURVE_OCCURRENCE",
-                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
@@ -29821,13 +29694,6 @@ fn check_external_identification_item_ref(
                 });
             }
         }
-        ExternalIdentificationItemRef::AnnotationFillAreaOccurrence(i) => {
-            if i.0 as usize >= model.annotation_fill_area_occurrence_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_FILL_AREA_OCCURRENCE",
-                });
-            }
-        }
         ExternalIdentificationItemRef::AnnotationOccurrence(i) => {
             if i.0 as usize >= model.annotation_occurrence_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
@@ -29856,13 +29722,6 @@ fn check_external_identification_item_ref(
             if i.0 as usize >= model.annotation_plane_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ANNOTATION_PLANE",
-                });
-            }
-        }
-        ExternalIdentificationItemRef::AnnotationSymbol(i) => {
-            if i.0 as usize >= model.annotation_symbol_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_SYMBOL",
                 });
             }
         }
@@ -31411,12 +31270,10 @@ fn check_external_identification_item_ref(
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
-                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
-                    "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
@@ -33220,6 +33077,68 @@ fn check_geometric_model_item_ref(
     }
     Ok(())
 }
+fn check_geometric_representation_context_ref(
+    model: &StepModel,
+    r: &GeometricRepresentationContextRef,
+) -> Result<(), AuthorError> {
+    match r {
+        GeometricRepresentationContextRef::GeometricRepresentationContext(i) => {
+            if i.0 as usize >= model.geometric_representation_context_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "GEOMETRIC_REPRESENTATION_CONTEXT",
+                });
+            }
+        }
+        GeometricRepresentationContextRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c
+                .parts
+                .iter()
+                .any(|p| ["GEOMETRIC_REPRESENTATION_CONTEXT"].contains(&part_name(p)))
+            {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not a GEOMETRIC_REPRESENTATION_CONTEXT",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_geometric_set_ref(model: &StepModel, r: &GeometricSetRef) -> Result<(), AuthorError> {
+    match r {
+        GeometricSetRef::GeometricCurveSet(i) => {
+            if i.0 as usize >= model.geometric_curve_set_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "GEOMETRIC_CURVE_SET",
+                });
+            }
+        }
+        GeometricSetRef::GeometricSet(i) => {
+            if i.0 as usize >= model.geometric_set_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "GEOMETRIC_SET",
+                });
+            }
+        }
+        GeometricSetRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c
+                .parts
+                .iter()
+                .any(|p| ["GEOMETRIC_CURVE_SET", "GEOMETRIC_SET"].contains(&part_name(p)))
+            {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not a GEOMETRIC_SET",
+                });
+            }
+        }
+    }
+    Ok(())
+}
 fn check_geometric_set_select_ref(
     model: &StepModel,
     r: &GeometricSetSelectRef,
@@ -34147,13 +34066,6 @@ fn check_groupable_item_ref(model: &StepModel, r: &GroupableItemRef) -> Result<(
                 });
             }
         }
-        GroupableItemRef::AnnotationFillAreaOccurrence(i) => {
-            if i.0 as usize >= model.annotation_fill_area_occurrence_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_FILL_AREA_OCCURRENCE",
-                });
-            }
-        }
         GroupableItemRef::AnnotationOccurrence(i) => {
             if i.0 as usize >= model.annotation_occurrence_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
@@ -34182,13 +34094,6 @@ fn check_groupable_item_ref(model: &StepModel, r: &GroupableItemRef) -> Result<(
             if i.0 as usize >= model.annotation_plane_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ANNOTATION_PLANE",
-                });
-            }
-        }
-        GroupableItemRef::AnnotationSymbol(i) => {
-            if i.0 as usize >= model.annotation_symbol_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_SYMBOL",
                 });
             }
         }
@@ -36183,12 +36088,10 @@ fn check_groupable_item_ref(model: &StepModel, r: &GroupableItemRef) -> Result<(
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
-                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
-                    "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
@@ -37334,13 +37237,6 @@ fn check_invisible_item_ref(model: &StepModel, r: &InvisibleItemRef) -> Result<(
                 });
             }
         }
-        InvisibleItemRef::AnnotationFillAreaOccurrence(i) => {
-            if i.0 as usize >= model.annotation_fill_area_occurrence_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_FILL_AREA_OCCURRENCE",
-                });
-            }
-        }
         InvisibleItemRef::AnnotationOccurrence(i) => {
             if i.0 as usize >= model.annotation_occurrence_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
@@ -37634,7 +37530,6 @@ fn check_invisible_item_ref(model: &StepModel, r: &InvisibleItemRef) -> Result<(
                 [
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ANNOTATION_CURVE_OCCURRENCE",
-                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
@@ -38356,13 +38251,11 @@ fn check_item_identified_representation_usage_select_ref(
     match r {
         ItemIdentifiedRepresentationUsageSelectRef::AdvancedFace(i) => { if i.0 as usize >= model.advanced_face_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "ADVANCED_FACE" }); } }
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationCurveOccurrence(i) => { if i.0 as usize >= model.annotation_curve_occurrence_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "ANNOTATION_CURVE_OCCURRENCE" }); } }
-        ItemIdentifiedRepresentationUsageSelectRef::AnnotationFillAreaOccurrence(i) => { if i.0 as usize >= model.annotation_fill_area_occurrence_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "ANNOTATION_FILL_AREA_OCCURRENCE" }); } }
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationOccurrence(i) => { if i.0 as usize >= model.annotation_occurrence_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "ANNOTATION_OCCURRENCE" }); } }
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderLeaderLine(_) => return Err(AuthorError::NotAp242 { entity: "ANNOTATION_PLACEHOLDER_LEADER_LINE" }),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderOccurrence(i) => { if i.0 as usize >= model.annotation_placeholder_occurrence_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "ANNOTATION_PLACEHOLDER_OCCURRENCE" }); } }
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderOccurrenceWithLeaderLine(_) => return Err(AuthorError::NotAp242 { entity: "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE" }),
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlane(i) => { if i.0 as usize >= model.annotation_plane_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "ANNOTATION_PLANE" }); } }
-        ItemIdentifiedRepresentationUsageSelectRef::AnnotationSymbol(i) => { if i.0 as usize >= model.annotation_symbol_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "ANNOTATION_SYMBOL" }); } }
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationSymbolOccurrence(i) => { if i.0 as usize >= model.annotation_symbol_occurrence_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "ANNOTATION_SYMBOL_OCCURRENCE" }); } }
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationText(i) => { if i.0 as usize >= model.annotation_text_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "ANNOTATION_TEXT" }); } }
         ItemIdentifiedRepresentationUsageSelectRef::AnnotationTextCharacter(i) => { if i.0 as usize >= model.annotation_text_character_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "ANNOTATION_TEXT_CHARACTER" }); } }
@@ -38505,7 +38398,7 @@ fn check_item_identified_representation_usage_select_ref(
         ItemIdentifiedRepresentationUsageSelectRef::WireShell(i) => { if i.0 as usize >= model.wire_shell_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "WIRE_SHELL" }); } }
         ItemIdentifiedRepresentationUsageSelectRef::ListRepresentationItem(v) => { for e in v { check_representation_item_ref(model, e)?; } }
         ItemIdentifiedRepresentationUsageSelectRef::SetRepresentationItem(v) => { for e in v { check_representation_item_ref(model, e)?; } }
-        ItemIdentifiedRepresentationUsageSelectRef::Complex(i) => { let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else { return Err(AuthorError::DanglingRef { entity: "COMPLEX" }); }; if !c.parts.iter().any(|p| ["ADVANCED_FACE", "ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_FILL_AREA_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT", "ANNOTATION_TEXT_CHARACTER", "ANNOTATION_TEXT_OCCURRENCE", "B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS", "BEZIER_CURVE", "BEZIER_SURFACE", "BOUNDED_CURVE", "BOUNDED_PCURVE", "BOUNDED_SURFACE", "BOUNDED_SURFACE_CURVE", "BREP_WITH_VOIDS", "CAMERA_IMAGE", "CAMERA_IMAGE_3D_WITH_SCALE", "CAMERA_MODEL", "CAMERA_MODEL_D3", "CAMERA_MODEL_D3_MULTI_CLIPPING", "CAMERA_MODEL_D3_WITH_HLHSR", "CLOSED_SHELL", "COMPOSITE_CURVE", "COMPOSITE_TEXT", "COMPOUND_REPRESENTATION_ITEM", "CONNECTED_FACE_SET", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "CURVE", "DEGENERATE_TOROIDAL_SURFACE", "DIRECTION", "DRAUGHTING_ANNOTATION_OCCURRENCE", "DRAUGHTING_CALLOUT", "EDGE", "EDGE_CURVE", "EDGE_LOOP", "ELEMENTARY_SURFACE", "EXTERNALLY_DEFINED_HATCH_STYLE", "EXTERNALLY_DEFINED_TILE_STYLE", "FACE", "FACE_BOUND", "FACE_OUTER_BOUND", "FACE_SURFACE", "FILL_AREA_STYLE_HATCHING", "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE", "FILL_AREA_STYLE_TILES", "GEOMETRIC_CURVE_SET", "GEOMETRIC_REPRESENTATION_ITEM", "GEOMETRIC_SET", "INTEGER_REPRESENTATION_ITEM", "INTERSECTION_CURVE", "LEADER_CURVE", "LEADER_DIRECTED_CALLOUT", "LEADER_TERMINATOR", "LOOP", "MANIFOLD_SOLID_BREP", "MAPPED_ITEM", "MEASURE_REPRESENTATION_ITEM", "ONE_DIRECTION_REPEAT_FACTOR", "OPEN_SHELL", "ORIENTED_CLOSED_SHELL", "ORIENTED_EDGE", "OVER_RIDING_STYLED_ITEM", "PATH", "PCURVE", "PLACEMENT", "PLANAR_BOX", "PLANAR_EXTENT", "POINT", "POLY_LOOP", "QUALIFIED_REPRESENTATION_ITEM", "QUASI_UNIFORM_CURVE", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_CURVE", "RATIONAL_B_SPLINE_SURFACE", "REAL_REPRESENTATION_ITEM", "REPOSITIONED_TESSELLATED_ITEM", "REPRESENTATION_ITEM", "SEAM_CURVE", "SHELL_BASED_SURFACE_MODEL", "SOLID_MODEL", "STYLED_ITEM", "SURFACE", "SURFACE_CURVE", "TERMINATOR_SYMBOL", "TESSELLATED_GEOMETRIC_SET", "TESSELLATED_ITEM", "TESSELLATED_STRUCTURED_ITEM", "TEXT_LITERAL", "TOPOLOGICAL_REPRESENTATION_ITEM", "TOROIDAL_SURFACE", "TWO_DIRECTION_REPEAT_FACTOR", "UNIFORM_CURVE", "UNIFORM_SURFACE", "VALUE_REPRESENTATION_ITEM", "VECTOR", "VERTEX", "VERTEX_POINT"].contains(&part_name(p))) { return Err(AuthorError::InvalidComplex { reason: "not a ITEM_IDENTIFIED_REPRESENTATION_USAGE_SELECT" }); } }
+        ItemIdentifiedRepresentationUsageSelectRef::Complex(i) => { let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else { return Err(AuthorError::DanglingRef { entity: "COMPLEX" }); }; if !c.parts.iter().any(|p| ["ADVANCED_FACE", "ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT", "ANNOTATION_TEXT_CHARACTER", "ANNOTATION_TEXT_OCCURRENCE", "B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS", "BEZIER_CURVE", "BEZIER_SURFACE", "BOUNDED_CURVE", "BOUNDED_PCURVE", "BOUNDED_SURFACE", "BOUNDED_SURFACE_CURVE", "BREP_WITH_VOIDS", "CAMERA_IMAGE", "CAMERA_IMAGE_3D_WITH_SCALE", "CAMERA_MODEL", "CAMERA_MODEL_D3", "CAMERA_MODEL_D3_MULTI_CLIPPING", "CAMERA_MODEL_D3_WITH_HLHSR", "CLOSED_SHELL", "COMPOSITE_CURVE", "COMPOSITE_TEXT", "COMPOUND_REPRESENTATION_ITEM", "CONNECTED_FACE_SET", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "CURVE", "DEGENERATE_TOROIDAL_SURFACE", "DIRECTION", "DRAUGHTING_ANNOTATION_OCCURRENCE", "DRAUGHTING_CALLOUT", "EDGE", "EDGE_CURVE", "EDGE_LOOP", "ELEMENTARY_SURFACE", "EXTERNALLY_DEFINED_HATCH_STYLE", "EXTERNALLY_DEFINED_TILE_STYLE", "FACE", "FACE_BOUND", "FACE_OUTER_BOUND", "FACE_SURFACE", "FILL_AREA_STYLE_HATCHING", "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE", "FILL_AREA_STYLE_TILES", "GEOMETRIC_CURVE_SET", "GEOMETRIC_REPRESENTATION_ITEM", "GEOMETRIC_SET", "INTEGER_REPRESENTATION_ITEM", "INTERSECTION_CURVE", "LEADER_CURVE", "LEADER_DIRECTED_CALLOUT", "LEADER_TERMINATOR", "LOOP", "MANIFOLD_SOLID_BREP", "MAPPED_ITEM", "MEASURE_REPRESENTATION_ITEM", "ONE_DIRECTION_REPEAT_FACTOR", "OPEN_SHELL", "ORIENTED_CLOSED_SHELL", "ORIENTED_EDGE", "OVER_RIDING_STYLED_ITEM", "PATH", "PCURVE", "PLACEMENT", "PLANAR_BOX", "PLANAR_EXTENT", "POINT", "POLY_LOOP", "QUALIFIED_REPRESENTATION_ITEM", "QUASI_UNIFORM_CURVE", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_CURVE", "RATIONAL_B_SPLINE_SURFACE", "REAL_REPRESENTATION_ITEM", "REPOSITIONED_TESSELLATED_ITEM", "REPRESENTATION_ITEM", "SEAM_CURVE", "SHELL_BASED_SURFACE_MODEL", "SOLID_MODEL", "STYLED_ITEM", "SURFACE", "SURFACE_CURVE", "TERMINATOR_SYMBOL", "TESSELLATED_GEOMETRIC_SET", "TESSELLATED_ITEM", "TESSELLATED_STRUCTURED_ITEM", "TEXT_LITERAL", "TOPOLOGICAL_REPRESENTATION_ITEM", "TOROIDAL_SURFACE", "TWO_DIRECTION_REPEAT_FACTOR", "UNIFORM_CURVE", "UNIFORM_SURFACE", "VALUE_REPRESENTATION_ITEM", "VECTOR", "VERTEX", "VERTEX_POINT"].contains(&part_name(p))) { return Err(AuthorError::InvalidComplex { reason: "not a ITEM_IDENTIFIED_REPRESENTATION_USAGE_SELECT" }); } }
     }
     Ok(())
 }
@@ -38522,13 +38415,6 @@ fn check_layered_item_ref(model: &StepModel, r: &LayeredItemRef) -> Result<(), A
             if i.0 as usize >= model.annotation_curve_occurrence_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ANNOTATION_CURVE_OCCURRENCE",
-                });
-            }
-        }
-        LayeredItemRef::AnnotationFillAreaOccurrence(i) => {
-            if i.0 as usize >= model.annotation_fill_area_occurrence_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_FILL_AREA_OCCURRENCE",
                 });
             }
         }
@@ -38560,13 +38446,6 @@ fn check_layered_item_ref(model: &StepModel, r: &LayeredItemRef) -> Result<(), A
             if i.0 as usize >= model.annotation_plane_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ANNOTATION_PLANE",
-                });
-            }
-        }
-        LayeredItemRef::AnnotationSymbol(i) => {
-            if i.0 as usize >= model.annotation_symbol_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_SYMBOL",
                 });
             }
         }
@@ -39550,12 +39429,10 @@ fn check_layered_item_ref(model: &StepModel, r: &LayeredItemRef) -> Result<(), A
                 [
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
-                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
-                    "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
@@ -42678,13 +42555,6 @@ fn check_representation_item_ref(
                 });
             }
         }
-        RepresentationItemRef::AnnotationFillAreaOccurrence(i) => {
-            if i.0 as usize >= model.annotation_fill_area_occurrence_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_FILL_AREA_OCCURRENCE",
-                });
-            }
-        }
         RepresentationItemRef::AnnotationOccurrence(i) => {
             if i.0 as usize >= model.annotation_occurrence_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
@@ -42713,13 +42583,6 @@ fn check_representation_item_ref(
             if i.0 as usize >= model.annotation_plane_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ANNOTATION_PLANE",
-                });
-            }
-        }
-        RepresentationItemRef::AnnotationSymbol(i) => {
-            if i.0 as usize >= model.annotation_symbol_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_SYMBOL",
                 });
             }
         }
@@ -43682,12 +43545,10 @@ fn check_representation_item_ref(
                 [
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
-                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
-                    "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
@@ -45389,13 +45250,6 @@ fn check_style_context_select_ref(
                 });
             }
         }
-        StyleContextSelectRef::AnnotationFillAreaOccurrence(i) => {
-            if i.0 as usize >= model.annotation_fill_area_occurrence_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_FILL_AREA_OCCURRENCE",
-                });
-            }
-        }
         StyleContextSelectRef::AnnotationOccurrence(i) => {
             if i.0 as usize >= model.annotation_occurrence_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
@@ -45424,13 +45278,6 @@ fn check_style_context_select_ref(
             if i.0 as usize >= model.annotation_plane_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ANNOTATION_PLANE",
-                });
-            }
-        }
-        StyleContextSelectRef::AnnotationSymbol(i) => {
-            if i.0 as usize >= model.annotation_symbol_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_SYMBOL",
                 });
             }
         }
@@ -46669,12 +46516,10 @@ fn check_style_context_select_ref(
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
                     "ANNOTATION_CURVE_OCCURRENCE",
-                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
-                    "ANNOTATION_SYMBOL",
                     "ANNOTATION_SYMBOL_OCCURRENCE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
@@ -46817,13 +46662,6 @@ fn check_styled_item_ref(model: &StepModel, r: &StyledItemRef) -> Result<(), Aut
                 });
             }
         }
-        StyledItemRef::AnnotationFillAreaOccurrence(i) => {
-            if i.0 as usize >= model.annotation_fill_area_occurrence_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_FILL_AREA_OCCURRENCE",
-                });
-            }
-        }
         StyledItemRef::AnnotationOccurrence(i) => {
             if i.0 as usize >= model.annotation_occurrence_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
@@ -46932,7 +46770,6 @@ fn check_styled_item_ref(model: &StepModel, r: &StyledItemRef) -> Result<(), Aut
             if !c.parts.iter().any(|p| {
                 [
                     "ANNOTATION_CURVE_OCCURRENCE",
-                    "ANNOTATION_FILL_AREA_OCCURRENCE",
                     "ANNOTATION_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
@@ -46997,13 +46834,6 @@ fn check_styled_item_target_ref(
             if i.0 as usize >= model.annotation_plane_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ANNOTATION_PLANE",
-                });
-            }
-        }
-        StyledItemTargetRef::AnnotationSymbol(i) => {
-            if i.0 as usize >= model.annotation_symbol_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_SYMBOL",
                 });
             }
         }
@@ -48008,7 +47838,6 @@ fn check_styled_item_target_ref(
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE",
                     "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
                     "ANNOTATION_PLANE",
-                    "ANNOTATION_SYMBOL",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "B_SPLINE_CURVE",
@@ -48475,6 +48304,35 @@ fn check_symbol_target_ref(model: &StepModel, r: &SymbolTargetRef) -> Result<(),
             if i.0 as usize >= model.symbol_target_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "SYMBOL_TARGET",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_tessellated_geometric_set_ref(
+    model: &StepModel,
+    r: &TessellatedGeometricSetRef,
+) -> Result<(), AuthorError> {
+    match r {
+        TessellatedGeometricSetRef::TessellatedGeometricSet(i) => {
+            if i.0 as usize >= model.tessellated_geometric_set_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TESSELLATED_GEOMETRIC_SET",
+                });
+            }
+        }
+        TessellatedGeometricSetRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c
+                .parts
+                .iter()
+                .any(|p| ["TESSELLATED_GEOMETRIC_SET"].contains(&part_name(p)))
+            {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not a TESSELLATED_GEOMETRIC_SET",
                 });
             }
         }
