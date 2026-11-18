@@ -50,8 +50,8 @@ pub struct AuthorNarrowing {
     /// (entity Rust name, field name) → the constructor's reference type.
     pub params: BTreeMap<(String, String), NarrowParam>,
     /// (entity Rust name, field name) → the run-time check a self-referencing
-    /// constructor (`add_*_cyclic`) runs instead, its argument being the
-    /// model struct.
+    /// constructor (`add_*_cyclic`) runs, its argument being the model
+    /// struct; the plain constructor takes the narrower type in `params`.
     pub cyclic: BTreeMap<(String, String), RuntimeNarrowing>,
     /// Narrower enums no model enum matches, keyed by Rust name, with the
     /// edition 2 type each stands for.
@@ -266,9 +266,11 @@ impl AuthorNarrowing {
                     f.name,
                     re.rust
                 );
+                // A self-referencing constructor takes the model struct, so
+                // it checks at run time; the plain constructor still takes
+                // the narrower type.
                 if cyclic.contains(se.rust.as_str()) {
-                    out.cyclic.insert(key, n);
-                    continue;
+                    out.cyclic.insert(key.clone(), n.clone());
                 }
                 let narrow = out.enum_for(ir, &n, element(&a.ty), legal, &legal_arms);
                 out.conversions.insert((narrow.clone(), re.rust.clone()));

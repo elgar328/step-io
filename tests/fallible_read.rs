@@ -170,6 +170,21 @@ fn older_edition_form_of_a_narrowed_attribute_is_kept() {
     assert!(r.dropped.is_empty(), "{:?}", r.dropped);
 }
 
+/// AP242 edition 1 narrowed a tessellated shape representation's items to
+/// tessellated items; edition 2 dropped that. A PMI drawing model that is also
+/// a tessellated shape representation, holding a non-tessellated item as
+/// edition 2 allows, is kept.
+#[test]
+fn a_narrowing_only_one_edition_made_is_not_enforced() {
+    let r = read_body(
+        "#1=CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2=(GEOMETRIC_REPRESENTATION_CONTEXT(3)REPRESENTATION_CONTEXT('',''));\n\
+         #3=(DRAUGHTING_MODEL()REPRESENTATION('',(#1),#2)SHAPE_REPRESENTATION()\
+         TESSELLATED_SHAPE_REPRESENTATION());\n",
+    );
+    assert!(r.dropped.is_empty(), "{:?}", r.dropped);
+}
+
 /// A fully valid body drops nothing and keeps everything.
 #[test]
 fn valid_body_keeps_all() {

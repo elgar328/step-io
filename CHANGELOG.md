@@ -15,12 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   self-referencing constructor (`add_applied_group_assignment_cyclic`).
 - `Ap242ApprovedItemRef`, `Ap242ConstructiveGeometryRepresentationRef`,
   `Ap242DerivedShapeAspectRef`, `Ap242DraughtingModelItemSelectRef`,
+  `Ap242GroupableItemRef`,
   `Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef`,
   `Ap242MechanicalDesignShadedPresentationRepresentationItemsRef`,
   `Ap242ShapeDimensionRepresentationItemRef`, `Ap242ShapeRepresentationRef`
   and `Ap242ShapeRepresentationWithParametersItemsRef`: what AP242 edition 2
   allows where the model, read from every edition, allows more. Each converts
-  into the model's reference with `From`.
+  into the model's reference with `From`, as does `PropertyDefinitionRef` into
+  `RepresentedDefinitionRef`.
 
 ### Changed
 
@@ -39,10 +41,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `add_constructive_geometry_representation_relationship`: `rep_2` takes an
     `Ap242ConstructiveGeometryRepresentationRef`
   - `add_cc_design_approval`: `items` takes `Ap242ApprovedItemRef`s
+  - `add_applied_group_assignment`: `items` takes `Ap242GroupableItemRef`s
 - `add_complex` and the self-referencing constructors check the same
   narrowings at run time, and `add_person_and_organization_address` takes
   exactly one organization and one person, as AP242 requires.
-
 - Attributes that every STEP edition narrows with a redeclaration
   (`SELF\supertype.attribute : narrower;`) now have the narrower type in the
   model, so both reading and `Ap242Author` take only what the schema allows

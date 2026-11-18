@@ -121,7 +121,7 @@
 //! # }
 //! ```
 //!
-//! ```compile_fail
+//! ```compile_fail,E0308
 //! # use step_io::{Ap242Author, model as m};
 //! # fn f(a: &mut Ap242Author, aspect: m::ShapeAspectId, rep: m::ShapeRepresentationId) {
 //! // AP214 lets a shape aspect have a shape representation; AP242 does not.
@@ -251,3 +251,52 @@ pub use parser::entity::{Error, ParseWarning};
 pub use parser::lexer::{LexError, LexErrorKind};
 pub use parser::schema::{ApFamily, SchemaId, Stage};
 pub use refgraph::RefGraph;
+
+/// Compile-time checks of the AP242 edition 2 argument types, each paired
+/// with a version that compiles, so a `compile_fail` fails for its reason.
+///
+/// AP242's `groupable_item` drops `ACTION_METHOD`:
+///
+/// ```
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, group: m::GroupId, aspect: m::ShapeAspectId) {
+/// let _ = a.add_applied_group_assignment(
+///     m::GroupRef::Group(group),
+///     vec![m::Ap242GroupableItemRef::ShapeAspect(aspect)],
+/// );
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, group: m::GroupId, method: m::ActionMethodId) {
+/// let _ = a.add_applied_group_assignment(
+///     m::GroupRef::Group(group),
+///     vec![m::Ap242GroupableItemRef::ActionMethod(method)],
+/// );
+/// # }
+/// ```
+///
+/// AP242's `approved_item` drops `PRODUCT_DEFINITION`, which AP203 allows:
+///
+/// ```
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, approval: m::ApprovalId, product: m::ProductId) {
+/// let _ = a.add_cc_design_approval(
+///     m::ApprovalRef::Approval(approval),
+///     vec![m::Ap242ApprovedItemRef::Product(product)],
+/// );
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, approval: m::ApprovalId, pd: m::ProductDefinitionId) {
+/// let _ = a.add_cc_design_approval(
+///     m::ApprovalRef::Approval(approval),
+///     vec![m::Ap242ApprovedItemRef::ProductDefinition(pd)],
+/// );
+/// # }
+/// ```
+#[cfg(doctest)]
+mod ap242_narrowed_arguments {}

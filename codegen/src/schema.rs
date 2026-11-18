@@ -150,7 +150,6 @@ pub struct Attr {
     /// For a redeclaration, whether every edition's type for the attribute
     /// falls inside it, so reading may enforce it on any instance.
     #[serde(default)]
-    #[allow(dead_code)] // read by the complex-instance narrowing table
     pub union_safe: Option<bool>,
 }
 

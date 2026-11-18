@@ -1224,7 +1224,7 @@ impl Ap242Author {
     pub fn add_applied_group_assignment(
         &mut self,
         assigned_group: GroupRef,
-        items: Vec<GroupableItemRef>,
+        items: Vec<Ap242GroupableItemRef>,
     ) -> Result<AppliedGroupAssignmentId, AuthorError> {
         check_group_ref(&self.model, &assigned_group)?;
         {
@@ -1240,14 +1240,14 @@ impl Ap242Author {
             }
         }
         for e0 in &items {
-            check_groupable_item_ref(&self.model, e0)?;
+            check_ap242_groupable_item_ref(&self.model, e0)?;
         }
         Ok(AppliedGroupAssignmentId(
             self.model
                 .applied_group_assignment_arena
                 .push(AppliedGroupAssignment {
                     assigned_group,
-                    items,
+                    items: items.into_iter().map(Into::into).collect(),
                 }),
         ))
     }
@@ -51554,6 +51554,2240 @@ fn check_ap242_draughting_model_item_select_ref(
             }) {
                 return Err(AuthorError::InvalidComplex {
                     reason: "not a DRAUGHTING_MODEL_ITEM_SELECT",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_groupable_item_ref(
+    model: &StepModel,
+    r: &Ap242GroupableItemRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242GroupableItemRef::Address(i) => {
+            if i.0 as usize >= model.address_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "ADDRESS" });
+            }
+        }
+        Ap242GroupableItemRef::AdvancedBrepShapeRepresentation(i) => {
+            if i.0 as usize >= model.advanced_brep_shape_representation_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::AdvancedFace(i) => {
+            if i.0 as usize >= model.advanced_face_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ADVANCED_FACE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::AllAroundShapeAspect(i) => {
+            if i.0 as usize >= model.all_around_shape_aspect_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ALL_AROUND_SHAPE_ASPECT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::AngularLocation(i) => {
+            if i.0 as usize >= model.angular_location_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ANGULAR_LOCATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::AnnotationCurveOccurrence(i) => {
+            if i.0 as usize >= model.annotation_curve_occurrence_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ANNOTATION_CURVE_OCCURRENCE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::AnnotationOccurrence(i) => {
+            if i.0 as usize >= model.annotation_occurrence_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ANNOTATION_OCCURRENCE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::AnnotationPlaceholderOccurrence(i) => {
+            if i.0 as usize >= model.annotation_placeholder_occurrence_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::AnnotationPlane(i) => {
+            if i.0 as usize >= model.annotation_plane_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ANNOTATION_PLANE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::AnnotationSymbolOccurrence(i) => {
+            if i.0 as usize >= model.annotation_symbol_occurrence_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ANNOTATION_SYMBOL_OCCURRENCE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::AnnotationText(i) => {
+            if i.0 as usize >= model.annotation_text_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ANNOTATION_TEXT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::AnnotationTextCharacter(i) => {
+            if i.0 as usize >= model.annotation_text_character_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ANNOTATION_TEXT_CHARACTER",
+                });
+            }
+        }
+        Ap242GroupableItemRef::AnnotationTextOccurrence(i) => {
+            if i.0 as usize >= model.annotation_text_occurrence_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ANNOTATION_TEXT_OCCURRENCE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::AppliedDateAndTimeAssignment(i) => {
+            if i.0 as usize >= model.applied_date_and_time_assignment_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "APPLIED_DATE_AND_TIME_ASSIGNMENT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::AppliedGroupAssignment(i) => {
+            if i.0 as usize >= model.applied_group_assignment_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "APPLIED_GROUP_ASSIGNMENT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Approval(i) => {
+            if i.0 as usize >= model.approval_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "APPROVAL" });
+            }
+        }
+        Ap242GroupableItemRef::ApprovalPersonOrganization(i) => {
+            if i.0 as usize >= model.approval_person_organization_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "APPROVAL_PERSON_ORGANIZATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ApprovalStatus(i) => {
+            if i.0 as usize >= model.approval_status_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "APPROVAL_STATUS",
+                });
+            }
+        }
+        Ap242GroupableItemRef::AreaUnit(i) => {
+            if i.0 as usize >= model.area_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "AREA_UNIT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::AscribableState(i) => {
+            if i.0 as usize >= model.ascribable_state_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ASCRIBABLE_STATE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::AscribableStateRelationship(i) => {
+            if i.0 as usize >= model.ascribable_state_relationship_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ASCRIBABLE_STATE_RELATIONSHIP",
+                });
+            }
+        }
+        Ap242GroupableItemRef::AssemblyComponentUsage(i) => {
+            if i.0 as usize >= model.assembly_component_usage_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ASSEMBLY_COMPONENT_USAGE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Axis1Placement(i) => {
+            if i.0 as usize >= model.axis1_placement_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "AXIS1_PLACEMENT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Axis2Placement2d(i) => {
+            if i.0 as usize >= model.axis2_placement2d_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "AXIS2_PLACEMENT_2D",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Axis2Placement3d(i) => {
+            if i.0 as usize >= model.axis2_placement3d_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "AXIS2_PLACEMENT_3D",
+                });
+            }
+        }
+        Ap242GroupableItemRef::BSplineCurve(i) => {
+            if i.0 as usize >= model.b_spline_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_CURVE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::BSplineCurveWithKnots(i) => {
+            if i.0 as usize >= model.b_spline_curve_with_knots_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_CURVE_WITH_KNOTS",
+                });
+            }
+        }
+        Ap242GroupableItemRef::BSplineSurface(i) => {
+            if i.0 as usize >= model.b_spline_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_SURFACE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::BSplineSurfaceWithKnots(i) => {
+            if i.0 as usize >= model.b_spline_surface_with_knots_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_SURFACE_WITH_KNOTS",
+                });
+            }
+        }
+        Ap242GroupableItemRef::BezierCurve(i) => {
+            if i.0 as usize >= model.bezier_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BEZIER_CURVE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::BezierSurface(i) => {
+            if i.0 as usize >= model.bezier_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BEZIER_SURFACE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::BoundedCurve(i) => {
+            if i.0 as usize >= model.bounded_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_CURVE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::BoundedPcurve(i) => {
+            if i.0 as usize >= model.bounded_pcurve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_PCURVE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::BoundedSurface(i) => {
+            if i.0 as usize >= model.bounded_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_SURFACE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::BoundedSurfaceCurve(i) => {
+            if i.0 as usize >= model.bounded_surface_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_SURFACE_CURVE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::BrepWithVoids(i) => {
+            if i.0 as usize >= model.brep_with_voids_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BREP_WITH_VOIDS",
+                });
+            }
+        }
+        Ap242GroupableItemRef::CalendarDate(i) => {
+            if i.0 as usize >= model.calendar_date_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CALENDAR_DATE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::CameraImage(i) => {
+            if i.0 as usize >= model.camera_image_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_IMAGE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::CameraImage3dWithScale(i) => {
+            if i.0 as usize >= model.camera_image3d_with_scale_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_IMAGE_3D_WITH_SCALE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::CameraModel(i) => {
+            if i.0 as usize >= model.camera_model_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_MODEL",
+                });
+            }
+        }
+        Ap242GroupableItemRef::CameraModelD3(i) => {
+            if i.0 as usize >= model.camera_model_d3_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_MODEL_D3",
+                });
+            }
+        }
+        Ap242GroupableItemRef::CameraModelD3MultiClipping(i) => {
+            if i.0 as usize >= model.camera_model_d3_multi_clipping_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_MODEL_D3_MULTI_CLIPPING",
+                });
+            }
+        }
+        Ap242GroupableItemRef::CameraModelD3WithHlhsr(i) => {
+            if i.0 as usize >= model.camera_model_d3_with_hlhsr_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_MODEL_D3_WITH_HLHSR",
+                });
+            }
+        }
+        Ap242GroupableItemRef::CartesianPoint(i) => {
+            if i.0 as usize >= model.cartesian_point_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CARTESIAN_POINT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::CcDesignDateAndTimeAssignment(i) => {
+            if i.0 as usize >= model.cc_design_date_and_time_assignment_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::CentreOfSymmetry(i) => {
+            if i.0 as usize >= model.centre_of_symmetry_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CENTRE_OF_SYMMETRY",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Certification(i) => {
+            if i.0 as usize >= model.certification_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CERTIFICATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::CharacterizedRepresentation(i) => {
+            if i.0 as usize >= model.characterized_representation_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CHARACTERIZED_REPRESENTATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Circle(i) => {
+            if i.0 as usize >= model.circle_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "CIRCLE" });
+            }
+        }
+        Ap242GroupableItemRef::ClosedShell(i) => {
+            if i.0 as usize >= model.closed_shell_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CLOSED_SHELL",
+                });
+            }
+        }
+        Ap242GroupableItemRef::CommonDatum(i) => {
+            if i.0 as usize >= model.common_datum_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "COMMON_DATUM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ComplexTriangulatedFace(i) => {
+            if i.0 as usize >= model.complex_triangulated_face_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "COMPLEX_TRIANGULATED_FACE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ComplexTriangulatedSurfaceSet(i) => {
+            if i.0 as usize >= model.complex_triangulated_surface_set_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "COMPLEX_TRIANGULATED_SURFACE_SET",
+                });
+            }
+        }
+        Ap242GroupableItemRef::CompositeCurve(i) => {
+            if i.0 as usize >= model.composite_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "COMPOSITE_CURVE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::CompositeGroupShapeAspect(i) => {
+            if i.0 as usize >= model.composite_group_shape_aspect_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "COMPOSITE_GROUP_SHAPE_ASPECT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::CompositeShapeAspect(i) => {
+            if i.0 as usize >= model.composite_shape_aspect_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "COMPOSITE_SHAPE_ASPECT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::CompositeText(i) => {
+            if i.0 as usize >= model.composite_text_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "COMPOSITE_TEXT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::CompoundRepresentationItem(i) => {
+            if i.0 as usize >= model.compound_representation_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "COMPOUND_REPRESENTATION_ITEM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ConfigurationDesign(i) => {
+            if i.0 as usize >= model.configuration_design_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CONFIGURATION_DESIGN",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ConfigurationEffectivity(i) => {
+            if i.0 as usize >= model.configuration_effectivity_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CONFIGURATION_EFFECTIVITY",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ConfigurationItem(i) => {
+            if i.0 as usize >= model.configuration_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CONFIGURATION_ITEM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Conic(i) => {
+            if i.0 as usize >= model.conic_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "CONIC" });
+            }
+        }
+        Ap242GroupableItemRef::ConicalSurface(i) => {
+            if i.0 as usize >= model.conical_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CONICAL_SURFACE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ConnectedFaceSet(i) => {
+            if i.0 as usize >= model.connected_face_set_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CONNECTED_FACE_SET",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ConstructiveGeometryRepresentation(i) => {
+            if i.0 as usize >= model.constructive_geometry_representation_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ConstructiveGeometryRepresentationRelationship(i) => {
+            if i.0 as usize
+                >= model
+                    .constructive_geometry_representation_relationship_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ContextDependentOverRidingStyledItem(i) => {
+            if i.0 as usize
+                >= model
+                    .context_dependent_over_riding_styled_item_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ContextDependentShapeRepresentation(i) => {
+            if i.0 as usize
+                >= model
+                    .context_dependent_shape_representation_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ContextDependentUnit(i) => {
+            if i.0 as usize >= model.context_dependent_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CONTEXT_DEPENDENT_UNIT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ContinuousShapeAspect(i) => {
+            if i.0 as usize >= model.continuous_shape_aspect_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CONTINUOUS_SHAPE_ASPECT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Contract(i) => {
+            if i.0 as usize >= model.contract_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "CONTRACT" });
+            }
+        }
+        Ap242GroupableItemRef::ConversionBasedUnit(i) => {
+            if i.0 as usize >= model.conversion_based_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CONVERSION_BASED_UNIT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::CoordinatedUniversalTimeOffset(i) => {
+            if i.0 as usize >= model.coordinated_universal_time_offset_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "COORDINATED_UNIVERSAL_TIME_OFFSET",
+                });
+            }
+        }
+        Ap242GroupableItemRef::CoordinatesList(i) => {
+            if i.0 as usize >= model.coordinates_list_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "COORDINATES_LIST",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Curve(i) => {
+            if i.0 as usize >= model.curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "CURVE" });
+            }
+        }
+        Ap242GroupableItemRef::CylindricalSurface(i) => {
+            if i.0 as usize >= model.cylindrical_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CYLINDRICAL_SURFACE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DateAndTime(i) => {
+            if i.0 as usize >= model.date_and_time_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DATE_AND_TIME",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DateAndTimeAssignment(i) => {
+            if i.0 as usize >= model.date_and_time_assignment_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DATE_AND_TIME_ASSIGNMENT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Datum(i) => {
+            if i.0 as usize >= model.datum_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "DATUM" });
+            }
+        }
+        Ap242GroupableItemRef::DatumFeature(i) => {
+            if i.0 as usize >= model.datum_feature_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DATUM_FEATURE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DatumReferenceCompartment(i) => {
+            if i.0 as usize >= model.datum_reference_compartment_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DATUM_REFERENCE_COMPARTMENT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DatumReferenceElement(i) => {
+            if i.0 as usize >= model.datum_reference_element_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DATUM_REFERENCE_ELEMENT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DatumSystem(i) => {
+            if i.0 as usize >= model.datum_system_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DATUM_SYSTEM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DatumTarget(i) => {
+            if i.0 as usize >= model.datum_target_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DATUM_TARGET",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DefaultModelGeometricView(i) => {
+            if i.0 as usize >= model.default_model_geometric_view_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DEFAULT_MODEL_GEOMETRIC_VIEW",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DefinedCharacterGlyph(i) => {
+            if i.0 as usize >= model.defined_character_glyph_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DEFINED_CHARACTER_GLYPH",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DefinedSymbol(i) => {
+            if i.0 as usize >= model.defined_symbol_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DEFINED_SYMBOL",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DefinitionalRepresentation(i) => {
+            if i.0 as usize >= model.definitional_representation_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DEFINITIONAL_REPRESENTATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DefinitionalRepresentationRelationship(i) => {
+            if i.0 as usize
+                >= model
+                    .definitional_representation_relationship_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DEFINITIONAL_REPRESENTATION_RELATIONSHIP",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DefinitionalRepresentationRelationshipWithSameContext(i) => {
+            if i.0 as usize
+                >= model
+                    .definitional_representation_relationship_with_same_context_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DegenerateToroidalSurface(i) => {
+            if i.0 as usize >= model.degenerate_toroidal_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DEGENERATE_TOROIDAL_SURFACE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DerivedShapeAspect(i) => {
+            if i.0 as usize >= model.derived_shape_aspect_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DERIVED_SHAPE_ASPECT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DerivedUnit(i) => {
+            if i.0 as usize >= model.derived_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DERIVED_UNIT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DerivedUnitElement(i) => {
+            if i.0 as usize >= model.derived_unit_element_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DERIVED_UNIT_ELEMENT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DescriptiveRepresentationItem(i) => {
+            if i.0 as usize >= model.descriptive_representation_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DESCRIPTIVE_REPRESENTATION_ITEM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DesignContext(i) => {
+            if i.0 as usize >= model.design_context_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DESIGN_CONTEXT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DimensionalLocation(i) => {
+            if i.0 as usize >= model.dimensional_location_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DIMENSIONAL_LOCATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DimensionalLocationWithPath(i) => {
+            if i.0 as usize >= model.dimensional_location_with_path_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DIMENSIONAL_LOCATION_WITH_PATH",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DimensionalSizeWithDatumFeature(i) => {
+            if i.0 as usize >= model.dimensional_size_with_datum_feature_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DirectedDimensionalLocation(i) => {
+            if i.0 as usize >= model.directed_dimensional_location_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DIRECTED_DIMENSIONAL_LOCATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Direction(i) => {
+            if i.0 as usize >= model.direction_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DIRECTION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DocumentFile(i) => {
+            if i.0 as usize >= model.document_file_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DOCUMENT_FILE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DraughtingAnnotationOccurrence(i) => {
+            if i.0 as usize >= model.draughting_annotation_occurrence_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DraughtingCallout(i) => {
+            if i.0 as usize >= model.draughting_callout_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DRAUGHTING_CALLOUT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::DraughtingModel(i) => {
+            if i.0 as usize >= model.draughting_model_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DRAUGHTING_MODEL",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Edge(i) => {
+            if i.0 as usize >= model.edge_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "EDGE" });
+            }
+        }
+        Ap242GroupableItemRef::EdgeCurve(i) => {
+            if i.0 as usize >= model.edge_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "EDGE_CURVE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::EdgeLoop(i) => {
+            if i.0 as usize >= model.edge_loop_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "EDGE_LOOP",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Effectivity(i) => {
+            if i.0 as usize >= model.effectivity_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "EFFECTIVITY",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ElementarySurface(i) => {
+            if i.0 as usize >= model.elementary_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ELEMENTARY_SURFACE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Ellipse(i) => {
+            if i.0 as usize >= model.ellipse_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "ELLIPSE" });
+            }
+        }
+        Ap242GroupableItemRef::ExternalSource(i) => {
+            if i.0 as usize >= model.external_source_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "EXTERNAL_SOURCE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ExternallyDefinedHatchStyle(i) => {
+            if i.0 as usize >= model.externally_defined_hatch_style_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "EXTERNALLY_DEFINED_HATCH_STYLE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ExternallyDefinedTileStyle(i) => {
+            if i.0 as usize >= model.externally_defined_tile_style_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "EXTERNALLY_DEFINED_TILE_STYLE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Face(i) => {
+            if i.0 as usize >= model.face_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "FACE" });
+            }
+        }
+        Ap242GroupableItemRef::FaceBound(i) => {
+            if i.0 as usize >= model.face_bound_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "FACE_BOUND",
+                });
+            }
+        }
+        Ap242GroupableItemRef::FaceOuterBound(i) => {
+            if i.0 as usize >= model.face_outer_bound_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "FACE_OUTER_BOUND",
+                });
+            }
+        }
+        Ap242GroupableItemRef::FaceSurface(i) => {
+            if i.0 as usize >= model.face_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "FACE_SURFACE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::FeatureForDatumTargetRelationship(i) => {
+            if i.0 as usize
+                >= model
+                    .feature_for_datum_target_relationship_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP",
+                });
+            }
+        }
+        Ap242GroupableItemRef::FillAreaStyleHatching(i) => {
+            if i.0 as usize >= model.fill_area_style_hatching_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "FILL_AREA_STYLE_HATCHING",
+                });
+            }
+        }
+        Ap242GroupableItemRef::FillAreaStyleTileColouredRegion(i) => {
+            if i.0 as usize >= model.fill_area_style_tile_coloured_region_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "FILL_AREA_STYLE_TILE_COLOURED_REGION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::FillAreaStyleTileCurveWithStyle(i) => {
+            if i.0 as usize
+                >= model
+                    .fill_area_style_tile_curve_with_style_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::FillAreaStyleTileSymbolWithStyle(i) => {
+            if i.0 as usize
+                >= model
+                    .fill_area_style_tile_symbol_with_style_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::FillAreaStyleTiles(i) => {
+            if i.0 as usize >= model.fill_area_style_tiles_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "FILL_AREA_STYLE_TILES",
+                });
+            }
+        }
+        Ap242GroupableItemRef::GeneralDatumReference(i) => {
+            if i.0 as usize >= model.general_datum_reference_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "GENERAL_DATUM_REFERENCE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::GeneralProperty(i) => {
+            if i.0 as usize >= model.general_property_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "GENERAL_PROPERTY",
+                });
+            }
+        }
+        Ap242GroupableItemRef::GeometricCurveSet(i) => {
+            if i.0 as usize >= model.geometric_curve_set_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "GEOMETRIC_CURVE_SET",
+                });
+            }
+        }
+        Ap242GroupableItemRef::GeometricItemSpecificUsage(i) => {
+            if i.0 as usize >= model.geometric_item_specific_usage_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "GEOMETRIC_ITEM_SPECIFIC_USAGE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::GeometricRepresentationContext(i) => {
+            if i.0 as usize >= model.geometric_representation_context_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "GEOMETRIC_REPRESENTATION_CONTEXT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::GeometricRepresentationItem(i) => {
+            if i.0 as usize >= model.geometric_representation_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "GEOMETRIC_REPRESENTATION_ITEM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::GeometricSet(i) => {
+            if i.0 as usize >= model.geometric_set_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "GEOMETRIC_SET",
+                });
+            }
+        }
+        Ap242GroupableItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+            if i.0 as usize
+                >= model
+                    .geometrically_bounded_surface_shape_representation_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+            if i.0 as usize
+                >= model
+                    .geometrically_bounded_wireframe_shape_representation_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::GlobalUncertaintyAssignedContext(i) => {
+            if i.0 as usize >= model.global_uncertainty_assigned_context_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::GlobalUnitAssignedContext(i) => {
+            if i.0 as usize >= model.global_unit_assigned_context_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "GLOBAL_UNIT_ASSIGNED_CONTEXT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Hyperbola(i) => {
+            if i.0 as usize >= model.hyperbola_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "HYPERBOLA",
+                });
+            }
+        }
+        Ap242GroupableItemRef::IntegerRepresentationItem(i) => {
+            if i.0 as usize >= model.integer_representation_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "INTEGER_REPRESENTATION_ITEM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::IntersectionCurve(i) => {
+            if i.0 as usize >= model.intersection_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "INTERSECTION_CURVE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ItemDefinedTransformation(i) => {
+            if i.0 as usize >= model.item_defined_transformation_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ITEM_DEFINED_TRANSFORMATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::LeaderCurve(i) => {
+            if i.0 as usize >= model.leader_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "LEADER_CURVE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::LeaderDirectedCallout(i) => {
+            if i.0 as usize >= model.leader_directed_callout_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "LEADER_DIRECTED_CALLOUT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::LeaderTerminator(i) => {
+            if i.0 as usize >= model.leader_terminator_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "LEADER_TERMINATOR",
+                });
+            }
+        }
+        Ap242GroupableItemRef::LengthMeasureWithUnit(i) => {
+            if i.0 as usize >= model.length_measure_with_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "LENGTH_MEASURE_WITH_UNIT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::LengthUnit(i) => {
+            if i.0 as usize >= model.length_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "LENGTH_UNIT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Line(i) => {
+            if i.0 as usize >= model.line_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "LINE" });
+            }
+        }
+        Ap242GroupableItemRef::LocalTime(i) => {
+            if i.0 as usize >= model.local_time_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "LOCAL_TIME",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Loop(i) => {
+            if i.0 as usize >= model.loop_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "LOOP" });
+            }
+        }
+        Ap242GroupableItemRef::MakeFromUsageOption(i) => {
+            if i.0 as usize >= model.make_from_usage_option_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MAKE_FROM_USAGE_OPTION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ManifoldSolidBrep(i) => {
+            if i.0 as usize >= model.manifold_solid_brep_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MANIFOLD_SOLID_BREP",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ManifoldSurfaceShapeRepresentation(i) => {
+            if i.0 as usize
+                >= model
+                    .manifold_surface_shape_representation_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::MappedItem(i) => {
+            if i.0 as usize >= model.mapped_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MAPPED_ITEM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::MassMeasureWithUnit(i) => {
+            if i.0 as usize >= model.mass_measure_with_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MASS_MEASURE_WITH_UNIT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::MassUnit(i) => {
+            if i.0 as usize >= model.mass_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MASS_UNIT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::MeasureRepresentationItem(i) => {
+            if i.0 as usize >= model.measure_representation_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MEASURE_REPRESENTATION_ITEM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::MeasureWithUnit(i) => {
+            if i.0 as usize >= model.measure_with_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MEASURE_WITH_UNIT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::MechanicalDesignAndDraughtingRelationship(i) => {
+            if i.0 as usize
+                >= model
+                    .mechanical_design_and_draughting_relationship_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP",
+                });
+            }
+        }
+        Ap242GroupableItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => {
+            if i.0 as usize
+                >= model
+                    .mechanical_design_geometric_presentation_representation_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+            if i.0 as usize
+                >= model
+                    .mechanical_design_presentation_representation_with_draughting_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
+                });
+            }
+        }
+        Ap242GroupableItemRef::MechanicalDesignShadedPresentationRepresentation(i) => {
+            if i.0 as usize
+                >= model
+                    .mechanical_design_shaded_presentation_representation_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::NamedUnit(i) => {
+            if i.0 as usize >= model.named_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "NAMED_UNIT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::NextAssemblyUsageOccurrence(i) => {
+            if i.0 as usize >= model.next_assembly_usage_occurrence_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::OffsetSurface(i) => {
+            if i.0 as usize >= model.offset_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "OFFSET_SURFACE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::OneDirectionRepeatFactor(i) => {
+            if i.0 as usize >= model.one_direction_repeat_factor_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ONE_DIRECTION_REPEAT_FACTOR",
+                });
+            }
+        }
+        Ap242GroupableItemRef::OpenShell(i) => {
+            if i.0 as usize >= model.open_shell_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "OPEN_SHELL",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Organization(i) => {
+            if i.0 as usize >= model.organization_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ORGANIZATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::OrganizationRelationship(i) => {
+            if i.0 as usize >= model.organization_relationship_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ORGANIZATION_RELATIONSHIP",
+                });
+            }
+        }
+        Ap242GroupableItemRef::OrganizationType(i) => {
+            if i.0 as usize >= model.organization_type_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ORGANIZATION_TYPE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::OrganizationalAddress(i) => {
+            if i.0 as usize >= model.organizational_address_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ORGANIZATIONAL_ADDRESS",
+                });
+            }
+        }
+        Ap242GroupableItemRef::OrganizationalProject(i) => {
+            if i.0 as usize >= model.organizational_project_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ORGANIZATIONAL_PROJECT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::OrganizationalProjectRelationship(i) => {
+            if i.0 as usize >= model.organizational_project_relationship_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ORGANIZATIONAL_PROJECT_RELATIONSHIP",
+                });
+            }
+        }
+        Ap242GroupableItemRef::OrientedClosedShell(i) => {
+            if i.0 as usize >= model.oriented_closed_shell_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ORIENTED_CLOSED_SHELL",
+                });
+            }
+        }
+        Ap242GroupableItemRef::OrientedEdge(i) => {
+            if i.0 as usize >= model.oriented_edge_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ORIENTED_EDGE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::OverRidingStyledItem(i) => {
+            if i.0 as usize >= model.over_riding_styled_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "OVER_RIDING_STYLED_ITEM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Parabola(i) => {
+            if i.0 as usize >= model.parabola_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
+            }
+        }
+        Ap242GroupableItemRef::ParametricRepresentationContext(i) => {
+            if i.0 as usize >= model.parametric_representation_context_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PARAMETRIC_REPRESENTATION_CONTEXT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Path(i) => {
+            if i.0 as usize >= model.path_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PATH" });
+            }
+        }
+        Ap242GroupableItemRef::Pcurve(i) => {
+            if i.0 as usize >= model.pcurve_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PCURVE" });
+            }
+        }
+        Ap242GroupableItemRef::Person(i) => {
+            if i.0 as usize >= model.person_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PERSON" });
+            }
+        }
+        Ap242GroupableItemRef::PersonAndOrganization(i) => {
+            if i.0 as usize >= model.person_and_organization_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PERSON_AND_ORGANIZATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::PersonAndOrganizationAddress(i) => {
+            if i.0 as usize >= model.person_and_organization_address_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PERSON_AND_ORGANIZATION_ADDRESS",
+                });
+            }
+        }
+        Ap242GroupableItemRef::PersonalAddress(i) => {
+            if i.0 as usize >= model.personal_address_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PERSONAL_ADDRESS",
+                });
+            }
+        }
+        Ap242GroupableItemRef::PlacedDatumTargetFeature(i) => {
+            if i.0 as usize >= model.placed_datum_target_feature_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PLACED_DATUM_TARGET_FEATURE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Placement(i) => {
+            if i.0 as usize >= model.placement_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PLACEMENT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::PlanarBox(i) => {
+            if i.0 as usize >= model.planar_box_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PLANAR_BOX",
+                });
+            }
+        }
+        Ap242GroupableItemRef::PlanarExtent(i) => {
+            if i.0 as usize >= model.planar_extent_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PLANAR_EXTENT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Plane(i) => {
+            if i.0 as usize >= model.plane_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PLANE" });
+            }
+        }
+        Ap242GroupableItemRef::PlaneAngleMeasureWithUnit(i) => {
+            if i.0 as usize >= model.plane_angle_measure_with_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PLANE_ANGLE_MEASURE_WITH_UNIT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::PlaneAngleUnit(i) => {
+            if i.0 as usize >= model.plane_angle_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PLANE_ANGLE_UNIT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Point(i) => {
+            if i.0 as usize >= model.point_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "POINT" });
+            }
+        }
+        Ap242GroupableItemRef::PolyLoop(i) => {
+            if i.0 as usize >= model.poly_loop_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "POLY_LOOP",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Polyline(i) => {
+            if i.0 as usize >= model.polyline_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "POLYLINE" });
+            }
+        }
+        Ap242GroupableItemRef::PrecisionQualifier(i) => {
+            if i.0 as usize >= model.precision_qualifier_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRECISION_QUALIFIER",
+                });
+            }
+        }
+        Ap242GroupableItemRef::PresentationArea(i) => {
+            if i.0 as usize >= model.presentation_area_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRESENTATION_AREA",
+                });
+            }
+        }
+        Ap242GroupableItemRef::PresentationRepresentation(i) => {
+            if i.0 as usize >= model.presentation_representation_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRESENTATION_REPRESENTATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::PresentationView(i) => {
+            if i.0 as usize >= model.presentation_view_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRESENTATION_VIEW",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Product(i) => {
+            if i.0 as usize >= model.product_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PRODUCT" });
+            }
+        }
+        Ap242GroupableItemRef::ProductConcept(i) => {
+            if i.0 as usize >= model.product_concept_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRODUCT_CONCEPT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ProductConceptContext(i) => {
+            if i.0 as usize >= model.product_concept_context_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRODUCT_CONCEPT_CONTEXT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ProductDefinition(i) => {
+            if i.0 as usize >= model.product_definition_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRODUCT_DEFINITION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ProductDefinitionContext(i) => {
+            if i.0 as usize >= model.product_definition_context_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRODUCT_DEFINITION_CONTEXT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ProductDefinitionEffectivity(i) => {
+            if i.0 as usize >= model.product_definition_effectivity_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRODUCT_DEFINITION_EFFECTIVITY",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ProductDefinitionFormation(i) => {
+            if i.0 as usize >= model.product_definition_formation_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRODUCT_DEFINITION_FORMATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
+            if i.0 as usize
+                >= model
+                    .product_definition_formation_with_specified_source_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ProductDefinitionRelationship(i) => {
+            if i.0 as usize >= model.product_definition_relationship_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRODUCT_DEFINITION_RELATIONSHIP",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ProductDefinitionShape(i) => {
+            if i.0 as usize >= model.product_definition_shape_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRODUCT_DEFINITION_SHAPE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ProductDefinitionUsage(i) => {
+            if i.0 as usize >= model.product_definition_usage_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRODUCT_DEFINITION_USAGE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
+            if i.0 as usize
+                >= model
+                    .product_definition_with_associated_documents_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
+                });
+            }
+        }
+        Ap242GroupableItemRef::PropertyDefinition(i) => {
+            if i.0 as usize >= model.property_definition_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PROPERTY_DEFINITION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::PropertyDefinitionRepresentation(i) => {
+            if i.0 as usize >= model.property_definition_representation_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PROPERTY_DEFINITION_REPRESENTATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::QualifiedRepresentationItem(i) => {
+            if i.0 as usize >= model.qualified_representation_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "QUALIFIED_REPRESENTATION_ITEM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::QuasiUniformCurve(i) => {
+            if i.0 as usize >= model.quasi_uniform_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "QUASI_UNIFORM_CURVE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::QuasiUniformSurface(i) => {
+            if i.0 as usize >= model.quasi_uniform_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "QUASI_UNIFORM_SURFACE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::RatioMeasureWithUnit(i) => {
+            if i.0 as usize >= model.ratio_measure_with_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "RATIO_MEASURE_WITH_UNIT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::RatioUnit(i) => {
+            if i.0 as usize >= model.ratio_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "RATIO_UNIT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::RationalBSplineCurve(i) => {
+            if i.0 as usize >= model.rational_b_spline_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "RATIONAL_B_SPLINE_CURVE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::RationalBSplineSurface(i) => {
+            if i.0 as usize >= model.rational_b_spline_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "RATIONAL_B_SPLINE_SURFACE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::RealRepresentationItem(i) => {
+            if i.0 as usize >= model.real_representation_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "REAL_REPRESENTATION_ITEM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::RepositionedTessellatedItem(i) => {
+            if i.0 as usize >= model.repositioned_tessellated_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "REPOSITIONED_TESSELLATED_ITEM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Representation(i) => {
+            if i.0 as usize >= model.representation_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "REPRESENTATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::RepresentationContext(i) => {
+            if i.0 as usize >= model.representation_context_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "REPRESENTATION_CONTEXT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::RepresentationItem(i) => {
+            if i.0 as usize >= model.representation_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "REPRESENTATION_ITEM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::RepresentationRelationship(i) => {
+            if i.0 as usize >= model.representation_relationship_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "REPRESENTATION_RELATIONSHIP",
+                });
+            }
+        }
+        Ap242GroupableItemRef::RepresentationRelationshipWithTransformation(i) => {
+            if i.0 as usize
+                >= model
+                    .representation_relationship_with_transformation_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::SeamCurve(i) => {
+            if i.0 as usize >= model.seam_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SEAM_CURVE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::SecurityClassification(i) => {
+            if i.0 as usize >= model.security_classification_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SECURITY_CLASSIFICATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ShapeAspect(i) => {
+            if i.0 as usize >= model.shape_aspect_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SHAPE_ASPECT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ShapeAspectAssociativity(i) => {
+            if i.0 as usize >= model.shape_aspect_associativity_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SHAPE_ASPECT_ASSOCIATIVITY",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ShapeAspectDerivingRelationship(i) => {
+            if i.0 as usize >= model.shape_aspect_deriving_relationship_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ShapeAspectRelationship(i) => {
+            if i.0 as usize >= model.shape_aspect_relationship_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SHAPE_ASPECT_RELATIONSHIP",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ShapeDefinitionRepresentation(i) => {
+            if i.0 as usize >= model.shape_definition_representation_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SHAPE_DEFINITION_REPRESENTATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ShapeDimensionRepresentation(i) => {
+            if i.0 as usize >= model.shape_dimension_representation_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SHAPE_DIMENSION_REPRESENTATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ShapeRepresentation(i) => {
+            if i.0 as usize >= model.shape_representation_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SHAPE_REPRESENTATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ShapeRepresentationRelationship(i) => {
+            if i.0 as usize >= model.shape_representation_relationship_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SHAPE_REPRESENTATION_RELATIONSHIP",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ShapeRepresentationWithParameters(i) => {
+            if i.0 as usize >= model.shape_representation_with_parameters_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SHAPE_REPRESENTATION_WITH_PARAMETERS",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ShellBasedSurfaceModel(i) => {
+            if i.0 as usize >= model.shell_based_surface_model_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SHELL_BASED_SURFACE_MODEL",
+                });
+            }
+        }
+        Ap242GroupableItemRef::SiUnit(i) => {
+            if i.0 as usize >= model.si_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "SI_UNIT" });
+            }
+        }
+        Ap242GroupableItemRef::SolidAngleUnit(i) => {
+            if i.0 as usize >= model.solid_angle_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SOLID_ANGLE_UNIT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::SolidModel(i) => {
+            if i.0 as usize >= model.solid_model_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SOLID_MODEL",
+                });
+            }
+        }
+        Ap242GroupableItemRef::SphericalSurface(i) => {
+            if i.0 as usize >= model.spherical_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SPHERICAL_SURFACE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::StateObserved(i) => {
+            if i.0 as usize >= model.state_observed_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "STATE_OBSERVED",
+                });
+            }
+        }
+        Ap242GroupableItemRef::StateType(i) => {
+            if i.0 as usize >= model.state_type_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "STATE_TYPE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::StyledItem(i) => {
+            if i.0 as usize >= model.styled_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "STYLED_ITEM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Surface(i) => {
+            if i.0 as usize >= model.surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "SURFACE" });
+            }
+        }
+        Ap242GroupableItemRef::SurfaceCurve(i) => {
+            if i.0 as usize >= model.surface_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SURFACE_CURVE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::SurfaceOfLinearExtrusion(i) => {
+            if i.0 as usize >= model.surface_of_linear_extrusion_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SURFACE_OF_LINEAR_EXTRUSION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::SurfaceOfRevolution(i) => {
+            if i.0 as usize >= model.surface_of_revolution_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SURFACE_OF_REVOLUTION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::SweptSurface(i) => {
+            if i.0 as usize >= model.swept_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SWEPT_SURFACE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::SymbolRepresentation(i) => {
+            if i.0 as usize >= model.symbol_representation_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SYMBOL_REPRESENTATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::SymbolTarget(i) => {
+            if i.0 as usize >= model.symbol_target_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SYMBOL_TARGET",
+                });
+            }
+        }
+        Ap242GroupableItemRef::TerminatorSymbol(i) => {
+            if i.0 as usize >= model.terminator_symbol_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TERMINATOR_SYMBOL",
+                });
+            }
+        }
+        Ap242GroupableItemRef::TessellatedAnnotationOccurrence(i) => {
+            if i.0 as usize >= model.tessellated_annotation_occurrence_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TESSELLATED_ANNOTATION_OCCURRENCE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::TessellatedCurveSet(i) => {
+            if i.0 as usize >= model.tessellated_curve_set_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TESSELLATED_CURVE_SET",
+                });
+            }
+        }
+        Ap242GroupableItemRef::TessellatedFace(i) => {
+            if i.0 as usize >= model.tessellated_face_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TESSELLATED_FACE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::TessellatedGeometricSet(i) => {
+            if i.0 as usize >= model.tessellated_geometric_set_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TESSELLATED_GEOMETRIC_SET",
+                });
+            }
+        }
+        Ap242GroupableItemRef::TessellatedItem(i) => {
+            if i.0 as usize >= model.tessellated_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TESSELLATED_ITEM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::TessellatedShapeRepresentation(i) => {
+            if i.0 as usize >= model.tessellated_shape_representation_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TESSELLATED_SHAPE_REPRESENTATION",
+                });
+            }
+        }
+        Ap242GroupableItemRef::TessellatedShell(i) => {
+            if i.0 as usize >= model.tessellated_shell_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TESSELLATED_SHELL",
+                });
+            }
+        }
+        Ap242GroupableItemRef::TessellatedSolid(i) => {
+            if i.0 as usize >= model.tessellated_solid_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TESSELLATED_SOLID",
+                });
+            }
+        }
+        Ap242GroupableItemRef::TessellatedStructuredItem(i) => {
+            if i.0 as usize >= model.tessellated_structured_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TESSELLATED_STRUCTURED_ITEM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::TessellatedSurfaceSet(i) => {
+            if i.0 as usize >= model.tessellated_surface_set_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TESSELLATED_SURFACE_SET",
+                });
+            }
+        }
+        Ap242GroupableItemRef::TextLiteral(i) => {
+            if i.0 as usize >= model.text_literal_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TEXT_LITERAL",
+                });
+            }
+        }
+        Ap242GroupableItemRef::TimeUnit(i) => {
+            if i.0 as usize >= model.time_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TIME_UNIT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ToleranceZone(i) => {
+            if i.0 as usize >= model.tolerance_zone_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TOLERANCE_ZONE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ToleranceZoneWithDatum(i) => {
+            if i.0 as usize >= model.tolerance_zone_with_datum_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TOLERANCE_ZONE_WITH_DATUM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::TopologicalRepresentationItem(i) => {
+            if i.0 as usize >= model.topological_representation_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TOPOLOGICAL_REPRESENTATION_ITEM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ToroidalSurface(i) => {
+            if i.0 as usize >= model.toroidal_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TOROIDAL_SURFACE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::TrimmedCurve(i) => {
+            if i.0 as usize >= model.trimmed_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TRIMMED_CURVE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::TwoDirectionRepeatFactor(i) => {
+            if i.0 as usize >= model.two_direction_repeat_factor_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TWO_DIRECTION_REPEAT_FACTOR",
+                });
+            }
+        }
+        Ap242GroupableItemRef::TypeQualifier(i) => {
+            if i.0 as usize >= model.type_qualifier_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TYPE_QUALIFIER",
+                });
+            }
+        }
+        Ap242GroupableItemRef::UncertaintyMeasureWithUnit(i) => {
+            if i.0 as usize >= model.uncertainty_measure_with_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "UNCERTAINTY_MEASURE_WITH_UNIT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::UncertaintyQualifier(i) => {
+            if i.0 as usize >= model.uncertainty_qualifier_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "UNCERTAINTY_QUALIFIER",
+                });
+            }
+        }
+        Ap242GroupableItemRef::UniformCurve(i) => {
+            if i.0 as usize >= model.uniform_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "UNIFORM_CURVE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::UniformSurface(i) => {
+            if i.0 as usize >= model.uniform_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "UNIFORM_SURFACE",
+                });
+            }
+        }
+        Ap242GroupableItemRef::ValueRepresentationItem(i) => {
+            if i.0 as usize >= model.value_representation_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "VALUE_REPRESENTATION_ITEM",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Vector(i) => {
+            if i.0 as usize >= model.vector_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "VECTOR" });
+            }
+        }
+        Ap242GroupableItemRef::VersionedActionRequest(i) => {
+            if i.0 as usize >= model.versioned_action_request_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "VERSIONED_ACTION_REQUEST",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Vertex(i) => {
+            if i.0 as usize >= model.vertex_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "VERTEX" });
+            }
+        }
+        Ap242GroupableItemRef::VertexLoop(i) => {
+            if i.0 as usize >= model.vertex_loop_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "VERTEX_LOOP",
+                });
+            }
+        }
+        Ap242GroupableItemRef::VertexPoint(i) => {
+            if i.0 as usize >= model.vertex_point_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "VERTEX_POINT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::VertexShell(i) => {
+            if i.0 as usize >= model.vertex_shell_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "VERTEX_SHELL",
+                });
+            }
+        }
+        Ap242GroupableItemRef::VolumeUnit(i) => {
+            if i.0 as usize >= model.volume_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "VOLUME_UNIT",
+                });
+            }
+        }
+        Ap242GroupableItemRef::WireShell(i) => {
+            if i.0 as usize >= model.wire_shell_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "WIRE_SHELL",
+                });
+            }
+        }
+        Ap242GroupableItemRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c.parts.iter().any(|p| {
+                [
+                    "ADDRESS",
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    "ADVANCED_FACE",
+                    "ANNOTATION_CURVE_OCCURRENCE",
+                    "ANNOTATION_OCCURRENCE",
+                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    "ANNOTATION_PLANE",
+                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "ANNOTATION_TEXT_OCCURRENCE",
+                    "APPLIED_DATE_AND_TIME_ASSIGNMENT",
+                    "APPLIED_GROUP_ASSIGNMENT",
+                    "ASCRIBABLE_STATE_RELATIONSHIP",
+                    "ASSEMBLY_COMPONENT_USAGE",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "BREP_WITH_VOIDS",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
+                    "CAMERA_MODEL",
+                    "CAMERA_MODEL_D3",
+                    "CAMERA_MODEL_D3_MULTI_CLIPPING",
+                    "CAMERA_MODEL_D3_WITH_HLHSR",
+                    "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
+                    "CHARACTERIZED_REPRESENTATION",
+                    "CLOSED_SHELL",
+                    "COMMON_DATUM",
+                    "COMPOSITE_CURVE",
+                    "COMPOSITE_GROUP_SHAPE_ASPECT",
+                    "COMPOSITE_SHAPE_ASPECT",
+                    "COMPOSITE_TEXT",
+                    "COMPOUND_REPRESENTATION_ITEM",
+                    "CONFIGURATION_EFFECTIVITY",
+                    "CONFIGURATION_ITEM",
+                    "CONNECTED_FACE_SET",
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP",
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    "CONTEXT_DEPENDENT_UNIT",
+                    "CONVERSION_BASED_UNIT",
+                    "CURVE",
+                    "DATE_AND_TIME",
+                    "DATE_AND_TIME_ASSIGNMENT",
+                    "DATUM",
+                    "DATUM_FEATURE",
+                    "DATUM_SYSTEM",
+                    "DATUM_TARGET",
+                    "DEFAULT_MODEL_GEOMETRIC_VIEW",
+                    "DEFINITIONAL_REPRESENTATION",
+                    "DEFINITIONAL_REPRESENTATION_RELATIONSHIP",
+                    "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "DERIVED_UNIT",
+                    "DESIGN_CONTEXT",
+                    "DIRECTION",
+                    "DOCUMENT_FILE",
+                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                    "DRAUGHTING_CALLOUT",
+                    "DRAUGHTING_MODEL",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "EDGE_LOOP",
+                    "EFFECTIVITY",
+                    "ELEMENTARY_SURFACE",
+                    "EXTERNALLY_DEFINED_HATCH_STYLE",
+                    "EXTERNALLY_DEFINED_TILE_STYLE",
+                    "EXTERNAL_SOURCE",
+                    "FACE",
+                    "FACE_BOUND",
+                    "FACE_OUTER_BOUND",
+                    "FACE_SURFACE",
+                    "FILL_AREA_STYLE_HATCHING",
+                    "FILL_AREA_STYLE_TILES",
+                    "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                    "GENERAL_DATUM_REFERENCE",
+                    "GENERAL_PROPERTY",
+                    "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
+                    "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_ITEM_SPECIFIC_USAGE",
+                    "GEOMETRIC_REPRESENTATION_CONTEXT",
+                    "GEOMETRIC_REPRESENTATION_ITEM",
+                    "GEOMETRIC_SET",
+                    "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
+                    "GLOBAL_UNIT_ASSIGNED_CONTEXT",
+                    "INTEGER_REPRESENTATION_ITEM",
+                    "INTERSECTION_CURVE",
+                    "ITEM_DEFINED_TRANSFORMATION",
+                    "LEADER_CURVE",
+                    "LEADER_DIRECTED_CALLOUT",
+                    "LEADER_TERMINATOR",
+                    "LENGTH_MEASURE_WITH_UNIT",
+                    "LENGTH_UNIT",
+                    "LOOP",
+                    "MANIFOLD_SOLID_BREP",
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    "MAPPED_ITEM",
+                    "MASS_UNIT",
+                    "MEASURE_REPRESENTATION_ITEM",
+                    "MEASURE_WITH_UNIT",
+                    "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP",
+                    "NAMED_UNIT",
+                    "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                    "ONE_DIRECTION_REPEAT_FACTOR",
+                    "OPEN_SHELL",
+                    "ORGANIZATIONAL_ADDRESS",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "OVER_RIDING_STYLED_ITEM",
+                    "PARAMETRIC_REPRESENTATION_CONTEXT",
+                    "PATH",
+                    "PCURVE",
+                    "PERSONAL_ADDRESS",
+                    "PERSON_AND_ORGANIZATION_ADDRESS",
+                    "PLACED_DATUM_TARGET_FEATURE",
+                    "PLACEMENT",
+                    "PLANAR_BOX",
+                    "PLANAR_EXTENT",
+                    "PLANE_ANGLE_MEASURE_WITH_UNIT",
+                    "PLANE_ANGLE_UNIT",
+                    "POINT",
+                    "POLY_LOOP",
+                    "PRESENTATION_AREA",
+                    "PRESENTATION_REPRESENTATION",
+                    "PRESENTATION_VIEW",
+                    "PRODUCT",
+                    "PRODUCT_CONCEPT",
+                    "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_CONTEXT",
+                    "PRODUCT_DEFINITION_EFFECTIVITY",
+                    "PRODUCT_DEFINITION_FORMATION",
+                    "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+                    "PRODUCT_DEFINITION_RELATIONSHIP",
+                    "PRODUCT_DEFINITION_SHAPE",
+                    "PRODUCT_DEFINITION_USAGE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
+                    "PROPERTY_DEFINITION",
+                    "PROPERTY_DEFINITION_REPRESENTATION",
+                    "QUALIFIED_REPRESENTATION_ITEM",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "RATIO_MEASURE_WITH_UNIT",
+                    "RATIO_UNIT",
+                    "REAL_REPRESENTATION_ITEM",
+                    "REPOSITIONED_TESSELLATED_ITEM",
+                    "REPRESENTATION",
+                    "REPRESENTATION_CONTEXT",
+                    "REPRESENTATION_ITEM",
+                    "REPRESENTATION_RELATIONSHIP",
+                    "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
+                    "SEAM_CURVE",
+                    "SHAPE_ASPECT",
+                    "SHAPE_ASPECT_RELATIONSHIP",
+                    "SHAPE_DEFINITION_REPRESENTATION",
+                    "SHAPE_DIMENSION_REPRESENTATION",
+                    "SHAPE_REPRESENTATION",
+                    "SHAPE_REPRESENTATION_RELATIONSHIP",
+                    "SHAPE_REPRESENTATION_WITH_PARAMETERS",
+                    "SHELL_BASED_SURFACE_MODEL",
+                    "SI_UNIT",
+                    "SOLID_ANGLE_UNIT",
+                    "SOLID_MODEL",
+                    "STATE_OBSERVED",
+                    "STATE_TYPE",
+                    "STYLED_ITEM",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "SYMBOL_REPRESENTATION",
+                    "TERMINATOR_SYMBOL",
+                    "TESSELLATED_GEOMETRIC_SET",
+                    "TESSELLATED_ITEM",
+                    "TESSELLATED_SHAPE_REPRESENTATION",
+                    "TESSELLATED_STRUCTURED_ITEM",
+                    "TEXT_LITERAL",
+                    "TIME_UNIT",
+                    "TOLERANCE_ZONE",
+                    "TOLERANCE_ZONE_WITH_DATUM",
+                    "TOPOLOGICAL_REPRESENTATION_ITEM",
+                    "TOROIDAL_SURFACE",
+                    "TWO_DIRECTION_REPEAT_FACTOR",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VALUE_REPRESENTATION_ITEM",
+                    "VECTOR",
+                    "VERTEX",
+                    "VERTEX_POINT",
+                ]
+                .contains(&part_name(p))
+            }) {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not a GROUPABLE_ITEM",
                 });
             }
         }

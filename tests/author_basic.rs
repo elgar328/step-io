@@ -867,3 +867,25 @@ fn narrower_arguments_convert_into_the_model_type() {
         m::Ap242ShapeRepresentationRef::Complex(m::ComplexEntityId(1)).into();
     assert_eq!(r, m::RepresentationRef::Complex(m::ComplexEntityId(1)));
 }
+
+/// The plain constructor of a self-referencing entity takes AP242's narrower
+/// type like any other, and stores it as the model's.
+#[test]
+fn a_self_referencing_entity_plain_constructor_takes_the_ap242_type() {
+    let mut a = Ap242Author::new();
+    let group = a.add_group("g", None).expect("group");
+    let point = a
+        .add_cartesian_point("", [0.0, 0.0, 0.0].into())
+        .expect("point");
+    let id = a
+        .add_applied_group_assignment(
+            m::GroupRef::Group(group),
+            vec![m::Ap242GroupableItemRef::CartesianPoint(point)],
+        )
+        .expect("assignment");
+    let model = a.finish();
+    assert_eq!(
+        model[id].items,
+        vec![m::GroupableItemRef::CartesianPoint(point)]
+    );
+}

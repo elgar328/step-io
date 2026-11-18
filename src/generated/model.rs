@@ -15625,6 +15625,310 @@ pub enum Ap242DraughtingModelItemSelectRef {
     Complex(ComplexEntityId),
 }
 
+/// A reference to what AP242 edition 2 allows as `groupable_item`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242GroupableItemRef {
+    Address(AddressId),
+    AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
+    AdvancedFace(AdvancedFaceId),
+    AllAroundShapeAspect(AllAroundShapeAspectId),
+    AngularLocation(AngularLocationId),
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
+    AnnotationPlane(AnnotationPlaneId),
+    AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
+    AnnotationText(AnnotationTextId),
+    AnnotationTextCharacter(AnnotationTextCharacterId),
+    AnnotationTextOccurrence(AnnotationTextOccurrenceId),
+    AppliedDateAndTimeAssignment(AppliedDateAndTimeAssignmentId),
+    AppliedGroupAssignment(AppliedGroupAssignmentId),
+    Approval(ApprovalId),
+    ApprovalPersonOrganization(ApprovalPersonOrganizationId),
+    ApprovalStatus(ApprovalStatusId),
+    AreaUnit(AreaUnitId),
+    AscribableState(AscribableStateId),
+    AscribableStateRelationship(AscribableStateRelationshipId),
+    AssemblyComponentUsage(AssemblyComponentUsageId),
+    Axis1Placement(Axis1PlacementId),
+    Axis2Placement2d(Axis2Placement2dId),
+    Axis2Placement3d(Axis2Placement3dId),
+    BSplineCurve(BSplineCurveId),
+    BSplineCurveWithKnots(BSplineCurveWithKnotsId),
+    BSplineSurface(BSplineSurfaceId),
+    BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
+    BezierCurve(BezierCurveId),
+    BezierSurface(BezierSurfaceId),
+    BoundedCurve(BoundedCurveId),
+    BoundedPcurve(BoundedPcurveId),
+    BoundedSurface(BoundedSurfaceId),
+    BoundedSurfaceCurve(BoundedSurfaceCurveId),
+    BrepWithVoids(BrepWithVoidsId),
+    CalendarDate(CalendarDateId),
+    CameraImage(CameraImageId),
+    CameraImage3dWithScale(CameraImage3dWithScaleId),
+    CameraModel(CameraModelId),
+    CameraModelD3(CameraModelD3Id),
+    CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
+    CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
+    CartesianPoint(CartesianPointId),
+    CcDesignDateAndTimeAssignment(CcDesignDateAndTimeAssignmentId),
+    CentreOfSymmetry(CentreOfSymmetryId),
+    Certification(CertificationId),
+    CharacterizedRepresentation(CharacterizedRepresentationId),
+    Circle(CircleId),
+    ClosedShell(ClosedShellId),
+    CommonDatum(CommonDatumId),
+    ComplexTriangulatedFace(ComplexTriangulatedFaceId),
+    ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
+    CompositeCurve(CompositeCurveId),
+    CompositeGroupShapeAspect(CompositeGroupShapeAspectId),
+    CompositeShapeAspect(CompositeShapeAspectId),
+    CompositeText(CompositeTextId),
+    CompoundRepresentationItem(CompoundRepresentationItemId),
+    ConfigurationDesign(ConfigurationDesignId),
+    ConfigurationEffectivity(ConfigurationEffectivityId),
+    ConfigurationItem(ConfigurationItemId),
+    Conic(ConicId),
+    ConicalSurface(ConicalSurfaceId),
+    ConnectedFaceSet(ConnectedFaceSetId),
+    ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
+    ConstructiveGeometryRepresentationRelationship(
+        ConstructiveGeometryRepresentationRelationshipId,
+    ),
+    ContextDependentOverRidingStyledItem(ContextDependentOverRidingStyledItemId),
+    ContextDependentShapeRepresentation(ContextDependentShapeRepresentationId),
+    ContextDependentUnit(ContextDependentUnitId),
+    ContinuousShapeAspect(ContinuousShapeAspectId),
+    Contract(ContractId),
+    ConversionBasedUnit(ConversionBasedUnitId),
+    CoordinatedUniversalTimeOffset(CoordinatedUniversalTimeOffsetId),
+    CoordinatesList(CoordinatesListId),
+    Curve(CurveId),
+    CylindricalSurface(CylindricalSurfaceId),
+    DateAndTime(DateAndTimeId),
+    DateAndTimeAssignment(DateAndTimeAssignmentId),
+    Datum(DatumId),
+    DatumFeature(DatumFeatureId),
+    DatumReferenceCompartment(DatumReferenceCompartmentId),
+    DatumReferenceElement(DatumReferenceElementId),
+    DatumSystem(DatumSystemId),
+    DatumTarget(DatumTargetId),
+    DefaultModelGeometricView(DefaultModelGeometricViewId),
+    DefinedCharacterGlyph(DefinedCharacterGlyphId),
+    DefinedSymbol(DefinedSymbolId),
+    DefinitionalRepresentation(DefinitionalRepresentationId),
+    DefinitionalRepresentationRelationship(DefinitionalRepresentationRelationshipId),
+    DefinitionalRepresentationRelationshipWithSameContext(
+        DefinitionalRepresentationRelationshipWithSameContextId,
+    ),
+    DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
+    DerivedShapeAspect(DerivedShapeAspectId),
+    DerivedUnit(DerivedUnitId),
+    DerivedUnitElement(DerivedUnitElementId),
+    DescriptiveRepresentationItem(DescriptiveRepresentationItemId),
+    DesignContext(DesignContextId),
+    DimensionalLocation(DimensionalLocationId),
+    DimensionalLocationWithPath(DimensionalLocationWithPathId),
+    DimensionalSizeWithDatumFeature(DimensionalSizeWithDatumFeatureId),
+    DirectedDimensionalLocation(DirectedDimensionalLocationId),
+    Direction(DirectionId),
+    DocumentFile(DocumentFileId),
+    DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrenceId),
+    DraughtingCallout(DraughtingCalloutId),
+    DraughtingModel(DraughtingModelId),
+    Edge(EdgeId),
+    EdgeCurve(EdgeCurveId),
+    EdgeLoop(EdgeLoopId),
+    Effectivity(EffectivityId),
+    ElementarySurface(ElementarySurfaceId),
+    Ellipse(EllipseId),
+    ExternalSource(ExternalSourceId),
+    ExternallyDefinedHatchStyle(ExternallyDefinedHatchStyleId),
+    ExternallyDefinedTileStyle(ExternallyDefinedTileStyleId),
+    Face(FaceId),
+    FaceBound(FaceBoundId),
+    FaceOuterBound(FaceOuterBoundId),
+    FaceSurface(FaceSurfaceId),
+    FeatureForDatumTargetRelationship(FeatureForDatumTargetRelationshipId),
+    FillAreaStyleHatching(FillAreaStyleHatchingId),
+    FillAreaStyleTileColouredRegion(FillAreaStyleTileColouredRegionId),
+    FillAreaStyleTileCurveWithStyle(FillAreaStyleTileCurveWithStyleId),
+    FillAreaStyleTileSymbolWithStyle(FillAreaStyleTileSymbolWithStyleId),
+    FillAreaStyleTiles(FillAreaStyleTilesId),
+    GeneralDatumReference(GeneralDatumReferenceId),
+    GeneralProperty(GeneralPropertyId),
+    GeometricCurveSet(GeometricCurveSetId),
+    GeometricItemSpecificUsage(GeometricItemSpecificUsageId),
+    GeometricRepresentationContext(GeometricRepresentationContextId),
+    GeometricRepresentationItem(GeometricRepresentationItemId),
+    GeometricSet(GeometricSetId),
+    GeometricallyBoundedSurfaceShapeRepresentation(
+        GeometricallyBoundedSurfaceShapeRepresentationId,
+    ),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        GeometricallyBoundedWireframeShapeRepresentationId,
+    ),
+    GlobalUncertaintyAssignedContext(GlobalUncertaintyAssignedContextId),
+    GlobalUnitAssignedContext(GlobalUnitAssignedContextId),
+    Hyperbola(HyperbolaId),
+    IntegerRepresentationItem(IntegerRepresentationItemId),
+    IntersectionCurve(IntersectionCurveId),
+    ItemDefinedTransformation(ItemDefinedTransformationId),
+    LeaderCurve(LeaderCurveId),
+    LeaderDirectedCallout(LeaderDirectedCalloutId),
+    LeaderTerminator(LeaderTerminatorId),
+    LengthMeasureWithUnit(LengthMeasureWithUnitId),
+    LengthUnit(LengthUnitId),
+    Line(LineId),
+    LocalTime(LocalTimeId),
+    Loop(LoopId),
+    MakeFromUsageOption(MakeFromUsageOptionId),
+    ManifoldSolidBrep(ManifoldSolidBrepId),
+    ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
+    MappedItem(MappedItemId),
+    MassMeasureWithUnit(MassMeasureWithUnitId),
+    MassUnit(MassUnitId),
+    MeasureRepresentationItem(MeasureRepresentationItemId),
+    MeasureWithUnit(MeasureWithUnitId),
+    MechanicalDesignAndDraughtingRelationship(MechanicalDesignAndDraughtingRelationshipId),
+    MechanicalDesignGeometricPresentationRepresentation(
+        MechanicalDesignGeometricPresentationRepresentationId,
+    ),
+    MechanicalDesignPresentationRepresentationWithDraughting(
+        MechanicalDesignPresentationRepresentationWithDraughtingId,
+    ),
+    MechanicalDesignShadedPresentationRepresentation(
+        MechanicalDesignShadedPresentationRepresentationId,
+    ),
+    NamedUnit(NamedUnitId),
+    NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
+    OffsetSurface(OffsetSurfaceId),
+    OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
+    OpenShell(OpenShellId),
+    Organization(OrganizationId),
+    OrganizationRelationship(OrganizationRelationshipId),
+    OrganizationType(OrganizationTypeId),
+    OrganizationalAddress(OrganizationalAddressId),
+    OrganizationalProject(OrganizationalProjectId),
+    OrganizationalProjectRelationship(OrganizationalProjectRelationshipId),
+    OrientedClosedShell(OrientedClosedShellId),
+    OrientedEdge(OrientedEdgeId),
+    OverRidingStyledItem(OverRidingStyledItemId),
+    Parabola(ParabolaId),
+    ParametricRepresentationContext(ParametricRepresentationContextId),
+    Path(PathId),
+    Pcurve(PcurveId),
+    Person(PersonId),
+    PersonAndOrganization(PersonAndOrganizationId),
+    PersonAndOrganizationAddress(PersonAndOrganizationAddressId),
+    PersonalAddress(PersonalAddressId),
+    PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
+    Placement(PlacementId),
+    PlanarBox(PlanarBoxId),
+    PlanarExtent(PlanarExtentId),
+    Plane(PlaneId),
+    PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
+    PlaneAngleUnit(PlaneAngleUnitId),
+    Point(PointId),
+    PolyLoop(PolyLoopId),
+    Polyline(PolylineId),
+    PrecisionQualifier(PrecisionQualifierId),
+    PresentationArea(PresentationAreaId),
+    PresentationRepresentation(PresentationRepresentationId),
+    PresentationView(PresentationViewId),
+    Product(ProductId),
+    ProductConcept(ProductConceptId),
+    ProductConceptContext(ProductConceptContextId),
+    ProductDefinition(ProductDefinitionId),
+    ProductDefinitionContext(ProductDefinitionContextId),
+    ProductDefinitionEffectivity(ProductDefinitionEffectivityId),
+    ProductDefinitionFormation(ProductDefinitionFormationId),
+    ProductDefinitionFormationWithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSourceId),
+    ProductDefinitionRelationship(ProductDefinitionRelationshipId),
+    ProductDefinitionShape(ProductDefinitionShapeId),
+    ProductDefinitionUsage(ProductDefinitionUsageId),
+    ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
+    PropertyDefinition(PropertyDefinitionId),
+    PropertyDefinitionRepresentation(PropertyDefinitionRepresentationId),
+    QualifiedRepresentationItem(QualifiedRepresentationItemId),
+    QuasiUniformCurve(QuasiUniformCurveId),
+    QuasiUniformSurface(QuasiUniformSurfaceId),
+    RatioMeasureWithUnit(RatioMeasureWithUnitId),
+    RatioUnit(RatioUnitId),
+    RationalBSplineCurve(RationalBSplineCurveId),
+    RationalBSplineSurface(RationalBSplineSurfaceId),
+    RealRepresentationItem(RealRepresentationItemId),
+    RepositionedTessellatedItem(RepositionedTessellatedItemId),
+    Representation(RepresentationId),
+    RepresentationContext(RepresentationContextId),
+    RepresentationItem(RepresentationItemId),
+    RepresentationRelationship(RepresentationRelationshipId),
+    RepresentationRelationshipWithTransformation(RepresentationRelationshipWithTransformationId),
+    SeamCurve(SeamCurveId),
+    SecurityClassification(SecurityClassificationId),
+    ShapeAspect(ShapeAspectId),
+    ShapeAspectAssociativity(ShapeAspectAssociativityId),
+    ShapeAspectDerivingRelationship(ShapeAspectDerivingRelationshipId),
+    ShapeAspectRelationship(ShapeAspectRelationshipId),
+    ShapeDefinitionRepresentation(ShapeDefinitionRepresentationId),
+    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
+    ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationRelationship(ShapeRepresentationRelationshipId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
+    ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
+    SiUnit(SiUnitId),
+    SolidAngleUnit(SolidAngleUnitId),
+    SolidModel(SolidModelId),
+    SphericalSurface(SphericalSurfaceId),
+    StateObserved(StateObservedId),
+    StateType(StateTypeId),
+    StyledItem(StyledItemId),
+    Surface(SurfaceId),
+    SurfaceCurve(SurfaceCurveId),
+    SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId),
+    SurfaceOfRevolution(SurfaceOfRevolutionId),
+    SweptSurface(SweptSurfaceId),
+    SymbolRepresentation(SymbolRepresentationId),
+    SymbolTarget(SymbolTargetId),
+    TerminatorSymbol(TerminatorSymbolId),
+    TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
+    TessellatedCurveSet(TessellatedCurveSetId),
+    TessellatedFace(TessellatedFaceId),
+    TessellatedGeometricSet(TessellatedGeometricSetId),
+    TessellatedItem(TessellatedItemId),
+    TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
+    TessellatedShell(TessellatedShellId),
+    TessellatedSolid(TessellatedSolidId),
+    TessellatedStructuredItem(TessellatedStructuredItemId),
+    TessellatedSurfaceSet(TessellatedSurfaceSetId),
+    TextLiteral(TextLiteralId),
+    TimeUnit(TimeUnitId),
+    ToleranceZone(ToleranceZoneId),
+    ToleranceZoneWithDatum(ToleranceZoneWithDatumId),
+    TopologicalRepresentationItem(TopologicalRepresentationItemId),
+    ToroidalSurface(ToroidalSurfaceId),
+    TrimmedCurve(TrimmedCurveId),
+    TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
+    TypeQualifier(TypeQualifierId),
+    UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
+    UncertaintyQualifier(UncertaintyQualifierId),
+    UniformCurve(UniformCurveId),
+    UniformSurface(UniformSurfaceId),
+    ValueRepresentationItem(ValueRepresentationItemId),
+    Vector(VectorId),
+    VersionedActionRequest(VersionedActionRequestId),
+    Vertex(VertexId),
+    VertexLoop(VertexLoopId),
+    VertexPoint(VertexPointId),
+    VertexShell(VertexShellId),
+    VolumeUnit(VolumeUnitId),
+    WireShell(WireShellId),
+    Complex(ComplexEntityId),
+}
+
 /// A reference to what AP242 edition 2 allows as `mechanical_design_geometric_presentation_representation_items`, where the
 /// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
 /// takes it and stores it as the model's wider reference.
@@ -15869,6 +16173,572 @@ impl From<Ap242DraughtingModelItemSelectRef> for RepresentationItemRef {
                 RepresentationItemRef::TessellatedAnnotationOccurrence(i)
             }
             Ap242DraughtingModelItemSelectRef::Complex(i) => RepresentationItemRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242GroupableItemRef> for GroupableItemRef {
+    fn from(r: Ap242GroupableItemRef) -> Self {
+        match r {
+            Ap242GroupableItemRef::Address(i) => GroupableItemRef::Address(i),
+            Ap242GroupableItemRef::AdvancedBrepShapeRepresentation(i) => {
+                GroupableItemRef::AdvancedBrepShapeRepresentation(i)
+            }
+            Ap242GroupableItemRef::AdvancedFace(i) => GroupableItemRef::AdvancedFace(i),
+            Ap242GroupableItemRef::AllAroundShapeAspect(i) => {
+                GroupableItemRef::AllAroundShapeAspect(i)
+            }
+            Ap242GroupableItemRef::AngularLocation(i) => GroupableItemRef::AngularLocation(i),
+            Ap242GroupableItemRef::AnnotationCurveOccurrence(i) => {
+                GroupableItemRef::AnnotationCurveOccurrence(i)
+            }
+            Ap242GroupableItemRef::AnnotationOccurrence(i) => {
+                GroupableItemRef::AnnotationOccurrence(i)
+            }
+            Ap242GroupableItemRef::AnnotationPlaceholderOccurrence(i) => {
+                GroupableItemRef::AnnotationPlaceholderOccurrence(i)
+            }
+            Ap242GroupableItemRef::AnnotationPlane(i) => GroupableItemRef::AnnotationPlane(i),
+            Ap242GroupableItemRef::AnnotationSymbolOccurrence(i) => {
+                GroupableItemRef::AnnotationSymbolOccurrence(i)
+            }
+            Ap242GroupableItemRef::AnnotationText(i) => GroupableItemRef::AnnotationText(i),
+            Ap242GroupableItemRef::AnnotationTextCharacter(i) => {
+                GroupableItemRef::AnnotationTextCharacter(i)
+            }
+            Ap242GroupableItemRef::AnnotationTextOccurrence(i) => {
+                GroupableItemRef::AnnotationTextOccurrence(i)
+            }
+            Ap242GroupableItemRef::AppliedDateAndTimeAssignment(i) => {
+                GroupableItemRef::AppliedDateAndTimeAssignment(i)
+            }
+            Ap242GroupableItemRef::AppliedGroupAssignment(i) => {
+                GroupableItemRef::AppliedGroupAssignment(i)
+            }
+            Ap242GroupableItemRef::Approval(i) => GroupableItemRef::Approval(i),
+            Ap242GroupableItemRef::ApprovalPersonOrganization(i) => {
+                GroupableItemRef::ApprovalPersonOrganization(i)
+            }
+            Ap242GroupableItemRef::ApprovalStatus(i) => GroupableItemRef::ApprovalStatus(i),
+            Ap242GroupableItemRef::AreaUnit(i) => GroupableItemRef::AreaUnit(i),
+            Ap242GroupableItemRef::AscribableState(i) => GroupableItemRef::AscribableState(i),
+            Ap242GroupableItemRef::AscribableStateRelationship(i) => {
+                GroupableItemRef::AscribableStateRelationship(i)
+            }
+            Ap242GroupableItemRef::AssemblyComponentUsage(i) => {
+                GroupableItemRef::AssemblyComponentUsage(i)
+            }
+            Ap242GroupableItemRef::Axis1Placement(i) => GroupableItemRef::Axis1Placement(i),
+            Ap242GroupableItemRef::Axis2Placement2d(i) => GroupableItemRef::Axis2Placement2d(i),
+            Ap242GroupableItemRef::Axis2Placement3d(i) => GroupableItemRef::Axis2Placement3d(i),
+            Ap242GroupableItemRef::BSplineCurve(i) => GroupableItemRef::BSplineCurve(i),
+            Ap242GroupableItemRef::BSplineCurveWithKnots(i) => {
+                GroupableItemRef::BSplineCurveWithKnots(i)
+            }
+            Ap242GroupableItemRef::BSplineSurface(i) => GroupableItemRef::BSplineSurface(i),
+            Ap242GroupableItemRef::BSplineSurfaceWithKnots(i) => {
+                GroupableItemRef::BSplineSurfaceWithKnots(i)
+            }
+            Ap242GroupableItemRef::BezierCurve(i) => GroupableItemRef::BezierCurve(i),
+            Ap242GroupableItemRef::BezierSurface(i) => GroupableItemRef::BezierSurface(i),
+            Ap242GroupableItemRef::BoundedCurve(i) => GroupableItemRef::BoundedCurve(i),
+            Ap242GroupableItemRef::BoundedPcurve(i) => GroupableItemRef::BoundedPcurve(i),
+            Ap242GroupableItemRef::BoundedSurface(i) => GroupableItemRef::BoundedSurface(i),
+            Ap242GroupableItemRef::BoundedSurfaceCurve(i) => {
+                GroupableItemRef::BoundedSurfaceCurve(i)
+            }
+            Ap242GroupableItemRef::BrepWithVoids(i) => GroupableItemRef::BrepWithVoids(i),
+            Ap242GroupableItemRef::CalendarDate(i) => GroupableItemRef::CalendarDate(i),
+            Ap242GroupableItemRef::CameraImage(i) => GroupableItemRef::CameraImage(i),
+            Ap242GroupableItemRef::CameraImage3dWithScale(i) => {
+                GroupableItemRef::CameraImage3dWithScale(i)
+            }
+            Ap242GroupableItemRef::CameraModel(i) => GroupableItemRef::CameraModel(i),
+            Ap242GroupableItemRef::CameraModelD3(i) => GroupableItemRef::CameraModelD3(i),
+            Ap242GroupableItemRef::CameraModelD3MultiClipping(i) => {
+                GroupableItemRef::CameraModelD3MultiClipping(i)
+            }
+            Ap242GroupableItemRef::CameraModelD3WithHlhsr(i) => {
+                GroupableItemRef::CameraModelD3WithHlhsr(i)
+            }
+            Ap242GroupableItemRef::CartesianPoint(i) => GroupableItemRef::CartesianPoint(i),
+            Ap242GroupableItemRef::CcDesignDateAndTimeAssignment(i) => {
+                GroupableItemRef::CcDesignDateAndTimeAssignment(i)
+            }
+            Ap242GroupableItemRef::CentreOfSymmetry(i) => GroupableItemRef::CentreOfSymmetry(i),
+            Ap242GroupableItemRef::Certification(i) => GroupableItemRef::Certification(i),
+            Ap242GroupableItemRef::CharacterizedRepresentation(i) => {
+                GroupableItemRef::CharacterizedRepresentation(i)
+            }
+            Ap242GroupableItemRef::Circle(i) => GroupableItemRef::Circle(i),
+            Ap242GroupableItemRef::ClosedShell(i) => GroupableItemRef::ClosedShell(i),
+            Ap242GroupableItemRef::CommonDatum(i) => GroupableItemRef::CommonDatum(i),
+            Ap242GroupableItemRef::ComplexTriangulatedFace(i) => {
+                GroupableItemRef::ComplexTriangulatedFace(i)
+            }
+            Ap242GroupableItemRef::ComplexTriangulatedSurfaceSet(i) => {
+                GroupableItemRef::ComplexTriangulatedSurfaceSet(i)
+            }
+            Ap242GroupableItemRef::CompositeCurve(i) => GroupableItemRef::CompositeCurve(i),
+            Ap242GroupableItemRef::CompositeGroupShapeAspect(i) => {
+                GroupableItemRef::CompositeGroupShapeAspect(i)
+            }
+            Ap242GroupableItemRef::CompositeShapeAspect(i) => {
+                GroupableItemRef::CompositeShapeAspect(i)
+            }
+            Ap242GroupableItemRef::CompositeText(i) => GroupableItemRef::CompositeText(i),
+            Ap242GroupableItemRef::CompoundRepresentationItem(i) => {
+                GroupableItemRef::CompoundRepresentationItem(i)
+            }
+            Ap242GroupableItemRef::ConfigurationDesign(i) => {
+                GroupableItemRef::ConfigurationDesign(i)
+            }
+            Ap242GroupableItemRef::ConfigurationEffectivity(i) => {
+                GroupableItemRef::ConfigurationEffectivity(i)
+            }
+            Ap242GroupableItemRef::ConfigurationItem(i) => GroupableItemRef::ConfigurationItem(i),
+            Ap242GroupableItemRef::Conic(i) => GroupableItemRef::Conic(i),
+            Ap242GroupableItemRef::ConicalSurface(i) => GroupableItemRef::ConicalSurface(i),
+            Ap242GroupableItemRef::ConnectedFaceSet(i) => GroupableItemRef::ConnectedFaceSet(i),
+            Ap242GroupableItemRef::ConstructiveGeometryRepresentation(i) => {
+                GroupableItemRef::ConstructiveGeometryRepresentation(i)
+            }
+            Ap242GroupableItemRef::ConstructiveGeometryRepresentationRelationship(i) => {
+                GroupableItemRef::ConstructiveGeometryRepresentationRelationship(i)
+            }
+            Ap242GroupableItemRef::ContextDependentOverRidingStyledItem(i) => {
+                GroupableItemRef::ContextDependentOverRidingStyledItem(i)
+            }
+            Ap242GroupableItemRef::ContextDependentShapeRepresentation(i) => {
+                GroupableItemRef::ContextDependentShapeRepresentation(i)
+            }
+            Ap242GroupableItemRef::ContextDependentUnit(i) => {
+                GroupableItemRef::ContextDependentUnit(i)
+            }
+            Ap242GroupableItemRef::ContinuousShapeAspect(i) => {
+                GroupableItemRef::ContinuousShapeAspect(i)
+            }
+            Ap242GroupableItemRef::Contract(i) => GroupableItemRef::Contract(i),
+            Ap242GroupableItemRef::ConversionBasedUnit(i) => {
+                GroupableItemRef::ConversionBasedUnit(i)
+            }
+            Ap242GroupableItemRef::CoordinatedUniversalTimeOffset(i) => {
+                GroupableItemRef::CoordinatedUniversalTimeOffset(i)
+            }
+            Ap242GroupableItemRef::CoordinatesList(i) => GroupableItemRef::CoordinatesList(i),
+            Ap242GroupableItemRef::Curve(i) => GroupableItemRef::Curve(i),
+            Ap242GroupableItemRef::CylindricalSurface(i) => GroupableItemRef::CylindricalSurface(i),
+            Ap242GroupableItemRef::DateAndTime(i) => GroupableItemRef::DateAndTime(i),
+            Ap242GroupableItemRef::DateAndTimeAssignment(i) => {
+                GroupableItemRef::DateAndTimeAssignment(i)
+            }
+            Ap242GroupableItemRef::Datum(i) => GroupableItemRef::Datum(i),
+            Ap242GroupableItemRef::DatumFeature(i) => GroupableItemRef::DatumFeature(i),
+            Ap242GroupableItemRef::DatumReferenceCompartment(i) => {
+                GroupableItemRef::DatumReferenceCompartment(i)
+            }
+            Ap242GroupableItemRef::DatumReferenceElement(i) => {
+                GroupableItemRef::DatumReferenceElement(i)
+            }
+            Ap242GroupableItemRef::DatumSystem(i) => GroupableItemRef::DatumSystem(i),
+            Ap242GroupableItemRef::DatumTarget(i) => GroupableItemRef::DatumTarget(i),
+            Ap242GroupableItemRef::DefaultModelGeometricView(i) => {
+                GroupableItemRef::DefaultModelGeometricView(i)
+            }
+            Ap242GroupableItemRef::DefinedCharacterGlyph(i) => {
+                GroupableItemRef::DefinedCharacterGlyph(i)
+            }
+            Ap242GroupableItemRef::DefinedSymbol(i) => GroupableItemRef::DefinedSymbol(i),
+            Ap242GroupableItemRef::DefinitionalRepresentation(i) => {
+                GroupableItemRef::DefinitionalRepresentation(i)
+            }
+            Ap242GroupableItemRef::DefinitionalRepresentationRelationship(i) => {
+                GroupableItemRef::DefinitionalRepresentationRelationship(i)
+            }
+            Ap242GroupableItemRef::DefinitionalRepresentationRelationshipWithSameContext(i) => {
+                GroupableItemRef::DefinitionalRepresentationRelationshipWithSameContext(i)
+            }
+            Ap242GroupableItemRef::DegenerateToroidalSurface(i) => {
+                GroupableItemRef::DegenerateToroidalSurface(i)
+            }
+            Ap242GroupableItemRef::DerivedShapeAspect(i) => GroupableItemRef::DerivedShapeAspect(i),
+            Ap242GroupableItemRef::DerivedUnit(i) => GroupableItemRef::DerivedUnit(i),
+            Ap242GroupableItemRef::DerivedUnitElement(i) => GroupableItemRef::DerivedUnitElement(i),
+            Ap242GroupableItemRef::DescriptiveRepresentationItem(i) => {
+                GroupableItemRef::DescriptiveRepresentationItem(i)
+            }
+            Ap242GroupableItemRef::DesignContext(i) => GroupableItemRef::DesignContext(i),
+            Ap242GroupableItemRef::DimensionalLocation(i) => {
+                GroupableItemRef::DimensionalLocation(i)
+            }
+            Ap242GroupableItemRef::DimensionalLocationWithPath(i) => {
+                GroupableItemRef::DimensionalLocationWithPath(i)
+            }
+            Ap242GroupableItemRef::DimensionalSizeWithDatumFeature(i) => {
+                GroupableItemRef::DimensionalSizeWithDatumFeature(i)
+            }
+            Ap242GroupableItemRef::DirectedDimensionalLocation(i) => {
+                GroupableItemRef::DirectedDimensionalLocation(i)
+            }
+            Ap242GroupableItemRef::Direction(i) => GroupableItemRef::Direction(i),
+            Ap242GroupableItemRef::DocumentFile(i) => GroupableItemRef::DocumentFile(i),
+            Ap242GroupableItemRef::DraughtingAnnotationOccurrence(i) => {
+                GroupableItemRef::DraughtingAnnotationOccurrence(i)
+            }
+            Ap242GroupableItemRef::DraughtingCallout(i) => GroupableItemRef::DraughtingCallout(i),
+            Ap242GroupableItemRef::DraughtingModel(i) => GroupableItemRef::DraughtingModel(i),
+            Ap242GroupableItemRef::Edge(i) => GroupableItemRef::Edge(i),
+            Ap242GroupableItemRef::EdgeCurve(i) => GroupableItemRef::EdgeCurve(i),
+            Ap242GroupableItemRef::EdgeLoop(i) => GroupableItemRef::EdgeLoop(i),
+            Ap242GroupableItemRef::Effectivity(i) => GroupableItemRef::Effectivity(i),
+            Ap242GroupableItemRef::ElementarySurface(i) => GroupableItemRef::ElementarySurface(i),
+            Ap242GroupableItemRef::Ellipse(i) => GroupableItemRef::Ellipse(i),
+            Ap242GroupableItemRef::ExternalSource(i) => GroupableItemRef::ExternalSource(i),
+            Ap242GroupableItemRef::ExternallyDefinedHatchStyle(i) => {
+                GroupableItemRef::ExternallyDefinedHatchStyle(i)
+            }
+            Ap242GroupableItemRef::ExternallyDefinedTileStyle(i) => {
+                GroupableItemRef::ExternallyDefinedTileStyle(i)
+            }
+            Ap242GroupableItemRef::Face(i) => GroupableItemRef::Face(i),
+            Ap242GroupableItemRef::FaceBound(i) => GroupableItemRef::FaceBound(i),
+            Ap242GroupableItemRef::FaceOuterBound(i) => GroupableItemRef::FaceOuterBound(i),
+            Ap242GroupableItemRef::FaceSurface(i) => GroupableItemRef::FaceSurface(i),
+            Ap242GroupableItemRef::FeatureForDatumTargetRelationship(i) => {
+                GroupableItemRef::FeatureForDatumTargetRelationship(i)
+            }
+            Ap242GroupableItemRef::FillAreaStyleHatching(i) => {
+                GroupableItemRef::FillAreaStyleHatching(i)
+            }
+            Ap242GroupableItemRef::FillAreaStyleTileColouredRegion(i) => {
+                GroupableItemRef::FillAreaStyleTileColouredRegion(i)
+            }
+            Ap242GroupableItemRef::FillAreaStyleTileCurveWithStyle(i) => {
+                GroupableItemRef::FillAreaStyleTileCurveWithStyle(i)
+            }
+            Ap242GroupableItemRef::FillAreaStyleTileSymbolWithStyle(i) => {
+                GroupableItemRef::FillAreaStyleTileSymbolWithStyle(i)
+            }
+            Ap242GroupableItemRef::FillAreaStyleTiles(i) => GroupableItemRef::FillAreaStyleTiles(i),
+            Ap242GroupableItemRef::GeneralDatumReference(i) => {
+                GroupableItemRef::GeneralDatumReference(i)
+            }
+            Ap242GroupableItemRef::GeneralProperty(i) => GroupableItemRef::GeneralProperty(i),
+            Ap242GroupableItemRef::GeometricCurveSet(i) => GroupableItemRef::GeometricCurveSet(i),
+            Ap242GroupableItemRef::GeometricItemSpecificUsage(i) => {
+                GroupableItemRef::GeometricItemSpecificUsage(i)
+            }
+            Ap242GroupableItemRef::GeometricRepresentationContext(i) => {
+                GroupableItemRef::GeometricRepresentationContext(i)
+            }
+            Ap242GroupableItemRef::GeometricRepresentationItem(i) => {
+                GroupableItemRef::GeometricRepresentationItem(i)
+            }
+            Ap242GroupableItemRef::GeometricSet(i) => GroupableItemRef::GeometricSet(i),
+            Ap242GroupableItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                GroupableItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i)
+            }
+            Ap242GroupableItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                GroupableItemRef::GeometricallyBoundedWireframeShapeRepresentation(i)
+            }
+            Ap242GroupableItemRef::GlobalUncertaintyAssignedContext(i) => {
+                GroupableItemRef::GlobalUncertaintyAssignedContext(i)
+            }
+            Ap242GroupableItemRef::GlobalUnitAssignedContext(i) => {
+                GroupableItemRef::GlobalUnitAssignedContext(i)
+            }
+            Ap242GroupableItemRef::Hyperbola(i) => GroupableItemRef::Hyperbola(i),
+            Ap242GroupableItemRef::IntegerRepresentationItem(i) => {
+                GroupableItemRef::IntegerRepresentationItem(i)
+            }
+            Ap242GroupableItemRef::IntersectionCurve(i) => GroupableItemRef::IntersectionCurve(i),
+            Ap242GroupableItemRef::ItemDefinedTransformation(i) => {
+                GroupableItemRef::ItemDefinedTransformation(i)
+            }
+            Ap242GroupableItemRef::LeaderCurve(i) => GroupableItemRef::LeaderCurve(i),
+            Ap242GroupableItemRef::LeaderDirectedCallout(i) => {
+                GroupableItemRef::LeaderDirectedCallout(i)
+            }
+            Ap242GroupableItemRef::LeaderTerminator(i) => GroupableItemRef::LeaderTerminator(i),
+            Ap242GroupableItemRef::LengthMeasureWithUnit(i) => {
+                GroupableItemRef::LengthMeasureWithUnit(i)
+            }
+            Ap242GroupableItemRef::LengthUnit(i) => GroupableItemRef::LengthUnit(i),
+            Ap242GroupableItemRef::Line(i) => GroupableItemRef::Line(i),
+            Ap242GroupableItemRef::LocalTime(i) => GroupableItemRef::LocalTime(i),
+            Ap242GroupableItemRef::Loop(i) => GroupableItemRef::Loop(i),
+            Ap242GroupableItemRef::MakeFromUsageOption(i) => {
+                GroupableItemRef::MakeFromUsageOption(i)
+            }
+            Ap242GroupableItemRef::ManifoldSolidBrep(i) => GroupableItemRef::ManifoldSolidBrep(i),
+            Ap242GroupableItemRef::ManifoldSurfaceShapeRepresentation(i) => {
+                GroupableItemRef::ManifoldSurfaceShapeRepresentation(i)
+            }
+            Ap242GroupableItemRef::MappedItem(i) => GroupableItemRef::MappedItem(i),
+            Ap242GroupableItemRef::MassMeasureWithUnit(i) => {
+                GroupableItemRef::MassMeasureWithUnit(i)
+            }
+            Ap242GroupableItemRef::MassUnit(i) => GroupableItemRef::MassUnit(i),
+            Ap242GroupableItemRef::MeasureRepresentationItem(i) => {
+                GroupableItemRef::MeasureRepresentationItem(i)
+            }
+            Ap242GroupableItemRef::MeasureWithUnit(i) => GroupableItemRef::MeasureWithUnit(i),
+            Ap242GroupableItemRef::MechanicalDesignAndDraughtingRelationship(i) => {
+                GroupableItemRef::MechanicalDesignAndDraughtingRelationship(i)
+            }
+            Ap242GroupableItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => {
+                GroupableItemRef::MechanicalDesignGeometricPresentationRepresentation(i)
+            }
+            Ap242GroupableItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+                GroupableItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i)
+            }
+            Ap242GroupableItemRef::MechanicalDesignShadedPresentationRepresentation(i) => {
+                GroupableItemRef::MechanicalDesignShadedPresentationRepresentation(i)
+            }
+            Ap242GroupableItemRef::NamedUnit(i) => GroupableItemRef::NamedUnit(i),
+            Ap242GroupableItemRef::NextAssemblyUsageOccurrence(i) => {
+                GroupableItemRef::NextAssemblyUsageOccurrence(i)
+            }
+            Ap242GroupableItemRef::OffsetSurface(i) => GroupableItemRef::OffsetSurface(i),
+            Ap242GroupableItemRef::OneDirectionRepeatFactor(i) => {
+                GroupableItemRef::OneDirectionRepeatFactor(i)
+            }
+            Ap242GroupableItemRef::OpenShell(i) => GroupableItemRef::OpenShell(i),
+            Ap242GroupableItemRef::Organization(i) => GroupableItemRef::Organization(i),
+            Ap242GroupableItemRef::OrganizationRelationship(i) => {
+                GroupableItemRef::OrganizationRelationship(i)
+            }
+            Ap242GroupableItemRef::OrganizationType(i) => GroupableItemRef::OrganizationType(i),
+            Ap242GroupableItemRef::OrganizationalAddress(i) => {
+                GroupableItemRef::OrganizationalAddress(i)
+            }
+            Ap242GroupableItemRef::OrganizationalProject(i) => {
+                GroupableItemRef::OrganizationalProject(i)
+            }
+            Ap242GroupableItemRef::OrganizationalProjectRelationship(i) => {
+                GroupableItemRef::OrganizationalProjectRelationship(i)
+            }
+            Ap242GroupableItemRef::OrientedClosedShell(i) => {
+                GroupableItemRef::OrientedClosedShell(i)
+            }
+            Ap242GroupableItemRef::OrientedEdge(i) => GroupableItemRef::OrientedEdge(i),
+            Ap242GroupableItemRef::OverRidingStyledItem(i) => {
+                GroupableItemRef::OverRidingStyledItem(i)
+            }
+            Ap242GroupableItemRef::Parabola(i) => GroupableItemRef::Parabola(i),
+            Ap242GroupableItemRef::ParametricRepresentationContext(i) => {
+                GroupableItemRef::ParametricRepresentationContext(i)
+            }
+            Ap242GroupableItemRef::Path(i) => GroupableItemRef::Path(i),
+            Ap242GroupableItemRef::Pcurve(i) => GroupableItemRef::Pcurve(i),
+            Ap242GroupableItemRef::Person(i) => GroupableItemRef::Person(i),
+            Ap242GroupableItemRef::PersonAndOrganization(i) => {
+                GroupableItemRef::PersonAndOrganization(i)
+            }
+            Ap242GroupableItemRef::PersonAndOrganizationAddress(i) => {
+                GroupableItemRef::PersonAndOrganizationAddress(i)
+            }
+            Ap242GroupableItemRef::PersonalAddress(i) => GroupableItemRef::PersonalAddress(i),
+            Ap242GroupableItemRef::PlacedDatumTargetFeature(i) => {
+                GroupableItemRef::PlacedDatumTargetFeature(i)
+            }
+            Ap242GroupableItemRef::Placement(i) => GroupableItemRef::Placement(i),
+            Ap242GroupableItemRef::PlanarBox(i) => GroupableItemRef::PlanarBox(i),
+            Ap242GroupableItemRef::PlanarExtent(i) => GroupableItemRef::PlanarExtent(i),
+            Ap242GroupableItemRef::Plane(i) => GroupableItemRef::Plane(i),
+            Ap242GroupableItemRef::PlaneAngleMeasureWithUnit(i) => {
+                GroupableItemRef::PlaneAngleMeasureWithUnit(i)
+            }
+            Ap242GroupableItemRef::PlaneAngleUnit(i) => GroupableItemRef::PlaneAngleUnit(i),
+            Ap242GroupableItemRef::Point(i) => GroupableItemRef::Point(i),
+            Ap242GroupableItemRef::PolyLoop(i) => GroupableItemRef::PolyLoop(i),
+            Ap242GroupableItemRef::Polyline(i) => GroupableItemRef::Polyline(i),
+            Ap242GroupableItemRef::PrecisionQualifier(i) => GroupableItemRef::PrecisionQualifier(i),
+            Ap242GroupableItemRef::PresentationArea(i) => GroupableItemRef::PresentationArea(i),
+            Ap242GroupableItemRef::PresentationRepresentation(i) => {
+                GroupableItemRef::PresentationRepresentation(i)
+            }
+            Ap242GroupableItemRef::PresentationView(i) => GroupableItemRef::PresentationView(i),
+            Ap242GroupableItemRef::Product(i) => GroupableItemRef::Product(i),
+            Ap242GroupableItemRef::ProductConcept(i) => GroupableItemRef::ProductConcept(i),
+            Ap242GroupableItemRef::ProductConceptContext(i) => {
+                GroupableItemRef::ProductConceptContext(i)
+            }
+            Ap242GroupableItemRef::ProductDefinition(i) => GroupableItemRef::ProductDefinition(i),
+            Ap242GroupableItemRef::ProductDefinitionContext(i) => {
+                GroupableItemRef::ProductDefinitionContext(i)
+            }
+            Ap242GroupableItemRef::ProductDefinitionEffectivity(i) => {
+                GroupableItemRef::ProductDefinitionEffectivity(i)
+            }
+            Ap242GroupableItemRef::ProductDefinitionFormation(i) => {
+                GroupableItemRef::ProductDefinitionFormation(i)
+            }
+            Ap242GroupableItemRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
+                GroupableItemRef::ProductDefinitionFormationWithSpecifiedSource(i)
+            }
+            Ap242GroupableItemRef::ProductDefinitionRelationship(i) => {
+                GroupableItemRef::ProductDefinitionRelationship(i)
+            }
+            Ap242GroupableItemRef::ProductDefinitionShape(i) => {
+                GroupableItemRef::ProductDefinitionShape(i)
+            }
+            Ap242GroupableItemRef::ProductDefinitionUsage(i) => {
+                GroupableItemRef::ProductDefinitionUsage(i)
+            }
+            Ap242GroupableItemRef::ProductDefinitionWithAssociatedDocuments(i) => {
+                GroupableItemRef::ProductDefinitionWithAssociatedDocuments(i)
+            }
+            Ap242GroupableItemRef::PropertyDefinition(i) => GroupableItemRef::PropertyDefinition(i),
+            Ap242GroupableItemRef::PropertyDefinitionRepresentation(i) => {
+                GroupableItemRef::PropertyDefinitionRepresentation(i)
+            }
+            Ap242GroupableItemRef::QualifiedRepresentationItem(i) => {
+                GroupableItemRef::QualifiedRepresentationItem(i)
+            }
+            Ap242GroupableItemRef::QuasiUniformCurve(i) => GroupableItemRef::QuasiUniformCurve(i),
+            Ap242GroupableItemRef::QuasiUniformSurface(i) => {
+                GroupableItemRef::QuasiUniformSurface(i)
+            }
+            Ap242GroupableItemRef::RatioMeasureWithUnit(i) => {
+                GroupableItemRef::RatioMeasureWithUnit(i)
+            }
+            Ap242GroupableItemRef::RatioUnit(i) => GroupableItemRef::RatioUnit(i),
+            Ap242GroupableItemRef::RationalBSplineCurve(i) => {
+                GroupableItemRef::RationalBSplineCurve(i)
+            }
+            Ap242GroupableItemRef::RationalBSplineSurface(i) => {
+                GroupableItemRef::RationalBSplineSurface(i)
+            }
+            Ap242GroupableItemRef::RealRepresentationItem(i) => {
+                GroupableItemRef::RealRepresentationItem(i)
+            }
+            Ap242GroupableItemRef::RepositionedTessellatedItem(i) => {
+                GroupableItemRef::RepositionedTessellatedItem(i)
+            }
+            Ap242GroupableItemRef::Representation(i) => GroupableItemRef::Representation(i),
+            Ap242GroupableItemRef::RepresentationContext(i) => {
+                GroupableItemRef::RepresentationContext(i)
+            }
+            Ap242GroupableItemRef::RepresentationItem(i) => GroupableItemRef::RepresentationItem(i),
+            Ap242GroupableItemRef::RepresentationRelationship(i) => {
+                GroupableItemRef::RepresentationRelationship(i)
+            }
+            Ap242GroupableItemRef::RepresentationRelationshipWithTransformation(i) => {
+                GroupableItemRef::RepresentationRelationshipWithTransformation(i)
+            }
+            Ap242GroupableItemRef::SeamCurve(i) => GroupableItemRef::SeamCurve(i),
+            Ap242GroupableItemRef::SecurityClassification(i) => {
+                GroupableItemRef::SecurityClassification(i)
+            }
+            Ap242GroupableItemRef::ShapeAspect(i) => GroupableItemRef::ShapeAspect(i),
+            Ap242GroupableItemRef::ShapeAspectAssociativity(i) => {
+                GroupableItemRef::ShapeAspectAssociativity(i)
+            }
+            Ap242GroupableItemRef::ShapeAspectDerivingRelationship(i) => {
+                GroupableItemRef::ShapeAspectDerivingRelationship(i)
+            }
+            Ap242GroupableItemRef::ShapeAspectRelationship(i) => {
+                GroupableItemRef::ShapeAspectRelationship(i)
+            }
+            Ap242GroupableItemRef::ShapeDefinitionRepresentation(i) => {
+                GroupableItemRef::ShapeDefinitionRepresentation(i)
+            }
+            Ap242GroupableItemRef::ShapeDimensionRepresentation(i) => {
+                GroupableItemRef::ShapeDimensionRepresentation(i)
+            }
+            Ap242GroupableItemRef::ShapeRepresentation(i) => {
+                GroupableItemRef::ShapeRepresentation(i)
+            }
+            Ap242GroupableItemRef::ShapeRepresentationRelationship(i) => {
+                GroupableItemRef::ShapeRepresentationRelationship(i)
+            }
+            Ap242GroupableItemRef::ShapeRepresentationWithParameters(i) => {
+                GroupableItemRef::ShapeRepresentationWithParameters(i)
+            }
+            Ap242GroupableItemRef::ShellBasedSurfaceModel(i) => {
+                GroupableItemRef::ShellBasedSurfaceModel(i)
+            }
+            Ap242GroupableItemRef::SiUnit(i) => GroupableItemRef::SiUnit(i),
+            Ap242GroupableItemRef::SolidAngleUnit(i) => GroupableItemRef::SolidAngleUnit(i),
+            Ap242GroupableItemRef::SolidModel(i) => GroupableItemRef::SolidModel(i),
+            Ap242GroupableItemRef::SphericalSurface(i) => GroupableItemRef::SphericalSurface(i),
+            Ap242GroupableItemRef::StateObserved(i) => GroupableItemRef::StateObserved(i),
+            Ap242GroupableItemRef::StateType(i) => GroupableItemRef::StateType(i),
+            Ap242GroupableItemRef::StyledItem(i) => GroupableItemRef::StyledItem(i),
+            Ap242GroupableItemRef::Surface(i) => GroupableItemRef::Surface(i),
+            Ap242GroupableItemRef::SurfaceCurve(i) => GroupableItemRef::SurfaceCurve(i),
+            Ap242GroupableItemRef::SurfaceOfLinearExtrusion(i) => {
+                GroupableItemRef::SurfaceOfLinearExtrusion(i)
+            }
+            Ap242GroupableItemRef::SurfaceOfRevolution(i) => {
+                GroupableItemRef::SurfaceOfRevolution(i)
+            }
+            Ap242GroupableItemRef::SweptSurface(i) => GroupableItemRef::SweptSurface(i),
+            Ap242GroupableItemRef::SymbolRepresentation(i) => {
+                GroupableItemRef::SymbolRepresentation(i)
+            }
+            Ap242GroupableItemRef::SymbolTarget(i) => GroupableItemRef::SymbolTarget(i),
+            Ap242GroupableItemRef::TerminatorSymbol(i) => GroupableItemRef::TerminatorSymbol(i),
+            Ap242GroupableItemRef::TessellatedAnnotationOccurrence(i) => {
+                GroupableItemRef::TessellatedAnnotationOccurrence(i)
+            }
+            Ap242GroupableItemRef::TessellatedCurveSet(i) => {
+                GroupableItemRef::TessellatedCurveSet(i)
+            }
+            Ap242GroupableItemRef::TessellatedFace(i) => GroupableItemRef::TessellatedFace(i),
+            Ap242GroupableItemRef::TessellatedGeometricSet(i) => {
+                GroupableItemRef::TessellatedGeometricSet(i)
+            }
+            Ap242GroupableItemRef::TessellatedItem(i) => GroupableItemRef::TessellatedItem(i),
+            Ap242GroupableItemRef::TessellatedShapeRepresentation(i) => {
+                GroupableItemRef::TessellatedShapeRepresentation(i)
+            }
+            Ap242GroupableItemRef::TessellatedShell(i) => GroupableItemRef::TessellatedShell(i),
+            Ap242GroupableItemRef::TessellatedSolid(i) => GroupableItemRef::TessellatedSolid(i),
+            Ap242GroupableItemRef::TessellatedStructuredItem(i) => {
+                GroupableItemRef::TessellatedStructuredItem(i)
+            }
+            Ap242GroupableItemRef::TessellatedSurfaceSet(i) => {
+                GroupableItemRef::TessellatedSurfaceSet(i)
+            }
+            Ap242GroupableItemRef::TextLiteral(i) => GroupableItemRef::TextLiteral(i),
+            Ap242GroupableItemRef::TimeUnit(i) => GroupableItemRef::TimeUnit(i),
+            Ap242GroupableItemRef::ToleranceZone(i) => GroupableItemRef::ToleranceZone(i),
+            Ap242GroupableItemRef::ToleranceZoneWithDatum(i) => {
+                GroupableItemRef::ToleranceZoneWithDatum(i)
+            }
+            Ap242GroupableItemRef::TopologicalRepresentationItem(i) => {
+                GroupableItemRef::TopologicalRepresentationItem(i)
+            }
+            Ap242GroupableItemRef::ToroidalSurface(i) => GroupableItemRef::ToroidalSurface(i),
+            Ap242GroupableItemRef::TrimmedCurve(i) => GroupableItemRef::TrimmedCurve(i),
+            Ap242GroupableItemRef::TwoDirectionRepeatFactor(i) => {
+                GroupableItemRef::TwoDirectionRepeatFactor(i)
+            }
+            Ap242GroupableItemRef::TypeQualifier(i) => GroupableItemRef::TypeQualifier(i),
+            Ap242GroupableItemRef::UncertaintyMeasureWithUnit(i) => {
+                GroupableItemRef::UncertaintyMeasureWithUnit(i)
+            }
+            Ap242GroupableItemRef::UncertaintyQualifier(i) => {
+                GroupableItemRef::UncertaintyQualifier(i)
+            }
+            Ap242GroupableItemRef::UniformCurve(i) => GroupableItemRef::UniformCurve(i),
+            Ap242GroupableItemRef::UniformSurface(i) => GroupableItemRef::UniformSurface(i),
+            Ap242GroupableItemRef::ValueRepresentationItem(i) => {
+                GroupableItemRef::ValueRepresentationItem(i)
+            }
+            Ap242GroupableItemRef::Vector(i) => GroupableItemRef::Vector(i),
+            Ap242GroupableItemRef::VersionedActionRequest(i) => {
+                GroupableItemRef::VersionedActionRequest(i)
+            }
+            Ap242GroupableItemRef::Vertex(i) => GroupableItemRef::Vertex(i),
+            Ap242GroupableItemRef::VertexLoop(i) => GroupableItemRef::VertexLoop(i),
+            Ap242GroupableItemRef::VertexPoint(i) => GroupableItemRef::VertexPoint(i),
+            Ap242GroupableItemRef::VertexShell(i) => GroupableItemRef::VertexShell(i),
+            Ap242GroupableItemRef::VolumeUnit(i) => GroupableItemRef::VolumeUnit(i),
+            Ap242GroupableItemRef::WireShell(i) => GroupableItemRef::WireShell(i),
+            Ap242GroupableItemRef::Complex(i) => GroupableItemRef::Complex(i),
         }
     }
 }
