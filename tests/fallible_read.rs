@@ -95,6 +95,25 @@ fn wrong_type_ref_drops_only_offender() {
     );
 }
 
+/// A complex instance fits a slot only through one of its parts. A unit slot
+/// takes the complex millimetre `#1` but not the complex context `#2`, which
+/// is dropped from `#4` as a wrong-type reference, the same as a simple
+/// entity of the wrong type would be.
+#[test]
+fn wrong_type_complex_ref_drops_only_offender() {
+    let r = read_body(
+        "#1=(LENGTH_UNIT()NAMED_UNIT(*)SI_UNIT(.MILLI.,.METRE.));\n\
+         #2=(GEOMETRIC_REPRESENTATION_CONTEXT(3)PARAMETRIC_REPRESENTATION_CONTEXT()\
+         REPRESENTATION_CONTEXT('',''));\n\
+         #3=MEASURE_WITH_UNIT(LENGTH_MEASURE(1.),#1);\n\
+         #4=MEASURE_WITH_UNIT(LENGTH_MEASURE(1.),#2);\n",
+    );
+    assert_eq!(dropped_kind(&r, 4), Some(&DropKind::NonstandardReference));
+    for id in 1..=3 {
+        assert!(dropped_kind(&r, id).is_none(), "#{id} must survive: {r:?}");
+    }
+}
+
 /// A fully valid body drops nothing and keeps everything.
 #[test]
 fn valid_body_keeps_all() {

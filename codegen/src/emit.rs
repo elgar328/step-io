@@ -956,16 +956,25 @@ fn read_int_measure_value(a: &Attribute, ctx: &str, tt: &mut TextIn<'_>) -> Resu
     // ---- per-slot ref allow-list (nonstandard-ref detection) ----
     // For each ref slot of each entity/part: the standard target types this slot
     // admits (`allowed` = the ref-enum's simple arms as sorted SIMPLE_NAMES
-    // indices, plus `complex_ok` for a part-bag target). A ref whose target type
-    // is in the closure but not in this list sits in a slot that does not admit
+    // indices; `complex_fits` = the sorted complex part names that make a
+    // complex instance fit the slot, empty if none can). A ref whose target is
+    // in the closure but admitted by neither sits in a slot that does not admit
     // it = a schema-violating (nonstandard) reference.
-    s.push_str("#[derive(Clone, Copy)]\npub struct RefSlot { pub idx: usize, pub name: &'static str, pub allowed: &'static [u16], pub complex_ok: bool, pub is_vec: bool }\n\n");
+    s.push_str("#[derive(Clone, Copy)]\npub struct RefSlot { pub idx: usize, pub name: &'static str, pub allowed: &'static [u16], pub complex_fits: &'static [&'static str], pub is_vec: bool }\n\n");
     let rust_to_index: std::collections::HashMap<&str, usize> = ir
         .simples
         .iter()
         .enumerate()
         .map(|(i, se)| (se.rust.as_str(), i))
         .collect();
+    // Each target's fitting complex parts, emitted once and shared by every
+    // slot of that target.
+    for (target, re) in &ir.ref_enums {
+        if let Some(fits) = complex_fits(re) {
+            writeln!(s, "const {}: &[&str] = &[{fits}];", fits_const(target)).unwrap();
+        }
+    }
+    s.push('\n');
     // Simple entities are keyed by their SIMPLE_NAMES index, complex parts by
     // their COMPLEX_PART_NAMES index.
     emit_ref_slot_table(
@@ -2272,11 +2281,31 @@ fn scalar_wire_of(ir: &ModelIr, k: &Kind) -> Option<String> {
     }
 }
 
+/// The complex parts that fit a reference to `re`'s target, sorted and
+/// quoted for a `&[&str]` literal; `None` if no complex instance can.
+fn complex_fits(re: &RefEnum) -> Option<String> {
+    let mut fits: Vec<&str> = re.complex_parts.iter().map(String::as_str).collect();
+    fits.sort_unstable();
+    fits.dedup();
+    (!fits.is_empty()).then(|| {
+        fits.iter()
+            .map(|p| format!("{p:?}"))
+            .collect::<Vec<_>>()
+            .join(",")
+    })
+}
+
+/// The name of the const holding `target`'s fitting complex parts.
+fn fits_const(target: &str) -> String {
+    format!("FITS_{}", target.to_uppercase())
+}
+
 /// Emit a `fn {fname}({param}) -> &'static [RefSlot]` table: one RefSlot per ref
 /// slot (`Ref` / `Vec<Ref>`), carrying the slot index, the admitted target types'
-/// SIMPLE_NAMES indices (the ref-enum's simple arms), complex-target flag, and
-/// vec flag. Non-ref slots are omitted. `ents` yields each entity's match
-/// pattern (a SIMPLE_NAMES index or a quoted part name) with its fields.
+/// SIMPLE_NAMES indices (the ref-enum's simple arms), the complex parts that
+/// fit it, and vec flag. Non-ref slots are omitted. `ents` yields each
+/// entity's match pattern (a SIMPLE_NAMES index or a quoted part name) with
+/// its fields.
 fn emit_ref_slot_table<'a>(
     s: &mut String,
     fname: &str,
@@ -2309,11 +2338,15 @@ fn emit_ref_slot_table<'a>(
                 allowed.sort_unstable();
                 allowed.dedup();
                 let allowed: Vec<String> = allowed.iter().map(usize::to_string).collect();
+                let fits = if re.complex_parts.is_empty() {
+                    "&[]".to_owned()
+                } else {
+                    fits_const(target)
+                };
                 Some(format!(
-                    "RefSlot{{idx:{idx},name:\"{}\",allowed:&[{}],complex_ok:{},is_vec:{is_vec}}}",
+                    "RefSlot{{idx:{idx},name:\"{}\",allowed:&[{}],complex_fits:{fits},is_vec:{is_vec}}}",
                     f.name,
                     allowed.join(","),
-                    re.has_complex,
                 ))
             })
             .collect();

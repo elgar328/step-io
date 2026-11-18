@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `read()` drops an entity whose reference points at a complex entity none
+  of whose parts the schema allows there, and reports it as a
+  `NonstandardReference`, as it already did for a simple entity of the wrong
+  type. Such an entity used to be kept, and the reference went missing from
+  the scene without a report: a face's surface read as `Other`, or a loop or
+  edge was left out.
+
 ## [0.3.1] - 2026-11-18
 
 ### Added

@@ -324,6 +324,16 @@ struct Scanned {
     parse_warnings: Vec<ParseWarning>,
 }
 
+/// Whether a complex entity, named by its sorted part names as `(A+B+C)`,
+/// has a part in `fits` (sorted), so that a slot admitting `fits` admits it.
+fn complex_fits(name: &str, fits: &[&str]) -> bool {
+    name.strip_prefix('(')
+        .and_then(|n| n.strip_suffix(')'))
+        .unwrap_or(name)
+        .split('+')
+        .any(|part| fits.binary_search(&part).is_ok())
+}
+
 /// Slot-aware nonstandard-ref check: does any ref slot of the entity in `row`
 /// point at an in-closure target whose type the slot's SELECT does not admit?
 /// Returns the first `<ENT>: '<slot>' references <TYPE>` label. Out-of-closure
@@ -362,7 +372,7 @@ fn nonstd_ref(
             let admitted = match target.member {
                 // Not in the closure: cascade / unimplemented handles it.
                 Member::Out | Member::Rejected => continue,
-                Member::Complex => rs.complex_ok,
+                Member::Complex => complex_fits(labels.of(target), rs.complex_fits),
                 Member::Simple(t) => rs.allowed.binary_search(&t).is_ok(),
             };
             if !admitted {
