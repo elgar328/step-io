@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-18
+
+### Added
+
+- `parser::stream()` reads a file one raw entity at a time, in file order.
+  The `Stream` it returns is an iterator of entities and shows the header,
+  schema, `ANCHOR` and `REFERENCE` sections up front and the parser's
+  warnings so far; any error, including a file that does not end as Part 21
+  requires, is its last item. It holds one entity at a time, so apart from
+  the warnings it collects, the memory it takes does not grow with the file.
+  Unlike `parser::parse()`, it does not check that each id appears once.
+
+### Changed
+
+- `parser::parse()` gathers the file's entities in one list on the way to
+  the `Graph`, where it used to fill two, so parsing a large file takes less
+  memory at its peak.
+
 ## [0.3.0] - 2026-10-21
 
 0.3.0 reshapes the public API: each item has one path, the model is read-only
@@ -526,7 +544,8 @@ write instead.
   coverage matrix ([`docs/entities.md`](docs/entities.md)) lists exactly what is
   read and written.
 
-[Unreleased]: https://github.com/elgar328/step-io/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/elgar328/step-io/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/elgar328/step-io/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/elgar328/step-io/compare/v0.2.5...v0.3.0
 [0.2.5]: https://github.com/elgar328/step-io/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/elgar328/step-io/compare/v0.2.3...v0.2.4
