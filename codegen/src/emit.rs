@@ -3186,15 +3186,16 @@ impl Ap242Author {
         s.push_str(" })))\n    }\n");
     }
 
-    // Self-referencing (cyclic) variants: for entities whose ref fields can
-    // target their own type, a closure-based constructor hands out the id the
+    // Self-referencing (cyclic) variants: for entities whose constructor
+    // types (AP242 edition 2's, where narrower) can target their own type,
+    // a closure-based constructor hands out the id the
     // entity will get before it exists, then validates after the push and
     // rolls back on error. The case seen in real files is
     // DIMENSIONAL_SIZE_WITH_DATUM_FEATURE.applies_to referencing itself.
     let mut cyclic_checks = String::new();
     let mut cyclic = 0usize;
     for se in &ir.simples {
-        if !legal.contains(&se.name) || !self_ref_capable(ir, se) {
+        if !narrowing.self_referencing.contains(&se.rust) {
             continue;
         }
         cyclic += 1;
@@ -3295,30 +3296,24 @@ impl Ap242Author {
     s
 }
 
-/// Whether any of `se`'s ref fields (through Vec/Option nesting, and one
-/// level into aggregate SELECT members) has an arm targeting `se` itself —
-/// i.e. a self-reference is type-representable, so the entity gets an
-/// `add_*_cyclic` variant.
-pub(crate) fn self_ref_capable(ir: &ModelIr, se: &SimpleEnt) -> bool {
-    fn kind_hits(ir: &ModelIr, k: &Kind, rust: &str) -> bool {
-        match k {
-            Kind::Ref(t) => {
-                let re = &ir.ref_enums[t];
-                re.simple_arms.iter().any(|(_, target)| target == rust)
-                    || re.aggregate.iter().any(|(_, elem_rust, _)| {
-                        ir.ref_enums.values().any(|e| {
-                            e.rust == *elem_rust
-                                && e.simple_arms.iter().any(|(_, target)| target == rust)
-                        })
+/// Whether a field of kind `k` (through Vec/Option nesting, and one level
+/// into aggregate SELECT members) has an arm targeting the entity `rust` —
+/// whether it can hold a reference to that entity.
+pub(crate) fn kind_hits(ir: &ModelIr, k: &Kind, rust: &str) -> bool {
+    match k {
+        Kind::Ref(t) => {
+            let re = &ir.ref_enums[t];
+            re.simple_arms.iter().any(|(_, target)| target == rust)
+                || re.aggregate.iter().any(|(_, elem_rust, _)| {
+                    ir.ref_enums.values().any(|e| {
+                        e.rust == *elem_rust
+                            && e.simple_arms.iter().any(|(_, target)| target == rust)
                     })
-            }
-            Kind::Vec(inner) => kind_hits(ir, inner, rust),
-            _ => false,
+                })
         }
+        Kind::Vec(inner) => kind_hits(ir, inner, rust),
+        _ => false,
     }
-    se.fields
-        .iter()
-        .any(|f| !f.derived && kind_hits(ir, &f.kind, &se.rust))
 }
 
 /// The complex-assembler support items for `author.rs`: `part_name`, the

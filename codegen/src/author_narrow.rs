@@ -53,6 +53,9 @@ pub struct AuthorNarrowing {
     /// constructor (`add_*_cyclic`) runs, its argument being the model
     /// struct; the plain constructor takes the narrower type in `params`.
     pub cyclic: BTreeMap<(String, String), RuntimeNarrowing>,
+    /// Entities (Rust name) that get a self-referencing constructor: some
+    /// field's constructor type admits the entity itself.
+    pub self_referencing: BTreeSet<String>,
     /// Narrower enums no model enum matches, keyed by Rust name, with the
     /// edition 2 type each stands for.
     pub new_enums: BTreeMap<String, (String, RefEnum)>,
@@ -227,12 +230,7 @@ impl AuthorNarrowing {
         };
 
         let mut out = AuthorNarrowing::default();
-        let cyclic: BTreeSet<&str> = ir
-            .simples
-            .iter()
-            .filter(|s| crate::emit::self_ref_capable(ir, s))
-            .map(|s| s.rust.as_str())
-            .collect();
+        let mut checks: BTreeMap<(String, String), RuntimeNarrowing> = BTreeMap::new();
         for se in &ir.simples {
             if !legal.contains(&se.name) {
                 continue;
@@ -266,12 +264,7 @@ impl AuthorNarrowing {
                     f.name,
                     re.rust
                 );
-                // A self-referencing constructor takes the model struct, so
-                // it checks at run time; the plain constructor still takes
-                // the narrower type.
-                if cyclic.contains(se.rust.as_str()) {
-                    out.cyclic.insert(key.clone(), n.clone());
-                }
+                checks.insert(key.clone(), n.clone());
                 let narrow = out.enum_for(ir, &n, element(&a.ty), legal, &legal_arms);
                 out.conversions.insert((narrow.clone(), re.rust.clone()));
                 out.params.insert(
@@ -281,6 +274,33 @@ impl AuthorNarrowing {
                         wide: re.rust.clone(),
                     },
                 );
+            }
+        }
+
+        // A self-referencing constructor exists where edition 2 lets the
+        // entity reference itself: through a field's narrower type where it
+        // has one. It takes the model struct, so it checks the narrowings at
+        // run time; the plain constructor still takes the narrower types.
+        for se in &ir.simples {
+            if !legal.contains(&se.name) {
+                continue;
+            }
+            let hits = se.fields.iter().any(|f| {
+                if f.derived {
+                    return false;
+                }
+                match out.params.get(&(se.rust.clone(), f.name.clone())) {
+                    Some(p) => out.narrow_arms(ir, &p.narrow).contains(&se.rust),
+                    None => crate::emit::kind_hits(ir, &f.kind, &se.rust),
+                }
+            });
+            if hits {
+                out.self_referencing.insert(se.rust.clone());
+                for ((e, f), n) in &checks {
+                    if *e == se.rust {
+                        out.cyclic.insert((e.clone(), f.clone()), n.clone());
+                    }
+                }
             }
         }
 
@@ -331,6 +351,18 @@ impl AuthorNarrowing {
         out.complex
             .sort_by(|a, b| (&a.owner, a.idx, &a.by).cmp(&(&b.owner, b.idx, &b.by)));
         out
+    }
+
+    /// The simple arms (Rust target names) of the narrower enum `rust`: a
+    /// model enum or one made for edition 2.
+    fn narrow_arms(&self, ir: &ModelIr, rust: &str) -> BTreeSet<String> {
+        let re = self
+            .new_enums
+            .get(rust)
+            .map(|(_, re)| re)
+            .or_else(|| ir.ref_enums.values().find(|re| re.rust == rust))
+            .unwrap_or_else(|| panic!("narrower enum {rust} not found"));
+        re.simple_arms.iter().map(|(_, t)| t.clone()).collect()
     }
 
     /// The enum a constructor takes for narrowing `n`: a model enum with
