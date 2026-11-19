@@ -101,11 +101,11 @@
 //! a generated low-level layer with one constructor per AP242 entity (exposed
 //! as [`StepBuilder::author`]); every argument is validated at insertion
 //! against the AP242 edition 2 schema — its types, aggregate sizes, references,
-//! rules for combining types, and the `WHERE` rules that unconditionally limit
-//! which types an attribute, or each of its elements, references (not those
-//! on one indexed element, on two attributes together or on a path through
-//! another entity, nor its other `WHERE` rules) — so there is no loss report
-//! to check afterwards.
+//! rules for combining types, and the `WHERE` rules that limit which types an
+//! attribute, or each of its elements, references, whether for every instance
+//! or by the instance's own type (not those on one indexed element, on two
+//! attributes together or on a path through another entity, nor its other
+//! `WHERE` rules) — so there is no loss report to check afterwards.
 //!
 //! Some of the model's reference types are wider than AP242 edition 2 allows.
 //! The model reads every edition, so an attribute a subtype narrows
@@ -325,6 +325,34 @@ pub use refgraph::RefGraph;
 ///     "",
 ///     vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
 ///     m::Ap242StyledItemItemRef::DescriptiveRepresentationItem(note),
+/// );
+/// # }
+/// ```
+///
+/// `STYLED_ITEM.WR3` lets a styled item style only a mapped item or a
+/// geometric item, unless it is a context-dependent over-riding styled item:
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, style: m::PresentationStyleAssignmentId, shell: m::ClosedShellId) {
+/// let _ = a.add_styled_item(
+///     "",
+///     vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
+///     m::Ap242StyledItemItemRef::ClosedShell(shell),
+/// );
+/// # }
+/// ```
+///
+/// ```
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, style: m::PresentationStyleAssignmentId, shell: m::ClosedShellId,
+/// #      styled: m::StyledItemId, face: m::AdvancedFaceId) {
+/// let _ = a.add_context_dependent_over_riding_styled_item(
+///     "",
+///     vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
+///     m::Ap242ContextDependentOverRidingStyledItemItemRef::ClosedShell(shell),
+///     m::StyledItemRef::StyledItem(styled),
+///     vec![m::StyleContextSelectRef::AdvancedFace(face)],
 /// );
 /// # }
 /// ```

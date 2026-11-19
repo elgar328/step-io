@@ -90,6 +90,11 @@ impl Schema {
         out.into_iter().map(|(_, a)| a).collect()
     }
 
+    /// Whether `entity` is `ty` or one of its subtypes.
+    pub fn is_a(&self, entity: &str, ty: &str) -> bool {
+        entity == ty || self.is_ancestor(ty, entity)
+    }
+
     /// Whether `ancestor` is a (transitive) supertype of `entity`.
     fn is_ancestor(&self, ancestor: &str, entity: &str) -> bool {
         let mut stack = vec![entity];
@@ -196,6 +201,20 @@ pub struct TypeRule {
     /// The type names the rule lists (an entity, or a SELECT for its
     /// members); a complex value's `TYPEOF` is the union over its parts.
     pub names: Vec<String>,
+    /// The rule holds only for an instance of all of these entities.
+    #[serde(default)]
+    pub when_self: Vec<String>,
+    /// The rule does not hold for an instance of any of these entities.
+    #[serde(default)]
+    pub unless_self: Vec<String>,
+}
+
+impl TypeRule {
+    /// Whether the rule holds for a (simple) instance of `entity`.
+    pub fn holds_for(&self, schema: &Schema, entity: &str) -> bool {
+        self.when_self.iter().all(|t| schema.is_a(entity, t))
+            && !self.unless_self.iter().any(|t| schema.is_a(entity, t))
+    }
 }
 
 /// How many of a type rule's names a value's `TYPEOF` holds.

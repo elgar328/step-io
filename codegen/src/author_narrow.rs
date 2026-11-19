@@ -73,7 +73,9 @@ fn merge_part_rules(into: &mut Vec<PartRule>, from: impl IntoIterator<Item = Par
 }
 
 /// One edition 2 narrowing of a complex part's field: applies when the
-/// instance holds part `by` (Rust variant name).
+/// instance holds part `by` (Rust variant name), a part of each `when` group
+/// and no part in `unless` (upper-case part names: a WHERE rule's condition
+/// on SELF's type).
 #[derive(Debug, Clone)]
 pub struct ComplexAuthorNarrowing {
     /// Rust variant name of the part declaring the field.
@@ -81,6 +83,8 @@ pub struct ComplexAuthorNarrowing {
     /// The field's position among the owner's own fields.
     pub idx: usize,
     pub by: String,
+    pub when: Vec<BTreeSet<String>>,
+    pub unless: BTreeSet<String>,
     pub check: RuntimeNarrowing,
 }
 
@@ -351,11 +355,24 @@ impl AuthorNarrowing {
                     continue;
                 };
                 let re = &ir.ref_enums[target];
-                let rules: Vec<(&str, &TypeRule)> = e2_schema
-                    .type_rules_for(&se.name.to_lowercase())
-                    .into_iter()
-                    .filter(|(_, r)| r.name == f.name)
-                    .collect();
+                let lower = se.name.to_lowercase();
+                // The rules on this field holding for an instance of `ent`:
+                // SELF's type is fixed, so its conditions are settled here.
+                let rules_for = |ent: &str| -> Vec<(&str, &TypeRule)> {
+                    e2_schema
+                        .type_rules_for(ent)
+                        .into_iter()
+                        .filter(|(_, r)| r.name == f.name && r.holds_for(e2_schema, ent))
+                        .collect()
+                };
+                let rules = rules_for(&lower);
+                // Whether every rule holding for `ent` holds for this entity.
+                let within = |ent: &str| {
+                    rules_for(ent)
+                        .iter()
+                        .all(|(_, t)| rules.iter().any(|(_, r)| std::ptr::eq(*t, *r)))
+                };
+                let same_rules = |ent: &str| rules_for(ent).len() == rules.len() && within(ent);
                 let allowed_by_rules = rules.iter().map(|(_, r)| &r.admits).fold(
                     None::<BTreeSet<String>>,
                     |acc, admits| {
@@ -393,9 +410,11 @@ impl AuthorNarrowing {
                     m.as_ref()
                         .is_some_and(|m| m.allowed == n.allowed && m.fits == n.fits)
                 };
+                // A rule names the type only where it holds the same for
+                // its holder: not where this entity is exempt from another.
                 let alone = rules
                     .iter()
-                    .find(|(_, r)| same(&narrowed(re, &a.ty, Some(&r.admits), none)));
+                    .find(|(h, r)| same(&narrowed(re, &a.ty, Some(&r.admits), none)) && within(h));
                 let (name, what) = if same(&narrowed(re, &a.ty, None, none)) {
                     let ty = element(&a.ty);
                     (ty.to_string(), format!("as `{ty}`"))
@@ -405,10 +424,31 @@ impl AuthorNarrowing {
                 {
                     (ty.to_string(), format!("as `{ty}`"))
                 } else {
-                    let (holder, attr) = alone
-                        .map_or((se.name.to_lowercase(), f.name.as_str()), |(h, r)| {
-                            (h.to_string(), r.name.as_str())
-                        });
+                    // Else after the most general entity with this field
+                    // that the same rules hold for.
+                    let general = || {
+                        let alike: Vec<&str> = e2_schema
+                            .entity
+                            .keys()
+                            .map(String::as_str)
+                            .filter(|e| {
+                                e2_schema.is_a(&lower, e)
+                                    && e2_schema
+                                        .flattened_attrs(e)
+                                        .iter()
+                                        .any(|a| a.name == f.name)
+                                    && same_rules(e)
+                            })
+                            .collect();
+                        alike
+                            .iter()
+                            .find(|g| alike.iter().all(|e| e2_schema.is_a(e, g)))
+                            .map_or(lower.clone(), |g| g.to_string())
+                    };
+                    let (holder, attr) = alone.map_or_else(
+                        || (general(), f.name.as_str()),
+                        |(h, r)| (h.to_string(), r.name.as_str()),
+                    );
                     (format!("{holder}_{attr}"), format!("for `{holder}.{attr}`"))
                 };
                 let narrow = out.enum_for(ir, &n, &name, &what, legal, &legal_arms);
@@ -472,6 +512,7 @@ impl AuthorNarrowing {
                        ty: &str,
                        rules: Option<&BTreeSet<String>>,
                        part_rules: &[PartRule],
+                       (when, unless): (Vec<BTreeSet<String>>, BTreeSet<String>),
                        out: &mut AuthorNarrowing| {
                 let Some(op) = ir.parts.iter().find(|o| o.rust == owner) else {
                     return;
@@ -491,17 +532,35 @@ impl AuthorNarrowing {
                         owner: owner.to_string(),
                         idx,
                         by: p.rust.clone(),
+                        when,
+                        unless,
                         check,
                     });
                 }
             };
             for r in &ent.redeclared_attrs {
                 if let Some(owner) = r.owner.as_deref().and_then(|o| part_rust.get(o)) {
-                    add(owner, &r.name, &r.ty, None, &[], &mut out);
+                    add(
+                        owner,
+                        &r.name,
+                        &r.ty,
+                        None,
+                        &[],
+                        Default::default(),
+                        &mut out,
+                    );
                 }
             }
             for a in &ent.own_attrs {
-                add(&p.rust, &a.name, &a.ty, None, &[], &mut out);
+                add(
+                    &p.rust,
+                    &a.name,
+                    &a.ty,
+                    None,
+                    &[],
+                    Default::default(),
+                    &mut out,
+                );
             }
             for r in &ent.type_rules {
                 let Some(owner) = part_rust.get(&r.owner) else {
@@ -514,6 +573,18 @@ impl AuthorNarrowing {
                 else {
                     continue;
                 };
+                // SELF's type is a complex value's parts: it is an X where a
+                // part is, or belongs to, X. A rule only for a type no part
+                // is never applies.
+                let when: Vec<BTreeSet<String>> = r
+                    .when_self
+                    .iter()
+                    .map(|t| parts_of(&mut std::iter::once(t)))
+                    .collect();
+                if when.iter().any(BTreeSet::is_empty) {
+                    continue;
+                }
+                let unless = parts_of(&mut r.unless_self.iter());
                 let part_rules = part_rules_of(&mut std::iter::once(r));
                 add(
                     owner,
@@ -521,16 +592,25 @@ impl AuthorNarrowing {
                     &declared.ty,
                     Some(&r.admits),
                     &part_rules,
+                    (when, unless),
                     &mut out,
                 );
             }
         }
-        out.complex
-            .sort_by(|a, b| (&a.owner, a.idx, &a.by).cmp(&(&b.owner, b.idx, &b.by)));
-        // One check per field and part: a declaration and a WHERE rule
-        // narrowing the same field hold together.
+        let key = |c: &ComplexAuthorNarrowing| {
+            (
+                c.owner.clone(),
+                c.idx,
+                c.by.clone(),
+                c.when.clone(),
+                c.unless.clone(),
+            )
+        };
+        out.complex.sort_by_key(key);
+        // One check per field, part and condition: a declaration and a WHERE
+        // rule narrowing the same field hold together.
         out.complex.dedup_by(|next, kept| {
-            if (&next.owner, next.idx, &next.by) != (&kept.owner, kept.idx, &kept.by) {
+            if key(next) != key(kept) {
                 return false;
             }
             let k = &mut kept.check;
@@ -638,8 +718,15 @@ impl AuthorNarrowing {
             ));
         }
         for c in &self.complex {
+            let mut on = String::new();
+            for w in &c.when {
+                on += &format!(" with one of {w:?}");
+            }
+            if !c.unless.is_empty() {
+                on += &format!(" without {:?}", c.unless);
+            }
             lines.push(format!(
-                "complex {}#{} by {}: {} to {} arms",
+                "complex {}#{} by {}{on}: {} to {} arms",
                 c.owner,
                 c.idx,
                 c.by,

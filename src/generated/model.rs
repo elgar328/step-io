@@ -15819,6 +15819,163 @@ pub enum Ap242ConstructiveGeometryRepresentationRef {
     ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
 }
 
+/// A reference to what AP242 edition 2 allows for `context_dependent_over_riding_styled_item.item`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242ContextDependentOverRidingStyledItemItemRef {
+    AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
+    AdvancedFace(AdvancedFaceId),
+    AnnotationText(AnnotationTextId),
+    AnnotationTextCharacter(AnnotationTextCharacterId),
+    Axis1Placement(Axis1PlacementId),
+    Axis2Placement2d(Axis2Placement2dId),
+    Axis2Placement3d(Axis2Placement3dId),
+    BSplineCurve(BSplineCurveId),
+    BSplineCurveWithKnots(BSplineCurveWithKnotsId),
+    BSplineSurface(BSplineSurfaceId),
+    BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
+    BezierCurve(BezierCurveId),
+    BezierSurface(BezierSurfaceId),
+    BoundedCurve(BoundedCurveId),
+    BoundedPcurve(BoundedPcurveId),
+    BoundedSurface(BoundedSurfaceId),
+    BoundedSurfaceCurve(BoundedSurfaceCurveId),
+    BrepWithVoids(BrepWithVoidsId),
+    CameraImage(CameraImageId),
+    CameraImage3dWithScale(CameraImage3dWithScaleId),
+    CameraModel(CameraModelId),
+    CameraModelD3(CameraModelD3Id),
+    CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
+    CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
+    CartesianPoint(CartesianPointId),
+    CharacterizedRepresentation(CharacterizedRepresentationId),
+    Circle(CircleId),
+    ClosedShell(ClosedShellId),
+    ComplexTriangulatedFace(ComplexTriangulatedFaceId),
+    ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
+    CompositeCurve(CompositeCurveId),
+    CompositeText(CompositeTextId),
+    Conic(ConicId),
+    ConicalSurface(ConicalSurfaceId),
+    ConnectedFaceSet(ConnectedFaceSetId),
+    ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
+    CoordinatesList(CoordinatesListId),
+    Curve(CurveId),
+    CylindricalSurface(CylindricalSurfaceId),
+    DefinedCharacterGlyph(DefinedCharacterGlyphId),
+    DefinedSymbol(DefinedSymbolId),
+    DefinitionalRepresentation(DefinitionalRepresentationId),
+    DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
+    Direction(DirectionId),
+    DraughtingCallout(DraughtingCalloutId),
+    DraughtingModel(DraughtingModelId),
+    Edge(EdgeId),
+    EdgeCurve(EdgeCurveId),
+    EdgeLoop(EdgeLoopId),
+    ElementarySurface(ElementarySurfaceId),
+    Ellipse(EllipseId),
+    ExternallyDefinedHatchStyle(ExternallyDefinedHatchStyleId),
+    ExternallyDefinedTileStyle(ExternallyDefinedTileStyleId),
+    Face(FaceId),
+    FaceBound(FaceBoundId),
+    FaceOuterBound(FaceOuterBoundId),
+    FaceSurface(FaceSurfaceId),
+    FillAreaStyleHatching(FillAreaStyleHatchingId),
+    FillAreaStyleTileColouredRegion(FillAreaStyleTileColouredRegionId),
+    FillAreaStyleTileCurveWithStyle(FillAreaStyleTileCurveWithStyleId),
+    FillAreaStyleTileSymbolWithStyle(FillAreaStyleTileSymbolWithStyleId),
+    FillAreaStyleTiles(FillAreaStyleTilesId),
+    GeometricCurveSet(GeometricCurveSetId),
+    GeometricRepresentationItem(GeometricRepresentationItemId),
+    GeometricSet(GeometricSetId),
+    GeometricallyBoundedSurfaceShapeRepresentation(
+        GeometricallyBoundedSurfaceShapeRepresentationId,
+    ),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        GeometricallyBoundedWireframeShapeRepresentationId,
+    ),
+    Hyperbola(HyperbolaId),
+    IntersectionCurve(IntersectionCurveId),
+    LeaderDirectedCallout(LeaderDirectedCalloutId),
+    Line(LineId),
+    Loop(LoopId),
+    ManifoldSolidBrep(ManifoldSolidBrepId),
+    ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
+    MappedItem(MappedItemId),
+    MechanicalDesignGeometricPresentationRepresentation(
+        MechanicalDesignGeometricPresentationRepresentationId,
+    ),
+    MechanicalDesignPresentationRepresentationWithDraughting(
+        MechanicalDesignPresentationRepresentationWithDraughtingId,
+    ),
+    MechanicalDesignShadedPresentationRepresentation(
+        MechanicalDesignShadedPresentationRepresentationId,
+    ),
+    OffsetSurface(OffsetSurfaceId),
+    OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
+    OpenShell(OpenShellId),
+    OrientedClosedShell(OrientedClosedShellId),
+    OrientedEdge(OrientedEdgeId),
+    Parabola(ParabolaId),
+    Path(PathId),
+    Pcurve(PcurveId),
+    Placement(PlacementId),
+    PlanarBox(PlanarBoxId),
+    PlanarExtent(PlanarExtentId),
+    Plane(PlaneId),
+    Point(PointId),
+    PolyLoop(PolyLoopId),
+    Polyline(PolylineId),
+    PresentationArea(PresentationAreaId),
+    PresentationRepresentation(PresentationRepresentationId),
+    PresentationView(PresentationViewId),
+    QuasiUniformCurve(QuasiUniformCurveId),
+    QuasiUniformSurface(QuasiUniformSurfaceId),
+    RationalBSplineCurve(RationalBSplineCurveId),
+    RationalBSplineSurface(RationalBSplineSurfaceId),
+    RepositionedTessellatedItem(RepositionedTessellatedItemId),
+    Representation(RepresentationId),
+    RepresentationReference(RepresentationReferenceId),
+    SeamCurve(SeamCurveId),
+    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
+    ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
+    ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
+    SolidModel(SolidModelId),
+    SphericalSurface(SphericalSurfaceId),
+    Surface(SurfaceId),
+    SurfaceCurve(SurfaceCurveId),
+    SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId),
+    SurfaceOfRevolution(SurfaceOfRevolutionId),
+    SweptSurface(SweptSurfaceId),
+    SymbolRepresentation(SymbolRepresentationId),
+    SymbolTarget(SymbolTargetId),
+    TessellatedCurveSet(TessellatedCurveSetId),
+    TessellatedFace(TessellatedFaceId),
+    TessellatedGeometricSet(TessellatedGeometricSetId),
+    TessellatedItem(TessellatedItemId),
+    TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
+    TessellatedShell(TessellatedShellId),
+    TessellatedSolid(TessellatedSolidId),
+    TessellatedStructuredItem(TessellatedStructuredItemId),
+    TessellatedSurfaceSet(TessellatedSurfaceSetId),
+    TextLiteral(TextLiteralId),
+    TopologicalRepresentationItem(TopologicalRepresentationItemId),
+    ToroidalSurface(ToroidalSurfaceId),
+    TrimmedCurve(TrimmedCurveId),
+    TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
+    UniformCurve(UniformCurveId),
+    UniformSurface(UniformSurfaceId),
+    Vector(VectorId),
+    Vertex(VertexId),
+    VertexLoop(VertexLoopId),
+    VertexPoint(VertexPointId),
+    VertexShell(VertexShellId),
+    WireShell(WireShellId),
+    Complex(ComplexEntityId),
+}
+
 /// A reference to what AP242 edition 2 allows as `derived_shape_aspect`, where the
 /// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
 /// takes it and stores it as the model's wider reference.
@@ -16496,7 +16653,6 @@ pub enum Ap242ShapeRepresentationWithParametersItemsRef {
 /// takes it and stores it as the model's wider reference.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Ap242StyledItemItemRef {
-    AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     AdvancedFace(AdvancedFaceId),
     AnnotationText(AnnotationTextId),
     AnnotationTextCharacter(AnnotationTextCharacterId),
@@ -16521,37 +16677,26 @@ pub enum Ap242StyledItemItemRef {
     CameraModelD3MultiClipping(CameraModelD3MultiClippingId),
     CameraModelD3WithHlhsr(CameraModelD3WithHlhsrId),
     CartesianPoint(CartesianPointId),
-    CharacterizedRepresentation(CharacterizedRepresentationId),
     Circle(CircleId),
-    ClosedShell(ClosedShellId),
     ComplexTriangulatedFace(ComplexTriangulatedFaceId),
     ComplexTriangulatedSurfaceSet(ComplexTriangulatedSurfaceSetId),
     CompositeCurve(CompositeCurveId),
     CompositeText(CompositeTextId),
     Conic(ConicId),
     ConicalSurface(ConicalSurfaceId),
-    ConnectedFaceSet(ConnectedFaceSetId),
-    ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
     CoordinatesList(CoordinatesListId),
     Curve(CurveId),
     CylindricalSurface(CylindricalSurfaceId),
     DefinedCharacterGlyph(DefinedCharacterGlyphId),
     DefinedSymbol(DefinedSymbolId),
-    DefinitionalRepresentation(DefinitionalRepresentationId),
     DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     Direction(DirectionId),
     DraughtingCallout(DraughtingCalloutId),
-    DraughtingModel(DraughtingModelId),
-    Edge(EdgeId),
     EdgeCurve(EdgeCurveId),
-    EdgeLoop(EdgeLoopId),
     ElementarySurface(ElementarySurfaceId),
     Ellipse(EllipseId),
     ExternallyDefinedHatchStyle(ExternallyDefinedHatchStyleId),
     ExternallyDefinedTileStyle(ExternallyDefinedTileStyleId),
-    Face(FaceId),
-    FaceBound(FaceBoundId),
-    FaceOuterBound(FaceOuterBoundId),
     FaceSurface(FaceSurfaceId),
     FillAreaStyleHatching(FillAreaStyleHatchingId),
     FillAreaStyleTileColouredRegion(FillAreaStyleTileColouredRegionId),
@@ -16561,36 +16706,15 @@ pub enum Ap242StyledItemItemRef {
     GeometricCurveSet(GeometricCurveSetId),
     GeometricRepresentationItem(GeometricRepresentationItemId),
     GeometricSet(GeometricSetId),
-    GeometricallyBoundedSurfaceShapeRepresentation(
-        GeometricallyBoundedSurfaceShapeRepresentationId,
-    ),
-    GeometricallyBoundedWireframeShapeRepresentation(
-        GeometricallyBoundedWireframeShapeRepresentationId,
-    ),
     Hyperbola(HyperbolaId),
     IntersectionCurve(IntersectionCurveId),
     LeaderDirectedCallout(LeaderDirectedCalloutId),
     Line(LineId),
-    Loop(LoopId),
     ManifoldSolidBrep(ManifoldSolidBrepId),
-    ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
     MappedItem(MappedItemId),
-    MechanicalDesignGeometricPresentationRepresentation(
-        MechanicalDesignGeometricPresentationRepresentationId,
-    ),
-    MechanicalDesignPresentationRepresentationWithDraughting(
-        MechanicalDesignPresentationRepresentationWithDraughtingId,
-    ),
-    MechanicalDesignShadedPresentationRepresentation(
-        MechanicalDesignShadedPresentationRepresentationId,
-    ),
     OffsetSurface(OffsetSurfaceId),
     OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
-    OpenShell(OpenShellId),
-    OrientedClosedShell(OrientedClosedShellId),
-    OrientedEdge(OrientedEdgeId),
     Parabola(ParabolaId),
-    Path(PathId),
     Pcurve(PcurveId),
     Placement(PlacementId),
     PlanarBox(PlanarBoxId),
@@ -16599,20 +16723,12 @@ pub enum Ap242StyledItemItemRef {
     Point(PointId),
     PolyLoop(PolyLoopId),
     Polyline(PolylineId),
-    PresentationArea(PresentationAreaId),
-    PresentationRepresentation(PresentationRepresentationId),
-    PresentationView(PresentationViewId),
     QuasiUniformCurve(QuasiUniformCurveId),
     QuasiUniformSurface(QuasiUniformSurfaceId),
     RationalBSplineCurve(RationalBSplineCurveId),
     RationalBSplineSurface(RationalBSplineSurfaceId),
     RepositionedTessellatedItem(RepositionedTessellatedItemId),
-    Representation(RepresentationId),
-    RepresentationReference(RepresentationReferenceId),
     SeamCurve(SeamCurveId),
-    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
-    ShapeRepresentation(ShapeRepresentationId),
-    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
     ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
     SolidModel(SolidModelId),
     SphericalSurface(SphericalSurfaceId),
@@ -16621,30 +16737,23 @@ pub enum Ap242StyledItemItemRef {
     SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId),
     SurfaceOfRevolution(SurfaceOfRevolutionId),
     SweptSurface(SweptSurfaceId),
-    SymbolRepresentation(SymbolRepresentationId),
     SymbolTarget(SymbolTargetId),
     TessellatedCurveSet(TessellatedCurveSetId),
     TessellatedFace(TessellatedFaceId),
     TessellatedGeometricSet(TessellatedGeometricSetId),
     TessellatedItem(TessellatedItemId),
-    TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
     TessellatedShell(TessellatedShellId),
     TessellatedSolid(TessellatedSolidId),
     TessellatedStructuredItem(TessellatedStructuredItemId),
     TessellatedSurfaceSet(TessellatedSurfaceSetId),
     TextLiteral(TextLiteralId),
-    TopologicalRepresentationItem(TopologicalRepresentationItemId),
     ToroidalSurface(ToroidalSurfaceId),
     TrimmedCurve(TrimmedCurveId),
     TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
     UniformCurve(UniformCurveId),
     UniformSurface(UniformSurfaceId),
     Vector(VectorId),
-    Vertex(VertexId),
-    VertexLoop(VertexLoopId),
     VertexPoint(VertexPointId),
-    VertexShell(VertexShellId),
-    WireShell(WireShellId),
     Complex(ComplexEntityId),
 }
 
@@ -17057,6 +17166,155 @@ impl From<Ap242ConstructiveGeometryRepresentationRef>
             Ap242ConstructiveGeometryRepresentationRef::ConstructiveGeometryRepresentation(i) => {
                 RepresentationOrRepresentationReferenceRef::ConstructiveGeometryRepresentation(i)
             }
+        }
+    }
+}
+
+impl From<Ap242ContextDependentOverRidingStyledItemItemRef>
+    for StyledItemTargetOrRepresentationItemRef
+{
+    fn from(r: Ap242ContextDependentOverRidingStyledItemItemRef) -> Self {
+        match r {
+            Ap242ContextDependentOverRidingStyledItemItemRef::AdvancedBrepShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::AdvancedFace(i) => StyledItemTargetOrRepresentationItemRef::AdvancedFace(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::AnnotationText(i) => StyledItemTargetOrRepresentationItemRef::AnnotationText(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::AnnotationTextCharacter(i) => StyledItemTargetOrRepresentationItemRef::AnnotationTextCharacter(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Axis1Placement(i) => StyledItemTargetOrRepresentationItemRef::Axis1Placement(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Axis2Placement2d(i) => StyledItemTargetOrRepresentationItemRef::Axis2Placement2d(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Axis2Placement3d(i) => StyledItemTargetOrRepresentationItemRef::Axis2Placement3d(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::BSplineCurve(i) => StyledItemTargetOrRepresentationItemRef::BSplineCurve(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::BSplineCurveWithKnots(i) => StyledItemTargetOrRepresentationItemRef::BSplineCurveWithKnots(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::BSplineSurface(i) => StyledItemTargetOrRepresentationItemRef::BSplineSurface(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::BSplineSurfaceWithKnots(i) => StyledItemTargetOrRepresentationItemRef::BSplineSurfaceWithKnots(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::BezierCurve(i) => StyledItemTargetOrRepresentationItemRef::BezierCurve(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::BezierSurface(i) => StyledItemTargetOrRepresentationItemRef::BezierSurface(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::BoundedCurve(i) => StyledItemTargetOrRepresentationItemRef::BoundedCurve(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::BoundedPcurve(i) => StyledItemTargetOrRepresentationItemRef::BoundedPcurve(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::BoundedSurface(i) => StyledItemTargetOrRepresentationItemRef::BoundedSurface(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::BoundedSurfaceCurve(i) => StyledItemTargetOrRepresentationItemRef::BoundedSurfaceCurve(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::BrepWithVoids(i) => StyledItemTargetOrRepresentationItemRef::BrepWithVoids(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::CameraImage(i) => StyledItemTargetOrRepresentationItemRef::CameraImage(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::CameraImage3dWithScale(i) => StyledItemTargetOrRepresentationItemRef::CameraImage3dWithScale(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::CameraModel(i) => StyledItemTargetOrRepresentationItemRef::CameraModel(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::CameraModelD3(i) => StyledItemTargetOrRepresentationItemRef::CameraModelD3(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::CameraModelD3MultiClipping(i) => StyledItemTargetOrRepresentationItemRef::CameraModelD3MultiClipping(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::CameraModelD3WithHlhsr(i) => StyledItemTargetOrRepresentationItemRef::CameraModelD3WithHlhsr(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::CartesianPoint(i) => StyledItemTargetOrRepresentationItemRef::CartesianPoint(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::CharacterizedRepresentation(i) => StyledItemTargetOrRepresentationItemRef::CharacterizedRepresentation(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Circle(i) => StyledItemTargetOrRepresentationItemRef::Circle(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::ClosedShell(i) => StyledItemTargetOrRepresentationItemRef::ClosedShell(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::ComplexTriangulatedFace(i) => StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedFace(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::ComplexTriangulatedSurfaceSet(i) => StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedSurfaceSet(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::CompositeCurve(i) => StyledItemTargetOrRepresentationItemRef::CompositeCurve(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::CompositeText(i) => StyledItemTargetOrRepresentationItemRef::CompositeText(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Conic(i) => StyledItemTargetOrRepresentationItemRef::Conic(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::ConicalSurface(i) => StyledItemTargetOrRepresentationItemRef::ConicalSurface(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::ConnectedFaceSet(i) => StyledItemTargetOrRepresentationItemRef::ConnectedFaceSet(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::ConstructiveGeometryRepresentation(i) => StyledItemTargetOrRepresentationItemRef::ConstructiveGeometryRepresentation(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::CoordinatesList(i) => StyledItemTargetOrRepresentationItemRef::CoordinatesList(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Curve(i) => StyledItemTargetOrRepresentationItemRef::Curve(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::CylindricalSurface(i) => StyledItemTargetOrRepresentationItemRef::CylindricalSurface(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::DefinedCharacterGlyph(i) => StyledItemTargetOrRepresentationItemRef::DefinedCharacterGlyph(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::DefinedSymbol(i) => StyledItemTargetOrRepresentationItemRef::DefinedSymbol(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::DefinitionalRepresentation(i) => StyledItemTargetOrRepresentationItemRef::DefinitionalRepresentation(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::DegenerateToroidalSurface(i) => StyledItemTargetOrRepresentationItemRef::DegenerateToroidalSurface(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Direction(i) => StyledItemTargetOrRepresentationItemRef::Direction(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::DraughtingCallout(i) => StyledItemTargetOrRepresentationItemRef::DraughtingCallout(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::DraughtingModel(i) => StyledItemTargetOrRepresentationItemRef::DraughtingModel(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Edge(i) => StyledItemTargetOrRepresentationItemRef::Edge(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::EdgeCurve(i) => StyledItemTargetOrRepresentationItemRef::EdgeCurve(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::EdgeLoop(i) => StyledItemTargetOrRepresentationItemRef::EdgeLoop(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::ElementarySurface(i) => StyledItemTargetOrRepresentationItemRef::ElementarySurface(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Ellipse(i) => StyledItemTargetOrRepresentationItemRef::Ellipse(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::ExternallyDefinedHatchStyle(i) => StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::ExternallyDefinedTileStyle(i) => StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Face(i) => StyledItemTargetOrRepresentationItemRef::Face(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::FaceBound(i) => StyledItemTargetOrRepresentationItemRef::FaceBound(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::FaceOuterBound(i) => StyledItemTargetOrRepresentationItemRef::FaceOuterBound(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::FaceSurface(i) => StyledItemTargetOrRepresentationItemRef::FaceSurface(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::FillAreaStyleHatching(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleHatching(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::FillAreaStyleTileColouredRegion(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileColouredRegion(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::FillAreaStyleTileCurveWithStyle(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileCurveWithStyle(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::FillAreaStyleTileSymbolWithStyle(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileSymbolWithStyle(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::FillAreaStyleTiles(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleTiles(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::GeometricCurveSet(i) => StyledItemTargetOrRepresentationItemRef::GeometricCurveSet(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::GeometricRepresentationItem(i) => StyledItemTargetOrRepresentationItemRef::GeometricRepresentationItem(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::GeometricSet(i) => StyledItemTargetOrRepresentationItemRef::GeometricSet(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedWireframeShapeRepresentation(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Hyperbola(i) => StyledItemTargetOrRepresentationItemRef::Hyperbola(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::IntersectionCurve(i) => StyledItemTargetOrRepresentationItemRef::IntersectionCurve(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::LeaderDirectedCallout(i) => StyledItemTargetOrRepresentationItemRef::LeaderDirectedCallout(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Line(i) => StyledItemTargetOrRepresentationItemRef::Line(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Loop(i) => StyledItemTargetOrRepresentationItemRef::Loop(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::ManifoldSolidBrep(i) => StyledItemTargetOrRepresentationItemRef::ManifoldSolidBrep(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::ManifoldSurfaceShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::ManifoldSurfaceShapeRepresentation(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::MappedItem(i) => StyledItemTargetOrRepresentationItemRef::MappedItem(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => StyledItemTargetOrRepresentationItemRef::MechanicalDesignGeometricPresentationRepresentation(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => StyledItemTargetOrRepresentationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::MechanicalDesignShadedPresentationRepresentation(i) => StyledItemTargetOrRepresentationItemRef::MechanicalDesignShadedPresentationRepresentation(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::OffsetSurface(i) => StyledItemTargetOrRepresentationItemRef::OffsetSurface(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::OneDirectionRepeatFactor(i) => StyledItemTargetOrRepresentationItemRef::OneDirectionRepeatFactor(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::OpenShell(i) => StyledItemTargetOrRepresentationItemRef::OpenShell(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::OrientedClosedShell(i) => StyledItemTargetOrRepresentationItemRef::OrientedClosedShell(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::OrientedEdge(i) => StyledItemTargetOrRepresentationItemRef::OrientedEdge(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Parabola(i) => StyledItemTargetOrRepresentationItemRef::Parabola(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Path(i) => StyledItemTargetOrRepresentationItemRef::Path(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Pcurve(i) => StyledItemTargetOrRepresentationItemRef::Pcurve(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Placement(i) => StyledItemTargetOrRepresentationItemRef::Placement(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::PlanarBox(i) => StyledItemTargetOrRepresentationItemRef::PlanarBox(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::PlanarExtent(i) => StyledItemTargetOrRepresentationItemRef::PlanarExtent(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Plane(i) => StyledItemTargetOrRepresentationItemRef::Plane(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Point(i) => StyledItemTargetOrRepresentationItemRef::Point(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::PolyLoop(i) => StyledItemTargetOrRepresentationItemRef::PolyLoop(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Polyline(i) => StyledItemTargetOrRepresentationItemRef::Polyline(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::PresentationArea(i) => StyledItemTargetOrRepresentationItemRef::PresentationArea(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::PresentationRepresentation(i) => StyledItemTargetOrRepresentationItemRef::PresentationRepresentation(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::PresentationView(i) => StyledItemTargetOrRepresentationItemRef::PresentationView(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::QuasiUniformCurve(i) => StyledItemTargetOrRepresentationItemRef::QuasiUniformCurve(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::QuasiUniformSurface(i) => StyledItemTargetOrRepresentationItemRef::QuasiUniformSurface(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::RationalBSplineCurve(i) => StyledItemTargetOrRepresentationItemRef::RationalBSplineCurve(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::RationalBSplineSurface(i) => StyledItemTargetOrRepresentationItemRef::RationalBSplineSurface(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::RepositionedTessellatedItem(i) => StyledItemTargetOrRepresentationItemRef::RepositionedTessellatedItem(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Representation(i) => StyledItemTargetOrRepresentationItemRef::Representation(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::RepresentationReference(i) => StyledItemTargetOrRepresentationItemRef::RepresentationReference(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::SeamCurve(i) => StyledItemTargetOrRepresentationItemRef::SeamCurve(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::ShapeDimensionRepresentation(i) => StyledItemTargetOrRepresentationItemRef::ShapeDimensionRepresentation(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::ShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::ShapeRepresentation(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::ShapeRepresentationWithParameters(i) => StyledItemTargetOrRepresentationItemRef::ShapeRepresentationWithParameters(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::ShellBasedSurfaceModel(i) => StyledItemTargetOrRepresentationItemRef::ShellBasedSurfaceModel(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::SolidModel(i) => StyledItemTargetOrRepresentationItemRef::SolidModel(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::SphericalSurface(i) => StyledItemTargetOrRepresentationItemRef::SphericalSurface(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Surface(i) => StyledItemTargetOrRepresentationItemRef::Surface(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::SurfaceCurve(i) => StyledItemTargetOrRepresentationItemRef::SurfaceCurve(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::SurfaceOfLinearExtrusion(i) => StyledItemTargetOrRepresentationItemRef::SurfaceOfLinearExtrusion(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::SurfaceOfRevolution(i) => StyledItemTargetOrRepresentationItemRef::SurfaceOfRevolution(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::SweptSurface(i) => StyledItemTargetOrRepresentationItemRef::SweptSurface(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::SymbolRepresentation(i) => StyledItemTargetOrRepresentationItemRef::SymbolRepresentation(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::SymbolTarget(i) => StyledItemTargetOrRepresentationItemRef::SymbolTarget(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::TessellatedCurveSet(i) => StyledItemTargetOrRepresentationItemRef::TessellatedCurveSet(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::TessellatedFace(i) => StyledItemTargetOrRepresentationItemRef::TessellatedFace(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::TessellatedGeometricSet(i) => StyledItemTargetOrRepresentationItemRef::TessellatedGeometricSet(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::TessellatedItem(i) => StyledItemTargetOrRepresentationItemRef::TessellatedItem(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::TessellatedShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::TessellatedShapeRepresentation(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::TessellatedShell(i) => StyledItemTargetOrRepresentationItemRef::TessellatedShell(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::TessellatedSolid(i) => StyledItemTargetOrRepresentationItemRef::TessellatedSolid(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::TessellatedStructuredItem(i) => StyledItemTargetOrRepresentationItemRef::TessellatedStructuredItem(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::TessellatedSurfaceSet(i) => StyledItemTargetOrRepresentationItemRef::TessellatedSurfaceSet(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::TextLiteral(i) => StyledItemTargetOrRepresentationItemRef::TextLiteral(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::TopologicalRepresentationItem(i) => StyledItemTargetOrRepresentationItemRef::TopologicalRepresentationItem(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::ToroidalSurface(i) => StyledItemTargetOrRepresentationItemRef::ToroidalSurface(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::TrimmedCurve(i) => StyledItemTargetOrRepresentationItemRef::TrimmedCurve(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::TwoDirectionRepeatFactor(i) => StyledItemTargetOrRepresentationItemRef::TwoDirectionRepeatFactor(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::UniformCurve(i) => StyledItemTargetOrRepresentationItemRef::UniformCurve(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::UniformSurface(i) => StyledItemTargetOrRepresentationItemRef::UniformSurface(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Vector(i) => StyledItemTargetOrRepresentationItemRef::Vector(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Vertex(i) => StyledItemTargetOrRepresentationItemRef::Vertex(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::VertexLoop(i) => StyledItemTargetOrRepresentationItemRef::VertexLoop(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::VertexPoint(i) => StyledItemTargetOrRepresentationItemRef::VertexPoint(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::VertexShell(i) => StyledItemTargetOrRepresentationItemRef::VertexShell(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::WireShell(i) => StyledItemTargetOrRepresentationItemRef::WireShell(i),
+            Ap242ContextDependentOverRidingStyledItemItemRef::Complex(i) => StyledItemTargetOrRepresentationItemRef::Complex(i),
         }
     }
 }
@@ -18208,146 +18466,296 @@ impl From<Ap242ShapeRepresentationWithParametersItemsRef> for RepresentationItem
 impl From<Ap242StyledItemItemRef> for StyledItemTargetOrRepresentationItemRef {
     fn from(r: Ap242StyledItemItemRef) -> Self {
         match r {
-            Ap242StyledItemItemRef::AdvancedBrepShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(i),
-            Ap242StyledItemItemRef::AdvancedFace(i) => StyledItemTargetOrRepresentationItemRef::AdvancedFace(i),
-            Ap242StyledItemItemRef::AnnotationText(i) => StyledItemTargetOrRepresentationItemRef::AnnotationText(i),
-            Ap242StyledItemItemRef::AnnotationTextCharacter(i) => StyledItemTargetOrRepresentationItemRef::AnnotationTextCharacter(i),
-            Ap242StyledItemItemRef::Axis1Placement(i) => StyledItemTargetOrRepresentationItemRef::Axis1Placement(i),
-            Ap242StyledItemItemRef::Axis2Placement2d(i) => StyledItemTargetOrRepresentationItemRef::Axis2Placement2d(i),
-            Ap242StyledItemItemRef::Axis2Placement3d(i) => StyledItemTargetOrRepresentationItemRef::Axis2Placement3d(i),
-            Ap242StyledItemItemRef::BSplineCurve(i) => StyledItemTargetOrRepresentationItemRef::BSplineCurve(i),
-            Ap242StyledItemItemRef::BSplineCurveWithKnots(i) => StyledItemTargetOrRepresentationItemRef::BSplineCurveWithKnots(i),
-            Ap242StyledItemItemRef::BSplineSurface(i) => StyledItemTargetOrRepresentationItemRef::BSplineSurface(i),
-            Ap242StyledItemItemRef::BSplineSurfaceWithKnots(i) => StyledItemTargetOrRepresentationItemRef::BSplineSurfaceWithKnots(i),
-            Ap242StyledItemItemRef::BezierCurve(i) => StyledItemTargetOrRepresentationItemRef::BezierCurve(i),
-            Ap242StyledItemItemRef::BezierSurface(i) => StyledItemTargetOrRepresentationItemRef::BezierSurface(i),
-            Ap242StyledItemItemRef::BoundedCurve(i) => StyledItemTargetOrRepresentationItemRef::BoundedCurve(i),
-            Ap242StyledItemItemRef::BoundedPcurve(i) => StyledItemTargetOrRepresentationItemRef::BoundedPcurve(i),
-            Ap242StyledItemItemRef::BoundedSurface(i) => StyledItemTargetOrRepresentationItemRef::BoundedSurface(i),
-            Ap242StyledItemItemRef::BoundedSurfaceCurve(i) => StyledItemTargetOrRepresentationItemRef::BoundedSurfaceCurve(i),
-            Ap242StyledItemItemRef::BrepWithVoids(i) => StyledItemTargetOrRepresentationItemRef::BrepWithVoids(i),
-            Ap242StyledItemItemRef::CameraImage(i) => StyledItemTargetOrRepresentationItemRef::CameraImage(i),
-            Ap242StyledItemItemRef::CameraImage3dWithScale(i) => StyledItemTargetOrRepresentationItemRef::CameraImage3dWithScale(i),
-            Ap242StyledItemItemRef::CameraModel(i) => StyledItemTargetOrRepresentationItemRef::CameraModel(i),
-            Ap242StyledItemItemRef::CameraModelD3(i) => StyledItemTargetOrRepresentationItemRef::CameraModelD3(i),
-            Ap242StyledItemItemRef::CameraModelD3MultiClipping(i) => StyledItemTargetOrRepresentationItemRef::CameraModelD3MultiClipping(i),
-            Ap242StyledItemItemRef::CameraModelD3WithHlhsr(i) => StyledItemTargetOrRepresentationItemRef::CameraModelD3WithHlhsr(i),
-            Ap242StyledItemItemRef::CartesianPoint(i) => StyledItemTargetOrRepresentationItemRef::CartesianPoint(i),
-            Ap242StyledItemItemRef::CharacterizedRepresentation(i) => StyledItemTargetOrRepresentationItemRef::CharacterizedRepresentation(i),
+            Ap242StyledItemItemRef::AdvancedFace(i) => {
+                StyledItemTargetOrRepresentationItemRef::AdvancedFace(i)
+            }
+            Ap242StyledItemItemRef::AnnotationText(i) => {
+                StyledItemTargetOrRepresentationItemRef::AnnotationText(i)
+            }
+            Ap242StyledItemItemRef::AnnotationTextCharacter(i) => {
+                StyledItemTargetOrRepresentationItemRef::AnnotationTextCharacter(i)
+            }
+            Ap242StyledItemItemRef::Axis1Placement(i) => {
+                StyledItemTargetOrRepresentationItemRef::Axis1Placement(i)
+            }
+            Ap242StyledItemItemRef::Axis2Placement2d(i) => {
+                StyledItemTargetOrRepresentationItemRef::Axis2Placement2d(i)
+            }
+            Ap242StyledItemItemRef::Axis2Placement3d(i) => {
+                StyledItemTargetOrRepresentationItemRef::Axis2Placement3d(i)
+            }
+            Ap242StyledItemItemRef::BSplineCurve(i) => {
+                StyledItemTargetOrRepresentationItemRef::BSplineCurve(i)
+            }
+            Ap242StyledItemItemRef::BSplineCurveWithKnots(i) => {
+                StyledItemTargetOrRepresentationItemRef::BSplineCurveWithKnots(i)
+            }
+            Ap242StyledItemItemRef::BSplineSurface(i) => {
+                StyledItemTargetOrRepresentationItemRef::BSplineSurface(i)
+            }
+            Ap242StyledItemItemRef::BSplineSurfaceWithKnots(i) => {
+                StyledItemTargetOrRepresentationItemRef::BSplineSurfaceWithKnots(i)
+            }
+            Ap242StyledItemItemRef::BezierCurve(i) => {
+                StyledItemTargetOrRepresentationItemRef::BezierCurve(i)
+            }
+            Ap242StyledItemItemRef::BezierSurface(i) => {
+                StyledItemTargetOrRepresentationItemRef::BezierSurface(i)
+            }
+            Ap242StyledItemItemRef::BoundedCurve(i) => {
+                StyledItemTargetOrRepresentationItemRef::BoundedCurve(i)
+            }
+            Ap242StyledItemItemRef::BoundedPcurve(i) => {
+                StyledItemTargetOrRepresentationItemRef::BoundedPcurve(i)
+            }
+            Ap242StyledItemItemRef::BoundedSurface(i) => {
+                StyledItemTargetOrRepresentationItemRef::BoundedSurface(i)
+            }
+            Ap242StyledItemItemRef::BoundedSurfaceCurve(i) => {
+                StyledItemTargetOrRepresentationItemRef::BoundedSurfaceCurve(i)
+            }
+            Ap242StyledItemItemRef::BrepWithVoids(i) => {
+                StyledItemTargetOrRepresentationItemRef::BrepWithVoids(i)
+            }
+            Ap242StyledItemItemRef::CameraImage(i) => {
+                StyledItemTargetOrRepresentationItemRef::CameraImage(i)
+            }
+            Ap242StyledItemItemRef::CameraImage3dWithScale(i) => {
+                StyledItemTargetOrRepresentationItemRef::CameraImage3dWithScale(i)
+            }
+            Ap242StyledItemItemRef::CameraModel(i) => {
+                StyledItemTargetOrRepresentationItemRef::CameraModel(i)
+            }
+            Ap242StyledItemItemRef::CameraModelD3(i) => {
+                StyledItemTargetOrRepresentationItemRef::CameraModelD3(i)
+            }
+            Ap242StyledItemItemRef::CameraModelD3MultiClipping(i) => {
+                StyledItemTargetOrRepresentationItemRef::CameraModelD3MultiClipping(i)
+            }
+            Ap242StyledItemItemRef::CameraModelD3WithHlhsr(i) => {
+                StyledItemTargetOrRepresentationItemRef::CameraModelD3WithHlhsr(i)
+            }
+            Ap242StyledItemItemRef::CartesianPoint(i) => {
+                StyledItemTargetOrRepresentationItemRef::CartesianPoint(i)
+            }
             Ap242StyledItemItemRef::Circle(i) => StyledItemTargetOrRepresentationItemRef::Circle(i),
-            Ap242StyledItemItemRef::ClosedShell(i) => StyledItemTargetOrRepresentationItemRef::ClosedShell(i),
-            Ap242StyledItemItemRef::ComplexTriangulatedFace(i) => StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedFace(i),
-            Ap242StyledItemItemRef::ComplexTriangulatedSurfaceSet(i) => StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedSurfaceSet(i),
-            Ap242StyledItemItemRef::CompositeCurve(i) => StyledItemTargetOrRepresentationItemRef::CompositeCurve(i),
-            Ap242StyledItemItemRef::CompositeText(i) => StyledItemTargetOrRepresentationItemRef::CompositeText(i),
+            Ap242StyledItemItemRef::ComplexTriangulatedFace(i) => {
+                StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedFace(i)
+            }
+            Ap242StyledItemItemRef::ComplexTriangulatedSurfaceSet(i) => {
+                StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedSurfaceSet(i)
+            }
+            Ap242StyledItemItemRef::CompositeCurve(i) => {
+                StyledItemTargetOrRepresentationItemRef::CompositeCurve(i)
+            }
+            Ap242StyledItemItemRef::CompositeText(i) => {
+                StyledItemTargetOrRepresentationItemRef::CompositeText(i)
+            }
             Ap242StyledItemItemRef::Conic(i) => StyledItemTargetOrRepresentationItemRef::Conic(i),
-            Ap242StyledItemItemRef::ConicalSurface(i) => StyledItemTargetOrRepresentationItemRef::ConicalSurface(i),
-            Ap242StyledItemItemRef::ConnectedFaceSet(i) => StyledItemTargetOrRepresentationItemRef::ConnectedFaceSet(i),
-            Ap242StyledItemItemRef::ConstructiveGeometryRepresentation(i) => StyledItemTargetOrRepresentationItemRef::ConstructiveGeometryRepresentation(i),
-            Ap242StyledItemItemRef::CoordinatesList(i) => StyledItemTargetOrRepresentationItemRef::CoordinatesList(i),
+            Ap242StyledItemItemRef::ConicalSurface(i) => {
+                StyledItemTargetOrRepresentationItemRef::ConicalSurface(i)
+            }
+            Ap242StyledItemItemRef::CoordinatesList(i) => {
+                StyledItemTargetOrRepresentationItemRef::CoordinatesList(i)
+            }
             Ap242StyledItemItemRef::Curve(i) => StyledItemTargetOrRepresentationItemRef::Curve(i),
-            Ap242StyledItemItemRef::CylindricalSurface(i) => StyledItemTargetOrRepresentationItemRef::CylindricalSurface(i),
-            Ap242StyledItemItemRef::DefinedCharacterGlyph(i) => StyledItemTargetOrRepresentationItemRef::DefinedCharacterGlyph(i),
-            Ap242StyledItemItemRef::DefinedSymbol(i) => StyledItemTargetOrRepresentationItemRef::DefinedSymbol(i),
-            Ap242StyledItemItemRef::DefinitionalRepresentation(i) => StyledItemTargetOrRepresentationItemRef::DefinitionalRepresentation(i),
-            Ap242StyledItemItemRef::DegenerateToroidalSurface(i) => StyledItemTargetOrRepresentationItemRef::DegenerateToroidalSurface(i),
-            Ap242StyledItemItemRef::Direction(i) => StyledItemTargetOrRepresentationItemRef::Direction(i),
-            Ap242StyledItemItemRef::DraughtingCallout(i) => StyledItemTargetOrRepresentationItemRef::DraughtingCallout(i),
-            Ap242StyledItemItemRef::DraughtingModel(i) => StyledItemTargetOrRepresentationItemRef::DraughtingModel(i),
-            Ap242StyledItemItemRef::Edge(i) => StyledItemTargetOrRepresentationItemRef::Edge(i),
-            Ap242StyledItemItemRef::EdgeCurve(i) => StyledItemTargetOrRepresentationItemRef::EdgeCurve(i),
-            Ap242StyledItemItemRef::EdgeLoop(i) => StyledItemTargetOrRepresentationItemRef::EdgeLoop(i),
-            Ap242StyledItemItemRef::ElementarySurface(i) => StyledItemTargetOrRepresentationItemRef::ElementarySurface(i),
-            Ap242StyledItemItemRef::Ellipse(i) => StyledItemTargetOrRepresentationItemRef::Ellipse(i),
-            Ap242StyledItemItemRef::ExternallyDefinedHatchStyle(i) => StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(i),
-            Ap242StyledItemItemRef::ExternallyDefinedTileStyle(i) => StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(i),
-            Ap242StyledItemItemRef::Face(i) => StyledItemTargetOrRepresentationItemRef::Face(i),
-            Ap242StyledItemItemRef::FaceBound(i) => StyledItemTargetOrRepresentationItemRef::FaceBound(i),
-            Ap242StyledItemItemRef::FaceOuterBound(i) => StyledItemTargetOrRepresentationItemRef::FaceOuterBound(i),
-            Ap242StyledItemItemRef::FaceSurface(i) => StyledItemTargetOrRepresentationItemRef::FaceSurface(i),
-            Ap242StyledItemItemRef::FillAreaStyleHatching(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleHatching(i),
-            Ap242StyledItemItemRef::FillAreaStyleTileColouredRegion(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileColouredRegion(i),
-            Ap242StyledItemItemRef::FillAreaStyleTileCurveWithStyle(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileCurveWithStyle(i),
-            Ap242StyledItemItemRef::FillAreaStyleTileSymbolWithStyle(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileSymbolWithStyle(i),
-            Ap242StyledItemItemRef::FillAreaStyleTiles(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleTiles(i),
-            Ap242StyledItemItemRef::GeometricCurveSet(i) => StyledItemTargetOrRepresentationItemRef::GeometricCurveSet(i),
-            Ap242StyledItemItemRef::GeometricRepresentationItem(i) => StyledItemTargetOrRepresentationItemRef::GeometricRepresentationItem(i),
-            Ap242StyledItemItemRef::GeometricSet(i) => StyledItemTargetOrRepresentationItemRef::GeometricSet(i),
-            Ap242StyledItemItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i),
-            Ap242StyledItemItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedWireframeShapeRepresentation(i),
-            Ap242StyledItemItemRef::Hyperbola(i) => StyledItemTargetOrRepresentationItemRef::Hyperbola(i),
-            Ap242StyledItemItemRef::IntersectionCurve(i) => StyledItemTargetOrRepresentationItemRef::IntersectionCurve(i),
-            Ap242StyledItemItemRef::LeaderDirectedCallout(i) => StyledItemTargetOrRepresentationItemRef::LeaderDirectedCallout(i),
+            Ap242StyledItemItemRef::CylindricalSurface(i) => {
+                StyledItemTargetOrRepresentationItemRef::CylindricalSurface(i)
+            }
+            Ap242StyledItemItemRef::DefinedCharacterGlyph(i) => {
+                StyledItemTargetOrRepresentationItemRef::DefinedCharacterGlyph(i)
+            }
+            Ap242StyledItemItemRef::DefinedSymbol(i) => {
+                StyledItemTargetOrRepresentationItemRef::DefinedSymbol(i)
+            }
+            Ap242StyledItemItemRef::DegenerateToroidalSurface(i) => {
+                StyledItemTargetOrRepresentationItemRef::DegenerateToroidalSurface(i)
+            }
+            Ap242StyledItemItemRef::Direction(i) => {
+                StyledItemTargetOrRepresentationItemRef::Direction(i)
+            }
+            Ap242StyledItemItemRef::DraughtingCallout(i) => {
+                StyledItemTargetOrRepresentationItemRef::DraughtingCallout(i)
+            }
+            Ap242StyledItemItemRef::EdgeCurve(i) => {
+                StyledItemTargetOrRepresentationItemRef::EdgeCurve(i)
+            }
+            Ap242StyledItemItemRef::ElementarySurface(i) => {
+                StyledItemTargetOrRepresentationItemRef::ElementarySurface(i)
+            }
+            Ap242StyledItemItemRef::Ellipse(i) => {
+                StyledItemTargetOrRepresentationItemRef::Ellipse(i)
+            }
+            Ap242StyledItemItemRef::ExternallyDefinedHatchStyle(i) => {
+                StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(i)
+            }
+            Ap242StyledItemItemRef::ExternallyDefinedTileStyle(i) => {
+                StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(i)
+            }
+            Ap242StyledItemItemRef::FaceSurface(i) => {
+                StyledItemTargetOrRepresentationItemRef::FaceSurface(i)
+            }
+            Ap242StyledItemItemRef::FillAreaStyleHatching(i) => {
+                StyledItemTargetOrRepresentationItemRef::FillAreaStyleHatching(i)
+            }
+            Ap242StyledItemItemRef::FillAreaStyleTileColouredRegion(i) => {
+                StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileColouredRegion(i)
+            }
+            Ap242StyledItemItemRef::FillAreaStyleTileCurveWithStyle(i) => {
+                StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileCurveWithStyle(i)
+            }
+            Ap242StyledItemItemRef::FillAreaStyleTileSymbolWithStyle(i) => {
+                StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileSymbolWithStyle(i)
+            }
+            Ap242StyledItemItemRef::FillAreaStyleTiles(i) => {
+                StyledItemTargetOrRepresentationItemRef::FillAreaStyleTiles(i)
+            }
+            Ap242StyledItemItemRef::GeometricCurveSet(i) => {
+                StyledItemTargetOrRepresentationItemRef::GeometricCurveSet(i)
+            }
+            Ap242StyledItemItemRef::GeometricRepresentationItem(i) => {
+                StyledItemTargetOrRepresentationItemRef::GeometricRepresentationItem(i)
+            }
+            Ap242StyledItemItemRef::GeometricSet(i) => {
+                StyledItemTargetOrRepresentationItemRef::GeometricSet(i)
+            }
+            Ap242StyledItemItemRef::Hyperbola(i) => {
+                StyledItemTargetOrRepresentationItemRef::Hyperbola(i)
+            }
+            Ap242StyledItemItemRef::IntersectionCurve(i) => {
+                StyledItemTargetOrRepresentationItemRef::IntersectionCurve(i)
+            }
+            Ap242StyledItemItemRef::LeaderDirectedCallout(i) => {
+                StyledItemTargetOrRepresentationItemRef::LeaderDirectedCallout(i)
+            }
             Ap242StyledItemItemRef::Line(i) => StyledItemTargetOrRepresentationItemRef::Line(i),
-            Ap242StyledItemItemRef::Loop(i) => StyledItemTargetOrRepresentationItemRef::Loop(i),
-            Ap242StyledItemItemRef::ManifoldSolidBrep(i) => StyledItemTargetOrRepresentationItemRef::ManifoldSolidBrep(i),
-            Ap242StyledItemItemRef::ManifoldSurfaceShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::ManifoldSurfaceShapeRepresentation(i),
-            Ap242StyledItemItemRef::MappedItem(i) => StyledItemTargetOrRepresentationItemRef::MappedItem(i),
-            Ap242StyledItemItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => StyledItemTargetOrRepresentationItemRef::MechanicalDesignGeometricPresentationRepresentation(i),
-            Ap242StyledItemItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => StyledItemTargetOrRepresentationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i),
-            Ap242StyledItemItemRef::MechanicalDesignShadedPresentationRepresentation(i) => StyledItemTargetOrRepresentationItemRef::MechanicalDesignShadedPresentationRepresentation(i),
-            Ap242StyledItemItemRef::OffsetSurface(i) => StyledItemTargetOrRepresentationItemRef::OffsetSurface(i),
-            Ap242StyledItemItemRef::OneDirectionRepeatFactor(i) => StyledItemTargetOrRepresentationItemRef::OneDirectionRepeatFactor(i),
-            Ap242StyledItemItemRef::OpenShell(i) => StyledItemTargetOrRepresentationItemRef::OpenShell(i),
-            Ap242StyledItemItemRef::OrientedClosedShell(i) => StyledItemTargetOrRepresentationItemRef::OrientedClosedShell(i),
-            Ap242StyledItemItemRef::OrientedEdge(i) => StyledItemTargetOrRepresentationItemRef::OrientedEdge(i),
-            Ap242StyledItemItemRef::Parabola(i) => StyledItemTargetOrRepresentationItemRef::Parabola(i),
-            Ap242StyledItemItemRef::Path(i) => StyledItemTargetOrRepresentationItemRef::Path(i),
+            Ap242StyledItemItemRef::ManifoldSolidBrep(i) => {
+                StyledItemTargetOrRepresentationItemRef::ManifoldSolidBrep(i)
+            }
+            Ap242StyledItemItemRef::MappedItem(i) => {
+                StyledItemTargetOrRepresentationItemRef::MappedItem(i)
+            }
+            Ap242StyledItemItemRef::OffsetSurface(i) => {
+                StyledItemTargetOrRepresentationItemRef::OffsetSurface(i)
+            }
+            Ap242StyledItemItemRef::OneDirectionRepeatFactor(i) => {
+                StyledItemTargetOrRepresentationItemRef::OneDirectionRepeatFactor(i)
+            }
+            Ap242StyledItemItemRef::Parabola(i) => {
+                StyledItemTargetOrRepresentationItemRef::Parabola(i)
+            }
             Ap242StyledItemItemRef::Pcurve(i) => StyledItemTargetOrRepresentationItemRef::Pcurve(i),
-            Ap242StyledItemItemRef::Placement(i) => StyledItemTargetOrRepresentationItemRef::Placement(i),
-            Ap242StyledItemItemRef::PlanarBox(i) => StyledItemTargetOrRepresentationItemRef::PlanarBox(i),
-            Ap242StyledItemItemRef::PlanarExtent(i) => StyledItemTargetOrRepresentationItemRef::PlanarExtent(i),
+            Ap242StyledItemItemRef::Placement(i) => {
+                StyledItemTargetOrRepresentationItemRef::Placement(i)
+            }
+            Ap242StyledItemItemRef::PlanarBox(i) => {
+                StyledItemTargetOrRepresentationItemRef::PlanarBox(i)
+            }
+            Ap242StyledItemItemRef::PlanarExtent(i) => {
+                StyledItemTargetOrRepresentationItemRef::PlanarExtent(i)
+            }
             Ap242StyledItemItemRef::Plane(i) => StyledItemTargetOrRepresentationItemRef::Plane(i),
             Ap242StyledItemItemRef::Point(i) => StyledItemTargetOrRepresentationItemRef::Point(i),
-            Ap242StyledItemItemRef::PolyLoop(i) => StyledItemTargetOrRepresentationItemRef::PolyLoop(i),
-            Ap242StyledItemItemRef::Polyline(i) => StyledItemTargetOrRepresentationItemRef::Polyline(i),
-            Ap242StyledItemItemRef::PresentationArea(i) => StyledItemTargetOrRepresentationItemRef::PresentationArea(i),
-            Ap242StyledItemItemRef::PresentationRepresentation(i) => StyledItemTargetOrRepresentationItemRef::PresentationRepresentation(i),
-            Ap242StyledItemItemRef::PresentationView(i) => StyledItemTargetOrRepresentationItemRef::PresentationView(i),
-            Ap242StyledItemItemRef::QuasiUniformCurve(i) => StyledItemTargetOrRepresentationItemRef::QuasiUniformCurve(i),
-            Ap242StyledItemItemRef::QuasiUniformSurface(i) => StyledItemTargetOrRepresentationItemRef::QuasiUniformSurface(i),
-            Ap242StyledItemItemRef::RationalBSplineCurve(i) => StyledItemTargetOrRepresentationItemRef::RationalBSplineCurve(i),
-            Ap242StyledItemItemRef::RationalBSplineSurface(i) => StyledItemTargetOrRepresentationItemRef::RationalBSplineSurface(i),
-            Ap242StyledItemItemRef::RepositionedTessellatedItem(i) => StyledItemTargetOrRepresentationItemRef::RepositionedTessellatedItem(i),
-            Ap242StyledItemItemRef::Representation(i) => StyledItemTargetOrRepresentationItemRef::Representation(i),
-            Ap242StyledItemItemRef::RepresentationReference(i) => StyledItemTargetOrRepresentationItemRef::RepresentationReference(i),
-            Ap242StyledItemItemRef::SeamCurve(i) => StyledItemTargetOrRepresentationItemRef::SeamCurve(i),
-            Ap242StyledItemItemRef::ShapeDimensionRepresentation(i) => StyledItemTargetOrRepresentationItemRef::ShapeDimensionRepresentation(i),
-            Ap242StyledItemItemRef::ShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::ShapeRepresentation(i),
-            Ap242StyledItemItemRef::ShapeRepresentationWithParameters(i) => StyledItemTargetOrRepresentationItemRef::ShapeRepresentationWithParameters(i),
-            Ap242StyledItemItemRef::ShellBasedSurfaceModel(i) => StyledItemTargetOrRepresentationItemRef::ShellBasedSurfaceModel(i),
-            Ap242StyledItemItemRef::SolidModel(i) => StyledItemTargetOrRepresentationItemRef::SolidModel(i),
-            Ap242StyledItemItemRef::SphericalSurface(i) => StyledItemTargetOrRepresentationItemRef::SphericalSurface(i),
-            Ap242StyledItemItemRef::Surface(i) => StyledItemTargetOrRepresentationItemRef::Surface(i),
-            Ap242StyledItemItemRef::SurfaceCurve(i) => StyledItemTargetOrRepresentationItemRef::SurfaceCurve(i),
-            Ap242StyledItemItemRef::SurfaceOfLinearExtrusion(i) => StyledItemTargetOrRepresentationItemRef::SurfaceOfLinearExtrusion(i),
-            Ap242StyledItemItemRef::SurfaceOfRevolution(i) => StyledItemTargetOrRepresentationItemRef::SurfaceOfRevolution(i),
-            Ap242StyledItemItemRef::SweptSurface(i) => StyledItemTargetOrRepresentationItemRef::SweptSurface(i),
-            Ap242StyledItemItemRef::SymbolRepresentation(i) => StyledItemTargetOrRepresentationItemRef::SymbolRepresentation(i),
-            Ap242StyledItemItemRef::SymbolTarget(i) => StyledItemTargetOrRepresentationItemRef::SymbolTarget(i),
-            Ap242StyledItemItemRef::TessellatedCurveSet(i) => StyledItemTargetOrRepresentationItemRef::TessellatedCurveSet(i),
-            Ap242StyledItemItemRef::TessellatedFace(i) => StyledItemTargetOrRepresentationItemRef::TessellatedFace(i),
-            Ap242StyledItemItemRef::TessellatedGeometricSet(i) => StyledItemTargetOrRepresentationItemRef::TessellatedGeometricSet(i),
-            Ap242StyledItemItemRef::TessellatedItem(i) => StyledItemTargetOrRepresentationItemRef::TessellatedItem(i),
-            Ap242StyledItemItemRef::TessellatedShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::TessellatedShapeRepresentation(i),
-            Ap242StyledItemItemRef::TessellatedShell(i) => StyledItemTargetOrRepresentationItemRef::TessellatedShell(i),
-            Ap242StyledItemItemRef::TessellatedSolid(i) => StyledItemTargetOrRepresentationItemRef::TessellatedSolid(i),
-            Ap242StyledItemItemRef::TessellatedStructuredItem(i) => StyledItemTargetOrRepresentationItemRef::TessellatedStructuredItem(i),
-            Ap242StyledItemItemRef::TessellatedSurfaceSet(i) => StyledItemTargetOrRepresentationItemRef::TessellatedSurfaceSet(i),
-            Ap242StyledItemItemRef::TextLiteral(i) => StyledItemTargetOrRepresentationItemRef::TextLiteral(i),
-            Ap242StyledItemItemRef::TopologicalRepresentationItem(i) => StyledItemTargetOrRepresentationItemRef::TopologicalRepresentationItem(i),
-            Ap242StyledItemItemRef::ToroidalSurface(i) => StyledItemTargetOrRepresentationItemRef::ToroidalSurface(i),
-            Ap242StyledItemItemRef::TrimmedCurve(i) => StyledItemTargetOrRepresentationItemRef::TrimmedCurve(i),
-            Ap242StyledItemItemRef::TwoDirectionRepeatFactor(i) => StyledItemTargetOrRepresentationItemRef::TwoDirectionRepeatFactor(i),
-            Ap242StyledItemItemRef::UniformCurve(i) => StyledItemTargetOrRepresentationItemRef::UniformCurve(i),
-            Ap242StyledItemItemRef::UniformSurface(i) => StyledItemTargetOrRepresentationItemRef::UniformSurface(i),
+            Ap242StyledItemItemRef::PolyLoop(i) => {
+                StyledItemTargetOrRepresentationItemRef::PolyLoop(i)
+            }
+            Ap242StyledItemItemRef::Polyline(i) => {
+                StyledItemTargetOrRepresentationItemRef::Polyline(i)
+            }
+            Ap242StyledItemItemRef::QuasiUniformCurve(i) => {
+                StyledItemTargetOrRepresentationItemRef::QuasiUniformCurve(i)
+            }
+            Ap242StyledItemItemRef::QuasiUniformSurface(i) => {
+                StyledItemTargetOrRepresentationItemRef::QuasiUniformSurface(i)
+            }
+            Ap242StyledItemItemRef::RationalBSplineCurve(i) => {
+                StyledItemTargetOrRepresentationItemRef::RationalBSplineCurve(i)
+            }
+            Ap242StyledItemItemRef::RationalBSplineSurface(i) => {
+                StyledItemTargetOrRepresentationItemRef::RationalBSplineSurface(i)
+            }
+            Ap242StyledItemItemRef::RepositionedTessellatedItem(i) => {
+                StyledItemTargetOrRepresentationItemRef::RepositionedTessellatedItem(i)
+            }
+            Ap242StyledItemItemRef::SeamCurve(i) => {
+                StyledItemTargetOrRepresentationItemRef::SeamCurve(i)
+            }
+            Ap242StyledItemItemRef::ShellBasedSurfaceModel(i) => {
+                StyledItemTargetOrRepresentationItemRef::ShellBasedSurfaceModel(i)
+            }
+            Ap242StyledItemItemRef::SolidModel(i) => {
+                StyledItemTargetOrRepresentationItemRef::SolidModel(i)
+            }
+            Ap242StyledItemItemRef::SphericalSurface(i) => {
+                StyledItemTargetOrRepresentationItemRef::SphericalSurface(i)
+            }
+            Ap242StyledItemItemRef::Surface(i) => {
+                StyledItemTargetOrRepresentationItemRef::Surface(i)
+            }
+            Ap242StyledItemItemRef::SurfaceCurve(i) => {
+                StyledItemTargetOrRepresentationItemRef::SurfaceCurve(i)
+            }
+            Ap242StyledItemItemRef::SurfaceOfLinearExtrusion(i) => {
+                StyledItemTargetOrRepresentationItemRef::SurfaceOfLinearExtrusion(i)
+            }
+            Ap242StyledItemItemRef::SurfaceOfRevolution(i) => {
+                StyledItemTargetOrRepresentationItemRef::SurfaceOfRevolution(i)
+            }
+            Ap242StyledItemItemRef::SweptSurface(i) => {
+                StyledItemTargetOrRepresentationItemRef::SweptSurface(i)
+            }
+            Ap242StyledItemItemRef::SymbolTarget(i) => {
+                StyledItemTargetOrRepresentationItemRef::SymbolTarget(i)
+            }
+            Ap242StyledItemItemRef::TessellatedCurveSet(i) => {
+                StyledItemTargetOrRepresentationItemRef::TessellatedCurveSet(i)
+            }
+            Ap242StyledItemItemRef::TessellatedFace(i) => {
+                StyledItemTargetOrRepresentationItemRef::TessellatedFace(i)
+            }
+            Ap242StyledItemItemRef::TessellatedGeometricSet(i) => {
+                StyledItemTargetOrRepresentationItemRef::TessellatedGeometricSet(i)
+            }
+            Ap242StyledItemItemRef::TessellatedItem(i) => {
+                StyledItemTargetOrRepresentationItemRef::TessellatedItem(i)
+            }
+            Ap242StyledItemItemRef::TessellatedShell(i) => {
+                StyledItemTargetOrRepresentationItemRef::TessellatedShell(i)
+            }
+            Ap242StyledItemItemRef::TessellatedSolid(i) => {
+                StyledItemTargetOrRepresentationItemRef::TessellatedSolid(i)
+            }
+            Ap242StyledItemItemRef::TessellatedStructuredItem(i) => {
+                StyledItemTargetOrRepresentationItemRef::TessellatedStructuredItem(i)
+            }
+            Ap242StyledItemItemRef::TessellatedSurfaceSet(i) => {
+                StyledItemTargetOrRepresentationItemRef::TessellatedSurfaceSet(i)
+            }
+            Ap242StyledItemItemRef::TextLiteral(i) => {
+                StyledItemTargetOrRepresentationItemRef::TextLiteral(i)
+            }
+            Ap242StyledItemItemRef::ToroidalSurface(i) => {
+                StyledItemTargetOrRepresentationItemRef::ToroidalSurface(i)
+            }
+            Ap242StyledItemItemRef::TrimmedCurve(i) => {
+                StyledItemTargetOrRepresentationItemRef::TrimmedCurve(i)
+            }
+            Ap242StyledItemItemRef::TwoDirectionRepeatFactor(i) => {
+                StyledItemTargetOrRepresentationItemRef::TwoDirectionRepeatFactor(i)
+            }
+            Ap242StyledItemItemRef::UniformCurve(i) => {
+                StyledItemTargetOrRepresentationItemRef::UniformCurve(i)
+            }
+            Ap242StyledItemItemRef::UniformSurface(i) => {
+                StyledItemTargetOrRepresentationItemRef::UniformSurface(i)
+            }
             Ap242StyledItemItemRef::Vector(i) => StyledItemTargetOrRepresentationItemRef::Vector(i),
-            Ap242StyledItemItemRef::Vertex(i) => StyledItemTargetOrRepresentationItemRef::Vertex(i),
-            Ap242StyledItemItemRef::VertexLoop(i) => StyledItemTargetOrRepresentationItemRef::VertexLoop(i),
-            Ap242StyledItemItemRef::VertexPoint(i) => StyledItemTargetOrRepresentationItemRef::VertexPoint(i),
-            Ap242StyledItemItemRef::VertexShell(i) => StyledItemTargetOrRepresentationItemRef::VertexShell(i),
-            Ap242StyledItemItemRef::WireShell(i) => StyledItemTargetOrRepresentationItemRef::WireShell(i),
-            Ap242StyledItemItemRef::Complex(i) => StyledItemTargetOrRepresentationItemRef::Complex(i),
+            Ap242StyledItemItemRef::VertexPoint(i) => {
+                StyledItemTargetOrRepresentationItemRef::VertexPoint(i)
+            }
+            Ap242StyledItemItemRef::Complex(i) => {
+                StyledItemTargetOrRepresentationItemRef::Complex(i)
+            }
         }
     }
 }

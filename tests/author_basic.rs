@@ -1225,3 +1225,142 @@ fn exactly_one_of_several_types_counts_every_part() {
         "{err:?}"
     );
 }
+
+/// `STYLED_ITEM.WR3`, a `WHERE` rule by the instance's own type: only a
+/// context-dependent over-riding styled item may style a topological item. A
+/// complex instance's type is its parts.
+#[test]
+fn a_where_rule_lifted_by_the_instances_type_is_checked() {
+    let mut a = Ap242Author::new();
+    let name = a.text("");
+    let style = a
+        .add_presentation_style_assignment(vec![m::PresentationStyleSelectRef::NullStyle(
+            m::NullStyle::Null,
+        )])
+        .expect("style");
+    let styles = vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)];
+    let point = a
+        .add_cartesian_point("", [0.0, 0.0, 0.0].into())
+        .expect("point");
+    let overridden = a
+        .add_styled_item(
+            "",
+            styles.clone(),
+            m::Ap242StyledItemItemRef::CartesianPoint(point),
+        )
+        .expect("styled item");
+    let vertex = a.add_vertex("").expect("vertex");
+    let context = vec![m::StyleContextSelectRef::CartesianPoint(point)];
+    a.add_context_dependent_over_riding_styled_item(
+        "",
+        styles.clone(),
+        m::Ap242ContextDependentOverRidingStyledItemItemRef::Vertex(vertex),
+        m::StyledItemRef::StyledItem(overridden),
+        context.clone(),
+    )
+    .expect("a context-dependent over-riding styled item may style a vertex");
+
+    let over_riding = |context: Option<Vec<m::StyleContextSelectRef>>| {
+        let mut parts: Vec<m::PartialEntity> = context
+            .into_iter()
+            .map(
+                |style_context| m::PartialEntity::ContextDependentOverRidingStyledItem {
+                    style_context,
+                },
+            )
+            .collect();
+        parts.extend([
+            m::PartialEntity::OverRidingStyledItem {
+                over_ridden_style: m::StyledItemRef::StyledItem(overridden),
+            },
+            m::PartialEntity::RepresentationItem { name },
+            m::PartialEntity::StyledItem {
+                styles: styles.clone(),
+                item: m::StyledItemTargetOrRepresentationItemRef::Vertex(vertex),
+            },
+        ]);
+        parts
+    };
+    let err = a.add_complex(over_riding(None)).unwrap_err();
+    assert!(
+        matches!(
+            err,
+            AuthorError::NarrowedReference {
+                entity: "STYLED_ITEM",
+                attribute: "item"
+            }
+        ),
+        "{err:?}"
+    );
+    a.add_complex(over_riding(Some(context)))
+        .expect("with a context-dependent part, a vertex may be styled");
+}
+
+/// `DRAUGHTING_ANNOTATION_OCCURRENCE.WR7` holds one that is also an annotation
+/// text occurrence, which only a complex instance is, to a composite text or
+/// text literal.
+#[test]
+fn a_where_rule_for_one_instance_type_is_checked_in_a_complex() {
+    let mut a = Ap242Author::new();
+    let name = a.text("");
+    let style = a
+        .add_presentation_style_assignment(vec![m::PresentationStyleSelectRef::NullStyle(
+            m::NullStyle::Null,
+        )])
+        .expect("style");
+    let styles = vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)];
+    let font = a
+        .add_draughting_pre_defined_text_font("ISO 3098")
+        .expect("font");
+    let at = placement(&mut a);
+    let text = a
+        .add_text_literal(
+            "",
+            "A",
+            at.clone(),
+            "baseline left",
+            m::TextPath::Right,
+            m::FontSelectRef::DraughtingPreDefinedTextFont(font),
+        )
+        .expect("text");
+    let glyph = a.add_pre_defined_character_glyph("a").expect("glyph");
+    let glyph = a
+        .add_defined_character_glyph(
+            "",
+            m::DefinedGlyphSelectRef::PreDefinedCharacterGlyph(glyph),
+            at,
+        )
+        .expect("glyph");
+    let text_occurrence = |item| {
+        vec![
+            m::PartialEntity::AnnotationOccurrence,
+            m::PartialEntity::AnnotationTextOccurrence,
+            m::PartialEntity::DraughtingAnnotationOccurrence,
+            m::PartialEntity::GeometricRepresentationItem,
+            m::PartialEntity::RepresentationItem { name },
+            m::PartialEntity::StyledItem {
+                styles: styles.clone(),
+                item,
+            },
+        ]
+    };
+    let err = a
+        .add_complex(text_occurrence(
+            m::StyledItemTargetOrRepresentationItemRef::DefinedCharacterGlyph(glyph),
+        ))
+        .unwrap_err();
+    assert!(
+        matches!(
+            err,
+            AuthorError::NarrowedReference {
+                entity: "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                attribute: "item"
+            }
+        ),
+        "{err:?}"
+    );
+    a.add_complex(text_occurrence(
+        m::StyledItemTargetOrRepresentationItemRef::TextLiteral(text),
+    ))
+    .expect("a draughting text occurrence of a text literal");
+}

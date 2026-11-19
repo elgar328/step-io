@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `add_over_riding_styled_item_cyclic`,
   `add_context_dependent_over_riding_styled_item_cyclic`).
 - `Ap242ApprovedItemRef`, `Ap242ConstructiveGeometryRepresentationRef`,
+  `Ap242ContextDependentOverRidingStyledItemItemRef`,
   `Ap242DerivedShapeAspectRef`, `Ap242DraughtingModelItemSelectRef`,
   `Ap242GroupableItemRef`,
   `Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef`,
@@ -70,20 +71,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `Ap242ConstructiveGeometryRepresentationRef`
   - `add_cc_design_approval`: `items` takes `Ap242ApprovedItemRef`s
   - `add_applied_group_assignment`: `items` takes `Ap242GroupableItemRef`s
-  - `add_styled_item`, `add_over_riding_styled_item`,
-    `add_context_dependent_over_riding_styled_item`,
-    `add_annotation_occurrence` and `add_draughting_annotation_occurrence`:
-    `item` takes an `Ap242StyledItemItemRef`, which also leaves out styled
-    items (`STYLED_ITEM.WR2`)
+  - `add_context_dependent_over_riding_styled_item`: `item` takes an
+    `Ap242ContextDependentOverRidingStyledItemItemRef`, which also leaves out
+    styled items (`STYLED_ITEM.WR2`)
 - `Ap242Author` constructors also take a narrower reference type where an
-  AP242 edition 2 `WHERE` rule unconditionally limits which types an
-  attribute, or each of its elements, references
+  AP242 edition 2 `WHERE` rule limits which types an attribute, or each of
+  its elements, references
   (such as `'LENGTH_UNIT' IN TYPEOF(SELF\measure_with_unit.unit_component)`;
   not rules on one indexed element, on two attributes together or on a path
-  through another entity). A complex argument's parts count together: where
+  through another entity), for every instance or by the instance's own type
+  (`STYLED_ITEM.WR3`, which does not hold for a context-dependent over-riding
+  styled item). A complex argument's parts count together: where
   a rule excludes a type, one holding a part of that type, and where it asks
   for exactly one of several types, one whose parts are of more than one of
   them, is rejected on insertion with `AuthorError::NarrowedReference`:
+  - `add_styled_item`, `add_over_riding_styled_item`,
+    `add_annotation_occurrence` and `add_draughting_annotation_occurrence`:
+    `item` takes an `Ap242StyledItemItemRef`: a mapped item or a geometric
+    item that is not a styled item (`STYLED_ITEM.WR2`, `WR3`)
   - `add_length_measure_with_unit`, `add_mass_measure_with_unit`,
     `add_plane_angle_measure_with_unit` and `add_ratio_measure_with_unit`:
     `unit_component` takes the matching `Ap242…UnitRef`
@@ -121,7 +126,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     (`qualified_measure`) and `add_camera_usage` (`mapped_representation`):
     the matching `Ap242…Ref`
 - `add_complex` and the self-referencing constructors check the same
-  narrowings at run time, and `add_person_and_organization_address` takes
+  narrowings at run time (in `add_complex`, a rule by the instance's own type
+  by its parts: `STYLED_ITEM.WR3` where no part is a context-dependent
+  over-riding styled item, `DRAUGHTING_ANNOTATION_OCCURRENCE.WR7` — exactly
+  one composite text or text literal — where a part is an annotation text
+  occurrence), and `add_person_and_organization_address` takes
   exactly one organization and one person, as AP242 requires.
 - Attributes that every STEP edition narrows with a redeclaration
   (`SELF\supertype.attribute : narrower;`) now have the narrower type in the

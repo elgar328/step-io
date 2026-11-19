@@ -3736,10 +3736,32 @@ fn emit_complex_narrowings(
             .nth(c.idx)
             .expect("owner field");
         let check = narrowed_check(ir, &c.check, f, &ident, true, &by.name);
+        // A WHERE rule's condition on SELF's type: which parts it holds.
+        let held = |names: &std::collections::BTreeSet<String>| {
+            let arms = names
+                .iter()
+                .map(|n| {
+                    let p = ir.parts.iter().find(|p| &p.name == n).expect("part");
+                    format!("PartialEntity::{} {{ .. }}", p.rust)
+                })
+                .collect::<Vec<_>>()
+                .join(" | ");
+            format!("parts.iter().any(|p| matches!(p, {arms}))")
+        };
+        let mut cond = format!(
+            "parts.iter().any(|p| matches!(p, PartialEntity::{} {{ .. }}))",
+            c.by
+        );
+        for w in &c.when {
+            cond += &format!(" && {}", held(w));
+        }
+        if !c.unless.is_empty() {
+            cond += &format!(" && !{}", held(&c.unless));
+        }
         writeln!(
             s,
-            "    if parts.iter().any(|p| matches!(p, PartialEntity::{} {{ .. }})) {{\n        for p in parts {{\n            if let PartialEntity::{} {{ {ident}, .. }} = p {{\n{check}            }}\n        }}\n    }}",
-            c.by, c.owner
+            "    if {cond} {{\n        for p in parts {{\n            if let PartialEntity::{} {{ {ident}, .. }} = p {{\n{check}            }}\n        }}\n    }}",
+            c.owner
         )
         .unwrap();
     }
