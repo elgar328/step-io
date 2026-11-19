@@ -15603,6 +15603,55 @@ impl WorkItemRef {
     }
 }
 
+/// A reference to what AP242 edition 2 allows for `advanced_brep_shape_representation.items`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242AdvancedBrepShapeRepresentationItemsRef {
+    AnnotationText(AnnotationTextId),
+    AnnotationTextCharacter(AnnotationTextCharacterId),
+    Axis2Placement3d(Axis2Placement3dId),
+    BrepWithVoids(BrepWithVoidsId),
+    CameraImage(CameraImageId),
+    CameraImage3dWithScale(CameraImage3dWithScaleId),
+    ManifoldSolidBrep(ManifoldSolidBrepId),
+    MappedItem(MappedItemId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows for `advanced_face.face_geometry`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242AdvancedFaceFaceGeometryRef {
+    BSplineSurface(BSplineSurfaceId),
+    BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
+    BezierSurface(BezierSurfaceId),
+    ConicalSurface(ConicalSurfaceId),
+    CylindricalSurface(CylindricalSurfaceId),
+    DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
+    ElementarySurface(ElementarySurfaceId),
+    Plane(PlaneId),
+    QuasiUniformSurface(QuasiUniformSurfaceId),
+    RationalBSplineSurface(RationalBSplineSurfaceId),
+    SphericalSurface(SphericalSurfaceId),
+    SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId),
+    SurfaceOfRevolution(SurfaceOfRevolutionId),
+    SweptSurface(SweptSurfaceId),
+    ToroidalSurface(ToroidalSurfaceId),
+    UniformSurface(UniformSurfaceId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows for `annotation_occurrence_associativity.related_annotation_occurrence`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242AnnotationOccurrenceAssociativityRelatedAnnotationOccurrenceRef {
+    LeaderCurve(LeaderCurveId),
+    Complex(ComplexEntityId),
+}
+
 /// A reference to what AP242 edition 2 allows as `approved_item`, where the
 /// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
 /// takes it and stores it as the model's wider reference.
@@ -15618,6 +15667,147 @@ pub enum Ap242ApprovedItemRef {
     SecurityClassification(SecurityClassificationId),
     StartRequest(StartRequestId),
     StartWork(StartWorkId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows as `bounded_curve`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242BoundedCurveRef {
+    BSplineCurve(BSplineCurveId),
+    BSplineCurveWithKnots(BSplineCurveWithKnotsId),
+    BezierCurve(BezierCurveId),
+    BoundedCurve(BoundedCurveId),
+    BoundedPcurve(BoundedPcurveId),
+    BoundedSurfaceCurve(BoundedSurfaceCurveId),
+    CompositeCurve(CompositeCurveId),
+    Polyline(PolylineId),
+    QuasiUniformCurve(QuasiUniformCurveId),
+    RationalBSplineCurve(RationalBSplineCurveId),
+    TrimmedCurve(TrimmedCurveId),
+    UniformCurve(UniformCurveId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows for `bounded_surface_curve.curve_3d`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242BoundedSurfaceCurveCurve3dRef {
+    BSplineCurve(BSplineCurveId),
+    BSplineCurveWithKnots(BSplineCurveWithKnotsId),
+    BezierCurve(BezierCurveId),
+    BoundedCurve(BoundedCurveId),
+    BoundedSurfaceCurve(BoundedSurfaceCurveId),
+    CompositeCurve(CompositeCurveId),
+    Polyline(PolylineId),
+    QuasiUniformCurve(QuasiUniformCurveId),
+    RationalBSplineCurve(RationalBSplineCurveId),
+    TrimmedCurve(TrimmedCurveId),
+    UniformCurve(UniformCurveId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows for `camera_usage.mapped_representation`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242CameraUsageMappedRepresentationRef {
+    AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
+    CharacterizedRepresentation(CharacterizedRepresentationId),
+    ConstructiveGeometryRepresentation(ConstructiveGeometryRepresentationId),
+    DefinitionalRepresentation(DefinitionalRepresentationId),
+    DraughtingModel(DraughtingModelId),
+    GeometricallyBoundedSurfaceShapeRepresentation(
+        GeometricallyBoundedSurfaceShapeRepresentationId,
+    ),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        GeometricallyBoundedWireframeShapeRepresentationId,
+    ),
+    ManifoldSurfaceShapeRepresentation(ManifoldSurfaceShapeRepresentationId),
+    MechanicalDesignGeometricPresentationRepresentation(
+        MechanicalDesignGeometricPresentationRepresentationId,
+    ),
+    MechanicalDesignPresentationRepresentationWithDraughting(
+        MechanicalDesignPresentationRepresentationWithDraughtingId,
+    ),
+    MechanicalDesignShadedPresentationRepresentation(
+        MechanicalDesignShadedPresentationRepresentationId,
+    ),
+    Representation(RepresentationId),
+    ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
+    ShapeRepresentation(ShapeRepresentationId),
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParametersId),
+    SymbolRepresentation(SymbolRepresentationId),
+    TessellatedShapeRepresentation(TessellatedShapeRepresentationId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows for `constructive_geometry_representation.items`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242ConstructiveGeometryRepresentationItemsRef {
+    AdvancedFace(AdvancedFaceId),
+    Axis1Placement(Axis1PlacementId),
+    Axis2Placement2d(Axis2Placement2dId),
+    Axis2Placement3d(Axis2Placement3dId),
+    BSplineCurve(BSplineCurveId),
+    BSplineCurveWithKnots(BSplineCurveWithKnotsId),
+    BSplineSurface(BSplineSurfaceId),
+    BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
+    BezierCurve(BezierCurveId),
+    BezierSurface(BezierSurfaceId),
+    BoundedCurve(BoundedCurveId),
+    BoundedPcurve(BoundedPcurveId),
+    BoundedSurface(BoundedSurfaceId),
+    BoundedSurfaceCurve(BoundedSurfaceCurveId),
+    CartesianPoint(CartesianPointId),
+    Circle(CircleId),
+    ClosedShell(ClosedShellId),
+    CompositeCurve(CompositeCurveId),
+    Conic(ConicId),
+    ConicalSurface(ConicalSurfaceId),
+    ConnectedFaceSet(ConnectedFaceSetId),
+    Curve(CurveId),
+    CylindricalSurface(CylindricalSurfaceId),
+    DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
+    Edge(EdgeId),
+    EdgeCurve(EdgeCurveId),
+    ElementarySurface(ElementarySurfaceId),
+    Ellipse(EllipseId),
+    Face(FaceId),
+    FaceSurface(FaceSurfaceId),
+    Hyperbola(HyperbolaId),
+    IntersectionCurve(IntersectionCurveId),
+    Line(LineId),
+    OffsetSurface(OffsetSurfaceId),
+    OpenShell(OpenShellId),
+    OrientedClosedShell(OrientedClosedShellId),
+    OrientedEdge(OrientedEdgeId),
+    Parabola(ParabolaId),
+    Pcurve(PcurveId),
+    Placement(PlacementId),
+    Plane(PlaneId),
+    Point(PointId),
+    Polyline(PolylineId),
+    QuasiUniformCurve(QuasiUniformCurveId),
+    QuasiUniformSurface(QuasiUniformSurfaceId),
+    RationalBSplineCurve(RationalBSplineCurveId),
+    RationalBSplineSurface(RationalBSplineSurfaceId),
+    SeamCurve(SeamCurveId),
+    SphericalSurface(SphericalSurfaceId),
+    Surface(SurfaceId),
+    SurfaceCurve(SurfaceCurveId),
+    SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId),
+    SurfaceOfRevolution(SurfaceOfRevolutionId),
+    SweptSurface(SweptSurfaceId),
+    ToroidalSurface(ToroidalSurfaceId),
+    TrimmedCurve(TrimmedCurveId),
+    UniformCurve(UniformCurveId),
+    UniformSurface(UniformSurfaceId),
+    VertexPoint(VertexPointId),
     Complex(ComplexEntityId),
 }
 
@@ -15670,6 +15860,79 @@ pub enum Ap242DraughtingModelItemSelectRef {
     StyledItem(StyledItemId),
     TerminatorSymbol(TerminatorSymbolId),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrenceId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows for `geometric_curve_set.elements`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242GeometricCurveSetElementsRef {
+    BSplineCurve(BSplineCurveId),
+    BSplineCurveWithKnots(BSplineCurveWithKnotsId),
+    BezierCurve(BezierCurveId),
+    BoundedCurve(BoundedCurveId),
+    BoundedPcurve(BoundedPcurveId),
+    BoundedSurfaceCurve(BoundedSurfaceCurveId),
+    CartesianPoint(CartesianPointId),
+    Circle(CircleId),
+    CompositeCurve(CompositeCurveId),
+    Conic(ConicId),
+    Curve(CurveId),
+    Ellipse(EllipseId),
+    Hyperbola(HyperbolaId),
+    IntersectionCurve(IntersectionCurveId),
+    Line(LineId),
+    Parabola(ParabolaId),
+    Pcurve(PcurveId),
+    Point(PointId),
+    Polyline(PolylineId),
+    QuasiUniformCurve(QuasiUniformCurveId),
+    RationalBSplineCurve(RationalBSplineCurveId),
+    SeamCurve(SeamCurveId),
+    SurfaceCurve(SurfaceCurveId),
+    TrimmedCurve(TrimmedCurveId),
+    UniformCurve(UniformCurveId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows for `geometrically_bounded_surface_shape_representation.items`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef {
+    AnnotationText(AnnotationTextId),
+    AnnotationTextCharacter(AnnotationTextCharacterId),
+    Axis2Placement3d(Axis2Placement3dId),
+    CameraImage(CameraImageId),
+    CameraImage3dWithScale(CameraImage3dWithScaleId),
+    GeometricCurveSet(GeometricCurveSetId),
+    GeometricSet(GeometricSetId),
+    MappedItem(MappedItemId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows for `geometrically_bounded_wireframe_shape_representation.items`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef {
+    AnnotationText(AnnotationTextId),
+    AnnotationTextCharacter(AnnotationTextCharacterId),
+    Axis2Placement3d(Axis2Placement3dId),
+    CameraImage(CameraImageId),
+    CameraImage3dWithScale(CameraImage3dWithScaleId),
+    GeometricCurveSet(GeometricCurveSetId),
+    MappedItem(MappedItemId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows as `global_unit_assigned_context`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242GlobalUnitAssignedContextRef {
+    GlobalUnitAssignedContext(GlobalUnitAssignedContextId),
     Complex(ComplexEntityId),
 }
 
@@ -15977,6 +16240,62 @@ pub enum Ap242GroupableItemRef {
     Complex(ComplexEntityId),
 }
 
+/// A reference to what AP242 edition 2 allows as `leader_curve`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242LeaderCurveRef {
+    LeaderCurve(LeaderCurveId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows as `length_unit`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242LengthUnitRef {
+    LengthUnit(LengthUnitId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows for `manifold_surface_shape_representation.items`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242ManifoldSurfaceShapeRepresentationItemsRef {
+    AnnotationText(AnnotationTextId),
+    AnnotationTextCharacter(AnnotationTextCharacterId),
+    Axis2Placement3d(Axis2Placement3dId),
+    CameraImage(CameraImageId),
+    CameraImage3dWithScale(CameraImage3dWithScaleId),
+    MappedItem(MappedItemId),
+    ShellBasedSurfaceModel(ShellBasedSurfaceModelId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows as `mass_unit`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242MassUnitRef {
+    MassUnit(MassUnitId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows for `measure_qualification.qualified_measure`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242MeasureQualificationQualifiedMeasureRef {
+    LengthMeasureWithUnit(LengthMeasureWithUnitId),
+    MassMeasureWithUnit(MassMeasureWithUnitId),
+    MeasureWithUnit(MeasureWithUnitId),
+    PlaneAngleMeasureWithUnit(PlaneAngleMeasureWithUnitId),
+    RatioMeasureWithUnit(RatioMeasureWithUnitId),
+    UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
+    Complex(ComplexEntityId),
+}
+
 /// A reference to what AP242 edition 2 allows as `mechanical_design_geometric_presentation_representation_items`, where the
 /// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
 /// takes it and stores it as the model's wider reference.
@@ -16041,6 +16360,87 @@ pub enum Ap242MechanicalDesignShadedPresentationRepresentationItemsRef {
     Complex(ComplexEntityId),
 }
 
+/// A reference to what AP242 edition 2 allows for `oriented_closed_shell.closed_shell_element`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242OrientedClosedShellClosedShellElementRef {
+    ClosedShell(ClosedShellId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows for `oriented_edge.edge_element`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242OrientedEdgeEdgeElementRef {
+    Edge(EdgeId),
+    EdgeCurve(EdgeCurveId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows as `parametric_representation_context`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242ParametricRepresentationContextRef {
+    ParametricRepresentationContext(ParametricRepresentationContextId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows as `plane_angle_unit`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242PlaneAngleUnitRef {
+    PlaneAngleUnit(PlaneAngleUnitId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows for `product_definition_shape.definition`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242ProductDefinitionShapeDefinitionRef {
+    AssemblyComponentUsage(AssemblyComponentUsageId),
+    CharacterizedItemWithinRepresentation(CharacterizedItemWithinRepresentationId),
+    CharacterizedObject(CharacterizedObjectId),
+    CharacterizedRepresentation(CharacterizedRepresentationId),
+    DefaultModelGeometricView(DefaultModelGeometricViewId),
+    DocumentFile(DocumentFileId),
+    MakeFromUsageOption(MakeFromUsageOptionId),
+    ModelGeometricView(ModelGeometricViewId),
+    NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
+    ProductDefinition(ProductDefinitionId),
+    ProductDefinitionOccurrence(ProductDefinitionOccurrenceId),
+    ProductDefinitionRelationship(ProductDefinitionRelationshipId),
+    ProductDefinitionRelationshipRelationship(ProductDefinitionRelationshipRelationshipId),
+    ProductDefinitionUsage(ProductDefinitionUsageId),
+    ProductDefinitionWithAssociatedDocuments(ProductDefinitionWithAssociatedDocumentsId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows as `product_definition_usage`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242ProductDefinitionUsageRef {
+    AssemblyComponentUsage(AssemblyComponentUsageId),
+    MakeFromUsageOption(MakeFromUsageOptionId),
+    NextAssemblyUsageOccurrence(NextAssemblyUsageOccurrenceId),
+    ProductDefinitionUsage(ProductDefinitionUsageId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows as `ratio_unit`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242RatioUnitRef {
+    RatioUnit(RatioUnitId),
+    Complex(ComplexEntityId),
+}
+
 /// A reference to what AP242 edition 2 allows as `shape_dimension_representation_item`, where the
 /// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
 /// takes it and stores it as the model's wider reference.
@@ -16091,15 +16491,13 @@ pub enum Ap242ShapeRepresentationWithParametersItemsRef {
     Complex(ComplexEntityId),
 }
 
-/// A reference to what AP242 edition 2 allows as `styled_item_target`, where the
+/// A reference to what AP242 edition 2 allows for `styled_item.item`, where the
 /// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
 /// takes it and stores it as the model's wider reference.
 #[derive(Debug, Clone, PartialEq)]
-pub enum Ap242StyledItemTargetRef {
+pub enum Ap242StyledItemItemRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
     AdvancedFace(AdvancedFaceId),
-    AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
-    AnnotationPlane(AnnotationPlaneId),
     AnnotationText(AnnotationTextId),
     AnnotationTextCharacter(AnnotationTextCharacterId),
     Axis1Placement(Axis1PlacementId),
@@ -16250,6 +16648,126 @@ pub enum Ap242StyledItemTargetRef {
     Complex(ComplexEntityId),
 }
 
+/// A reference to what AP242 edition 2 allows for `surface_curve.curve_3d`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242SurfaceCurveCurve3dRef {
+    BSplineCurve(BSplineCurveId),
+    BSplineCurveWithKnots(BSplineCurveWithKnotsId),
+    BezierCurve(BezierCurveId),
+    BoundedCurve(BoundedCurveId),
+    BoundedSurfaceCurve(BoundedSurfaceCurveId),
+    Circle(CircleId),
+    CompositeCurve(CompositeCurveId),
+    Conic(ConicId),
+    Curve(CurveId),
+    Ellipse(EllipseId),
+    Hyperbola(HyperbolaId),
+    IntersectionCurve(IntersectionCurveId),
+    Line(LineId),
+    Parabola(ParabolaId),
+    Polyline(PolylineId),
+    QuasiUniformCurve(QuasiUniformCurveId),
+    RationalBSplineCurve(RationalBSplineCurveId),
+    SeamCurve(SeamCurveId),
+    SurfaceCurve(SurfaceCurveId),
+    TrimmedCurve(TrimmedCurveId),
+    UniformCurve(UniformCurveId),
+    Complex(ComplexEntityId),
+}
+
+impl From<Ap242AdvancedBrepShapeRepresentationItemsRef> for RepresentationItemRef {
+    fn from(r: Ap242AdvancedBrepShapeRepresentationItemsRef) -> Self {
+        match r {
+            Ap242AdvancedBrepShapeRepresentationItemsRef::AnnotationText(i) => {
+                RepresentationItemRef::AnnotationText(i)
+            }
+            Ap242AdvancedBrepShapeRepresentationItemsRef::AnnotationTextCharacter(i) => {
+                RepresentationItemRef::AnnotationTextCharacter(i)
+            }
+            Ap242AdvancedBrepShapeRepresentationItemsRef::Axis2Placement3d(i) => {
+                RepresentationItemRef::Axis2Placement3d(i)
+            }
+            Ap242AdvancedBrepShapeRepresentationItemsRef::BrepWithVoids(i) => {
+                RepresentationItemRef::BrepWithVoids(i)
+            }
+            Ap242AdvancedBrepShapeRepresentationItemsRef::CameraImage(i) => {
+                RepresentationItemRef::CameraImage(i)
+            }
+            Ap242AdvancedBrepShapeRepresentationItemsRef::CameraImage3dWithScale(i) => {
+                RepresentationItemRef::CameraImage3dWithScale(i)
+            }
+            Ap242AdvancedBrepShapeRepresentationItemsRef::ManifoldSolidBrep(i) => {
+                RepresentationItemRef::ManifoldSolidBrep(i)
+            }
+            Ap242AdvancedBrepShapeRepresentationItemsRef::MappedItem(i) => {
+                RepresentationItemRef::MappedItem(i)
+            }
+            Ap242AdvancedBrepShapeRepresentationItemsRef::Complex(i) => {
+                RepresentationItemRef::Complex(i)
+            }
+        }
+    }
+}
+
+impl From<Ap242AdvancedFaceFaceGeometryRef> for SurfaceRef {
+    fn from(r: Ap242AdvancedFaceFaceGeometryRef) -> Self {
+        match r {
+            Ap242AdvancedFaceFaceGeometryRef::BSplineSurface(i) => SurfaceRef::BSplineSurface(i),
+            Ap242AdvancedFaceFaceGeometryRef::BSplineSurfaceWithKnots(i) => {
+                SurfaceRef::BSplineSurfaceWithKnots(i)
+            }
+            Ap242AdvancedFaceFaceGeometryRef::BezierSurface(i) => SurfaceRef::BezierSurface(i),
+            Ap242AdvancedFaceFaceGeometryRef::ConicalSurface(i) => SurfaceRef::ConicalSurface(i),
+            Ap242AdvancedFaceFaceGeometryRef::CylindricalSurface(i) => {
+                SurfaceRef::CylindricalSurface(i)
+            }
+            Ap242AdvancedFaceFaceGeometryRef::DegenerateToroidalSurface(i) => {
+                SurfaceRef::DegenerateToroidalSurface(i)
+            }
+            Ap242AdvancedFaceFaceGeometryRef::ElementarySurface(i) => {
+                SurfaceRef::ElementarySurface(i)
+            }
+            Ap242AdvancedFaceFaceGeometryRef::Plane(i) => SurfaceRef::Plane(i),
+            Ap242AdvancedFaceFaceGeometryRef::QuasiUniformSurface(i) => {
+                SurfaceRef::QuasiUniformSurface(i)
+            }
+            Ap242AdvancedFaceFaceGeometryRef::RationalBSplineSurface(i) => {
+                SurfaceRef::RationalBSplineSurface(i)
+            }
+            Ap242AdvancedFaceFaceGeometryRef::SphericalSurface(i) => {
+                SurfaceRef::SphericalSurface(i)
+            }
+            Ap242AdvancedFaceFaceGeometryRef::SurfaceOfLinearExtrusion(i) => {
+                SurfaceRef::SurfaceOfLinearExtrusion(i)
+            }
+            Ap242AdvancedFaceFaceGeometryRef::SurfaceOfRevolution(i) => {
+                SurfaceRef::SurfaceOfRevolution(i)
+            }
+            Ap242AdvancedFaceFaceGeometryRef::SweptSurface(i) => SurfaceRef::SweptSurface(i),
+            Ap242AdvancedFaceFaceGeometryRef::ToroidalSurface(i) => SurfaceRef::ToroidalSurface(i),
+            Ap242AdvancedFaceFaceGeometryRef::UniformSurface(i) => SurfaceRef::UniformSurface(i),
+            Ap242AdvancedFaceFaceGeometryRef::Complex(i) => SurfaceRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242AnnotationOccurrenceAssociativityRelatedAnnotationOccurrenceRef>
+    for AnnotationOccurrenceRef
+{
+    fn from(r: Ap242AnnotationOccurrenceAssociativityRelatedAnnotationOccurrenceRef) -> Self {
+        match r {
+            Ap242AnnotationOccurrenceAssociativityRelatedAnnotationOccurrenceRef::LeaderCurve(
+                i,
+            ) => AnnotationOccurrenceRef::LeaderCurve(i),
+            Ap242AnnotationOccurrenceAssociativityRelatedAnnotationOccurrenceRef::Complex(i) => {
+                AnnotationOccurrenceRef::Complex(i)
+            }
+        }
+    }
+}
+
 impl From<Ap242ApprovedItemRef> for ApprovedItemRef {
     fn from(r: Ap242ApprovedItemRef) -> Self {
         match r {
@@ -16268,6 +16786,265 @@ impl From<Ap242ApprovedItemRef> for ApprovedItemRef {
             Ap242ApprovedItemRef::StartRequest(i) => ApprovedItemRef::StartRequest(i),
             Ap242ApprovedItemRef::StartWork(i) => ApprovedItemRef::StartWork(i),
             Ap242ApprovedItemRef::Complex(i) => ApprovedItemRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242BoundedCurveRef> for CurveRef {
+    fn from(r: Ap242BoundedCurveRef) -> Self {
+        match r {
+            Ap242BoundedCurveRef::BSplineCurve(i) => CurveRef::BSplineCurve(i),
+            Ap242BoundedCurveRef::BSplineCurveWithKnots(i) => CurveRef::BSplineCurveWithKnots(i),
+            Ap242BoundedCurveRef::BezierCurve(i) => CurveRef::BezierCurve(i),
+            Ap242BoundedCurveRef::BoundedCurve(i) => CurveRef::BoundedCurve(i),
+            Ap242BoundedCurveRef::BoundedPcurve(i) => CurveRef::BoundedPcurve(i),
+            Ap242BoundedCurveRef::BoundedSurfaceCurve(i) => CurveRef::BoundedSurfaceCurve(i),
+            Ap242BoundedCurveRef::CompositeCurve(i) => CurveRef::CompositeCurve(i),
+            Ap242BoundedCurveRef::Polyline(i) => CurveRef::Polyline(i),
+            Ap242BoundedCurveRef::QuasiUniformCurve(i) => CurveRef::QuasiUniformCurve(i),
+            Ap242BoundedCurveRef::RationalBSplineCurve(i) => CurveRef::RationalBSplineCurve(i),
+            Ap242BoundedCurveRef::TrimmedCurve(i) => CurveRef::TrimmedCurve(i),
+            Ap242BoundedCurveRef::UniformCurve(i) => CurveRef::UniformCurve(i),
+            Ap242BoundedCurveRef::Complex(i) => CurveRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242BoundedSurfaceCurveCurve3dRef> for CurveRef {
+    fn from(r: Ap242BoundedSurfaceCurveCurve3dRef) -> Self {
+        match r {
+            Ap242BoundedSurfaceCurveCurve3dRef::BSplineCurve(i) => CurveRef::BSplineCurve(i),
+            Ap242BoundedSurfaceCurveCurve3dRef::BSplineCurveWithKnots(i) => {
+                CurveRef::BSplineCurveWithKnots(i)
+            }
+            Ap242BoundedSurfaceCurveCurve3dRef::BezierCurve(i) => CurveRef::BezierCurve(i),
+            Ap242BoundedSurfaceCurveCurve3dRef::BoundedCurve(i) => CurveRef::BoundedCurve(i),
+            Ap242BoundedSurfaceCurveCurve3dRef::BoundedSurfaceCurve(i) => {
+                CurveRef::BoundedSurfaceCurve(i)
+            }
+            Ap242BoundedSurfaceCurveCurve3dRef::CompositeCurve(i) => CurveRef::CompositeCurve(i),
+            Ap242BoundedSurfaceCurveCurve3dRef::Polyline(i) => CurveRef::Polyline(i),
+            Ap242BoundedSurfaceCurveCurve3dRef::QuasiUniformCurve(i) => {
+                CurveRef::QuasiUniformCurve(i)
+            }
+            Ap242BoundedSurfaceCurveCurve3dRef::RationalBSplineCurve(i) => {
+                CurveRef::RationalBSplineCurve(i)
+            }
+            Ap242BoundedSurfaceCurveCurve3dRef::TrimmedCurve(i) => CurveRef::TrimmedCurve(i),
+            Ap242BoundedSurfaceCurveCurve3dRef::UniformCurve(i) => CurveRef::UniformCurve(i),
+            Ap242BoundedSurfaceCurveCurve3dRef::Complex(i) => CurveRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242CameraUsageMappedRepresentationRef> for RepresentationRef {
+    fn from(r: Ap242CameraUsageMappedRepresentationRef) -> Self {
+        match r {
+            Ap242CameraUsageMappedRepresentationRef::AdvancedBrepShapeRepresentation(i) => RepresentationRef::AdvancedBrepShapeRepresentation(i),
+            Ap242CameraUsageMappedRepresentationRef::CharacterizedRepresentation(i) => RepresentationRef::CharacterizedRepresentation(i),
+            Ap242CameraUsageMappedRepresentationRef::ConstructiveGeometryRepresentation(i) => RepresentationRef::ConstructiveGeometryRepresentation(i),
+            Ap242CameraUsageMappedRepresentationRef::DefinitionalRepresentation(i) => RepresentationRef::DefinitionalRepresentation(i),
+            Ap242CameraUsageMappedRepresentationRef::DraughtingModel(i) => RepresentationRef::DraughtingModel(i),
+            Ap242CameraUsageMappedRepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => RepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i),
+            Ap242CameraUsageMappedRepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => RepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i),
+            Ap242CameraUsageMappedRepresentationRef::ManifoldSurfaceShapeRepresentation(i) => RepresentationRef::ManifoldSurfaceShapeRepresentation(i),
+            Ap242CameraUsageMappedRepresentationRef::MechanicalDesignGeometricPresentationRepresentation(i) => RepresentationRef::MechanicalDesignGeometricPresentationRepresentation(i),
+            Ap242CameraUsageMappedRepresentationRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => RepresentationRef::MechanicalDesignPresentationRepresentationWithDraughting(i),
+            Ap242CameraUsageMappedRepresentationRef::MechanicalDesignShadedPresentationRepresentation(i) => RepresentationRef::MechanicalDesignShadedPresentationRepresentation(i),
+            Ap242CameraUsageMappedRepresentationRef::Representation(i) => RepresentationRef::Representation(i),
+            Ap242CameraUsageMappedRepresentationRef::ShapeDimensionRepresentation(i) => RepresentationRef::ShapeDimensionRepresentation(i),
+            Ap242CameraUsageMappedRepresentationRef::ShapeRepresentation(i) => RepresentationRef::ShapeRepresentation(i),
+            Ap242CameraUsageMappedRepresentationRef::ShapeRepresentationWithParameters(i) => RepresentationRef::ShapeRepresentationWithParameters(i),
+            Ap242CameraUsageMappedRepresentationRef::SymbolRepresentation(i) => RepresentationRef::SymbolRepresentation(i),
+            Ap242CameraUsageMappedRepresentationRef::TessellatedShapeRepresentation(i) => RepresentationRef::TessellatedShapeRepresentation(i),
+            Ap242CameraUsageMappedRepresentationRef::Complex(i) => RepresentationRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242ConstructiveGeometryRepresentationItemsRef> for RepresentationItemRef {
+    fn from(r: Ap242ConstructiveGeometryRepresentationItemsRef) -> Self {
+        match r {
+            Ap242ConstructiveGeometryRepresentationItemsRef::AdvancedFace(i) => {
+                RepresentationItemRef::AdvancedFace(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Axis1Placement(i) => {
+                RepresentationItemRef::Axis1Placement(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Axis2Placement2d(i) => {
+                RepresentationItemRef::Axis2Placement2d(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Axis2Placement3d(i) => {
+                RepresentationItemRef::Axis2Placement3d(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::BSplineCurve(i) => {
+                RepresentationItemRef::BSplineCurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::BSplineCurveWithKnots(i) => {
+                RepresentationItemRef::BSplineCurveWithKnots(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::BSplineSurface(i) => {
+                RepresentationItemRef::BSplineSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::BSplineSurfaceWithKnots(i) => {
+                RepresentationItemRef::BSplineSurfaceWithKnots(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::BezierCurve(i) => {
+                RepresentationItemRef::BezierCurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::BezierSurface(i) => {
+                RepresentationItemRef::BezierSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::BoundedCurve(i) => {
+                RepresentationItemRef::BoundedCurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::BoundedPcurve(i) => {
+                RepresentationItemRef::BoundedPcurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::BoundedSurface(i) => {
+                RepresentationItemRef::BoundedSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::BoundedSurfaceCurve(i) => {
+                RepresentationItemRef::BoundedSurfaceCurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::CartesianPoint(i) => {
+                RepresentationItemRef::CartesianPoint(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Circle(i) => {
+                RepresentationItemRef::Circle(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::ClosedShell(i) => {
+                RepresentationItemRef::ClosedShell(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::CompositeCurve(i) => {
+                RepresentationItemRef::CompositeCurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Conic(i) => {
+                RepresentationItemRef::Conic(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::ConicalSurface(i) => {
+                RepresentationItemRef::ConicalSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::ConnectedFaceSet(i) => {
+                RepresentationItemRef::ConnectedFaceSet(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Curve(i) => {
+                RepresentationItemRef::Curve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::CylindricalSurface(i) => {
+                RepresentationItemRef::CylindricalSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::DegenerateToroidalSurface(i) => {
+                RepresentationItemRef::DegenerateToroidalSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Edge(i) => {
+                RepresentationItemRef::Edge(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::EdgeCurve(i) => {
+                RepresentationItemRef::EdgeCurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::ElementarySurface(i) => {
+                RepresentationItemRef::ElementarySurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Ellipse(i) => {
+                RepresentationItemRef::Ellipse(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Face(i) => {
+                RepresentationItemRef::Face(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::FaceSurface(i) => {
+                RepresentationItemRef::FaceSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Hyperbola(i) => {
+                RepresentationItemRef::Hyperbola(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::IntersectionCurve(i) => {
+                RepresentationItemRef::IntersectionCurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Line(i) => {
+                RepresentationItemRef::Line(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::OffsetSurface(i) => {
+                RepresentationItemRef::OffsetSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::OpenShell(i) => {
+                RepresentationItemRef::OpenShell(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::OrientedClosedShell(i) => {
+                RepresentationItemRef::OrientedClosedShell(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::OrientedEdge(i) => {
+                RepresentationItemRef::OrientedEdge(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Parabola(i) => {
+                RepresentationItemRef::Parabola(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Pcurve(i) => {
+                RepresentationItemRef::Pcurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Placement(i) => {
+                RepresentationItemRef::Placement(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Plane(i) => {
+                RepresentationItemRef::Plane(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Point(i) => {
+                RepresentationItemRef::Point(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Polyline(i) => {
+                RepresentationItemRef::Polyline(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::QuasiUniformCurve(i) => {
+                RepresentationItemRef::QuasiUniformCurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::QuasiUniformSurface(i) => {
+                RepresentationItemRef::QuasiUniformSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::RationalBSplineCurve(i) => {
+                RepresentationItemRef::RationalBSplineCurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::RationalBSplineSurface(i) => {
+                RepresentationItemRef::RationalBSplineSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::SeamCurve(i) => {
+                RepresentationItemRef::SeamCurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::SphericalSurface(i) => {
+                RepresentationItemRef::SphericalSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Surface(i) => {
+                RepresentationItemRef::Surface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::SurfaceCurve(i) => {
+                RepresentationItemRef::SurfaceCurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::SurfaceOfLinearExtrusion(i) => {
+                RepresentationItemRef::SurfaceOfLinearExtrusion(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::SurfaceOfRevolution(i) => {
+                RepresentationItemRef::SurfaceOfRevolution(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::SweptSurface(i) => {
+                RepresentationItemRef::SweptSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::ToroidalSurface(i) => {
+                RepresentationItemRef::ToroidalSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::TrimmedCurve(i) => {
+                RepresentationItemRef::TrimmedCurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::UniformCurve(i) => {
+                RepresentationItemRef::UniformCurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::UniformSurface(i) => {
+                RepresentationItemRef::UniformSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::VertexPoint(i) => {
+                RepresentationItemRef::VertexPoint(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Complex(i) => {
+                RepresentationItemRef::Complex(i)
+            }
         }
     }
 }
@@ -16380,6 +17157,109 @@ impl From<Ap242DraughtingModelItemSelectRef> for RepresentationItemRef {
                 RepresentationItemRef::TessellatedAnnotationOccurrence(i)
             }
             Ap242DraughtingModelItemSelectRef::Complex(i) => RepresentationItemRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242GeometricCurveSetElementsRef> for GeometricSetSelectRef {
+    fn from(r: Ap242GeometricCurveSetElementsRef) -> Self {
+        match r {
+            Ap242GeometricCurveSetElementsRef::BSplineCurve(i) => {
+                GeometricSetSelectRef::BSplineCurve(i)
+            }
+            Ap242GeometricCurveSetElementsRef::BSplineCurveWithKnots(i) => {
+                GeometricSetSelectRef::BSplineCurveWithKnots(i)
+            }
+            Ap242GeometricCurveSetElementsRef::BezierCurve(i) => {
+                GeometricSetSelectRef::BezierCurve(i)
+            }
+            Ap242GeometricCurveSetElementsRef::BoundedCurve(i) => {
+                GeometricSetSelectRef::BoundedCurve(i)
+            }
+            Ap242GeometricCurveSetElementsRef::BoundedPcurve(i) => {
+                GeometricSetSelectRef::BoundedPcurve(i)
+            }
+            Ap242GeometricCurveSetElementsRef::BoundedSurfaceCurve(i) => {
+                GeometricSetSelectRef::BoundedSurfaceCurve(i)
+            }
+            Ap242GeometricCurveSetElementsRef::CartesianPoint(i) => {
+                GeometricSetSelectRef::CartesianPoint(i)
+            }
+            Ap242GeometricCurveSetElementsRef::Circle(i) => GeometricSetSelectRef::Circle(i),
+            Ap242GeometricCurveSetElementsRef::CompositeCurve(i) => {
+                GeometricSetSelectRef::CompositeCurve(i)
+            }
+            Ap242GeometricCurveSetElementsRef::Conic(i) => GeometricSetSelectRef::Conic(i),
+            Ap242GeometricCurveSetElementsRef::Curve(i) => GeometricSetSelectRef::Curve(i),
+            Ap242GeometricCurveSetElementsRef::Ellipse(i) => GeometricSetSelectRef::Ellipse(i),
+            Ap242GeometricCurveSetElementsRef::Hyperbola(i) => GeometricSetSelectRef::Hyperbola(i),
+            Ap242GeometricCurveSetElementsRef::IntersectionCurve(i) => {
+                GeometricSetSelectRef::IntersectionCurve(i)
+            }
+            Ap242GeometricCurveSetElementsRef::Line(i) => GeometricSetSelectRef::Line(i),
+            Ap242GeometricCurveSetElementsRef::Parabola(i) => GeometricSetSelectRef::Parabola(i),
+            Ap242GeometricCurveSetElementsRef::Pcurve(i) => GeometricSetSelectRef::Pcurve(i),
+            Ap242GeometricCurveSetElementsRef::Point(i) => GeometricSetSelectRef::Point(i),
+            Ap242GeometricCurveSetElementsRef::Polyline(i) => GeometricSetSelectRef::Polyline(i),
+            Ap242GeometricCurveSetElementsRef::QuasiUniformCurve(i) => {
+                GeometricSetSelectRef::QuasiUniformCurve(i)
+            }
+            Ap242GeometricCurveSetElementsRef::RationalBSplineCurve(i) => {
+                GeometricSetSelectRef::RationalBSplineCurve(i)
+            }
+            Ap242GeometricCurveSetElementsRef::SeamCurve(i) => GeometricSetSelectRef::SeamCurve(i),
+            Ap242GeometricCurveSetElementsRef::SurfaceCurve(i) => {
+                GeometricSetSelectRef::SurfaceCurve(i)
+            }
+            Ap242GeometricCurveSetElementsRef::TrimmedCurve(i) => {
+                GeometricSetSelectRef::TrimmedCurve(i)
+            }
+            Ap242GeometricCurveSetElementsRef::UniformCurve(i) => {
+                GeometricSetSelectRef::UniformCurve(i)
+            }
+            Ap242GeometricCurveSetElementsRef::Complex(i) => GeometricSetSelectRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef> for RepresentationItemRef {
+    fn from(r: Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef) -> Self {
+        match r {
+            Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::AnnotationText(i) => RepresentationItemRef::AnnotationText(i),
+            Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::AnnotationTextCharacter(i) => RepresentationItemRef::AnnotationTextCharacter(i),
+            Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::Axis2Placement3d(i) => RepresentationItemRef::Axis2Placement3d(i),
+            Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::CameraImage(i) => RepresentationItemRef::CameraImage(i),
+            Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::CameraImage3dWithScale(i) => RepresentationItemRef::CameraImage3dWithScale(i),
+            Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::GeometricCurveSet(i) => RepresentationItemRef::GeometricCurveSet(i),
+            Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::GeometricSet(i) => RepresentationItemRef::GeometricSet(i),
+            Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::MappedItem(i) => RepresentationItemRef::MappedItem(i),
+            Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::Complex(i) => RepresentationItemRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef> for RepresentationItemRef {
+    fn from(r: Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef) -> Self {
+        match r {
+            Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef::AnnotationText(i) => RepresentationItemRef::AnnotationText(i),
+            Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef::AnnotationTextCharacter(i) => RepresentationItemRef::AnnotationTextCharacter(i),
+            Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef::Axis2Placement3d(i) => RepresentationItemRef::Axis2Placement3d(i),
+            Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef::CameraImage(i) => RepresentationItemRef::CameraImage(i),
+            Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef::CameraImage3dWithScale(i) => RepresentationItemRef::CameraImage3dWithScale(i),
+            Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef::GeometricCurveSet(i) => RepresentationItemRef::GeometricCurveSet(i),
+            Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef::MappedItem(i) => RepresentationItemRef::MappedItem(i),
+            Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef::Complex(i) => RepresentationItemRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242GlobalUnitAssignedContextRef> for RepresentationContextRef {
+    fn from(r: Ap242GlobalUnitAssignedContextRef) -> Self {
+        match r {
+            Ap242GlobalUnitAssignedContextRef::GlobalUnitAssignedContext(i) => {
+                RepresentationContextRef::GlobalUnitAssignedContext(i)
+            }
+            Ap242GlobalUnitAssignedContextRef::Complex(i) => RepresentationContextRef::Complex(i),
         }
     }
 }
@@ -16950,6 +17830,92 @@ impl From<Ap242GroupableItemRef> for GroupableItemRef {
     }
 }
 
+impl From<Ap242LeaderCurveRef> for AnnotationCurveOccurrenceRef {
+    fn from(r: Ap242LeaderCurveRef) -> Self {
+        match r {
+            Ap242LeaderCurveRef::LeaderCurve(i) => AnnotationCurveOccurrenceRef::LeaderCurve(i),
+            Ap242LeaderCurveRef::Complex(i) => AnnotationCurveOccurrenceRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242LengthUnitRef> for UnitRef {
+    fn from(r: Ap242LengthUnitRef) -> Self {
+        match r {
+            Ap242LengthUnitRef::LengthUnit(i) => UnitRef::LengthUnit(i),
+            Ap242LengthUnitRef::Complex(i) => UnitRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242ManifoldSurfaceShapeRepresentationItemsRef> for RepresentationItemRef {
+    fn from(r: Ap242ManifoldSurfaceShapeRepresentationItemsRef) -> Self {
+        match r {
+            Ap242ManifoldSurfaceShapeRepresentationItemsRef::AnnotationText(i) => {
+                RepresentationItemRef::AnnotationText(i)
+            }
+            Ap242ManifoldSurfaceShapeRepresentationItemsRef::AnnotationTextCharacter(i) => {
+                RepresentationItemRef::AnnotationTextCharacter(i)
+            }
+            Ap242ManifoldSurfaceShapeRepresentationItemsRef::Axis2Placement3d(i) => {
+                RepresentationItemRef::Axis2Placement3d(i)
+            }
+            Ap242ManifoldSurfaceShapeRepresentationItemsRef::CameraImage(i) => {
+                RepresentationItemRef::CameraImage(i)
+            }
+            Ap242ManifoldSurfaceShapeRepresentationItemsRef::CameraImage3dWithScale(i) => {
+                RepresentationItemRef::CameraImage3dWithScale(i)
+            }
+            Ap242ManifoldSurfaceShapeRepresentationItemsRef::MappedItem(i) => {
+                RepresentationItemRef::MappedItem(i)
+            }
+            Ap242ManifoldSurfaceShapeRepresentationItemsRef::ShellBasedSurfaceModel(i) => {
+                RepresentationItemRef::ShellBasedSurfaceModel(i)
+            }
+            Ap242ManifoldSurfaceShapeRepresentationItemsRef::Complex(i) => {
+                RepresentationItemRef::Complex(i)
+            }
+        }
+    }
+}
+
+impl From<Ap242MassUnitRef> for UnitRef {
+    fn from(r: Ap242MassUnitRef) -> Self {
+        match r {
+            Ap242MassUnitRef::MassUnit(i) => UnitRef::MassUnit(i),
+            Ap242MassUnitRef::Complex(i) => UnitRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242MeasureQualificationQualifiedMeasureRef> for MeasureWithUnitRef {
+    fn from(r: Ap242MeasureQualificationQualifiedMeasureRef) -> Self {
+        match r {
+            Ap242MeasureQualificationQualifiedMeasureRef::LengthMeasureWithUnit(i) => {
+                MeasureWithUnitRef::LengthMeasureWithUnit(i)
+            }
+            Ap242MeasureQualificationQualifiedMeasureRef::MassMeasureWithUnit(i) => {
+                MeasureWithUnitRef::MassMeasureWithUnit(i)
+            }
+            Ap242MeasureQualificationQualifiedMeasureRef::MeasureWithUnit(i) => {
+                MeasureWithUnitRef::MeasureWithUnit(i)
+            }
+            Ap242MeasureQualificationQualifiedMeasureRef::PlaneAngleMeasureWithUnit(i) => {
+                MeasureWithUnitRef::PlaneAngleMeasureWithUnit(i)
+            }
+            Ap242MeasureQualificationQualifiedMeasureRef::RatioMeasureWithUnit(i) => {
+                MeasureWithUnitRef::RatioMeasureWithUnit(i)
+            }
+            Ap242MeasureQualificationQualifiedMeasureRef::UncertaintyMeasureWithUnit(i) => {
+                MeasureWithUnitRef::UncertaintyMeasureWithUnit(i)
+            }
+            Ap242MeasureQualificationQualifiedMeasureRef::Complex(i) => {
+                MeasureWithUnitRef::Complex(i)
+            }
+        }
+    }
+}
+
 impl From<Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef>
     for RepresentationItemRef
 {
@@ -17012,6 +17978,135 @@ impl From<Ap242MechanicalDesignShadedPresentationRepresentationItemsRef> for Rep
             Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::TerminatorSymbol(i) => RepresentationItemRef::TerminatorSymbol(i),
             Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::TessellatedAnnotationOccurrence(i) => RepresentationItemRef::TessellatedAnnotationOccurrence(i),
             Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::Complex(i) => RepresentationItemRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242OrientedClosedShellClosedShellElementRef> for ClosedShellRef {
+    fn from(r: Ap242OrientedClosedShellClosedShellElementRef) -> Self {
+        match r {
+            Ap242OrientedClosedShellClosedShellElementRef::ClosedShell(i) => {
+                ClosedShellRef::ClosedShell(i)
+            }
+            Ap242OrientedClosedShellClosedShellElementRef::Complex(i) => ClosedShellRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242OrientedEdgeEdgeElementRef> for EdgeRef {
+    fn from(r: Ap242OrientedEdgeEdgeElementRef) -> Self {
+        match r {
+            Ap242OrientedEdgeEdgeElementRef::Edge(i) => EdgeRef::Edge(i),
+            Ap242OrientedEdgeEdgeElementRef::EdgeCurve(i) => EdgeRef::EdgeCurve(i),
+            Ap242OrientedEdgeEdgeElementRef::Complex(i) => EdgeRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242ParametricRepresentationContextRef> for RepresentationContextRef {
+    fn from(r: Ap242ParametricRepresentationContextRef) -> Self {
+        match r {
+            Ap242ParametricRepresentationContextRef::ParametricRepresentationContext(i) => {
+                RepresentationContextRef::ParametricRepresentationContext(i)
+            }
+            Ap242ParametricRepresentationContextRef::Complex(i) => {
+                RepresentationContextRef::Complex(i)
+            }
+        }
+    }
+}
+
+impl From<Ap242PlaneAngleUnitRef> for UnitRef {
+    fn from(r: Ap242PlaneAngleUnitRef) -> Self {
+        match r {
+            Ap242PlaneAngleUnitRef::PlaneAngleUnit(i) => UnitRef::PlaneAngleUnit(i),
+            Ap242PlaneAngleUnitRef::Complex(i) => UnitRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242ProductDefinitionShapeDefinitionRef> for CharacterizedDefinitionRef {
+    fn from(r: Ap242ProductDefinitionShapeDefinitionRef) -> Self {
+        match r {
+            Ap242ProductDefinitionShapeDefinitionRef::AssemblyComponentUsage(i) => {
+                CharacterizedDefinitionRef::AssemblyComponentUsage(i)
+            }
+            Ap242ProductDefinitionShapeDefinitionRef::CharacterizedItemWithinRepresentation(i) => {
+                CharacterizedDefinitionRef::CharacterizedItemWithinRepresentation(i)
+            }
+            Ap242ProductDefinitionShapeDefinitionRef::CharacterizedObject(i) => {
+                CharacterizedDefinitionRef::CharacterizedObject(i)
+            }
+            Ap242ProductDefinitionShapeDefinitionRef::CharacterizedRepresentation(i) => {
+                CharacterizedDefinitionRef::CharacterizedRepresentation(i)
+            }
+            Ap242ProductDefinitionShapeDefinitionRef::DefaultModelGeometricView(i) => {
+                CharacterizedDefinitionRef::DefaultModelGeometricView(i)
+            }
+            Ap242ProductDefinitionShapeDefinitionRef::DocumentFile(i) => {
+                CharacterizedDefinitionRef::DocumentFile(i)
+            }
+            Ap242ProductDefinitionShapeDefinitionRef::MakeFromUsageOption(i) => {
+                CharacterizedDefinitionRef::MakeFromUsageOption(i)
+            }
+            Ap242ProductDefinitionShapeDefinitionRef::ModelGeometricView(i) => {
+                CharacterizedDefinitionRef::ModelGeometricView(i)
+            }
+            Ap242ProductDefinitionShapeDefinitionRef::NextAssemblyUsageOccurrence(i) => {
+                CharacterizedDefinitionRef::NextAssemblyUsageOccurrence(i)
+            }
+            Ap242ProductDefinitionShapeDefinitionRef::ProductDefinition(i) => {
+                CharacterizedDefinitionRef::ProductDefinition(i)
+            }
+            Ap242ProductDefinitionShapeDefinitionRef::ProductDefinitionOccurrence(i) => {
+                CharacterizedDefinitionRef::ProductDefinitionOccurrence(i)
+            }
+            Ap242ProductDefinitionShapeDefinitionRef::ProductDefinitionRelationship(i) => {
+                CharacterizedDefinitionRef::ProductDefinitionRelationship(i)
+            }
+            Ap242ProductDefinitionShapeDefinitionRef::ProductDefinitionRelationshipRelationship(
+                i,
+            ) => CharacterizedDefinitionRef::ProductDefinitionRelationshipRelationship(i),
+            Ap242ProductDefinitionShapeDefinitionRef::ProductDefinitionUsage(i) => {
+                CharacterizedDefinitionRef::ProductDefinitionUsage(i)
+            }
+            Ap242ProductDefinitionShapeDefinitionRef::ProductDefinitionWithAssociatedDocuments(
+                i,
+            ) => CharacterizedDefinitionRef::ProductDefinitionWithAssociatedDocuments(i),
+            Ap242ProductDefinitionShapeDefinitionRef::Complex(i) => {
+                CharacterizedDefinitionRef::Complex(i)
+            }
+        }
+    }
+}
+
+impl From<Ap242ProductDefinitionUsageRef> for ProductDefinitionRelationshipRef {
+    fn from(r: Ap242ProductDefinitionUsageRef) -> Self {
+        match r {
+            Ap242ProductDefinitionUsageRef::AssemblyComponentUsage(i) => {
+                ProductDefinitionRelationshipRef::AssemblyComponentUsage(i)
+            }
+            Ap242ProductDefinitionUsageRef::MakeFromUsageOption(i) => {
+                ProductDefinitionRelationshipRef::MakeFromUsageOption(i)
+            }
+            Ap242ProductDefinitionUsageRef::NextAssemblyUsageOccurrence(i) => {
+                ProductDefinitionRelationshipRef::NextAssemblyUsageOccurrence(i)
+            }
+            Ap242ProductDefinitionUsageRef::ProductDefinitionUsage(i) => {
+                ProductDefinitionRelationshipRef::ProductDefinitionUsage(i)
+            }
+            Ap242ProductDefinitionUsageRef::Complex(i) => {
+                ProductDefinitionRelationshipRef::Complex(i)
+            }
+        }
+    }
+}
+
+impl From<Ap242RatioUnitRef> for UnitRef {
+    fn from(r: Ap242RatioUnitRef) -> Self {
+        match r {
+            Ap242RatioUnitRef::RatioUnit(i) => UnitRef::RatioUnit(i),
+            Ap242RatioUnitRef::Complex(i) => UnitRef::Complex(i),
         }
     }
 }
@@ -17110,151 +18205,193 @@ impl From<Ap242ShapeRepresentationWithParametersItemsRef> for RepresentationItem
     }
 }
 
-impl From<Ap242StyledItemTargetRef> for StyledItemTargetOrRepresentationItemRef {
-    fn from(r: Ap242StyledItemTargetRef) -> Self {
+impl From<Ap242StyledItemItemRef> for StyledItemTargetOrRepresentationItemRef {
+    fn from(r: Ap242StyledItemItemRef) -> Self {
         match r {
-            Ap242StyledItemTargetRef::AdvancedBrepShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(i),
-            Ap242StyledItemTargetRef::AdvancedFace(i) => StyledItemTargetOrRepresentationItemRef::AdvancedFace(i),
-            Ap242StyledItemTargetRef::AnnotationPlaceholderOccurrence(i) => StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderOccurrence(i),
-            Ap242StyledItemTargetRef::AnnotationPlane(i) => StyledItemTargetOrRepresentationItemRef::AnnotationPlane(i),
-            Ap242StyledItemTargetRef::AnnotationText(i) => StyledItemTargetOrRepresentationItemRef::AnnotationText(i),
-            Ap242StyledItemTargetRef::AnnotationTextCharacter(i) => StyledItemTargetOrRepresentationItemRef::AnnotationTextCharacter(i),
-            Ap242StyledItemTargetRef::Axis1Placement(i) => StyledItemTargetOrRepresentationItemRef::Axis1Placement(i),
-            Ap242StyledItemTargetRef::Axis2Placement2d(i) => StyledItemTargetOrRepresentationItemRef::Axis2Placement2d(i),
-            Ap242StyledItemTargetRef::Axis2Placement3d(i) => StyledItemTargetOrRepresentationItemRef::Axis2Placement3d(i),
-            Ap242StyledItemTargetRef::BSplineCurve(i) => StyledItemTargetOrRepresentationItemRef::BSplineCurve(i),
-            Ap242StyledItemTargetRef::BSplineCurveWithKnots(i) => StyledItemTargetOrRepresentationItemRef::BSplineCurveWithKnots(i),
-            Ap242StyledItemTargetRef::BSplineSurface(i) => StyledItemTargetOrRepresentationItemRef::BSplineSurface(i),
-            Ap242StyledItemTargetRef::BSplineSurfaceWithKnots(i) => StyledItemTargetOrRepresentationItemRef::BSplineSurfaceWithKnots(i),
-            Ap242StyledItemTargetRef::BezierCurve(i) => StyledItemTargetOrRepresentationItemRef::BezierCurve(i),
-            Ap242StyledItemTargetRef::BezierSurface(i) => StyledItemTargetOrRepresentationItemRef::BezierSurface(i),
-            Ap242StyledItemTargetRef::BoundedCurve(i) => StyledItemTargetOrRepresentationItemRef::BoundedCurve(i),
-            Ap242StyledItemTargetRef::BoundedPcurve(i) => StyledItemTargetOrRepresentationItemRef::BoundedPcurve(i),
-            Ap242StyledItemTargetRef::BoundedSurface(i) => StyledItemTargetOrRepresentationItemRef::BoundedSurface(i),
-            Ap242StyledItemTargetRef::BoundedSurfaceCurve(i) => StyledItemTargetOrRepresentationItemRef::BoundedSurfaceCurve(i),
-            Ap242StyledItemTargetRef::BrepWithVoids(i) => StyledItemTargetOrRepresentationItemRef::BrepWithVoids(i),
-            Ap242StyledItemTargetRef::CameraImage(i) => StyledItemTargetOrRepresentationItemRef::CameraImage(i),
-            Ap242StyledItemTargetRef::CameraImage3dWithScale(i) => StyledItemTargetOrRepresentationItemRef::CameraImage3dWithScale(i),
-            Ap242StyledItemTargetRef::CameraModel(i) => StyledItemTargetOrRepresentationItemRef::CameraModel(i),
-            Ap242StyledItemTargetRef::CameraModelD3(i) => StyledItemTargetOrRepresentationItemRef::CameraModelD3(i),
-            Ap242StyledItemTargetRef::CameraModelD3MultiClipping(i) => StyledItemTargetOrRepresentationItemRef::CameraModelD3MultiClipping(i),
-            Ap242StyledItemTargetRef::CameraModelD3WithHlhsr(i) => StyledItemTargetOrRepresentationItemRef::CameraModelD3WithHlhsr(i),
-            Ap242StyledItemTargetRef::CartesianPoint(i) => StyledItemTargetOrRepresentationItemRef::CartesianPoint(i),
-            Ap242StyledItemTargetRef::CharacterizedRepresentation(i) => StyledItemTargetOrRepresentationItemRef::CharacterizedRepresentation(i),
-            Ap242StyledItemTargetRef::Circle(i) => StyledItemTargetOrRepresentationItemRef::Circle(i),
-            Ap242StyledItemTargetRef::ClosedShell(i) => StyledItemTargetOrRepresentationItemRef::ClosedShell(i),
-            Ap242StyledItemTargetRef::ComplexTriangulatedFace(i) => StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedFace(i),
-            Ap242StyledItemTargetRef::ComplexTriangulatedSurfaceSet(i) => StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedSurfaceSet(i),
-            Ap242StyledItemTargetRef::CompositeCurve(i) => StyledItemTargetOrRepresentationItemRef::CompositeCurve(i),
-            Ap242StyledItemTargetRef::CompositeText(i) => StyledItemTargetOrRepresentationItemRef::CompositeText(i),
-            Ap242StyledItemTargetRef::Conic(i) => StyledItemTargetOrRepresentationItemRef::Conic(i),
-            Ap242StyledItemTargetRef::ConicalSurface(i) => StyledItemTargetOrRepresentationItemRef::ConicalSurface(i),
-            Ap242StyledItemTargetRef::ConnectedFaceSet(i) => StyledItemTargetOrRepresentationItemRef::ConnectedFaceSet(i),
-            Ap242StyledItemTargetRef::ConstructiveGeometryRepresentation(i) => StyledItemTargetOrRepresentationItemRef::ConstructiveGeometryRepresentation(i),
-            Ap242StyledItemTargetRef::CoordinatesList(i) => StyledItemTargetOrRepresentationItemRef::CoordinatesList(i),
-            Ap242StyledItemTargetRef::Curve(i) => StyledItemTargetOrRepresentationItemRef::Curve(i),
-            Ap242StyledItemTargetRef::CylindricalSurface(i) => StyledItemTargetOrRepresentationItemRef::CylindricalSurface(i),
-            Ap242StyledItemTargetRef::DefinedCharacterGlyph(i) => StyledItemTargetOrRepresentationItemRef::DefinedCharacterGlyph(i),
-            Ap242StyledItemTargetRef::DefinedSymbol(i) => StyledItemTargetOrRepresentationItemRef::DefinedSymbol(i),
-            Ap242StyledItemTargetRef::DefinitionalRepresentation(i) => StyledItemTargetOrRepresentationItemRef::DefinitionalRepresentation(i),
-            Ap242StyledItemTargetRef::DegenerateToroidalSurface(i) => StyledItemTargetOrRepresentationItemRef::DegenerateToroidalSurface(i),
-            Ap242StyledItemTargetRef::Direction(i) => StyledItemTargetOrRepresentationItemRef::Direction(i),
-            Ap242StyledItemTargetRef::DraughtingCallout(i) => StyledItemTargetOrRepresentationItemRef::DraughtingCallout(i),
-            Ap242StyledItemTargetRef::DraughtingModel(i) => StyledItemTargetOrRepresentationItemRef::DraughtingModel(i),
-            Ap242StyledItemTargetRef::Edge(i) => StyledItemTargetOrRepresentationItemRef::Edge(i),
-            Ap242StyledItemTargetRef::EdgeCurve(i) => StyledItemTargetOrRepresentationItemRef::EdgeCurve(i),
-            Ap242StyledItemTargetRef::EdgeLoop(i) => StyledItemTargetOrRepresentationItemRef::EdgeLoop(i),
-            Ap242StyledItemTargetRef::ElementarySurface(i) => StyledItemTargetOrRepresentationItemRef::ElementarySurface(i),
-            Ap242StyledItemTargetRef::Ellipse(i) => StyledItemTargetOrRepresentationItemRef::Ellipse(i),
-            Ap242StyledItemTargetRef::ExternallyDefinedHatchStyle(i) => StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(i),
-            Ap242StyledItemTargetRef::ExternallyDefinedTileStyle(i) => StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(i),
-            Ap242StyledItemTargetRef::Face(i) => StyledItemTargetOrRepresentationItemRef::Face(i),
-            Ap242StyledItemTargetRef::FaceBound(i) => StyledItemTargetOrRepresentationItemRef::FaceBound(i),
-            Ap242StyledItemTargetRef::FaceOuterBound(i) => StyledItemTargetOrRepresentationItemRef::FaceOuterBound(i),
-            Ap242StyledItemTargetRef::FaceSurface(i) => StyledItemTargetOrRepresentationItemRef::FaceSurface(i),
-            Ap242StyledItemTargetRef::FillAreaStyleHatching(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleHatching(i),
-            Ap242StyledItemTargetRef::FillAreaStyleTileColouredRegion(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileColouredRegion(i),
-            Ap242StyledItemTargetRef::FillAreaStyleTileCurveWithStyle(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileCurveWithStyle(i),
-            Ap242StyledItemTargetRef::FillAreaStyleTileSymbolWithStyle(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileSymbolWithStyle(i),
-            Ap242StyledItemTargetRef::FillAreaStyleTiles(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleTiles(i),
-            Ap242StyledItemTargetRef::GeometricCurveSet(i) => StyledItemTargetOrRepresentationItemRef::GeometricCurveSet(i),
-            Ap242StyledItemTargetRef::GeometricRepresentationItem(i) => StyledItemTargetOrRepresentationItemRef::GeometricRepresentationItem(i),
-            Ap242StyledItemTargetRef::GeometricSet(i) => StyledItemTargetOrRepresentationItemRef::GeometricSet(i),
-            Ap242StyledItemTargetRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i),
-            Ap242StyledItemTargetRef::GeometricallyBoundedWireframeShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedWireframeShapeRepresentation(i),
-            Ap242StyledItemTargetRef::Hyperbola(i) => StyledItemTargetOrRepresentationItemRef::Hyperbola(i),
-            Ap242StyledItemTargetRef::IntersectionCurve(i) => StyledItemTargetOrRepresentationItemRef::IntersectionCurve(i),
-            Ap242StyledItemTargetRef::LeaderDirectedCallout(i) => StyledItemTargetOrRepresentationItemRef::LeaderDirectedCallout(i),
-            Ap242StyledItemTargetRef::Line(i) => StyledItemTargetOrRepresentationItemRef::Line(i),
-            Ap242StyledItemTargetRef::Loop(i) => StyledItemTargetOrRepresentationItemRef::Loop(i),
-            Ap242StyledItemTargetRef::ManifoldSolidBrep(i) => StyledItemTargetOrRepresentationItemRef::ManifoldSolidBrep(i),
-            Ap242StyledItemTargetRef::ManifoldSurfaceShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::ManifoldSurfaceShapeRepresentation(i),
-            Ap242StyledItemTargetRef::MappedItem(i) => StyledItemTargetOrRepresentationItemRef::MappedItem(i),
-            Ap242StyledItemTargetRef::MechanicalDesignGeometricPresentationRepresentation(i) => StyledItemTargetOrRepresentationItemRef::MechanicalDesignGeometricPresentationRepresentation(i),
-            Ap242StyledItemTargetRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => StyledItemTargetOrRepresentationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i),
-            Ap242StyledItemTargetRef::MechanicalDesignShadedPresentationRepresentation(i) => StyledItemTargetOrRepresentationItemRef::MechanicalDesignShadedPresentationRepresentation(i),
-            Ap242StyledItemTargetRef::OffsetSurface(i) => StyledItemTargetOrRepresentationItemRef::OffsetSurface(i),
-            Ap242StyledItemTargetRef::OneDirectionRepeatFactor(i) => StyledItemTargetOrRepresentationItemRef::OneDirectionRepeatFactor(i),
-            Ap242StyledItemTargetRef::OpenShell(i) => StyledItemTargetOrRepresentationItemRef::OpenShell(i),
-            Ap242StyledItemTargetRef::OrientedClosedShell(i) => StyledItemTargetOrRepresentationItemRef::OrientedClosedShell(i),
-            Ap242StyledItemTargetRef::OrientedEdge(i) => StyledItemTargetOrRepresentationItemRef::OrientedEdge(i),
-            Ap242StyledItemTargetRef::Parabola(i) => StyledItemTargetOrRepresentationItemRef::Parabola(i),
-            Ap242StyledItemTargetRef::Path(i) => StyledItemTargetOrRepresentationItemRef::Path(i),
-            Ap242StyledItemTargetRef::Pcurve(i) => StyledItemTargetOrRepresentationItemRef::Pcurve(i),
-            Ap242StyledItemTargetRef::Placement(i) => StyledItemTargetOrRepresentationItemRef::Placement(i),
-            Ap242StyledItemTargetRef::PlanarBox(i) => StyledItemTargetOrRepresentationItemRef::PlanarBox(i),
-            Ap242StyledItemTargetRef::PlanarExtent(i) => StyledItemTargetOrRepresentationItemRef::PlanarExtent(i),
-            Ap242StyledItemTargetRef::Plane(i) => StyledItemTargetOrRepresentationItemRef::Plane(i),
-            Ap242StyledItemTargetRef::Point(i) => StyledItemTargetOrRepresentationItemRef::Point(i),
-            Ap242StyledItemTargetRef::PolyLoop(i) => StyledItemTargetOrRepresentationItemRef::PolyLoop(i),
-            Ap242StyledItemTargetRef::Polyline(i) => StyledItemTargetOrRepresentationItemRef::Polyline(i),
-            Ap242StyledItemTargetRef::PresentationArea(i) => StyledItemTargetOrRepresentationItemRef::PresentationArea(i),
-            Ap242StyledItemTargetRef::PresentationRepresentation(i) => StyledItemTargetOrRepresentationItemRef::PresentationRepresentation(i),
-            Ap242StyledItemTargetRef::PresentationView(i) => StyledItemTargetOrRepresentationItemRef::PresentationView(i),
-            Ap242StyledItemTargetRef::QuasiUniformCurve(i) => StyledItemTargetOrRepresentationItemRef::QuasiUniformCurve(i),
-            Ap242StyledItemTargetRef::QuasiUniformSurface(i) => StyledItemTargetOrRepresentationItemRef::QuasiUniformSurface(i),
-            Ap242StyledItemTargetRef::RationalBSplineCurve(i) => StyledItemTargetOrRepresentationItemRef::RationalBSplineCurve(i),
-            Ap242StyledItemTargetRef::RationalBSplineSurface(i) => StyledItemTargetOrRepresentationItemRef::RationalBSplineSurface(i),
-            Ap242StyledItemTargetRef::RepositionedTessellatedItem(i) => StyledItemTargetOrRepresentationItemRef::RepositionedTessellatedItem(i),
-            Ap242StyledItemTargetRef::Representation(i) => StyledItemTargetOrRepresentationItemRef::Representation(i),
-            Ap242StyledItemTargetRef::RepresentationReference(i) => StyledItemTargetOrRepresentationItemRef::RepresentationReference(i),
-            Ap242StyledItemTargetRef::SeamCurve(i) => StyledItemTargetOrRepresentationItemRef::SeamCurve(i),
-            Ap242StyledItemTargetRef::ShapeDimensionRepresentation(i) => StyledItemTargetOrRepresentationItemRef::ShapeDimensionRepresentation(i),
-            Ap242StyledItemTargetRef::ShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::ShapeRepresentation(i),
-            Ap242StyledItemTargetRef::ShapeRepresentationWithParameters(i) => StyledItemTargetOrRepresentationItemRef::ShapeRepresentationWithParameters(i),
-            Ap242StyledItemTargetRef::ShellBasedSurfaceModel(i) => StyledItemTargetOrRepresentationItemRef::ShellBasedSurfaceModel(i),
-            Ap242StyledItemTargetRef::SolidModel(i) => StyledItemTargetOrRepresentationItemRef::SolidModel(i),
-            Ap242StyledItemTargetRef::SphericalSurface(i) => StyledItemTargetOrRepresentationItemRef::SphericalSurface(i),
-            Ap242StyledItemTargetRef::Surface(i) => StyledItemTargetOrRepresentationItemRef::Surface(i),
-            Ap242StyledItemTargetRef::SurfaceCurve(i) => StyledItemTargetOrRepresentationItemRef::SurfaceCurve(i),
-            Ap242StyledItemTargetRef::SurfaceOfLinearExtrusion(i) => StyledItemTargetOrRepresentationItemRef::SurfaceOfLinearExtrusion(i),
-            Ap242StyledItemTargetRef::SurfaceOfRevolution(i) => StyledItemTargetOrRepresentationItemRef::SurfaceOfRevolution(i),
-            Ap242StyledItemTargetRef::SweptSurface(i) => StyledItemTargetOrRepresentationItemRef::SweptSurface(i),
-            Ap242StyledItemTargetRef::SymbolRepresentation(i) => StyledItemTargetOrRepresentationItemRef::SymbolRepresentation(i),
-            Ap242StyledItemTargetRef::SymbolTarget(i) => StyledItemTargetOrRepresentationItemRef::SymbolTarget(i),
-            Ap242StyledItemTargetRef::TessellatedCurveSet(i) => StyledItemTargetOrRepresentationItemRef::TessellatedCurveSet(i),
-            Ap242StyledItemTargetRef::TessellatedFace(i) => StyledItemTargetOrRepresentationItemRef::TessellatedFace(i),
-            Ap242StyledItemTargetRef::TessellatedGeometricSet(i) => StyledItemTargetOrRepresentationItemRef::TessellatedGeometricSet(i),
-            Ap242StyledItemTargetRef::TessellatedItem(i) => StyledItemTargetOrRepresentationItemRef::TessellatedItem(i),
-            Ap242StyledItemTargetRef::TessellatedShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::TessellatedShapeRepresentation(i),
-            Ap242StyledItemTargetRef::TessellatedShell(i) => StyledItemTargetOrRepresentationItemRef::TessellatedShell(i),
-            Ap242StyledItemTargetRef::TessellatedSolid(i) => StyledItemTargetOrRepresentationItemRef::TessellatedSolid(i),
-            Ap242StyledItemTargetRef::TessellatedStructuredItem(i) => StyledItemTargetOrRepresentationItemRef::TessellatedStructuredItem(i),
-            Ap242StyledItemTargetRef::TessellatedSurfaceSet(i) => StyledItemTargetOrRepresentationItemRef::TessellatedSurfaceSet(i),
-            Ap242StyledItemTargetRef::TextLiteral(i) => StyledItemTargetOrRepresentationItemRef::TextLiteral(i),
-            Ap242StyledItemTargetRef::TopologicalRepresentationItem(i) => StyledItemTargetOrRepresentationItemRef::TopologicalRepresentationItem(i),
-            Ap242StyledItemTargetRef::ToroidalSurface(i) => StyledItemTargetOrRepresentationItemRef::ToroidalSurface(i),
-            Ap242StyledItemTargetRef::TrimmedCurve(i) => StyledItemTargetOrRepresentationItemRef::TrimmedCurve(i),
-            Ap242StyledItemTargetRef::TwoDirectionRepeatFactor(i) => StyledItemTargetOrRepresentationItemRef::TwoDirectionRepeatFactor(i),
-            Ap242StyledItemTargetRef::UniformCurve(i) => StyledItemTargetOrRepresentationItemRef::UniformCurve(i),
-            Ap242StyledItemTargetRef::UniformSurface(i) => StyledItemTargetOrRepresentationItemRef::UniformSurface(i),
-            Ap242StyledItemTargetRef::Vector(i) => StyledItemTargetOrRepresentationItemRef::Vector(i),
-            Ap242StyledItemTargetRef::Vertex(i) => StyledItemTargetOrRepresentationItemRef::Vertex(i),
-            Ap242StyledItemTargetRef::VertexLoop(i) => StyledItemTargetOrRepresentationItemRef::VertexLoop(i),
-            Ap242StyledItemTargetRef::VertexPoint(i) => StyledItemTargetOrRepresentationItemRef::VertexPoint(i),
-            Ap242StyledItemTargetRef::VertexShell(i) => StyledItemTargetOrRepresentationItemRef::VertexShell(i),
-            Ap242StyledItemTargetRef::WireShell(i) => StyledItemTargetOrRepresentationItemRef::WireShell(i),
-            Ap242StyledItemTargetRef::Complex(i) => StyledItemTargetOrRepresentationItemRef::Complex(i),
+            Ap242StyledItemItemRef::AdvancedBrepShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(i),
+            Ap242StyledItemItemRef::AdvancedFace(i) => StyledItemTargetOrRepresentationItemRef::AdvancedFace(i),
+            Ap242StyledItemItemRef::AnnotationText(i) => StyledItemTargetOrRepresentationItemRef::AnnotationText(i),
+            Ap242StyledItemItemRef::AnnotationTextCharacter(i) => StyledItemTargetOrRepresentationItemRef::AnnotationTextCharacter(i),
+            Ap242StyledItemItemRef::Axis1Placement(i) => StyledItemTargetOrRepresentationItemRef::Axis1Placement(i),
+            Ap242StyledItemItemRef::Axis2Placement2d(i) => StyledItemTargetOrRepresentationItemRef::Axis2Placement2d(i),
+            Ap242StyledItemItemRef::Axis2Placement3d(i) => StyledItemTargetOrRepresentationItemRef::Axis2Placement3d(i),
+            Ap242StyledItemItemRef::BSplineCurve(i) => StyledItemTargetOrRepresentationItemRef::BSplineCurve(i),
+            Ap242StyledItemItemRef::BSplineCurveWithKnots(i) => StyledItemTargetOrRepresentationItemRef::BSplineCurveWithKnots(i),
+            Ap242StyledItemItemRef::BSplineSurface(i) => StyledItemTargetOrRepresentationItemRef::BSplineSurface(i),
+            Ap242StyledItemItemRef::BSplineSurfaceWithKnots(i) => StyledItemTargetOrRepresentationItemRef::BSplineSurfaceWithKnots(i),
+            Ap242StyledItemItemRef::BezierCurve(i) => StyledItemTargetOrRepresentationItemRef::BezierCurve(i),
+            Ap242StyledItemItemRef::BezierSurface(i) => StyledItemTargetOrRepresentationItemRef::BezierSurface(i),
+            Ap242StyledItemItemRef::BoundedCurve(i) => StyledItemTargetOrRepresentationItemRef::BoundedCurve(i),
+            Ap242StyledItemItemRef::BoundedPcurve(i) => StyledItemTargetOrRepresentationItemRef::BoundedPcurve(i),
+            Ap242StyledItemItemRef::BoundedSurface(i) => StyledItemTargetOrRepresentationItemRef::BoundedSurface(i),
+            Ap242StyledItemItemRef::BoundedSurfaceCurve(i) => StyledItemTargetOrRepresentationItemRef::BoundedSurfaceCurve(i),
+            Ap242StyledItemItemRef::BrepWithVoids(i) => StyledItemTargetOrRepresentationItemRef::BrepWithVoids(i),
+            Ap242StyledItemItemRef::CameraImage(i) => StyledItemTargetOrRepresentationItemRef::CameraImage(i),
+            Ap242StyledItemItemRef::CameraImage3dWithScale(i) => StyledItemTargetOrRepresentationItemRef::CameraImage3dWithScale(i),
+            Ap242StyledItemItemRef::CameraModel(i) => StyledItemTargetOrRepresentationItemRef::CameraModel(i),
+            Ap242StyledItemItemRef::CameraModelD3(i) => StyledItemTargetOrRepresentationItemRef::CameraModelD3(i),
+            Ap242StyledItemItemRef::CameraModelD3MultiClipping(i) => StyledItemTargetOrRepresentationItemRef::CameraModelD3MultiClipping(i),
+            Ap242StyledItemItemRef::CameraModelD3WithHlhsr(i) => StyledItemTargetOrRepresentationItemRef::CameraModelD3WithHlhsr(i),
+            Ap242StyledItemItemRef::CartesianPoint(i) => StyledItemTargetOrRepresentationItemRef::CartesianPoint(i),
+            Ap242StyledItemItemRef::CharacterizedRepresentation(i) => StyledItemTargetOrRepresentationItemRef::CharacterizedRepresentation(i),
+            Ap242StyledItemItemRef::Circle(i) => StyledItemTargetOrRepresentationItemRef::Circle(i),
+            Ap242StyledItemItemRef::ClosedShell(i) => StyledItemTargetOrRepresentationItemRef::ClosedShell(i),
+            Ap242StyledItemItemRef::ComplexTriangulatedFace(i) => StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedFace(i),
+            Ap242StyledItemItemRef::ComplexTriangulatedSurfaceSet(i) => StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedSurfaceSet(i),
+            Ap242StyledItemItemRef::CompositeCurve(i) => StyledItemTargetOrRepresentationItemRef::CompositeCurve(i),
+            Ap242StyledItemItemRef::CompositeText(i) => StyledItemTargetOrRepresentationItemRef::CompositeText(i),
+            Ap242StyledItemItemRef::Conic(i) => StyledItemTargetOrRepresentationItemRef::Conic(i),
+            Ap242StyledItemItemRef::ConicalSurface(i) => StyledItemTargetOrRepresentationItemRef::ConicalSurface(i),
+            Ap242StyledItemItemRef::ConnectedFaceSet(i) => StyledItemTargetOrRepresentationItemRef::ConnectedFaceSet(i),
+            Ap242StyledItemItemRef::ConstructiveGeometryRepresentation(i) => StyledItemTargetOrRepresentationItemRef::ConstructiveGeometryRepresentation(i),
+            Ap242StyledItemItemRef::CoordinatesList(i) => StyledItemTargetOrRepresentationItemRef::CoordinatesList(i),
+            Ap242StyledItemItemRef::Curve(i) => StyledItemTargetOrRepresentationItemRef::Curve(i),
+            Ap242StyledItemItemRef::CylindricalSurface(i) => StyledItemTargetOrRepresentationItemRef::CylindricalSurface(i),
+            Ap242StyledItemItemRef::DefinedCharacterGlyph(i) => StyledItemTargetOrRepresentationItemRef::DefinedCharacterGlyph(i),
+            Ap242StyledItemItemRef::DefinedSymbol(i) => StyledItemTargetOrRepresentationItemRef::DefinedSymbol(i),
+            Ap242StyledItemItemRef::DefinitionalRepresentation(i) => StyledItemTargetOrRepresentationItemRef::DefinitionalRepresentation(i),
+            Ap242StyledItemItemRef::DegenerateToroidalSurface(i) => StyledItemTargetOrRepresentationItemRef::DegenerateToroidalSurface(i),
+            Ap242StyledItemItemRef::Direction(i) => StyledItemTargetOrRepresentationItemRef::Direction(i),
+            Ap242StyledItemItemRef::DraughtingCallout(i) => StyledItemTargetOrRepresentationItemRef::DraughtingCallout(i),
+            Ap242StyledItemItemRef::DraughtingModel(i) => StyledItemTargetOrRepresentationItemRef::DraughtingModel(i),
+            Ap242StyledItemItemRef::Edge(i) => StyledItemTargetOrRepresentationItemRef::Edge(i),
+            Ap242StyledItemItemRef::EdgeCurve(i) => StyledItemTargetOrRepresentationItemRef::EdgeCurve(i),
+            Ap242StyledItemItemRef::EdgeLoop(i) => StyledItemTargetOrRepresentationItemRef::EdgeLoop(i),
+            Ap242StyledItemItemRef::ElementarySurface(i) => StyledItemTargetOrRepresentationItemRef::ElementarySurface(i),
+            Ap242StyledItemItemRef::Ellipse(i) => StyledItemTargetOrRepresentationItemRef::Ellipse(i),
+            Ap242StyledItemItemRef::ExternallyDefinedHatchStyle(i) => StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(i),
+            Ap242StyledItemItemRef::ExternallyDefinedTileStyle(i) => StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(i),
+            Ap242StyledItemItemRef::Face(i) => StyledItemTargetOrRepresentationItemRef::Face(i),
+            Ap242StyledItemItemRef::FaceBound(i) => StyledItemTargetOrRepresentationItemRef::FaceBound(i),
+            Ap242StyledItemItemRef::FaceOuterBound(i) => StyledItemTargetOrRepresentationItemRef::FaceOuterBound(i),
+            Ap242StyledItemItemRef::FaceSurface(i) => StyledItemTargetOrRepresentationItemRef::FaceSurface(i),
+            Ap242StyledItemItemRef::FillAreaStyleHatching(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleHatching(i),
+            Ap242StyledItemItemRef::FillAreaStyleTileColouredRegion(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileColouredRegion(i),
+            Ap242StyledItemItemRef::FillAreaStyleTileCurveWithStyle(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileCurveWithStyle(i),
+            Ap242StyledItemItemRef::FillAreaStyleTileSymbolWithStyle(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileSymbolWithStyle(i),
+            Ap242StyledItemItemRef::FillAreaStyleTiles(i) => StyledItemTargetOrRepresentationItemRef::FillAreaStyleTiles(i),
+            Ap242StyledItemItemRef::GeometricCurveSet(i) => StyledItemTargetOrRepresentationItemRef::GeometricCurveSet(i),
+            Ap242StyledItemItemRef::GeometricRepresentationItem(i) => StyledItemTargetOrRepresentationItemRef::GeometricRepresentationItem(i),
+            Ap242StyledItemItemRef::GeometricSet(i) => StyledItemTargetOrRepresentationItemRef::GeometricSet(i),
+            Ap242StyledItemItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i),
+            Ap242StyledItemItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedWireframeShapeRepresentation(i),
+            Ap242StyledItemItemRef::Hyperbola(i) => StyledItemTargetOrRepresentationItemRef::Hyperbola(i),
+            Ap242StyledItemItemRef::IntersectionCurve(i) => StyledItemTargetOrRepresentationItemRef::IntersectionCurve(i),
+            Ap242StyledItemItemRef::LeaderDirectedCallout(i) => StyledItemTargetOrRepresentationItemRef::LeaderDirectedCallout(i),
+            Ap242StyledItemItemRef::Line(i) => StyledItemTargetOrRepresentationItemRef::Line(i),
+            Ap242StyledItemItemRef::Loop(i) => StyledItemTargetOrRepresentationItemRef::Loop(i),
+            Ap242StyledItemItemRef::ManifoldSolidBrep(i) => StyledItemTargetOrRepresentationItemRef::ManifoldSolidBrep(i),
+            Ap242StyledItemItemRef::ManifoldSurfaceShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::ManifoldSurfaceShapeRepresentation(i),
+            Ap242StyledItemItemRef::MappedItem(i) => StyledItemTargetOrRepresentationItemRef::MappedItem(i),
+            Ap242StyledItemItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => StyledItemTargetOrRepresentationItemRef::MechanicalDesignGeometricPresentationRepresentation(i),
+            Ap242StyledItemItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => StyledItemTargetOrRepresentationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i),
+            Ap242StyledItemItemRef::MechanicalDesignShadedPresentationRepresentation(i) => StyledItemTargetOrRepresentationItemRef::MechanicalDesignShadedPresentationRepresentation(i),
+            Ap242StyledItemItemRef::OffsetSurface(i) => StyledItemTargetOrRepresentationItemRef::OffsetSurface(i),
+            Ap242StyledItemItemRef::OneDirectionRepeatFactor(i) => StyledItemTargetOrRepresentationItemRef::OneDirectionRepeatFactor(i),
+            Ap242StyledItemItemRef::OpenShell(i) => StyledItemTargetOrRepresentationItemRef::OpenShell(i),
+            Ap242StyledItemItemRef::OrientedClosedShell(i) => StyledItemTargetOrRepresentationItemRef::OrientedClosedShell(i),
+            Ap242StyledItemItemRef::OrientedEdge(i) => StyledItemTargetOrRepresentationItemRef::OrientedEdge(i),
+            Ap242StyledItemItemRef::Parabola(i) => StyledItemTargetOrRepresentationItemRef::Parabola(i),
+            Ap242StyledItemItemRef::Path(i) => StyledItemTargetOrRepresentationItemRef::Path(i),
+            Ap242StyledItemItemRef::Pcurve(i) => StyledItemTargetOrRepresentationItemRef::Pcurve(i),
+            Ap242StyledItemItemRef::Placement(i) => StyledItemTargetOrRepresentationItemRef::Placement(i),
+            Ap242StyledItemItemRef::PlanarBox(i) => StyledItemTargetOrRepresentationItemRef::PlanarBox(i),
+            Ap242StyledItemItemRef::PlanarExtent(i) => StyledItemTargetOrRepresentationItemRef::PlanarExtent(i),
+            Ap242StyledItemItemRef::Plane(i) => StyledItemTargetOrRepresentationItemRef::Plane(i),
+            Ap242StyledItemItemRef::Point(i) => StyledItemTargetOrRepresentationItemRef::Point(i),
+            Ap242StyledItemItemRef::PolyLoop(i) => StyledItemTargetOrRepresentationItemRef::PolyLoop(i),
+            Ap242StyledItemItemRef::Polyline(i) => StyledItemTargetOrRepresentationItemRef::Polyline(i),
+            Ap242StyledItemItemRef::PresentationArea(i) => StyledItemTargetOrRepresentationItemRef::PresentationArea(i),
+            Ap242StyledItemItemRef::PresentationRepresentation(i) => StyledItemTargetOrRepresentationItemRef::PresentationRepresentation(i),
+            Ap242StyledItemItemRef::PresentationView(i) => StyledItemTargetOrRepresentationItemRef::PresentationView(i),
+            Ap242StyledItemItemRef::QuasiUniformCurve(i) => StyledItemTargetOrRepresentationItemRef::QuasiUniformCurve(i),
+            Ap242StyledItemItemRef::QuasiUniformSurface(i) => StyledItemTargetOrRepresentationItemRef::QuasiUniformSurface(i),
+            Ap242StyledItemItemRef::RationalBSplineCurve(i) => StyledItemTargetOrRepresentationItemRef::RationalBSplineCurve(i),
+            Ap242StyledItemItemRef::RationalBSplineSurface(i) => StyledItemTargetOrRepresentationItemRef::RationalBSplineSurface(i),
+            Ap242StyledItemItemRef::RepositionedTessellatedItem(i) => StyledItemTargetOrRepresentationItemRef::RepositionedTessellatedItem(i),
+            Ap242StyledItemItemRef::Representation(i) => StyledItemTargetOrRepresentationItemRef::Representation(i),
+            Ap242StyledItemItemRef::RepresentationReference(i) => StyledItemTargetOrRepresentationItemRef::RepresentationReference(i),
+            Ap242StyledItemItemRef::SeamCurve(i) => StyledItemTargetOrRepresentationItemRef::SeamCurve(i),
+            Ap242StyledItemItemRef::ShapeDimensionRepresentation(i) => StyledItemTargetOrRepresentationItemRef::ShapeDimensionRepresentation(i),
+            Ap242StyledItemItemRef::ShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::ShapeRepresentation(i),
+            Ap242StyledItemItemRef::ShapeRepresentationWithParameters(i) => StyledItemTargetOrRepresentationItemRef::ShapeRepresentationWithParameters(i),
+            Ap242StyledItemItemRef::ShellBasedSurfaceModel(i) => StyledItemTargetOrRepresentationItemRef::ShellBasedSurfaceModel(i),
+            Ap242StyledItemItemRef::SolidModel(i) => StyledItemTargetOrRepresentationItemRef::SolidModel(i),
+            Ap242StyledItemItemRef::SphericalSurface(i) => StyledItemTargetOrRepresentationItemRef::SphericalSurface(i),
+            Ap242StyledItemItemRef::Surface(i) => StyledItemTargetOrRepresentationItemRef::Surface(i),
+            Ap242StyledItemItemRef::SurfaceCurve(i) => StyledItemTargetOrRepresentationItemRef::SurfaceCurve(i),
+            Ap242StyledItemItemRef::SurfaceOfLinearExtrusion(i) => StyledItemTargetOrRepresentationItemRef::SurfaceOfLinearExtrusion(i),
+            Ap242StyledItemItemRef::SurfaceOfRevolution(i) => StyledItemTargetOrRepresentationItemRef::SurfaceOfRevolution(i),
+            Ap242StyledItemItemRef::SweptSurface(i) => StyledItemTargetOrRepresentationItemRef::SweptSurface(i),
+            Ap242StyledItemItemRef::SymbolRepresentation(i) => StyledItemTargetOrRepresentationItemRef::SymbolRepresentation(i),
+            Ap242StyledItemItemRef::SymbolTarget(i) => StyledItemTargetOrRepresentationItemRef::SymbolTarget(i),
+            Ap242StyledItemItemRef::TessellatedCurveSet(i) => StyledItemTargetOrRepresentationItemRef::TessellatedCurveSet(i),
+            Ap242StyledItemItemRef::TessellatedFace(i) => StyledItemTargetOrRepresentationItemRef::TessellatedFace(i),
+            Ap242StyledItemItemRef::TessellatedGeometricSet(i) => StyledItemTargetOrRepresentationItemRef::TessellatedGeometricSet(i),
+            Ap242StyledItemItemRef::TessellatedItem(i) => StyledItemTargetOrRepresentationItemRef::TessellatedItem(i),
+            Ap242StyledItemItemRef::TessellatedShapeRepresentation(i) => StyledItemTargetOrRepresentationItemRef::TessellatedShapeRepresentation(i),
+            Ap242StyledItemItemRef::TessellatedShell(i) => StyledItemTargetOrRepresentationItemRef::TessellatedShell(i),
+            Ap242StyledItemItemRef::TessellatedSolid(i) => StyledItemTargetOrRepresentationItemRef::TessellatedSolid(i),
+            Ap242StyledItemItemRef::TessellatedStructuredItem(i) => StyledItemTargetOrRepresentationItemRef::TessellatedStructuredItem(i),
+            Ap242StyledItemItemRef::TessellatedSurfaceSet(i) => StyledItemTargetOrRepresentationItemRef::TessellatedSurfaceSet(i),
+            Ap242StyledItemItemRef::TextLiteral(i) => StyledItemTargetOrRepresentationItemRef::TextLiteral(i),
+            Ap242StyledItemItemRef::TopologicalRepresentationItem(i) => StyledItemTargetOrRepresentationItemRef::TopologicalRepresentationItem(i),
+            Ap242StyledItemItemRef::ToroidalSurface(i) => StyledItemTargetOrRepresentationItemRef::ToroidalSurface(i),
+            Ap242StyledItemItemRef::TrimmedCurve(i) => StyledItemTargetOrRepresentationItemRef::TrimmedCurve(i),
+            Ap242StyledItemItemRef::TwoDirectionRepeatFactor(i) => StyledItemTargetOrRepresentationItemRef::TwoDirectionRepeatFactor(i),
+            Ap242StyledItemItemRef::UniformCurve(i) => StyledItemTargetOrRepresentationItemRef::UniformCurve(i),
+            Ap242StyledItemItemRef::UniformSurface(i) => StyledItemTargetOrRepresentationItemRef::UniformSurface(i),
+            Ap242StyledItemItemRef::Vector(i) => StyledItemTargetOrRepresentationItemRef::Vector(i),
+            Ap242StyledItemItemRef::Vertex(i) => StyledItemTargetOrRepresentationItemRef::Vertex(i),
+            Ap242StyledItemItemRef::VertexLoop(i) => StyledItemTargetOrRepresentationItemRef::VertexLoop(i),
+            Ap242StyledItemItemRef::VertexPoint(i) => StyledItemTargetOrRepresentationItemRef::VertexPoint(i),
+            Ap242StyledItemItemRef::VertexShell(i) => StyledItemTargetOrRepresentationItemRef::VertexShell(i),
+            Ap242StyledItemItemRef::WireShell(i) => StyledItemTargetOrRepresentationItemRef::WireShell(i),
+            Ap242StyledItemItemRef::Complex(i) => StyledItemTargetOrRepresentationItemRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242SurfaceCurveCurve3dRef> for CurveRef {
+    fn from(r: Ap242SurfaceCurveCurve3dRef) -> Self {
+        match r {
+            Ap242SurfaceCurveCurve3dRef::BSplineCurve(i) => CurveRef::BSplineCurve(i),
+            Ap242SurfaceCurveCurve3dRef::BSplineCurveWithKnots(i) => {
+                CurveRef::BSplineCurveWithKnots(i)
+            }
+            Ap242SurfaceCurveCurve3dRef::BezierCurve(i) => CurveRef::BezierCurve(i),
+            Ap242SurfaceCurveCurve3dRef::BoundedCurve(i) => CurveRef::BoundedCurve(i),
+            Ap242SurfaceCurveCurve3dRef::BoundedSurfaceCurve(i) => CurveRef::BoundedSurfaceCurve(i),
+            Ap242SurfaceCurveCurve3dRef::Circle(i) => CurveRef::Circle(i),
+            Ap242SurfaceCurveCurve3dRef::CompositeCurve(i) => CurveRef::CompositeCurve(i),
+            Ap242SurfaceCurveCurve3dRef::Conic(i) => CurveRef::Conic(i),
+            Ap242SurfaceCurveCurve3dRef::Curve(i) => CurveRef::Curve(i),
+            Ap242SurfaceCurveCurve3dRef::Ellipse(i) => CurveRef::Ellipse(i),
+            Ap242SurfaceCurveCurve3dRef::Hyperbola(i) => CurveRef::Hyperbola(i),
+            Ap242SurfaceCurveCurve3dRef::IntersectionCurve(i) => CurveRef::IntersectionCurve(i),
+            Ap242SurfaceCurveCurve3dRef::Line(i) => CurveRef::Line(i),
+            Ap242SurfaceCurveCurve3dRef::Parabola(i) => CurveRef::Parabola(i),
+            Ap242SurfaceCurveCurve3dRef::Polyline(i) => CurveRef::Polyline(i),
+            Ap242SurfaceCurveCurve3dRef::QuasiUniformCurve(i) => CurveRef::QuasiUniformCurve(i),
+            Ap242SurfaceCurveCurve3dRef::RationalBSplineCurve(i) => {
+                CurveRef::RationalBSplineCurve(i)
+            }
+            Ap242SurfaceCurveCurve3dRef::SeamCurve(i) => CurveRef::SeamCurve(i),
+            Ap242SurfaceCurveCurve3dRef::SurfaceCurve(i) => CurveRef::SurfaceCurve(i),
+            Ap242SurfaceCurveCurve3dRef::TrimmedCurve(i) => CurveRef::TrimmedCurve(i),
+            Ap242SurfaceCurveCurve3dRef::UniformCurve(i) => CurveRef::UniformCurve(i),
+            Ap242SurfaceCurveCurve3dRef::Complex(i) => CurveRef::Complex(i),
+        }
+    }
+}
+
+impl From<GeometricRepresentationContextRef> for RepresentationContextRef {
+    fn from(r: GeometricRepresentationContextRef) -> Self {
+        match r {
+            GeometricRepresentationContextRef::GeometricRepresentationContext(i) => {
+                RepresentationContextRef::GeometricRepresentationContext(i)
+            }
+            GeometricRepresentationContextRef::Complex(i) => RepresentationContextRef::Complex(i),
         }
     }
 }

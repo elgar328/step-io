@@ -795,10 +795,10 @@ fn emit_author_ref_enums(
     ir: &ModelIr,
     narrowing: &crate::author_narrow::AuthorNarrowing,
 ) {
-    for (rust, (e2_type, re)) in &narrowing.new_enums {
+    for (rust, (what, re)) in &narrowing.new_enums {
         writeln!(
             s,
-            "/// A reference to what AP242 edition 2 allows as `{e2_type}`, where the\n/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)\n/// takes it and stores it as the model's wider reference.\n#[derive(Debug, Clone, PartialEq)]\npub enum {rust} {{"
+            "/// A reference to what AP242 edition 2 allows {what}, where the\n/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)\n/// takes it and stores it as the model's wider reference.\n#[derive(Debug, Clone, PartialEq)]\npub enum {rust} {{"
         )
         .unwrap();
         for (variant, target) in &re.simple_arms {
@@ -3145,6 +3145,9 @@ impl Ap242Author {
                 None => check,
             };
             s.push_str(&check);
+            if let Some((r, rules)) = narrowing.part_rules.get(&(se.rust.clone(), f.name.clone())) {
+                s.push_str(&part_rule_check(r, rules, f, ident, &se.name));
+            }
         }
         for (ident, f) in &params {
             if !f.derived {
@@ -3604,9 +3607,21 @@ fn narrowed_check(
         f.name
     );
     let fits: Vec<String> = n.fits.iter().map(|p| format!("{p:?}")).collect();
+    let part_conds: String = n
+        .part_rules
+        .iter()
+        .map(|r| match r {
+            crate::author_narrow::PartRule::NoneOf(s) => {
+                format!(" && !{}", any_part_in(s))
+            }
+            crate::author_narrow::PartRule::ExactlyOneOf(gs) => {
+                format!(" && {} == 1", groups_held(gs))
+            }
+        })
+        .collect();
     let complex = if wide.has_complex {
         format!(
-            "{w}::Complex(i) => {{ if !model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| [{}].contains(&part_name(p)))) {{ {err} }} }}\n",
+            "{w}::Complex(i) => {{ if !model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| [{}].contains(&part_name(p))){part_conds}) {{ {err} }} }}\n",
             fits.join(", ")
         )
     } else {
@@ -3617,7 +3632,17 @@ fn narrowed_check(
     } else {
         format!("{} => {{}}\n", arms.join(" | "))
     };
-    let one = |v: &str| format!("match {v} {{\n{ok}{complex}_ => {err},\n}}\n");
+    // Only excluded parts narrow it: every arm is matched above.
+    let exhaustive = arms.len() == wide.simple_arms.len()
+        && wide.aggregate.is_empty()
+        && wide.enum_arms.is_empty()
+        && wide.scalar_arms.is_empty();
+    let rest = if exhaustive {
+        String::new()
+    } else {
+        format!("_ => {err},\n")
+    };
+    let one = |v: &str| format!("match {v} {{\n{ok}{complex}{rest}}}\n");
     let amp = if expr_is_ref { "" } else { "&" };
     let body = match f.kind {
         Kind::Vec(_) => format!("for v in x.iter() {{\n{}}}\n", one("v")),
@@ -3627,6 +3652,67 @@ fn narrowed_check(
         format!("        if let Some(x) = {amp}{expr} {{\n{body}        }}\n")
     } else {
         format!("        {{ let x = {amp}{expr};\n{body}        }}\n")
+    }
+}
+
+/// Code: whether complex `c` has a part in `parts`.
+fn any_part_in(parts: &std::collections::BTreeSet<String>) -> String {
+    let parts: Vec<String> = parts.iter().map(|p| format!("{p:?}")).collect();
+    format!(
+        "c.parts.iter().any(|p| [{}].contains(&part_name(p)))",
+        parts.join(", ")
+    )
+}
+
+/// Code: how many of `groups` hold a part of complex `c`.
+fn groups_held(groups: &[std::collections::BTreeSet<String>]) -> String {
+    let groups: Vec<String> = groups
+        .iter()
+        .map(|g| {
+            let parts: Vec<String> = g.iter().map(|p| format!("{p:?}")).collect();
+            format!("&[{}][..]", parts.join(", "))
+        })
+        .collect();
+    format!(
+        "[{}].iter().filter(|g| c.parts.iter().any(|p| g.contains(&part_name(p)))).count()",
+        groups.join(", ")
+    )
+}
+
+/// A constructor's check that a complex argument (or element) of enum `r`
+/// meets what WHERE rules ask of its parts.
+fn part_rule_check(
+    r: &str,
+    rules: &[crate::author_narrow::PartRule],
+    f: &Field,
+    ident: &str,
+    entity_upper: &str,
+) -> String {
+    let one = |v: &str| {
+        rules
+            .iter()
+            .map(|rule| {
+                let broken = match rule {
+                    crate::author_narrow::PartRule::NoneOf(s) => any_part_in(s),
+                    crate::author_narrow::PartRule::ExactlyOneOf(gs) => {
+                        format!("{} != 1", groups_held(gs))
+                    }
+                };
+                format!(
+                    "if matches!({v}, {r}::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| {broken})) {{ return Err(AuthorError::NarrowedReference {{ entity: {entity_upper:?}, attribute: {:?} }}); }}\n",
+                    f.name
+                )
+            })
+            .collect::<String>()
+    };
+    let body = match f.kind {
+        Kind::Vec(_) => format!("for v in x.iter() {{\n{}}}\n", one("v")),
+        _ => one("x"),
+    };
+    if f.optional || f.derivable {
+        format!("        if let Some(x) = &{ident} {{\n{body}        }}\n")
+    } else {
+        format!("        {{ let x = &{ident};\n{body}        }}\n")
     }
 }
 
@@ -3673,8 +3759,21 @@ fn emit_author_ref_checks(
         .iter()
         .map(|se| (se.rust.as_str(), se.name.as_str()))
         .collect();
-    let new_enums = narrowing.new_enums.iter().map(|(_, (t, re))| (t, re));
-    for (target, re) in ir.ref_enums.iter().chain(new_enums) {
+    // What a complex value that fits none of the enum's types is not.
+    let model_enums = ir
+        .ref_enums
+        .iter()
+        .map(|(t, re)| (format!("not a {}", t.to_uppercase()), re));
+    let new_enums = narrowing.new_enums.values().map(|(what, re)| {
+        let inner = what.split('`').nth(1).unwrap_or(what).to_uppercase();
+        let reason = if what.starts_with("as ") {
+            format!("not a {inner}")
+        } else {
+            format!("not allowed in {inner}")
+        };
+        (reason, re)
+    });
+    for (reason, re) in model_enums.chain(new_enums) {
         let r = &re.rust;
         writeln!(
             s,
@@ -3729,10 +3828,9 @@ fn emit_author_ref_checks(
                 .map(|p| format!("{p:?}"))
                 .collect::<Vec<_>>()
                 .join(", ");
-            let target = target.to_uppercase();
             writeln!(
                 s,
-                "        {r}::Complex(i) => {{ let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {{ return Err(AuthorError::DanglingRef {{ entity: \"COMPLEX\" }}); }}; if !c.parts.iter().any(|p| [{fits}].contains(&part_name(p))) {{ return Err(AuthorError::InvalidComplex {{ reason: \"not a {target}\" }}); }} }}"
+                "        {r}::Complex(i) => {{ let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {{ return Err(AuthorError::DanglingRef {{ entity: \"COMPLEX\" }}); }}; if !c.parts.iter().any(|p| [{fits}].contains(&part_name(p))) {{ return Err(AuthorError::InvalidComplex {{ reason: {reason:?} }}); }} }}"
             )
             .unwrap();
         }

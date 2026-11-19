@@ -538,7 +538,7 @@ impl Ap242Author {
     pub fn add_advanced_brep_shape_representation(
         &mut self,
         name: &str,
-        items: Vec<RepresentationItemRef>,
+        items: Vec<Ap242AdvancedBrepShapeRepresentationItemsRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<AdvancedBrepShapeRepresentationId, AuthorError> {
         {
@@ -554,7 +554,19 @@ impl Ap242Author {
             }
         }
         for e0 in &items {
-            check_representation_item_ref(&self.model, e0)?;
+            check_ap242_advanced_brep_shape_representation_items_ref(&self.model, e0)?;
+        }
+        {
+            let x = &items;
+            for v in x.iter() {
+                if matches!(v, Ap242AdvancedBrepShapeRepresentationItemsRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| [&["BREP_WITH_VOIDS", "MANIFOLD_SOLID_BREP"][..], &["ANNOTATION_TEXT", "ANNOTATION_TEXT_CHARACTER", "CAMERA_IMAGE", "CAMERA_IMAGE_3D_WITH_SCALE", "MAPPED_ITEM"][..]].iter().filter(|g| c.parts.iter().any(|p| g.contains(&part_name(p)))).count() != 1))
+                {
+                    return Err(AuthorError::NarrowedReference {
+                        entity: "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                        attribute: "items",
+                    });
+                }
+            }
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
@@ -565,7 +577,7 @@ impl Ap242Author {
             self.model.advanced_brep_shape_representation_arena.push(
                 AdvancedBrepShapeRepresentation {
                     name,
-                    items,
+                    items: items.into_iter().map(Into::into).collect(),
                     context_of_items,
                 },
             ),
@@ -577,7 +589,7 @@ impl Ap242Author {
         &mut self,
         name: &str,
         bounds: Vec<FaceBoundRef>,
-        face_geometry: SurfaceRef,
+        face_geometry: Ap242AdvancedFaceFaceGeometryRef,
         same_sense: bool,
     ) -> Result<AdvancedFaceId, AuthorError> {
         {
@@ -595,7 +607,17 @@ impl Ap242Author {
         for e0 in &bounds {
             check_face_bound_ref(&self.model, e0)?;
         }
-        check_surface_ref(&self.model, &face_geometry)?;
+        check_ap242_advanced_face_face_geometry_ref(&self.model, &face_geometry)?;
+        {
+            let x = &face_geometry;
+            if matches!(x, Ap242AdvancedFaceFaceGeometryRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| [&["DEGENERATE_TOROIDAL_SURFACE", "ELEMENTARY_SURFACE", "TOROIDAL_SURFACE"][..], &["BEZIER_SURFACE", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_SURFACE", "UNIFORM_SURFACE"][..]].iter().filter(|g| c.parts.iter().any(|p| g.contains(&part_name(p)))).count() != 1))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "ADVANCED_FACE",
+                    attribute: "face_geometry",
+                });
+            }
+        }
         let name = {
             let v = name;
             self.text(v)
@@ -604,7 +626,7 @@ impl Ap242Author {
             AdvancedFace {
                 name,
                 bounds,
-                face_geometry,
+                face_geometry: face_geometry.into(),
                 same_sense,
             },
         )))
@@ -741,6 +763,16 @@ impl Ap242Author {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
         check_curve_or_curve_set_ref(&self.model, &item)?;
+        {
+            let x = &item;
+            if matches!(x, CurveOrCurveSetRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT_OCCURRENCE", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "DRAUGHTING_ANNOTATION_OCCURRENCE", "LEADER_CURVE", "LEADER_TERMINATOR", "OVER_RIDING_STYLED_ITEM", "STYLED_ITEM", "TERMINATOR_SYMBOL"].contains(&part_name(p)))))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "ANNOTATION_CURVE_OCCURRENCE",
+                    attribute: "item",
+                });
+            }
+        }
         let name = {
             let v = name;
             self.text(v)
@@ -757,12 +789,22 @@ impl Ap242Author {
         &mut self,
         name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
-        item: Ap242StyledItemTargetRef,
+        item: Ap242StyledItemItemRef,
     ) -> Result<AnnotationOccurrenceId, AuthorError> {
         for e0 in &styles {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
-        check_ap242_styled_item_target_ref(&self.model, &item)?;
+        check_ap242_styled_item_item_ref(&self.model, &item)?;
+        {
+            let x = &item;
+            if matches!(x, Ap242StyledItemItemRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT_OCCURRENCE", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "DRAUGHTING_ANNOTATION_OCCURRENCE", "LEADER_CURVE", "LEADER_TERMINATOR", "OVER_RIDING_STYLED_ITEM", "STYLED_ITEM", "TERMINATOR_SYMBOL"].contains(&part_name(p)))))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "ANNOTATION_OCCURRENCE",
+                    attribute: "item",
+                });
+            }
+        }
         let name = {
             let v = name;
             self.text(v)
@@ -784,10 +826,13 @@ impl Ap242Author {
         name: &str,
         description: &str,
         relating_annotation_occurrence: AnnotationOccurrenceRef,
-        related_annotation_occurrence: AnnotationOccurrenceRef,
+        related_annotation_occurrence: Ap242AnnotationOccurrenceAssociativityRelatedAnnotationOccurrenceRef,
     ) -> Result<AnnotationOccurrenceAssociativityId, AuthorError> {
         check_annotation_occurrence_ref(&self.model, &relating_annotation_occurrence)?;
-        check_annotation_occurrence_ref(&self.model, &related_annotation_occurrence)?;
+        check_ap242_annotation_occurrence_associativity_related_annotation_occurrence_ref(
+            &self.model,
+            &related_annotation_occurrence,
+        )?;
         let name = {
             let v = name;
             self.text(v)
@@ -802,7 +847,7 @@ impl Ap242Author {
                     name,
                     description,
                     relating_annotation_occurrence,
-                    related_annotation_occurrence,
+                    related_annotation_occurrence: related_annotation_occurrence.into(),
                 },
             ),
         ))
@@ -851,6 +896,16 @@ impl Ap242Author {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
         check_geometric_set_ref(&self.model, &item)?;
+        {
+            let x = &item;
+            if matches!(x, GeometricSetRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT_OCCURRENCE", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "DRAUGHTING_ANNOTATION_OCCURRENCE", "LEADER_CURVE", "LEADER_TERMINATOR", "OVER_RIDING_STYLED_ITEM", "STYLED_ITEM", "TERMINATOR_SYMBOL"].contains(&part_name(p)))))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                    attribute: "item",
+                });
+            }
+        }
         if !line_spacing.is_finite() {
             return Err(AuthorError::NonFiniteReal {
                 entity: "ANNOTATION_PLACEHOLDER_OCCURRENCE",
@@ -886,6 +941,16 @@ impl Ap242Author {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
         check_plane_or_planar_box_ref(&self.model, &item)?;
+        {
+            let x = &item;
+            if matches!(x, PlaneOrPlanarBoxRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT_OCCURRENCE", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "DRAUGHTING_ANNOTATION_OCCURRENCE", "LEADER_CURVE", "LEADER_TERMINATOR", "OVER_RIDING_STYLED_ITEM", "STYLED_ITEM", "TERMINATOR_SYMBOL"].contains(&part_name(p)))))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "ANNOTATION_PLANE",
+                    attribute: "item",
+                });
+            }
+        }
         if let Some(x) = &elements {
             if x.len() < 1 {
                 return Err(AuthorError::Cardinality {
@@ -1001,6 +1066,16 @@ impl Ap242Author {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
         check_annotation_text_occurrence_item_ref(&self.model, &item)?;
+        {
+            let x = &item;
+            if matches!(x, AnnotationTextOccurrenceItemRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT_OCCURRENCE", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "DRAUGHTING_ANNOTATION_OCCURRENCE", "LEADER_CURVE", "LEADER_TERMINATOR", "OVER_RIDING_STYLED_ITEM", "STYLED_ITEM", "TERMINATOR_SYMBOL"].contains(&part_name(p)))))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "ANNOTATION_TEXT_OCCURRENCE",
+                    attribute: "item",
+                });
+            }
+        }
         let name = {
             let v = name;
             self.text(v)
@@ -2111,11 +2186,21 @@ impl Ap242Author {
     pub fn add_bounded_surface_curve(
         &mut self,
         name: &str,
-        curve_3d: CurveRef,
+        curve_3d: Ap242BoundedSurfaceCurveCurve3dRef,
         associated_geometry: Vec<PcurveOrSurfaceRef>,
         master_representation: PreferredSurfaceCurveRepresentation,
     ) -> Result<BoundedSurfaceCurveId, AuthorError> {
-        check_curve_ref(&self.model, &curve_3d)?;
+        check_ap242_bounded_surface_curve_curve3d_ref(&self.model, &curve_3d)?;
+        {
+            let x = &curve_3d;
+            if matches!(x, Ap242BoundedSurfaceCurveCurve3dRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["BOUNDED_PCURVE", "PCURVE"].contains(&part_name(p)))))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "BOUNDED_SURFACE_CURVE",
+                    attribute: "curve_3d",
+                });
+            }
+        }
         {
             let x = &associated_geometry;
             if x.len() < 1 || x.len() > 2 {
@@ -2140,7 +2225,7 @@ impl Ap242Author {
                 .bounded_surface_curve_arena
                 .push(BoundedSurfaceCurve {
                     name,
-                    curve_3d,
+                    curve_3d: curve_3d.into(),
                     associated_geometry,
                     master_representation,
                 }),
@@ -2347,14 +2432,24 @@ impl Ap242Author {
     pub fn add_camera_usage(
         &mut self,
         mapping_origin: CameraModelRef,
-        mapped_representation: RepresentationRef,
+        mapped_representation: Ap242CameraUsageMappedRepresentationRef,
     ) -> Result<CameraUsageId, AuthorError> {
         check_camera_model_ref(&self.model, &mapping_origin)?;
-        check_representation_ref(&self.model, &mapped_representation)?;
+        check_ap242_camera_usage_mapped_representation_ref(&self.model, &mapped_representation)?;
+        {
+            let x = &mapped_representation;
+            if matches!(x, Ap242CameraUsageMappedRepresentationRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["PRESENTATION_AREA", "PRESENTATION_REPRESENTATION", "PRESENTATION_VIEW"].contains(&part_name(p)))))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "CAMERA_USAGE",
+                    attribute: "mapped_representation",
+                });
+            }
+        }
         Ok(CameraUsageId(self.model.camera_usage_arena.push(
             CameraUsage {
                 mapping_origin,
-                mapped_representation,
+                mapped_representation: mapped_representation.into(),
             },
         )))
     }
@@ -3194,16 +3289,16 @@ impl Ap242Author {
         &mut self,
         transition: TransitionCode,
         same_sense: bool,
-        parent_curve: CurveRef,
+        parent_curve: Ap242BoundedCurveRef,
     ) -> Result<CompositeCurveSegmentId, AuthorError> {
-        check_curve_ref(&self.model, &parent_curve)?;
+        check_ap242_bounded_curve_ref(&self.model, &parent_curve)?;
         Ok(CompositeCurveSegmentId(
             self.model
                 .composite_curve_segment_arena
                 .push(CompositeCurveSegment {
                     transition,
                     same_sense,
-                    parent_curve,
+                    parent_curve: parent_curve.into(),
                 }),
         ))
     }
@@ -3379,10 +3474,10 @@ impl Ap242Author {
     pub fn add_configuration_effectivity(
         &mut self,
         id: &str,
-        usage: ProductDefinitionRelationshipRef,
+        usage: Ap242ProductDefinitionUsageRef,
         configuration: ConfigurationDesignRef,
     ) -> Result<ConfigurationEffectivityId, AuthorError> {
-        check_product_definition_relationship_ref(&self.model, &usage)?;
+        check_ap242_product_definition_usage_ref(&self.model, &usage)?;
         check_configuration_design_ref(&self.model, &configuration)?;
         let id = {
             let v = id;
@@ -3393,7 +3488,7 @@ impl Ap242Author {
                 .configuration_effectivity_arena
                 .push(ConfigurationEffectivity {
                     id,
-                    usage,
+                    usage: usage.into(),
                     configuration,
                 }),
         ))
@@ -3518,8 +3613,8 @@ impl Ap242Author {
     pub fn add_constructive_geometry_representation(
         &mut self,
         name: &str,
-        items: Vec<RepresentationItemRef>,
-        context_of_items: RepresentationContextRef,
+        items: Vec<Ap242ConstructiveGeometryRepresentationItemsRef>,
+        context_of_items: GeometricRepresentationContextRef,
     ) -> Result<ConstructiveGeometryRepresentationId, AuthorError> {
         {
             let x = &items;
@@ -3534,9 +3629,21 @@ impl Ap242Author {
             }
         }
         for e0 in &items {
-            check_representation_item_ref(&self.model, e0)?;
+            check_ap242_constructive_geometry_representation_items_ref(&self.model, e0)?;
         }
-        check_representation_context_ref(&self.model, &context_of_items)?;
+        {
+            let x = &items;
+            for v in x.iter() {
+                if matches!(v, Ap242ConstructiveGeometryRepresentationItemsRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| [&["PLACEMENT"][..], &["BEZIER_CURVE", "BOUNDED_CURVE", "BOUNDED_PCURVE", "BOUNDED_SURFACE_CURVE", "B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "COMPOSITE_CURVE", "CURVE", "INTERSECTION_CURVE", "PCURVE", "QUASI_UNIFORM_CURVE", "RATIONAL_B_SPLINE_CURVE", "SEAM_CURVE", "SURFACE_CURVE", "UNIFORM_CURVE"][..], &["EDGE", "EDGE_CURVE", "ORIENTED_EDGE"][..], &["ADVANCED_FACE", "FACE", "FACE_SURFACE"][..], &["POINT"][..], &["BEZIER_SURFACE", "BOUNDED_SURFACE", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS", "DEGENERATE_TOROIDAL_SURFACE", "ELEMENTARY_SURFACE", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_SURFACE", "SURFACE", "TOROIDAL_SURFACE", "UNIFORM_SURFACE"][..], &["CLOSED_SHELL", "CONNECTED_FACE_SET", "OPEN_SHELL", "ORIENTED_CLOSED_SHELL"][..], &["VERTEX_POINT"][..]].iter().filter(|g| c.parts.iter().any(|p| g.contains(&part_name(p)))).count() != 1))
+                {
+                    return Err(AuthorError::NarrowedReference {
+                        entity: "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                        attribute: "items",
+                    });
+                }
+            }
+        }
+        check_geometric_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
             self.text(v)
@@ -3545,8 +3652,8 @@ impl Ap242Author {
             self.model.constructive_geometry_representation_arena.push(
                 ConstructiveGeometryRepresentation {
                     name,
-                    items,
-                    context_of_items,
+                    items: items.into_iter().map(Into::into).collect(),
+                    context_of_items: context_of_items.into(),
                 },
             ),
         ))
@@ -3587,14 +3694,24 @@ impl Ap242Author {
         &mut self,
         name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
-        item: Ap242StyledItemTargetRef,
+        item: Ap242StyledItemItemRef,
         over_ridden_style: StyledItemRef,
         style_context: Vec<StyleContextSelectRef>,
     ) -> Result<ContextDependentOverRidingStyledItemId, AuthorError> {
         for e0 in &styles {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
-        check_ap242_styled_item_target_ref(&self.model, &item)?;
+        check_ap242_styled_item_item_ref(&self.model, &item)?;
+        {
+            let x = &item;
+            if matches!(x, Ap242StyledItemItemRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT_OCCURRENCE", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "DRAUGHTING_ANNOTATION_OCCURRENCE", "LEADER_CURVE", "LEADER_TERMINATOR", "OVER_RIDING_STYLED_ITEM", "STYLED_ITEM", "TERMINATOR_SYMBOL"].contains(&part_name(p)))))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                    attribute: "item",
+                });
+            }
+        }
         check_styled_item_ref(&self.model, &over_ridden_style)?;
         {
             let x = &style_context;
@@ -4426,7 +4543,7 @@ impl Ap242Author {
         &mut self,
         name: &str,
         items: Vec<RepresentationItemRef>,
-        context_of_items: RepresentationContextRef,
+        context_of_items: Ap242ParametricRepresentationContextRef,
     ) -> Result<DefinitionalRepresentationId, AuthorError> {
         {
             let x = &items;
@@ -4443,7 +4560,7 @@ impl Ap242Author {
         for e0 in &items {
             check_representation_item_ref(&self.model, e0)?;
         }
-        check_representation_context_ref(&self.model, &context_of_items)?;
+        check_ap242_parametric_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
             self.text(v)
@@ -4454,7 +4571,7 @@ impl Ap242Author {
                 .push(DefinitionalRepresentation {
                     name,
                     items,
-                    context_of_items,
+                    context_of_items: context_of_items.into(),
                 }),
         ))
     }
@@ -5149,12 +5266,22 @@ impl Ap242Author {
         &mut self,
         name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
-        item: Ap242StyledItemTargetRef,
+        item: Ap242StyledItemItemRef,
     ) -> Result<DraughtingAnnotationOccurrenceId, AuthorError> {
         for e0 in &styles {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
-        check_ap242_styled_item_target_ref(&self.model, &item)?;
+        check_ap242_styled_item_item_ref(&self.model, &item)?;
+        {
+            let x = &item;
+            if matches!(x, Ap242StyledItemItemRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT_OCCURRENCE", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "DRAUGHTING_ANNOTATION_OCCURRENCE", "LEADER_CURVE", "LEADER_TERMINATOR", "OVER_RIDING_STYLED_ITEM", "STYLED_ITEM", "TERMINATOR_SYMBOL"].contains(&part_name(p)))))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                    attribute: "item",
+                });
+            }
+        }
         let name = {
             let v = name;
             self.text(v)
@@ -6220,7 +6347,7 @@ impl Ap242Author {
     pub fn add_geometric_curve_set(
         &mut self,
         name: &str,
-        elements: Vec<GeometricSetSelectRef>,
+        elements: Vec<Ap242GeometricCurveSetElementsRef>,
     ) -> Result<GeometricCurveSetId, AuthorError> {
         {
             let x = &elements;
@@ -6235,7 +6362,7 @@ impl Ap242Author {
             }
         }
         for e0 in &elements {
-            check_geometric_set_select_ref(&self.model, e0)?;
+            check_ap242_geometric_curve_set_elements_ref(&self.model, e0)?;
         }
         let name = {
             let v = name;
@@ -6244,7 +6371,10 @@ impl Ap242Author {
         Ok(GeometricCurveSetId(
             self.model
                 .geometric_curve_set_arena
-                .push(GeometricCurveSet { name, elements }),
+                .push(GeometricCurveSet {
+                    name,
+                    elements: elements.into_iter().map(Into::into).collect(),
+                }),
         ))
     }
 
@@ -6621,7 +6751,7 @@ impl Ap242Author {
     pub fn add_geometrically_bounded_surface_shape_representation(
         &mut self,
         name: &str,
-        items: Vec<RepresentationItemRef>,
+        items: Vec<Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<GeometricallyBoundedSurfaceShapeRepresentationId, AuthorError> {
         {
@@ -6637,7 +6767,22 @@ impl Ap242Author {
             }
         }
         for e0 in &items {
-            check_representation_item_ref(&self.model, e0)?;
+            check_ap242_geometrically_bounded_surface_shape_representation_items_ref(
+                &self.model,
+                e0,
+            )?;
+        }
+        {
+            let x = &items;
+            for v in x.iter() {
+                if matches!(v, Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| [&["GEOMETRIC_CURVE_SET", "GEOMETRIC_SET"][..], &["ANNOTATION_TEXT", "ANNOTATION_TEXT_CHARACTER", "CAMERA_IMAGE", "CAMERA_IMAGE_3D_WITH_SCALE", "MAPPED_ITEM"][..]].iter().filter(|g| c.parts.iter().any(|p| g.contains(&part_name(p)))).count() != 1))
+                {
+                    return Err(AuthorError::NarrowedReference {
+                        entity: "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
+                        attribute: "items",
+                    });
+                }
+            }
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
@@ -6649,7 +6794,7 @@ impl Ap242Author {
                 .geometrically_bounded_surface_shape_representation_arena
                 .push(GeometricallyBoundedSurfaceShapeRepresentation {
                     name,
-                    items,
+                    items: items.into_iter().map(Into::into).collect(),
                     context_of_items,
                 }),
         ))
@@ -6659,7 +6804,7 @@ impl Ap242Author {
     pub fn add_geometrically_bounded_wireframe_shape_representation(
         &mut self,
         name: &str,
-        items: Vec<RepresentationItemRef>,
+        items: Vec<Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<GeometricallyBoundedWireframeShapeRepresentationId, AuthorError> {
         {
@@ -6675,7 +6820,22 @@ impl Ap242Author {
             }
         }
         for e0 in &items {
-            check_representation_item_ref(&self.model, e0)?;
+            check_ap242_geometrically_bounded_wireframe_shape_representation_items_ref(
+                &self.model,
+                e0,
+            )?;
+        }
+        {
+            let x = &items;
+            for v in x.iter() {
+                if matches!(v, Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| [&["GEOMETRIC_CURVE_SET"][..], &["ANNOTATION_TEXT", "ANNOTATION_TEXT_CHARACTER", "CAMERA_IMAGE", "CAMERA_IMAGE_3D_WITH_SCALE", "MAPPED_ITEM"][..]].iter().filter(|g| c.parts.iter().any(|p| g.contains(&part_name(p)))).count() != 1))
+                {
+                    return Err(AuthorError::NarrowedReference {
+                        entity: "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                        attribute: "items",
+                    });
+                }
+            }
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
@@ -6687,7 +6847,7 @@ impl Ap242Author {
                 .geometrically_bounded_wireframe_shape_representation_arena
                 .push(GeometricallyBoundedWireframeShapeRepresentation {
                     name,
-                    items,
+                    items: items.into_iter().map(Into::into).collect(),
                     context_of_items,
                 }),
         ))
@@ -6920,11 +7080,21 @@ impl Ap242Author {
     pub fn add_intersection_curve(
         &mut self,
         name: &str,
-        curve_3d: CurveRef,
+        curve_3d: Ap242SurfaceCurveCurve3dRef,
         associated_geometry: Vec<PcurveOrSurfaceRef>,
         master_representation: PreferredSurfaceCurveRepresentation,
     ) -> Result<IntersectionCurveId, AuthorError> {
-        check_curve_ref(&self.model, &curve_3d)?;
+        check_ap242_surface_curve_curve3d_ref(&self.model, &curve_3d)?;
+        {
+            let x = &curve_3d;
+            if matches!(x, Ap242SurfaceCurveCurve3dRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["BOUNDED_PCURVE", "PCURVE"].contains(&part_name(p)))))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "INTERSECTION_CURVE",
+                    attribute: "curve_3d",
+                });
+            }
+        }
         {
             let x = &associated_geometry;
             if x.len() < 1 || x.len() > 2 {
@@ -6947,7 +7117,7 @@ impl Ap242Author {
         Ok(IntersectionCurveId(
             self.model.intersection_curve_arena.push(IntersectionCurve {
                 name,
-                curve_3d,
+                curve_3d: curve_3d.into(),
                 associated_geometry,
                 master_representation,
             }),
@@ -7049,6 +7219,16 @@ impl Ap242Author {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
         check_curve_or_curve_set_ref(&self.model, &item)?;
+        {
+            let x = &item;
+            if matches!(x, CurveOrCurveSetRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT_OCCURRENCE", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "DRAUGHTING_ANNOTATION_OCCURRENCE", "LEADER_CURVE", "LEADER_TERMINATOR", "OVER_RIDING_STYLED_ITEM", "STYLED_ITEM", "TERMINATOR_SYMBOL"].contains(&part_name(p)))))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "LEADER_CURVE",
+                    attribute: "item",
+                });
+            }
+        }
         let name = {
             let v = name;
             self.text(v)
@@ -7098,13 +7278,13 @@ impl Ap242Author {
         name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
         item: AnnotationSymbolOccurrenceItemRef,
-        annotated_curve: AnnotationCurveOccurrenceRef,
+        annotated_curve: Ap242LeaderCurveRef,
     ) -> Result<LeaderTerminatorId, AuthorError> {
         for e0 in &styles {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
         check_annotation_symbol_occurrence_item_ref(&self.model, &item)?;
-        check_annotation_curve_occurrence_ref(&self.model, &annotated_curve)?;
+        check_ap242_leader_curve_ref(&self.model, &annotated_curve)?;
         let name = {
             let v = name;
             self.text(v)
@@ -7114,7 +7294,7 @@ impl Ap242Author {
                 name,
                 styles,
                 item,
-                annotated_curve,
+                annotated_curve: annotated_curve.into(),
             },
         )))
     }
@@ -7123,7 +7303,7 @@ impl Ap242Author {
     pub fn add_length_measure_with_unit(
         &mut self,
         value_component: MeasureValue,
-        unit_component: UnitRef,
+        unit_component: Ap242LengthUnitRef,
     ) -> Result<LengthMeasureWithUnitId, AuthorError> {
         if let MeasureScalar::Real(v) = &value_component.value {
             if !v.is_finite() {
@@ -7133,13 +7313,13 @@ impl Ap242Author {
                 });
             }
         }
-        check_unit_ref(&self.model, &unit_component)?;
+        check_ap242_length_unit_ref(&self.model, &unit_component)?;
         Ok(LengthMeasureWithUnitId(
             self.model
                 .length_measure_with_unit_arena
                 .push(LengthMeasureWithUnit {
                     value_component,
-                    unit_component,
+                    unit_component: unit_component.into(),
                 }),
         ))
     }
@@ -7349,7 +7529,7 @@ impl Ap242Author {
     pub fn add_manifold_surface_shape_representation(
         &mut self,
         name: &str,
-        items: Vec<RepresentationItemRef>,
+        items: Vec<Ap242ManifoldSurfaceShapeRepresentationItemsRef>,
         context_of_items: RepresentationContextRef,
     ) -> Result<ManifoldSurfaceShapeRepresentationId, AuthorError> {
         {
@@ -7365,7 +7545,19 @@ impl Ap242Author {
             }
         }
         for e0 in &items {
-            check_representation_item_ref(&self.model, e0)?;
+            check_ap242_manifold_surface_shape_representation_items_ref(&self.model, e0)?;
+        }
+        {
+            let x = &items;
+            for v in x.iter() {
+                if matches!(v, Ap242ManifoldSurfaceShapeRepresentationItemsRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| [&["SHELL_BASED_SURFACE_MODEL"][..], &["ANNOTATION_TEXT", "ANNOTATION_TEXT_CHARACTER", "CAMERA_IMAGE", "CAMERA_IMAGE_3D_WITH_SCALE", "MAPPED_ITEM"][..]].iter().filter(|g| c.parts.iter().any(|p| g.contains(&part_name(p)))).count() != 1))
+                {
+                    return Err(AuthorError::NarrowedReference {
+                        entity: "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                        attribute: "items",
+                    });
+                }
+            }
         }
         check_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
@@ -7376,7 +7568,7 @@ impl Ap242Author {
             self.model.manifold_surface_shape_representation_arena.push(
                 ManifoldSurfaceShapeRepresentation {
                     name,
-                    items,
+                    items: items.into_iter().map(Into::into).collect(),
                     context_of_items,
                 },
             ),
@@ -7409,7 +7601,7 @@ impl Ap242Author {
     pub fn add_mass_measure_with_unit(
         &mut self,
         value_component: MeasureValue,
-        unit_component: UnitRef,
+        unit_component: Ap242MassUnitRef,
     ) -> Result<MassMeasureWithUnitId, AuthorError> {
         if let MeasureScalar::Real(v) = &value_component.value {
             if !v.is_finite() {
@@ -7419,13 +7611,13 @@ impl Ap242Author {
                 });
             }
         }
-        check_unit_ref(&self.model, &unit_component)?;
+        check_ap242_mass_unit_ref(&self.model, &unit_component)?;
         Ok(MassMeasureWithUnitId(
             self.model
                 .mass_measure_with_unit_arena
                 .push(MassMeasureWithUnit {
                     value_component,
-                    unit_component,
+                    unit_component: unit_component.into(),
                 }),
         ))
     }
@@ -7446,10 +7638,20 @@ impl Ap242Author {
         &mut self,
         name: &str,
         description: &str,
-        qualified_measure: MeasureWithUnitRef,
+        qualified_measure: Ap242MeasureQualificationQualifiedMeasureRef,
         qualifiers: Vec<ValueQualifierRef>,
     ) -> Result<MeasureQualificationId, AuthorError> {
-        check_measure_with_unit_ref(&self.model, &qualified_measure)?;
+        check_ap242_measure_qualification_qualified_measure_ref(&self.model, &qualified_measure)?;
+        {
+            let x = &qualified_measure;
+            if matches!(x, Ap242MeasureQualificationQualifiedMeasureRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ADVANCED_FACE", "ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT", "ANNOTATION_TEXT_CHARACTER", "ANNOTATION_TEXT_OCCURRENCE", "BEZIER_CURVE", "BEZIER_SURFACE", "BOUNDED_CURVE", "BOUNDED_PCURVE", "BOUNDED_SURFACE", "BOUNDED_SURFACE_CURVE", "BREP_WITH_VOIDS", "B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS", "CAMERA_IMAGE", "CAMERA_IMAGE_3D_WITH_SCALE", "CAMERA_MODEL", "CAMERA_MODEL_D3", "CAMERA_MODEL_D3_MULTI_CLIPPING", "CAMERA_MODEL_D3_WITH_HLHSR", "CLOSED_SHELL", "COMPOSITE_CURVE", "COMPOSITE_TEXT", "COMPOUND_REPRESENTATION_ITEM", "CONNECTED_FACE_SET", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "CURVE", "DEGENERATE_TOROIDAL_SURFACE", "DIRECTION", "DRAUGHTING_ANNOTATION_OCCURRENCE", "DRAUGHTING_CALLOUT", "EDGE", "EDGE_CURVE", "EDGE_LOOP", "ELEMENTARY_SURFACE", "EXTERNALLY_DEFINED_HATCH_STYLE", "EXTERNALLY_DEFINED_TILE_STYLE", "FACE", "FACE_BOUND", "FACE_OUTER_BOUND", "FACE_SURFACE", "FILL_AREA_STYLE_HATCHING", "FILL_AREA_STYLE_TILES", "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE", "GEOMETRIC_CURVE_SET", "GEOMETRIC_REPRESENTATION_ITEM", "GEOMETRIC_SET", "INTEGER_REPRESENTATION_ITEM", "INTERSECTION_CURVE", "LEADER_CURVE", "LEADER_DIRECTED_CALLOUT", "LEADER_TERMINATOR", "LOOP", "MANIFOLD_SOLID_BREP", "MAPPED_ITEM", "MEASURE_REPRESENTATION_ITEM", "ONE_DIRECTION_REPEAT_FACTOR", "OPEN_SHELL", "ORIENTED_CLOSED_SHELL", "ORIENTED_EDGE", "OVER_RIDING_STYLED_ITEM", "PATH", "PCURVE", "PLACEMENT", "PLANAR_BOX", "PLANAR_EXTENT", "POINT", "POLY_LOOP", "QUALIFIED_REPRESENTATION_ITEM", "QUASI_UNIFORM_CURVE", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_CURVE", "RATIONAL_B_SPLINE_SURFACE", "REAL_REPRESENTATION_ITEM", "REPOSITIONED_TESSELLATED_ITEM", "REPRESENTATION_ITEM", "SEAM_CURVE", "SHELL_BASED_SURFACE_MODEL", "SOLID_MODEL", "STYLED_ITEM", "SURFACE", "SURFACE_CURVE", "TERMINATOR_SYMBOL", "TESSELLATED_GEOMETRIC_SET", "TESSELLATED_ITEM", "TESSELLATED_STRUCTURED_ITEM", "TEXT_LITERAL", "TOPOLOGICAL_REPRESENTATION_ITEM", "TOROIDAL_SURFACE", "TWO_DIRECTION_REPEAT_FACTOR", "UNIFORM_CURVE", "UNIFORM_SURFACE", "VALUE_REPRESENTATION_ITEM", "VECTOR", "VERTEX", "VERTEX_POINT"].contains(&part_name(p)))))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "MEASURE_QUALIFICATION",
+                    attribute: "qualified_measure",
+                });
+            }
+        }
         {
             let x = &qualifiers;
             if x.len() < 1 {
@@ -7479,7 +7681,7 @@ impl Ap242Author {
                 .push(MeasureQualification {
                     name,
                     description,
-                    qualified_measure,
+                    qualified_measure: qualified_measure.into(),
                     qualifiers,
                 }),
         ))
@@ -8215,10 +8417,23 @@ impl Ap242Author {
     pub fn add_oriented_closed_shell(
         &mut self,
         name: &str,
-        closed_shell_element: ClosedShellRef,
+        closed_shell_element: Ap242OrientedClosedShellClosedShellElementRef,
         orientation: bool,
     ) -> Result<OrientedClosedShellId, AuthorError> {
-        check_closed_shell_ref(&self.model, &closed_shell_element)?;
+        check_ap242_oriented_closed_shell_closed_shell_element_ref(
+            &self.model,
+            &closed_shell_element,
+        )?;
+        {
+            let x = &closed_shell_element;
+            if matches!(x, Ap242OrientedClosedShellClosedShellElementRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ORIENTED_CLOSED_SHELL"].contains(&part_name(p)))))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "ORIENTED_CLOSED_SHELL",
+                    attribute: "closed_shell_element",
+                });
+            }
+        }
         let name = {
             let v = name;
             self.text(v)
@@ -8228,7 +8443,7 @@ impl Ap242Author {
                 .oriented_closed_shell_arena
                 .push(OrientedClosedShell {
                     name,
-                    closed_shell_element,
+                    closed_shell_element: closed_shell_element.into(),
                     orientation,
                 }),
         ))
@@ -8238,10 +8453,20 @@ impl Ap242Author {
     pub fn add_oriented_edge(
         &mut self,
         name: &str,
-        edge_element: EdgeRef,
+        edge_element: Ap242OrientedEdgeEdgeElementRef,
         orientation: bool,
     ) -> Result<OrientedEdgeId, AuthorError> {
-        check_edge_ref(&self.model, &edge_element)?;
+        check_ap242_oriented_edge_edge_element_ref(&self.model, &edge_element)?;
+        {
+            let x = &edge_element;
+            if matches!(x, Ap242OrientedEdgeEdgeElementRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ORIENTED_EDGE"].contains(&part_name(p)))))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "ORIENTED_EDGE",
+                    attribute: "edge_element",
+                });
+            }
+        }
         let name = {
             let v = name;
             self.text(v)
@@ -8249,7 +8474,7 @@ impl Ap242Author {
         Ok(OrientedEdgeId(self.model.oriented_edge_arena.push(
             OrientedEdge {
                 name,
-                edge_element,
+                edge_element: edge_element.into(),
                 orientation,
             },
         )))
@@ -8260,13 +8485,23 @@ impl Ap242Author {
         &mut self,
         name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
-        item: Ap242StyledItemTargetRef,
+        item: Ap242StyledItemItemRef,
         over_ridden_style: StyledItemRef,
     ) -> Result<OverRidingStyledItemId, AuthorError> {
         for e0 in &styles {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
-        check_ap242_styled_item_target_ref(&self.model, &item)?;
+        check_ap242_styled_item_item_ref(&self.model, &item)?;
+        {
+            let x = &item;
+            if matches!(x, Ap242StyledItemItemRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT_OCCURRENCE", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "DRAUGHTING_ANNOTATION_OCCURRENCE", "LEADER_CURVE", "LEADER_TERMINATOR", "OVER_RIDING_STYLED_ITEM", "STYLED_ITEM", "TERMINATOR_SYMBOL"].contains(&part_name(p)))))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "OVER_RIDING_STYLED_ITEM",
+                    attribute: "item",
+                });
+            }
+        }
         check_styled_item_ref(&self.model, &over_ridden_style)?;
         let name = {
             let v = name;
@@ -8876,7 +9111,7 @@ impl Ap242Author {
     pub fn add_plane_angle_measure_with_unit(
         &mut self,
         value_component: MeasureValue,
-        unit_component: UnitRef,
+        unit_component: Ap242PlaneAngleUnitRef,
     ) -> Result<PlaneAngleMeasureWithUnitId, AuthorError> {
         if let MeasureScalar::Real(v) = &value_component.value {
             if !v.is_finite() {
@@ -8886,13 +9121,13 @@ impl Ap242Author {
                 });
             }
         }
-        check_unit_ref(&self.model, &unit_component)?;
+        check_ap242_plane_angle_unit_ref(&self.model, &unit_component)?;
         Ok(PlaneAngleMeasureWithUnitId(
             self.model
                 .plane_angle_measure_with_unit_arena
                 .push(PlaneAngleMeasureWithUnit {
                     value_component,
-                    unit_component,
+                    unit_component: unit_component.into(),
                 }),
         ))
     }
@@ -9965,9 +10200,9 @@ impl Ap242Author {
         &mut self,
         name: &str,
         description: Option<&str>,
-        definition: CharacterizedDefinitionRef,
+        definition: Ap242ProductDefinitionShapeDefinitionRef,
     ) -> Result<ProductDefinitionShapeId, AuthorError> {
-        check_characterized_definition_ref(&self.model, &definition)?;
+        check_ap242_product_definition_shape_definition_ref(&self.model, &definition)?;
         let name = {
             let v = name;
             self.text(v)
@@ -9979,7 +10214,7 @@ impl Ap242Author {
                 .push(ProductDefinitionShape {
                     name,
                     description,
-                    definition,
+                    definition: definition.into(),
                 }),
         ))
     }
@@ -10360,7 +10595,7 @@ impl Ap242Author {
     pub fn add_ratio_measure_with_unit(
         &mut self,
         value_component: MeasureValue,
-        unit_component: UnitRef,
+        unit_component: Ap242RatioUnitRef,
     ) -> Result<RatioMeasureWithUnitId, AuthorError> {
         if let MeasureScalar::Real(v) = &value_component.value {
             if !v.is_finite() {
@@ -10370,13 +10605,13 @@ impl Ap242Author {
                 });
             }
         }
-        check_unit_ref(&self.model, &unit_component)?;
+        check_ap242_ratio_unit_ref(&self.model, &unit_component)?;
         Ok(RatioMeasureWithUnitId(
             self.model
                 .ratio_measure_with_unit_arena
                 .push(RatioMeasureWithUnit {
                     value_component,
-                    unit_component,
+                    unit_component: unit_component.into(),
                 }),
         ))
     }
@@ -10891,11 +11126,21 @@ impl Ap242Author {
     pub fn add_seam_curve(
         &mut self,
         name: &str,
-        curve_3d: CurveRef,
+        curve_3d: Ap242SurfaceCurveCurve3dRef,
         associated_geometry: Vec<PcurveOrSurfaceRef>,
         master_representation: PreferredSurfaceCurveRepresentation,
     ) -> Result<SeamCurveId, AuthorError> {
-        check_curve_ref(&self.model, &curve_3d)?;
+        check_ap242_surface_curve_curve3d_ref(&self.model, &curve_3d)?;
+        {
+            let x = &curve_3d;
+            if matches!(x, Ap242SurfaceCurveCurve3dRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["BOUNDED_PCURVE", "PCURVE"].contains(&part_name(p)))))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "SEAM_CURVE",
+                    attribute: "curve_3d",
+                });
+            }
+        }
         {
             let x = &associated_geometry;
             if x.len() < 1 || x.len() > 2 {
@@ -10917,7 +11162,7 @@ impl Ap242Author {
         };
         Ok(SeamCurveId(self.model.seam_curve_arena.push(SeamCurve {
             name,
-            curve_3d,
+            curve_3d: curve_3d.into(),
             associated_geometry,
             master_representation,
         })))
@@ -11492,12 +11737,22 @@ impl Ap242Author {
         &mut self,
         name: &str,
         styles: Vec<PresentationStyleAssignmentRef>,
-        item: Ap242StyledItemTargetRef,
+        item: Ap242StyledItemItemRef,
     ) -> Result<StyledItemId, AuthorError> {
         for e0 in &styles {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
-        check_ap242_styled_item_target_ref(&self.model, &item)?;
+        check_ap242_styled_item_item_ref(&self.model, &item)?;
+        {
+            let x = &item;
+            if matches!(x, Ap242StyledItemItemRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT_OCCURRENCE", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "DRAUGHTING_ANNOTATION_OCCURRENCE", "LEADER_CURVE", "LEADER_TERMINATOR", "OVER_RIDING_STYLED_ITEM", "STYLED_ITEM", "TERMINATOR_SYMBOL"].contains(&part_name(p)))))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "STYLED_ITEM",
+                    attribute: "item",
+                });
+            }
+        }
         let name = {
             let v = name;
             self.text(v)
@@ -11524,11 +11779,21 @@ impl Ap242Author {
     pub fn add_surface_curve(
         &mut self,
         name: &str,
-        curve_3d: CurveRef,
+        curve_3d: Ap242SurfaceCurveCurve3dRef,
         associated_geometry: Vec<PcurveOrSurfaceRef>,
         master_representation: PreferredSurfaceCurveRepresentation,
     ) -> Result<SurfaceCurveId, AuthorError> {
-        check_curve_ref(&self.model, &curve_3d)?;
+        check_ap242_surface_curve_curve3d_ref(&self.model, &curve_3d)?;
+        {
+            let x = &curve_3d;
+            if matches!(x, Ap242SurfaceCurveCurve3dRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["BOUNDED_PCURVE", "PCURVE"].contains(&part_name(p)))))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "SURFACE_CURVE",
+                    attribute: "curve_3d",
+                });
+            }
+        }
         {
             let x = &associated_geometry;
             if x.len() < 1 || x.len() > 2 {
@@ -11551,7 +11816,7 @@ impl Ap242Author {
         Ok(SurfaceCurveId(self.model.surface_curve_arena.push(
             SurfaceCurve {
                 name,
-                curve_3d,
+                curve_3d: curve_3d.into(),
                 associated_geometry,
                 master_representation,
             },
@@ -12088,6 +12353,16 @@ impl Ap242Author {
             check_presentation_style_assignment_ref(&self.model, e0)?;
         }
         check_tessellated_geometric_set_ref(&self.model, &item)?;
+        {
+            let x = &item;
+            if matches!(x, TessellatedGeometricSetRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT_OCCURRENCE", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "DRAUGHTING_ANNOTATION_OCCURRENCE", "LEADER_CURVE", "LEADER_TERMINATOR", "OVER_RIDING_STYLED_ITEM", "STYLED_ITEM", "TERMINATOR_SYMBOL"].contains(&part_name(p)))))
+            {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "TESSELLATED_ANNOTATION_OCCURRENCE",
+                    attribute: "item",
+                });
+            }
+        }
         let name = {
             let v = name;
             self.text(v)
@@ -12248,7 +12523,7 @@ impl Ap242Author {
         &mut self,
         name: &str,
         items: Vec<RepresentationItemRef>,
-        context_of_items: RepresentationContextRef,
+        context_of_items: Ap242GlobalUnitAssignedContextRef,
     ) -> Result<TessellatedShapeRepresentationId, AuthorError> {
         {
             let x = &items;
@@ -12265,7 +12540,7 @@ impl Ap242Author {
         for e0 in &items {
             check_representation_item_ref(&self.model, e0)?;
         }
-        check_representation_context_ref(&self.model, &context_of_items)?;
+        check_ap242_global_unit_assigned_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
             self.text(v)
@@ -12275,7 +12550,7 @@ impl Ap242Author {
                 TessellatedShapeRepresentation {
                     name,
                     items,
-                    context_of_items,
+                    context_of_items: context_of_items.into(),
                 },
             ),
         ))
@@ -13703,38 +13978,6 @@ impl Ap242Author {
         Ok(id)
     }
 
-    /// `ORIENTED_CLOSED_SHELL` — self-referencing variant: the closure receives the id
-    /// this entity will get, so a field may reference the entity itself.
-    /// Validation runs after insertion; on error the insertion is rolled back.
-    pub fn add_oriented_closed_shell_cyclic(
-        &mut self,
-        build: impl FnOnce(OrientedClosedShellId) -> OrientedClosedShell,
-    ) -> Result<OrientedClosedShellId, AuthorError> {
-        let id = OrientedClosedShellId(self.model.oriented_closed_shell_arena.items.len() as u32);
-        self.model.oriented_closed_shell_arena.push(build(id));
-        if let Err(e) = cyclic_check_oriented_closed_shell(&self.model, id.0) {
-            self.model.oriented_closed_shell_arena.items.pop();
-            return Err(e);
-        }
-        Ok(id)
-    }
-
-    /// `ORIENTED_EDGE` — self-referencing variant: the closure receives the id
-    /// this entity will get, so a field may reference the entity itself.
-    /// Validation runs after insertion; on error the insertion is rolled back.
-    pub fn add_oriented_edge_cyclic(
-        &mut self,
-        build: impl FnOnce(OrientedEdgeId) -> OrientedEdge,
-    ) -> Result<OrientedEdgeId, AuthorError> {
-        let id = OrientedEdgeId(self.model.oriented_edge_arena.items.len() as u32);
-        self.model.oriented_edge_arena.push(build(id));
-        if let Err(e) = cyclic_check_oriented_edge(&self.model, id.0) {
-            self.model.oriented_edge_arena.items.pop();
-            return Err(e);
-        }
-        Ok(id)
-    }
-
     /// `OVER_RIDING_STYLED_ITEM` — self-referencing variant: the closure receives the id
     /// this entity will get, so a field may reference the entity itself.
     /// Validation runs after insertion; on error the insertion is rolled back.
@@ -13767,23 +14010,6 @@ impl Ap242Author {
             .push(build(id));
         if let Err(e) = cyclic_check_product_definition_occurrence(&self.model, id.0) {
             self.model.product_definition_occurrence_arena.items.pop();
-            return Err(e);
-        }
-        Ok(id)
-    }
-
-    /// `PRODUCT_DEFINITION_SHAPE` — self-referencing variant: the closure receives the id
-    /// this entity will get, so a field may reference the entity itself.
-    /// Validation runs after insertion; on error the insertion is rolled back.
-    pub fn add_product_definition_shape_cyclic(
-        &mut self,
-        build: impl FnOnce(ProductDefinitionShapeId) -> ProductDefinitionShape,
-    ) -> Result<ProductDefinitionShapeId, AuthorError> {
-        let id =
-            ProductDefinitionShapeId(self.model.product_definition_shape_arena.items.len() as u32);
-        self.model.product_definition_shape_arena.push(build(id));
-        if let Err(e) = cyclic_check_product_definition_shape(&self.model, id.0) {
-            self.model.product_definition_shape_arena.items.pop();
             return Err(e);
         }
         Ok(id)
@@ -13882,6 +14108,47 @@ impl Ap242Author {
 fn cyclic_check_annotation_plane(model: &StepModel, id: u32) -> Result<(), AuthorError> {
     for e0 in &model.annotation_plane_arena.items[id as usize].styles {
         check_presentation_style_assignment_ref(model, e0)?;
+    }
+    {
+        let x = &model.annotation_plane_arena.items[id as usize].item;
+        match x {
+            PlaneOrPlanarBoxRef::PlanarBox(_) | PlaneOrPlanarBoxRef::Plane(_) => {}
+            PlaneOrPlanarBoxRef::Complex(i) => {
+                if !model
+                    .complex_entity_arena
+                    .items
+                    .get(i.0 as usize)
+                    .is_some_and(|c| {
+                        c.parts
+                            .iter()
+                            .any(|p| ["PLANAR_BOX"].contains(&part_name(p)))
+                            && !c.parts.iter().any(|p| {
+                                [
+                                    "ANNOTATION_CURVE_OCCURRENCE",
+                                    "ANNOTATION_OCCURRENCE",
+                                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                                    "ANNOTATION_PLANE",
+                                    "ANNOTATION_SYMBOL_OCCURRENCE",
+                                    "ANNOTATION_TEXT_OCCURRENCE",
+                                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                                    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                                    "LEADER_CURVE",
+                                    "LEADER_TERMINATOR",
+                                    "OVER_RIDING_STYLED_ITEM",
+                                    "STYLED_ITEM",
+                                    "TERMINATOR_SYMBOL",
+                                ]
+                                .contains(&part_name(p))
+                            })
+                    })
+                {
+                    return Err(AuthorError::NarrowedReference {
+                        entity: "ANNOTATION_PLANE",
+                        attribute: "item",
+                    });
+                }
+            }
+        }
     }
     check_plane_or_planar_box_ref(model, &model.annotation_plane_arena.items[id as usize].item)?;
     if let Some(x) = &model.annotation_plane_arena.items[id as usize].elements {
@@ -14574,6 +14841,59 @@ fn cyclic_check_applied_person_and_organization_assignment(
 }
 
 fn cyclic_check_bounded_surface_curve(model: &StepModel, id: u32) -> Result<(), AuthorError> {
+    {
+        let x = &model.bounded_surface_curve_arena.items[id as usize].curve_3d;
+        match x {
+            CurveRef::BSplineCurve(_)
+            | CurveRef::BSplineCurveWithKnots(_)
+            | CurveRef::BezierCurve(_)
+            | CurveRef::BoundedCurve(_)
+            | CurveRef::BoundedSurfaceCurve(_)
+            | CurveRef::CompositeCurve(_)
+            | CurveRef::Polyline(_)
+            | CurveRef::QuasiUniformCurve(_)
+            | CurveRef::RationalBSplineCurve(_)
+            | CurveRef::TrimmedCurve(_)
+            | CurveRef::UniformCurve(_) => {}
+            CurveRef::Complex(i) => {
+                if !model
+                    .complex_entity_arena
+                    .items
+                    .get(i.0 as usize)
+                    .is_some_and(|c| {
+                        c.parts.iter().any(|p| {
+                            [
+                                "BEZIER_CURVE",
+                                "BOUNDED_CURVE",
+                                "BOUNDED_SURFACE_CURVE",
+                                "B_SPLINE_CURVE",
+                                "B_SPLINE_CURVE_WITH_KNOTS",
+                                "COMPOSITE_CURVE",
+                                "QUASI_UNIFORM_CURVE",
+                                "RATIONAL_B_SPLINE_CURVE",
+                                "UNIFORM_CURVE",
+                            ]
+                            .contains(&part_name(p))
+                        }) && !c
+                            .parts
+                            .iter()
+                            .any(|p| ["BOUNDED_PCURVE", "PCURVE"].contains(&part_name(p)))
+                    })
+                {
+                    return Err(AuthorError::NarrowedReference {
+                        entity: "BOUNDED_SURFACE_CURVE",
+                        attribute: "curve_3d",
+                    });
+                }
+            }
+            _ => {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "BOUNDED_SURFACE_CURVE",
+                    attribute: "curve_3d",
+                });
+            }
+        }
+    }
     check_curve_ref(
         model,
         &model.bounded_surface_curve_arena.items[id as usize].curve_3d,
@@ -14636,8 +14956,8 @@ fn cyclic_check_context_dependent_over_riding_styled_item(
     {
         let x = &model.context_dependent_over_riding_styled_item_arena.items[id as usize].item;
         match x {
-StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::AdvancedFace(_) | StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderOccurrence(_) | StyledItemTargetOrRepresentationItemRef::AnnotationPlane(_) | StyledItemTargetOrRepresentationItemRef::AnnotationText(_) | StyledItemTargetOrRepresentationItemRef::AnnotationTextCharacter(_) | StyledItemTargetOrRepresentationItemRef::Axis1Placement(_) | StyledItemTargetOrRepresentationItemRef::Axis2Placement2d(_) | StyledItemTargetOrRepresentationItemRef::Axis2Placement3d(_) | StyledItemTargetOrRepresentationItemRef::BSplineCurve(_) | StyledItemTargetOrRepresentationItemRef::BSplineCurveWithKnots(_) | StyledItemTargetOrRepresentationItemRef::BSplineSurface(_) | StyledItemTargetOrRepresentationItemRef::BSplineSurfaceWithKnots(_) | StyledItemTargetOrRepresentationItemRef::BezierCurve(_) | StyledItemTargetOrRepresentationItemRef::BezierSurface(_) | StyledItemTargetOrRepresentationItemRef::BoundedCurve(_) | StyledItemTargetOrRepresentationItemRef::BoundedPcurve(_) | StyledItemTargetOrRepresentationItemRef::BoundedSurface(_) | StyledItemTargetOrRepresentationItemRef::BoundedSurfaceCurve(_) | StyledItemTargetOrRepresentationItemRef::BrepWithVoids(_) | StyledItemTargetOrRepresentationItemRef::CameraImage(_) | StyledItemTargetOrRepresentationItemRef::CameraImage3dWithScale(_) | StyledItemTargetOrRepresentationItemRef::CameraModel(_) | StyledItemTargetOrRepresentationItemRef::CameraModelD3(_) | StyledItemTargetOrRepresentationItemRef::CameraModelD3MultiClipping(_) | StyledItemTargetOrRepresentationItemRef::CameraModelD3WithHlhsr(_) | StyledItemTargetOrRepresentationItemRef::CartesianPoint(_) | StyledItemTargetOrRepresentationItemRef::CharacterizedRepresentation(_) | StyledItemTargetOrRepresentationItemRef::Circle(_) | StyledItemTargetOrRepresentationItemRef::ClosedShell(_) | StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedFace(_) | StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedSurfaceSet(_) | StyledItemTargetOrRepresentationItemRef::CompositeCurve(_) | StyledItemTargetOrRepresentationItemRef::CompositeText(_) | StyledItemTargetOrRepresentationItemRef::Conic(_) | StyledItemTargetOrRepresentationItemRef::ConicalSurface(_) | StyledItemTargetOrRepresentationItemRef::ConnectedFaceSet(_) | StyledItemTargetOrRepresentationItemRef::ConstructiveGeometryRepresentation(_) | StyledItemTargetOrRepresentationItemRef::CoordinatesList(_) | StyledItemTargetOrRepresentationItemRef::Curve(_) | StyledItemTargetOrRepresentationItemRef::CylindricalSurface(_) | StyledItemTargetOrRepresentationItemRef::DefinedCharacterGlyph(_) | StyledItemTargetOrRepresentationItemRef::DefinedSymbol(_) | StyledItemTargetOrRepresentationItemRef::DefinitionalRepresentation(_) | StyledItemTargetOrRepresentationItemRef::DegenerateToroidalSurface(_) | StyledItemTargetOrRepresentationItemRef::Direction(_) | StyledItemTargetOrRepresentationItemRef::DraughtingCallout(_) | StyledItemTargetOrRepresentationItemRef::DraughtingModel(_) | StyledItemTargetOrRepresentationItemRef::Edge(_) | StyledItemTargetOrRepresentationItemRef::EdgeCurve(_) | StyledItemTargetOrRepresentationItemRef::EdgeLoop(_) | StyledItemTargetOrRepresentationItemRef::ElementarySurface(_) | StyledItemTargetOrRepresentationItemRef::Ellipse(_) | StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(_) | StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(_) | StyledItemTargetOrRepresentationItemRef::Face(_) | StyledItemTargetOrRepresentationItemRef::FaceBound(_) | StyledItemTargetOrRepresentationItemRef::FaceOuterBound(_) | StyledItemTargetOrRepresentationItemRef::FaceSurface(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleHatching(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileColouredRegion(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileCurveWithStyle(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileSymbolWithStyle(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTiles(_) | StyledItemTargetOrRepresentationItemRef::GeometricCurveSet(_) | StyledItemTargetOrRepresentationItemRef::GeometricRepresentationItem(_) | StyledItemTargetOrRepresentationItemRef::GeometricSet(_) | StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedWireframeShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::Hyperbola(_) | StyledItemTargetOrRepresentationItemRef::IntersectionCurve(_) | StyledItemTargetOrRepresentationItemRef::LeaderDirectedCallout(_) | StyledItemTargetOrRepresentationItemRef::Line(_) | StyledItemTargetOrRepresentationItemRef::Loop(_) | StyledItemTargetOrRepresentationItemRef::ManifoldSolidBrep(_) | StyledItemTargetOrRepresentationItemRef::ManifoldSurfaceShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::MappedItem(_) | StyledItemTargetOrRepresentationItemRef::MechanicalDesignGeometricPresentationRepresentation(_) | StyledItemTargetOrRepresentationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(_) | StyledItemTargetOrRepresentationItemRef::MechanicalDesignShadedPresentationRepresentation(_) | StyledItemTargetOrRepresentationItemRef::OffsetSurface(_) | StyledItemTargetOrRepresentationItemRef::OneDirectionRepeatFactor(_) | StyledItemTargetOrRepresentationItemRef::OpenShell(_) | StyledItemTargetOrRepresentationItemRef::OrientedClosedShell(_) | StyledItemTargetOrRepresentationItemRef::OrientedEdge(_) | StyledItemTargetOrRepresentationItemRef::Parabola(_) | StyledItemTargetOrRepresentationItemRef::Path(_) | StyledItemTargetOrRepresentationItemRef::Pcurve(_) | StyledItemTargetOrRepresentationItemRef::Placement(_) | StyledItemTargetOrRepresentationItemRef::PlanarBox(_) | StyledItemTargetOrRepresentationItemRef::PlanarExtent(_) | StyledItemTargetOrRepresentationItemRef::Plane(_) | StyledItemTargetOrRepresentationItemRef::Point(_) | StyledItemTargetOrRepresentationItemRef::PolyLoop(_) | StyledItemTargetOrRepresentationItemRef::Polyline(_) | StyledItemTargetOrRepresentationItemRef::PresentationArea(_) | StyledItemTargetOrRepresentationItemRef::PresentationRepresentation(_) | StyledItemTargetOrRepresentationItemRef::PresentationView(_) | StyledItemTargetOrRepresentationItemRef::QuasiUniformCurve(_) | StyledItemTargetOrRepresentationItemRef::QuasiUniformSurface(_) | StyledItemTargetOrRepresentationItemRef::RationalBSplineCurve(_) | StyledItemTargetOrRepresentationItemRef::RationalBSplineSurface(_) | StyledItemTargetOrRepresentationItemRef::RepositionedTessellatedItem(_) | StyledItemTargetOrRepresentationItemRef::Representation(_) | StyledItemTargetOrRepresentationItemRef::RepresentationReference(_) | StyledItemTargetOrRepresentationItemRef::SeamCurve(_) | StyledItemTargetOrRepresentationItemRef::ShapeDimensionRepresentation(_) | StyledItemTargetOrRepresentationItemRef::ShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::ShapeRepresentationWithParameters(_) | StyledItemTargetOrRepresentationItemRef::ShellBasedSurfaceModel(_) | StyledItemTargetOrRepresentationItemRef::SolidModel(_) | StyledItemTargetOrRepresentationItemRef::SphericalSurface(_) | StyledItemTargetOrRepresentationItemRef::Surface(_) | StyledItemTargetOrRepresentationItemRef::SurfaceCurve(_) | StyledItemTargetOrRepresentationItemRef::SurfaceOfLinearExtrusion(_) | StyledItemTargetOrRepresentationItemRef::SurfaceOfRevolution(_) | StyledItemTargetOrRepresentationItemRef::SweptSurface(_) | StyledItemTargetOrRepresentationItemRef::SymbolRepresentation(_) | StyledItemTargetOrRepresentationItemRef::SymbolTarget(_) | StyledItemTargetOrRepresentationItemRef::TessellatedCurveSet(_) | StyledItemTargetOrRepresentationItemRef::TessellatedFace(_) | StyledItemTargetOrRepresentationItemRef::TessellatedGeometricSet(_) | StyledItemTargetOrRepresentationItemRef::TessellatedItem(_) | StyledItemTargetOrRepresentationItemRef::TessellatedShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::TessellatedShell(_) | StyledItemTargetOrRepresentationItemRef::TessellatedSolid(_) | StyledItemTargetOrRepresentationItemRef::TessellatedStructuredItem(_) | StyledItemTargetOrRepresentationItemRef::TessellatedSurfaceSet(_) | StyledItemTargetOrRepresentationItemRef::TextLiteral(_) | StyledItemTargetOrRepresentationItemRef::TopologicalRepresentationItem(_) | StyledItemTargetOrRepresentationItemRef::ToroidalSurface(_) | StyledItemTargetOrRepresentationItemRef::TrimmedCurve(_) | StyledItemTargetOrRepresentationItemRef::TwoDirectionRepeatFactor(_) | StyledItemTargetOrRepresentationItemRef::UniformCurve(_) | StyledItemTargetOrRepresentationItemRef::UniformSurface(_) | StyledItemTargetOrRepresentationItemRef::Vector(_) | StyledItemTargetOrRepresentationItemRef::Vertex(_) | StyledItemTargetOrRepresentationItemRef::VertexLoop(_) | StyledItemTargetOrRepresentationItemRef::VertexPoint(_) | StyledItemTargetOrRepresentationItemRef::VertexShell(_) | StyledItemTargetOrRepresentationItemRef::WireShell(_) => {}
-StyledItemTargetOrRepresentationItemRef::Complex(i) => { if !model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ADVANCED_BREP_SHAPE_REPRESENTATION", "ADVANCED_FACE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLANE", "ANNOTATION_TEXT", "ANNOTATION_TEXT_CHARACTER", "BEZIER_CURVE", "BEZIER_SURFACE", "BOUNDED_CURVE", "BOUNDED_PCURVE", "BOUNDED_SURFACE", "BOUNDED_SURFACE_CURVE", "BREP_WITH_VOIDS", "B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS", "CAMERA_IMAGE", "CAMERA_IMAGE_3D_WITH_SCALE", "CAMERA_MODEL", "CAMERA_MODEL_D3", "CAMERA_MODEL_D3_MULTI_CLIPPING", "CAMERA_MODEL_D3_WITH_HLHSR", "CHARACTERIZED_REPRESENTATION", "CLOSED_SHELL", "COMPOSITE_CURVE", "COMPOSITE_TEXT", "CONNECTED_FACE_SET", "CURVE", "DEFINITIONAL_REPRESENTATION", "DEGENERATE_TOROIDAL_SURFACE", "DIRECTION", "DRAUGHTING_CALLOUT", "DRAUGHTING_MODEL", "EDGE", "EDGE_CURVE", "EDGE_LOOP", "ELEMENTARY_SURFACE", "EXTERNALLY_DEFINED_HATCH_STYLE", "EXTERNALLY_DEFINED_TILE_STYLE", "FACE", "FACE_BOUND", "FACE_OUTER_BOUND", "FACE_SURFACE", "FILL_AREA_STYLE_HATCHING", "FILL_AREA_STYLE_TILES", "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE", "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION", "GEOMETRIC_CURVE_SET", "GEOMETRIC_REPRESENTATION_ITEM", "GEOMETRIC_SET", "INTERSECTION_CURVE", "LEADER_DIRECTED_CALLOUT", "LOOP", "MANIFOLD_SOLID_BREP", "MANIFOLD_SURFACE_SHAPE_REPRESENTATION", "MAPPED_ITEM", "ONE_DIRECTION_REPEAT_FACTOR", "OPEN_SHELL", "ORIENTED_CLOSED_SHELL", "ORIENTED_EDGE", "PATH", "PCURVE", "PLACEMENT", "PLANAR_BOX", "PLANAR_EXTENT", "POINT", "POLY_LOOP", "PRESENTATION_AREA", "PRESENTATION_REPRESENTATION", "PRESENTATION_VIEW", "QUASI_UNIFORM_CURVE", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_CURVE", "RATIONAL_B_SPLINE_SURFACE", "REPOSITIONED_TESSELLATED_ITEM", "REPRESENTATION", "REPRESENTATION_REFERENCE", "SEAM_CURVE", "SHAPE_DIMENSION_REPRESENTATION", "SHAPE_REPRESENTATION", "SHAPE_REPRESENTATION_WITH_PARAMETERS", "SHELL_BASED_SURFACE_MODEL", "SOLID_MODEL", "SURFACE", "SURFACE_CURVE", "SYMBOL_REPRESENTATION", "TESSELLATED_GEOMETRIC_SET", "TESSELLATED_ITEM", "TESSELLATED_SHAPE_REPRESENTATION", "TESSELLATED_STRUCTURED_ITEM", "TEXT_LITERAL", "TOPOLOGICAL_REPRESENTATION_ITEM", "TOROIDAL_SURFACE", "TWO_DIRECTION_REPEAT_FACTOR", "UNIFORM_CURVE", "UNIFORM_SURFACE", "VECTOR", "VERTEX", "VERTEX_POINT"].contains(&part_name(p)))) { return Err(AuthorError::NarrowedReference { entity: "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", attribute: "item" }) } }
+StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::AdvancedFace(_) | StyledItemTargetOrRepresentationItemRef::AnnotationText(_) | StyledItemTargetOrRepresentationItemRef::AnnotationTextCharacter(_) | StyledItemTargetOrRepresentationItemRef::Axis1Placement(_) | StyledItemTargetOrRepresentationItemRef::Axis2Placement2d(_) | StyledItemTargetOrRepresentationItemRef::Axis2Placement3d(_) | StyledItemTargetOrRepresentationItemRef::BSplineCurve(_) | StyledItemTargetOrRepresentationItemRef::BSplineCurveWithKnots(_) | StyledItemTargetOrRepresentationItemRef::BSplineSurface(_) | StyledItemTargetOrRepresentationItemRef::BSplineSurfaceWithKnots(_) | StyledItemTargetOrRepresentationItemRef::BezierCurve(_) | StyledItemTargetOrRepresentationItemRef::BezierSurface(_) | StyledItemTargetOrRepresentationItemRef::BoundedCurve(_) | StyledItemTargetOrRepresentationItemRef::BoundedPcurve(_) | StyledItemTargetOrRepresentationItemRef::BoundedSurface(_) | StyledItemTargetOrRepresentationItemRef::BoundedSurfaceCurve(_) | StyledItemTargetOrRepresentationItemRef::BrepWithVoids(_) | StyledItemTargetOrRepresentationItemRef::CameraImage(_) | StyledItemTargetOrRepresentationItemRef::CameraImage3dWithScale(_) | StyledItemTargetOrRepresentationItemRef::CameraModel(_) | StyledItemTargetOrRepresentationItemRef::CameraModelD3(_) | StyledItemTargetOrRepresentationItemRef::CameraModelD3MultiClipping(_) | StyledItemTargetOrRepresentationItemRef::CameraModelD3WithHlhsr(_) | StyledItemTargetOrRepresentationItemRef::CartesianPoint(_) | StyledItemTargetOrRepresentationItemRef::CharacterizedRepresentation(_) | StyledItemTargetOrRepresentationItemRef::Circle(_) | StyledItemTargetOrRepresentationItemRef::ClosedShell(_) | StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedFace(_) | StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedSurfaceSet(_) | StyledItemTargetOrRepresentationItemRef::CompositeCurve(_) | StyledItemTargetOrRepresentationItemRef::CompositeText(_) | StyledItemTargetOrRepresentationItemRef::Conic(_) | StyledItemTargetOrRepresentationItemRef::ConicalSurface(_) | StyledItemTargetOrRepresentationItemRef::ConnectedFaceSet(_) | StyledItemTargetOrRepresentationItemRef::ConstructiveGeometryRepresentation(_) | StyledItemTargetOrRepresentationItemRef::CoordinatesList(_) | StyledItemTargetOrRepresentationItemRef::Curve(_) | StyledItemTargetOrRepresentationItemRef::CylindricalSurface(_) | StyledItemTargetOrRepresentationItemRef::DefinedCharacterGlyph(_) | StyledItemTargetOrRepresentationItemRef::DefinedSymbol(_) | StyledItemTargetOrRepresentationItemRef::DefinitionalRepresentation(_) | StyledItemTargetOrRepresentationItemRef::DegenerateToroidalSurface(_) | StyledItemTargetOrRepresentationItemRef::Direction(_) | StyledItemTargetOrRepresentationItemRef::DraughtingCallout(_) | StyledItemTargetOrRepresentationItemRef::DraughtingModel(_) | StyledItemTargetOrRepresentationItemRef::Edge(_) | StyledItemTargetOrRepresentationItemRef::EdgeCurve(_) | StyledItemTargetOrRepresentationItemRef::EdgeLoop(_) | StyledItemTargetOrRepresentationItemRef::ElementarySurface(_) | StyledItemTargetOrRepresentationItemRef::Ellipse(_) | StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(_) | StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(_) | StyledItemTargetOrRepresentationItemRef::Face(_) | StyledItemTargetOrRepresentationItemRef::FaceBound(_) | StyledItemTargetOrRepresentationItemRef::FaceOuterBound(_) | StyledItemTargetOrRepresentationItemRef::FaceSurface(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleHatching(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileColouredRegion(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileCurveWithStyle(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileSymbolWithStyle(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTiles(_) | StyledItemTargetOrRepresentationItemRef::GeometricCurveSet(_) | StyledItemTargetOrRepresentationItemRef::GeometricRepresentationItem(_) | StyledItemTargetOrRepresentationItemRef::GeometricSet(_) | StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedWireframeShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::Hyperbola(_) | StyledItemTargetOrRepresentationItemRef::IntersectionCurve(_) | StyledItemTargetOrRepresentationItemRef::LeaderDirectedCallout(_) | StyledItemTargetOrRepresentationItemRef::Line(_) | StyledItemTargetOrRepresentationItemRef::Loop(_) | StyledItemTargetOrRepresentationItemRef::ManifoldSolidBrep(_) | StyledItemTargetOrRepresentationItemRef::ManifoldSurfaceShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::MappedItem(_) | StyledItemTargetOrRepresentationItemRef::MechanicalDesignGeometricPresentationRepresentation(_) | StyledItemTargetOrRepresentationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(_) | StyledItemTargetOrRepresentationItemRef::MechanicalDesignShadedPresentationRepresentation(_) | StyledItemTargetOrRepresentationItemRef::OffsetSurface(_) | StyledItemTargetOrRepresentationItemRef::OneDirectionRepeatFactor(_) | StyledItemTargetOrRepresentationItemRef::OpenShell(_) | StyledItemTargetOrRepresentationItemRef::OrientedClosedShell(_) | StyledItemTargetOrRepresentationItemRef::OrientedEdge(_) | StyledItemTargetOrRepresentationItemRef::Parabola(_) | StyledItemTargetOrRepresentationItemRef::Path(_) | StyledItemTargetOrRepresentationItemRef::Pcurve(_) | StyledItemTargetOrRepresentationItemRef::Placement(_) | StyledItemTargetOrRepresentationItemRef::PlanarBox(_) | StyledItemTargetOrRepresentationItemRef::PlanarExtent(_) | StyledItemTargetOrRepresentationItemRef::Plane(_) | StyledItemTargetOrRepresentationItemRef::Point(_) | StyledItemTargetOrRepresentationItemRef::PolyLoop(_) | StyledItemTargetOrRepresentationItemRef::Polyline(_) | StyledItemTargetOrRepresentationItemRef::PresentationArea(_) | StyledItemTargetOrRepresentationItemRef::PresentationRepresentation(_) | StyledItemTargetOrRepresentationItemRef::PresentationView(_) | StyledItemTargetOrRepresentationItemRef::QuasiUniformCurve(_) | StyledItemTargetOrRepresentationItemRef::QuasiUniformSurface(_) | StyledItemTargetOrRepresentationItemRef::RationalBSplineCurve(_) | StyledItemTargetOrRepresentationItemRef::RationalBSplineSurface(_) | StyledItemTargetOrRepresentationItemRef::RepositionedTessellatedItem(_) | StyledItemTargetOrRepresentationItemRef::Representation(_) | StyledItemTargetOrRepresentationItemRef::RepresentationReference(_) | StyledItemTargetOrRepresentationItemRef::SeamCurve(_) | StyledItemTargetOrRepresentationItemRef::ShapeDimensionRepresentation(_) | StyledItemTargetOrRepresentationItemRef::ShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::ShapeRepresentationWithParameters(_) | StyledItemTargetOrRepresentationItemRef::ShellBasedSurfaceModel(_) | StyledItemTargetOrRepresentationItemRef::SolidModel(_) | StyledItemTargetOrRepresentationItemRef::SphericalSurface(_) | StyledItemTargetOrRepresentationItemRef::Surface(_) | StyledItemTargetOrRepresentationItemRef::SurfaceCurve(_) | StyledItemTargetOrRepresentationItemRef::SurfaceOfLinearExtrusion(_) | StyledItemTargetOrRepresentationItemRef::SurfaceOfRevolution(_) | StyledItemTargetOrRepresentationItemRef::SweptSurface(_) | StyledItemTargetOrRepresentationItemRef::SymbolRepresentation(_) | StyledItemTargetOrRepresentationItemRef::SymbolTarget(_) | StyledItemTargetOrRepresentationItemRef::TessellatedCurveSet(_) | StyledItemTargetOrRepresentationItemRef::TessellatedFace(_) | StyledItemTargetOrRepresentationItemRef::TessellatedGeometricSet(_) | StyledItemTargetOrRepresentationItemRef::TessellatedItem(_) | StyledItemTargetOrRepresentationItemRef::TessellatedShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::TessellatedShell(_) | StyledItemTargetOrRepresentationItemRef::TessellatedSolid(_) | StyledItemTargetOrRepresentationItemRef::TessellatedStructuredItem(_) | StyledItemTargetOrRepresentationItemRef::TessellatedSurfaceSet(_) | StyledItemTargetOrRepresentationItemRef::TextLiteral(_) | StyledItemTargetOrRepresentationItemRef::TopologicalRepresentationItem(_) | StyledItemTargetOrRepresentationItemRef::ToroidalSurface(_) | StyledItemTargetOrRepresentationItemRef::TrimmedCurve(_) | StyledItemTargetOrRepresentationItemRef::TwoDirectionRepeatFactor(_) | StyledItemTargetOrRepresentationItemRef::UniformCurve(_) | StyledItemTargetOrRepresentationItemRef::UniformSurface(_) | StyledItemTargetOrRepresentationItemRef::Vector(_) | StyledItemTargetOrRepresentationItemRef::Vertex(_) | StyledItemTargetOrRepresentationItemRef::VertexLoop(_) | StyledItemTargetOrRepresentationItemRef::VertexPoint(_) | StyledItemTargetOrRepresentationItemRef::VertexShell(_) | StyledItemTargetOrRepresentationItemRef::WireShell(_) => {}
+StyledItemTargetOrRepresentationItemRef::Complex(i) => { if !model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ADVANCED_BREP_SHAPE_REPRESENTATION", "ADVANCED_FACE", "ANNOTATION_TEXT", "ANNOTATION_TEXT_CHARACTER", "BEZIER_CURVE", "BEZIER_SURFACE", "BOUNDED_CURVE", "BOUNDED_PCURVE", "BOUNDED_SURFACE", "BOUNDED_SURFACE_CURVE", "BREP_WITH_VOIDS", "B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS", "CAMERA_IMAGE", "CAMERA_IMAGE_3D_WITH_SCALE", "CAMERA_MODEL", "CAMERA_MODEL_D3", "CAMERA_MODEL_D3_MULTI_CLIPPING", "CAMERA_MODEL_D3_WITH_HLHSR", "CHARACTERIZED_REPRESENTATION", "CLOSED_SHELL", "COMPOSITE_CURVE", "COMPOSITE_TEXT", "CONNECTED_FACE_SET", "CURVE", "DEFINITIONAL_REPRESENTATION", "DEGENERATE_TOROIDAL_SURFACE", "DIRECTION", "DRAUGHTING_CALLOUT", "DRAUGHTING_MODEL", "EDGE", "EDGE_CURVE", "EDGE_LOOP", "ELEMENTARY_SURFACE", "EXTERNALLY_DEFINED_HATCH_STYLE", "EXTERNALLY_DEFINED_TILE_STYLE", "FACE", "FACE_BOUND", "FACE_OUTER_BOUND", "FACE_SURFACE", "FILL_AREA_STYLE_HATCHING", "FILL_AREA_STYLE_TILES", "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE", "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION", "GEOMETRIC_CURVE_SET", "GEOMETRIC_REPRESENTATION_ITEM", "GEOMETRIC_SET", "INTERSECTION_CURVE", "LEADER_DIRECTED_CALLOUT", "LOOP", "MANIFOLD_SOLID_BREP", "MANIFOLD_SURFACE_SHAPE_REPRESENTATION", "MAPPED_ITEM", "ONE_DIRECTION_REPEAT_FACTOR", "OPEN_SHELL", "ORIENTED_CLOSED_SHELL", "ORIENTED_EDGE", "PATH", "PCURVE", "PLACEMENT", "PLANAR_BOX", "PLANAR_EXTENT", "POINT", "POLY_LOOP", "PRESENTATION_AREA", "PRESENTATION_REPRESENTATION", "PRESENTATION_VIEW", "QUASI_UNIFORM_CURVE", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_CURVE", "RATIONAL_B_SPLINE_SURFACE", "REPOSITIONED_TESSELLATED_ITEM", "REPRESENTATION", "REPRESENTATION_REFERENCE", "SEAM_CURVE", "SHAPE_DIMENSION_REPRESENTATION", "SHAPE_REPRESENTATION", "SHAPE_REPRESENTATION_WITH_PARAMETERS", "SHELL_BASED_SURFACE_MODEL", "SOLID_MODEL", "SURFACE", "SURFACE_CURVE", "SYMBOL_REPRESENTATION", "TESSELLATED_GEOMETRIC_SET", "TESSELLATED_ITEM", "TESSELLATED_SHAPE_REPRESENTATION", "TESSELLATED_STRUCTURED_ITEM", "TEXT_LITERAL", "TOPOLOGICAL_REPRESENTATION_ITEM", "TOROIDAL_SURFACE", "TWO_DIRECTION_REPEAT_FACTOR", "UNIFORM_CURVE", "UNIFORM_SURFACE", "VECTOR", "VERTEX", "VERTEX_POINT"].contains(&part_name(p))) && !c.parts.iter().any(|p| ["ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT_OCCURRENCE", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "DRAUGHTING_ANNOTATION_OCCURRENCE", "LEADER_CURVE", "LEADER_TERMINATOR", "OVER_RIDING_STYLED_ITEM", "STYLED_ITEM", "TERMINATOR_SYMBOL"].contains(&part_name(p)))) { return Err(AuthorError::NarrowedReference { entity: "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", attribute: "item" }) } }
 _ => return Err(AuthorError::NarrowedReference { entity: "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", attribute: "item" }),
 }
     }
@@ -14714,6 +15034,73 @@ fn cyclic_check_dimensional_size_with_datum_feature(
 }
 
 fn cyclic_check_intersection_curve(model: &StepModel, id: u32) -> Result<(), AuthorError> {
+    {
+        let x = &model.intersection_curve_arena.items[id as usize].curve_3d;
+        match x {
+            CurveRef::BSplineCurve(_)
+            | CurveRef::BSplineCurveWithKnots(_)
+            | CurveRef::BezierCurve(_)
+            | CurveRef::BoundedCurve(_)
+            | CurveRef::BoundedSurfaceCurve(_)
+            | CurveRef::Circle(_)
+            | CurveRef::CompositeCurve(_)
+            | CurveRef::Conic(_)
+            | CurveRef::Curve(_)
+            | CurveRef::Ellipse(_)
+            | CurveRef::Hyperbola(_)
+            | CurveRef::IntersectionCurve(_)
+            | CurveRef::Line(_)
+            | CurveRef::Parabola(_)
+            | CurveRef::Polyline(_)
+            | CurveRef::QuasiUniformCurve(_)
+            | CurveRef::RationalBSplineCurve(_)
+            | CurveRef::SeamCurve(_)
+            | CurveRef::SurfaceCurve(_)
+            | CurveRef::TrimmedCurve(_)
+            | CurveRef::UniformCurve(_) => {}
+            CurveRef::Complex(i) => {
+                if !model
+                    .complex_entity_arena
+                    .items
+                    .get(i.0 as usize)
+                    .is_some_and(|c| {
+                        c.parts.iter().any(|p| {
+                            [
+                                "BEZIER_CURVE",
+                                "BOUNDED_CURVE",
+                                "BOUNDED_SURFACE_CURVE",
+                                "B_SPLINE_CURVE",
+                                "B_SPLINE_CURVE_WITH_KNOTS",
+                                "COMPOSITE_CURVE",
+                                "CURVE",
+                                "INTERSECTION_CURVE",
+                                "QUASI_UNIFORM_CURVE",
+                                "RATIONAL_B_SPLINE_CURVE",
+                                "SEAM_CURVE",
+                                "SURFACE_CURVE",
+                                "UNIFORM_CURVE",
+                            ]
+                            .contains(&part_name(p))
+                        }) && !c
+                            .parts
+                            .iter()
+                            .any(|p| ["BOUNDED_PCURVE", "PCURVE"].contains(&part_name(p)))
+                    })
+                {
+                    return Err(AuthorError::NarrowedReference {
+                        entity: "INTERSECTION_CURVE",
+                        attribute: "curve_3d",
+                    });
+                }
+            }
+            _ => {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "INTERSECTION_CURVE",
+                    attribute: "curve_3d",
+                });
+            }
+        }
+    }
     check_curve_ref(
         model,
         &model.intersection_curve_arena.items[id as usize].curve_3d,
@@ -14765,22 +15152,6 @@ fn cyclic_check_offset_surface(model: &StepModel, id: u32) -> Result<(), AuthorE
     Ok(())
 }
 
-fn cyclic_check_oriented_closed_shell(model: &StepModel, id: u32) -> Result<(), AuthorError> {
-    check_closed_shell_ref(
-        model,
-        &model.oriented_closed_shell_arena.items[id as usize].closed_shell_element,
-    )?;
-    Ok(())
-}
-
-fn cyclic_check_oriented_edge(model: &StepModel, id: u32) -> Result<(), AuthorError> {
-    check_edge_ref(
-        model,
-        &model.oriented_edge_arena.items[id as usize].edge_element,
-    )?;
-    Ok(())
-}
-
 fn cyclic_check_over_riding_styled_item(model: &StepModel, id: u32) -> Result<(), AuthorError> {
     for e0 in &model.over_riding_styled_item_arena.items[id as usize].styles {
         check_presentation_style_assignment_ref(model, e0)?;
@@ -14788,8 +15159,8 @@ fn cyclic_check_over_riding_styled_item(model: &StepModel, id: u32) -> Result<()
     {
         let x = &model.over_riding_styled_item_arena.items[id as usize].item;
         match x {
-StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::AdvancedFace(_) | StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderOccurrence(_) | StyledItemTargetOrRepresentationItemRef::AnnotationPlane(_) | StyledItemTargetOrRepresentationItemRef::AnnotationText(_) | StyledItemTargetOrRepresentationItemRef::AnnotationTextCharacter(_) | StyledItemTargetOrRepresentationItemRef::Axis1Placement(_) | StyledItemTargetOrRepresentationItemRef::Axis2Placement2d(_) | StyledItemTargetOrRepresentationItemRef::Axis2Placement3d(_) | StyledItemTargetOrRepresentationItemRef::BSplineCurve(_) | StyledItemTargetOrRepresentationItemRef::BSplineCurveWithKnots(_) | StyledItemTargetOrRepresentationItemRef::BSplineSurface(_) | StyledItemTargetOrRepresentationItemRef::BSplineSurfaceWithKnots(_) | StyledItemTargetOrRepresentationItemRef::BezierCurve(_) | StyledItemTargetOrRepresentationItemRef::BezierSurface(_) | StyledItemTargetOrRepresentationItemRef::BoundedCurve(_) | StyledItemTargetOrRepresentationItemRef::BoundedPcurve(_) | StyledItemTargetOrRepresentationItemRef::BoundedSurface(_) | StyledItemTargetOrRepresentationItemRef::BoundedSurfaceCurve(_) | StyledItemTargetOrRepresentationItemRef::BrepWithVoids(_) | StyledItemTargetOrRepresentationItemRef::CameraImage(_) | StyledItemTargetOrRepresentationItemRef::CameraImage3dWithScale(_) | StyledItemTargetOrRepresentationItemRef::CameraModel(_) | StyledItemTargetOrRepresentationItemRef::CameraModelD3(_) | StyledItemTargetOrRepresentationItemRef::CameraModelD3MultiClipping(_) | StyledItemTargetOrRepresentationItemRef::CameraModelD3WithHlhsr(_) | StyledItemTargetOrRepresentationItemRef::CartesianPoint(_) | StyledItemTargetOrRepresentationItemRef::CharacterizedRepresentation(_) | StyledItemTargetOrRepresentationItemRef::Circle(_) | StyledItemTargetOrRepresentationItemRef::ClosedShell(_) | StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedFace(_) | StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedSurfaceSet(_) | StyledItemTargetOrRepresentationItemRef::CompositeCurve(_) | StyledItemTargetOrRepresentationItemRef::CompositeText(_) | StyledItemTargetOrRepresentationItemRef::Conic(_) | StyledItemTargetOrRepresentationItemRef::ConicalSurface(_) | StyledItemTargetOrRepresentationItemRef::ConnectedFaceSet(_) | StyledItemTargetOrRepresentationItemRef::ConstructiveGeometryRepresentation(_) | StyledItemTargetOrRepresentationItemRef::CoordinatesList(_) | StyledItemTargetOrRepresentationItemRef::Curve(_) | StyledItemTargetOrRepresentationItemRef::CylindricalSurface(_) | StyledItemTargetOrRepresentationItemRef::DefinedCharacterGlyph(_) | StyledItemTargetOrRepresentationItemRef::DefinedSymbol(_) | StyledItemTargetOrRepresentationItemRef::DefinitionalRepresentation(_) | StyledItemTargetOrRepresentationItemRef::DegenerateToroidalSurface(_) | StyledItemTargetOrRepresentationItemRef::Direction(_) | StyledItemTargetOrRepresentationItemRef::DraughtingCallout(_) | StyledItemTargetOrRepresentationItemRef::DraughtingModel(_) | StyledItemTargetOrRepresentationItemRef::Edge(_) | StyledItemTargetOrRepresentationItemRef::EdgeCurve(_) | StyledItemTargetOrRepresentationItemRef::EdgeLoop(_) | StyledItemTargetOrRepresentationItemRef::ElementarySurface(_) | StyledItemTargetOrRepresentationItemRef::Ellipse(_) | StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(_) | StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(_) | StyledItemTargetOrRepresentationItemRef::Face(_) | StyledItemTargetOrRepresentationItemRef::FaceBound(_) | StyledItemTargetOrRepresentationItemRef::FaceOuterBound(_) | StyledItemTargetOrRepresentationItemRef::FaceSurface(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleHatching(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileColouredRegion(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileCurveWithStyle(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileSymbolWithStyle(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTiles(_) | StyledItemTargetOrRepresentationItemRef::GeometricCurveSet(_) | StyledItemTargetOrRepresentationItemRef::GeometricRepresentationItem(_) | StyledItemTargetOrRepresentationItemRef::GeometricSet(_) | StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedWireframeShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::Hyperbola(_) | StyledItemTargetOrRepresentationItemRef::IntersectionCurve(_) | StyledItemTargetOrRepresentationItemRef::LeaderDirectedCallout(_) | StyledItemTargetOrRepresentationItemRef::Line(_) | StyledItemTargetOrRepresentationItemRef::Loop(_) | StyledItemTargetOrRepresentationItemRef::ManifoldSolidBrep(_) | StyledItemTargetOrRepresentationItemRef::ManifoldSurfaceShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::MappedItem(_) | StyledItemTargetOrRepresentationItemRef::MechanicalDesignGeometricPresentationRepresentation(_) | StyledItemTargetOrRepresentationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(_) | StyledItemTargetOrRepresentationItemRef::MechanicalDesignShadedPresentationRepresentation(_) | StyledItemTargetOrRepresentationItemRef::OffsetSurface(_) | StyledItemTargetOrRepresentationItemRef::OneDirectionRepeatFactor(_) | StyledItemTargetOrRepresentationItemRef::OpenShell(_) | StyledItemTargetOrRepresentationItemRef::OrientedClosedShell(_) | StyledItemTargetOrRepresentationItemRef::OrientedEdge(_) | StyledItemTargetOrRepresentationItemRef::Parabola(_) | StyledItemTargetOrRepresentationItemRef::Path(_) | StyledItemTargetOrRepresentationItemRef::Pcurve(_) | StyledItemTargetOrRepresentationItemRef::Placement(_) | StyledItemTargetOrRepresentationItemRef::PlanarBox(_) | StyledItemTargetOrRepresentationItemRef::PlanarExtent(_) | StyledItemTargetOrRepresentationItemRef::Plane(_) | StyledItemTargetOrRepresentationItemRef::Point(_) | StyledItemTargetOrRepresentationItemRef::PolyLoop(_) | StyledItemTargetOrRepresentationItemRef::Polyline(_) | StyledItemTargetOrRepresentationItemRef::PresentationArea(_) | StyledItemTargetOrRepresentationItemRef::PresentationRepresentation(_) | StyledItemTargetOrRepresentationItemRef::PresentationView(_) | StyledItemTargetOrRepresentationItemRef::QuasiUniformCurve(_) | StyledItemTargetOrRepresentationItemRef::QuasiUniformSurface(_) | StyledItemTargetOrRepresentationItemRef::RationalBSplineCurve(_) | StyledItemTargetOrRepresentationItemRef::RationalBSplineSurface(_) | StyledItemTargetOrRepresentationItemRef::RepositionedTessellatedItem(_) | StyledItemTargetOrRepresentationItemRef::Representation(_) | StyledItemTargetOrRepresentationItemRef::RepresentationReference(_) | StyledItemTargetOrRepresentationItemRef::SeamCurve(_) | StyledItemTargetOrRepresentationItemRef::ShapeDimensionRepresentation(_) | StyledItemTargetOrRepresentationItemRef::ShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::ShapeRepresentationWithParameters(_) | StyledItemTargetOrRepresentationItemRef::ShellBasedSurfaceModel(_) | StyledItemTargetOrRepresentationItemRef::SolidModel(_) | StyledItemTargetOrRepresentationItemRef::SphericalSurface(_) | StyledItemTargetOrRepresentationItemRef::Surface(_) | StyledItemTargetOrRepresentationItemRef::SurfaceCurve(_) | StyledItemTargetOrRepresentationItemRef::SurfaceOfLinearExtrusion(_) | StyledItemTargetOrRepresentationItemRef::SurfaceOfRevolution(_) | StyledItemTargetOrRepresentationItemRef::SweptSurface(_) | StyledItemTargetOrRepresentationItemRef::SymbolRepresentation(_) | StyledItemTargetOrRepresentationItemRef::SymbolTarget(_) | StyledItemTargetOrRepresentationItemRef::TessellatedCurveSet(_) | StyledItemTargetOrRepresentationItemRef::TessellatedFace(_) | StyledItemTargetOrRepresentationItemRef::TessellatedGeometricSet(_) | StyledItemTargetOrRepresentationItemRef::TessellatedItem(_) | StyledItemTargetOrRepresentationItemRef::TessellatedShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::TessellatedShell(_) | StyledItemTargetOrRepresentationItemRef::TessellatedSolid(_) | StyledItemTargetOrRepresentationItemRef::TessellatedStructuredItem(_) | StyledItemTargetOrRepresentationItemRef::TessellatedSurfaceSet(_) | StyledItemTargetOrRepresentationItemRef::TextLiteral(_) | StyledItemTargetOrRepresentationItemRef::TopologicalRepresentationItem(_) | StyledItemTargetOrRepresentationItemRef::ToroidalSurface(_) | StyledItemTargetOrRepresentationItemRef::TrimmedCurve(_) | StyledItemTargetOrRepresentationItemRef::TwoDirectionRepeatFactor(_) | StyledItemTargetOrRepresentationItemRef::UniformCurve(_) | StyledItemTargetOrRepresentationItemRef::UniformSurface(_) | StyledItemTargetOrRepresentationItemRef::Vector(_) | StyledItemTargetOrRepresentationItemRef::Vertex(_) | StyledItemTargetOrRepresentationItemRef::VertexLoop(_) | StyledItemTargetOrRepresentationItemRef::VertexPoint(_) | StyledItemTargetOrRepresentationItemRef::VertexShell(_) | StyledItemTargetOrRepresentationItemRef::WireShell(_) => {}
-StyledItemTargetOrRepresentationItemRef::Complex(i) => { if !model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ADVANCED_BREP_SHAPE_REPRESENTATION", "ADVANCED_FACE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLANE", "ANNOTATION_TEXT", "ANNOTATION_TEXT_CHARACTER", "BEZIER_CURVE", "BEZIER_SURFACE", "BOUNDED_CURVE", "BOUNDED_PCURVE", "BOUNDED_SURFACE", "BOUNDED_SURFACE_CURVE", "BREP_WITH_VOIDS", "B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS", "CAMERA_IMAGE", "CAMERA_IMAGE_3D_WITH_SCALE", "CAMERA_MODEL", "CAMERA_MODEL_D3", "CAMERA_MODEL_D3_MULTI_CLIPPING", "CAMERA_MODEL_D3_WITH_HLHSR", "CHARACTERIZED_REPRESENTATION", "CLOSED_SHELL", "COMPOSITE_CURVE", "COMPOSITE_TEXT", "CONNECTED_FACE_SET", "CURVE", "DEFINITIONAL_REPRESENTATION", "DEGENERATE_TOROIDAL_SURFACE", "DIRECTION", "DRAUGHTING_CALLOUT", "DRAUGHTING_MODEL", "EDGE", "EDGE_CURVE", "EDGE_LOOP", "ELEMENTARY_SURFACE", "EXTERNALLY_DEFINED_HATCH_STYLE", "EXTERNALLY_DEFINED_TILE_STYLE", "FACE", "FACE_BOUND", "FACE_OUTER_BOUND", "FACE_SURFACE", "FILL_AREA_STYLE_HATCHING", "FILL_AREA_STYLE_TILES", "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE", "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION", "GEOMETRIC_CURVE_SET", "GEOMETRIC_REPRESENTATION_ITEM", "GEOMETRIC_SET", "INTERSECTION_CURVE", "LEADER_DIRECTED_CALLOUT", "LOOP", "MANIFOLD_SOLID_BREP", "MANIFOLD_SURFACE_SHAPE_REPRESENTATION", "MAPPED_ITEM", "ONE_DIRECTION_REPEAT_FACTOR", "OPEN_SHELL", "ORIENTED_CLOSED_SHELL", "ORIENTED_EDGE", "PATH", "PCURVE", "PLACEMENT", "PLANAR_BOX", "PLANAR_EXTENT", "POINT", "POLY_LOOP", "PRESENTATION_AREA", "PRESENTATION_REPRESENTATION", "PRESENTATION_VIEW", "QUASI_UNIFORM_CURVE", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_CURVE", "RATIONAL_B_SPLINE_SURFACE", "REPOSITIONED_TESSELLATED_ITEM", "REPRESENTATION", "REPRESENTATION_REFERENCE", "SEAM_CURVE", "SHAPE_DIMENSION_REPRESENTATION", "SHAPE_REPRESENTATION", "SHAPE_REPRESENTATION_WITH_PARAMETERS", "SHELL_BASED_SURFACE_MODEL", "SOLID_MODEL", "SURFACE", "SURFACE_CURVE", "SYMBOL_REPRESENTATION", "TESSELLATED_GEOMETRIC_SET", "TESSELLATED_ITEM", "TESSELLATED_SHAPE_REPRESENTATION", "TESSELLATED_STRUCTURED_ITEM", "TEXT_LITERAL", "TOPOLOGICAL_REPRESENTATION_ITEM", "TOROIDAL_SURFACE", "TWO_DIRECTION_REPEAT_FACTOR", "UNIFORM_CURVE", "UNIFORM_SURFACE", "VECTOR", "VERTEX", "VERTEX_POINT"].contains(&part_name(p)))) { return Err(AuthorError::NarrowedReference { entity: "OVER_RIDING_STYLED_ITEM", attribute: "item" }) } }
+StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::AdvancedFace(_) | StyledItemTargetOrRepresentationItemRef::AnnotationText(_) | StyledItemTargetOrRepresentationItemRef::AnnotationTextCharacter(_) | StyledItemTargetOrRepresentationItemRef::Axis1Placement(_) | StyledItemTargetOrRepresentationItemRef::Axis2Placement2d(_) | StyledItemTargetOrRepresentationItemRef::Axis2Placement3d(_) | StyledItemTargetOrRepresentationItemRef::BSplineCurve(_) | StyledItemTargetOrRepresentationItemRef::BSplineCurveWithKnots(_) | StyledItemTargetOrRepresentationItemRef::BSplineSurface(_) | StyledItemTargetOrRepresentationItemRef::BSplineSurfaceWithKnots(_) | StyledItemTargetOrRepresentationItemRef::BezierCurve(_) | StyledItemTargetOrRepresentationItemRef::BezierSurface(_) | StyledItemTargetOrRepresentationItemRef::BoundedCurve(_) | StyledItemTargetOrRepresentationItemRef::BoundedPcurve(_) | StyledItemTargetOrRepresentationItemRef::BoundedSurface(_) | StyledItemTargetOrRepresentationItemRef::BoundedSurfaceCurve(_) | StyledItemTargetOrRepresentationItemRef::BrepWithVoids(_) | StyledItemTargetOrRepresentationItemRef::CameraImage(_) | StyledItemTargetOrRepresentationItemRef::CameraImage3dWithScale(_) | StyledItemTargetOrRepresentationItemRef::CameraModel(_) | StyledItemTargetOrRepresentationItemRef::CameraModelD3(_) | StyledItemTargetOrRepresentationItemRef::CameraModelD3MultiClipping(_) | StyledItemTargetOrRepresentationItemRef::CameraModelD3WithHlhsr(_) | StyledItemTargetOrRepresentationItemRef::CartesianPoint(_) | StyledItemTargetOrRepresentationItemRef::CharacterizedRepresentation(_) | StyledItemTargetOrRepresentationItemRef::Circle(_) | StyledItemTargetOrRepresentationItemRef::ClosedShell(_) | StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedFace(_) | StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedSurfaceSet(_) | StyledItemTargetOrRepresentationItemRef::CompositeCurve(_) | StyledItemTargetOrRepresentationItemRef::CompositeText(_) | StyledItemTargetOrRepresentationItemRef::Conic(_) | StyledItemTargetOrRepresentationItemRef::ConicalSurface(_) | StyledItemTargetOrRepresentationItemRef::ConnectedFaceSet(_) | StyledItemTargetOrRepresentationItemRef::ConstructiveGeometryRepresentation(_) | StyledItemTargetOrRepresentationItemRef::CoordinatesList(_) | StyledItemTargetOrRepresentationItemRef::Curve(_) | StyledItemTargetOrRepresentationItemRef::CylindricalSurface(_) | StyledItemTargetOrRepresentationItemRef::DefinedCharacterGlyph(_) | StyledItemTargetOrRepresentationItemRef::DefinedSymbol(_) | StyledItemTargetOrRepresentationItemRef::DefinitionalRepresentation(_) | StyledItemTargetOrRepresentationItemRef::DegenerateToroidalSurface(_) | StyledItemTargetOrRepresentationItemRef::Direction(_) | StyledItemTargetOrRepresentationItemRef::DraughtingCallout(_) | StyledItemTargetOrRepresentationItemRef::DraughtingModel(_) | StyledItemTargetOrRepresentationItemRef::Edge(_) | StyledItemTargetOrRepresentationItemRef::EdgeCurve(_) | StyledItemTargetOrRepresentationItemRef::EdgeLoop(_) | StyledItemTargetOrRepresentationItemRef::ElementarySurface(_) | StyledItemTargetOrRepresentationItemRef::Ellipse(_) | StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(_) | StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(_) | StyledItemTargetOrRepresentationItemRef::Face(_) | StyledItemTargetOrRepresentationItemRef::FaceBound(_) | StyledItemTargetOrRepresentationItemRef::FaceOuterBound(_) | StyledItemTargetOrRepresentationItemRef::FaceSurface(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleHatching(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileColouredRegion(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileCurveWithStyle(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileSymbolWithStyle(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTiles(_) | StyledItemTargetOrRepresentationItemRef::GeometricCurveSet(_) | StyledItemTargetOrRepresentationItemRef::GeometricRepresentationItem(_) | StyledItemTargetOrRepresentationItemRef::GeometricSet(_) | StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedWireframeShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::Hyperbola(_) | StyledItemTargetOrRepresentationItemRef::IntersectionCurve(_) | StyledItemTargetOrRepresentationItemRef::LeaderDirectedCallout(_) | StyledItemTargetOrRepresentationItemRef::Line(_) | StyledItemTargetOrRepresentationItemRef::Loop(_) | StyledItemTargetOrRepresentationItemRef::ManifoldSolidBrep(_) | StyledItemTargetOrRepresentationItemRef::ManifoldSurfaceShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::MappedItem(_) | StyledItemTargetOrRepresentationItemRef::MechanicalDesignGeometricPresentationRepresentation(_) | StyledItemTargetOrRepresentationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(_) | StyledItemTargetOrRepresentationItemRef::MechanicalDesignShadedPresentationRepresentation(_) | StyledItemTargetOrRepresentationItemRef::OffsetSurface(_) | StyledItemTargetOrRepresentationItemRef::OneDirectionRepeatFactor(_) | StyledItemTargetOrRepresentationItemRef::OpenShell(_) | StyledItemTargetOrRepresentationItemRef::OrientedClosedShell(_) | StyledItemTargetOrRepresentationItemRef::OrientedEdge(_) | StyledItemTargetOrRepresentationItemRef::Parabola(_) | StyledItemTargetOrRepresentationItemRef::Path(_) | StyledItemTargetOrRepresentationItemRef::Pcurve(_) | StyledItemTargetOrRepresentationItemRef::Placement(_) | StyledItemTargetOrRepresentationItemRef::PlanarBox(_) | StyledItemTargetOrRepresentationItemRef::PlanarExtent(_) | StyledItemTargetOrRepresentationItemRef::Plane(_) | StyledItemTargetOrRepresentationItemRef::Point(_) | StyledItemTargetOrRepresentationItemRef::PolyLoop(_) | StyledItemTargetOrRepresentationItemRef::Polyline(_) | StyledItemTargetOrRepresentationItemRef::PresentationArea(_) | StyledItemTargetOrRepresentationItemRef::PresentationRepresentation(_) | StyledItemTargetOrRepresentationItemRef::PresentationView(_) | StyledItemTargetOrRepresentationItemRef::QuasiUniformCurve(_) | StyledItemTargetOrRepresentationItemRef::QuasiUniformSurface(_) | StyledItemTargetOrRepresentationItemRef::RationalBSplineCurve(_) | StyledItemTargetOrRepresentationItemRef::RationalBSplineSurface(_) | StyledItemTargetOrRepresentationItemRef::RepositionedTessellatedItem(_) | StyledItemTargetOrRepresentationItemRef::Representation(_) | StyledItemTargetOrRepresentationItemRef::RepresentationReference(_) | StyledItemTargetOrRepresentationItemRef::SeamCurve(_) | StyledItemTargetOrRepresentationItemRef::ShapeDimensionRepresentation(_) | StyledItemTargetOrRepresentationItemRef::ShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::ShapeRepresentationWithParameters(_) | StyledItemTargetOrRepresentationItemRef::ShellBasedSurfaceModel(_) | StyledItemTargetOrRepresentationItemRef::SolidModel(_) | StyledItemTargetOrRepresentationItemRef::SphericalSurface(_) | StyledItemTargetOrRepresentationItemRef::Surface(_) | StyledItemTargetOrRepresentationItemRef::SurfaceCurve(_) | StyledItemTargetOrRepresentationItemRef::SurfaceOfLinearExtrusion(_) | StyledItemTargetOrRepresentationItemRef::SurfaceOfRevolution(_) | StyledItemTargetOrRepresentationItemRef::SweptSurface(_) | StyledItemTargetOrRepresentationItemRef::SymbolRepresentation(_) | StyledItemTargetOrRepresentationItemRef::SymbolTarget(_) | StyledItemTargetOrRepresentationItemRef::TessellatedCurveSet(_) | StyledItemTargetOrRepresentationItemRef::TessellatedFace(_) | StyledItemTargetOrRepresentationItemRef::TessellatedGeometricSet(_) | StyledItemTargetOrRepresentationItemRef::TessellatedItem(_) | StyledItemTargetOrRepresentationItemRef::TessellatedShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::TessellatedShell(_) | StyledItemTargetOrRepresentationItemRef::TessellatedSolid(_) | StyledItemTargetOrRepresentationItemRef::TessellatedStructuredItem(_) | StyledItemTargetOrRepresentationItemRef::TessellatedSurfaceSet(_) | StyledItemTargetOrRepresentationItemRef::TextLiteral(_) | StyledItemTargetOrRepresentationItemRef::TopologicalRepresentationItem(_) | StyledItemTargetOrRepresentationItemRef::ToroidalSurface(_) | StyledItemTargetOrRepresentationItemRef::TrimmedCurve(_) | StyledItemTargetOrRepresentationItemRef::TwoDirectionRepeatFactor(_) | StyledItemTargetOrRepresentationItemRef::UniformCurve(_) | StyledItemTargetOrRepresentationItemRef::UniformSurface(_) | StyledItemTargetOrRepresentationItemRef::Vector(_) | StyledItemTargetOrRepresentationItemRef::Vertex(_) | StyledItemTargetOrRepresentationItemRef::VertexLoop(_) | StyledItemTargetOrRepresentationItemRef::VertexPoint(_) | StyledItemTargetOrRepresentationItemRef::VertexShell(_) | StyledItemTargetOrRepresentationItemRef::WireShell(_) => {}
+StyledItemTargetOrRepresentationItemRef::Complex(i) => { if !model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ADVANCED_BREP_SHAPE_REPRESENTATION", "ADVANCED_FACE", "ANNOTATION_TEXT", "ANNOTATION_TEXT_CHARACTER", "BEZIER_CURVE", "BEZIER_SURFACE", "BOUNDED_CURVE", "BOUNDED_PCURVE", "BOUNDED_SURFACE", "BOUNDED_SURFACE_CURVE", "BREP_WITH_VOIDS", "B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS", "CAMERA_IMAGE", "CAMERA_IMAGE_3D_WITH_SCALE", "CAMERA_MODEL", "CAMERA_MODEL_D3", "CAMERA_MODEL_D3_MULTI_CLIPPING", "CAMERA_MODEL_D3_WITH_HLHSR", "CHARACTERIZED_REPRESENTATION", "CLOSED_SHELL", "COMPOSITE_CURVE", "COMPOSITE_TEXT", "CONNECTED_FACE_SET", "CURVE", "DEFINITIONAL_REPRESENTATION", "DEGENERATE_TOROIDAL_SURFACE", "DIRECTION", "DRAUGHTING_CALLOUT", "DRAUGHTING_MODEL", "EDGE", "EDGE_CURVE", "EDGE_LOOP", "ELEMENTARY_SURFACE", "EXTERNALLY_DEFINED_HATCH_STYLE", "EXTERNALLY_DEFINED_TILE_STYLE", "FACE", "FACE_BOUND", "FACE_OUTER_BOUND", "FACE_SURFACE", "FILL_AREA_STYLE_HATCHING", "FILL_AREA_STYLE_TILES", "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE", "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION", "GEOMETRIC_CURVE_SET", "GEOMETRIC_REPRESENTATION_ITEM", "GEOMETRIC_SET", "INTERSECTION_CURVE", "LEADER_DIRECTED_CALLOUT", "LOOP", "MANIFOLD_SOLID_BREP", "MANIFOLD_SURFACE_SHAPE_REPRESENTATION", "MAPPED_ITEM", "ONE_DIRECTION_REPEAT_FACTOR", "OPEN_SHELL", "ORIENTED_CLOSED_SHELL", "ORIENTED_EDGE", "PATH", "PCURVE", "PLACEMENT", "PLANAR_BOX", "PLANAR_EXTENT", "POINT", "POLY_LOOP", "PRESENTATION_AREA", "PRESENTATION_REPRESENTATION", "PRESENTATION_VIEW", "QUASI_UNIFORM_CURVE", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_CURVE", "RATIONAL_B_SPLINE_SURFACE", "REPOSITIONED_TESSELLATED_ITEM", "REPRESENTATION", "REPRESENTATION_REFERENCE", "SEAM_CURVE", "SHAPE_DIMENSION_REPRESENTATION", "SHAPE_REPRESENTATION", "SHAPE_REPRESENTATION_WITH_PARAMETERS", "SHELL_BASED_SURFACE_MODEL", "SOLID_MODEL", "SURFACE", "SURFACE_CURVE", "SYMBOL_REPRESENTATION", "TESSELLATED_GEOMETRIC_SET", "TESSELLATED_ITEM", "TESSELLATED_SHAPE_REPRESENTATION", "TESSELLATED_STRUCTURED_ITEM", "TEXT_LITERAL", "TOPOLOGICAL_REPRESENTATION_ITEM", "TOROIDAL_SURFACE", "TWO_DIRECTION_REPEAT_FACTOR", "UNIFORM_CURVE", "UNIFORM_SURFACE", "VECTOR", "VERTEX", "VERTEX_POINT"].contains(&part_name(p))) && !c.parts.iter().any(|p| ["ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT_OCCURRENCE", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "DRAUGHTING_ANNOTATION_OCCURRENCE", "LEADER_CURVE", "LEADER_TERMINATOR", "OVER_RIDING_STYLED_ITEM", "STYLED_ITEM", "TERMINATOR_SYMBOL"].contains(&part_name(p)))) { return Err(AuthorError::NarrowedReference { entity: "OVER_RIDING_STYLED_ITEM", attribute: "item" }) } }
 _ => return Err(AuthorError::NarrowedReference { entity: "OVER_RIDING_STYLED_ITEM", attribute: "item" }),
 }
     }
@@ -14817,15 +15188,74 @@ fn cyclic_check_product_definition_occurrence(
     Ok(())
 }
 
-fn cyclic_check_product_definition_shape(model: &StepModel, id: u32) -> Result<(), AuthorError> {
-    check_characterized_definition_ref(
-        model,
-        &model.product_definition_shape_arena.items[id as usize].definition,
-    )?;
-    Ok(())
-}
-
 fn cyclic_check_seam_curve(model: &StepModel, id: u32) -> Result<(), AuthorError> {
+    {
+        let x = &model.seam_curve_arena.items[id as usize].curve_3d;
+        match x {
+            CurveRef::BSplineCurve(_)
+            | CurveRef::BSplineCurveWithKnots(_)
+            | CurveRef::BezierCurve(_)
+            | CurveRef::BoundedCurve(_)
+            | CurveRef::BoundedSurfaceCurve(_)
+            | CurveRef::Circle(_)
+            | CurveRef::CompositeCurve(_)
+            | CurveRef::Conic(_)
+            | CurveRef::Curve(_)
+            | CurveRef::Ellipse(_)
+            | CurveRef::Hyperbola(_)
+            | CurveRef::IntersectionCurve(_)
+            | CurveRef::Line(_)
+            | CurveRef::Parabola(_)
+            | CurveRef::Polyline(_)
+            | CurveRef::QuasiUniformCurve(_)
+            | CurveRef::RationalBSplineCurve(_)
+            | CurveRef::SeamCurve(_)
+            | CurveRef::SurfaceCurve(_)
+            | CurveRef::TrimmedCurve(_)
+            | CurveRef::UniformCurve(_) => {}
+            CurveRef::Complex(i) => {
+                if !model
+                    .complex_entity_arena
+                    .items
+                    .get(i.0 as usize)
+                    .is_some_and(|c| {
+                        c.parts.iter().any(|p| {
+                            [
+                                "BEZIER_CURVE",
+                                "BOUNDED_CURVE",
+                                "BOUNDED_SURFACE_CURVE",
+                                "B_SPLINE_CURVE",
+                                "B_SPLINE_CURVE_WITH_KNOTS",
+                                "COMPOSITE_CURVE",
+                                "CURVE",
+                                "INTERSECTION_CURVE",
+                                "QUASI_UNIFORM_CURVE",
+                                "RATIONAL_B_SPLINE_CURVE",
+                                "SEAM_CURVE",
+                                "SURFACE_CURVE",
+                                "UNIFORM_CURVE",
+                            ]
+                            .contains(&part_name(p))
+                        }) && !c
+                            .parts
+                            .iter()
+                            .any(|p| ["BOUNDED_PCURVE", "PCURVE"].contains(&part_name(p)))
+                    })
+                {
+                    return Err(AuthorError::NarrowedReference {
+                        entity: "SEAM_CURVE",
+                        attribute: "curve_3d",
+                    });
+                }
+            }
+            _ => {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "SEAM_CURVE",
+                    attribute: "curve_3d",
+                });
+            }
+        }
+    }
     check_curve_ref(model, &model.seam_curve_arena.items[id as usize].curve_3d)?;
     {
         let x = &model.seam_curve_arena.items[id as usize].associated_geometry;
@@ -14846,6 +15276,73 @@ fn cyclic_check_seam_curve(model: &StepModel, id: u32) -> Result<(), AuthorError
 }
 
 fn cyclic_check_surface_curve(model: &StepModel, id: u32) -> Result<(), AuthorError> {
+    {
+        let x = &model.surface_curve_arena.items[id as usize].curve_3d;
+        match x {
+            CurveRef::BSplineCurve(_)
+            | CurveRef::BSplineCurveWithKnots(_)
+            | CurveRef::BezierCurve(_)
+            | CurveRef::BoundedCurve(_)
+            | CurveRef::BoundedSurfaceCurve(_)
+            | CurveRef::Circle(_)
+            | CurveRef::CompositeCurve(_)
+            | CurveRef::Conic(_)
+            | CurveRef::Curve(_)
+            | CurveRef::Ellipse(_)
+            | CurveRef::Hyperbola(_)
+            | CurveRef::IntersectionCurve(_)
+            | CurveRef::Line(_)
+            | CurveRef::Parabola(_)
+            | CurveRef::Polyline(_)
+            | CurveRef::QuasiUniformCurve(_)
+            | CurveRef::RationalBSplineCurve(_)
+            | CurveRef::SeamCurve(_)
+            | CurveRef::SurfaceCurve(_)
+            | CurveRef::TrimmedCurve(_)
+            | CurveRef::UniformCurve(_) => {}
+            CurveRef::Complex(i) => {
+                if !model
+                    .complex_entity_arena
+                    .items
+                    .get(i.0 as usize)
+                    .is_some_and(|c| {
+                        c.parts.iter().any(|p| {
+                            [
+                                "BEZIER_CURVE",
+                                "BOUNDED_CURVE",
+                                "BOUNDED_SURFACE_CURVE",
+                                "B_SPLINE_CURVE",
+                                "B_SPLINE_CURVE_WITH_KNOTS",
+                                "COMPOSITE_CURVE",
+                                "CURVE",
+                                "INTERSECTION_CURVE",
+                                "QUASI_UNIFORM_CURVE",
+                                "RATIONAL_B_SPLINE_CURVE",
+                                "SEAM_CURVE",
+                                "SURFACE_CURVE",
+                                "UNIFORM_CURVE",
+                            ]
+                            .contains(&part_name(p))
+                        }) && !c
+                            .parts
+                            .iter()
+                            .any(|p| ["BOUNDED_PCURVE", "PCURVE"].contains(&part_name(p)))
+                    })
+                {
+                    return Err(AuthorError::NarrowedReference {
+                        entity: "SURFACE_CURVE",
+                        attribute: "curve_3d",
+                    });
+                }
+            }
+            _ => {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "SURFACE_CURVE",
+                    attribute: "curve_3d",
+                });
+            }
+        }
+    }
     check_curve_ref(
         model,
         &model.surface_curve_arena.items[id as usize].curve_3d,
@@ -19047,6 +19544,48 @@ fn check_partial_entity(model: &StepModel, p: &PartialEntity) -> Result<(), Auth
 fn check_complex_narrowings(model: &StepModel, parts: &[PartialEntity]) -> Result<(), AuthorError> {
     if parts
         .iter()
+        .any(|p| matches!(p, PartialEntity::AnnotationOccurrenceAssociativity { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::AnnotationOccurrenceRelationship {
+                related_annotation_occurrence,
+                ..
+            } = p
+            {
+                {
+                    let x = related_annotation_occurrence;
+                    match x {
+                        AnnotationOccurrenceRef::LeaderCurve(_) => {}
+                        AnnotationOccurrenceRef::Complex(i) => {
+                            if !model
+                                .complex_entity_arena
+                                .items
+                                .get(i.0 as usize)
+                                .is_some_and(|c| {
+                                    c.parts
+                                        .iter()
+                                        .any(|p| ["LEADER_CURVE"].contains(&part_name(p)))
+                                })
+                            {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "ANNOTATION_OCCURRENCE_ASSOCIATIVITY",
+                                    attribute: "related_annotation_occurrence",
+                                });
+                            }
+                        }
+                        _ => {
+                            return Err(AuthorError::NarrowedReference {
+                                entity: "ANNOTATION_OCCURRENCE_ASSOCIATIVITY",
+                                attribute: "related_annotation_occurrence",
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
         .any(|p| matches!(p, PartialEntity::AppliedGroupAssignment { .. }))
     {
         for p in parts {
@@ -19199,6 +19738,231 @@ _ => return Err(AuthorError::NarrowedReference { entity: "APPLIED_GROUP_ASSIGNME
                                 entity: "MODEL_GEOMETRIC_VIEW",
                                 attribute: "rep",
                             });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
+        .any(|p| matches!(p, PartialEntity::CompositeCurveSegment { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::CompositeCurveSegment { parent_curve, .. } = p {
+                {
+                    let x = parent_curve;
+                    match x {
+                        CurveRef::BSplineCurve(_)
+                        | CurveRef::BSplineCurveWithKnots(_)
+                        | CurveRef::BezierCurve(_)
+                        | CurveRef::BoundedCurve(_)
+                        | CurveRef::BoundedPcurve(_)
+                        | CurveRef::BoundedSurfaceCurve(_)
+                        | CurveRef::CompositeCurve(_)
+                        | CurveRef::Polyline(_)
+                        | CurveRef::QuasiUniformCurve(_)
+                        | CurveRef::RationalBSplineCurve(_)
+                        | CurveRef::TrimmedCurve(_)
+                        | CurveRef::UniformCurve(_) => {}
+                        CurveRef::Complex(i) => {
+                            if !model
+                                .complex_entity_arena
+                                .items
+                                .get(i.0 as usize)
+                                .is_some_and(|c| {
+                                    c.parts.iter().any(|p| {
+                                        [
+                                            "BEZIER_CURVE",
+                                            "BOUNDED_CURVE",
+                                            "BOUNDED_PCURVE",
+                                            "BOUNDED_SURFACE_CURVE",
+                                            "B_SPLINE_CURVE",
+                                            "B_SPLINE_CURVE_WITH_KNOTS",
+                                            "COMPOSITE_CURVE",
+                                            "QUASI_UNIFORM_CURVE",
+                                            "RATIONAL_B_SPLINE_CURVE",
+                                            "UNIFORM_CURVE",
+                                        ]
+                                        .contains(&part_name(p))
+                                    })
+                                })
+                            {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "COMPOSITE_CURVE_SEGMENT",
+                                    attribute: "parent_curve",
+                                });
+                            }
+                        }
+                        _ => {
+                            return Err(AuthorError::NarrowedReference {
+                                entity: "COMPOSITE_CURVE_SEGMENT",
+                                attribute: "parent_curve",
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
+        .any(|p| matches!(p, PartialEntity::AdvancedFace { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::FaceSurface { face_geometry, .. } = p {
+                {
+                    let x = face_geometry;
+                    match x {
+                        SurfaceRef::BSplineSurface(_)
+                        | SurfaceRef::BSplineSurfaceWithKnots(_)
+                        | SurfaceRef::BezierSurface(_)
+                        | SurfaceRef::ConicalSurface(_)
+                        | SurfaceRef::CylindricalSurface(_)
+                        | SurfaceRef::DegenerateToroidalSurface(_)
+                        | SurfaceRef::ElementarySurface(_)
+                        | SurfaceRef::Plane(_)
+                        | SurfaceRef::QuasiUniformSurface(_)
+                        | SurfaceRef::RationalBSplineSurface(_)
+                        | SurfaceRef::SphericalSurface(_)
+                        | SurfaceRef::SurfaceOfLinearExtrusion(_)
+                        | SurfaceRef::SurfaceOfRevolution(_)
+                        | SurfaceRef::SweptSurface(_)
+                        | SurfaceRef::ToroidalSurface(_)
+                        | SurfaceRef::UniformSurface(_) => {}
+                        SurfaceRef::Complex(i) => {
+                            if !model
+                                .complex_entity_arena
+                                .items
+                                .get(i.0 as usize)
+                                .is_some_and(|c| {
+                                    c.parts.iter().any(|p| {
+                                        [
+                                            "BEZIER_SURFACE",
+                                            "B_SPLINE_SURFACE",
+                                            "B_SPLINE_SURFACE_WITH_KNOTS",
+                                            "DEGENERATE_TOROIDAL_SURFACE",
+                                            "ELEMENTARY_SURFACE",
+                                            "QUASI_UNIFORM_SURFACE",
+                                            "RATIONAL_B_SPLINE_SURFACE",
+                                            "TOROIDAL_SURFACE",
+                                            "UNIFORM_SURFACE",
+                                        ]
+                                        .contains(&part_name(p))
+                                    }) && [
+                                        &[
+                                            "DEGENERATE_TOROIDAL_SURFACE",
+                                            "ELEMENTARY_SURFACE",
+                                            "TOROIDAL_SURFACE",
+                                        ][..],
+                                        &[
+                                            "BEZIER_SURFACE",
+                                            "B_SPLINE_SURFACE",
+                                            "B_SPLINE_SURFACE_WITH_KNOTS",
+                                            "QUASI_UNIFORM_SURFACE",
+                                            "RATIONAL_B_SPLINE_SURFACE",
+                                            "UNIFORM_SURFACE",
+                                        ][..],
+                                    ]
+                                    .iter()
+                                    .filter(|g| c.parts.iter().any(|p| g.contains(&part_name(p))))
+                                    .count()
+                                        == 1
+                                })
+                            {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "ADVANCED_FACE",
+                                    attribute: "face_geometry",
+                                });
+                            }
+                        }
+                        _ => {
+                            return Err(AuthorError::NarrowedReference {
+                                entity: "ADVANCED_FACE",
+                                attribute: "face_geometry",
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
+        .any(|p| matches!(p, PartialEntity::GeometricCurveSet { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::GeometricSet { elements, .. } = p {
+                {
+                    let x = elements;
+                    for v in x.iter() {
+                        match v {
+                            GeometricSetSelectRef::BSplineCurve(_)
+                            | GeometricSetSelectRef::BSplineCurveWithKnots(_)
+                            | GeometricSetSelectRef::BezierCurve(_)
+                            | GeometricSetSelectRef::BoundedCurve(_)
+                            | GeometricSetSelectRef::BoundedPcurve(_)
+                            | GeometricSetSelectRef::BoundedSurfaceCurve(_)
+                            | GeometricSetSelectRef::CartesianPoint(_)
+                            | GeometricSetSelectRef::Circle(_)
+                            | GeometricSetSelectRef::CompositeCurve(_)
+                            | GeometricSetSelectRef::Conic(_)
+                            | GeometricSetSelectRef::Curve(_)
+                            | GeometricSetSelectRef::Ellipse(_)
+                            | GeometricSetSelectRef::Hyperbola(_)
+                            | GeometricSetSelectRef::IntersectionCurve(_)
+                            | GeometricSetSelectRef::Line(_)
+                            | GeometricSetSelectRef::Parabola(_)
+                            | GeometricSetSelectRef::Pcurve(_)
+                            | GeometricSetSelectRef::Point(_)
+                            | GeometricSetSelectRef::Polyline(_)
+                            | GeometricSetSelectRef::QuasiUniformCurve(_)
+                            | GeometricSetSelectRef::RationalBSplineCurve(_)
+                            | GeometricSetSelectRef::SeamCurve(_)
+                            | GeometricSetSelectRef::SurfaceCurve(_)
+                            | GeometricSetSelectRef::TrimmedCurve(_)
+                            | GeometricSetSelectRef::UniformCurve(_) => {}
+                            GeometricSetSelectRef::Complex(i) => {
+                                if !model
+                                    .complex_entity_arena
+                                    .items
+                                    .get(i.0 as usize)
+                                    .is_some_and(|c| {
+                                        c.parts.iter().any(|p| {
+                                            [
+                                                "BEZIER_CURVE",
+                                                "BOUNDED_CURVE",
+                                                "BOUNDED_PCURVE",
+                                                "BOUNDED_SURFACE_CURVE",
+                                                "B_SPLINE_CURVE",
+                                                "B_SPLINE_CURVE_WITH_KNOTS",
+                                                "COMPOSITE_CURVE",
+                                                "CURVE",
+                                                "INTERSECTION_CURVE",
+                                                "PCURVE",
+                                                "POINT",
+                                                "QUASI_UNIFORM_CURVE",
+                                                "RATIONAL_B_SPLINE_CURVE",
+                                                "SEAM_CURVE",
+                                                "SURFACE_CURVE",
+                                                "UNIFORM_CURVE",
+                                            ]
+                                            .contains(&part_name(p))
+                                        })
+                                    })
+                                {
+                                    return Err(AuthorError::NarrowedReference {
+                                        entity: "GEOMETRIC_CURVE_SET",
+                                        attribute: "elements",
+                                    });
+                                }
+                            }
+                            _ => {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "GEOMETRIC_CURVE_SET",
+                                    attribute: "elements",
+                                });
+                            }
                         }
                     }
                 }
@@ -19726,6 +20490,253 @@ _ => return Err(AuthorError::NarrowedReference { entity: "GEOMETRIC_ITEM_SPECIFI
     }
     if parts
         .iter()
+        .any(|p| matches!(p, PartialEntity::LengthMeasureWithUnit { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::MeasureWithUnit { unit_component, .. } = p {
+                {
+                    let x = unit_component;
+                    match x {
+                        UnitRef::LengthUnit(_) => {}
+                        UnitRef::Complex(i) => {
+                            if !model
+                                .complex_entity_arena
+                                .items
+                                .get(i.0 as usize)
+                                .is_some_and(|c| {
+                                    c.parts
+                                        .iter()
+                                        .any(|p| ["LENGTH_UNIT"].contains(&part_name(p)))
+                                })
+                            {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "LENGTH_MEASURE_WITH_UNIT",
+                                    attribute: "unit_component",
+                                });
+                            }
+                        }
+                        _ => {
+                            return Err(AuthorError::NarrowedReference {
+                                entity: "LENGTH_MEASURE_WITH_UNIT",
+                                attribute: "unit_component",
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
+        .any(|p| matches!(p, PartialEntity::PlaneAngleMeasureWithUnit { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::MeasureWithUnit { unit_component, .. } = p {
+                {
+                    let x = unit_component;
+                    match x {
+                        UnitRef::PlaneAngleUnit(_) => {}
+                        UnitRef::Complex(i) => {
+                            if !model
+                                .complex_entity_arena
+                                .items
+                                .get(i.0 as usize)
+                                .is_some_and(|c| {
+                                    c.parts
+                                        .iter()
+                                        .any(|p| ["PLANE_ANGLE_UNIT"].contains(&part_name(p)))
+                                })
+                            {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "PLANE_ANGLE_MEASURE_WITH_UNIT",
+                                    attribute: "unit_component",
+                                });
+                            }
+                        }
+                        _ => {
+                            return Err(AuthorError::NarrowedReference {
+                                entity: "PLANE_ANGLE_MEASURE_WITH_UNIT",
+                                attribute: "unit_component",
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
+        .any(|p| matches!(p, PartialEntity::RatioMeasureWithUnit { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::MeasureWithUnit { unit_component, .. } = p {
+                {
+                    let x = unit_component;
+                    match x {
+                        UnitRef::RatioUnit(_) => {}
+                        UnitRef::Complex(i) => {
+                            if !model
+                                .complex_entity_arena
+                                .items
+                                .get(i.0 as usize)
+                                .is_some_and(|c| {
+                                    c.parts
+                                        .iter()
+                                        .any(|p| ["RATIO_UNIT"].contains(&part_name(p)))
+                                })
+                            {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "RATIO_MEASURE_WITH_UNIT",
+                                    attribute: "unit_component",
+                                });
+                            }
+                        }
+                        _ => {
+                            return Err(AuthorError::NarrowedReference {
+                                entity: "RATIO_MEASURE_WITH_UNIT",
+                                attribute: "unit_component",
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
+        .any(|p| matches!(p, PartialEntity::OrientedClosedShell { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::OrientedClosedShell {
+                closed_shell_element,
+                ..
+            } = p
+            {
+                {
+                    let x = closed_shell_element;
+                    match x {
+                        ClosedShellRef::ClosedShell(_) => {}
+                        ClosedShellRef::Complex(i) => {
+                            if !model
+                                .complex_entity_arena
+                                .items
+                                .get(i.0 as usize)
+                                .is_some_and(|c| {
+                                    c.parts
+                                        .iter()
+                                        .any(|p| ["CLOSED_SHELL"].contains(&part_name(p)))
+                                        && !c.parts.iter().any(|p| {
+                                            ["ORIENTED_CLOSED_SHELL"].contains(&part_name(p))
+                                        })
+                                })
+                            {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "ORIENTED_CLOSED_SHELL",
+                                    attribute: "closed_shell_element",
+                                });
+                            }
+                        }
+                        _ => {
+                            return Err(AuthorError::NarrowedReference {
+                                entity: "ORIENTED_CLOSED_SHELL",
+                                attribute: "closed_shell_element",
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
+        .any(|p| matches!(p, PartialEntity::OrientedEdge { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::OrientedEdge { edge_element, .. } = p {
+                {
+                    let x = edge_element;
+                    match x {
+                        EdgeRef::Edge(_) | EdgeRef::EdgeCurve(_) => {}
+                        EdgeRef::Complex(i) => {
+                            if !model
+                                .complex_entity_arena
+                                .items
+                                .get(i.0 as usize)
+                                .is_some_and(|c| {
+                                    c.parts
+                                        .iter()
+                                        .any(|p| ["EDGE", "EDGE_CURVE"].contains(&part_name(p)))
+                                        && !c
+                                            .parts
+                                            .iter()
+                                            .any(|p| ["ORIENTED_EDGE"].contains(&part_name(p)))
+                                })
+                            {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "ORIENTED_EDGE",
+                                    attribute: "edge_element",
+                                });
+                            }
+                        }
+                        _ => {
+                            return Err(AuthorError::NarrowedReference {
+                                entity: "ORIENTED_EDGE",
+                                attribute: "edge_element",
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
+        .any(|p| matches!(p, PartialEntity::ConfigurationEffectivity { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::ProductDefinitionEffectivity { usage, .. } = p {
+                {
+                    let x = usage;
+                    match x {
+                        ProductDefinitionRelationshipRef::AssemblyComponentUsage(_)
+                        | ProductDefinitionRelationshipRef::MakeFromUsageOption(_)
+                        | ProductDefinitionRelationshipRef::NextAssemblyUsageOccurrence(_)
+                        | ProductDefinitionRelationshipRef::ProductDefinitionUsage(_) => {}
+                        ProductDefinitionRelationshipRef::Complex(i) => {
+                            if !model
+                                .complex_entity_arena
+                                .items
+                                .get(i.0 as usize)
+                                .is_some_and(|c| {
+                                    c.parts.iter().any(|p| {
+                                        [
+                                            "ASSEMBLY_COMPONENT_USAGE",
+                                            "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                                            "PRODUCT_DEFINITION_USAGE",
+                                        ]
+                                        .contains(&part_name(p))
+                                    })
+                                })
+                            {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "CONFIGURATION_EFFECTIVITY",
+                                    attribute: "usage",
+                                });
+                            }
+                        }
+                        _ => {
+                            return Err(AuthorError::NarrowedReference {
+                                entity: "CONFIGURATION_EFFECTIVITY",
+                                attribute: "usage",
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
         .any(|p| matches!(p, PartialEntity::ProjectedZoneDefinition { .. }))
     {
         for p in parts {
@@ -19758,6 +20769,77 @@ _ => return Err(AuthorError::NarrowedReference { entity: "GEOMETRIC_ITEM_SPECIFI
                             return Err(AuthorError::NarrowedReference {
                                 entity: "PROJECTED_ZONE_DEFINITION",
                                 attribute: "projected_length",
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
+        .any(|p| matches!(p, PartialEntity::ProductDefinitionShape { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::PropertyDefinition { definition, .. } = p {
+                {
+                    let x = definition;
+                    match x {
+                        CharacterizedDefinitionRef::AssemblyComponentUsage(_)
+                        | CharacterizedDefinitionRef::CharacterizedItemWithinRepresentation(_)
+                        | CharacterizedDefinitionRef::CharacterizedObject(_)
+                        | CharacterizedDefinitionRef::CharacterizedRepresentation(_)
+                        | CharacterizedDefinitionRef::DefaultModelGeometricView(_)
+                        | CharacterizedDefinitionRef::DocumentFile(_)
+                        | CharacterizedDefinitionRef::MakeFromUsageOption(_)
+                        | CharacterizedDefinitionRef::ModelGeometricView(_)
+                        | CharacterizedDefinitionRef::NextAssemblyUsageOccurrence(_)
+                        | CharacterizedDefinitionRef::ProductDefinition(_)
+                        | CharacterizedDefinitionRef::ProductDefinitionOccurrence(_)
+                        | CharacterizedDefinitionRef::ProductDefinitionRelationship(_)
+                        | CharacterizedDefinitionRef::ProductDefinitionRelationshipRelationship(
+                            _,
+                        )
+                        | CharacterizedDefinitionRef::ProductDefinitionUsage(_)
+                        | CharacterizedDefinitionRef::ProductDefinitionWithAssociatedDocuments(_) =>
+                            {}
+                        CharacterizedDefinitionRef::Complex(i) => {
+                            if !model
+                                .complex_entity_arena
+                                .items
+                                .get(i.0 as usize)
+                                .is_some_and(|c| {
+                                    c.parts.iter().any(|p| {
+                                        [
+                                            "ASSEMBLY_COMPONENT_USAGE",
+                                            "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
+                                            "CHARACTERIZED_OBJECT",
+                                            "CHARACTERIZED_REPRESENTATION",
+                                            "DEFAULT_MODEL_GEOMETRIC_VIEW",
+                                            "DOCUMENT_FILE",
+                                            "MODEL_GEOMETRIC_VIEW",
+                                            "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                                            "PRODUCT_DEFINITION",
+                                            "PRODUCT_DEFINITION_OCCURRENCE",
+                                            "PRODUCT_DEFINITION_RELATIONSHIP",
+                                            "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP",
+                                            "PRODUCT_DEFINITION_USAGE",
+                                            "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
+                                        ]
+                                        .contains(&part_name(p))
+                                    })
+                                })
+                            {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "PRODUCT_DEFINITION_SHAPE",
+                                    attribute: "definition",
+                                });
+                            }
+                        }
+                        _ => {
+                            return Err(AuthorError::NarrowedReference {
+                                entity: "PRODUCT_DEFINITION_SHAPE",
+                                attribute: "definition",
                             });
                         }
                     }
@@ -19866,6 +20948,77 @@ _ => return Err(AuthorError::NarrowedReference { entity: "GEOMETRIC_ITEM_SPECIFI
     }
     if parts
         .iter()
+        .any(|p| matches!(p, PartialEntity::AdvancedBrepShapeRepresentation { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::Representation { items, .. } = p {
+                {
+                    let x = items;
+                    for v in x.iter() {
+                        match v {
+                            RepresentationItemRef::AnnotationText(_)
+                            | RepresentationItemRef::AnnotationTextCharacter(_)
+                            | RepresentationItemRef::Axis2Placement3d(_)
+                            | RepresentationItemRef::BrepWithVoids(_)
+                            | RepresentationItemRef::CameraImage(_)
+                            | RepresentationItemRef::CameraImage3dWithScale(_)
+                            | RepresentationItemRef::ManifoldSolidBrep(_)
+                            | RepresentationItemRef::MappedItem(_) => {}
+                            RepresentationItemRef::Complex(i) => {
+                                if !model
+                                    .complex_entity_arena
+                                    .items
+                                    .get(i.0 as usize)
+                                    .is_some_and(|c| {
+                                        c.parts.iter().any(|p| {
+                                            [
+                                                "ANNOTATION_TEXT",
+                                                "ANNOTATION_TEXT_CHARACTER",
+                                                "BREP_WITH_VOIDS",
+                                                "CAMERA_IMAGE",
+                                                "CAMERA_IMAGE_3D_WITH_SCALE",
+                                                "MANIFOLD_SOLID_BREP",
+                                                "MAPPED_ITEM",
+                                            ]
+                                            .contains(&part_name(p))
+                                        }) && [
+                                            &["BREP_WITH_VOIDS", "MANIFOLD_SOLID_BREP"][..],
+                                            &[
+                                                "ANNOTATION_TEXT",
+                                                "ANNOTATION_TEXT_CHARACTER",
+                                                "CAMERA_IMAGE",
+                                                "CAMERA_IMAGE_3D_WITH_SCALE",
+                                                "MAPPED_ITEM",
+                                            ][..],
+                                        ]
+                                        .iter()
+                                        .filter(|g| {
+                                            c.parts.iter().any(|p| g.contains(&part_name(p)))
+                                        })
+                                        .count()
+                                            == 1
+                                    })
+                                {
+                                    return Err(AuthorError::NarrowedReference {
+                                        entity: "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                                        attribute: "items",
+                                    });
+                                }
+                            }
+                            _ => {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                                    attribute: "items",
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
         .any(|p| matches!(p, PartialEntity::DraughtingModel { .. }))
     {
         for p in parts {
@@ -19947,6 +21100,219 @@ _ => return Err(AuthorError::NarrowedReference { entity: "GEOMETRIC_ITEM_SPECIFI
                             _ => {
                                 return Err(AuthorError::NarrowedReference {
                                     entity: "DRAUGHTING_MODEL",
+                                    attribute: "items",
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts.iter().any(|p| {
+        matches!(
+            p,
+            PartialEntity::GeometricallyBoundedSurfaceShapeRepresentation { .. }
+        )
+    }) {
+        for p in parts {
+            if let PartialEntity::Representation { items, .. } = p {
+                {
+                    let x = items;
+                    for v in x.iter() {
+                        match v {
+                            RepresentationItemRef::AnnotationText(_)
+                            | RepresentationItemRef::AnnotationTextCharacter(_)
+                            | RepresentationItemRef::Axis2Placement3d(_)
+                            | RepresentationItemRef::CameraImage(_)
+                            | RepresentationItemRef::CameraImage3dWithScale(_)
+                            | RepresentationItemRef::GeometricCurveSet(_)
+                            | RepresentationItemRef::GeometricSet(_)
+                            | RepresentationItemRef::MappedItem(_) => {}
+                            RepresentationItemRef::Complex(i) => {
+                                if !model
+                                    .complex_entity_arena
+                                    .items
+                                    .get(i.0 as usize)
+                                    .is_some_and(|c| {
+                                        c.parts.iter().any(|p| {
+                                            [
+                                                "ANNOTATION_TEXT",
+                                                "ANNOTATION_TEXT_CHARACTER",
+                                                "CAMERA_IMAGE",
+                                                "CAMERA_IMAGE_3D_WITH_SCALE",
+                                                "GEOMETRIC_CURVE_SET",
+                                                "GEOMETRIC_SET",
+                                                "MAPPED_ITEM",
+                                            ]
+                                            .contains(&part_name(p))
+                                        }) && [
+                                            &["GEOMETRIC_CURVE_SET", "GEOMETRIC_SET"][..],
+                                            &[
+                                                "ANNOTATION_TEXT",
+                                                "ANNOTATION_TEXT_CHARACTER",
+                                                "CAMERA_IMAGE",
+                                                "CAMERA_IMAGE_3D_WITH_SCALE",
+                                                "MAPPED_ITEM",
+                                            ][..],
+                                        ]
+                                        .iter()
+                                        .filter(|g| {
+                                            c.parts.iter().any(|p| g.contains(&part_name(p)))
+                                        })
+                                        .count()
+                                            == 1
+                                    })
+                                {
+                                    return Err(AuthorError::NarrowedReference {
+                                        entity: "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
+                                        attribute: "items",
+                                    });
+                                }
+                            }
+                            _ => {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
+                                    attribute: "items",
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts.iter().any(|p| {
+        matches!(
+            p,
+            PartialEntity::GeometricallyBoundedWireframeShapeRepresentation { .. }
+        )
+    }) {
+        for p in parts {
+            if let PartialEntity::Representation { items, .. } = p {
+                {
+                    let x = items;
+                    for v in x.iter() {
+                        match v {
+                            RepresentationItemRef::AnnotationText(_)
+                            | RepresentationItemRef::AnnotationTextCharacter(_)
+                            | RepresentationItemRef::Axis2Placement3d(_)
+                            | RepresentationItemRef::CameraImage(_)
+                            | RepresentationItemRef::CameraImage3dWithScale(_)
+                            | RepresentationItemRef::GeometricCurveSet(_)
+                            | RepresentationItemRef::MappedItem(_) => {}
+                            RepresentationItemRef::Complex(i) => {
+                                if !model
+                                    .complex_entity_arena
+                                    .items
+                                    .get(i.0 as usize)
+                                    .is_some_and(|c| {
+                                        c.parts.iter().any(|p| {
+                                            [
+                                                "ANNOTATION_TEXT",
+                                                "ANNOTATION_TEXT_CHARACTER",
+                                                "CAMERA_IMAGE",
+                                                "CAMERA_IMAGE_3D_WITH_SCALE",
+                                                "GEOMETRIC_CURVE_SET",
+                                                "MAPPED_ITEM",
+                                            ]
+                                            .contains(&part_name(p))
+                                        }) && [
+                                            &["GEOMETRIC_CURVE_SET"][..],
+                                            &[
+                                                "ANNOTATION_TEXT",
+                                                "ANNOTATION_TEXT_CHARACTER",
+                                                "CAMERA_IMAGE",
+                                                "CAMERA_IMAGE_3D_WITH_SCALE",
+                                                "MAPPED_ITEM",
+                                            ][..],
+                                        ]
+                                        .iter()
+                                        .filter(|g| {
+                                            c.parts.iter().any(|p| g.contains(&part_name(p)))
+                                        })
+                                        .count()
+                                            == 1
+                                    })
+                                {
+                                    return Err(AuthorError::NarrowedReference {
+                                        entity: "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                                        attribute: "items",
+                                    });
+                                }
+                            }
+                            _ => {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+                                    attribute: "items",
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
+        .any(|p| matches!(p, PartialEntity::ManifoldSurfaceShapeRepresentation { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::Representation { items, .. } = p {
+                {
+                    let x = items;
+                    for v in x.iter() {
+                        match v {
+                            RepresentationItemRef::AnnotationText(_)
+                            | RepresentationItemRef::AnnotationTextCharacter(_)
+                            | RepresentationItemRef::Axis2Placement3d(_)
+                            | RepresentationItemRef::CameraImage(_)
+                            | RepresentationItemRef::CameraImage3dWithScale(_)
+                            | RepresentationItemRef::MappedItem(_)
+                            | RepresentationItemRef::ShellBasedSurfaceModel(_) => {}
+                            RepresentationItemRef::Complex(i) => {
+                                if !model
+                                    .complex_entity_arena
+                                    .items
+                                    .get(i.0 as usize)
+                                    .is_some_and(|c| {
+                                        c.parts.iter().any(|p| {
+                                            [
+                                                "ANNOTATION_TEXT",
+                                                "ANNOTATION_TEXT_CHARACTER",
+                                                "CAMERA_IMAGE",
+                                                "CAMERA_IMAGE_3D_WITH_SCALE",
+                                                "MAPPED_ITEM",
+                                                "SHELL_BASED_SURFACE_MODEL",
+                                            ]
+                                            .contains(&part_name(p))
+                                        }) && [
+                                            &["SHELL_BASED_SURFACE_MODEL"][..],
+                                            &[
+                                                "ANNOTATION_TEXT",
+                                                "ANNOTATION_TEXT_CHARACTER",
+                                                "CAMERA_IMAGE",
+                                                "CAMERA_IMAGE_3D_WITH_SCALE",
+                                                "MAPPED_ITEM",
+                                            ][..],
+                                        ]
+                                        .iter()
+                                        .filter(|g| {
+                                            c.parts.iter().any(|p| g.contains(&part_name(p)))
+                                        })
+                                        .count()
+                                            == 1
+                                    })
+                                {
+                                    return Err(AuthorError::NarrowedReference {
+                                        entity: "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                                        attribute: "items",
+                                    });
+                                }
+                            }
+                            _ => {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                                     attribute: "items",
                                 });
                             }
@@ -20060,6 +21426,48 @@ _ => return Err(AuthorError::NarrowedReference { entity: "GEOMETRIC_ITEM_SPECIFI
     }
     if parts
         .iter()
+        .any(|p| matches!(p, PartialEntity::DefinitionalRepresentation { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::Representation {
+                context_of_items, ..
+            } = p
+            {
+                {
+                    let x = context_of_items;
+                    match x {
+                        RepresentationContextRef::ParametricRepresentationContext(_) => {}
+                        RepresentationContextRef::Complex(i) => {
+                            if !model
+                                .complex_entity_arena
+                                .items
+                                .get(i.0 as usize)
+                                .is_some_and(|c| {
+                                    c.parts.iter().any(|p| {
+                                        ["PARAMETRIC_REPRESENTATION_CONTEXT"]
+                                            .contains(&part_name(p))
+                                    })
+                                })
+                            {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "DEFINITIONAL_REPRESENTATION",
+                                    attribute: "context_of_items",
+                                });
+                            }
+                        }
+                        _ => {
+                            return Err(AuthorError::NarrowedReference {
+                                entity: "DEFINITIONAL_REPRESENTATION",
+                                attribute: "context_of_items",
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
         .any(|p| matches!(p, PartialEntity::PresentationRepresentation { .. }))
     {
         for p in parts {
@@ -20091,6 +21499,47 @@ _ => return Err(AuthorError::NarrowedReference { entity: "GEOMETRIC_ITEM_SPECIFI
                         _ => {
                             return Err(AuthorError::NarrowedReference {
                                 entity: "PRESENTATION_REPRESENTATION",
+                                attribute: "context_of_items",
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
+        .any(|p| matches!(p, PartialEntity::TessellatedShapeRepresentation { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::Representation {
+                context_of_items, ..
+            } = p
+            {
+                {
+                    let x = context_of_items;
+                    match x {
+                        RepresentationContextRef::GlobalUnitAssignedContext(_) => {}
+                        RepresentationContextRef::Complex(i) => {
+                            if !model
+                                .complex_entity_arena
+                                .items
+                                .get(i.0 as usize)
+                                .is_some_and(|c| {
+                                    c.parts.iter().any(|p| {
+                                        ["GLOBAL_UNIT_ASSIGNED_CONTEXT"].contains(&part_name(p))
+                                    })
+                                })
+                            {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "TESSELLATED_SHAPE_REPRESENTATION",
+                                    attribute: "context_of_items",
+                                });
+                            }
+                        }
+                        _ => {
+                            return Err(AuthorError::NarrowedReference {
+                                entity: "TESSELLATED_SHAPE_REPRESENTATION",
                                 attribute: "context_of_items",
                             });
                         }
@@ -20142,6 +21591,27 @@ _ => return Err(AuthorError::NarrowedReference { entity: "GEOMETRIC_ITEM_SPECIFI
                             });
                         }
                     }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
+        .any(|p| matches!(p, PartialEntity::CameraUsage { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::RepresentationMap {
+                mapped_representation,
+                ..
+            } = p
+            {
+                {
+                    let x = mapped_representation;
+                    match x {
+RepresentationRef::AdvancedBrepShapeRepresentation(_) | RepresentationRef::CharacterizedRepresentation(_) | RepresentationRef::ConstructiveGeometryRepresentation(_) | RepresentationRef::DefinitionalRepresentation(_) | RepresentationRef::DraughtingModel(_) | RepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(_) | RepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(_) | RepresentationRef::ManifoldSurfaceShapeRepresentation(_) | RepresentationRef::MechanicalDesignGeometricPresentationRepresentation(_) | RepresentationRef::MechanicalDesignPresentationRepresentationWithDraughting(_) | RepresentationRef::MechanicalDesignShadedPresentationRepresentation(_) | RepresentationRef::Representation(_) | RepresentationRef::ShapeDimensionRepresentation(_) | RepresentationRef::ShapeRepresentation(_) | RepresentationRef::ShapeRepresentationWithParameters(_) | RepresentationRef::SymbolRepresentation(_) | RepresentationRef::TessellatedShapeRepresentation(_) => {}
+RepresentationRef::Complex(i) => { if !model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ADVANCED_BREP_SHAPE_REPRESENTATION", "CHARACTERIZED_REPRESENTATION", "DEFINITIONAL_REPRESENTATION", "DRAUGHTING_MODEL", "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION", "MANIFOLD_SURFACE_SHAPE_REPRESENTATION", "REPRESENTATION", "SHAPE_DIMENSION_REPRESENTATION", "SHAPE_REPRESENTATION", "SHAPE_REPRESENTATION_WITH_PARAMETERS", "SYMBOL_REPRESENTATION", "TESSELLATED_SHAPE_REPRESENTATION"].contains(&part_name(p))) && !c.parts.iter().any(|p| ["PRESENTATION_AREA", "PRESENTATION_REPRESENTATION", "PRESENTATION_VIEW"].contains(&part_name(p)))) { return Err(AuthorError::NarrowedReference { entity: "CAMERA_USAGE", attribute: "mapped_representation" }) } }
+_ => return Err(AuthorError::NarrowedReference { entity: "CAMERA_USAGE", attribute: "mapped_representation" }),
+}
                 }
             }
         }
@@ -20471,10 +21941,187 @@ _ => return Err(AuthorError::NarrowedReference { entity: "MECHANICAL_DESIGN_AND_
                 {
                     let x = item;
                     match x {
-StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::AdvancedFace(_) | StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderOccurrence(_) | StyledItemTargetOrRepresentationItemRef::AnnotationPlane(_) | StyledItemTargetOrRepresentationItemRef::AnnotationText(_) | StyledItemTargetOrRepresentationItemRef::AnnotationTextCharacter(_) | StyledItemTargetOrRepresentationItemRef::Axis1Placement(_) | StyledItemTargetOrRepresentationItemRef::Axis2Placement2d(_) | StyledItemTargetOrRepresentationItemRef::Axis2Placement3d(_) | StyledItemTargetOrRepresentationItemRef::BSplineCurve(_) | StyledItemTargetOrRepresentationItemRef::BSplineCurveWithKnots(_) | StyledItemTargetOrRepresentationItemRef::BSplineSurface(_) | StyledItemTargetOrRepresentationItemRef::BSplineSurfaceWithKnots(_) | StyledItemTargetOrRepresentationItemRef::BezierCurve(_) | StyledItemTargetOrRepresentationItemRef::BezierSurface(_) | StyledItemTargetOrRepresentationItemRef::BoundedCurve(_) | StyledItemTargetOrRepresentationItemRef::BoundedPcurve(_) | StyledItemTargetOrRepresentationItemRef::BoundedSurface(_) | StyledItemTargetOrRepresentationItemRef::BoundedSurfaceCurve(_) | StyledItemTargetOrRepresentationItemRef::BrepWithVoids(_) | StyledItemTargetOrRepresentationItemRef::CameraImage(_) | StyledItemTargetOrRepresentationItemRef::CameraImage3dWithScale(_) | StyledItemTargetOrRepresentationItemRef::CameraModel(_) | StyledItemTargetOrRepresentationItemRef::CameraModelD3(_) | StyledItemTargetOrRepresentationItemRef::CameraModelD3MultiClipping(_) | StyledItemTargetOrRepresentationItemRef::CameraModelD3WithHlhsr(_) | StyledItemTargetOrRepresentationItemRef::CartesianPoint(_) | StyledItemTargetOrRepresentationItemRef::CharacterizedRepresentation(_) | StyledItemTargetOrRepresentationItemRef::Circle(_) | StyledItemTargetOrRepresentationItemRef::ClosedShell(_) | StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedFace(_) | StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedSurfaceSet(_) | StyledItemTargetOrRepresentationItemRef::CompositeCurve(_) | StyledItemTargetOrRepresentationItemRef::CompositeText(_) | StyledItemTargetOrRepresentationItemRef::Conic(_) | StyledItemTargetOrRepresentationItemRef::ConicalSurface(_) | StyledItemTargetOrRepresentationItemRef::ConnectedFaceSet(_) | StyledItemTargetOrRepresentationItemRef::ConstructiveGeometryRepresentation(_) | StyledItemTargetOrRepresentationItemRef::CoordinatesList(_) | StyledItemTargetOrRepresentationItemRef::Curve(_) | StyledItemTargetOrRepresentationItemRef::CylindricalSurface(_) | StyledItemTargetOrRepresentationItemRef::DefinedCharacterGlyph(_) | StyledItemTargetOrRepresentationItemRef::DefinedSymbol(_) | StyledItemTargetOrRepresentationItemRef::DefinitionalRepresentation(_) | StyledItemTargetOrRepresentationItemRef::DegenerateToroidalSurface(_) | StyledItemTargetOrRepresentationItemRef::Direction(_) | StyledItemTargetOrRepresentationItemRef::DraughtingCallout(_) | StyledItemTargetOrRepresentationItemRef::DraughtingModel(_) | StyledItemTargetOrRepresentationItemRef::Edge(_) | StyledItemTargetOrRepresentationItemRef::EdgeCurve(_) | StyledItemTargetOrRepresentationItemRef::EdgeLoop(_) | StyledItemTargetOrRepresentationItemRef::ElementarySurface(_) | StyledItemTargetOrRepresentationItemRef::Ellipse(_) | StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(_) | StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(_) | StyledItemTargetOrRepresentationItemRef::Face(_) | StyledItemTargetOrRepresentationItemRef::FaceBound(_) | StyledItemTargetOrRepresentationItemRef::FaceOuterBound(_) | StyledItemTargetOrRepresentationItemRef::FaceSurface(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleHatching(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileColouredRegion(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileCurveWithStyle(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileSymbolWithStyle(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTiles(_) | StyledItemTargetOrRepresentationItemRef::GeometricCurveSet(_) | StyledItemTargetOrRepresentationItemRef::GeometricRepresentationItem(_) | StyledItemTargetOrRepresentationItemRef::GeometricSet(_) | StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedWireframeShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::Hyperbola(_) | StyledItemTargetOrRepresentationItemRef::IntersectionCurve(_) | StyledItemTargetOrRepresentationItemRef::LeaderDirectedCallout(_) | StyledItemTargetOrRepresentationItemRef::Line(_) | StyledItemTargetOrRepresentationItemRef::Loop(_) | StyledItemTargetOrRepresentationItemRef::ManifoldSolidBrep(_) | StyledItemTargetOrRepresentationItemRef::ManifoldSurfaceShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::MappedItem(_) | StyledItemTargetOrRepresentationItemRef::MechanicalDesignGeometricPresentationRepresentation(_) | StyledItemTargetOrRepresentationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(_) | StyledItemTargetOrRepresentationItemRef::MechanicalDesignShadedPresentationRepresentation(_) | StyledItemTargetOrRepresentationItemRef::OffsetSurface(_) | StyledItemTargetOrRepresentationItemRef::OneDirectionRepeatFactor(_) | StyledItemTargetOrRepresentationItemRef::OpenShell(_) | StyledItemTargetOrRepresentationItemRef::OrientedClosedShell(_) | StyledItemTargetOrRepresentationItemRef::OrientedEdge(_) | StyledItemTargetOrRepresentationItemRef::Parabola(_) | StyledItemTargetOrRepresentationItemRef::Path(_) | StyledItemTargetOrRepresentationItemRef::Pcurve(_) | StyledItemTargetOrRepresentationItemRef::Placement(_) | StyledItemTargetOrRepresentationItemRef::PlanarBox(_) | StyledItemTargetOrRepresentationItemRef::PlanarExtent(_) | StyledItemTargetOrRepresentationItemRef::Plane(_) | StyledItemTargetOrRepresentationItemRef::Point(_) | StyledItemTargetOrRepresentationItemRef::PolyLoop(_) | StyledItemTargetOrRepresentationItemRef::Polyline(_) | StyledItemTargetOrRepresentationItemRef::PresentationArea(_) | StyledItemTargetOrRepresentationItemRef::PresentationRepresentation(_) | StyledItemTargetOrRepresentationItemRef::PresentationView(_) | StyledItemTargetOrRepresentationItemRef::QuasiUniformCurve(_) | StyledItemTargetOrRepresentationItemRef::QuasiUniformSurface(_) | StyledItemTargetOrRepresentationItemRef::RationalBSplineCurve(_) | StyledItemTargetOrRepresentationItemRef::RationalBSplineSurface(_) | StyledItemTargetOrRepresentationItemRef::RepositionedTessellatedItem(_) | StyledItemTargetOrRepresentationItemRef::Representation(_) | StyledItemTargetOrRepresentationItemRef::RepresentationReference(_) | StyledItemTargetOrRepresentationItemRef::SeamCurve(_) | StyledItemTargetOrRepresentationItemRef::ShapeDimensionRepresentation(_) | StyledItemTargetOrRepresentationItemRef::ShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::ShapeRepresentationWithParameters(_) | StyledItemTargetOrRepresentationItemRef::ShellBasedSurfaceModel(_) | StyledItemTargetOrRepresentationItemRef::SolidModel(_) | StyledItemTargetOrRepresentationItemRef::SphericalSurface(_) | StyledItemTargetOrRepresentationItemRef::Surface(_) | StyledItemTargetOrRepresentationItemRef::SurfaceCurve(_) | StyledItemTargetOrRepresentationItemRef::SurfaceOfLinearExtrusion(_) | StyledItemTargetOrRepresentationItemRef::SurfaceOfRevolution(_) | StyledItemTargetOrRepresentationItemRef::SweptSurface(_) | StyledItemTargetOrRepresentationItemRef::SymbolRepresentation(_) | StyledItemTargetOrRepresentationItemRef::SymbolTarget(_) | StyledItemTargetOrRepresentationItemRef::TessellatedCurveSet(_) | StyledItemTargetOrRepresentationItemRef::TessellatedFace(_) | StyledItemTargetOrRepresentationItemRef::TessellatedGeometricSet(_) | StyledItemTargetOrRepresentationItemRef::TessellatedItem(_) | StyledItemTargetOrRepresentationItemRef::TessellatedShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::TessellatedShell(_) | StyledItemTargetOrRepresentationItemRef::TessellatedSolid(_) | StyledItemTargetOrRepresentationItemRef::TessellatedStructuredItem(_) | StyledItemTargetOrRepresentationItemRef::TessellatedSurfaceSet(_) | StyledItemTargetOrRepresentationItemRef::TextLiteral(_) | StyledItemTargetOrRepresentationItemRef::TopologicalRepresentationItem(_) | StyledItemTargetOrRepresentationItemRef::ToroidalSurface(_) | StyledItemTargetOrRepresentationItemRef::TrimmedCurve(_) | StyledItemTargetOrRepresentationItemRef::TwoDirectionRepeatFactor(_) | StyledItemTargetOrRepresentationItemRef::UniformCurve(_) | StyledItemTargetOrRepresentationItemRef::UniformSurface(_) | StyledItemTargetOrRepresentationItemRef::Vector(_) | StyledItemTargetOrRepresentationItemRef::Vertex(_) | StyledItemTargetOrRepresentationItemRef::VertexLoop(_) | StyledItemTargetOrRepresentationItemRef::VertexPoint(_) | StyledItemTargetOrRepresentationItemRef::VertexShell(_) | StyledItemTargetOrRepresentationItemRef::WireShell(_) => {}
-StyledItemTargetOrRepresentationItemRef::Complex(i) => { if !model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ADVANCED_BREP_SHAPE_REPRESENTATION", "ADVANCED_FACE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLANE", "ANNOTATION_TEXT", "ANNOTATION_TEXT_CHARACTER", "BEZIER_CURVE", "BEZIER_SURFACE", "BOUNDED_CURVE", "BOUNDED_PCURVE", "BOUNDED_SURFACE", "BOUNDED_SURFACE_CURVE", "BREP_WITH_VOIDS", "B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS", "CAMERA_IMAGE", "CAMERA_IMAGE_3D_WITH_SCALE", "CAMERA_MODEL", "CAMERA_MODEL_D3", "CAMERA_MODEL_D3_MULTI_CLIPPING", "CAMERA_MODEL_D3_WITH_HLHSR", "CHARACTERIZED_REPRESENTATION", "CLOSED_SHELL", "COMPOSITE_CURVE", "COMPOSITE_TEXT", "CONNECTED_FACE_SET", "CURVE", "DEFINITIONAL_REPRESENTATION", "DEGENERATE_TOROIDAL_SURFACE", "DIRECTION", "DRAUGHTING_CALLOUT", "DRAUGHTING_MODEL", "EDGE", "EDGE_CURVE", "EDGE_LOOP", "ELEMENTARY_SURFACE", "EXTERNALLY_DEFINED_HATCH_STYLE", "EXTERNALLY_DEFINED_TILE_STYLE", "FACE", "FACE_BOUND", "FACE_OUTER_BOUND", "FACE_SURFACE", "FILL_AREA_STYLE_HATCHING", "FILL_AREA_STYLE_TILES", "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE", "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION", "GEOMETRIC_CURVE_SET", "GEOMETRIC_REPRESENTATION_ITEM", "GEOMETRIC_SET", "INTERSECTION_CURVE", "LEADER_DIRECTED_CALLOUT", "LOOP", "MANIFOLD_SOLID_BREP", "MANIFOLD_SURFACE_SHAPE_REPRESENTATION", "MAPPED_ITEM", "ONE_DIRECTION_REPEAT_FACTOR", "OPEN_SHELL", "ORIENTED_CLOSED_SHELL", "ORIENTED_EDGE", "PATH", "PCURVE", "PLACEMENT", "PLANAR_BOX", "PLANAR_EXTENT", "POINT", "POLY_LOOP", "PRESENTATION_AREA", "PRESENTATION_REPRESENTATION", "PRESENTATION_VIEW", "QUASI_UNIFORM_CURVE", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_CURVE", "RATIONAL_B_SPLINE_SURFACE", "REPOSITIONED_TESSELLATED_ITEM", "REPRESENTATION", "REPRESENTATION_REFERENCE", "SEAM_CURVE", "SHAPE_DIMENSION_REPRESENTATION", "SHAPE_REPRESENTATION", "SHAPE_REPRESENTATION_WITH_PARAMETERS", "SHELL_BASED_SURFACE_MODEL", "SOLID_MODEL", "SURFACE", "SURFACE_CURVE", "SYMBOL_REPRESENTATION", "TESSELLATED_GEOMETRIC_SET", "TESSELLATED_ITEM", "TESSELLATED_SHAPE_REPRESENTATION", "TESSELLATED_STRUCTURED_ITEM", "TEXT_LITERAL", "TOPOLOGICAL_REPRESENTATION_ITEM", "TOROIDAL_SURFACE", "TWO_DIRECTION_REPEAT_FACTOR", "UNIFORM_CURVE", "UNIFORM_SURFACE", "VECTOR", "VERTEX", "VERTEX_POINT"].contains(&part_name(p)))) { return Err(AuthorError::NarrowedReference { entity: "STYLED_ITEM", attribute: "item" }) } }
+StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::AdvancedFace(_) | StyledItemTargetOrRepresentationItemRef::AnnotationText(_) | StyledItemTargetOrRepresentationItemRef::AnnotationTextCharacter(_) | StyledItemTargetOrRepresentationItemRef::Axis1Placement(_) | StyledItemTargetOrRepresentationItemRef::Axis2Placement2d(_) | StyledItemTargetOrRepresentationItemRef::Axis2Placement3d(_) | StyledItemTargetOrRepresentationItemRef::BSplineCurve(_) | StyledItemTargetOrRepresentationItemRef::BSplineCurveWithKnots(_) | StyledItemTargetOrRepresentationItemRef::BSplineSurface(_) | StyledItemTargetOrRepresentationItemRef::BSplineSurfaceWithKnots(_) | StyledItemTargetOrRepresentationItemRef::BezierCurve(_) | StyledItemTargetOrRepresentationItemRef::BezierSurface(_) | StyledItemTargetOrRepresentationItemRef::BoundedCurve(_) | StyledItemTargetOrRepresentationItemRef::BoundedPcurve(_) | StyledItemTargetOrRepresentationItemRef::BoundedSurface(_) | StyledItemTargetOrRepresentationItemRef::BoundedSurfaceCurve(_) | StyledItemTargetOrRepresentationItemRef::BrepWithVoids(_) | StyledItemTargetOrRepresentationItemRef::CameraImage(_) | StyledItemTargetOrRepresentationItemRef::CameraImage3dWithScale(_) | StyledItemTargetOrRepresentationItemRef::CameraModel(_) | StyledItemTargetOrRepresentationItemRef::CameraModelD3(_) | StyledItemTargetOrRepresentationItemRef::CameraModelD3MultiClipping(_) | StyledItemTargetOrRepresentationItemRef::CameraModelD3WithHlhsr(_) | StyledItemTargetOrRepresentationItemRef::CartesianPoint(_) | StyledItemTargetOrRepresentationItemRef::CharacterizedRepresentation(_) | StyledItemTargetOrRepresentationItemRef::Circle(_) | StyledItemTargetOrRepresentationItemRef::ClosedShell(_) | StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedFace(_) | StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedSurfaceSet(_) | StyledItemTargetOrRepresentationItemRef::CompositeCurve(_) | StyledItemTargetOrRepresentationItemRef::CompositeText(_) | StyledItemTargetOrRepresentationItemRef::Conic(_) | StyledItemTargetOrRepresentationItemRef::ConicalSurface(_) | StyledItemTargetOrRepresentationItemRef::ConnectedFaceSet(_) | StyledItemTargetOrRepresentationItemRef::ConstructiveGeometryRepresentation(_) | StyledItemTargetOrRepresentationItemRef::CoordinatesList(_) | StyledItemTargetOrRepresentationItemRef::Curve(_) | StyledItemTargetOrRepresentationItemRef::CylindricalSurface(_) | StyledItemTargetOrRepresentationItemRef::DefinedCharacterGlyph(_) | StyledItemTargetOrRepresentationItemRef::DefinedSymbol(_) | StyledItemTargetOrRepresentationItemRef::DefinitionalRepresentation(_) | StyledItemTargetOrRepresentationItemRef::DegenerateToroidalSurface(_) | StyledItemTargetOrRepresentationItemRef::Direction(_) | StyledItemTargetOrRepresentationItemRef::DraughtingCallout(_) | StyledItemTargetOrRepresentationItemRef::DraughtingModel(_) | StyledItemTargetOrRepresentationItemRef::Edge(_) | StyledItemTargetOrRepresentationItemRef::EdgeCurve(_) | StyledItemTargetOrRepresentationItemRef::EdgeLoop(_) | StyledItemTargetOrRepresentationItemRef::ElementarySurface(_) | StyledItemTargetOrRepresentationItemRef::Ellipse(_) | StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(_) | StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(_) | StyledItemTargetOrRepresentationItemRef::Face(_) | StyledItemTargetOrRepresentationItemRef::FaceBound(_) | StyledItemTargetOrRepresentationItemRef::FaceOuterBound(_) | StyledItemTargetOrRepresentationItemRef::FaceSurface(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleHatching(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileColouredRegion(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileCurveWithStyle(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileSymbolWithStyle(_) | StyledItemTargetOrRepresentationItemRef::FillAreaStyleTiles(_) | StyledItemTargetOrRepresentationItemRef::GeometricCurveSet(_) | StyledItemTargetOrRepresentationItemRef::GeometricRepresentationItem(_) | StyledItemTargetOrRepresentationItemRef::GeometricSet(_) | StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedWireframeShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::Hyperbola(_) | StyledItemTargetOrRepresentationItemRef::IntersectionCurve(_) | StyledItemTargetOrRepresentationItemRef::LeaderDirectedCallout(_) | StyledItemTargetOrRepresentationItemRef::Line(_) | StyledItemTargetOrRepresentationItemRef::Loop(_) | StyledItemTargetOrRepresentationItemRef::ManifoldSolidBrep(_) | StyledItemTargetOrRepresentationItemRef::ManifoldSurfaceShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::MappedItem(_) | StyledItemTargetOrRepresentationItemRef::MechanicalDesignGeometricPresentationRepresentation(_) | StyledItemTargetOrRepresentationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(_) | StyledItemTargetOrRepresentationItemRef::MechanicalDesignShadedPresentationRepresentation(_) | StyledItemTargetOrRepresentationItemRef::OffsetSurface(_) | StyledItemTargetOrRepresentationItemRef::OneDirectionRepeatFactor(_) | StyledItemTargetOrRepresentationItemRef::OpenShell(_) | StyledItemTargetOrRepresentationItemRef::OrientedClosedShell(_) | StyledItemTargetOrRepresentationItemRef::OrientedEdge(_) | StyledItemTargetOrRepresentationItemRef::Parabola(_) | StyledItemTargetOrRepresentationItemRef::Path(_) | StyledItemTargetOrRepresentationItemRef::Pcurve(_) | StyledItemTargetOrRepresentationItemRef::Placement(_) | StyledItemTargetOrRepresentationItemRef::PlanarBox(_) | StyledItemTargetOrRepresentationItemRef::PlanarExtent(_) | StyledItemTargetOrRepresentationItemRef::Plane(_) | StyledItemTargetOrRepresentationItemRef::Point(_) | StyledItemTargetOrRepresentationItemRef::PolyLoop(_) | StyledItemTargetOrRepresentationItemRef::Polyline(_) | StyledItemTargetOrRepresentationItemRef::PresentationArea(_) | StyledItemTargetOrRepresentationItemRef::PresentationRepresentation(_) | StyledItemTargetOrRepresentationItemRef::PresentationView(_) | StyledItemTargetOrRepresentationItemRef::QuasiUniformCurve(_) | StyledItemTargetOrRepresentationItemRef::QuasiUniformSurface(_) | StyledItemTargetOrRepresentationItemRef::RationalBSplineCurve(_) | StyledItemTargetOrRepresentationItemRef::RationalBSplineSurface(_) | StyledItemTargetOrRepresentationItemRef::RepositionedTessellatedItem(_) | StyledItemTargetOrRepresentationItemRef::Representation(_) | StyledItemTargetOrRepresentationItemRef::RepresentationReference(_) | StyledItemTargetOrRepresentationItemRef::SeamCurve(_) | StyledItemTargetOrRepresentationItemRef::ShapeDimensionRepresentation(_) | StyledItemTargetOrRepresentationItemRef::ShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::ShapeRepresentationWithParameters(_) | StyledItemTargetOrRepresentationItemRef::ShellBasedSurfaceModel(_) | StyledItemTargetOrRepresentationItemRef::SolidModel(_) | StyledItemTargetOrRepresentationItemRef::SphericalSurface(_) | StyledItemTargetOrRepresentationItemRef::Surface(_) | StyledItemTargetOrRepresentationItemRef::SurfaceCurve(_) | StyledItemTargetOrRepresentationItemRef::SurfaceOfLinearExtrusion(_) | StyledItemTargetOrRepresentationItemRef::SurfaceOfRevolution(_) | StyledItemTargetOrRepresentationItemRef::SweptSurface(_) | StyledItemTargetOrRepresentationItemRef::SymbolRepresentation(_) | StyledItemTargetOrRepresentationItemRef::SymbolTarget(_) | StyledItemTargetOrRepresentationItemRef::TessellatedCurveSet(_) | StyledItemTargetOrRepresentationItemRef::TessellatedFace(_) | StyledItemTargetOrRepresentationItemRef::TessellatedGeometricSet(_) | StyledItemTargetOrRepresentationItemRef::TessellatedItem(_) | StyledItemTargetOrRepresentationItemRef::TessellatedShapeRepresentation(_) | StyledItemTargetOrRepresentationItemRef::TessellatedShell(_) | StyledItemTargetOrRepresentationItemRef::TessellatedSolid(_) | StyledItemTargetOrRepresentationItemRef::TessellatedStructuredItem(_) | StyledItemTargetOrRepresentationItemRef::TessellatedSurfaceSet(_) | StyledItemTargetOrRepresentationItemRef::TextLiteral(_) | StyledItemTargetOrRepresentationItemRef::TopologicalRepresentationItem(_) | StyledItemTargetOrRepresentationItemRef::ToroidalSurface(_) | StyledItemTargetOrRepresentationItemRef::TrimmedCurve(_) | StyledItemTargetOrRepresentationItemRef::TwoDirectionRepeatFactor(_) | StyledItemTargetOrRepresentationItemRef::UniformCurve(_) | StyledItemTargetOrRepresentationItemRef::UniformSurface(_) | StyledItemTargetOrRepresentationItemRef::Vector(_) | StyledItemTargetOrRepresentationItemRef::Vertex(_) | StyledItemTargetOrRepresentationItemRef::VertexLoop(_) | StyledItemTargetOrRepresentationItemRef::VertexPoint(_) | StyledItemTargetOrRepresentationItemRef::VertexShell(_) | StyledItemTargetOrRepresentationItemRef::WireShell(_) => {}
+StyledItemTargetOrRepresentationItemRef::Complex(i) => { if !model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| c.parts.iter().any(|p| ["ADVANCED_BREP_SHAPE_REPRESENTATION", "ADVANCED_FACE", "ANNOTATION_TEXT", "ANNOTATION_TEXT_CHARACTER", "BEZIER_CURVE", "BEZIER_SURFACE", "BOUNDED_CURVE", "BOUNDED_PCURVE", "BOUNDED_SURFACE", "BOUNDED_SURFACE_CURVE", "BREP_WITH_VOIDS", "B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS", "CAMERA_IMAGE", "CAMERA_IMAGE_3D_WITH_SCALE", "CAMERA_MODEL", "CAMERA_MODEL_D3", "CAMERA_MODEL_D3_MULTI_CLIPPING", "CAMERA_MODEL_D3_WITH_HLHSR", "CHARACTERIZED_REPRESENTATION", "CLOSED_SHELL", "COMPOSITE_CURVE", "COMPOSITE_TEXT", "CONNECTED_FACE_SET", "CURVE", "DEFINITIONAL_REPRESENTATION", "DEGENERATE_TOROIDAL_SURFACE", "DIRECTION", "DRAUGHTING_CALLOUT", "DRAUGHTING_MODEL", "EDGE", "EDGE_CURVE", "EDGE_LOOP", "ELEMENTARY_SURFACE", "EXTERNALLY_DEFINED_HATCH_STYLE", "EXTERNALLY_DEFINED_TILE_STYLE", "FACE", "FACE_BOUND", "FACE_OUTER_BOUND", "FACE_SURFACE", "FILL_AREA_STYLE_HATCHING", "FILL_AREA_STYLE_TILES", "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE", "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION", "GEOMETRIC_CURVE_SET", "GEOMETRIC_REPRESENTATION_ITEM", "GEOMETRIC_SET", "INTERSECTION_CURVE", "LEADER_DIRECTED_CALLOUT", "LOOP", "MANIFOLD_SOLID_BREP", "MANIFOLD_SURFACE_SHAPE_REPRESENTATION", "MAPPED_ITEM", "ONE_DIRECTION_REPEAT_FACTOR", "OPEN_SHELL", "ORIENTED_CLOSED_SHELL", "ORIENTED_EDGE", "PATH", "PCURVE", "PLACEMENT", "PLANAR_BOX", "PLANAR_EXTENT", "POINT", "POLY_LOOP", "PRESENTATION_AREA", "PRESENTATION_REPRESENTATION", "PRESENTATION_VIEW", "QUASI_UNIFORM_CURVE", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_CURVE", "RATIONAL_B_SPLINE_SURFACE", "REPOSITIONED_TESSELLATED_ITEM", "REPRESENTATION", "REPRESENTATION_REFERENCE", "SEAM_CURVE", "SHAPE_DIMENSION_REPRESENTATION", "SHAPE_REPRESENTATION", "SHAPE_REPRESENTATION_WITH_PARAMETERS", "SHELL_BASED_SURFACE_MODEL", "SOLID_MODEL", "SURFACE", "SURFACE_CURVE", "SYMBOL_REPRESENTATION", "TESSELLATED_GEOMETRIC_SET", "TESSELLATED_ITEM", "TESSELLATED_SHAPE_REPRESENTATION", "TESSELLATED_STRUCTURED_ITEM", "TEXT_LITERAL", "TOPOLOGICAL_REPRESENTATION_ITEM", "TOROIDAL_SURFACE", "TWO_DIRECTION_REPEAT_FACTOR", "UNIFORM_CURVE", "UNIFORM_SURFACE", "VECTOR", "VERTEX", "VERTEX_POINT"].contains(&part_name(p))) && !c.parts.iter().any(|p| ["ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT_OCCURRENCE", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "DRAUGHTING_ANNOTATION_OCCURRENCE", "LEADER_CURVE", "LEADER_TERMINATOR", "OVER_RIDING_STYLED_ITEM", "STYLED_ITEM", "TERMINATOR_SYMBOL"].contains(&part_name(p)))) { return Err(AuthorError::NarrowedReference { entity: "STYLED_ITEM", attribute: "item" }) } }
 _ => return Err(AuthorError::NarrowedReference { entity: "STYLED_ITEM", attribute: "item" }),
 }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
+        .any(|p| matches!(p, PartialEntity::BoundedSurfaceCurve { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::SurfaceCurve { curve_3d, .. } = p {
+                {
+                    let x = curve_3d;
+                    match x {
+                        CurveRef::BSplineCurve(_)
+                        | CurveRef::BSplineCurveWithKnots(_)
+                        | CurveRef::BezierCurve(_)
+                        | CurveRef::BoundedCurve(_)
+                        | CurveRef::BoundedPcurve(_)
+                        | CurveRef::BoundedSurfaceCurve(_)
+                        | CurveRef::CompositeCurve(_)
+                        | CurveRef::Polyline(_)
+                        | CurveRef::QuasiUniformCurve(_)
+                        | CurveRef::RationalBSplineCurve(_)
+                        | CurveRef::TrimmedCurve(_)
+                        | CurveRef::UniformCurve(_) => {}
+                        CurveRef::Complex(i) => {
+                            if !model
+                                .complex_entity_arena
+                                .items
+                                .get(i.0 as usize)
+                                .is_some_and(|c| {
+                                    c.parts.iter().any(|p| {
+                                        [
+                                            "BEZIER_CURVE",
+                                            "BOUNDED_CURVE",
+                                            "BOUNDED_PCURVE",
+                                            "BOUNDED_SURFACE_CURVE",
+                                            "B_SPLINE_CURVE",
+                                            "B_SPLINE_CURVE_WITH_KNOTS",
+                                            "COMPOSITE_CURVE",
+                                            "QUASI_UNIFORM_CURVE",
+                                            "RATIONAL_B_SPLINE_CURVE",
+                                            "UNIFORM_CURVE",
+                                        ]
+                                        .contains(&part_name(p))
+                                    })
+                                })
+                            {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "BOUNDED_SURFACE_CURVE",
+                                    attribute: "curve_3d",
+                                });
+                            }
+                        }
+                        _ => {
+                            return Err(AuthorError::NarrowedReference {
+                                entity: "BOUNDED_SURFACE_CURVE",
+                                attribute: "curve_3d",
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
+        .any(|p| matches!(p, PartialEntity::SurfaceCurve { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::SurfaceCurve { curve_3d, .. } = p {
+                {
+                    let x = curve_3d;
+                    match x {
+                        CurveRef::BSplineCurve(_)
+                        | CurveRef::BSplineCurveWithKnots(_)
+                        | CurveRef::BezierCurve(_)
+                        | CurveRef::BoundedCurve(_)
+                        | CurveRef::BoundedSurfaceCurve(_)
+                        | CurveRef::Circle(_)
+                        | CurveRef::CompositeCurve(_)
+                        | CurveRef::Conic(_)
+                        | CurveRef::Curve(_)
+                        | CurveRef::Ellipse(_)
+                        | CurveRef::Hyperbola(_)
+                        | CurveRef::IntersectionCurve(_)
+                        | CurveRef::Line(_)
+                        | CurveRef::Parabola(_)
+                        | CurveRef::Polyline(_)
+                        | CurveRef::QuasiUniformCurve(_)
+                        | CurveRef::RationalBSplineCurve(_)
+                        | CurveRef::SeamCurve(_)
+                        | CurveRef::SurfaceCurve(_)
+                        | CurveRef::TrimmedCurve(_)
+                        | CurveRef::UniformCurve(_) => {}
+                        CurveRef::Complex(i) => {
+                            if !model
+                                .complex_entity_arena
+                                .items
+                                .get(i.0 as usize)
+                                .is_some_and(|c| {
+                                    c.parts.iter().any(|p| {
+                                        [
+                                            "BEZIER_CURVE",
+                                            "BOUNDED_CURVE",
+                                            "BOUNDED_SURFACE_CURVE",
+                                            "B_SPLINE_CURVE",
+                                            "B_SPLINE_CURVE_WITH_KNOTS",
+                                            "COMPOSITE_CURVE",
+                                            "CURVE",
+                                            "INTERSECTION_CURVE",
+                                            "QUASI_UNIFORM_CURVE",
+                                            "RATIONAL_B_SPLINE_CURVE",
+                                            "SEAM_CURVE",
+                                            "SURFACE_CURVE",
+                                            "UNIFORM_CURVE",
+                                        ]
+                                        .contains(&part_name(p))
+                                    }) && !c.parts.iter().any(|p| {
+                                        ["BOUNDED_PCURVE", "PCURVE"].contains(&part_name(p))
+                                    })
+                                })
+                            {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "SURFACE_CURVE",
+                                    attribute: "curve_3d",
+                                });
+                            }
+                        }
+                        _ => {
+                            return Err(AuthorError::NarrowedReference {
+                                entity: "SURFACE_CURVE",
+                                attribute: "curve_3d",
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
+        .any(|p| matches!(p, PartialEntity::LeaderTerminator { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::TerminatorSymbol {
+                annotated_curve, ..
+            } = p
+            {
+                {
+                    let x = annotated_curve;
+                    match x {
+                        AnnotationCurveOccurrenceRef::LeaderCurve(_) => {}
+                        AnnotationCurveOccurrenceRef::Complex(i) => {
+                            if !model
+                                .complex_entity_arena
+                                .items
+                                .get(i.0 as usize)
+                                .is_some_and(|c| {
+                                    c.parts
+                                        .iter()
+                                        .any(|p| ["LEADER_CURVE"].contains(&part_name(p)))
+                                })
+                            {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "LEADER_TERMINATOR",
+                                    attribute: "annotated_curve",
+                                });
+                            }
+                        }
+                        _ => {
+                            return Err(AuthorError::NarrowedReference {
+                                entity: "LEADER_TERMINATOR",
+                                attribute: "annotated_curve",
+                            });
+                        }
+                    }
                 }
             }
         }
@@ -50382,6 +52029,261 @@ fn check_work_item_ref(model: &StepModel, r: &WorkItemRef) -> Result<(), AuthorE
     }
     Ok(())
 }
+fn check_ap242_advanced_brep_shape_representation_items_ref(
+    model: &StepModel,
+    r: &Ap242AdvancedBrepShapeRepresentationItemsRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242AdvancedBrepShapeRepresentationItemsRef::AnnotationText(i) => {
+            if i.0 as usize >= model.annotation_text_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ANNOTATION_TEXT",
+                });
+            }
+        }
+        Ap242AdvancedBrepShapeRepresentationItemsRef::AnnotationTextCharacter(i) => {
+            if i.0 as usize >= model.annotation_text_character_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ANNOTATION_TEXT_CHARACTER",
+                });
+            }
+        }
+        Ap242AdvancedBrepShapeRepresentationItemsRef::Axis2Placement3d(i) => {
+            if i.0 as usize >= model.axis2_placement3d_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "AXIS2_PLACEMENT_3D",
+                });
+            }
+        }
+        Ap242AdvancedBrepShapeRepresentationItemsRef::BrepWithVoids(i) => {
+            if i.0 as usize >= model.brep_with_voids_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BREP_WITH_VOIDS",
+                });
+            }
+        }
+        Ap242AdvancedBrepShapeRepresentationItemsRef::CameraImage(i) => {
+            if i.0 as usize >= model.camera_image_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_IMAGE",
+                });
+            }
+        }
+        Ap242AdvancedBrepShapeRepresentationItemsRef::CameraImage3dWithScale(i) => {
+            if i.0 as usize >= model.camera_image3d_with_scale_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_IMAGE_3D_WITH_SCALE",
+                });
+            }
+        }
+        Ap242AdvancedBrepShapeRepresentationItemsRef::ManifoldSolidBrep(i) => {
+            if i.0 as usize >= model.manifold_solid_brep_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MANIFOLD_SOLID_BREP",
+                });
+            }
+        }
+        Ap242AdvancedBrepShapeRepresentationItemsRef::MappedItem(i) => {
+            if i.0 as usize >= model.mapped_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MAPPED_ITEM",
+                });
+            }
+        }
+        Ap242AdvancedBrepShapeRepresentationItemsRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c.parts.iter().any(|p| {
+                [
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "BREP_WITH_VOIDS",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
+                    "MANIFOLD_SOLID_BREP",
+                    "MAPPED_ITEM",
+                ]
+                .contains(&part_name(p))
+            }) {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not allowed in ADVANCED_BREP_SHAPE_REPRESENTATION.ITEMS",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_advanced_face_face_geometry_ref(
+    model: &StepModel,
+    r: &Ap242AdvancedFaceFaceGeometryRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242AdvancedFaceFaceGeometryRef::BSplineSurface(i) => {
+            if i.0 as usize >= model.b_spline_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_SURFACE",
+                });
+            }
+        }
+        Ap242AdvancedFaceFaceGeometryRef::BSplineSurfaceWithKnots(i) => {
+            if i.0 as usize >= model.b_spline_surface_with_knots_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_SURFACE_WITH_KNOTS",
+                });
+            }
+        }
+        Ap242AdvancedFaceFaceGeometryRef::BezierSurface(i) => {
+            if i.0 as usize >= model.bezier_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BEZIER_SURFACE",
+                });
+            }
+        }
+        Ap242AdvancedFaceFaceGeometryRef::ConicalSurface(i) => {
+            if i.0 as usize >= model.conical_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CONICAL_SURFACE",
+                });
+            }
+        }
+        Ap242AdvancedFaceFaceGeometryRef::CylindricalSurface(i) => {
+            if i.0 as usize >= model.cylindrical_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CYLINDRICAL_SURFACE",
+                });
+            }
+        }
+        Ap242AdvancedFaceFaceGeometryRef::DegenerateToroidalSurface(i) => {
+            if i.0 as usize >= model.degenerate_toroidal_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DEGENERATE_TOROIDAL_SURFACE",
+                });
+            }
+        }
+        Ap242AdvancedFaceFaceGeometryRef::ElementarySurface(i) => {
+            if i.0 as usize >= model.elementary_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ELEMENTARY_SURFACE",
+                });
+            }
+        }
+        Ap242AdvancedFaceFaceGeometryRef::Plane(i) => {
+            if i.0 as usize >= model.plane_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PLANE" });
+            }
+        }
+        Ap242AdvancedFaceFaceGeometryRef::QuasiUniformSurface(i) => {
+            if i.0 as usize >= model.quasi_uniform_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "QUASI_UNIFORM_SURFACE",
+                });
+            }
+        }
+        Ap242AdvancedFaceFaceGeometryRef::RationalBSplineSurface(i) => {
+            if i.0 as usize >= model.rational_b_spline_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "RATIONAL_B_SPLINE_SURFACE",
+                });
+            }
+        }
+        Ap242AdvancedFaceFaceGeometryRef::SphericalSurface(i) => {
+            if i.0 as usize >= model.spherical_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SPHERICAL_SURFACE",
+                });
+            }
+        }
+        Ap242AdvancedFaceFaceGeometryRef::SurfaceOfLinearExtrusion(i) => {
+            if i.0 as usize >= model.surface_of_linear_extrusion_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SURFACE_OF_LINEAR_EXTRUSION",
+                });
+            }
+        }
+        Ap242AdvancedFaceFaceGeometryRef::SurfaceOfRevolution(i) => {
+            if i.0 as usize >= model.surface_of_revolution_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SURFACE_OF_REVOLUTION",
+                });
+            }
+        }
+        Ap242AdvancedFaceFaceGeometryRef::SweptSurface(i) => {
+            if i.0 as usize >= model.swept_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SWEPT_SURFACE",
+                });
+            }
+        }
+        Ap242AdvancedFaceFaceGeometryRef::ToroidalSurface(i) => {
+            if i.0 as usize >= model.toroidal_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TOROIDAL_SURFACE",
+                });
+            }
+        }
+        Ap242AdvancedFaceFaceGeometryRef::UniformSurface(i) => {
+            if i.0 as usize >= model.uniform_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "UNIFORM_SURFACE",
+                });
+            }
+        }
+        Ap242AdvancedFaceFaceGeometryRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c.parts.iter().any(|p| {
+                [
+                    "BEZIER_SURFACE",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "ELEMENTARY_SURFACE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "TOROIDAL_SURFACE",
+                    "UNIFORM_SURFACE",
+                ]
+                .contains(&part_name(p))
+            }) {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not allowed in ADVANCED_FACE.FACE_GEOMETRY",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_annotation_occurrence_associativity_related_annotation_occurrence_ref(
+    model: &StepModel,
+    r: &Ap242AnnotationOccurrenceAssociativityRelatedAnnotationOccurrenceRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242AnnotationOccurrenceAssociativityRelatedAnnotationOccurrenceRef::LeaderCurve(i) => {
+            if i.0 as usize >= model.leader_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "LEADER_CURVE",
+                });
+            }
+        }
+        Ap242AnnotationOccurrenceAssociativityRelatedAnnotationOccurrenceRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c
+                .parts
+                .iter()
+                .any(|p| ["LEADER_CURVE"].contains(&part_name(p)))
+            {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not allowed in ANNOTATION_OCCURRENCE_ASSOCIATIVITY.RELATED_ANNOTATION_OCCURRENCE",
+                });
+            }
+        }
+    }
+    Ok(())
+}
 fn check_ap242_approved_item_ref(
     model: &StepModel,
     r: &Ap242ApprovedItemRef,
@@ -50467,6 +52369,700 @@ fn check_ap242_approved_item_ref(
             }) {
                 return Err(AuthorError::InvalidComplex {
                     reason: "not a APPROVED_ITEM",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_bounded_curve_ref(
+    model: &StepModel,
+    r: &Ap242BoundedCurveRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242BoundedCurveRef::BSplineCurve(i) => {
+            if i.0 as usize >= model.b_spline_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_CURVE",
+                });
+            }
+        }
+        Ap242BoundedCurveRef::BSplineCurveWithKnots(i) => {
+            if i.0 as usize >= model.b_spline_curve_with_knots_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_CURVE_WITH_KNOTS",
+                });
+            }
+        }
+        Ap242BoundedCurveRef::BezierCurve(i) => {
+            if i.0 as usize >= model.bezier_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BEZIER_CURVE",
+                });
+            }
+        }
+        Ap242BoundedCurveRef::BoundedCurve(i) => {
+            if i.0 as usize >= model.bounded_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_CURVE",
+                });
+            }
+        }
+        Ap242BoundedCurveRef::BoundedPcurve(i) => {
+            if i.0 as usize >= model.bounded_pcurve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_PCURVE",
+                });
+            }
+        }
+        Ap242BoundedCurveRef::BoundedSurfaceCurve(i) => {
+            if i.0 as usize >= model.bounded_surface_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_SURFACE_CURVE",
+                });
+            }
+        }
+        Ap242BoundedCurveRef::CompositeCurve(i) => {
+            if i.0 as usize >= model.composite_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "COMPOSITE_CURVE",
+                });
+            }
+        }
+        Ap242BoundedCurveRef::Polyline(i) => {
+            if i.0 as usize >= model.polyline_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "POLYLINE" });
+            }
+        }
+        Ap242BoundedCurveRef::QuasiUniformCurve(i) => {
+            if i.0 as usize >= model.quasi_uniform_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "QUASI_UNIFORM_CURVE",
+                });
+            }
+        }
+        Ap242BoundedCurveRef::RationalBSplineCurve(i) => {
+            if i.0 as usize >= model.rational_b_spline_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "RATIONAL_B_SPLINE_CURVE",
+                });
+            }
+        }
+        Ap242BoundedCurveRef::TrimmedCurve(i) => {
+            if i.0 as usize >= model.trimmed_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TRIMMED_CURVE",
+                });
+            }
+        }
+        Ap242BoundedCurveRef::UniformCurve(i) => {
+            if i.0 as usize >= model.uniform_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "UNIFORM_CURVE",
+                });
+            }
+        }
+        Ap242BoundedCurveRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c.parts.iter().any(|p| {
+                [
+                    "BEZIER_CURVE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "COMPOSITE_CURVE",
+                    "QUASI_UNIFORM_CURVE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "UNIFORM_CURVE",
+                ]
+                .contains(&part_name(p))
+            }) {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not a BOUNDED_CURVE",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_bounded_surface_curve_curve3d_ref(
+    model: &StepModel,
+    r: &Ap242BoundedSurfaceCurveCurve3dRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242BoundedSurfaceCurveCurve3dRef::BSplineCurve(i) => {
+            if i.0 as usize >= model.b_spline_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_CURVE",
+                });
+            }
+        }
+        Ap242BoundedSurfaceCurveCurve3dRef::BSplineCurveWithKnots(i) => {
+            if i.0 as usize >= model.b_spline_curve_with_knots_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_CURVE_WITH_KNOTS",
+                });
+            }
+        }
+        Ap242BoundedSurfaceCurveCurve3dRef::BezierCurve(i) => {
+            if i.0 as usize >= model.bezier_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BEZIER_CURVE",
+                });
+            }
+        }
+        Ap242BoundedSurfaceCurveCurve3dRef::BoundedCurve(i) => {
+            if i.0 as usize >= model.bounded_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_CURVE",
+                });
+            }
+        }
+        Ap242BoundedSurfaceCurveCurve3dRef::BoundedSurfaceCurve(i) => {
+            if i.0 as usize >= model.bounded_surface_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_SURFACE_CURVE",
+                });
+            }
+        }
+        Ap242BoundedSurfaceCurveCurve3dRef::CompositeCurve(i) => {
+            if i.0 as usize >= model.composite_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "COMPOSITE_CURVE",
+                });
+            }
+        }
+        Ap242BoundedSurfaceCurveCurve3dRef::Polyline(i) => {
+            if i.0 as usize >= model.polyline_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "POLYLINE" });
+            }
+        }
+        Ap242BoundedSurfaceCurveCurve3dRef::QuasiUniformCurve(i) => {
+            if i.0 as usize >= model.quasi_uniform_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "QUASI_UNIFORM_CURVE",
+                });
+            }
+        }
+        Ap242BoundedSurfaceCurveCurve3dRef::RationalBSplineCurve(i) => {
+            if i.0 as usize >= model.rational_b_spline_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "RATIONAL_B_SPLINE_CURVE",
+                });
+            }
+        }
+        Ap242BoundedSurfaceCurveCurve3dRef::TrimmedCurve(i) => {
+            if i.0 as usize >= model.trimmed_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TRIMMED_CURVE",
+                });
+            }
+        }
+        Ap242BoundedSurfaceCurveCurve3dRef::UniformCurve(i) => {
+            if i.0 as usize >= model.uniform_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "UNIFORM_CURVE",
+                });
+            }
+        }
+        Ap242BoundedSurfaceCurveCurve3dRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c.parts.iter().any(|p| {
+                [
+                    "BEZIER_CURVE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "COMPOSITE_CURVE",
+                    "QUASI_UNIFORM_CURVE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "UNIFORM_CURVE",
+                ]
+                .contains(&part_name(p))
+            }) {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not allowed in BOUNDED_SURFACE_CURVE.CURVE_3D",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_camera_usage_mapped_representation_ref(
+    model: &StepModel,
+    r: &Ap242CameraUsageMappedRepresentationRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242CameraUsageMappedRepresentationRef::AdvancedBrepShapeRepresentation(i) => { if i.0 as usize >= model.advanced_brep_shape_representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "ADVANCED_BREP_SHAPE_REPRESENTATION" }); } }
+        Ap242CameraUsageMappedRepresentationRef::CharacterizedRepresentation(i) => { if i.0 as usize >= model.characterized_representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "CHARACTERIZED_REPRESENTATION" }); } }
+        Ap242CameraUsageMappedRepresentationRef::ConstructiveGeometryRepresentation(i) => { if i.0 as usize >= model.constructive_geometry_representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "CONSTRUCTIVE_GEOMETRY_REPRESENTATION" }); } }
+        Ap242CameraUsageMappedRepresentationRef::DefinitionalRepresentation(i) => { if i.0 as usize >= model.definitional_representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "DEFINITIONAL_REPRESENTATION" }); } }
+        Ap242CameraUsageMappedRepresentationRef::DraughtingModel(i) => { if i.0 as usize >= model.draughting_model_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "DRAUGHTING_MODEL" }); } }
+        Ap242CameraUsageMappedRepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => { if i.0 as usize >= model.geometrically_bounded_surface_shape_representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION" }); } }
+        Ap242CameraUsageMappedRepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => { if i.0 as usize >= model.geometrically_bounded_wireframe_shape_representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION" }); } }
+        Ap242CameraUsageMappedRepresentationRef::ManifoldSurfaceShapeRepresentation(i) => { if i.0 as usize >= model.manifold_surface_shape_representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "MANIFOLD_SURFACE_SHAPE_REPRESENTATION" }); } }
+        Ap242CameraUsageMappedRepresentationRef::MechanicalDesignGeometricPresentationRepresentation(i) => { if i.0 as usize >= model.mechanical_design_geometric_presentation_representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION" }); } }
+        Ap242CameraUsageMappedRepresentationRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => { if i.0 as usize >= model.mechanical_design_presentation_representation_with_draughting_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING" }); } }
+        Ap242CameraUsageMappedRepresentationRef::MechanicalDesignShadedPresentationRepresentation(i) => { if i.0 as usize >= model.mechanical_design_shaded_presentation_representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION" }); } }
+        Ap242CameraUsageMappedRepresentationRef::Representation(i) => { if i.0 as usize >= model.representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "REPRESENTATION" }); } }
+        Ap242CameraUsageMappedRepresentationRef::ShapeDimensionRepresentation(i) => { if i.0 as usize >= model.shape_dimension_representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "SHAPE_DIMENSION_REPRESENTATION" }); } }
+        Ap242CameraUsageMappedRepresentationRef::ShapeRepresentation(i) => { if i.0 as usize >= model.shape_representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "SHAPE_REPRESENTATION" }); } }
+        Ap242CameraUsageMappedRepresentationRef::ShapeRepresentationWithParameters(i) => { if i.0 as usize >= model.shape_representation_with_parameters_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "SHAPE_REPRESENTATION_WITH_PARAMETERS" }); } }
+        Ap242CameraUsageMappedRepresentationRef::SymbolRepresentation(i) => { if i.0 as usize >= model.symbol_representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "SYMBOL_REPRESENTATION" }); } }
+        Ap242CameraUsageMappedRepresentationRef::TessellatedShapeRepresentation(i) => { if i.0 as usize >= model.tessellated_shape_representation_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "TESSELLATED_SHAPE_REPRESENTATION" }); } }
+        Ap242CameraUsageMappedRepresentationRef::Complex(i) => { let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else { return Err(AuthorError::DanglingRef { entity: "COMPLEX" }); }; if !c.parts.iter().any(|p| ["ADVANCED_BREP_SHAPE_REPRESENTATION", "CHARACTERIZED_REPRESENTATION", "DEFINITIONAL_REPRESENTATION", "DRAUGHTING_MODEL", "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION", "MANIFOLD_SURFACE_SHAPE_REPRESENTATION", "REPRESENTATION", "SHAPE_DIMENSION_REPRESENTATION", "SHAPE_REPRESENTATION", "SHAPE_REPRESENTATION_WITH_PARAMETERS", "SYMBOL_REPRESENTATION", "TESSELLATED_SHAPE_REPRESENTATION"].contains(&part_name(p))) { return Err(AuthorError::InvalidComplex { reason: "not allowed in CAMERA_USAGE.MAPPED_REPRESENTATION" }); } }
+    }
+    Ok(())
+}
+fn check_ap242_constructive_geometry_representation_items_ref(
+    model: &StepModel,
+    r: &Ap242ConstructiveGeometryRepresentationItemsRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242ConstructiveGeometryRepresentationItemsRef::AdvancedFace(i) => {
+            if i.0 as usize >= model.advanced_face_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ADVANCED_FACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Axis1Placement(i) => {
+            if i.0 as usize >= model.axis1_placement_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "AXIS1_PLACEMENT",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Axis2Placement2d(i) => {
+            if i.0 as usize >= model.axis2_placement2d_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "AXIS2_PLACEMENT_2D",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Axis2Placement3d(i) => {
+            if i.0 as usize >= model.axis2_placement3d_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "AXIS2_PLACEMENT_3D",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::BSplineCurve(i) => {
+            if i.0 as usize >= model.b_spline_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_CURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::BSplineCurveWithKnots(i) => {
+            if i.0 as usize >= model.b_spline_curve_with_knots_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_CURVE_WITH_KNOTS",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::BSplineSurface(i) => {
+            if i.0 as usize >= model.b_spline_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::BSplineSurfaceWithKnots(i) => {
+            if i.0 as usize >= model.b_spline_surface_with_knots_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_SURFACE_WITH_KNOTS",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::BezierCurve(i) => {
+            if i.0 as usize >= model.bezier_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BEZIER_CURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::BezierSurface(i) => {
+            if i.0 as usize >= model.bezier_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BEZIER_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::BoundedCurve(i) => {
+            if i.0 as usize >= model.bounded_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_CURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::BoundedPcurve(i) => {
+            if i.0 as usize >= model.bounded_pcurve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_PCURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::BoundedSurface(i) => {
+            if i.0 as usize >= model.bounded_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::BoundedSurfaceCurve(i) => {
+            if i.0 as usize >= model.bounded_surface_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_SURFACE_CURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::CartesianPoint(i) => {
+            if i.0 as usize >= model.cartesian_point_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CARTESIAN_POINT",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Circle(i) => {
+            if i.0 as usize >= model.circle_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "CIRCLE" });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::ClosedShell(i) => {
+            if i.0 as usize >= model.closed_shell_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CLOSED_SHELL",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::CompositeCurve(i) => {
+            if i.0 as usize >= model.composite_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "COMPOSITE_CURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Conic(i) => {
+            if i.0 as usize >= model.conic_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "CONIC" });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::ConicalSurface(i) => {
+            if i.0 as usize >= model.conical_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CONICAL_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::ConnectedFaceSet(i) => {
+            if i.0 as usize >= model.connected_face_set_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CONNECTED_FACE_SET",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Curve(i) => {
+            if i.0 as usize >= model.curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "CURVE" });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::CylindricalSurface(i) => {
+            if i.0 as usize >= model.cylindrical_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CYLINDRICAL_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::DegenerateToroidalSurface(i) => {
+            if i.0 as usize >= model.degenerate_toroidal_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DEGENERATE_TOROIDAL_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Edge(i) => {
+            if i.0 as usize >= model.edge_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "EDGE" });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::EdgeCurve(i) => {
+            if i.0 as usize >= model.edge_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "EDGE_CURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::ElementarySurface(i) => {
+            if i.0 as usize >= model.elementary_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ELEMENTARY_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Ellipse(i) => {
+            if i.0 as usize >= model.ellipse_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "ELLIPSE" });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Face(i) => {
+            if i.0 as usize >= model.face_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "FACE" });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::FaceSurface(i) => {
+            if i.0 as usize >= model.face_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "FACE_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Hyperbola(i) => {
+            if i.0 as usize >= model.hyperbola_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "HYPERBOLA",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::IntersectionCurve(i) => {
+            if i.0 as usize >= model.intersection_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "INTERSECTION_CURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Line(i) => {
+            if i.0 as usize >= model.line_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "LINE" });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::OffsetSurface(i) => {
+            if i.0 as usize >= model.offset_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "OFFSET_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::OpenShell(i) => {
+            if i.0 as usize >= model.open_shell_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "OPEN_SHELL",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::OrientedClosedShell(i) => {
+            if i.0 as usize >= model.oriented_closed_shell_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ORIENTED_CLOSED_SHELL",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::OrientedEdge(i) => {
+            if i.0 as usize >= model.oriented_edge_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ORIENTED_EDGE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Parabola(i) => {
+            if i.0 as usize >= model.parabola_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Pcurve(i) => {
+            if i.0 as usize >= model.pcurve_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PCURVE" });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Placement(i) => {
+            if i.0 as usize >= model.placement_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PLACEMENT",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Plane(i) => {
+            if i.0 as usize >= model.plane_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PLANE" });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Point(i) => {
+            if i.0 as usize >= model.point_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "POINT" });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Polyline(i) => {
+            if i.0 as usize >= model.polyline_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "POLYLINE" });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::QuasiUniformCurve(i) => {
+            if i.0 as usize >= model.quasi_uniform_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "QUASI_UNIFORM_CURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::QuasiUniformSurface(i) => {
+            if i.0 as usize >= model.quasi_uniform_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "QUASI_UNIFORM_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::RationalBSplineCurve(i) => {
+            if i.0 as usize >= model.rational_b_spline_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "RATIONAL_B_SPLINE_CURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::RationalBSplineSurface(i) => {
+            if i.0 as usize >= model.rational_b_spline_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "RATIONAL_B_SPLINE_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::SeamCurve(i) => {
+            if i.0 as usize >= model.seam_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SEAM_CURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::SphericalSurface(i) => {
+            if i.0 as usize >= model.spherical_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SPHERICAL_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Surface(i) => {
+            if i.0 as usize >= model.surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "SURFACE" });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::SurfaceCurve(i) => {
+            if i.0 as usize >= model.surface_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SURFACE_CURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::SurfaceOfLinearExtrusion(i) => {
+            if i.0 as usize >= model.surface_of_linear_extrusion_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SURFACE_OF_LINEAR_EXTRUSION",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::SurfaceOfRevolution(i) => {
+            if i.0 as usize >= model.surface_of_revolution_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SURFACE_OF_REVOLUTION",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::SweptSurface(i) => {
+            if i.0 as usize >= model.swept_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SWEPT_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::ToroidalSurface(i) => {
+            if i.0 as usize >= model.toroidal_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TOROIDAL_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::TrimmedCurve(i) => {
+            if i.0 as usize >= model.trimmed_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TRIMMED_CURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::UniformCurve(i) => {
+            if i.0 as usize >= model.uniform_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "UNIFORM_CURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::UniformSurface(i) => {
+            if i.0 as usize >= model.uniform_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "UNIFORM_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::VertexPoint(i) => {
+            if i.0 as usize >= model.vertex_point_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "VERTEX_POINT",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c.parts.iter().any(|p| {
+                [
+                    "ADVANCED_FACE",
+                    "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "CLOSED_SHELL",
+                    "COMPOSITE_CURVE",
+                    "CONNECTED_FACE_SET",
+                    "CURVE",
+                    "DEGENERATE_TOROIDAL_SURFACE",
+                    "EDGE",
+                    "EDGE_CURVE",
+                    "ELEMENTARY_SURFACE",
+                    "FACE",
+                    "FACE_SURFACE",
+                    "INTERSECTION_CURVE",
+                    "OPEN_SHELL",
+                    "ORIENTED_CLOSED_SHELL",
+                    "ORIENTED_EDGE",
+                    "PCURVE",
+                    "PLACEMENT",
+                    "POINT",
+                    "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "SEAM_CURVE",
+                    "SURFACE",
+                    "SURFACE_CURVE",
+                    "TOROIDAL_SURFACE",
+                    "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
+                    "VERTEX_POINT",
+                ]
+                .contains(&part_name(p))
+            }) {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not allowed in CONSTRUCTIVE_GEOMETRY_REPRESENTATION.ITEMS",
                 });
             }
         }
@@ -50744,6 +53340,396 @@ fn check_ap242_draughting_model_item_select_ref(
             }) {
                 return Err(AuthorError::InvalidComplex {
                     reason: "not a DRAUGHTING_MODEL_ITEM_SELECT",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_geometric_curve_set_elements_ref(
+    model: &StepModel,
+    r: &Ap242GeometricCurveSetElementsRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242GeometricCurveSetElementsRef::BSplineCurve(i) => {
+            if i.0 as usize >= model.b_spline_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_CURVE",
+                });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::BSplineCurveWithKnots(i) => {
+            if i.0 as usize >= model.b_spline_curve_with_knots_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_CURVE_WITH_KNOTS",
+                });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::BezierCurve(i) => {
+            if i.0 as usize >= model.bezier_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BEZIER_CURVE",
+                });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::BoundedCurve(i) => {
+            if i.0 as usize >= model.bounded_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_CURVE",
+                });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::BoundedPcurve(i) => {
+            if i.0 as usize >= model.bounded_pcurve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_PCURVE",
+                });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::BoundedSurfaceCurve(i) => {
+            if i.0 as usize >= model.bounded_surface_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_SURFACE_CURVE",
+                });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::CartesianPoint(i) => {
+            if i.0 as usize >= model.cartesian_point_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CARTESIAN_POINT",
+                });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::Circle(i) => {
+            if i.0 as usize >= model.circle_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "CIRCLE" });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::CompositeCurve(i) => {
+            if i.0 as usize >= model.composite_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "COMPOSITE_CURVE",
+                });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::Conic(i) => {
+            if i.0 as usize >= model.conic_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "CONIC" });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::Curve(i) => {
+            if i.0 as usize >= model.curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "CURVE" });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::Ellipse(i) => {
+            if i.0 as usize >= model.ellipse_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "ELLIPSE" });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::Hyperbola(i) => {
+            if i.0 as usize >= model.hyperbola_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "HYPERBOLA",
+                });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::IntersectionCurve(i) => {
+            if i.0 as usize >= model.intersection_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "INTERSECTION_CURVE",
+                });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::Line(i) => {
+            if i.0 as usize >= model.line_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "LINE" });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::Parabola(i) => {
+            if i.0 as usize >= model.parabola_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::Pcurve(i) => {
+            if i.0 as usize >= model.pcurve_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PCURVE" });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::Point(i) => {
+            if i.0 as usize >= model.point_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "POINT" });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::Polyline(i) => {
+            if i.0 as usize >= model.polyline_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "POLYLINE" });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::QuasiUniformCurve(i) => {
+            if i.0 as usize >= model.quasi_uniform_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "QUASI_UNIFORM_CURVE",
+                });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::RationalBSplineCurve(i) => {
+            if i.0 as usize >= model.rational_b_spline_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "RATIONAL_B_SPLINE_CURVE",
+                });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::SeamCurve(i) => {
+            if i.0 as usize >= model.seam_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SEAM_CURVE",
+                });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::SurfaceCurve(i) => {
+            if i.0 as usize >= model.surface_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SURFACE_CURVE",
+                });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::TrimmedCurve(i) => {
+            if i.0 as usize >= model.trimmed_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TRIMMED_CURVE",
+                });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::UniformCurve(i) => {
+            if i.0 as usize >= model.uniform_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "UNIFORM_CURVE",
+                });
+            }
+        }
+        Ap242GeometricCurveSetElementsRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c.parts.iter().any(|p| {
+                [
+                    "BEZIER_CURVE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "COMPOSITE_CURVE",
+                    "CURVE",
+                    "INTERSECTION_CURVE",
+                    "PCURVE",
+                    "POINT",
+                    "QUASI_UNIFORM_CURVE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "SEAM_CURVE",
+                    "SURFACE_CURVE",
+                    "UNIFORM_CURVE",
+                ]
+                .contains(&part_name(p))
+            }) {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not allowed in GEOMETRIC_CURVE_SET.ELEMENTS",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_geometrically_bounded_surface_shape_representation_items_ref(
+    model: &StepModel,
+    r: &Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::AnnotationText(i) => {
+            if i.0 as usize >= model.annotation_text_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ANNOTATION_TEXT",
+                });
+            }
+        }
+        Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::AnnotationTextCharacter(i) => {
+            if i.0 as usize >= model.annotation_text_character_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ANNOTATION_TEXT_CHARACTER",
+                });
+            }
+        }
+        Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::Axis2Placement3d(i) => {
+            if i.0 as usize >= model.axis2_placement3d_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "AXIS2_PLACEMENT_3D",
+                });
+            }
+        }
+        Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::CameraImage(i) => {
+            if i.0 as usize >= model.camera_image_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_IMAGE",
+                });
+            }
+        }
+        Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::CameraImage3dWithScale(i) => {
+            if i.0 as usize >= model.camera_image3d_with_scale_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_IMAGE_3D_WITH_SCALE",
+                });
+            }
+        }
+        Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::GeometricCurveSet(i) => {
+            if i.0 as usize >= model.geometric_curve_set_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "GEOMETRIC_CURVE_SET",
+                });
+            }
+        }
+        Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::GeometricSet(i) => {
+            if i.0 as usize >= model.geometric_set_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "GEOMETRIC_SET",
+                });
+            }
+        }
+        Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::MappedItem(i) => {
+            if i.0 as usize >= model.mapped_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MAPPED_ITEM",
+                });
+            }
+        }
+        Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c.parts.iter().any(|p| {
+                [
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
+                    "GEOMETRIC_CURVE_SET",
+                    "GEOMETRIC_SET",
+                    "MAPPED_ITEM",
+                ]
+                .contains(&part_name(p))
+            }) {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not allowed in GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION.ITEMS",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_geometrically_bounded_wireframe_shape_representation_items_ref(
+    model: &StepModel,
+    r: &Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef::AnnotationText(i) => {
+            if i.0 as usize >= model.annotation_text_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ANNOTATION_TEXT",
+                });
+            }
+        }
+        Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef::AnnotationTextCharacter(
+            i,
+        ) => {
+            if i.0 as usize >= model.annotation_text_character_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ANNOTATION_TEXT_CHARACTER",
+                });
+            }
+        }
+        Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef::Axis2Placement3d(i) => {
+            if i.0 as usize >= model.axis2_placement3d_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "AXIS2_PLACEMENT_3D",
+                });
+            }
+        }
+        Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef::CameraImage(i) => {
+            if i.0 as usize >= model.camera_image_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_IMAGE",
+                });
+            }
+        }
+        Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef::CameraImage3dWithScale(
+            i,
+        ) => {
+            if i.0 as usize >= model.camera_image3d_with_scale_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_IMAGE_3D_WITH_SCALE",
+                });
+            }
+        }
+        Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef::GeometricCurveSet(i) => {
+            if i.0 as usize >= model.geometric_curve_set_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "GEOMETRIC_CURVE_SET",
+                });
+            }
+        }
+        Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef::MappedItem(i) => {
+            if i.0 as usize >= model.mapped_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MAPPED_ITEM",
+                });
+            }
+        }
+        Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c.parts.iter().any(|p| {
+                [
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
+                    "GEOMETRIC_CURVE_SET",
+                    "MAPPED_ITEM",
+                ]
+                .contains(&part_name(p))
+            }) {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not allowed in GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION.ITEMS",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_global_unit_assigned_context_ref(
+    model: &StepModel,
+    r: &Ap242GlobalUnitAssignedContextRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242GlobalUnitAssignedContextRef::GlobalUnitAssignedContext(i) => {
+            if i.0 as usize >= model.global_unit_assigned_context_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "GLOBAL_UNIT_ASSIGNED_CONTEXT",
+                });
+            }
+        }
+        Ap242GlobalUnitAssignedContextRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c
+                .parts
+                .iter()
+                .any(|p| ["GLOBAL_UNIT_ASSIGNED_CONTEXT"].contains(&part_name(p)))
+            {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not a GLOBAL_UNIT_ASSIGNED_CONTEXT",
                 });
             }
         }
@@ -52984,6 +55970,235 @@ fn check_ap242_groupable_item_ref(
     }
     Ok(())
 }
+fn check_ap242_leader_curve_ref(
+    model: &StepModel,
+    r: &Ap242LeaderCurveRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242LeaderCurveRef::LeaderCurve(i) => {
+            if i.0 as usize >= model.leader_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "LEADER_CURVE",
+                });
+            }
+        }
+        Ap242LeaderCurveRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c
+                .parts
+                .iter()
+                .any(|p| ["LEADER_CURVE"].contains(&part_name(p)))
+            {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not a LEADER_CURVE",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_length_unit_ref(
+    model: &StepModel,
+    r: &Ap242LengthUnitRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242LengthUnitRef::LengthUnit(i) => {
+            if i.0 as usize >= model.length_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "LENGTH_UNIT",
+                });
+            }
+        }
+        Ap242LengthUnitRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c
+                .parts
+                .iter()
+                .any(|p| ["LENGTH_UNIT"].contains(&part_name(p)))
+            {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not a LENGTH_UNIT",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_manifold_surface_shape_representation_items_ref(
+    model: &StepModel,
+    r: &Ap242ManifoldSurfaceShapeRepresentationItemsRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242ManifoldSurfaceShapeRepresentationItemsRef::AnnotationText(i) => {
+            if i.0 as usize >= model.annotation_text_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ANNOTATION_TEXT",
+                });
+            }
+        }
+        Ap242ManifoldSurfaceShapeRepresentationItemsRef::AnnotationTextCharacter(i) => {
+            if i.0 as usize >= model.annotation_text_character_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ANNOTATION_TEXT_CHARACTER",
+                });
+            }
+        }
+        Ap242ManifoldSurfaceShapeRepresentationItemsRef::Axis2Placement3d(i) => {
+            if i.0 as usize >= model.axis2_placement3d_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "AXIS2_PLACEMENT_3D",
+                });
+            }
+        }
+        Ap242ManifoldSurfaceShapeRepresentationItemsRef::CameraImage(i) => {
+            if i.0 as usize >= model.camera_image_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_IMAGE",
+                });
+            }
+        }
+        Ap242ManifoldSurfaceShapeRepresentationItemsRef::CameraImage3dWithScale(i) => {
+            if i.0 as usize >= model.camera_image3d_with_scale_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CAMERA_IMAGE_3D_WITH_SCALE",
+                });
+            }
+        }
+        Ap242ManifoldSurfaceShapeRepresentationItemsRef::MappedItem(i) => {
+            if i.0 as usize >= model.mapped_item_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MAPPED_ITEM",
+                });
+            }
+        }
+        Ap242ManifoldSurfaceShapeRepresentationItemsRef::ShellBasedSurfaceModel(i) => {
+            if i.0 as usize >= model.shell_based_surface_model_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SHELL_BASED_SURFACE_MODEL",
+                });
+            }
+        }
+        Ap242ManifoldSurfaceShapeRepresentationItemsRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c.parts.iter().any(|p| {
+                [
+                    "ANNOTATION_TEXT",
+                    "ANNOTATION_TEXT_CHARACTER",
+                    "CAMERA_IMAGE",
+                    "CAMERA_IMAGE_3D_WITH_SCALE",
+                    "MAPPED_ITEM",
+                    "SHELL_BASED_SURFACE_MODEL",
+                ]
+                .contains(&part_name(p))
+            }) {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not allowed in MANIFOLD_SURFACE_SHAPE_REPRESENTATION.ITEMS",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_mass_unit_ref(model: &StepModel, r: &Ap242MassUnitRef) -> Result<(), AuthorError> {
+    match r {
+        Ap242MassUnitRef::MassUnit(i) => {
+            if i.0 as usize >= model.mass_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MASS_UNIT",
+                });
+            }
+        }
+        Ap242MassUnitRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c
+                .parts
+                .iter()
+                .any(|p| ["MASS_UNIT"].contains(&part_name(p)))
+            {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not a MASS_UNIT",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_measure_qualification_qualified_measure_ref(
+    model: &StepModel,
+    r: &Ap242MeasureQualificationQualifiedMeasureRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242MeasureQualificationQualifiedMeasureRef::LengthMeasureWithUnit(i) => {
+            if i.0 as usize >= model.length_measure_with_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "LENGTH_MEASURE_WITH_UNIT",
+                });
+            }
+        }
+        Ap242MeasureQualificationQualifiedMeasureRef::MassMeasureWithUnit(i) => {
+            if i.0 as usize >= model.mass_measure_with_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MASS_MEASURE_WITH_UNIT",
+                });
+            }
+        }
+        Ap242MeasureQualificationQualifiedMeasureRef::MeasureWithUnit(i) => {
+            if i.0 as usize >= model.measure_with_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MEASURE_WITH_UNIT",
+                });
+            }
+        }
+        Ap242MeasureQualificationQualifiedMeasureRef::PlaneAngleMeasureWithUnit(i) => {
+            if i.0 as usize >= model.plane_angle_measure_with_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PLANE_ANGLE_MEASURE_WITH_UNIT",
+                });
+            }
+        }
+        Ap242MeasureQualificationQualifiedMeasureRef::RatioMeasureWithUnit(i) => {
+            if i.0 as usize >= model.ratio_measure_with_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "RATIO_MEASURE_WITH_UNIT",
+                });
+            }
+        }
+        Ap242MeasureQualificationQualifiedMeasureRef::UncertaintyMeasureWithUnit(i) => {
+            if i.0 as usize >= model.uncertainty_measure_with_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "UNCERTAINTY_MEASURE_WITH_UNIT",
+                });
+            }
+        }
+        Ap242MeasureQualificationQualifiedMeasureRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c.parts.iter().any(|p| {
+                [
+                    "LENGTH_MEASURE_WITH_UNIT",
+                    "MEASURE_WITH_UNIT",
+                    "PLANE_ANGLE_MEASURE_WITH_UNIT",
+                    "RATIO_MEASURE_WITH_UNIT",
+                ]
+                .contains(&part_name(p))
+            }) {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not allowed in MEASURE_QUALIFICATION.QUALIFIED_MEASURE",
+                });
+            }
+        }
+    }
+    Ok(())
+}
 fn check_ap242_mechanical_design_geometric_presentation_representation_items_ref(
     model: &StepModel,
     r: &Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef,
@@ -53047,6 +56262,362 @@ fn check_ap242_mechanical_design_shaded_presentation_representation_items_ref(
         Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::TerminatorSymbol(i) => { if i.0 as usize >= model.terminator_symbol_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "TERMINATOR_SYMBOL" }); } }
         Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::TessellatedAnnotationOccurrence(i) => { if i.0 as usize >= model.tessellated_annotation_occurrence_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "TESSELLATED_ANNOTATION_OCCURRENCE" }); } }
         Ap242MechanicalDesignShadedPresentationRepresentationItemsRef::Complex(i) => { let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else { return Err(AuthorError::DanglingRef { entity: "COMPLEX" }); }; if !c.parts.iter().any(|p| ["ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT", "ANNOTATION_TEXT_CHARACTER", "ANNOTATION_TEXT_OCCURRENCE", "CAMERA_IMAGE", "CAMERA_IMAGE_3D_WITH_SCALE", "CAMERA_MODEL_D3", "CAMERA_MODEL_D3_MULTI_CLIPPING", "CAMERA_MODEL_D3_WITH_HLHSR", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "DRAUGHTING_ANNOTATION_OCCURRENCE", "LEADER_CURVE", "LEADER_TERMINATOR", "MAPPED_ITEM", "OVER_RIDING_STYLED_ITEM", "STYLED_ITEM", "TERMINATOR_SYMBOL"].contains(&part_name(p))) { return Err(AuthorError::InvalidComplex { reason: "not a MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION_ITEMS" }); } }
+    }
+    Ok(())
+}
+fn check_ap242_oriented_closed_shell_closed_shell_element_ref(
+    model: &StepModel,
+    r: &Ap242OrientedClosedShellClosedShellElementRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242OrientedClosedShellClosedShellElementRef::ClosedShell(i) => {
+            if i.0 as usize >= model.closed_shell_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CLOSED_SHELL",
+                });
+            }
+        }
+        Ap242OrientedClosedShellClosedShellElementRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c
+                .parts
+                .iter()
+                .any(|p| ["CLOSED_SHELL"].contains(&part_name(p)))
+            {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not allowed in ORIENTED_CLOSED_SHELL.CLOSED_SHELL_ELEMENT",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_oriented_edge_edge_element_ref(
+    model: &StepModel,
+    r: &Ap242OrientedEdgeEdgeElementRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242OrientedEdgeEdgeElementRef::Edge(i) => {
+            if i.0 as usize >= model.edge_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "EDGE" });
+            }
+        }
+        Ap242OrientedEdgeEdgeElementRef::EdgeCurve(i) => {
+            if i.0 as usize >= model.edge_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "EDGE_CURVE",
+                });
+            }
+        }
+        Ap242OrientedEdgeEdgeElementRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c
+                .parts
+                .iter()
+                .any(|p| ["EDGE", "EDGE_CURVE"].contains(&part_name(p)))
+            {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not allowed in ORIENTED_EDGE.EDGE_ELEMENT",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_parametric_representation_context_ref(
+    model: &StepModel,
+    r: &Ap242ParametricRepresentationContextRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242ParametricRepresentationContextRef::ParametricRepresentationContext(i) => {
+            if i.0 as usize >= model.parametric_representation_context_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PARAMETRIC_REPRESENTATION_CONTEXT",
+                });
+            }
+        }
+        Ap242ParametricRepresentationContextRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c
+                .parts
+                .iter()
+                .any(|p| ["PARAMETRIC_REPRESENTATION_CONTEXT"].contains(&part_name(p)))
+            {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not a PARAMETRIC_REPRESENTATION_CONTEXT",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_plane_angle_unit_ref(
+    model: &StepModel,
+    r: &Ap242PlaneAngleUnitRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242PlaneAngleUnitRef::PlaneAngleUnit(i) => {
+            if i.0 as usize >= model.plane_angle_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PLANE_ANGLE_UNIT",
+                });
+            }
+        }
+        Ap242PlaneAngleUnitRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c
+                .parts
+                .iter()
+                .any(|p| ["PLANE_ANGLE_UNIT"].contains(&part_name(p)))
+            {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not a PLANE_ANGLE_UNIT",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_product_definition_shape_definition_ref(
+    model: &StepModel,
+    r: &Ap242ProductDefinitionShapeDefinitionRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242ProductDefinitionShapeDefinitionRef::AssemblyComponentUsage(i) => {
+            if i.0 as usize >= model.assembly_component_usage_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ASSEMBLY_COMPONENT_USAGE",
+                });
+            }
+        }
+        Ap242ProductDefinitionShapeDefinitionRef::CharacterizedItemWithinRepresentation(i) => {
+            if i.0 as usize
+                >= model
+                    .characterized_item_within_representation_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
+                });
+            }
+        }
+        Ap242ProductDefinitionShapeDefinitionRef::CharacterizedObject(i) => {
+            if i.0 as usize >= model.characterized_object_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CHARACTERIZED_OBJECT",
+                });
+            }
+        }
+        Ap242ProductDefinitionShapeDefinitionRef::CharacterizedRepresentation(i) => {
+            if i.0 as usize >= model.characterized_representation_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CHARACTERIZED_REPRESENTATION",
+                });
+            }
+        }
+        Ap242ProductDefinitionShapeDefinitionRef::DefaultModelGeometricView(i) => {
+            if i.0 as usize >= model.default_model_geometric_view_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DEFAULT_MODEL_GEOMETRIC_VIEW",
+                });
+            }
+        }
+        Ap242ProductDefinitionShapeDefinitionRef::DocumentFile(i) => {
+            if i.0 as usize >= model.document_file_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DOCUMENT_FILE",
+                });
+            }
+        }
+        Ap242ProductDefinitionShapeDefinitionRef::MakeFromUsageOption(i) => {
+            if i.0 as usize >= model.make_from_usage_option_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MAKE_FROM_USAGE_OPTION",
+                });
+            }
+        }
+        Ap242ProductDefinitionShapeDefinitionRef::ModelGeometricView(i) => {
+            if i.0 as usize >= model.model_geometric_view_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MODEL_GEOMETRIC_VIEW",
+                });
+            }
+        }
+        Ap242ProductDefinitionShapeDefinitionRef::NextAssemblyUsageOccurrence(i) => {
+            if i.0 as usize >= model.next_assembly_usage_occurrence_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                });
+            }
+        }
+        Ap242ProductDefinitionShapeDefinitionRef::ProductDefinition(i) => {
+            if i.0 as usize >= model.product_definition_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRODUCT_DEFINITION",
+                });
+            }
+        }
+        Ap242ProductDefinitionShapeDefinitionRef::ProductDefinitionOccurrence(i) => {
+            if i.0 as usize >= model.product_definition_occurrence_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRODUCT_DEFINITION_OCCURRENCE",
+                });
+            }
+        }
+        Ap242ProductDefinitionShapeDefinitionRef::ProductDefinitionRelationship(i) => {
+            if i.0 as usize >= model.product_definition_relationship_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRODUCT_DEFINITION_RELATIONSHIP",
+                });
+            }
+        }
+        Ap242ProductDefinitionShapeDefinitionRef::ProductDefinitionRelationshipRelationship(i) => {
+            if i.0 as usize
+                >= model
+                    .product_definition_relationship_relationship_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP",
+                });
+            }
+        }
+        Ap242ProductDefinitionShapeDefinitionRef::ProductDefinitionUsage(i) => {
+            if i.0 as usize >= model.product_definition_usage_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRODUCT_DEFINITION_USAGE",
+                });
+            }
+        }
+        Ap242ProductDefinitionShapeDefinitionRef::ProductDefinitionWithAssociatedDocuments(i) => {
+            if i.0 as usize
+                >= model
+                    .product_definition_with_associated_documents_arena
+                    .items
+                    .len()
+            {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
+                });
+            }
+        }
+        Ap242ProductDefinitionShapeDefinitionRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c.parts.iter().any(|p| {
+                [
+                    "ASSEMBLY_COMPONENT_USAGE",
+                    "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
+                    "CHARACTERIZED_OBJECT",
+                    "CHARACTERIZED_REPRESENTATION",
+                    "DEFAULT_MODEL_GEOMETRIC_VIEW",
+                    "DOCUMENT_FILE",
+                    "MODEL_GEOMETRIC_VIEW",
+                    "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                    "PRODUCT_DEFINITION",
+                    "PRODUCT_DEFINITION_OCCURRENCE",
+                    "PRODUCT_DEFINITION_RELATIONSHIP",
+                    "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP",
+                    "PRODUCT_DEFINITION_USAGE",
+                    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
+                ]
+                .contains(&part_name(p))
+            }) {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not allowed in PRODUCT_DEFINITION_SHAPE.DEFINITION",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_product_definition_usage_ref(
+    model: &StepModel,
+    r: &Ap242ProductDefinitionUsageRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242ProductDefinitionUsageRef::AssemblyComponentUsage(i) => {
+            if i.0 as usize >= model.assembly_component_usage_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ASSEMBLY_COMPONENT_USAGE",
+                });
+            }
+        }
+        Ap242ProductDefinitionUsageRef::MakeFromUsageOption(i) => {
+            if i.0 as usize >= model.make_from_usage_option_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "MAKE_FROM_USAGE_OPTION",
+                });
+            }
+        }
+        Ap242ProductDefinitionUsageRef::NextAssemblyUsageOccurrence(i) => {
+            if i.0 as usize >= model.next_assembly_usage_occurrence_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                });
+            }
+        }
+        Ap242ProductDefinitionUsageRef::ProductDefinitionUsage(i) => {
+            if i.0 as usize >= model.product_definition_usage_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "PRODUCT_DEFINITION_USAGE",
+                });
+            }
+        }
+        Ap242ProductDefinitionUsageRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c.parts.iter().any(|p| {
+                [
+                    "ASSEMBLY_COMPONENT_USAGE",
+                    "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                    "PRODUCT_DEFINITION_USAGE",
+                ]
+                .contains(&part_name(p))
+            }) {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not a PRODUCT_DEFINITION_USAGE",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_ratio_unit_ref(model: &StepModel, r: &Ap242RatioUnitRef) -> Result<(), AuthorError> {
+    match r {
+        Ap242RatioUnitRef::RatioUnit(i) => {
+            if i.0 as usize >= model.ratio_unit_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "RATIO_UNIT",
+                });
+            }
+        }
+        Ap242RatioUnitRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c
+                .parts
+                .iter()
+                .any(|p| ["RATIO_UNIT"].contains(&part_name(p)))
+            {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not a RATIO_UNIT",
+                });
+            }
+        }
     }
     Ok(())
 }
@@ -53294,427 +56865,413 @@ fn check_ap242_shape_representation_with_parameters_items_ref(
     }
     Ok(())
 }
-fn check_ap242_styled_item_target_ref(
+fn check_ap242_styled_item_item_ref(
     model: &StepModel,
-    r: &Ap242StyledItemTargetRef,
+    r: &Ap242StyledItemItemRef,
 ) -> Result<(), AuthorError> {
     match r {
-        Ap242StyledItemTargetRef::AdvancedBrepShapeRepresentation(i) => {
+        Ap242StyledItemItemRef::AdvancedBrepShapeRepresentation(i) => {
             if i.0 as usize >= model.advanced_brep_shape_representation_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ADVANCED_BREP_SHAPE_REPRESENTATION",
                 });
             }
         }
-        Ap242StyledItemTargetRef::AdvancedFace(i) => {
+        Ap242StyledItemItemRef::AdvancedFace(i) => {
             if i.0 as usize >= model.advanced_face_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ADVANCED_FACE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::AnnotationPlaceholderOccurrence(i) => {
-            if i.0 as usize >= model.annotation_placeholder_occurrence_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_PLACEHOLDER_OCCURRENCE",
-                });
-            }
-        }
-        Ap242StyledItemTargetRef::AnnotationPlane(i) => {
-            if i.0 as usize >= model.annotation_plane_arena.items.len() {
-                return Err(AuthorError::DanglingRef {
-                    entity: "ANNOTATION_PLANE",
-                });
-            }
-        }
-        Ap242StyledItemTargetRef::AnnotationText(i) => {
+        Ap242StyledItemItemRef::AnnotationText(i) => {
             if i.0 as usize >= model.annotation_text_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ANNOTATION_TEXT",
                 });
             }
         }
-        Ap242StyledItemTargetRef::AnnotationTextCharacter(i) => {
+        Ap242StyledItemItemRef::AnnotationTextCharacter(i) => {
             if i.0 as usize >= model.annotation_text_character_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ANNOTATION_TEXT_CHARACTER",
                 });
             }
         }
-        Ap242StyledItemTargetRef::Axis1Placement(i) => {
+        Ap242StyledItemItemRef::Axis1Placement(i) => {
             if i.0 as usize >= model.axis1_placement_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "AXIS1_PLACEMENT",
                 });
             }
         }
-        Ap242StyledItemTargetRef::Axis2Placement2d(i) => {
+        Ap242StyledItemItemRef::Axis2Placement2d(i) => {
             if i.0 as usize >= model.axis2_placement2d_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "AXIS2_PLACEMENT_2D",
                 });
             }
         }
-        Ap242StyledItemTargetRef::Axis2Placement3d(i) => {
+        Ap242StyledItemItemRef::Axis2Placement3d(i) => {
             if i.0 as usize >= model.axis2_placement3d_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "AXIS2_PLACEMENT_3D",
                 });
             }
         }
-        Ap242StyledItemTargetRef::BSplineCurve(i) => {
+        Ap242StyledItemItemRef::BSplineCurve(i) => {
             if i.0 as usize >= model.b_spline_curve_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "B_SPLINE_CURVE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::BSplineCurveWithKnots(i) => {
+        Ap242StyledItemItemRef::BSplineCurveWithKnots(i) => {
             if i.0 as usize >= model.b_spline_curve_with_knots_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "B_SPLINE_CURVE_WITH_KNOTS",
                 });
             }
         }
-        Ap242StyledItemTargetRef::BSplineSurface(i) => {
+        Ap242StyledItemItemRef::BSplineSurface(i) => {
             if i.0 as usize >= model.b_spline_surface_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "B_SPLINE_SURFACE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::BSplineSurfaceWithKnots(i) => {
+        Ap242StyledItemItemRef::BSplineSurfaceWithKnots(i) => {
             if i.0 as usize >= model.b_spline_surface_with_knots_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "B_SPLINE_SURFACE_WITH_KNOTS",
                 });
             }
         }
-        Ap242StyledItemTargetRef::BezierCurve(i) => {
+        Ap242StyledItemItemRef::BezierCurve(i) => {
             if i.0 as usize >= model.bezier_curve_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "BEZIER_CURVE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::BezierSurface(i) => {
+        Ap242StyledItemItemRef::BezierSurface(i) => {
             if i.0 as usize >= model.bezier_surface_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "BEZIER_SURFACE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::BoundedCurve(i) => {
+        Ap242StyledItemItemRef::BoundedCurve(i) => {
             if i.0 as usize >= model.bounded_curve_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "BOUNDED_CURVE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::BoundedPcurve(i) => {
+        Ap242StyledItemItemRef::BoundedPcurve(i) => {
             if i.0 as usize >= model.bounded_pcurve_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "BOUNDED_PCURVE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::BoundedSurface(i) => {
+        Ap242StyledItemItemRef::BoundedSurface(i) => {
             if i.0 as usize >= model.bounded_surface_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "BOUNDED_SURFACE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::BoundedSurfaceCurve(i) => {
+        Ap242StyledItemItemRef::BoundedSurfaceCurve(i) => {
             if i.0 as usize >= model.bounded_surface_curve_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "BOUNDED_SURFACE_CURVE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::BrepWithVoids(i) => {
+        Ap242StyledItemItemRef::BrepWithVoids(i) => {
             if i.0 as usize >= model.brep_with_voids_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "BREP_WITH_VOIDS",
                 });
             }
         }
-        Ap242StyledItemTargetRef::CameraImage(i) => {
+        Ap242StyledItemItemRef::CameraImage(i) => {
             if i.0 as usize >= model.camera_image_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "CAMERA_IMAGE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::CameraImage3dWithScale(i) => {
+        Ap242StyledItemItemRef::CameraImage3dWithScale(i) => {
             if i.0 as usize >= model.camera_image3d_with_scale_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "CAMERA_IMAGE_3D_WITH_SCALE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::CameraModel(i) => {
+        Ap242StyledItemItemRef::CameraModel(i) => {
             if i.0 as usize >= model.camera_model_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "CAMERA_MODEL",
                 });
             }
         }
-        Ap242StyledItemTargetRef::CameraModelD3(i) => {
+        Ap242StyledItemItemRef::CameraModelD3(i) => {
             if i.0 as usize >= model.camera_model_d3_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "CAMERA_MODEL_D3",
                 });
             }
         }
-        Ap242StyledItemTargetRef::CameraModelD3MultiClipping(i) => {
+        Ap242StyledItemItemRef::CameraModelD3MultiClipping(i) => {
             if i.0 as usize >= model.camera_model_d3_multi_clipping_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "CAMERA_MODEL_D3_MULTI_CLIPPING",
                 });
             }
         }
-        Ap242StyledItemTargetRef::CameraModelD3WithHlhsr(i) => {
+        Ap242StyledItemItemRef::CameraModelD3WithHlhsr(i) => {
             if i.0 as usize >= model.camera_model_d3_with_hlhsr_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "CAMERA_MODEL_D3_WITH_HLHSR",
                 });
             }
         }
-        Ap242StyledItemTargetRef::CartesianPoint(i) => {
+        Ap242StyledItemItemRef::CartesianPoint(i) => {
             if i.0 as usize >= model.cartesian_point_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "CARTESIAN_POINT",
                 });
             }
         }
-        Ap242StyledItemTargetRef::CharacterizedRepresentation(i) => {
+        Ap242StyledItemItemRef::CharacterizedRepresentation(i) => {
             if i.0 as usize >= model.characterized_representation_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "CHARACTERIZED_REPRESENTATION",
                 });
             }
         }
-        Ap242StyledItemTargetRef::Circle(i) => {
+        Ap242StyledItemItemRef::Circle(i) => {
             if i.0 as usize >= model.circle_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "CIRCLE" });
             }
         }
-        Ap242StyledItemTargetRef::ClosedShell(i) => {
+        Ap242StyledItemItemRef::ClosedShell(i) => {
             if i.0 as usize >= model.closed_shell_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "CLOSED_SHELL",
                 });
             }
         }
-        Ap242StyledItemTargetRef::ComplexTriangulatedFace(i) => {
+        Ap242StyledItemItemRef::ComplexTriangulatedFace(i) => {
             if i.0 as usize >= model.complex_triangulated_face_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "COMPLEX_TRIANGULATED_FACE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::ComplexTriangulatedSurfaceSet(i) => {
+        Ap242StyledItemItemRef::ComplexTriangulatedSurfaceSet(i) => {
             if i.0 as usize >= model.complex_triangulated_surface_set_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "COMPLEX_TRIANGULATED_SURFACE_SET",
                 });
             }
         }
-        Ap242StyledItemTargetRef::CompositeCurve(i) => {
+        Ap242StyledItemItemRef::CompositeCurve(i) => {
             if i.0 as usize >= model.composite_curve_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "COMPOSITE_CURVE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::CompositeText(i) => {
+        Ap242StyledItemItemRef::CompositeText(i) => {
             if i.0 as usize >= model.composite_text_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "COMPOSITE_TEXT",
                 });
             }
         }
-        Ap242StyledItemTargetRef::Conic(i) => {
+        Ap242StyledItemItemRef::Conic(i) => {
             if i.0 as usize >= model.conic_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "CONIC" });
             }
         }
-        Ap242StyledItemTargetRef::ConicalSurface(i) => {
+        Ap242StyledItemItemRef::ConicalSurface(i) => {
             if i.0 as usize >= model.conical_surface_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "CONICAL_SURFACE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::ConnectedFaceSet(i) => {
+        Ap242StyledItemItemRef::ConnectedFaceSet(i) => {
             if i.0 as usize >= model.connected_face_set_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "CONNECTED_FACE_SET",
                 });
             }
         }
-        Ap242StyledItemTargetRef::ConstructiveGeometryRepresentation(i) => {
+        Ap242StyledItemItemRef::ConstructiveGeometryRepresentation(i) => {
             if i.0 as usize >= model.constructive_geometry_representation_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
                 });
             }
         }
-        Ap242StyledItemTargetRef::CoordinatesList(i) => {
+        Ap242StyledItemItemRef::CoordinatesList(i) => {
             if i.0 as usize >= model.coordinates_list_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "COORDINATES_LIST",
                 });
             }
         }
-        Ap242StyledItemTargetRef::Curve(i) => {
+        Ap242StyledItemItemRef::Curve(i) => {
             if i.0 as usize >= model.curve_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "CURVE" });
             }
         }
-        Ap242StyledItemTargetRef::CylindricalSurface(i) => {
+        Ap242StyledItemItemRef::CylindricalSurface(i) => {
             if i.0 as usize >= model.cylindrical_surface_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "CYLINDRICAL_SURFACE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::DefinedCharacterGlyph(i) => {
+        Ap242StyledItemItemRef::DefinedCharacterGlyph(i) => {
             if i.0 as usize >= model.defined_character_glyph_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "DEFINED_CHARACTER_GLYPH",
                 });
             }
         }
-        Ap242StyledItemTargetRef::DefinedSymbol(i) => {
+        Ap242StyledItemItemRef::DefinedSymbol(i) => {
             if i.0 as usize >= model.defined_symbol_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "DEFINED_SYMBOL",
                 });
             }
         }
-        Ap242StyledItemTargetRef::DefinitionalRepresentation(i) => {
+        Ap242StyledItemItemRef::DefinitionalRepresentation(i) => {
             if i.0 as usize >= model.definitional_representation_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "DEFINITIONAL_REPRESENTATION",
                 });
             }
         }
-        Ap242StyledItemTargetRef::DegenerateToroidalSurface(i) => {
+        Ap242StyledItemItemRef::DegenerateToroidalSurface(i) => {
             if i.0 as usize >= model.degenerate_toroidal_surface_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "DEGENERATE_TOROIDAL_SURFACE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::Direction(i) => {
+        Ap242StyledItemItemRef::Direction(i) => {
             if i.0 as usize >= model.direction_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "DIRECTION",
                 });
             }
         }
-        Ap242StyledItemTargetRef::DraughtingCallout(i) => {
+        Ap242StyledItemItemRef::DraughtingCallout(i) => {
             if i.0 as usize >= model.draughting_callout_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "DRAUGHTING_CALLOUT",
                 });
             }
         }
-        Ap242StyledItemTargetRef::DraughtingModel(i) => {
+        Ap242StyledItemItemRef::DraughtingModel(i) => {
             if i.0 as usize >= model.draughting_model_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "DRAUGHTING_MODEL",
                 });
             }
         }
-        Ap242StyledItemTargetRef::Edge(i) => {
+        Ap242StyledItemItemRef::Edge(i) => {
             if i.0 as usize >= model.edge_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "EDGE" });
             }
         }
-        Ap242StyledItemTargetRef::EdgeCurve(i) => {
+        Ap242StyledItemItemRef::EdgeCurve(i) => {
             if i.0 as usize >= model.edge_curve_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "EDGE_CURVE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::EdgeLoop(i) => {
+        Ap242StyledItemItemRef::EdgeLoop(i) => {
             if i.0 as usize >= model.edge_loop_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "EDGE_LOOP",
                 });
             }
         }
-        Ap242StyledItemTargetRef::ElementarySurface(i) => {
+        Ap242StyledItemItemRef::ElementarySurface(i) => {
             if i.0 as usize >= model.elementary_surface_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ELEMENTARY_SURFACE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::Ellipse(i) => {
+        Ap242StyledItemItemRef::Ellipse(i) => {
             if i.0 as usize >= model.ellipse_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "ELLIPSE" });
             }
         }
-        Ap242StyledItemTargetRef::ExternallyDefinedHatchStyle(i) => {
+        Ap242StyledItemItemRef::ExternallyDefinedHatchStyle(i) => {
             if i.0 as usize >= model.externally_defined_hatch_style_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "EXTERNALLY_DEFINED_HATCH_STYLE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::ExternallyDefinedTileStyle(i) => {
+        Ap242StyledItemItemRef::ExternallyDefinedTileStyle(i) => {
             if i.0 as usize >= model.externally_defined_tile_style_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "EXTERNALLY_DEFINED_TILE_STYLE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::Face(i) => {
+        Ap242StyledItemItemRef::Face(i) => {
             if i.0 as usize >= model.face_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "FACE" });
             }
         }
-        Ap242StyledItemTargetRef::FaceBound(i) => {
+        Ap242StyledItemItemRef::FaceBound(i) => {
             if i.0 as usize >= model.face_bound_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "FACE_BOUND",
                 });
             }
         }
-        Ap242StyledItemTargetRef::FaceOuterBound(i) => {
+        Ap242StyledItemItemRef::FaceOuterBound(i) => {
             if i.0 as usize >= model.face_outer_bound_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "FACE_OUTER_BOUND",
                 });
             }
         }
-        Ap242StyledItemTargetRef::FaceSurface(i) => {
+        Ap242StyledItemItemRef::FaceSurface(i) => {
             if i.0 as usize >= model.face_surface_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "FACE_SURFACE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::FillAreaStyleHatching(i) => {
+        Ap242StyledItemItemRef::FillAreaStyleHatching(i) => {
             if i.0 as usize >= model.fill_area_style_hatching_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "FILL_AREA_STYLE_HATCHING",
                 });
             }
         }
-        Ap242StyledItemTargetRef::FillAreaStyleTileColouredRegion(i) => {
+        Ap242StyledItemItemRef::FillAreaStyleTileColouredRegion(i) => {
             if i.0 as usize >= model.fill_area_style_tile_coloured_region_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "FILL_AREA_STYLE_TILE_COLOURED_REGION",
                 });
             }
         }
-        Ap242StyledItemTargetRef::FillAreaStyleTileCurveWithStyle(i) => {
+        Ap242StyledItemItemRef::FillAreaStyleTileCurveWithStyle(i) => {
             if i.0 as usize
                 >= model
                     .fill_area_style_tile_curve_with_style_arena
@@ -53726,7 +57283,7 @@ fn check_ap242_styled_item_target_ref(
                 });
             }
         }
-        Ap242StyledItemTargetRef::FillAreaStyleTileSymbolWithStyle(i) => {
+        Ap242StyledItemItemRef::FillAreaStyleTileSymbolWithStyle(i) => {
             if i.0 as usize
                 >= model
                     .fill_area_style_tile_symbol_with_style_arena
@@ -53738,35 +57295,35 @@ fn check_ap242_styled_item_target_ref(
                 });
             }
         }
-        Ap242StyledItemTargetRef::FillAreaStyleTiles(i) => {
+        Ap242StyledItemItemRef::FillAreaStyleTiles(i) => {
             if i.0 as usize >= model.fill_area_style_tiles_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "FILL_AREA_STYLE_TILES",
                 });
             }
         }
-        Ap242StyledItemTargetRef::GeometricCurveSet(i) => {
+        Ap242StyledItemItemRef::GeometricCurveSet(i) => {
             if i.0 as usize >= model.geometric_curve_set_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "GEOMETRIC_CURVE_SET",
                 });
             }
         }
-        Ap242StyledItemTargetRef::GeometricRepresentationItem(i) => {
+        Ap242StyledItemItemRef::GeometricRepresentationItem(i) => {
             if i.0 as usize >= model.geometric_representation_item_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "GEOMETRIC_REPRESENTATION_ITEM",
                 });
             }
         }
-        Ap242StyledItemTargetRef::GeometricSet(i) => {
+        Ap242StyledItemItemRef::GeometricSet(i) => {
             if i.0 as usize >= model.geometric_set_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "GEOMETRIC_SET",
                 });
             }
         }
-        Ap242StyledItemTargetRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+        Ap242StyledItemItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
             if i.0 as usize
                 >= model
                     .geometrically_bounded_surface_shape_representation_arena
@@ -53778,7 +57335,7 @@ fn check_ap242_styled_item_target_ref(
                 });
             }
         }
-        Ap242StyledItemTargetRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+        Ap242StyledItemItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
             if i.0 as usize
                 >= model
                     .geometrically_bounded_wireframe_shape_representation_arena
@@ -53790,45 +57347,45 @@ fn check_ap242_styled_item_target_ref(
                 });
             }
         }
-        Ap242StyledItemTargetRef::Hyperbola(i) => {
+        Ap242StyledItemItemRef::Hyperbola(i) => {
             if i.0 as usize >= model.hyperbola_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "HYPERBOLA",
                 });
             }
         }
-        Ap242StyledItemTargetRef::IntersectionCurve(i) => {
+        Ap242StyledItemItemRef::IntersectionCurve(i) => {
             if i.0 as usize >= model.intersection_curve_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "INTERSECTION_CURVE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::LeaderDirectedCallout(i) => {
+        Ap242StyledItemItemRef::LeaderDirectedCallout(i) => {
             if i.0 as usize >= model.leader_directed_callout_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "LEADER_DIRECTED_CALLOUT",
                 });
             }
         }
-        Ap242StyledItemTargetRef::Line(i) => {
+        Ap242StyledItemItemRef::Line(i) => {
             if i.0 as usize >= model.line_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "LINE" });
             }
         }
-        Ap242StyledItemTargetRef::Loop(i) => {
+        Ap242StyledItemItemRef::Loop(i) => {
             if i.0 as usize >= model.loop_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "LOOP" });
             }
         }
-        Ap242StyledItemTargetRef::ManifoldSolidBrep(i) => {
+        Ap242StyledItemItemRef::ManifoldSolidBrep(i) => {
             if i.0 as usize >= model.manifold_solid_brep_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "MANIFOLD_SOLID_BREP",
                 });
             }
         }
-        Ap242StyledItemTargetRef::ManifoldSurfaceShapeRepresentation(i) => {
+        Ap242StyledItemItemRef::ManifoldSurfaceShapeRepresentation(i) => {
             if i.0 as usize
                 >= model
                     .manifold_surface_shape_representation_arena
@@ -53840,14 +57397,14 @@ fn check_ap242_styled_item_target_ref(
                 });
             }
         }
-        Ap242StyledItemTargetRef::MappedItem(i) => {
+        Ap242StyledItemItemRef::MappedItem(i) => {
             if i.0 as usize >= model.mapped_item_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "MAPPED_ITEM",
                 });
             }
         }
-        Ap242StyledItemTargetRef::MechanicalDesignGeometricPresentationRepresentation(i) => {
+        Ap242StyledItemItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => {
             if i.0 as usize
                 >= model
                     .mechanical_design_geometric_presentation_representation_arena
@@ -53859,7 +57416,7 @@ fn check_ap242_styled_item_target_ref(
                 });
             }
         }
-        Ap242StyledItemTargetRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
+        Ap242StyledItemItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => {
             if i.0 as usize
                 >= model
                     .mechanical_design_presentation_representation_with_draughting_arena
@@ -53871,7 +57428,7 @@ fn check_ap242_styled_item_target_ref(
                 });
             }
         }
-        Ap242StyledItemTargetRef::MechanicalDesignShadedPresentationRepresentation(i) => {
+        Ap242StyledItemItemRef::MechanicalDesignShadedPresentationRepresentation(i) => {
             if i.0 as usize
                 >= model
                     .mechanical_design_shaded_presentation_representation_arena
@@ -53883,416 +57440,416 @@ fn check_ap242_styled_item_target_ref(
                 });
             }
         }
-        Ap242StyledItemTargetRef::OffsetSurface(i) => {
+        Ap242StyledItemItemRef::OffsetSurface(i) => {
             if i.0 as usize >= model.offset_surface_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "OFFSET_SURFACE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::OneDirectionRepeatFactor(i) => {
+        Ap242StyledItemItemRef::OneDirectionRepeatFactor(i) => {
             if i.0 as usize >= model.one_direction_repeat_factor_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ONE_DIRECTION_REPEAT_FACTOR",
                 });
             }
         }
-        Ap242StyledItemTargetRef::OpenShell(i) => {
+        Ap242StyledItemItemRef::OpenShell(i) => {
             if i.0 as usize >= model.open_shell_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "OPEN_SHELL",
                 });
             }
         }
-        Ap242StyledItemTargetRef::OrientedClosedShell(i) => {
+        Ap242StyledItemItemRef::OrientedClosedShell(i) => {
             if i.0 as usize >= model.oriented_closed_shell_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ORIENTED_CLOSED_SHELL",
                 });
             }
         }
-        Ap242StyledItemTargetRef::OrientedEdge(i) => {
+        Ap242StyledItemItemRef::OrientedEdge(i) => {
             if i.0 as usize >= model.oriented_edge_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "ORIENTED_EDGE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::Parabola(i) => {
+        Ap242StyledItemItemRef::Parabola(i) => {
             if i.0 as usize >= model.parabola_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
             }
         }
-        Ap242StyledItemTargetRef::Path(i) => {
+        Ap242StyledItemItemRef::Path(i) => {
             if i.0 as usize >= model.path_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "PATH" });
             }
         }
-        Ap242StyledItemTargetRef::Pcurve(i) => {
+        Ap242StyledItemItemRef::Pcurve(i) => {
             if i.0 as usize >= model.pcurve_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "PCURVE" });
             }
         }
-        Ap242StyledItemTargetRef::Placement(i) => {
+        Ap242StyledItemItemRef::Placement(i) => {
             if i.0 as usize >= model.placement_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "PLACEMENT",
                 });
             }
         }
-        Ap242StyledItemTargetRef::PlanarBox(i) => {
+        Ap242StyledItemItemRef::PlanarBox(i) => {
             if i.0 as usize >= model.planar_box_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "PLANAR_BOX",
                 });
             }
         }
-        Ap242StyledItemTargetRef::PlanarExtent(i) => {
+        Ap242StyledItemItemRef::PlanarExtent(i) => {
             if i.0 as usize >= model.planar_extent_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "PLANAR_EXTENT",
                 });
             }
         }
-        Ap242StyledItemTargetRef::Plane(i) => {
+        Ap242StyledItemItemRef::Plane(i) => {
             if i.0 as usize >= model.plane_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "PLANE" });
             }
         }
-        Ap242StyledItemTargetRef::Point(i) => {
+        Ap242StyledItemItemRef::Point(i) => {
             if i.0 as usize >= model.point_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "POINT" });
             }
         }
-        Ap242StyledItemTargetRef::PolyLoop(i) => {
+        Ap242StyledItemItemRef::PolyLoop(i) => {
             if i.0 as usize >= model.poly_loop_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "POLY_LOOP",
                 });
             }
         }
-        Ap242StyledItemTargetRef::Polyline(i) => {
+        Ap242StyledItemItemRef::Polyline(i) => {
             if i.0 as usize >= model.polyline_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "POLYLINE" });
             }
         }
-        Ap242StyledItemTargetRef::PresentationArea(i) => {
+        Ap242StyledItemItemRef::PresentationArea(i) => {
             if i.0 as usize >= model.presentation_area_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "PRESENTATION_AREA",
                 });
             }
         }
-        Ap242StyledItemTargetRef::PresentationRepresentation(i) => {
+        Ap242StyledItemItemRef::PresentationRepresentation(i) => {
             if i.0 as usize >= model.presentation_representation_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "PRESENTATION_REPRESENTATION",
                 });
             }
         }
-        Ap242StyledItemTargetRef::PresentationView(i) => {
+        Ap242StyledItemItemRef::PresentationView(i) => {
             if i.0 as usize >= model.presentation_view_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "PRESENTATION_VIEW",
                 });
             }
         }
-        Ap242StyledItemTargetRef::QuasiUniformCurve(i) => {
+        Ap242StyledItemItemRef::QuasiUniformCurve(i) => {
             if i.0 as usize >= model.quasi_uniform_curve_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "QUASI_UNIFORM_CURVE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::QuasiUniformSurface(i) => {
+        Ap242StyledItemItemRef::QuasiUniformSurface(i) => {
             if i.0 as usize >= model.quasi_uniform_surface_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "QUASI_UNIFORM_SURFACE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::RationalBSplineCurve(i) => {
+        Ap242StyledItemItemRef::RationalBSplineCurve(i) => {
             if i.0 as usize >= model.rational_b_spline_curve_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "RATIONAL_B_SPLINE_CURVE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::RationalBSplineSurface(i) => {
+        Ap242StyledItemItemRef::RationalBSplineSurface(i) => {
             if i.0 as usize >= model.rational_b_spline_surface_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "RATIONAL_B_SPLINE_SURFACE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::RepositionedTessellatedItem(i) => {
+        Ap242StyledItemItemRef::RepositionedTessellatedItem(i) => {
             if i.0 as usize >= model.repositioned_tessellated_item_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "REPOSITIONED_TESSELLATED_ITEM",
                 });
             }
         }
-        Ap242StyledItemTargetRef::Representation(i) => {
+        Ap242StyledItemItemRef::Representation(i) => {
             if i.0 as usize >= model.representation_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "REPRESENTATION",
                 });
             }
         }
-        Ap242StyledItemTargetRef::RepresentationReference(i) => {
+        Ap242StyledItemItemRef::RepresentationReference(i) => {
             if i.0 as usize >= model.representation_reference_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "REPRESENTATION_REFERENCE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::SeamCurve(i) => {
+        Ap242StyledItemItemRef::SeamCurve(i) => {
             if i.0 as usize >= model.seam_curve_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "SEAM_CURVE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::ShapeDimensionRepresentation(i) => {
+        Ap242StyledItemItemRef::ShapeDimensionRepresentation(i) => {
             if i.0 as usize >= model.shape_dimension_representation_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "SHAPE_DIMENSION_REPRESENTATION",
                 });
             }
         }
-        Ap242StyledItemTargetRef::ShapeRepresentation(i) => {
+        Ap242StyledItemItemRef::ShapeRepresentation(i) => {
             if i.0 as usize >= model.shape_representation_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "SHAPE_REPRESENTATION",
                 });
             }
         }
-        Ap242StyledItemTargetRef::ShapeRepresentationWithParameters(i) => {
+        Ap242StyledItemItemRef::ShapeRepresentationWithParameters(i) => {
             if i.0 as usize >= model.shape_representation_with_parameters_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "SHAPE_REPRESENTATION_WITH_PARAMETERS",
                 });
             }
         }
-        Ap242StyledItemTargetRef::ShellBasedSurfaceModel(i) => {
+        Ap242StyledItemItemRef::ShellBasedSurfaceModel(i) => {
             if i.0 as usize >= model.shell_based_surface_model_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "SHELL_BASED_SURFACE_MODEL",
                 });
             }
         }
-        Ap242StyledItemTargetRef::SolidModel(i) => {
+        Ap242StyledItemItemRef::SolidModel(i) => {
             if i.0 as usize >= model.solid_model_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "SOLID_MODEL",
                 });
             }
         }
-        Ap242StyledItemTargetRef::SphericalSurface(i) => {
+        Ap242StyledItemItemRef::SphericalSurface(i) => {
             if i.0 as usize >= model.spherical_surface_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "SPHERICAL_SURFACE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::Surface(i) => {
+        Ap242StyledItemItemRef::Surface(i) => {
             if i.0 as usize >= model.surface_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "SURFACE" });
             }
         }
-        Ap242StyledItemTargetRef::SurfaceCurve(i) => {
+        Ap242StyledItemItemRef::SurfaceCurve(i) => {
             if i.0 as usize >= model.surface_curve_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "SURFACE_CURVE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::SurfaceOfLinearExtrusion(i) => {
+        Ap242StyledItemItemRef::SurfaceOfLinearExtrusion(i) => {
             if i.0 as usize >= model.surface_of_linear_extrusion_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "SURFACE_OF_LINEAR_EXTRUSION",
                 });
             }
         }
-        Ap242StyledItemTargetRef::SurfaceOfRevolution(i) => {
+        Ap242StyledItemItemRef::SurfaceOfRevolution(i) => {
             if i.0 as usize >= model.surface_of_revolution_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "SURFACE_OF_REVOLUTION",
                 });
             }
         }
-        Ap242StyledItemTargetRef::SweptSurface(i) => {
+        Ap242StyledItemItemRef::SweptSurface(i) => {
             if i.0 as usize >= model.swept_surface_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "SWEPT_SURFACE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::SymbolRepresentation(i) => {
+        Ap242StyledItemItemRef::SymbolRepresentation(i) => {
             if i.0 as usize >= model.symbol_representation_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "SYMBOL_REPRESENTATION",
                 });
             }
         }
-        Ap242StyledItemTargetRef::SymbolTarget(i) => {
+        Ap242StyledItemItemRef::SymbolTarget(i) => {
             if i.0 as usize >= model.symbol_target_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "SYMBOL_TARGET",
                 });
             }
         }
-        Ap242StyledItemTargetRef::TessellatedCurveSet(i) => {
+        Ap242StyledItemItemRef::TessellatedCurveSet(i) => {
             if i.0 as usize >= model.tessellated_curve_set_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "TESSELLATED_CURVE_SET",
                 });
             }
         }
-        Ap242StyledItemTargetRef::TessellatedFace(i) => {
+        Ap242StyledItemItemRef::TessellatedFace(i) => {
             if i.0 as usize >= model.tessellated_face_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "TESSELLATED_FACE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::TessellatedGeometricSet(i) => {
+        Ap242StyledItemItemRef::TessellatedGeometricSet(i) => {
             if i.0 as usize >= model.tessellated_geometric_set_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "TESSELLATED_GEOMETRIC_SET",
                 });
             }
         }
-        Ap242StyledItemTargetRef::TessellatedItem(i) => {
+        Ap242StyledItemItemRef::TessellatedItem(i) => {
             if i.0 as usize >= model.tessellated_item_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "TESSELLATED_ITEM",
                 });
             }
         }
-        Ap242StyledItemTargetRef::TessellatedShapeRepresentation(i) => {
+        Ap242StyledItemItemRef::TessellatedShapeRepresentation(i) => {
             if i.0 as usize >= model.tessellated_shape_representation_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "TESSELLATED_SHAPE_REPRESENTATION",
                 });
             }
         }
-        Ap242StyledItemTargetRef::TessellatedShell(i) => {
+        Ap242StyledItemItemRef::TessellatedShell(i) => {
             if i.0 as usize >= model.tessellated_shell_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "TESSELLATED_SHELL",
                 });
             }
         }
-        Ap242StyledItemTargetRef::TessellatedSolid(i) => {
+        Ap242StyledItemItemRef::TessellatedSolid(i) => {
             if i.0 as usize >= model.tessellated_solid_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "TESSELLATED_SOLID",
                 });
             }
         }
-        Ap242StyledItemTargetRef::TessellatedStructuredItem(i) => {
+        Ap242StyledItemItemRef::TessellatedStructuredItem(i) => {
             if i.0 as usize >= model.tessellated_structured_item_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "TESSELLATED_STRUCTURED_ITEM",
                 });
             }
         }
-        Ap242StyledItemTargetRef::TessellatedSurfaceSet(i) => {
+        Ap242StyledItemItemRef::TessellatedSurfaceSet(i) => {
             if i.0 as usize >= model.tessellated_surface_set_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "TESSELLATED_SURFACE_SET",
                 });
             }
         }
-        Ap242StyledItemTargetRef::TextLiteral(i) => {
+        Ap242StyledItemItemRef::TextLiteral(i) => {
             if i.0 as usize >= model.text_literal_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "TEXT_LITERAL",
                 });
             }
         }
-        Ap242StyledItemTargetRef::TopologicalRepresentationItem(i) => {
+        Ap242StyledItemItemRef::TopologicalRepresentationItem(i) => {
             if i.0 as usize >= model.topological_representation_item_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "TOPOLOGICAL_REPRESENTATION_ITEM",
                 });
             }
         }
-        Ap242StyledItemTargetRef::ToroidalSurface(i) => {
+        Ap242StyledItemItemRef::ToroidalSurface(i) => {
             if i.0 as usize >= model.toroidal_surface_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "TOROIDAL_SURFACE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::TrimmedCurve(i) => {
+        Ap242StyledItemItemRef::TrimmedCurve(i) => {
             if i.0 as usize >= model.trimmed_curve_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "TRIMMED_CURVE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::TwoDirectionRepeatFactor(i) => {
+        Ap242StyledItemItemRef::TwoDirectionRepeatFactor(i) => {
             if i.0 as usize >= model.two_direction_repeat_factor_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "TWO_DIRECTION_REPEAT_FACTOR",
                 });
             }
         }
-        Ap242StyledItemTargetRef::UniformCurve(i) => {
+        Ap242StyledItemItemRef::UniformCurve(i) => {
             if i.0 as usize >= model.uniform_curve_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "UNIFORM_CURVE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::UniformSurface(i) => {
+        Ap242StyledItemItemRef::UniformSurface(i) => {
             if i.0 as usize >= model.uniform_surface_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "UNIFORM_SURFACE",
                 });
             }
         }
-        Ap242StyledItemTargetRef::Vector(i) => {
+        Ap242StyledItemItemRef::Vector(i) => {
             if i.0 as usize >= model.vector_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "VECTOR" });
             }
         }
-        Ap242StyledItemTargetRef::Vertex(i) => {
+        Ap242StyledItemItemRef::Vertex(i) => {
             if i.0 as usize >= model.vertex_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "VERTEX" });
             }
         }
-        Ap242StyledItemTargetRef::VertexLoop(i) => {
+        Ap242StyledItemItemRef::VertexLoop(i) => {
             if i.0 as usize >= model.vertex_loop_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "VERTEX_LOOP",
                 });
             }
         }
-        Ap242StyledItemTargetRef::VertexPoint(i) => {
+        Ap242StyledItemItemRef::VertexPoint(i) => {
             if i.0 as usize >= model.vertex_point_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "VERTEX_POINT",
                 });
             }
         }
-        Ap242StyledItemTargetRef::VertexShell(i) => {
+        Ap242StyledItemItemRef::VertexShell(i) => {
             if i.0 as usize >= model.vertex_shell_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "VERTEX_SHELL",
                 });
             }
         }
-        Ap242StyledItemTargetRef::WireShell(i) => {
+        Ap242StyledItemItemRef::WireShell(i) => {
             if i.0 as usize >= model.wire_shell_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "WIRE_SHELL",
                 });
             }
         }
-        Ap242StyledItemTargetRef::Complex(i) => {
+        Ap242StyledItemItemRef::Complex(i) => {
             let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
                 return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
             };
@@ -54300,8 +57857,6 @@ fn check_ap242_styled_item_target_ref(
                 [
                     "ADVANCED_BREP_SHAPE_REPRESENTATION",
                     "ADVANCED_FACE",
-                    "ANNOTATION_PLACEHOLDER_OCCURRENCE",
-                    "ANNOTATION_PLANE",
                     "ANNOTATION_TEXT",
                     "ANNOTATION_TEXT_CHARACTER",
                     "BEZIER_CURVE",
@@ -54403,7 +57958,175 @@ fn check_ap242_styled_item_target_ref(
                 .contains(&part_name(p))
             }) {
                 return Err(AuthorError::InvalidComplex {
-                    reason: "not a STYLED_ITEM_TARGET",
+                    reason: "not allowed in STYLED_ITEM.ITEM",
+                });
+            }
+        }
+    }
+    Ok(())
+}
+fn check_ap242_surface_curve_curve3d_ref(
+    model: &StepModel,
+    r: &Ap242SurfaceCurveCurve3dRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242SurfaceCurveCurve3dRef::BSplineCurve(i) => {
+            if i.0 as usize >= model.b_spline_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_CURVE",
+                });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::BSplineCurveWithKnots(i) => {
+            if i.0 as usize >= model.b_spline_curve_with_knots_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_CURVE_WITH_KNOTS",
+                });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::BezierCurve(i) => {
+            if i.0 as usize >= model.bezier_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BEZIER_CURVE",
+                });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::BoundedCurve(i) => {
+            if i.0 as usize >= model.bounded_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_CURVE",
+                });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::BoundedSurfaceCurve(i) => {
+            if i.0 as usize >= model.bounded_surface_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_SURFACE_CURVE",
+                });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::Circle(i) => {
+            if i.0 as usize >= model.circle_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "CIRCLE" });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::CompositeCurve(i) => {
+            if i.0 as usize >= model.composite_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "COMPOSITE_CURVE",
+                });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::Conic(i) => {
+            if i.0 as usize >= model.conic_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "CONIC" });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::Curve(i) => {
+            if i.0 as usize >= model.curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "CURVE" });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::Ellipse(i) => {
+            if i.0 as usize >= model.ellipse_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "ELLIPSE" });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::Hyperbola(i) => {
+            if i.0 as usize >= model.hyperbola_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "HYPERBOLA",
+                });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::IntersectionCurve(i) => {
+            if i.0 as usize >= model.intersection_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "INTERSECTION_CURVE",
+                });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::Line(i) => {
+            if i.0 as usize >= model.line_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "LINE" });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::Parabola(i) => {
+            if i.0 as usize >= model.parabola_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::Polyline(i) => {
+            if i.0 as usize >= model.polyline_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "POLYLINE" });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::QuasiUniformCurve(i) => {
+            if i.0 as usize >= model.quasi_uniform_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "QUASI_UNIFORM_CURVE",
+                });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::RationalBSplineCurve(i) => {
+            if i.0 as usize >= model.rational_b_spline_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "RATIONAL_B_SPLINE_CURVE",
+                });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::SeamCurve(i) => {
+            if i.0 as usize >= model.seam_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SEAM_CURVE",
+                });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::SurfaceCurve(i) => {
+            if i.0 as usize >= model.surface_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SURFACE_CURVE",
+                });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::TrimmedCurve(i) => {
+            if i.0 as usize >= model.trimmed_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TRIMMED_CURVE",
+                });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::UniformCurve(i) => {
+            if i.0 as usize >= model.uniform_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "UNIFORM_CURVE",
+                });
+            }
+        }
+        Ap242SurfaceCurveCurve3dRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c.parts.iter().any(|p| {
+                [
+                    "BEZIER_CURVE",
+                    "BOUNDED_CURVE",
+                    "BOUNDED_SURFACE_CURVE",
+                    "B_SPLINE_CURVE",
+                    "B_SPLINE_CURVE_WITH_KNOTS",
+                    "COMPOSITE_CURVE",
+                    "CURVE",
+                    "INTERSECTION_CURVE",
+                    "QUASI_UNIFORM_CURVE",
+                    "RATIONAL_B_SPLINE_CURVE",
+                    "SEAM_CURVE",
+                    "SURFACE_CURVE",
+                    "UNIFORM_CURVE",
+                ]
+                .contains(&part_name(p))
+            }) {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not allowed in SURFACE_CURVE.CURVE_3D",
                 });
             }
         }

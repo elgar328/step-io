@@ -22,11 +22,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Ap242MechanicalDesignShadedPresentationRepresentationItemsRef`,
   `Ap242ShapeDimensionRepresentationItemRef`, `Ap242ShapeRepresentationRef`,
   `Ap242ShapeRepresentationWithParametersItemsRef` and
-  `Ap242StyledItemTargetRef`: what AP242 edition 2
+  `Ap242StyledItemItemRef`: what AP242 edition 2
   allows where the model, read from every edition, allows more. Each converts
   into the model's reference with `From`, as do `PropertyDefinitionRef` into
   `RepresentedDefinitionRef`, and `LengthMeasureWithUnitRef` and
   `LengthOrPlaneAngleMeasureWithUnitSelectRef` into `MeasureWithUnitRef`.
+- `Ap242AdvancedBrepShapeRepresentationItemsRef`,
+  `Ap242AdvancedFaceFaceGeometryRef`,
+  `Ap242AnnotationOccurrenceAssociativityRelatedAnnotationOccurrenceRef`,
+  `Ap242BoundedCurveRef`, `Ap242BoundedSurfaceCurveCurve3dRef`,
+  `Ap242CameraUsageMappedRepresentationRef`,
+  `Ap242ConstructiveGeometryRepresentationItemsRef`,
+  `Ap242GeometricCurveSetElementsRef`,
+  `Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef`,
+  `Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef`,
+  `Ap242GlobalUnitAssignedContextRef`, `Ap242LeaderCurveRef`,
+  `Ap242LengthUnitRef`, `Ap242ManifoldSurfaceShapeRepresentationItemsRef`,
+  `Ap242MassUnitRef`, `Ap242MeasureQualificationQualifiedMeasureRef`,
+  `Ap242OrientedClosedShellClosedShellElementRef`,
+  `Ap242OrientedEdgeEdgeElementRef`,
+  `Ap242ParametricRepresentationContextRef`, `Ap242PlaneAngleUnitRef`,
+  `Ap242ProductDefinitionShapeDefinitionRef`,
+  `Ap242ProductDefinitionUsageRef`, `Ap242RatioUnitRef` and
+  `Ap242SurfaceCurveCurve3dRef`: what an AP242 edition 2 `WHERE` rule lets an
+  attribute reference. Each converts into the model's reference with `From`,
+  as does `GeometricRepresentationContextRef` into
+  `RepresentationContextRef`.
 - `StyledItemTargetOrRepresentationItemRef`: what a styled item's `item` takes
   in the model — AP242's `styled_item_target` or, as AP203 and AP214 allow,
   any representation item.
@@ -52,7 +73,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `add_styled_item`, `add_over_riding_styled_item`,
     `add_context_dependent_over_riding_styled_item`,
     `add_annotation_occurrence` and `add_draughting_annotation_occurrence`:
-    `item` takes an `Ap242StyledItemTargetRef`
+    `item` takes an `Ap242StyledItemItemRef`, which also leaves out styled
+    items (`STYLED_ITEM.WR2`)
+- `Ap242Author` constructors also take a narrower reference type where an
+  AP242 edition 2 `WHERE` rule unconditionally limits which types an
+  attribute, or each of its elements, references
+  (such as `'LENGTH_UNIT' IN TYPEOF(SELF\measure_with_unit.unit_component)`;
+  not rules on one indexed element, on two attributes together or on a path
+  through another entity). A complex argument's parts count together: where
+  a rule excludes a type, one holding a part of that type, and where it asks
+  for exactly one of several types, one whose parts are of more than one of
+  them, is rejected on insertion with `AuthorError::NarrowedReference`:
+  - `add_length_measure_with_unit`, `add_mass_measure_with_unit`,
+    `add_plane_angle_measure_with_unit` and `add_ratio_measure_with_unit`:
+    `unit_component` takes the matching `Ap242…UnitRef`
+  - `add_advanced_face`: `face_geometry` takes an
+    `Ap242AdvancedFaceFaceGeometryRef` (an elementary, B-spline or swept
+    surface)
+  - `add_advanced_brep_shape_representation`,
+    `add_geometrically_bounded_surface_shape_representation`,
+    `add_geometrically_bounded_wireframe_shape_representation` and
+    `add_manifold_surface_shape_representation`: `items` takes the matching
+    `Ap242…ItemsRef`
+  - `add_constructive_geometry_representation`: `items` takes
+    `Ap242ConstructiveGeometryRepresentationItemsRef`s (each exactly one of a
+    placement, curve, edge, face, point, surface, connected face or edge set,
+    or vertex point)
+  - `add_product_definition_shape`: `definition` takes an
+    `Ap242ProductDefinitionShapeDefinitionRef` (a product definition or its
+    relationship, or a characterized object; not a shape aspect)
+  - `add_constructive_geometry_representation`,
+    `add_definitional_representation` and
+    `add_tessellated_shape_representation`: `context_of_items` takes a
+    `GeometricRepresentationContextRef`,
+    `Ap242ParametricRepresentationContextRef` and
+    `Ap242GlobalUnitAssignedContextRef` respectively
+  - `add_surface_curve`, `add_intersection_curve` and `add_seam_curve`:
+    `curve_3d` takes an `Ap242SurfaceCurveCurve3dRef` (not a pcurve);
+    `add_bounded_surface_curve` an `Ap242BoundedSurfaceCurveCurve3dRef`;
+    `add_composite_curve_segment`: `parent_curve` an `Ap242BoundedCurveRef`
+  - `add_oriented_edge` and `add_oriented_closed_shell`: `edge_element` and
+    `closed_shell_element` take a type that is not itself oriented
+  - `add_configuration_effectivity` (`usage`), `add_geometric_curve_set`
+    (`elements`), `add_leader_terminator` (`annotated_curve`),
+    `add_annotation_occurrence_associativity`
+    (`related_annotation_occurrence`), `add_measure_qualification`
+    (`qualified_measure`) and `add_camera_usage` (`mapped_representation`):
+    the matching `Ap242…Ref`
 - `add_complex` and the self-referencing constructors check the same
   narrowings at run time, and `add_person_and_organization_address` takes
   exactly one organization and one person, as AP242 requires.
@@ -101,7 +168,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `EntityKey`, `PartialEntity` and the reference enums that listed them are
   gone.
 - `StyledItemTargetRef`, replaced by `StyledItemTargetOrRepresentationItemRef`
-  in the model and `Ap242StyledItemTargetRef` in the constructors.
+  in the model and `Ap242StyledItemItemRef` in the constructors.
+- `add_oriented_edge_cyclic`, `add_oriented_closed_shell_cyclic` and
+  `add_product_definition_shape_cyclic`: AP242's `WHERE` rules do not let
+  these entities reference themselves.
 
 ### Fixed
 

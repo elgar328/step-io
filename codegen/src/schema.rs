@@ -44,6 +44,10 @@ pub struct Entity {
     /// `*` slots; the hard/derivable split is computed in `main.rs`.
     #[serde(default)]
     pub derives: Vec<String>,
+    /// Output profile only: attribute type restrictions the entity's WHERE
+    /// rules make, holding for every subtype too.
+    #[serde(default)]
+    pub type_rules: Vec<TypeRule>,
     /// Source AP schemas declaring this entity, publication order (ap203e1 →
     /// ap242e3). Membership data for the coverage matrix doc; not used for
     /// generation.
@@ -106,6 +110,27 @@ impl Schema {
         false
     }
 
+    /// The WHERE-rule type restrictions holding for `ent_name`: its own and
+    /// every supertype's, each with the entity declaring it, nearest first.
+    pub fn type_rules_for(&self, ent_name: &str) -> Vec<(&str, &TypeRule)> {
+        let mut out = Vec::new();
+        let Some((first, _)) = self.entity.get_key_value(ent_name) else {
+            return out;
+        };
+        let mut stack = vec![first.as_str()];
+        let mut seen = BTreeSet::new();
+        while let Some(n) = stack.pop() {
+            if !seen.insert(n) {
+                continue;
+            }
+            if let Some((name, e)) = self.entity.get_key_value(n) {
+                out.extend(e.type_rules.iter().map(|r| (name.as_str(), r)));
+                stack.extend(e.parents.iter().map(String::as_str));
+            }
+        }
+        out
+    }
+
     /// An entity's OWN attributes only (no inheritance flattening). Used by the
     /// complex-entity emitter (each part contributes its own attrs).
     pub fn own_attrs(&self, ent_name: &str) -> Vec<Attr> {
@@ -151,6 +176,35 @@ pub struct Attr {
     /// falls inside it, so reading may enforce it on any instance.
     #[serde(default)]
     pub union_safe: Option<bool>,
+}
+
+/// A WHERE rule's restriction of an attribute's types (output profile).
+#[derive(Deserialize, Clone)]
+pub struct TypeRule {
+    /// The restricted attribute.
+    pub name: String,
+    /// The entity declaring the attribute.
+    pub owner: String,
+    /// The single type the rule names, else `<entity>_<attr>`: the name of a
+    /// reference type made for it.
+    pub type_name: String,
+    /// The entities (lowercase) the attribute, or each element of it, may
+    /// reference.
+    pub admits: BTreeSet<String>,
+    /// How many of `names` the value's `TYPEOF` holds.
+    pub count: RuleCount,
+    /// The type names the rule lists (an entity, or a SELECT for its
+    /// members); a complex value's `TYPEOF` is the union over its parts.
+    pub names: Vec<String>,
+}
+
+/// How many of a type rule's names a value's `TYPEOF` holds.
+#[derive(Deserialize, Clone, Copy, PartialEq, Eq, Debug)]
+#[serde(rename_all = "snake_case")]
+pub enum RuleCount {
+    AtLeastOne,
+    ExactlyOne,
+    Zero,
 }
 
 #[derive(Deserialize)]

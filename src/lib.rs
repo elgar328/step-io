@@ -100,16 +100,21 @@
 //! The write side is strict by construction. Its foundation is [`Ap242Author`],
 //! a generated low-level layer with one constructor per AP242 entity (exposed
 //! as [`StepBuilder::author`]); every argument is validated at insertion
-//! against the AP242 edition 2 schema — its types, aggregate sizes, references
-//! and rules for combining types, though not its `WHERE` rules — so there is
-//! no loss report to check afterwards.
+//! against the AP242 edition 2 schema — its types, aggregate sizes, references,
+//! rules for combining types, and the `WHERE` rules that unconditionally limit
+//! which types an attribute, or each of its elements, references (not those
+//! on one indexed element, on two attributes together or on a path through
+//! another entity, nor its other `WHERE` rules) — so there is no loss report
+//! to check afterwards.
 //!
-//! The model reads every edition, so some of its reference types are wider
-//! than AP242 edition 2 allows: an attribute a subtype narrows
+//! Some of the model's reference types are wider than AP242 edition 2 allows.
+//! The model reads every edition, so an attribute a subtype narrows
 //! (`SELF\supertype.attribute : narrower;`) only from AP242 on, or a SELECT
-//! with members AP242 dropped. There a constructor takes a narrower type and
-//! stores it as the model's, so a reference AP242 does not allow does not
-//! compile:
+//! with members AP242 dropped, takes the wider type; and it does not hold an
+//! attribute to a `WHERE` rule such as
+//! `'LENGTH_UNIT' IN TYPEOF(SELF\measure_with_unit.unit_component)`. There a
+//! constructor takes a narrower type and stores it as the model's, so a
+//! reference AP242 does not allow does not compile:
 //!
 //! ```
 //! # use step_io::{Ap242Author, model as m};
@@ -308,7 +313,7 @@ pub use refgraph::RefGraph;
 /// let _ = a.add_styled_item(
 ///     "",
 ///     vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
-///     m::Ap242StyledItemTargetRef::CartesianPoint(point),
+///     m::Ap242StyledItemItemRef::CartesianPoint(point),
 /// );
 /// # }
 /// ```
@@ -319,7 +324,7 @@ pub use refgraph::RefGraph;
 /// let _ = a.add_styled_item(
 ///     "",
 ///     vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
-///     m::Ap242StyledItemTargetRef::DescriptiveRepresentationItem(note),
+///     m::Ap242StyledItemItemRef::DescriptiveRepresentationItem(note),
 /// );
 /// # }
 /// ```
@@ -351,6 +356,75 @@ pub use refgraph::RefGraph;
 ///     styles: vec![style],
 ///     item: m::StyledItemTargetOrRepresentationItemRef::CartesianPoint(point),
 /// });
+/// # }
+/// ```
+///
+/// `ADVANCED_FACE.WR1` lets a face lie only on an elementary, B-spline or
+/// swept surface:
+///
+/// ```
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, bounds: Vec<m::FaceBoundRef>, plane: m::PlaneId) {
+/// let _ = a.add_advanced_face(
+///     "",
+///     bounds,
+///     m::Ap242AdvancedFaceFaceGeometryRef::Plane(plane),
+///     true,
+/// );
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, bounds: Vec<m::FaceBoundRef>, offset: m::OffsetSurfaceId) {
+/// let _ = a.add_advanced_face(
+///     "",
+///     bounds,
+///     m::Ap242AdvancedFaceFaceGeometryRef::OffsetSurface(offset),
+///     true,
+/// );
+/// # }
+/// ```
+///
+/// `CONSTRUCTIVE_GEOMETRY_REPRESENTATION.WR2` lets each item be exactly one
+/// of a placement, curve, edge, face, point, surface, connected face or edge
+/// set, or vertex point:
+///
+/// ```
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, point: m::CartesianPointId, ctx: m::GeometricRepresentationContextId) {
+/// let _ = a.add_constructive_geometry_representation(
+///     "",
+///     vec![m::Ap242ConstructiveGeometryRepresentationItemsRef::CartesianPoint(point)],
+///     m::GeometricRepresentationContextRef::GeometricRepresentationContext(ctx),
+/// );
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, item: m::MappedItemId, ctx: m::GeometricRepresentationContextId) {
+/// let _ = a.add_constructive_geometry_representation(
+///     "",
+///     vec![m::Ap242ConstructiveGeometryRepresentationItemsRef::MappedItem(item)],
+///     m::GeometricRepresentationContextRef::GeometricRepresentationContext(ctx),
+/// );
+/// # }
+/// ```
+///
+/// `LENGTH_MEASURE_WITH_UNIT.WR1` asks for a length unit:
+///
+/// ```
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, value: m::MeasureValue, unit: m::LengthUnitId) {
+/// let _ = a.add_length_measure_with_unit(value, m::Ap242LengthUnitRef::LengthUnit(unit));
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, value: m::MeasureValue, unit: m::MassUnitId) {
+/// let _ = a.add_length_measure_with_unit(value, m::Ap242LengthUnitRef::MassUnit(unit));
 /// # }
 /// ```
 #[cfg(doctest)]

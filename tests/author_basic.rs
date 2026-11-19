@@ -345,7 +345,7 @@ fn self_referencing_entity_round_trips_with_zero_drops() {
         .add_product_definition_shape(
             "",
             None,
-            m::CharacterizedDefinitionRef::ProductDefinition(pd),
+            m::Ap242ProductDefinitionShapeDefinitionRef::ProductDefinition(pd),
         )
         .expect("pds");
 
@@ -878,7 +878,7 @@ fn widened_attributes_are_checked_where_the_type_cannot() {
         .add_styled_item(
             "",
             vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
-            m::Ap242StyledItemTargetRef::CartesianPoint(point),
+            m::Ap242StyledItemItemRef::CartesianPoint(point),
         )
         .expect("styled item");
     let err = a
@@ -941,7 +941,7 @@ fn shape_aspect(a: &mut Ap242Author) -> m::ShapeAspectId {
         .add_product_definition_shape(
             "",
             None,
-            m::CharacterizedDefinitionRef::ProductDefinition(pd),
+            m::Ap242ProductDefinitionShapeDefinitionRef::ProductDefinition(pd),
         )
         .expect("pds");
     a.add_shape_aspect(
@@ -1035,5 +1035,193 @@ fn a_self_referencing_entity_plain_constructor_takes_the_ap242_type() {
     assert_eq!(
         model[id].items,
         vec![m::GroupableItemRef::CartesianPoint(point)]
+    );
+}
+
+/// AP242's WHERE rules that restrict which types an attribute references
+/// narrow the constructor's type, and are checked at run time where a
+/// complex value or a complex part carries them.
+#[test]
+fn where_rule_type_restrictions_are_checked() {
+    let mut a = Ap242Author::new();
+    let si = |a: &mut Ap242Author, kind, prefix, name| {
+        a.add_complex(vec![
+            kind,
+            m::PartialEntity::NamedUnit { dimensions: None },
+            m::PartialEntity::SiUnit { prefix, name },
+        ])
+        .expect("si unit complex")
+    };
+    let mm = si(
+        &mut a,
+        m::PartialEntity::LengthUnit,
+        Some(m::SiPrefix::Milli),
+        m::SiUnitName::Metre,
+    );
+    let gram = si(
+        &mut a,
+        m::PartialEntity::MassUnit,
+        None,
+        m::SiUnitName::Gram,
+    );
+    let length = a.text("LENGTH_MEASURE");
+    let value = m::MeasureValue {
+        type_name: Some(length),
+        value: m::MeasureScalar::Real(2.5),
+    };
+
+    // LENGTH_MEASURE_WITH_UNIT.WR1: the unit is a length unit.
+    a.add_length_measure_with_unit(value.clone(), m::Ap242LengthUnitRef::Complex(mm))
+        .expect("length in millimetres");
+    let err = a
+        .add_length_measure_with_unit(value.clone(), m::Ap242LengthUnitRef::Complex(gram))
+        .unwrap_err();
+    assert!(
+        matches!(
+            err,
+            AuthorError::InvalidComplex {
+                reason: "not a LENGTH_UNIT"
+            }
+        ),
+        "{err:?}"
+    );
+
+    // The same rule holds where LENGTH_MEASURE_WITH_UNIT is a complex part.
+    let name = a.text("");
+    let part = |unit| {
+        vec![
+            m::PartialEntity::LengthMeasureWithUnit,
+            m::PartialEntity::MeasureRepresentationItem,
+            m::PartialEntity::MeasureWithUnit {
+                value_component: value.clone(),
+                unit_component: m::UnitRef::Complex(unit),
+            },
+            m::PartialEntity::RepresentationItem { name },
+        ]
+    };
+    let item = a.add_complex(part(mm)).expect("length measure item");
+    let err = a.add_complex(part(gram)).unwrap_err();
+    assert!(
+        matches!(
+            err,
+            AuthorError::NarrowedReference {
+                entity: "LENGTH_MEASURE_WITH_UNIT",
+                attribute: "unit_component"
+            }
+        ),
+        "{err:?}"
+    );
+
+    // MEASURE_QUALIFICATION.WR2 excludes a representation item: a complex
+    // value with a REPRESENTATION_ITEM part breaks it, though its
+    // MEASURE_WITH_UNIT part is allowed.
+    let precision = a.add_precision_qualifier(3).expect("qualifier");
+    let err = a
+        .add_measure_qualification(
+            "q",
+            "",
+            m::Ap242MeasureQualificationQualifiedMeasureRef::Complex(item),
+            vec![m::ValueQualifierRef::PrecisionQualifier(precision)],
+        )
+        .unwrap_err();
+    assert!(
+        matches!(
+            err,
+            AuthorError::NarrowedReference {
+                entity: "MEASURE_QUALIFICATION",
+                attribute: "qualified_measure"
+            }
+        ),
+        "{err:?}"
+    );
+}
+
+#[test]
+fn exactly_one_of_several_types_counts_every_part() {
+    let mut a = Ap242Author::new();
+    let name = a.text("");
+    let ctx = a
+        .add_geometric_representation_context("", "3D", 3)
+        .expect("context");
+    let ctx = m::GeometricRepresentationContextRef::GeometricRepresentationContext(ctx);
+    let cps: Vec<m::CartesianPointRef> = [[0.0, 0.0, 0.0], [1.0, 1.0, 0.0], [2.0, 0.0, 0.0]]
+        .iter()
+        .map(|c| {
+            m::CartesianPointRef::CartesianPoint(a.add_cartesian_point("", (*c).into()).unwrap())
+        })
+        .collect();
+    let p = a
+        .add_cartesian_point("", [0.0, 0.0, 0.0].into())
+        .expect("point");
+    let origin = a
+        .add_vertex_point("", m::PointRef::CartesianPoint(p))
+        .expect("vertex");
+
+    // A rational B-spline curve is one curve, though it has seven parts.
+    let curve = a
+        .add_complex(vec![
+            m::PartialEntity::BoundedCurve,
+            m::PartialEntity::BSplineCurve {
+                degree: 2,
+                control_points_list: cps,
+                curve_form: m::BSplineCurveForm::Unspecified,
+                closed_curve: m::Logical::False,
+                self_intersect: m::Logical::False,
+            },
+            m::PartialEntity::BSplineCurveWithKnots {
+                knot_multiplicities: vec![3, 3],
+                knot_spec: m::KnotType::Unspecified,
+                knots: vec![0.0, 1.0],
+            },
+            m::PartialEntity::Curve,
+            m::PartialEntity::GeometricRepresentationItem,
+            m::PartialEntity::RationalBSplineCurve {
+                weights_data: vec![1.0, 2.0, 1.0],
+            },
+            m::PartialEntity::RepresentationItem { name },
+        ])
+        .expect("rational b-spline curve complex");
+    a.add_constructive_geometry_representation(
+        "",
+        vec![m::Ap242ConstructiveGeometryRepresentationItemsRef::Complex(
+            curve,
+        )],
+        ctx.clone(),
+    )
+    .expect("one curve");
+
+    // CONSTRUCTIVE_GEOMETRY_REPRESENTATION.WR2: each item is exactly one of a
+    // placement, curve, edge, face, point, ...; a value that is both a point
+    // and an edge breaks it, though each part alone is allowed.
+    let point_edge = a
+        .add_complex(vec![
+            m::PartialEntity::Edge {
+                edge_start: Some(m::VertexRef::VertexPoint(origin)),
+                edge_end: Some(m::VertexRef::VertexPoint(origin)),
+            },
+            m::PartialEntity::GeometricRepresentationItem,
+            m::PartialEntity::Point,
+            m::PartialEntity::RepresentationItem { name },
+            m::PartialEntity::TopologicalRepresentationItem,
+        ])
+        .expect("point and edge complex");
+    let err = a
+        .add_constructive_geometry_representation(
+            "",
+            vec![m::Ap242ConstructiveGeometryRepresentationItemsRef::Complex(
+                point_edge,
+            )],
+            ctx,
+        )
+        .unwrap_err();
+    assert!(
+        matches!(
+            err,
+            AuthorError::NarrowedReference {
+                entity: "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                attribute: "items"
+            }
+        ),
+        "{err:?}"
     );
 }
