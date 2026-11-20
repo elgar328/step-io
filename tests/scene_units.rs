@@ -50,3 +50,18 @@ fn reads_length_angle_units_and_precision() {
     let precision = units.precision.expect("a precision");
     assert!((precision - 0.01).abs() < 1e-12, "precision = {precision}");
 }
+
+/// The uncertainty written as a complex instance with its length measure.
+#[test]
+fn reads_a_complex_uncertainty_as_the_precision() {
+    let units = UNITS.replace(
+        "#12=UNCERTAINTY_MEASURE_WITH_UNIT(LENGTH_MEASURE(0.01),#10,'closure','');",
+        "#12=(LENGTH_MEASURE_WITH_UNIT()MEASURE_WITH_UNIT(LENGTH_MEASURE(0.01),#10)\
+         UNCERTAINTY_MEASURE_WITH_UNIT('closure',''));",
+    );
+    let src = format!("{HEADER}{units}{FOOTER}");
+    let (model, report) = read(src.as_bytes()).expect("read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    let precision = model.scene().units().precision.expect("a precision");
+    assert!((precision - 0.01).abs() < 1e-12, "precision = {precision}");
+}

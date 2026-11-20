@@ -90,16 +90,27 @@ pub(crate) fn units_of(model: &StepModel) -> Units {
             })
         })
         .and_then(|u| u.first())
-        .map(
-            |m::UncertaintyMeasureWithUnitRef::UncertaintyMeasureWithUnit(id)| {
+        .and_then(|u| match u {
+            m::UncertaintyMeasureWithUnitRef::UncertaintyMeasureWithUnit(id) => Some(
                 model
                     .uncertainty_measure_with_unit_arena
                     .get(id.0)
                     .value_component
                     .value
-                    .as_f64()
-            },
-        );
+                    .as_f64(),
+            ),
+            m::UncertaintyMeasureWithUnitRef::Complex(cuid) => model
+                .complex_entity_arena
+                .get(cuid.0)
+                .parts
+                .iter()
+                .find_map(|p| match p {
+                    m::PartialEntity::MeasureWithUnit {
+                        value_component, ..
+                    } => Some(value_component.value.as_f64()),
+                    _ => None,
+                }),
+        });
     out
 }
 

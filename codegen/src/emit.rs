@@ -804,7 +804,7 @@ fn emit_ref_enum(s: &mut String, re: &RefEnum) {
     writeln!(s, "    }} }}\n}}\n").unwrap();
 }
 
-/// The reference enums `Ap242Author` takes where AP242 edition 2 is narrower
+/// The reference enums `Ap242Author` takes where AP242 edition 4 is narrower
 /// than the model, and the conversions into the model's enums.
 fn emit_author_ref_enums(
     s: &mut String,
@@ -814,7 +814,7 @@ fn emit_author_ref_enums(
     for (rust, (what, re)) in &narrowing.new_enums {
         writeln!(
             s,
-            "/// A reference to what AP242 edition 2 allows {what}, where the\n/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)\n/// takes it and stores it as the model's wider reference.\n#[derive(Debug, Clone, PartialEq)]\npub enum {rust} {{"
+            "/// A reference to what AP242 edition 4 allows {what}, where the\n/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)\n/// takes it and stores it as the model's wider reference.\n#[derive(Debug, Clone, PartialEq)]\npub enum {rust} {{"
         )
         .unwrap();
         for (variant, target) in &re.simple_arms {
@@ -3108,11 +3108,11 @@ impl Ap242Author {
     }
 
     /// The authored model, its header's `FILE_SCHEMA` stamped AP242 (edition
-    /// 2 IS) — the authoring layer's schema. Write it out with
+    /// 4 IS) — the authoring layer's schema. Write it out with
     /// [`write`](crate::write).
     #[must_use]
     pub fn finish(mut self) -> StepModel {
-        self.model.header.schema = super::schema::ap242e2_schema_id();
+        self.model.header.schema = super::schema::ap242e4_schema_id();
         self.model
     }
 
@@ -3159,7 +3159,8 @@ impl Ap242Author {
             if f.derived {
                 continue;
             }
-            let f = &with_e2_bounds(f, narrowing.bounds.get(&(se.rust.clone(), f.name.clone())));
+            let f =
+                &with_target_bounds(f, narrowing.bounds.get(&(se.rust.clone(), f.name.clone())));
             s.push_str(&author_card_check(&se.name, &f.name, ident, f, false));
             s.push_str(&author_finite_check(
                 &se.name,
@@ -3233,7 +3234,7 @@ impl Ap242Author {
     }
 
     // Self-referencing (cyclic) variants: for entities whose constructor
-    // types (AP242 edition 2's, where narrower) can target their own type,
+    // types (AP242 edition 4's, where narrower) can target their own type,
     // a closure-based constructor hands out the id the
     // entity will get before it exists, then validates after the push and
     // rolls back on error. The case seen in real files is
@@ -3276,7 +3277,8 @@ impl Ap242Author {
                 continue;
             }
             let expr = format!("model.{}.items[id as usize].{ident}", arena_field(&se.rust));
-            let f = &with_e2_bounds(f, narrowing.bounds.get(&(se.rust.clone(), f.name.clone())));
+            let f =
+                &with_target_bounds(f, narrowing.bounds.get(&(se.rust.clone(), f.name.clone())));
             if let Some(n) = narrowing.cyclic.get(&(se.rust.clone(), f.name.clone())) {
                 cyclic_checks.push_str(&narrowed_check(ir, n, f, &expr, false, &se.name));
             }
@@ -3613,8 +3615,8 @@ fn replace_type_name(ty: &str, from: &str, to: &str) -> String {
         .collect()
 }
 
-/// `f` with AP242 edition 2's outer aggregate bounds, where they differ.
-fn with_e2_bounds(f: &Field, bounds: Option<&(u32, Option<u32>)>) -> Field {
+/// `f` with AP242 edition 4's outer aggregate bounds, where they differ.
+fn with_target_bounds(f: &Field, bounds: Option<&(u32, Option<u32>)>) -> Field {
     let mut f = f.clone();
     if let Some(&(min, max)) = bounds {
         f.min = min;
@@ -3786,7 +3788,7 @@ fn part_rule_check(
     }
 }
 
-/// `check_complex_narrowings`: for each AP242 edition 2 narrowing of a
+/// `check_complex_narrowings`: for each AP242 edition 4 narrowing of a
 /// complex part's field that holds when the instance has part `by`.
 fn emit_complex_narrowings(
     ir: &ModelIr,

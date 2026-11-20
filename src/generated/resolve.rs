@@ -72,6 +72,34 @@ impl ActionResourceRef {
 }
 
 #[derive(Clone, Copy, Debug)]
+pub enum ActionResourceRequirementRefView<'m> {
+    ActionResourceRequirement(&'m ActionResourceRequirement),
+    Complex(&'m ComplexEntity),
+}
+impl ActionResourceRequirementRef {
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> ActionResourceRequirementRefView<'m> {
+        match self {
+            ActionResourceRequirementRef::ActionResourceRequirement(i) => {
+                ActionResourceRequirementRefView::ActionResourceRequirement(
+                    model.action_resource_requirement_arena.get(i.0),
+                )
+            }
+            ActionResourceRequirementRef::Complex(i) => {
+                ActionResourceRequirementRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            ActionResourceRequirementRef::ActionResourceRequirement(i) => {
+                EntityKey::ActionResourceRequirement(*i)
+            }
+            ActionResourceRequirementRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
 pub enum ActionResourceTypeRefView<'m> {
     ActionResourceType(&'m ActionResourceType),
 }
@@ -137,6 +165,7 @@ pub enum AnnotationOccurrenceRefView<'m> {
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     AnnotationTextOccurrence(&'m AnnotationTextOccurrence),
     DraughtingAnnotationOccurrence(&'m DraughtingAnnotationOccurrence),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     LeaderCurve(&'m LeaderCurve),
     LeaderTerminator(&'m LeaderTerminator),
     TerminatorSymbol(&'m TerminatorSymbol),
@@ -186,6 +215,11 @@ impl AnnotationOccurrenceRef {
                     model.draughting_annotation_occurrence_arena.get(i.0),
                 )
             }
+            AnnotationOccurrenceRef::ExternalImagePlacementInCallout(i) => {
+                AnnotationOccurrenceRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
+            }
             AnnotationOccurrenceRef::LeaderCurve(i) => {
                 AnnotationOccurrenceRefView::LeaderCurve(model.leader_curve_arena.get(i.0))
             }
@@ -231,6 +265,9 @@ impl AnnotationOccurrenceRef {
             AnnotationOccurrenceRef::DraughtingAnnotationOccurrence(i) => {
                 EntityKey::DraughtingAnnotationOccurrence(*i)
             }
+            AnnotationOccurrenceRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             AnnotationOccurrenceRef::LeaderCurve(i) => EntityKey::LeaderCurve(*i),
             AnnotationOccurrenceRef::LeaderTerminator(i) => EntityKey::LeaderTerminator(*i),
             AnnotationOccurrenceRef::TerminatorSymbol(i) => EntityKey::TerminatorSymbol(*i),
@@ -248,6 +285,7 @@ pub enum AnnotationPlaceholderLeaderLineRefView<'m> {
     AnnotationToAnnotationLeaderLine(&'m AnnotationToAnnotationLeaderLine),
     AnnotationToModelLeaderLine(&'m AnnotationToModelLeaderLine),
     AuxiliaryLeaderLine(&'m AuxiliaryLeaderLine),
+    Complex(&'m ComplexEntity),
 }
 impl AnnotationPlaceholderLeaderLineRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationPlaceholderLeaderLineRefView<'m> {
@@ -272,6 +310,9 @@ impl AnnotationPlaceholderLeaderLineRef {
                     model.auxiliary_leader_line_arena.get(i.0),
                 )
             }
+            AnnotationPlaceholderLeaderLineRef::Complex(i) => {
+                AnnotationPlaceholderLeaderLineRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -288,6 +329,7 @@ impl AnnotationPlaceholderLeaderLineRef {
             AnnotationPlaceholderLeaderLineRef::AuxiliaryLeaderLine(i) => {
                 EntityKey::AuxiliaryLeaderLine(*i)
             }
+            AnnotationPlaceholderLeaderLineRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -335,6 +377,7 @@ pub enum AnnotationPlaneElementRefView<'m> {
     ContextDependentOverRidingStyledItem(&'m ContextDependentOverRidingStyledItem),
     DraughtingAnnotationOccurrence(&'m DraughtingAnnotationOccurrence),
     DraughtingCallout(&'m DraughtingCallout),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     LeaderCurve(&'m LeaderCurve),
     LeaderDirectedCallout(&'m LeaderDirectedCallout),
     LeaderTerminator(&'m LeaderTerminator),
@@ -401,6 +444,11 @@ impl AnnotationPlaneElementRef {
                     model.draughting_callout_arena.get(i.0),
                 )
             }
+            AnnotationPlaneElementRef::ExternalImagePlacementInCallout(i) => {
+                AnnotationPlaneElementRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
+            }
             AnnotationPlaneElementRef::LeaderCurve(i) => {
                 AnnotationPlaneElementRefView::LeaderCurve(model.leader_curve_arena.get(i.0))
             }
@@ -465,6 +513,9 @@ impl AnnotationPlaneElementRef {
                 EntityKey::DraughtingAnnotationOccurrence(*i)
             }
             AnnotationPlaneElementRef::DraughtingCallout(i) => EntityKey::DraughtingCallout(*i),
+            AnnotationPlaneElementRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             AnnotationPlaneElementRef::LeaderCurve(i) => EntityKey::LeaderCurve(*i),
             AnnotationPlaneElementRef::LeaderDirectedCallout(i) => {
                 EntityKey::LeaderDirectedCallout(*i)
@@ -581,6 +632,7 @@ impl AnnotationSymbolOccurrenceRef {
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationSymbolOccurrenceItemRefView<'m> {
     DefinedSymbol(&'m DefinedSymbol),
+    Complex(&'m ComplexEntity),
 }
 impl AnnotationSymbolOccurrenceItemRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationSymbolOccurrenceItemRefView<'m> {
@@ -590,11 +642,15 @@ impl AnnotationSymbolOccurrenceItemRef {
                     model.defined_symbol_arena.get(i.0),
                 )
             }
+            AnnotationSymbolOccurrenceItemRef::Complex(i) => {
+                AnnotationSymbolOccurrenceItemRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationSymbolOccurrenceItemRef::DefinedSymbol(i) => EntityKey::DefinedSymbol(*i),
+            AnnotationSymbolOccurrenceItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -658,6 +714,7 @@ impl AnnotationTextOccurrenceItemRef {
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationToModelLeaderLineRefView<'m> {
     AnnotationToModelLeaderLine(&'m AnnotationToModelLeaderLine),
+    Complex(&'m ComplexEntity),
 }
 impl AnnotationToModelLeaderLineRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationToModelLeaderLineRefView<'m> {
@@ -667,6 +724,9 @@ impl AnnotationToModelLeaderLineRef {
                     model.annotation_to_model_leader_line_arena.get(i.0),
                 )
             }
+            AnnotationToModelLeaderLineRef::Complex(i) => {
+                AnnotationToModelLeaderLineRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -674,6 +734,7 @@ impl AnnotationToModelLeaderLineRef {
             AnnotationToModelLeaderLineRef::AnnotationToModelLeaderLine(i) => {
                 EntityKey::AnnotationToModelLeaderLine(*i)
             }
+            AnnotationToModelLeaderLineRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -824,6 +885,7 @@ pub enum ApprovalItemRefView<'m> {
     Effectivity(&'m Effectivity),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
     ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
     Face(&'m Face),
@@ -1363,6 +1425,11 @@ impl ApprovalItemRef {
             }
             ApprovalItemRef::Ellipse(i) => {
                 ApprovalItemRefView::Ellipse(model.ellipse_arena.get(i.0))
+            }
+            ApprovalItemRef::ExternalImagePlacementInCallout(i) => {
+                ApprovalItemRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
             }
             ApprovalItemRef::ExternallyDefinedHatchStyle(i) => {
                 ApprovalItemRefView::ExternallyDefinedHatchStyle(
@@ -2062,6 +2129,9 @@ impl ApprovalItemRef {
             ApprovalItemRef::Effectivity(i) => EntityKey::Effectivity(*i),
             ApprovalItemRef::ElementarySurface(i) => EntityKey::ElementarySurface(*i),
             ApprovalItemRef::Ellipse(i) => EntityKey::Ellipse(*i),
+            ApprovalItemRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             ApprovalItemRef::ExternallyDefinedHatchStyle(i) => {
                 EntityKey::ExternallyDefinedHatchStyle(*i)
             }
@@ -2453,6 +2523,7 @@ impl AscribableStateRef {
 #[derive(Clone, Copy, Debug)]
 pub enum Axis1PlacementRefView<'m> {
     Axis1Placement(&'m Axis1Placement),
+    Complex(&'m ComplexEntity),
 }
 impl Axis1PlacementRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> Axis1PlacementRefView<'m> {
@@ -2460,11 +2531,15 @@ impl Axis1PlacementRef {
             Axis1PlacementRef::Axis1Placement(i) => {
                 Axis1PlacementRefView::Axis1Placement(model.axis1_placement_arena.get(i.0))
             }
+            Axis1PlacementRef::Complex(i) => {
+                Axis1PlacementRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             Axis1PlacementRef::Axis1Placement(i) => EntityKey::Axis1Placement(*i),
+            Axis1PlacementRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -2473,6 +2548,7 @@ impl Axis1PlacementRef {
 pub enum Axis2PlacementRefView<'m> {
     Axis2Placement2d(&'m Axis2Placement2d),
     Axis2Placement3d(&'m Axis2Placement3d),
+    Complex(&'m ComplexEntity),
 }
 impl Axis2PlacementRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> Axis2PlacementRefView<'m> {
@@ -2483,12 +2559,16 @@ impl Axis2PlacementRef {
             Axis2PlacementRef::Axis2Placement3d(i) => {
                 Axis2PlacementRefView::Axis2Placement3d(model.axis2_placement3d_arena.get(i.0))
             }
+            Axis2PlacementRef::Complex(i) => {
+                Axis2PlacementRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             Axis2PlacementRef::Axis2Placement2d(i) => EntityKey::Axis2Placement2d(*i),
             Axis2PlacementRef::Axis2Placement3d(i) => EntityKey::Axis2Placement3d(*i),
+            Axis2PlacementRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -2496,6 +2576,7 @@ impl Axis2PlacementRef {
 #[derive(Clone, Copy, Debug)]
 pub enum Axis2Placement3dRefView<'m> {
     Axis2Placement3d(&'m Axis2Placement3d),
+    Complex(&'m ComplexEntity),
 }
 impl Axis2Placement3dRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> Axis2Placement3dRefView<'m> {
@@ -2503,11 +2584,66 @@ impl Axis2Placement3dRef {
             Axis2Placement3dRef::Axis2Placement3d(i) => {
                 Axis2Placement3dRefView::Axis2Placement3d(model.axis2_placement3d_arena.get(i.0))
             }
+            Axis2Placement3dRef::Complex(i) => {
+                Axis2Placement3dRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             Axis2Placement3dRef::Axis2Placement3d(i) => EntityKey::Axis2Placement3d(*i),
+            Axis2Placement3dRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum BottomConditionTargetRefView<'m> {
+    BasicRoundHole(&'m BasicRoundHole),
+    CounterboreHoleDefinition(&'m CounterboreHoleDefinition),
+    CounterdrillHoleDefinition(&'m CounterdrillHoleDefinition),
+    CountersinkHoleDefinition(&'m CountersinkHoleDefinition),
+    Complex(&'m ComplexEntity),
+}
+impl BottomConditionTargetRef {
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> BottomConditionTargetRefView<'m> {
+        match self {
+            BottomConditionTargetRef::BasicRoundHole(i) => {
+                BottomConditionTargetRefView::BasicRoundHole(model.basic_round_hole_arena.get(i.0))
+            }
+            BottomConditionTargetRef::CounterboreHoleDefinition(i) => {
+                BottomConditionTargetRefView::CounterboreHoleDefinition(
+                    model.counterbore_hole_definition_arena.get(i.0),
+                )
+            }
+            BottomConditionTargetRef::CounterdrillHoleDefinition(i) => {
+                BottomConditionTargetRefView::CounterdrillHoleDefinition(
+                    model.counterdrill_hole_definition_arena.get(i.0),
+                )
+            }
+            BottomConditionTargetRef::CountersinkHoleDefinition(i) => {
+                BottomConditionTargetRefView::CountersinkHoleDefinition(
+                    model.countersink_hole_definition_arena.get(i.0),
+                )
+            }
+            BottomConditionTargetRef::Complex(i) => {
+                BottomConditionTargetRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            BottomConditionTargetRef::BasicRoundHole(i) => EntityKey::BasicRoundHole(*i),
+            BottomConditionTargetRef::CounterboreHoleDefinition(i) => {
+                EntityKey::CounterboreHoleDefinition(*i)
+            }
+            BottomConditionTargetRef::CounterdrillHoleDefinition(i) => {
+                EntityKey::CounterdrillHoleDefinition(*i)
+            }
+            BottomConditionTargetRef::CountersinkHoleDefinition(i) => {
+                EntityKey::CountersinkHoleDefinition(*i)
+            }
+            BottomConditionTargetRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -2600,6 +2736,7 @@ impl CameraModelD3Ref {
 #[derive(Clone, Copy, Debug)]
 pub enum CameraModelD3MultiClippingIntersectionSelectRefView<'m> {
     Plane(&'m Plane),
+    Complex(&'m ComplexEntity),
 }
 impl CameraModelD3MultiClippingIntersectionSelectRef {
     pub fn resolve<'m>(
@@ -2612,11 +2749,19 @@ impl CameraModelD3MultiClippingIntersectionSelectRef {
                     model.plane_arena.get(i.0),
                 )
             }
+            CameraModelD3MultiClippingIntersectionSelectRef::Complex(i) => {
+                CameraModelD3MultiClippingIntersectionSelectRefView::Complex(
+                    model.complex_entity_arena.get(i.0),
+                )
+            }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CameraModelD3MultiClippingIntersectionSelectRef::Plane(i) => EntityKey::Plane(*i),
+            CameraModelD3MultiClippingIntersectionSelectRef::Complex(i) => {
+                EntityKey::ComplexEntity(*i)
+            }
         }
     }
 }
@@ -2650,6 +2795,7 @@ pub enum CartesianPointRefView<'m> {
     ApllPoint(&'m ApllPoint),
     ApllPointWithSurface(&'m ApllPointWithSurface),
     CartesianPoint(&'m CartesianPoint),
+    Complex(&'m ComplexEntity),
 }
 impl CartesianPointRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CartesianPointRefView<'m> {
@@ -2665,6 +2811,9 @@ impl CartesianPointRef {
             CartesianPointRef::CartesianPoint(i) => {
                 CartesianPointRefView::CartesianPoint(model.cartesian_point_arena.get(i.0))
             }
+            CartesianPointRef::Complex(i) => {
+                CartesianPointRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -2672,6 +2821,7 @@ impl CartesianPointRef {
             CartesianPointRef::ApllPoint(i) => EntityKey::ApllPoint(*i),
             CartesianPointRef::ApllPointWithSurface(i) => EntityKey::ApllPointWithSurface(*i),
             CartesianPointRef::CartesianPoint(i) => EntityKey::CartesianPoint(*i),
+            CartesianPointRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -3000,6 +3150,7 @@ pub enum CharacterizedDefinitionRefView<'m> {
     AngularSize(&'m AngularSize),
     AngularityTolerance(&'m AngularityTolerance),
     AssemblyComponentUsage(&'m AssemblyComponentUsage),
+    BasicRoundHole(&'m BasicRoundHole),
     CentreOfSymmetry(&'m CentreOfSymmetry),
     CharacterizedItemWithinRepresentation(&'m CharacterizedItemWithinRepresentation),
     CharacterizedObject(&'m CharacterizedObject),
@@ -3008,9 +3159,14 @@ pub enum CharacterizedDefinitionRefView<'m> {
     CoaxialityTolerance(&'m CoaxialityTolerance),
     CommonDatum(&'m CommonDatum),
     CompositeGroupShapeAspect(&'m CompositeGroupShapeAspect),
+    CompositeHole(&'m CompositeHole),
     CompositeShapeAspect(&'m CompositeShapeAspect),
+    CompoundFeature(&'m CompoundFeature),
     ConcentricityTolerance(&'m ConcentricityTolerance),
     ContinuousShapeAspect(&'m ContinuousShapeAspect),
+    CounterboreHoleDefinition(&'m CounterboreHoleDefinition),
+    CounterdrillHoleDefinition(&'m CounterdrillHoleDefinition),
+    CountersinkHoleDefinition(&'m CountersinkHoleDefinition),
     CylindricityTolerance(&'m CylindricityTolerance),
     Datum(&'m Datum),
     DatumFeature(&'m DatumFeature),
@@ -3031,6 +3187,9 @@ pub enum CharacterizedDefinitionRefView<'m> {
     DraughtingModelItemAssociationWithPlaceholder(
         &'m DraughtingModelItemAssociationWithPlaceholder,
     ),
+    ExplicitCompositeHole(&'m ExplicitCompositeHole),
+    ExplicitRoundHole(&'m ExplicitRoundHole),
+    FeatureDefinition(&'m FeatureDefinition),
     FeatureForDatumTargetRelationship(&'m FeatureForDatumTargetRelationship),
     FlatnessTolerance(&'m FlatnessTolerance),
     GeneralDatumReference(&'m GeneralDatumReference),
@@ -3058,6 +3217,7 @@ pub enum CharacterizedDefinitionRefView<'m> {
     ProductDefinitionShape(&'m ProductDefinitionShape),
     ProductDefinitionUsage(&'m ProductDefinitionUsage),
     ProductDefinitionWithAssociatedDocuments(&'m ProductDefinitionWithAssociatedDocuments),
+    RoundHole(&'m RoundHole),
     RoundnessTolerance(&'m RoundnessTolerance),
     ShapeAspect(&'m ShapeAspect),
     ShapeAspectAssociativity(&'m ShapeAspectAssociativity),
@@ -3096,6 +3256,11 @@ impl CharacterizedDefinitionRef {
             CharacterizedDefinitionRef::AssemblyComponentUsage(i) => {
                 CharacterizedDefinitionRefView::AssemblyComponentUsage(
                     model.assembly_component_usage_arena.get(i.0),
+                )
+            }
+            CharacterizedDefinitionRef::BasicRoundHole(i) => {
+                CharacterizedDefinitionRefView::BasicRoundHole(
+                    model.basic_round_hole_arena.get(i.0),
                 )
             }
             CharacterizedDefinitionRef::CentreOfSymmetry(i) => {
@@ -3138,9 +3303,17 @@ impl CharacterizedDefinitionRef {
                     model.composite_group_shape_aspect_arena.get(i.0),
                 )
             }
+            CharacterizedDefinitionRef::CompositeHole(i) => {
+                CharacterizedDefinitionRefView::CompositeHole(model.composite_hole_arena.get(i.0))
+            }
             CharacterizedDefinitionRef::CompositeShapeAspect(i) => {
                 CharacterizedDefinitionRefView::CompositeShapeAspect(
                     model.composite_shape_aspect_arena.get(i.0),
+                )
+            }
+            CharacterizedDefinitionRef::CompoundFeature(i) => {
+                CharacterizedDefinitionRefView::CompoundFeature(
+                    model.compound_feature_arena.get(i.0),
                 )
             }
             CharacterizedDefinitionRef::ConcentricityTolerance(i) => {
@@ -3151,6 +3324,21 @@ impl CharacterizedDefinitionRef {
             CharacterizedDefinitionRef::ContinuousShapeAspect(i) => {
                 CharacterizedDefinitionRefView::ContinuousShapeAspect(
                     model.continuous_shape_aspect_arena.get(i.0),
+                )
+            }
+            CharacterizedDefinitionRef::CounterboreHoleDefinition(i) => {
+                CharacterizedDefinitionRefView::CounterboreHoleDefinition(
+                    model.counterbore_hole_definition_arena.get(i.0),
+                )
+            }
+            CharacterizedDefinitionRef::CounterdrillHoleDefinition(i) => {
+                CharacterizedDefinitionRefView::CounterdrillHoleDefinition(
+                    model.counterdrill_hole_definition_arena.get(i.0),
+                )
+            }
+            CharacterizedDefinitionRef::CountersinkHoleDefinition(i) => {
+                CharacterizedDefinitionRefView::CountersinkHoleDefinition(
+                    model.countersink_hole_definition_arena.get(i.0),
                 )
             }
             CharacterizedDefinitionRef::CylindricityTolerance(i) => {
@@ -3233,6 +3421,21 @@ impl CharacterizedDefinitionRef {
                     model
                         .draughting_model_item_association_with_placeholder_arena
                         .get(i.0),
+                )
+            }
+            CharacterizedDefinitionRef::ExplicitCompositeHole(i) => {
+                CharacterizedDefinitionRefView::ExplicitCompositeHole(
+                    model.explicit_composite_hole_arena.get(i.0),
+                )
+            }
+            CharacterizedDefinitionRef::ExplicitRoundHole(i) => {
+                CharacterizedDefinitionRefView::ExplicitRoundHole(
+                    model.explicit_round_hole_arena.get(i.0),
+                )
+            }
+            CharacterizedDefinitionRef::FeatureDefinition(i) => {
+                CharacterizedDefinitionRefView::FeatureDefinition(
+                    model.feature_definition_arena.get(i.0),
                 )
             }
             CharacterizedDefinitionRef::FeatureForDatumTargetRelationship(i) => {
@@ -3380,6 +3583,9 @@ impl CharacterizedDefinitionRef {
                         .get(i.0),
                 )
             }
+            CharacterizedDefinitionRef::RoundHole(i) => {
+                CharacterizedDefinitionRefView::RoundHole(model.round_hole_arena.get(i.0))
+            }
             CharacterizedDefinitionRef::RoundnessTolerance(i) => {
                 CharacterizedDefinitionRefView::RoundnessTolerance(
                     model.roundness_tolerance_arena.get(i.0),
@@ -3454,6 +3660,7 @@ impl CharacterizedDefinitionRef {
             CharacterizedDefinitionRef::AssemblyComponentUsage(i) => {
                 EntityKey::AssemblyComponentUsage(*i)
             }
+            CharacterizedDefinitionRef::BasicRoundHole(i) => EntityKey::BasicRoundHole(*i),
             CharacterizedDefinitionRef::CentreOfSymmetry(i) => EntityKey::CentreOfSymmetry(*i),
             CharacterizedDefinitionRef::CharacterizedItemWithinRepresentation(i) => {
                 EntityKey::CharacterizedItemWithinRepresentation(*i)
@@ -3474,14 +3681,25 @@ impl CharacterizedDefinitionRef {
             CharacterizedDefinitionRef::CompositeGroupShapeAspect(i) => {
                 EntityKey::CompositeGroupShapeAspect(*i)
             }
+            CharacterizedDefinitionRef::CompositeHole(i) => EntityKey::CompositeHole(*i),
             CharacterizedDefinitionRef::CompositeShapeAspect(i) => {
                 EntityKey::CompositeShapeAspect(*i)
             }
+            CharacterizedDefinitionRef::CompoundFeature(i) => EntityKey::CompoundFeature(*i),
             CharacterizedDefinitionRef::ConcentricityTolerance(i) => {
                 EntityKey::ConcentricityTolerance(*i)
             }
             CharacterizedDefinitionRef::ContinuousShapeAspect(i) => {
                 EntityKey::ContinuousShapeAspect(*i)
+            }
+            CharacterizedDefinitionRef::CounterboreHoleDefinition(i) => {
+                EntityKey::CounterboreHoleDefinition(*i)
+            }
+            CharacterizedDefinitionRef::CounterdrillHoleDefinition(i) => {
+                EntityKey::CounterdrillHoleDefinition(*i)
+            }
+            CharacterizedDefinitionRef::CountersinkHoleDefinition(i) => {
+                EntityKey::CountersinkHoleDefinition(*i)
             }
             CharacterizedDefinitionRef::CylindricityTolerance(i) => {
                 EntityKey::CylindricityTolerance(*i)
@@ -3523,6 +3741,11 @@ impl CharacterizedDefinitionRef {
             CharacterizedDefinitionRef::DraughtingModelItemAssociationWithPlaceholder(i) => {
                 EntityKey::DraughtingModelItemAssociationWithPlaceholder(*i)
             }
+            CharacterizedDefinitionRef::ExplicitCompositeHole(i) => {
+                EntityKey::ExplicitCompositeHole(*i)
+            }
+            CharacterizedDefinitionRef::ExplicitRoundHole(i) => EntityKey::ExplicitRoundHole(*i),
+            CharacterizedDefinitionRef::FeatureDefinition(i) => EntityKey::FeatureDefinition(*i),
             CharacterizedDefinitionRef::FeatureForDatumTargetRelationship(i) => {
                 EntityKey::FeatureForDatumTargetRelationship(*i)
             }
@@ -3594,6 +3817,7 @@ impl CharacterizedDefinitionRef {
             CharacterizedDefinitionRef::ProductDefinitionWithAssociatedDocuments(i) => {
                 EntityKey::ProductDefinitionWithAssociatedDocuments(*i)
             }
+            CharacterizedDefinitionRef::RoundHole(i) => EntityKey::RoundHole(*i),
             CharacterizedDefinitionRef::RoundnessTolerance(i) => EntityKey::RoundnessTolerance(*i),
             CharacterizedDefinitionRef::ShapeAspect(i) => EntityKey::ShapeAspect(*i),
             CharacterizedDefinitionRef::ShapeAspectAssociativity(i) => {
@@ -3632,6 +3856,7 @@ pub enum CharacterizedResourceDefinitionRefView<'m> {
     ActionResource(&'m ActionResource),
     ActionResourceRelationship(&'m ActionResourceRelationship),
     ActionResourceRequirement(&'m ActionResourceRequirement),
+    ActionResourceRequirementRelationship(&'m ActionResourceRequirementRelationship),
     Complex(&'m ComplexEntity),
 }
 impl CharacterizedResourceDefinitionRef {
@@ -3652,6 +3877,13 @@ impl CharacterizedResourceDefinitionRef {
                     model.action_resource_requirement_arena.get(i.0),
                 )
             }
+            CharacterizedResourceDefinitionRef::ActionResourceRequirementRelationship(i) => {
+                CharacterizedResourceDefinitionRefView::ActionResourceRequirementRelationship(
+                    model
+                        .action_resource_requirement_relationship_arena
+                        .get(i.0),
+                )
+            }
             CharacterizedResourceDefinitionRef::Complex(i) => {
                 CharacterizedResourceDefinitionRefView::Complex(model.complex_entity_arena.get(i.0))
             }
@@ -3665,6 +3897,9 @@ impl CharacterizedResourceDefinitionRef {
             }
             CharacterizedResourceDefinitionRef::ActionResourceRequirement(i) => {
                 EntityKey::ActionResourceRequirement(*i)
+            }
+            CharacterizedResourceDefinitionRef::ActionResourceRequirementRelationship(i) => {
+                EntityKey::ActionResourceRequirementRelationship(*i)
             }
             CharacterizedResourceDefinitionRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
@@ -3833,6 +4068,7 @@ pub enum CompoundItemDefinitionRefView<'m> {
     EdgeLoop(&'m EdgeLoop),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
     ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
     Face(&'m Face),
@@ -4184,6 +4420,11 @@ impl CompoundItemDefinitionRef {
             }
             CompoundItemDefinitionRef::Ellipse(i) => {
                 CompoundItemDefinitionRefView::Ellipse(model.ellipse_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ExternalImagePlacementInCallout(i) => {
+                CompoundItemDefinitionRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
             }
             CompoundItemDefinitionRef::ExternallyDefinedHatchStyle(i) => {
                 CompoundItemDefinitionRefView::ExternallyDefinedHatchStyle(
@@ -4693,57 +4934,6 @@ impl ConnectedFaceSetRef {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub enum ConstructiveGeometryRepresentationOrShapeRepresentationRefView<'m> {
-    AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
-    ConstructiveGeometryRepresentation(&'m ConstructiveGeometryRepresentation),
-    GeometricallyBoundedSurfaceShapeRepresentation(
-        &'m GeometricallyBoundedSurfaceShapeRepresentation,
-    ),
-    GeometricallyBoundedWireframeShapeRepresentation(
-        &'m GeometricallyBoundedWireframeShapeRepresentation,
-    ),
-    ManifoldSurfaceShapeRepresentation(&'m ManifoldSurfaceShapeRepresentation),
-    ShapeDimensionRepresentation(&'m ShapeDimensionRepresentation),
-    ShapeRepresentation(&'m ShapeRepresentation),
-    ShapeRepresentationWithParameters(&'m ShapeRepresentationWithParameters),
-    TessellatedShapeRepresentation(&'m TessellatedShapeRepresentation),
-    Complex(&'m ComplexEntity),
-}
-impl ConstructiveGeometryRepresentationOrShapeRepresentationRef {
-    pub fn resolve<'m>(
-        &self,
-        model: &'m StepModel,
-    ) -> ConstructiveGeometryRepresentationOrShapeRepresentationRefView<'m> {
-        match self {
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::AdvancedBrepShapeRepresentation(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::AdvancedBrepShapeRepresentation(model.advanced_brep_shape_representation_arena.get(i.0)),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ConstructiveGeometryRepresentation(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::ConstructiveGeometryRepresentation(model.constructive_geometry_representation_arena.get(i.0)),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::GeometricallyBoundedSurfaceShapeRepresentation(model.geometrically_bounded_surface_shape_representation_arena.get(i.0)),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::GeometricallyBoundedWireframeShapeRepresentation(model.geometrically_bounded_wireframe_shape_representation_arena.get(i.0)),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ManifoldSurfaceShapeRepresentation(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::ManifoldSurfaceShapeRepresentation(model.manifold_surface_shape_representation_arena.get(i.0)),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeDimensionRepresentation(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::ShapeDimensionRepresentation(model.shape_dimension_representation_arena.get(i.0)),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentation(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::ShapeRepresentation(model.shape_representation_arena.get(i.0)),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentationWithParameters(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::ShapeRepresentationWithParameters(model.shape_representation_with_parameters_arena.get(i.0)),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::TessellatedShapeRepresentation(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::TessellatedShapeRepresentation(model.tessellated_shape_representation_arena.get(i.0)),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::Complex(i) => ConstructiveGeometryRepresentationOrShapeRepresentationRefView::Complex(model.complex_entity_arena.get(i.0)),
-        }
-    }
-    pub fn entity_key(&self) -> EntityKey {
-        match self {
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::AdvancedBrepShapeRepresentation(i) => EntityKey::AdvancedBrepShapeRepresentation(*i),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ConstructiveGeometryRepresentation(i) => EntityKey::ConstructiveGeometryRepresentation(*i),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(*i),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => EntityKey::GeometricallyBoundedWireframeShapeRepresentation(*i),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ManifoldSurfaceShapeRepresentation(i) => EntityKey::ManifoldSurfaceShapeRepresentation(*i),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeDimensionRepresentation(i) => EntityKey::ShapeDimensionRepresentation(*i),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentation(i) => EntityKey::ShapeRepresentation(*i),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentationWithParameters(i) => EntityKey::ShapeRepresentationWithParameters(*i),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::TessellatedShapeRepresentation(i) => EntityKey::TessellatedShapeRepresentation(*i),
-            ConstructiveGeometryRepresentationOrShapeRepresentationRef::Complex(i) => EntityKey::ComplexEntity(*i),
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug)]
 pub enum ContractTypeRefView<'m> {
     ContractType(&'m ContractType),
 }
@@ -4788,6 +4978,7 @@ impl CoordinatedUniversalTimeOffsetRef {
 #[derive(Clone, Copy, Debug)]
 pub enum CoordinatesListRefView<'m> {
     CoordinatesList(&'m CoordinatesList),
+    Complex(&'m ComplexEntity),
 }
 impl CoordinatesListRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CoordinatesListRefView<'m> {
@@ -4795,11 +4986,15 @@ impl CoordinatesListRef {
             CoordinatesListRef::CoordinatesList(i) => {
                 CoordinatesListRefView::CoordinatesList(model.coordinates_list_arena.get(i.0))
             }
+            CoordinatesListRef::Complex(i) => {
+                CoordinatesListRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CoordinatesListRef::CoordinatesList(i) => EntityKey::CoordinatesList(*i),
+            CoordinatesListRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -6231,6 +6426,7 @@ impl DatumOrCommonDatumRef {
 #[derive(Clone, Copy, Debug)]
 pub enum DatumReferenceCompartmentRefView<'m> {
     DatumReferenceCompartment(&'m DatumReferenceCompartment),
+    Complex(&'m ComplexEntity),
 }
 impl DatumReferenceCompartmentRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DatumReferenceCompartmentRefView<'m> {
@@ -6240,6 +6436,9 @@ impl DatumReferenceCompartmentRef {
                     model.datum_reference_compartment_arena.get(i.0),
                 )
             }
+            DatumReferenceCompartmentRef::Complex(i) => {
+                DatumReferenceCompartmentRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -6247,6 +6446,7 @@ impl DatumReferenceCompartmentRef {
             DatumReferenceCompartmentRef::DatumReferenceCompartment(i) => {
                 EntityKey::DatumReferenceCompartment(*i)
             }
+            DatumReferenceCompartmentRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -6254,6 +6454,7 @@ impl DatumReferenceCompartmentRef {
 #[derive(Clone, Copy, Debug)]
 pub enum DatumReferenceElementRefView<'m> {
     DatumReferenceElement(&'m DatumReferenceElement),
+    Complex(&'m ComplexEntity),
 }
 impl DatumReferenceElementRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DatumReferenceElementRefView<'m> {
@@ -6263,6 +6464,9 @@ impl DatumReferenceElementRef {
                     model.datum_reference_element_arena.get(i.0),
                 )
             }
+            DatumReferenceElementRef::Complex(i) => {
+                DatumReferenceElementRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -6270,6 +6474,7 @@ impl DatumReferenceElementRef {
             DatumReferenceElementRef::DatumReferenceElement(i) => {
                 EntityKey::DatumReferenceElement(*i)
             }
+            DatumReferenceElementRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -6805,6 +7010,7 @@ impl DerivedUnitElementRef {
 pub enum DesApllPointSelectRefView<'m> {
     ApllPoint(&'m ApllPoint),
     ApllPointWithSurface(&'m ApllPointWithSurface),
+    Complex(&'m ComplexEntity),
 }
 impl DesApllPointSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DesApllPointSelectRefView<'m> {
@@ -6817,12 +7023,16 @@ impl DesApllPointSelectRef {
                     model.apll_point_with_surface_arena.get(i.0),
                 )
             }
+            DesApllPointSelectRef::Complex(i) => {
+                DesApllPointSelectRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DesApllPointSelectRef::ApllPoint(i) => EntityKey::ApllPoint(*i),
             DesApllPointSelectRef::ApllPointWithSurface(i) => EntityKey::ApllPointWithSurface(*i),
+            DesApllPointSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -7162,6 +7372,7 @@ pub enum DocumentReferenceItemRefView<'m> {
     BSplineCurveWithKnots(&'m BSplineCurveWithKnots),
     BSplineSurface(&'m BSplineSurface),
     BSplineSurfaceWithKnots(&'m BSplineSurfaceWithKnots),
+    BasicRoundHole(&'m BasicRoundHole),
     BezierCurve(&'m BezierCurve),
     BezierSurface(&'m BezierSurface),
     BoundedCurve(&'m BoundedCurve),
@@ -7189,8 +7400,10 @@ pub enum DocumentReferenceItemRefView<'m> {
     ComplexTriangulatedSurfaceSet(&'m ComplexTriangulatedSurfaceSet),
     CompositeCurve(&'m CompositeCurve),
     CompositeGroupShapeAspect(&'m CompositeGroupShapeAspect),
+    CompositeHole(&'m CompositeHole),
     CompositeShapeAspect(&'m CompositeShapeAspect),
     CompositeText(&'m CompositeText),
+    CompoundFeature(&'m CompoundFeature),
     CompoundRepresentationItem(&'m CompoundRepresentationItem),
     ConfigurationDesign(&'m ConfigurationDesign),
     ConfigurationEffectivity(&'m ConfigurationEffectivity),
@@ -7206,6 +7419,9 @@ pub enum DocumentReferenceItemRefView<'m> {
     ContinuousShapeAspect(&'m ContinuousShapeAspect),
     Contract(&'m Contract),
     CoordinatesList(&'m CoordinatesList),
+    CounterboreHoleDefinition(&'m CounterboreHoleDefinition),
+    CounterdrillHoleDefinition(&'m CounterdrillHoleDefinition),
+    CountersinkHoleDefinition(&'m CountersinkHoleDefinition),
     Curve(&'m Curve),
     CylindricalSurface(&'m CylindricalSurface),
     DateAndTimeAssignment(&'m DateAndTimeAssignment),
@@ -7244,6 +7460,9 @@ pub enum DocumentReferenceItemRefView<'m> {
     Effectivity(&'m Effectivity),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExplicitCompositeHole(&'m ExplicitCompositeHole),
+    ExplicitRoundHole(&'m ExplicitRoundHole),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternallyDefinedCharacterGlyph(&'m ExternallyDefinedCharacterGlyph),
     ExternallyDefinedCurveFont(&'m ExternallyDefinedCurveFont),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
@@ -7257,6 +7476,7 @@ pub enum DocumentReferenceItemRefView<'m> {
     FaceBound(&'m FaceBound),
     FaceOuterBound(&'m FaceOuterBound),
     FaceSurface(&'m FaceSurface),
+    FeatureDefinition(&'m FeatureDefinition),
     FeatureForDatumTargetRelationship(&'m FeatureForDatumTargetRelationship),
     FillAreaStyleHatching(&'m FillAreaStyleHatching),
     FillAreaStyleTileColouredRegion(&'m FillAreaStyleTileColouredRegion),
@@ -7358,6 +7578,7 @@ pub enum DocumentReferenceItemRefView<'m> {
     RepresentationRelationship(&'m RepresentationRelationship),
     RepresentationRelationshipWithTransformation(&'m RepresentationRelationshipWithTransformation),
     ResourceRequirementType(&'m ResourceRequirementType),
+    RoundHole(&'m RoundHole),
     SeamCurve(&'m SeamCurve),
     SecurityClassification(&'m SecurityClassification),
     ShapeAspect(&'m ShapeAspect),
@@ -7453,6 +7674,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::BSplineCurveWithKnots(i) => DocumentReferenceItemRefView::BSplineCurveWithKnots(model.b_spline_curve_with_knots_arena.get(i.0)),
             DocumentReferenceItemRef::BSplineSurface(i) => DocumentReferenceItemRefView::BSplineSurface(model.b_spline_surface_arena.get(i.0)),
             DocumentReferenceItemRef::BSplineSurfaceWithKnots(i) => DocumentReferenceItemRefView::BSplineSurfaceWithKnots(model.b_spline_surface_with_knots_arena.get(i.0)),
+            DocumentReferenceItemRef::BasicRoundHole(i) => DocumentReferenceItemRefView::BasicRoundHole(model.basic_round_hole_arena.get(i.0)),
             DocumentReferenceItemRef::BezierCurve(i) => DocumentReferenceItemRefView::BezierCurve(model.bezier_curve_arena.get(i.0)),
             DocumentReferenceItemRef::BezierSurface(i) => DocumentReferenceItemRefView::BezierSurface(model.bezier_surface_arena.get(i.0)),
             DocumentReferenceItemRef::BoundedCurve(i) => DocumentReferenceItemRefView::BoundedCurve(model.bounded_curve_arena.get(i.0)),
@@ -7480,8 +7702,10 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::ComplexTriangulatedSurfaceSet(i) => DocumentReferenceItemRefView::ComplexTriangulatedSurfaceSet(model.complex_triangulated_surface_set_arena.get(i.0)),
             DocumentReferenceItemRef::CompositeCurve(i) => DocumentReferenceItemRefView::CompositeCurve(model.composite_curve_arena.get(i.0)),
             DocumentReferenceItemRef::CompositeGroupShapeAspect(i) => DocumentReferenceItemRefView::CompositeGroupShapeAspect(model.composite_group_shape_aspect_arena.get(i.0)),
+            DocumentReferenceItemRef::CompositeHole(i) => DocumentReferenceItemRefView::CompositeHole(model.composite_hole_arena.get(i.0)),
             DocumentReferenceItemRef::CompositeShapeAspect(i) => DocumentReferenceItemRefView::CompositeShapeAspect(model.composite_shape_aspect_arena.get(i.0)),
             DocumentReferenceItemRef::CompositeText(i) => DocumentReferenceItemRefView::CompositeText(model.composite_text_arena.get(i.0)),
+            DocumentReferenceItemRef::CompoundFeature(i) => DocumentReferenceItemRefView::CompoundFeature(model.compound_feature_arena.get(i.0)),
             DocumentReferenceItemRef::CompoundRepresentationItem(i) => DocumentReferenceItemRefView::CompoundRepresentationItem(model.compound_representation_item_arena.get(i.0)),
             DocumentReferenceItemRef::ConfigurationDesign(i) => DocumentReferenceItemRefView::ConfigurationDesign(model.configuration_design_arena.get(i.0)),
             DocumentReferenceItemRef::ConfigurationEffectivity(i) => DocumentReferenceItemRefView::ConfigurationEffectivity(model.configuration_effectivity_arena.get(i.0)),
@@ -7495,6 +7719,9 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::ContinuousShapeAspect(i) => DocumentReferenceItemRefView::ContinuousShapeAspect(model.continuous_shape_aspect_arena.get(i.0)),
             DocumentReferenceItemRef::Contract(i) => DocumentReferenceItemRefView::Contract(model.contract_arena.get(i.0)),
             DocumentReferenceItemRef::CoordinatesList(i) => DocumentReferenceItemRefView::CoordinatesList(model.coordinates_list_arena.get(i.0)),
+            DocumentReferenceItemRef::CounterboreHoleDefinition(i) => DocumentReferenceItemRefView::CounterboreHoleDefinition(model.counterbore_hole_definition_arena.get(i.0)),
+            DocumentReferenceItemRef::CounterdrillHoleDefinition(i) => DocumentReferenceItemRefView::CounterdrillHoleDefinition(model.counterdrill_hole_definition_arena.get(i.0)),
+            DocumentReferenceItemRef::CountersinkHoleDefinition(i) => DocumentReferenceItemRefView::CountersinkHoleDefinition(model.countersink_hole_definition_arena.get(i.0)),
             DocumentReferenceItemRef::Curve(i) => DocumentReferenceItemRefView::Curve(model.curve_arena.get(i.0)),
             DocumentReferenceItemRef::CylindricalSurface(i) => DocumentReferenceItemRefView::CylindricalSurface(model.cylindrical_surface_arena.get(i.0)),
             DocumentReferenceItemRef::DateAndTimeAssignment(i) => DocumentReferenceItemRefView::DateAndTimeAssignment(model.date_and_time_assignment_arena.get(i.0)),
@@ -7531,6 +7758,9 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::Effectivity(i) => DocumentReferenceItemRefView::Effectivity(model.effectivity_arena.get(i.0)),
             DocumentReferenceItemRef::ElementarySurface(i) => DocumentReferenceItemRefView::ElementarySurface(model.elementary_surface_arena.get(i.0)),
             DocumentReferenceItemRef::Ellipse(i) => DocumentReferenceItemRefView::Ellipse(model.ellipse_arena.get(i.0)),
+            DocumentReferenceItemRef::ExplicitCompositeHole(i) => DocumentReferenceItemRefView::ExplicitCompositeHole(model.explicit_composite_hole_arena.get(i.0)),
+            DocumentReferenceItemRef::ExplicitRoundHole(i) => DocumentReferenceItemRefView::ExplicitRoundHole(model.explicit_round_hole_arena.get(i.0)),
+            DocumentReferenceItemRef::ExternalImagePlacementInCallout(i) => DocumentReferenceItemRefView::ExternalImagePlacementInCallout(model.external_image_placement_in_callout_arena.get(i.0)),
             DocumentReferenceItemRef::ExternallyDefinedCharacterGlyph(i) => DocumentReferenceItemRefView::ExternallyDefinedCharacterGlyph(model.externally_defined_character_glyph_arena.get(i.0)),
             DocumentReferenceItemRef::ExternallyDefinedCurveFont(i) => DocumentReferenceItemRefView::ExternallyDefinedCurveFont(model.externally_defined_curve_font_arena.get(i.0)),
             DocumentReferenceItemRef::ExternallyDefinedHatchStyle(i) => DocumentReferenceItemRefView::ExternallyDefinedHatchStyle(model.externally_defined_hatch_style_arena.get(i.0)),
@@ -7544,6 +7774,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::FaceBound(i) => DocumentReferenceItemRefView::FaceBound(model.face_bound_arena.get(i.0)),
             DocumentReferenceItemRef::FaceOuterBound(i) => DocumentReferenceItemRefView::FaceOuterBound(model.face_outer_bound_arena.get(i.0)),
             DocumentReferenceItemRef::FaceSurface(i) => DocumentReferenceItemRefView::FaceSurface(model.face_surface_arena.get(i.0)),
+            DocumentReferenceItemRef::FeatureDefinition(i) => DocumentReferenceItemRefView::FeatureDefinition(model.feature_definition_arena.get(i.0)),
             DocumentReferenceItemRef::FeatureForDatumTargetRelationship(i) => DocumentReferenceItemRefView::FeatureForDatumTargetRelationship(model.feature_for_datum_target_relationship_arena.get(i.0)),
             DocumentReferenceItemRef::FillAreaStyleHatching(i) => DocumentReferenceItemRefView::FillAreaStyleHatching(model.fill_area_style_hatching_arena.get(i.0)),
             DocumentReferenceItemRef::FillAreaStyleTileColouredRegion(i) => DocumentReferenceItemRefView::FillAreaStyleTileColouredRegion(model.fill_area_style_tile_coloured_region_arena.get(i.0)),
@@ -7633,6 +7864,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::RepresentationRelationship(i) => DocumentReferenceItemRefView::RepresentationRelationship(model.representation_relationship_arena.get(i.0)),
             DocumentReferenceItemRef::RepresentationRelationshipWithTransformation(i) => DocumentReferenceItemRefView::RepresentationRelationshipWithTransformation(model.representation_relationship_with_transformation_arena.get(i.0)),
             DocumentReferenceItemRef::ResourceRequirementType(i) => DocumentReferenceItemRefView::ResourceRequirementType(model.resource_requirement_type_arena.get(i.0)),
+            DocumentReferenceItemRef::RoundHole(i) => DocumentReferenceItemRefView::RoundHole(model.round_hole_arena.get(i.0)),
             DocumentReferenceItemRef::SeamCurve(i) => DocumentReferenceItemRefView::SeamCurve(model.seam_curve_arena.get(i.0)),
             DocumentReferenceItemRef::SecurityClassification(i) => DocumentReferenceItemRefView::SecurityClassification(model.security_classification_arena.get(i.0)),
             DocumentReferenceItemRef::ShapeAspect(i) => DocumentReferenceItemRefView::ShapeAspect(model.shape_aspect_arena.get(i.0)),
@@ -7770,6 +8002,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::BSplineSurfaceWithKnots(i) => {
                 EntityKey::BSplineSurfaceWithKnots(*i)
             }
+            DocumentReferenceItemRef::BasicRoundHole(i) => EntityKey::BasicRoundHole(*i),
             DocumentReferenceItemRef::BezierCurve(i) => EntityKey::BezierCurve(*i),
             DocumentReferenceItemRef::BezierSurface(i) => EntityKey::BezierSurface(*i),
             DocumentReferenceItemRef::BoundedCurve(i) => EntityKey::BoundedCurve(*i),
@@ -7815,10 +8048,12 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::CompositeGroupShapeAspect(i) => {
                 EntityKey::CompositeGroupShapeAspect(*i)
             }
+            DocumentReferenceItemRef::CompositeHole(i) => EntityKey::CompositeHole(*i),
             DocumentReferenceItemRef::CompositeShapeAspect(i) => {
                 EntityKey::CompositeShapeAspect(*i)
             }
             DocumentReferenceItemRef::CompositeText(i) => EntityKey::CompositeText(*i),
+            DocumentReferenceItemRef::CompoundFeature(i) => EntityKey::CompoundFeature(*i),
             DocumentReferenceItemRef::CompoundRepresentationItem(i) => {
                 EntityKey::CompoundRepresentationItem(*i)
             }
@@ -7844,6 +8079,15 @@ impl DocumentReferenceItemRef {
             }
             DocumentReferenceItemRef::Contract(i) => EntityKey::Contract(*i),
             DocumentReferenceItemRef::CoordinatesList(i) => EntityKey::CoordinatesList(*i),
+            DocumentReferenceItemRef::CounterboreHoleDefinition(i) => {
+                EntityKey::CounterboreHoleDefinition(*i)
+            }
+            DocumentReferenceItemRef::CounterdrillHoleDefinition(i) => {
+                EntityKey::CounterdrillHoleDefinition(*i)
+            }
+            DocumentReferenceItemRef::CountersinkHoleDefinition(i) => {
+                EntityKey::CountersinkHoleDefinition(*i)
+            }
             DocumentReferenceItemRef::Curve(i) => EntityKey::Curve(*i),
             DocumentReferenceItemRef::CylindricalSurface(i) => EntityKey::CylindricalSurface(*i),
             DocumentReferenceItemRef::DateAndTimeAssignment(i) => {
@@ -7910,6 +8154,13 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::Effectivity(i) => EntityKey::Effectivity(*i),
             DocumentReferenceItemRef::ElementarySurface(i) => EntityKey::ElementarySurface(*i),
             DocumentReferenceItemRef::Ellipse(i) => EntityKey::Ellipse(*i),
+            DocumentReferenceItemRef::ExplicitCompositeHole(i) => {
+                EntityKey::ExplicitCompositeHole(*i)
+            }
+            DocumentReferenceItemRef::ExplicitRoundHole(i) => EntityKey::ExplicitRoundHole(*i),
+            DocumentReferenceItemRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             DocumentReferenceItemRef::ExternallyDefinedCharacterGlyph(i) => {
                 EntityKey::ExternallyDefinedCharacterGlyph(*i)
             }
@@ -7941,6 +8192,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::FaceBound(i) => EntityKey::FaceBound(*i),
             DocumentReferenceItemRef::FaceOuterBound(i) => EntityKey::FaceOuterBound(*i),
             DocumentReferenceItemRef::FaceSurface(i) => EntityKey::FaceSurface(*i),
+            DocumentReferenceItemRef::FeatureDefinition(i) => EntityKey::FeatureDefinition(*i),
             DocumentReferenceItemRef::FeatureForDatumTargetRelationship(i) => {
                 EntityKey::FeatureForDatumTargetRelationship(*i)
             }
@@ -8124,6 +8376,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::ResourceRequirementType(i) => {
                 EntityKey::ResourceRequirementType(*i)
             }
+            DocumentReferenceItemRef::RoundHole(i) => EntityKey::RoundHole(*i),
             DocumentReferenceItemRef::SeamCurve(i) => EntityKey::SeamCurve(*i),
             DocumentReferenceItemRef::SecurityClassification(i) => {
                 EntityKey::SecurityClassification(*i)
@@ -8282,6 +8535,7 @@ pub enum DraughtingCalloutElementRefView<'m> {
     ),
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
     AnnotationTextOccurrence(&'m AnnotationTextOccurrence),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     LeaderCurve(&'m LeaderCurve),
     LeaderTerminator(&'m LeaderTerminator),
     TerminatorSymbol(&'m TerminatorSymbol),
@@ -8316,6 +8570,11 @@ impl DraughtingCalloutElementRef {
             DraughtingCalloutElementRef::AnnotationTextOccurrence(i) => {
                 DraughtingCalloutElementRefView::AnnotationTextOccurrence(
                     model.annotation_text_occurrence_arena.get(i.0),
+                )
+            }
+            DraughtingCalloutElementRef::ExternalImagePlacementInCallout(i) => {
+                DraughtingCalloutElementRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
                 )
             }
             DraughtingCalloutElementRef::LeaderCurve(i) => {
@@ -8357,6 +8616,9 @@ impl DraughtingCalloutElementRef {
             }
             DraughtingCalloutElementRef::AnnotationTextOccurrence(i) => {
                 EntityKey::AnnotationTextOccurrence(*i)
+            }
+            DraughtingCalloutElementRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
             }
             DraughtingCalloutElementRef::LeaderCurve(i) => EntityKey::LeaderCurve(*i),
             DraughtingCalloutElementRef::LeaderTerminator(i) => EntityKey::LeaderTerminator(*i),
@@ -8406,6 +8668,7 @@ pub enum DraughtingModelItemAssociationSelectRefView<'m> {
     AnnotationTextOccurrence(&'m AnnotationTextOccurrence),
     DraughtingAnnotationOccurrence(&'m DraughtingAnnotationOccurrence),
     DraughtingCallout(&'m DraughtingCallout),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     LeaderCurve(&'m LeaderCurve),
     LeaderDirectedCallout(&'m LeaderDirectedCallout),
     LeaderTerminator(&'m LeaderTerminator),
@@ -8428,6 +8691,7 @@ impl DraughtingModelItemAssociationSelectRef {
             DraughtingModelItemAssociationSelectRef::AnnotationTextOccurrence(i) => DraughtingModelItemAssociationSelectRefView::AnnotationTextOccurrence(model.annotation_text_occurrence_arena.get(i.0)),
             DraughtingModelItemAssociationSelectRef::DraughtingAnnotationOccurrence(i) => DraughtingModelItemAssociationSelectRefView::DraughtingAnnotationOccurrence(model.draughting_annotation_occurrence_arena.get(i.0)),
             DraughtingModelItemAssociationSelectRef::DraughtingCallout(i) => DraughtingModelItemAssociationSelectRefView::DraughtingCallout(model.draughting_callout_arena.get(i.0)),
+            DraughtingModelItemAssociationSelectRef::ExternalImagePlacementInCallout(i) => DraughtingModelItemAssociationSelectRefView::ExternalImagePlacementInCallout(model.external_image_placement_in_callout_arena.get(i.0)),
             DraughtingModelItemAssociationSelectRef::LeaderCurve(i) => DraughtingModelItemAssociationSelectRefView::LeaderCurve(model.leader_curve_arena.get(i.0)),
             DraughtingModelItemAssociationSelectRef::LeaderDirectedCallout(i) => DraughtingModelItemAssociationSelectRefView::LeaderDirectedCallout(model.leader_directed_callout_arena.get(i.0)),
             DraughtingModelItemAssociationSelectRef::LeaderTerminator(i) => DraughtingModelItemAssociationSelectRefView::LeaderTerminator(model.leader_terminator_arena.get(i.0)),
@@ -8447,6 +8711,7 @@ impl DraughtingModelItemAssociationSelectRef {
             DraughtingModelItemAssociationSelectRef::AnnotationTextOccurrence(i) => EntityKey::AnnotationTextOccurrence(*i),
             DraughtingModelItemAssociationSelectRef::DraughtingAnnotationOccurrence(i) => EntityKey::DraughtingAnnotationOccurrence(*i),
             DraughtingModelItemAssociationSelectRef::DraughtingCallout(i) => EntityKey::DraughtingCallout(*i),
+            DraughtingModelItemAssociationSelectRef::ExternalImagePlacementInCallout(i) => EntityKey::ExternalImagePlacementInCallout(*i),
             DraughtingModelItemAssociationSelectRef::LeaderCurve(i) => EntityKey::LeaderCurve(*i),
             DraughtingModelItemAssociationSelectRef::LeaderDirectedCallout(i) => EntityKey::LeaderDirectedCallout(*i),
             DraughtingModelItemAssociationSelectRef::LeaderTerminator(i) => EntityKey::LeaderTerminator(*i),
@@ -9028,6 +9293,32 @@ impl EdgeRef {
 }
 
 #[derive(Clone, Copy, Debug)]
+pub enum ExplicitRoundHoleRefView<'m> {
+    ExplicitRoundHole(&'m ExplicitRoundHole),
+    Complex(&'m ComplexEntity),
+}
+impl ExplicitRoundHoleRef {
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> ExplicitRoundHoleRefView<'m> {
+        match self {
+            ExplicitRoundHoleRef::ExplicitRoundHole(i) => {
+                ExplicitRoundHoleRefView::ExplicitRoundHole(
+                    model.explicit_round_hole_arena.get(i.0),
+                )
+            }
+            ExplicitRoundHoleRef::Complex(i) => {
+                ExplicitRoundHoleRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            ExplicitRoundHoleRef::ExplicitRoundHole(i) => EntityKey::ExplicitRoundHole(*i),
+            ExplicitRoundHoleRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
 pub enum ExternalIdentificationItemRefView<'m> {
     ActionDirective(&'m ActionDirective),
     ActionMethod(&'m ActionMethod),
@@ -9122,6 +9413,7 @@ pub enum ExternalIdentificationItemRefView<'m> {
     Effectivity(&'m Effectivity),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternalSource(&'m ExternalSource),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
     ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
@@ -9370,6 +9662,7 @@ impl ExternalIdentificationItemRef {
             ExternalIdentificationItemRef::Effectivity(i) => ExternalIdentificationItemRefView::Effectivity(model.effectivity_arena.get(i.0)),
             ExternalIdentificationItemRef::ElementarySurface(i) => ExternalIdentificationItemRefView::ElementarySurface(model.elementary_surface_arena.get(i.0)),
             ExternalIdentificationItemRef::Ellipse(i) => ExternalIdentificationItemRefView::Ellipse(model.ellipse_arena.get(i.0)),
+            ExternalIdentificationItemRef::ExternalImagePlacementInCallout(i) => ExternalIdentificationItemRefView::ExternalImagePlacementInCallout(model.external_image_placement_in_callout_arena.get(i.0)),
             ExternalIdentificationItemRef::ExternalSource(i) => ExternalIdentificationItemRefView::ExternalSource(model.external_source_arena.get(i.0)),
             ExternalIdentificationItemRef::ExternallyDefinedHatchStyle(i) => ExternalIdentificationItemRefView::ExternallyDefinedHatchStyle(model.externally_defined_hatch_style_arena.get(i.0)),
             ExternalIdentificationItemRef::ExternallyDefinedTileStyle(i) => ExternalIdentificationItemRefView::ExternallyDefinedTileStyle(model.externally_defined_tile_style_arena.get(i.0)),
@@ -9606,6 +9899,7 @@ impl ExternalIdentificationItemRef {
             ExternalIdentificationItemRef::Effectivity(i) => EntityKey::Effectivity(*i),
             ExternalIdentificationItemRef::ElementarySurface(i) => EntityKey::ElementarySurface(*i),
             ExternalIdentificationItemRef::Ellipse(i) => EntityKey::Ellipse(*i),
+            ExternalIdentificationItemRef::ExternalImagePlacementInCallout(i) => EntityKey::ExternalImagePlacementInCallout(*i),
             ExternalIdentificationItemRef::ExternalSource(i) => EntityKey::ExternalSource(*i),
             ExternalIdentificationItemRef::ExternallyDefinedHatchStyle(i) => EntityKey::ExternallyDefinedHatchStyle(*i),
             ExternalIdentificationItemRef::ExternallyDefinedTileStyle(i) => EntityKey::ExternallyDefinedTileStyle(*i),
@@ -10542,6 +10836,7 @@ pub enum GeometricModelItemRefView<'m> {
     EdgeLoop(&'m EdgeLoop),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
     ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
     FaceSurface(&'m FaceSurface),
@@ -10796,6 +11091,11 @@ impl GeometricModelItemRef {
             }
             GeometricModelItemRef::Ellipse(i) => {
                 GeometricModelItemRefView::Ellipse(model.ellipse_arena.get(i.0))
+            }
+            GeometricModelItemRef::ExternalImagePlacementInCallout(i) => {
+                GeometricModelItemRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
             }
             GeometricModelItemRef::ExternallyDefinedHatchStyle(i) => {
                 GeometricModelItemRefView::ExternallyDefinedHatchStyle(
@@ -11110,6 +11410,9 @@ impl GeometricModelItemRef {
             GeometricModelItemRef::EdgeLoop(i) => EntityKey::EdgeLoop(*i),
             GeometricModelItemRef::ElementarySurface(i) => EntityKey::ElementarySurface(*i),
             GeometricModelItemRef::Ellipse(i) => EntityKey::Ellipse(*i),
+            GeometricModelItemRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             GeometricModelItemRef::ExternallyDefinedHatchStyle(i) => {
                 EntityKey::ExternallyDefinedHatchStyle(*i)
             }
@@ -11807,10 +12110,14 @@ pub enum GeometricToleranceTargetRefView<'m> {
     DimensionalSizeWithDatumFeature(&'m DimensionalSizeWithDatumFeature),
     DimensionalSizeWithPath(&'m DimensionalSizeWithPath),
     DirectedDimensionalLocation(&'m DirectedDimensionalLocation),
+    FeatureForDatumTargetRelationship(&'m FeatureForDatumTargetRelationship),
     GeneralDatumReference(&'m GeneralDatumReference),
     PlacedDatumTargetFeature(&'m PlacedDatumTargetFeature),
     ProductDefinitionShape(&'m ProductDefinitionShape),
     ShapeAspect(&'m ShapeAspect),
+    ShapeAspectAssociativity(&'m ShapeAspectAssociativity),
+    ShapeAspectDerivingRelationship(&'m ShapeAspectDerivingRelationship),
+    ShapeAspectRelationship(&'m ShapeAspectRelationship),
     ToleranceZone(&'m ToleranceZone),
     ToleranceZoneWithDatum(&'m ToleranceZoneWithDatum),
     Complex(&'m ComplexEntity),
@@ -11916,6 +12223,11 @@ impl GeometricToleranceTargetRef {
                     model.directed_dimensional_location_arena.get(i.0),
                 )
             }
+            GeometricToleranceTargetRef::FeatureForDatumTargetRelationship(i) => {
+                GeometricToleranceTargetRefView::FeatureForDatumTargetRelationship(
+                    model.feature_for_datum_target_relationship_arena.get(i.0),
+                )
+            }
             GeometricToleranceTargetRef::GeneralDatumReference(i) => {
                 GeometricToleranceTargetRefView::GeneralDatumReference(
                     model.general_datum_reference_arena.get(i.0),
@@ -11933,6 +12245,21 @@ impl GeometricToleranceTargetRef {
             }
             GeometricToleranceTargetRef::ShapeAspect(i) => {
                 GeometricToleranceTargetRefView::ShapeAspect(model.shape_aspect_arena.get(i.0))
+            }
+            GeometricToleranceTargetRef::ShapeAspectAssociativity(i) => {
+                GeometricToleranceTargetRefView::ShapeAspectAssociativity(
+                    model.shape_aspect_associativity_arena.get(i.0),
+                )
+            }
+            GeometricToleranceTargetRef::ShapeAspectDerivingRelationship(i) => {
+                GeometricToleranceTargetRefView::ShapeAspectDerivingRelationship(
+                    model.shape_aspect_deriving_relationship_arena.get(i.0),
+                )
+            }
+            GeometricToleranceTargetRef::ShapeAspectRelationship(i) => {
+                GeometricToleranceTargetRefView::ShapeAspectRelationship(
+                    model.shape_aspect_relationship_arena.get(i.0),
+                )
             }
             GeometricToleranceTargetRef::ToleranceZone(i) => {
                 GeometricToleranceTargetRefView::ToleranceZone(model.tolerance_zone_arena.get(i.0))
@@ -11995,6 +12322,9 @@ impl GeometricToleranceTargetRef {
             GeometricToleranceTargetRef::DirectedDimensionalLocation(i) => {
                 EntityKey::DirectedDimensionalLocation(*i)
             }
+            GeometricToleranceTargetRef::FeatureForDatumTargetRelationship(i) => {
+                EntityKey::FeatureForDatumTargetRelationship(*i)
+            }
             GeometricToleranceTargetRef::GeneralDatumReference(i) => {
                 EntityKey::GeneralDatumReference(*i)
             }
@@ -12005,6 +12335,15 @@ impl GeometricToleranceTargetRef {
                 EntityKey::ProductDefinitionShape(*i)
             }
             GeometricToleranceTargetRef::ShapeAspect(i) => EntityKey::ShapeAspect(*i),
+            GeometricToleranceTargetRef::ShapeAspectAssociativity(i) => {
+                EntityKey::ShapeAspectAssociativity(*i)
+            }
+            GeometricToleranceTargetRef::ShapeAspectDerivingRelationship(i) => {
+                EntityKey::ShapeAspectDerivingRelationship(*i)
+            }
+            GeometricToleranceTargetRef::ShapeAspectRelationship(i) => {
+                EntityKey::ShapeAspectRelationship(*i)
+            }
             GeometricToleranceTargetRef::ToleranceZone(i) => EntityKey::ToleranceZone(*i),
             GeometricToleranceTargetRef::ToleranceZoneWithDatum(i) => {
                 EntityKey::ToleranceZoneWithDatum(*i)
@@ -12170,6 +12509,7 @@ pub enum GroupableItemRefView<'m> {
     Effectivity(&'m Effectivity),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternalSource(&'m ExternalSource),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
     ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
@@ -12260,6 +12600,8 @@ pub enum GroupableItemRefView<'m> {
     Point(&'m Point),
     PolyLoop(&'m PolyLoop),
     Polyline(&'m Polyline),
+    PositiveLengthMeasureWithUnit(&'m PositiveLengthMeasureWithUnit),
+    PositivePlaneAngleMeasureWithUnit(&'m PositivePlaneAngleMeasureWithUnit),
     PrecisionQualifier(&'m PrecisionQualifier),
     PresentationArea(&'m PresentationArea),
     PresentationRepresentation(&'m PresentationRepresentation),
@@ -12821,6 +13163,11 @@ impl GroupableItemRef {
             GroupableItemRef::Ellipse(i) => {
                 GroupableItemRefView::Ellipse(model.ellipse_arena.get(i.0))
             }
+            GroupableItemRef::ExternalImagePlacementInCallout(i) => {
+                GroupableItemRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
+            }
             GroupableItemRef::ExternalSource(i) => {
                 GroupableItemRefView::ExternalSource(model.external_source_arena.get(i.0))
             }
@@ -13134,6 +13481,16 @@ impl GroupableItemRef {
             }
             GroupableItemRef::Polyline(i) => {
                 GroupableItemRefView::Polyline(model.polyline_arena.get(i.0))
+            }
+            GroupableItemRef::PositiveLengthMeasureWithUnit(i) => {
+                GroupableItemRefView::PositiveLengthMeasureWithUnit(
+                    model.positive_length_measure_with_unit_arena.get(i.0),
+                )
+            }
+            GroupableItemRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                GroupableItemRefView::PositivePlaneAngleMeasureWithUnit(
+                    model.positive_plane_angle_measure_with_unit_arena.get(i.0),
+                )
             }
             GroupableItemRef::PrecisionQualifier(i) => {
                 GroupableItemRefView::PrecisionQualifier(model.precision_qualifier_arena.get(i.0))
@@ -13696,6 +14053,9 @@ impl GroupableItemRef {
             GroupableItemRef::Effectivity(i) => EntityKey::Effectivity(*i),
             GroupableItemRef::ElementarySurface(i) => EntityKey::ElementarySurface(*i),
             GroupableItemRef::Ellipse(i) => EntityKey::Ellipse(*i),
+            GroupableItemRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             GroupableItemRef::ExternalSource(i) => EntityKey::ExternalSource(*i),
             GroupableItemRef::ExternallyDefinedHatchStyle(i) => {
                 EntityKey::ExternallyDefinedHatchStyle(*i)
@@ -13834,6 +14194,12 @@ impl GroupableItemRef {
             GroupableItemRef::Point(i) => EntityKey::Point(*i),
             GroupableItemRef::PolyLoop(i) => EntityKey::PolyLoop(*i),
             GroupableItemRef::Polyline(i) => EntityKey::Polyline(*i),
+            GroupableItemRef::PositiveLengthMeasureWithUnit(i) => {
+                EntityKey::PositiveLengthMeasureWithUnit(*i)
+            }
+            GroupableItemRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                EntityKey::PositivePlaneAngleMeasureWithUnit(*i)
+            }
             GroupableItemRef::PrecisionQualifier(i) => EntityKey::PrecisionQualifier(*i),
             GroupableItemRef::PresentationArea(i) => EntityKey::PresentationArea(*i),
             GroupableItemRef::PresentationRepresentation(i) => {
@@ -14079,6 +14445,7 @@ pub enum IdAttributeSelectRefView<'m> {
     ProductRelatedProductCategory(&'m ProductRelatedProductCategory),
     PropertyDefinition(&'m PropertyDefinition),
     Representation(&'m Representation),
+    RoundHoleBottomCondition(&'m RoundHoleBottomCondition),
     RoundnessTolerance(&'m RoundnessTolerance),
     ShapeAspect(&'m ShapeAspect),
     ShapeAspectAssociativity(&'m ShapeAspectAssociativity),
@@ -14488,6 +14855,11 @@ impl IdAttributeSelectRef {
             IdAttributeSelectRef::Representation(i) => {
                 IdAttributeSelectRefView::Representation(model.representation_arena.get(i.0))
             }
+            IdAttributeSelectRef::RoundHoleBottomCondition(i) => {
+                IdAttributeSelectRefView::RoundHoleBottomCondition(
+                    model.round_hole_bottom_condition_arena.get(i.0),
+                )
+            }
             IdAttributeSelectRef::RoundnessTolerance(i) => {
                 IdAttributeSelectRefView::RoundnessTolerance(
                     model.roundness_tolerance_arena.get(i.0),
@@ -14749,6 +15121,9 @@ impl IdAttributeSelectRef {
             }
             IdAttributeSelectRef::PropertyDefinition(i) => EntityKey::PropertyDefinition(*i),
             IdAttributeSelectRef::Representation(i) => EntityKey::Representation(*i),
+            IdAttributeSelectRef::RoundHoleBottomCondition(i) => {
+                EntityKey::RoundHoleBottomCondition(*i)
+            }
             IdAttributeSelectRef::RoundnessTolerance(i) => EntityKey::RoundnessTolerance(*i),
             IdAttributeSelectRef::ShapeAspect(i) => EntityKey::ShapeAspect(*i),
             IdAttributeSelectRef::ShapeAspectAssociativity(i) => {
@@ -14837,6 +15212,7 @@ pub enum InvisibleItemRefView<'m> {
     DraughtingAnnotationOccurrence(&'m DraughtingAnnotationOccurrence),
     DraughtingCallout(&'m DraughtingCallout),
     DraughtingModel(&'m DraughtingModel),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     GeometricallyBoundedSurfaceShapeRepresentation(
         &'m GeometricallyBoundedSurfaceShapeRepresentation,
     ),
@@ -14947,6 +15323,11 @@ impl InvisibleItemRef {
             }
             InvisibleItemRef::DraughtingModel(i) => {
                 InvisibleItemRefView::DraughtingModel(model.draughting_model_arena.get(i.0))
+            }
+            InvisibleItemRef::ExternalImagePlacementInCallout(i) => {
+                InvisibleItemRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
             }
             InvisibleItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
                 InvisibleItemRefView::GeometricallyBoundedSurfaceShapeRepresentation(
@@ -15101,6 +15482,9 @@ impl InvisibleItemRef {
             }
             InvisibleItemRef::DraughtingCallout(i) => EntityKey::DraughtingCallout(*i),
             InvisibleItemRef::DraughtingModel(i) => EntityKey::DraughtingModel(*i),
+            InvisibleItemRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             InvisibleItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
                 EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(*i)
             }
@@ -15194,6 +15578,7 @@ pub enum ItemIdentifiedRepresentationUsageDefinitionRefView<'m> {
     AppliedGroupAssignment(&'m AppliedGroupAssignment),
     AppliedPersonAndOrganizationAssignment(&'m AppliedPersonAndOrganizationAssignment),
     AssemblyComponentUsage(&'m AssemblyComponentUsage),
+    BasicRoundHole(&'m BasicRoundHole),
     CentreOfSymmetry(&'m CentreOfSymmetry),
     CharacterizedItemWithinRepresentation(&'m CharacterizedItemWithinRepresentation),
     CharacterizedObject(&'m CharacterizedObject),
@@ -15202,9 +15587,14 @@ pub enum ItemIdentifiedRepresentationUsageDefinitionRefView<'m> {
     CoaxialityTolerance(&'m CoaxialityTolerance),
     CommonDatum(&'m CommonDatum),
     CompositeGroupShapeAspect(&'m CompositeGroupShapeAspect),
+    CompositeHole(&'m CompositeHole),
     CompositeShapeAspect(&'m CompositeShapeAspect),
+    CompoundFeature(&'m CompoundFeature),
     ConcentricityTolerance(&'m ConcentricityTolerance),
     ContinuousShapeAspect(&'m ContinuousShapeAspect),
+    CounterboreHoleDefinition(&'m CounterboreHoleDefinition),
+    CounterdrillHoleDefinition(&'m CounterdrillHoleDefinition),
+    CountersinkHoleDefinition(&'m CountersinkHoleDefinition),
     CylindricityTolerance(&'m CylindricityTolerance),
     Datum(&'m Datum),
     DatumFeature(&'m DatumFeature),
@@ -15221,6 +15611,9 @@ pub enum ItemIdentifiedRepresentationUsageDefinitionRefView<'m> {
     DimensionalSizeWithPath(&'m DimensionalSizeWithPath),
     DirectedDimensionalLocation(&'m DirectedDimensionalLocation),
     DocumentFile(&'m DocumentFile),
+    ExplicitCompositeHole(&'m ExplicitCompositeHole),
+    ExplicitRoundHole(&'m ExplicitRoundHole),
+    FeatureDefinition(&'m FeatureDefinition),
     FeatureForDatumTargetRelationship(&'m FeatureForDatumTargetRelationship),
     FlatnessTolerance(&'m FlatnessTolerance),
     GeneralDatumReference(&'m GeneralDatumReference),
@@ -15245,6 +15638,7 @@ pub enum ItemIdentifiedRepresentationUsageDefinitionRefView<'m> {
     ProductDefinitionUsage(&'m ProductDefinitionUsage),
     PropertyDefinition(&'m PropertyDefinition),
     PropertyDefinitionRelationship(&'m PropertyDefinitionRelationship),
+    RoundHole(&'m RoundHole),
     RoundnessTolerance(&'m RoundnessTolerance),
     ShapeAspect(&'m ShapeAspect),
     ShapeAspectAssociativity(&'m ShapeAspectAssociativity),
@@ -15276,6 +15670,7 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::AppliedGroupAssignment(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::AppliedGroupAssignment(model.applied_group_assignment_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::AppliedPersonAndOrganizationAssignment(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::AppliedPersonAndOrganizationAssignment(model.applied_person_and_organization_assignment_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::AssemblyComponentUsage(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::AssemblyComponentUsage(model.assembly_component_usage_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::BasicRoundHole(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::BasicRoundHole(model.basic_round_hole_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::CentreOfSymmetry(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CentreOfSymmetry(model.centre_of_symmetry_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::CharacterizedItemWithinRepresentation(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CharacterizedItemWithinRepresentation(model.characterized_item_within_representation_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::CharacterizedObject(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CharacterizedObject(model.characterized_object_arena.get(i.0)),
@@ -15284,9 +15679,14 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::CoaxialityTolerance(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CoaxialityTolerance(model.coaxiality_tolerance_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::CommonDatum(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CommonDatum(model.common_datum_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::CompositeGroupShapeAspect(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CompositeGroupShapeAspect(model.composite_group_shape_aspect_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CompositeHole(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CompositeHole(model.composite_hole_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::CompositeShapeAspect(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CompositeShapeAspect(model.composite_shape_aspect_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CompoundFeature(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CompoundFeature(model.compound_feature_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::ConcentricityTolerance(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::ConcentricityTolerance(model.concentricity_tolerance_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::ContinuousShapeAspect(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::ContinuousShapeAspect(model.continuous_shape_aspect_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CounterboreHoleDefinition(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CounterboreHoleDefinition(model.counterbore_hole_definition_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CounterdrillHoleDefinition(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CounterdrillHoleDefinition(model.counterdrill_hole_definition_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CountersinkHoleDefinition(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CountersinkHoleDefinition(model.countersink_hole_definition_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::CylindricityTolerance(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::CylindricityTolerance(model.cylindricity_tolerance_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::Datum(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::Datum(model.datum_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::DatumFeature(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::DatumFeature(model.datum_feature_arena.get(i.0)),
@@ -15303,6 +15703,9 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::DimensionalSizeWithPath(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::DimensionalSizeWithPath(model.dimensional_size_with_path_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::DirectedDimensionalLocation(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::DirectedDimensionalLocation(model.directed_dimensional_location_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::DocumentFile(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::DocumentFile(model.document_file_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::ExplicitCompositeHole(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::ExplicitCompositeHole(model.explicit_composite_hole_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::ExplicitRoundHole(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::ExplicitRoundHole(model.explicit_round_hole_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::FeatureDefinition(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::FeatureDefinition(model.feature_definition_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::FeatureForDatumTargetRelationship(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::FeatureForDatumTargetRelationship(model.feature_for_datum_target_relationship_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::FlatnessTolerance(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::FlatnessTolerance(model.flatness_tolerance_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::GeneralDatumReference(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::GeneralDatumReference(model.general_datum_reference_arena.get(i.0)),
@@ -15327,6 +15730,7 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::ProductDefinitionUsage(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::ProductDefinitionUsage(model.product_definition_usage_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::PropertyDefinition(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::PropertyDefinition(model.property_definition_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::PropertyDefinitionRelationship(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::PropertyDefinitionRelationship(model.property_definition_relationship_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageDefinitionRef::RoundHole(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::RoundHole(model.round_hole_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::RoundnessTolerance(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::RoundnessTolerance(model.roundness_tolerance_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspect(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::ShapeAspect(model.shape_aspect_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspectAssociativity(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::ShapeAspectAssociativity(model.shape_aspect_associativity_arena.get(i.0)),
@@ -15355,6 +15759,7 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::AppliedGroupAssignment(i) => EntityKey::AppliedGroupAssignment(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::AppliedPersonAndOrganizationAssignment(i) => EntityKey::AppliedPersonAndOrganizationAssignment(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::AssemblyComponentUsage(i) => EntityKey::AssemblyComponentUsage(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::BasicRoundHole(i) => EntityKey::BasicRoundHole(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::CentreOfSymmetry(i) => EntityKey::CentreOfSymmetry(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::CharacterizedItemWithinRepresentation(i) => EntityKey::CharacterizedItemWithinRepresentation(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::CharacterizedObject(i) => EntityKey::CharacterizedObject(*i),
@@ -15363,9 +15768,14 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::CoaxialityTolerance(i) => EntityKey::CoaxialityTolerance(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::CommonDatum(i) => EntityKey::CommonDatum(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::CompositeGroupShapeAspect(i) => EntityKey::CompositeGroupShapeAspect(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CompositeHole(i) => EntityKey::CompositeHole(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::CompositeShapeAspect(i) => EntityKey::CompositeShapeAspect(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CompoundFeature(i) => EntityKey::CompoundFeature(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::ConcentricityTolerance(i) => EntityKey::ConcentricityTolerance(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::ContinuousShapeAspect(i) => EntityKey::ContinuousShapeAspect(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CounterboreHoleDefinition(i) => EntityKey::CounterboreHoleDefinition(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CounterdrillHoleDefinition(i) => EntityKey::CounterdrillHoleDefinition(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::CountersinkHoleDefinition(i) => EntityKey::CountersinkHoleDefinition(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::CylindricityTolerance(i) => EntityKey::CylindricityTolerance(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::Datum(i) => EntityKey::Datum(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::DatumFeature(i) => EntityKey::DatumFeature(*i),
@@ -15382,6 +15792,9 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::DimensionalSizeWithPath(i) => EntityKey::DimensionalSizeWithPath(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::DirectedDimensionalLocation(i) => EntityKey::DirectedDimensionalLocation(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::DocumentFile(i) => EntityKey::DocumentFile(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::ExplicitCompositeHole(i) => EntityKey::ExplicitCompositeHole(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::ExplicitRoundHole(i) => EntityKey::ExplicitRoundHole(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::FeatureDefinition(i) => EntityKey::FeatureDefinition(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::FeatureForDatumTargetRelationship(i) => EntityKey::FeatureForDatumTargetRelationship(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::FlatnessTolerance(i) => EntityKey::FlatnessTolerance(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::GeneralDatumReference(i) => EntityKey::GeneralDatumReference(*i),
@@ -15406,6 +15819,7 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::ProductDefinitionUsage(i) => EntityKey::ProductDefinitionUsage(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::PropertyDefinition(i) => EntityKey::PropertyDefinition(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::PropertyDefinitionRelationship(i) => EntityKey::PropertyDefinitionRelationship(*i),
+            ItemIdentifiedRepresentationUsageDefinitionRef::RoundHole(i) => EntityKey::RoundHole(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::RoundnessTolerance(i) => EntityKey::RoundnessTolerance(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspect(i) => EntityKey::ShapeAspect(*i),
             ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspectAssociativity(i) => EntityKey::ShapeAspectAssociativity(*i),
@@ -15490,6 +15904,7 @@ pub enum ItemIdentifiedRepresentationUsageSelectRefView<'m> {
     EdgeLoop(&'m EdgeLoop),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
     ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
     Face(&'m Face),
@@ -15647,6 +16062,7 @@ impl ItemIdentifiedRepresentationUsageSelectRef {
             ItemIdentifiedRepresentationUsageSelectRef::EdgeLoop(i) => ItemIdentifiedRepresentationUsageSelectRefView::EdgeLoop(model.edge_loop_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageSelectRef::ElementarySurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::ElementarySurface(model.elementary_surface_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageSelectRef::Ellipse(i) => ItemIdentifiedRepresentationUsageSelectRefView::Ellipse(model.ellipse_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ExternalImagePlacementInCallout(i) => ItemIdentifiedRepresentationUsageSelectRefView::ExternalImagePlacementInCallout(model.external_image_placement_in_callout_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageSelectRef::ExternallyDefinedHatchStyle(i) => ItemIdentifiedRepresentationUsageSelectRefView::ExternallyDefinedHatchStyle(model.externally_defined_hatch_style_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageSelectRef::ExternallyDefinedTileStyle(i) => ItemIdentifiedRepresentationUsageSelectRefView::ExternallyDefinedTileStyle(model.externally_defined_tile_style_arena.get(i.0)),
             ItemIdentifiedRepresentationUsageSelectRef::Face(i) => ItemIdentifiedRepresentationUsageSelectRefView::Face(model.face_arena.get(i.0)),
@@ -15805,6 +16221,7 @@ pub enum LayeredItemRefView<'m> {
     EdgeLoop(&'m EdgeLoop),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
     ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
     Face(&'m Face),
@@ -16120,6 +16537,11 @@ impl LayeredItemRef {
                 LayeredItemRefView::ElementarySurface(model.elementary_surface_arena.get(i.0))
             }
             LayeredItemRef::Ellipse(i) => LayeredItemRefView::Ellipse(model.ellipse_arena.get(i.0)),
+            LayeredItemRef::ExternalImagePlacementInCallout(i) => {
+                LayeredItemRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
+            }
             LayeredItemRef::ExternallyDefinedHatchStyle(i) => {
                 LayeredItemRefView::ExternallyDefinedHatchStyle(
                     model.externally_defined_hatch_style_arena.get(i.0),
@@ -16503,6 +16925,9 @@ impl LayeredItemRef {
             LayeredItemRef::EdgeLoop(i) => EntityKey::EdgeLoop(*i),
             LayeredItemRef::ElementarySurface(i) => EntityKey::ElementarySurface(*i),
             LayeredItemRef::Ellipse(i) => EntityKey::Ellipse(*i),
+            LayeredItemRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             LayeredItemRef::ExternallyDefinedHatchStyle(i) => {
                 EntityKey::ExternallyDefinedHatchStyle(*i)
             }
@@ -16626,6 +17051,7 @@ impl LayeredItemRef {
 #[derive(Clone, Copy, Debug)]
 pub enum LengthMeasureWithUnitRefView<'m> {
     LengthMeasureWithUnit(&'m LengthMeasureWithUnit),
+    PositiveLengthMeasureWithUnit(&'m PositiveLengthMeasureWithUnit),
     Complex(&'m ComplexEntity),
 }
 impl LengthMeasureWithUnitRef {
@@ -16634,6 +17060,11 @@ impl LengthMeasureWithUnitRef {
             LengthMeasureWithUnitRef::LengthMeasureWithUnit(i) => {
                 LengthMeasureWithUnitRefView::LengthMeasureWithUnit(
                     model.length_measure_with_unit_arena.get(i.0),
+                )
+            }
+            LengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
+                LengthMeasureWithUnitRefView::PositiveLengthMeasureWithUnit(
+                    model.positive_length_measure_with_unit_arena.get(i.0),
                 )
             }
             LengthMeasureWithUnitRef::Complex(i) => {
@@ -16646,6 +17077,9 @@ impl LengthMeasureWithUnitRef {
             LengthMeasureWithUnitRef::LengthMeasureWithUnit(i) => {
                 EntityKey::LengthMeasureWithUnit(*i)
             }
+            LengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
+                EntityKey::PositiveLengthMeasureWithUnit(*i)
+            }
             LengthMeasureWithUnitRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
@@ -16655,6 +17089,8 @@ impl LengthMeasureWithUnitRef {
 pub enum LengthOrPlaneAngleMeasureWithUnitSelectRefView<'m> {
     LengthMeasureWithUnit(&'m LengthMeasureWithUnit),
     PlaneAngleMeasureWithUnit(&'m PlaneAngleMeasureWithUnit),
+    PositiveLengthMeasureWithUnit(&'m PositiveLengthMeasureWithUnit),
+    PositivePlaneAngleMeasureWithUnit(&'m PositivePlaneAngleMeasureWithUnit),
     Complex(&'m ComplexEntity),
 }
 impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
@@ -16673,6 +17109,16 @@ impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
                     model.plane_angle_measure_with_unit_arena.get(i.0),
                 )
             }
+            LengthOrPlaneAngleMeasureWithUnitSelectRef::PositiveLengthMeasureWithUnit(i) => {
+                LengthOrPlaneAngleMeasureWithUnitSelectRefView::PositiveLengthMeasureWithUnit(
+                    model.positive_length_measure_with_unit_arena.get(i.0),
+                )
+            }
+            LengthOrPlaneAngleMeasureWithUnitSelectRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                LengthOrPlaneAngleMeasureWithUnitSelectRefView::PositivePlaneAngleMeasureWithUnit(
+                    model.positive_plane_angle_measure_with_unit_arena.get(i.0),
+                )
+            }
             LengthOrPlaneAngleMeasureWithUnitSelectRef::Complex(i) => {
                 LengthOrPlaneAngleMeasureWithUnitSelectRefView::Complex(
                     model.complex_entity_arena.get(i.0),
@@ -16687,6 +17133,12 @@ impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
             }
             LengthOrPlaneAngleMeasureWithUnitSelectRef::PlaneAngleMeasureWithUnit(i) => {
                 EntityKey::PlaneAngleMeasureWithUnit(*i)
+            }
+            LengthOrPlaneAngleMeasureWithUnitSelectRef::PositiveLengthMeasureWithUnit(i) => {
+                EntityKey::PositiveLengthMeasureWithUnit(*i)
+            }
+            LengthOrPlaneAngleMeasureWithUnitSelectRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                EntityKey::PositivePlaneAngleMeasureWithUnit(*i)
             }
             LengthOrPlaneAngleMeasureWithUnitSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
@@ -16779,6 +17231,8 @@ pub enum MeasureWithUnitRefView<'m> {
     MeasureRepresentationItem(&'m MeasureRepresentationItem),
     MeasureWithUnit(&'m MeasureWithUnit),
     PlaneAngleMeasureWithUnit(&'m PlaneAngleMeasureWithUnit),
+    PositiveLengthMeasureWithUnit(&'m PositiveLengthMeasureWithUnit),
+    PositivePlaneAngleMeasureWithUnit(&'m PositivePlaneAngleMeasureWithUnit),
     RatioMeasureWithUnit(&'m RatioMeasureWithUnit),
     UncertaintyMeasureWithUnit(&'m UncertaintyMeasureWithUnit),
     Complex(&'m ComplexEntity),
@@ -16809,6 +17263,16 @@ impl MeasureWithUnitRef {
                     model.plane_angle_measure_with_unit_arena.get(i.0),
                 )
             }
+            MeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
+                MeasureWithUnitRefView::PositiveLengthMeasureWithUnit(
+                    model.positive_length_measure_with_unit_arena.get(i.0),
+                )
+            }
+            MeasureWithUnitRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                MeasureWithUnitRefView::PositivePlaneAngleMeasureWithUnit(
+                    model.positive_plane_angle_measure_with_unit_arena.get(i.0),
+                )
+            }
             MeasureWithUnitRef::RatioMeasureWithUnit(i) => {
                 MeasureWithUnitRefView::RatioMeasureWithUnit(
                     model.ratio_measure_with_unit_arena.get(i.0),
@@ -16834,6 +17298,12 @@ impl MeasureWithUnitRef {
             MeasureWithUnitRef::MeasureWithUnit(i) => EntityKey::MeasureWithUnit(*i),
             MeasureWithUnitRef::PlaneAngleMeasureWithUnit(i) => {
                 EntityKey::PlaneAngleMeasureWithUnit(*i)
+            }
+            MeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
+                EntityKey::PositiveLengthMeasureWithUnit(*i)
+            }
+            MeasureWithUnitRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                EntityKey::PositivePlaneAngleMeasureWithUnit(*i)
             }
             MeasureWithUnitRef::RatioMeasureWithUnit(i) => EntityKey::RatioMeasureWithUnit(*i),
             MeasureWithUnitRef::UncertaintyMeasureWithUnit(i) => {
@@ -17862,6 +18332,67 @@ impl PointRef {
             PointRef::CartesianPoint(i) => EntityKey::CartesianPoint(*i),
             PointRef::Point(i) => EntityKey::Point(*i),
             PointRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum PositiveLengthMeasureWithUnitRefView<'m> {
+    PositiveLengthMeasureWithUnit(&'m PositiveLengthMeasureWithUnit),
+    Complex(&'m ComplexEntity),
+}
+impl PositiveLengthMeasureWithUnitRef {
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> PositiveLengthMeasureWithUnitRefView<'m> {
+        match self {
+            PositiveLengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
+                PositiveLengthMeasureWithUnitRefView::PositiveLengthMeasureWithUnit(
+                    model.positive_length_measure_with_unit_arena.get(i.0),
+                )
+            }
+            PositiveLengthMeasureWithUnitRef::Complex(i) => {
+                PositiveLengthMeasureWithUnitRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            PositiveLengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
+                EntityKey::PositiveLengthMeasureWithUnit(*i)
+            }
+            PositiveLengthMeasureWithUnitRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum PositivePlaneAngleMeasureWithUnitRefView<'m> {
+    PositivePlaneAngleMeasureWithUnit(&'m PositivePlaneAngleMeasureWithUnit),
+    Complex(&'m ComplexEntity),
+}
+impl PositivePlaneAngleMeasureWithUnitRef {
+    pub fn resolve<'m>(
+        &self,
+        model: &'m StepModel,
+    ) -> PositivePlaneAngleMeasureWithUnitRefView<'m> {
+        match self {
+            PositivePlaneAngleMeasureWithUnitRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                PositivePlaneAngleMeasureWithUnitRefView::PositivePlaneAngleMeasureWithUnit(
+                    model.positive_plane_angle_measure_with_unit_arena.get(i.0),
+                )
+            }
+            PositivePlaneAngleMeasureWithUnitRef::Complex(i) => {
+                PositivePlaneAngleMeasureWithUnitRefView::Complex(
+                    model.complex_entity_arena.get(i.0),
+                )
+            }
+        }
+    }
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            PositivePlaneAngleMeasureWithUnitRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                EntityKey::PositivePlaneAngleMeasureWithUnit(*i)
+            }
+            PositivePlaneAngleMeasureWithUnitRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -19126,6 +19657,7 @@ pub enum RepresentationItemRefView<'m> {
     EdgeLoop(&'m EdgeLoop),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
     ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
     Face(&'m Face),
@@ -19465,6 +19997,11 @@ impl RepresentationItemRef {
             }
             RepresentationItemRef::Ellipse(i) => {
                 RepresentationItemRefView::Ellipse(model.ellipse_arena.get(i.0))
+            }
+            RepresentationItemRef::ExternalImagePlacementInCallout(i) => {
+                RepresentationItemRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
             }
             RepresentationItemRef::ExternallyDefinedHatchStyle(i) => {
                 RepresentationItemRefView::ExternallyDefinedHatchStyle(
@@ -19900,6 +20437,9 @@ impl RepresentationItemRef {
             RepresentationItemRef::EdgeLoop(i) => EntityKey::EdgeLoop(*i),
             RepresentationItemRef::ElementarySurface(i) => EntityKey::ElementarySurface(*i),
             RepresentationItemRef::Ellipse(i) => EntityKey::Ellipse(*i),
+            RepresentationItemRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             RepresentationItemRef::ExternallyDefinedHatchStyle(i) => {
                 EntityKey::ExternallyDefinedHatchStyle(*i)
             }
@@ -21065,6 +21605,103 @@ impl ShapeModelRef {
 }
 
 #[derive(Clone, Copy, Debug)]
+pub enum ShapeRepresentationRefView<'m> {
+    AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
+    GeometricallyBoundedSurfaceShapeRepresentation(
+        &'m GeometricallyBoundedSurfaceShapeRepresentation,
+    ),
+    GeometricallyBoundedWireframeShapeRepresentation(
+        &'m GeometricallyBoundedWireframeShapeRepresentation,
+    ),
+    ManifoldSurfaceShapeRepresentation(&'m ManifoldSurfaceShapeRepresentation),
+    ShapeDimensionRepresentation(&'m ShapeDimensionRepresentation),
+    ShapeRepresentation(&'m ShapeRepresentation),
+    ShapeRepresentationWithParameters(&'m ShapeRepresentationWithParameters),
+    TessellatedShapeRepresentation(&'m TessellatedShapeRepresentation),
+    Complex(&'m ComplexEntity),
+}
+impl ShapeRepresentationRef {
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> ShapeRepresentationRefView<'m> {
+        match self {
+            ShapeRepresentationRef::AdvancedBrepShapeRepresentation(i) => {
+                ShapeRepresentationRefView::AdvancedBrepShapeRepresentation(
+                    model.advanced_brep_shape_representation_arena.get(i.0),
+                )
+            }
+            ShapeRepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                ShapeRepresentationRefView::GeometricallyBoundedSurfaceShapeRepresentation(
+                    model
+                        .geometrically_bounded_surface_shape_representation_arena
+                        .get(i.0),
+                )
+            }
+            ShapeRepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                ShapeRepresentationRefView::GeometricallyBoundedWireframeShapeRepresentation(
+                    model
+                        .geometrically_bounded_wireframe_shape_representation_arena
+                        .get(i.0),
+                )
+            }
+            ShapeRepresentationRef::ManifoldSurfaceShapeRepresentation(i) => {
+                ShapeRepresentationRefView::ManifoldSurfaceShapeRepresentation(
+                    model.manifold_surface_shape_representation_arena.get(i.0),
+                )
+            }
+            ShapeRepresentationRef::ShapeDimensionRepresentation(i) => {
+                ShapeRepresentationRefView::ShapeDimensionRepresentation(
+                    model.shape_dimension_representation_arena.get(i.0),
+                )
+            }
+            ShapeRepresentationRef::ShapeRepresentation(i) => {
+                ShapeRepresentationRefView::ShapeRepresentation(
+                    model.shape_representation_arena.get(i.0),
+                )
+            }
+            ShapeRepresentationRef::ShapeRepresentationWithParameters(i) => {
+                ShapeRepresentationRefView::ShapeRepresentationWithParameters(
+                    model.shape_representation_with_parameters_arena.get(i.0),
+                )
+            }
+            ShapeRepresentationRef::TessellatedShapeRepresentation(i) => {
+                ShapeRepresentationRefView::TessellatedShapeRepresentation(
+                    model.tessellated_shape_representation_arena.get(i.0),
+                )
+            }
+            ShapeRepresentationRef::Complex(i) => {
+                ShapeRepresentationRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            ShapeRepresentationRef::AdvancedBrepShapeRepresentation(i) => {
+                EntityKey::AdvancedBrepShapeRepresentation(*i)
+            }
+            ShapeRepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => {
+                EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(*i)
+            }
+            ShapeRepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => {
+                EntityKey::GeometricallyBoundedWireframeShapeRepresentation(*i)
+            }
+            ShapeRepresentationRef::ManifoldSurfaceShapeRepresentation(i) => {
+                EntityKey::ManifoldSurfaceShapeRepresentation(*i)
+            }
+            ShapeRepresentationRef::ShapeDimensionRepresentation(i) => {
+                EntityKey::ShapeDimensionRepresentation(*i)
+            }
+            ShapeRepresentationRef::ShapeRepresentation(i) => EntityKey::ShapeRepresentation(*i),
+            ShapeRepresentationRef::ShapeRepresentationWithParameters(i) => {
+                EntityKey::ShapeRepresentationWithParameters(*i)
+            }
+            ShapeRepresentationRef::TessellatedShapeRepresentation(i) => {
+                EntityKey::TessellatedShapeRepresentation(*i)
+            }
+            ShapeRepresentationRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
 pub enum ShapeRepresentationRelationshipRefView<'m> {
     ShapeRepresentationRelationship(&'m ShapeRepresentationRelationship),
     Complex(&'m ComplexEntity),
@@ -21299,6 +21936,7 @@ pub enum StyleContextSelectRefView<'m> {
     EdgeLoop(&'m EdgeLoop),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
     ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
     Face(&'m Face),
@@ -21720,6 +22358,11 @@ impl StyleContextSelectRef {
             }
             StyleContextSelectRef::Ellipse(i) => {
                 StyleContextSelectRefView::Ellipse(model.ellipse_arena.get(i.0))
+            }
+            StyleContextSelectRef::ExternalImagePlacementInCallout(i) => {
+                StyleContextSelectRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
             }
             StyleContextSelectRef::ExternallyDefinedHatchStyle(i) => {
                 StyleContextSelectRefView::ExternallyDefinedHatchStyle(
@@ -22299,6 +22942,9 @@ impl StyleContextSelectRef {
             StyleContextSelectRef::EdgeLoop(i) => EntityKey::EdgeLoop(*i),
             StyleContextSelectRef::ElementarySurface(i) => EntityKey::ElementarySurface(*i),
             StyleContextSelectRef::Ellipse(i) => EntityKey::Ellipse(*i),
+            StyleContextSelectRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
+            }
             StyleContextSelectRef::ExternallyDefinedHatchStyle(i) => {
                 EntityKey::ExternallyDefinedHatchStyle(*i)
             }
@@ -22498,6 +23144,7 @@ pub enum StyledItemRefView<'m> {
     AnnotationTextOccurrence(&'m AnnotationTextOccurrence),
     ContextDependentOverRidingStyledItem(&'m ContextDependentOverRidingStyledItem),
     DraughtingAnnotationOccurrence(&'m DraughtingAnnotationOccurrence),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     LeaderCurve(&'m LeaderCurve),
     LeaderTerminator(&'m LeaderTerminator),
     OverRidingStyledItem(&'m OverRidingStyledItem),
@@ -22554,6 +23201,11 @@ impl StyledItemRef {
                     model.draughting_annotation_occurrence_arena.get(i.0),
                 )
             }
+            StyledItemRef::ExternalImagePlacementInCallout(i) => {
+                StyledItemRefView::ExternalImagePlacementInCallout(
+                    model.external_image_placement_in_callout_arena.get(i.0),
+                )
+            }
             StyledItemRef::LeaderCurve(i) => {
                 StyledItemRefView::LeaderCurve(model.leader_curve_arena.get(i.0))
             }
@@ -22599,6 +23251,9 @@ impl StyledItemRef {
             }
             StyledItemRef::DraughtingAnnotationOccurrence(i) => {
                 EntityKey::DraughtingAnnotationOccurrence(*i)
+            }
+            StyledItemRef::ExternalImagePlacementInCallout(i) => {
+                EntityKey::ExternalImagePlacementInCallout(*i)
             }
             StyledItemRef::LeaderCurve(i) => EntityKey::LeaderCurve(*i),
             StyledItemRef::LeaderTerminator(i) => EntityKey::LeaderTerminator(*i),
@@ -22685,6 +23340,7 @@ pub enum StyledItemTargetOrRepresentationItemRefView<'m> {
     EdgeLoop(&'m EdgeLoop),
     ElementarySurface(&'m ElementarySurface),
     Ellipse(&'m Ellipse),
+    ExternalImagePlacementInCallout(&'m ExternalImagePlacementInCallout),
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
     ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
     Face(&'m Face),
@@ -22795,11 +23451,12 @@ pub enum StyledItemTargetOrRepresentationItemRefView<'m> {
     VertexPoint(&'m VertexPoint),
     VertexShell(&'m VertexShell),
     WireShell(&'m WireShell),
+    SetRepresentationItem(&'m [RepresentationItemRef]),
     Complex(&'m ComplexEntity),
 }
 impl StyledItemTargetOrRepresentationItemRef {
     pub fn resolve<'m>(
-        &self,
+        &'m self,
         model: &'m StepModel,
     ) -> StyledItemTargetOrRepresentationItemRefView<'m> {
         match self {
@@ -22871,6 +23528,7 @@ impl StyledItemTargetOrRepresentationItemRef {
             StyledItemTargetOrRepresentationItemRef::EdgeLoop(i) => StyledItemTargetOrRepresentationItemRefView::EdgeLoop(model.edge_loop_arena.get(i.0)),
             StyledItemTargetOrRepresentationItemRef::ElementarySurface(i) => StyledItemTargetOrRepresentationItemRefView::ElementarySurface(model.elementary_surface_arena.get(i.0)),
             StyledItemTargetOrRepresentationItemRef::Ellipse(i) => StyledItemTargetOrRepresentationItemRefView::Ellipse(model.ellipse_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::ExternalImagePlacementInCallout(i) => StyledItemTargetOrRepresentationItemRefView::ExternalImagePlacementInCallout(model.external_image_placement_in_callout_arena.get(i.0)),
             StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(i) => StyledItemTargetOrRepresentationItemRefView::ExternallyDefinedHatchStyle(model.externally_defined_hatch_style_arena.get(i.0)),
             StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(i) => StyledItemTargetOrRepresentationItemRefView::ExternallyDefinedTileStyle(model.externally_defined_tile_style_arena.get(i.0)),
             StyledItemTargetOrRepresentationItemRef::Face(i) => StyledItemTargetOrRepresentationItemRefView::Face(model.face_arena.get(i.0)),
@@ -22971,180 +23629,8 @@ impl StyledItemTargetOrRepresentationItemRef {
             StyledItemTargetOrRepresentationItemRef::VertexPoint(i) => StyledItemTargetOrRepresentationItemRefView::VertexPoint(model.vertex_point_arena.get(i.0)),
             StyledItemTargetOrRepresentationItemRef::VertexShell(i) => StyledItemTargetOrRepresentationItemRefView::VertexShell(model.vertex_shell_arena.get(i.0)),
             StyledItemTargetOrRepresentationItemRef::WireShell(i) => StyledItemTargetOrRepresentationItemRefView::WireShell(model.wire_shell_arena.get(i.0)),
+            StyledItemTargetOrRepresentationItemRef::SetRepresentationItem(v) => StyledItemTargetOrRepresentationItemRefView::SetRepresentationItem(v),
             StyledItemTargetOrRepresentationItemRef::Complex(i) => StyledItemTargetOrRepresentationItemRefView::Complex(model.complex_entity_arena.get(i.0)),
-        }
-    }
-    pub fn entity_key(&self) -> EntityKey {
-        match self {
-            StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(i) => EntityKey::AdvancedBrepShapeRepresentation(*i),
-            StyledItemTargetOrRepresentationItemRef::AdvancedFace(i) => EntityKey::AdvancedFace(*i),
-            StyledItemTargetOrRepresentationItemRef::AnnotationCurveOccurrence(i) => EntityKey::AnnotationCurveOccurrence(*i),
-            StyledItemTargetOrRepresentationItemRef::AnnotationOccurrence(i) => EntityKey::AnnotationOccurrence(*i),
-            StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderLeaderLine(i) => EntityKey::AnnotationPlaceholderLeaderLine(*i),
-            StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderOccurrence(i) => EntityKey::AnnotationPlaceholderOccurrence(*i),
-            StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i),
-            StyledItemTargetOrRepresentationItemRef::AnnotationPlane(i) => EntityKey::AnnotationPlane(*i),
-            StyledItemTargetOrRepresentationItemRef::AnnotationSymbolOccurrence(i) => EntityKey::AnnotationSymbolOccurrence(*i),
-            StyledItemTargetOrRepresentationItemRef::AnnotationText(i) => EntityKey::AnnotationText(*i),
-            StyledItemTargetOrRepresentationItemRef::AnnotationTextCharacter(i) => EntityKey::AnnotationTextCharacter(*i),
-            StyledItemTargetOrRepresentationItemRef::AnnotationTextOccurrence(i) => EntityKey::AnnotationTextOccurrence(*i),
-            StyledItemTargetOrRepresentationItemRef::AnnotationToAnnotationLeaderLine(i) => EntityKey::AnnotationToAnnotationLeaderLine(*i),
-            StyledItemTargetOrRepresentationItemRef::AnnotationToModelLeaderLine(i) => EntityKey::AnnotationToModelLeaderLine(*i),
-            StyledItemTargetOrRepresentationItemRef::ApllPoint(i) => EntityKey::ApllPoint(*i),
-            StyledItemTargetOrRepresentationItemRef::ApllPointWithSurface(i) => EntityKey::ApllPointWithSurface(*i),
-            StyledItemTargetOrRepresentationItemRef::AuxiliaryLeaderLine(i) => EntityKey::AuxiliaryLeaderLine(*i),
-            StyledItemTargetOrRepresentationItemRef::Axis1Placement(i) => EntityKey::Axis1Placement(*i),
-            StyledItemTargetOrRepresentationItemRef::Axis2Placement2d(i) => EntityKey::Axis2Placement2d(*i),
-            StyledItemTargetOrRepresentationItemRef::Axis2Placement3d(i) => EntityKey::Axis2Placement3d(*i),
-            StyledItemTargetOrRepresentationItemRef::BSplineCurve(i) => EntityKey::BSplineCurve(*i),
-            StyledItemTargetOrRepresentationItemRef::BSplineCurveWithKnots(i) => EntityKey::BSplineCurveWithKnots(*i),
-            StyledItemTargetOrRepresentationItemRef::BSplineSurface(i) => EntityKey::BSplineSurface(*i),
-            StyledItemTargetOrRepresentationItemRef::BSplineSurfaceWithKnots(i) => EntityKey::BSplineSurfaceWithKnots(*i),
-            StyledItemTargetOrRepresentationItemRef::BezierCurve(i) => EntityKey::BezierCurve(*i),
-            StyledItemTargetOrRepresentationItemRef::BezierSurface(i) => EntityKey::BezierSurface(*i),
-            StyledItemTargetOrRepresentationItemRef::BoundedCurve(i) => EntityKey::BoundedCurve(*i),
-            StyledItemTargetOrRepresentationItemRef::BoundedPcurve(i) => EntityKey::BoundedPcurve(*i),
-            StyledItemTargetOrRepresentationItemRef::BoundedSurface(i) => EntityKey::BoundedSurface(*i),
-            StyledItemTargetOrRepresentationItemRef::BoundedSurfaceCurve(i) => EntityKey::BoundedSurfaceCurve(*i),
-            StyledItemTargetOrRepresentationItemRef::BrepWithVoids(i) => EntityKey::BrepWithVoids(*i),
-            StyledItemTargetOrRepresentationItemRef::CameraImage(i) => EntityKey::CameraImage(*i),
-            StyledItemTargetOrRepresentationItemRef::CameraImage3dWithScale(i) => EntityKey::CameraImage3dWithScale(*i),
-            StyledItemTargetOrRepresentationItemRef::CameraModel(i) => EntityKey::CameraModel(*i),
-            StyledItemTargetOrRepresentationItemRef::CameraModelD3(i) => EntityKey::CameraModelD3(*i),
-            StyledItemTargetOrRepresentationItemRef::CameraModelD3MultiClipping(i) => EntityKey::CameraModelD3MultiClipping(*i),
-            StyledItemTargetOrRepresentationItemRef::CameraModelD3WithHlhsr(i) => EntityKey::CameraModelD3WithHlhsr(*i),
-            StyledItemTargetOrRepresentationItemRef::CartesianPoint(i) => EntityKey::CartesianPoint(*i),
-            StyledItemTargetOrRepresentationItemRef::CharacterizedRepresentation(i) => EntityKey::CharacterizedRepresentation(*i),
-            StyledItemTargetOrRepresentationItemRef::Circle(i) => EntityKey::Circle(*i),
-            StyledItemTargetOrRepresentationItemRef::ClosedShell(i) => EntityKey::ClosedShell(*i),
-            StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedFace(i) => EntityKey::ComplexTriangulatedFace(*i),
-            StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedSurfaceSet(i) => EntityKey::ComplexTriangulatedSurfaceSet(*i),
-            StyledItemTargetOrRepresentationItemRef::CompositeCurve(i) => EntityKey::CompositeCurve(*i),
-            StyledItemTargetOrRepresentationItemRef::CompositeText(i) => EntityKey::CompositeText(*i),
-            StyledItemTargetOrRepresentationItemRef::CompoundRepresentationItem(i) => EntityKey::CompoundRepresentationItem(*i),
-            StyledItemTargetOrRepresentationItemRef::Conic(i) => EntityKey::Conic(*i),
-            StyledItemTargetOrRepresentationItemRef::ConicalSurface(i) => EntityKey::ConicalSurface(*i),
-            StyledItemTargetOrRepresentationItemRef::ConnectedFaceSet(i) => EntityKey::ConnectedFaceSet(*i),
-            StyledItemTargetOrRepresentationItemRef::ConstructiveGeometryRepresentation(i) => EntityKey::ConstructiveGeometryRepresentation(*i),
-            StyledItemTargetOrRepresentationItemRef::ContextDependentOverRidingStyledItem(i) => EntityKey::ContextDependentOverRidingStyledItem(*i),
-            StyledItemTargetOrRepresentationItemRef::CoordinatesList(i) => EntityKey::CoordinatesList(*i),
-            StyledItemTargetOrRepresentationItemRef::Curve(i) => EntityKey::Curve(*i),
-            StyledItemTargetOrRepresentationItemRef::CylindricalSurface(i) => EntityKey::CylindricalSurface(*i),
-            StyledItemTargetOrRepresentationItemRef::DefinedCharacterGlyph(i) => EntityKey::DefinedCharacterGlyph(*i),
-            StyledItemTargetOrRepresentationItemRef::DefinedSymbol(i) => EntityKey::DefinedSymbol(*i),
-            StyledItemTargetOrRepresentationItemRef::DefinitionalRepresentation(i) => EntityKey::DefinitionalRepresentation(*i),
-            StyledItemTargetOrRepresentationItemRef::DegenerateToroidalSurface(i) => EntityKey::DegenerateToroidalSurface(*i),
-            StyledItemTargetOrRepresentationItemRef::DescriptiveRepresentationItem(i) => EntityKey::DescriptiveRepresentationItem(*i),
-            StyledItemTargetOrRepresentationItemRef::Direction(i) => EntityKey::Direction(*i),
-            StyledItemTargetOrRepresentationItemRef::DraughtingAnnotationOccurrence(i) => EntityKey::DraughtingAnnotationOccurrence(*i),
-            StyledItemTargetOrRepresentationItemRef::DraughtingCallout(i) => EntityKey::DraughtingCallout(*i),
-            StyledItemTargetOrRepresentationItemRef::DraughtingModel(i) => EntityKey::DraughtingModel(*i),
-            StyledItemTargetOrRepresentationItemRef::Edge(i) => EntityKey::Edge(*i),
-            StyledItemTargetOrRepresentationItemRef::EdgeCurve(i) => EntityKey::EdgeCurve(*i),
-            StyledItemTargetOrRepresentationItemRef::EdgeLoop(i) => EntityKey::EdgeLoop(*i),
-            StyledItemTargetOrRepresentationItemRef::ElementarySurface(i) => EntityKey::ElementarySurface(*i),
-            StyledItemTargetOrRepresentationItemRef::Ellipse(i) => EntityKey::Ellipse(*i),
-            StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(i) => EntityKey::ExternallyDefinedHatchStyle(*i),
-            StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(i) => EntityKey::ExternallyDefinedTileStyle(*i),
-            StyledItemTargetOrRepresentationItemRef::Face(i) => EntityKey::Face(*i),
-            StyledItemTargetOrRepresentationItemRef::FaceBound(i) => EntityKey::FaceBound(*i),
-            StyledItemTargetOrRepresentationItemRef::FaceOuterBound(i) => EntityKey::FaceOuterBound(*i),
-            StyledItemTargetOrRepresentationItemRef::FaceSurface(i) => EntityKey::FaceSurface(*i),
-            StyledItemTargetOrRepresentationItemRef::FillAreaStyleHatching(i) => EntityKey::FillAreaStyleHatching(*i),
-            StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileColouredRegion(i) => EntityKey::FillAreaStyleTileColouredRegion(*i),
-            StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileCurveWithStyle(i) => EntityKey::FillAreaStyleTileCurveWithStyle(*i),
-            StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileSymbolWithStyle(i) => EntityKey::FillAreaStyleTileSymbolWithStyle(*i),
-            StyledItemTargetOrRepresentationItemRef::FillAreaStyleTiles(i) => EntityKey::FillAreaStyleTiles(*i),
-            StyledItemTargetOrRepresentationItemRef::GeometricCurveSet(i) => EntityKey::GeometricCurveSet(*i),
-            StyledItemTargetOrRepresentationItemRef::GeometricRepresentationItem(i) => EntityKey::GeometricRepresentationItem(*i),
-            StyledItemTargetOrRepresentationItemRef::GeometricSet(i) => EntityKey::GeometricSet(*i),
-            StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(*i),
-            StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => EntityKey::GeometricallyBoundedWireframeShapeRepresentation(*i),
-            StyledItemTargetOrRepresentationItemRef::Hyperbola(i) => EntityKey::Hyperbola(*i),
-            StyledItemTargetOrRepresentationItemRef::IntegerRepresentationItem(i) => EntityKey::IntegerRepresentationItem(*i),
-            StyledItemTargetOrRepresentationItemRef::IntersectionCurve(i) => EntityKey::IntersectionCurve(*i),
-            StyledItemTargetOrRepresentationItemRef::LeaderCurve(i) => EntityKey::LeaderCurve(*i),
-            StyledItemTargetOrRepresentationItemRef::LeaderDirectedCallout(i) => EntityKey::LeaderDirectedCallout(*i),
-            StyledItemTargetOrRepresentationItemRef::LeaderTerminator(i) => EntityKey::LeaderTerminator(*i),
-            StyledItemTargetOrRepresentationItemRef::Line(i) => EntityKey::Line(*i),
-            StyledItemTargetOrRepresentationItemRef::Loop(i) => EntityKey::Loop(*i),
-            StyledItemTargetOrRepresentationItemRef::ManifoldSolidBrep(i) => EntityKey::ManifoldSolidBrep(*i),
-            StyledItemTargetOrRepresentationItemRef::ManifoldSurfaceShapeRepresentation(i) => EntityKey::ManifoldSurfaceShapeRepresentation(*i),
-            StyledItemTargetOrRepresentationItemRef::MappedItem(i) => EntityKey::MappedItem(*i),
-            StyledItemTargetOrRepresentationItemRef::MeasureRepresentationItem(i) => EntityKey::MeasureRepresentationItem(*i),
-            StyledItemTargetOrRepresentationItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => EntityKey::MechanicalDesignGeometricPresentationRepresentation(*i),
-            StyledItemTargetOrRepresentationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => EntityKey::MechanicalDesignPresentationRepresentationWithDraughting(*i),
-            StyledItemTargetOrRepresentationItemRef::MechanicalDesignShadedPresentationRepresentation(i) => EntityKey::MechanicalDesignShadedPresentationRepresentation(*i),
-            StyledItemTargetOrRepresentationItemRef::OffsetSurface(i) => EntityKey::OffsetSurface(*i),
-            StyledItemTargetOrRepresentationItemRef::OneDirectionRepeatFactor(i) => EntityKey::OneDirectionRepeatFactor(*i),
-            StyledItemTargetOrRepresentationItemRef::OpenShell(i) => EntityKey::OpenShell(*i),
-            StyledItemTargetOrRepresentationItemRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
-            StyledItemTargetOrRepresentationItemRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
-            StyledItemTargetOrRepresentationItemRef::OverRidingStyledItem(i) => EntityKey::OverRidingStyledItem(*i),
-            StyledItemTargetOrRepresentationItemRef::Parabola(i) => EntityKey::Parabola(*i),
-            StyledItemTargetOrRepresentationItemRef::Path(i) => EntityKey::Path(*i),
-            StyledItemTargetOrRepresentationItemRef::Pcurve(i) => EntityKey::Pcurve(*i),
-            StyledItemTargetOrRepresentationItemRef::Placement(i) => EntityKey::Placement(*i),
-            StyledItemTargetOrRepresentationItemRef::PlanarBox(i) => EntityKey::PlanarBox(*i),
-            StyledItemTargetOrRepresentationItemRef::PlanarExtent(i) => EntityKey::PlanarExtent(*i),
-            StyledItemTargetOrRepresentationItemRef::Plane(i) => EntityKey::Plane(*i),
-            StyledItemTargetOrRepresentationItemRef::Point(i) => EntityKey::Point(*i),
-            StyledItemTargetOrRepresentationItemRef::PolyLoop(i) => EntityKey::PolyLoop(*i),
-            StyledItemTargetOrRepresentationItemRef::Polyline(i) => EntityKey::Polyline(*i),
-            StyledItemTargetOrRepresentationItemRef::PresentationArea(i) => EntityKey::PresentationArea(*i),
-            StyledItemTargetOrRepresentationItemRef::PresentationRepresentation(i) => EntityKey::PresentationRepresentation(*i),
-            StyledItemTargetOrRepresentationItemRef::PresentationView(i) => EntityKey::PresentationView(*i),
-            StyledItemTargetOrRepresentationItemRef::QualifiedRepresentationItem(i) => EntityKey::QualifiedRepresentationItem(*i),
-            StyledItemTargetOrRepresentationItemRef::QuasiUniformCurve(i) => EntityKey::QuasiUniformCurve(*i),
-            StyledItemTargetOrRepresentationItemRef::QuasiUniformSurface(i) => EntityKey::QuasiUniformSurface(*i),
-            StyledItemTargetOrRepresentationItemRef::RationalBSplineCurve(i) => EntityKey::RationalBSplineCurve(*i),
-            StyledItemTargetOrRepresentationItemRef::RationalBSplineSurface(i) => EntityKey::RationalBSplineSurface(*i),
-            StyledItemTargetOrRepresentationItemRef::RealRepresentationItem(i) => EntityKey::RealRepresentationItem(*i),
-            StyledItemTargetOrRepresentationItemRef::RepositionedTessellatedItem(i) => EntityKey::RepositionedTessellatedItem(*i),
-            StyledItemTargetOrRepresentationItemRef::Representation(i) => EntityKey::Representation(*i),
-            StyledItemTargetOrRepresentationItemRef::RepresentationItem(i) => EntityKey::RepresentationItem(*i),
-            StyledItemTargetOrRepresentationItemRef::RepresentationReference(i) => EntityKey::RepresentationReference(*i),
-            StyledItemTargetOrRepresentationItemRef::SeamCurve(i) => EntityKey::SeamCurve(*i),
-            StyledItemTargetOrRepresentationItemRef::ShapeDimensionRepresentation(i) => EntityKey::ShapeDimensionRepresentation(*i),
-            StyledItemTargetOrRepresentationItemRef::ShapeRepresentation(i) => EntityKey::ShapeRepresentation(*i),
-            StyledItemTargetOrRepresentationItemRef::ShapeRepresentationWithParameters(i) => EntityKey::ShapeRepresentationWithParameters(*i),
-            StyledItemTargetOrRepresentationItemRef::ShellBasedSurfaceModel(i) => EntityKey::ShellBasedSurfaceModel(*i),
-            StyledItemTargetOrRepresentationItemRef::SolidModel(i) => EntityKey::SolidModel(*i),
-            StyledItemTargetOrRepresentationItemRef::SphericalSurface(i) => EntityKey::SphericalSurface(*i),
-            StyledItemTargetOrRepresentationItemRef::StyledItem(i) => EntityKey::StyledItem(*i),
-            StyledItemTargetOrRepresentationItemRef::Surface(i) => EntityKey::Surface(*i),
-            StyledItemTargetOrRepresentationItemRef::SurfaceCurve(i) => EntityKey::SurfaceCurve(*i),
-            StyledItemTargetOrRepresentationItemRef::SurfaceOfLinearExtrusion(i) => EntityKey::SurfaceOfLinearExtrusion(*i),
-            StyledItemTargetOrRepresentationItemRef::SurfaceOfRevolution(i) => EntityKey::SurfaceOfRevolution(*i),
-            StyledItemTargetOrRepresentationItemRef::SweptSurface(i) => EntityKey::SweptSurface(*i),
-            StyledItemTargetOrRepresentationItemRef::SymbolRepresentation(i) => EntityKey::SymbolRepresentation(*i),
-            StyledItemTargetOrRepresentationItemRef::SymbolTarget(i) => EntityKey::SymbolTarget(*i),
-            StyledItemTargetOrRepresentationItemRef::TerminatorSymbol(i) => EntityKey::TerminatorSymbol(*i),
-            StyledItemTargetOrRepresentationItemRef::TessellatedAnnotationOccurrence(i) => EntityKey::TessellatedAnnotationOccurrence(*i),
-            StyledItemTargetOrRepresentationItemRef::TessellatedCurveSet(i) => EntityKey::TessellatedCurveSet(*i),
-            StyledItemTargetOrRepresentationItemRef::TessellatedFace(i) => EntityKey::TessellatedFace(*i),
-            StyledItemTargetOrRepresentationItemRef::TessellatedGeometricSet(i) => EntityKey::TessellatedGeometricSet(*i),
-            StyledItemTargetOrRepresentationItemRef::TessellatedItem(i) => EntityKey::TessellatedItem(*i),
-            StyledItemTargetOrRepresentationItemRef::TessellatedShapeRepresentation(i) => EntityKey::TessellatedShapeRepresentation(*i),
-            StyledItemTargetOrRepresentationItemRef::TessellatedShell(i) => EntityKey::TessellatedShell(*i),
-            StyledItemTargetOrRepresentationItemRef::TessellatedSolid(i) => EntityKey::TessellatedSolid(*i),
-            StyledItemTargetOrRepresentationItemRef::TessellatedStructuredItem(i) => EntityKey::TessellatedStructuredItem(*i),
-            StyledItemTargetOrRepresentationItemRef::TessellatedSurfaceSet(i) => EntityKey::TessellatedSurfaceSet(*i),
-            StyledItemTargetOrRepresentationItemRef::TextLiteral(i) => EntityKey::TextLiteral(*i),
-            StyledItemTargetOrRepresentationItemRef::TopologicalRepresentationItem(i) => EntityKey::TopologicalRepresentationItem(*i),
-            StyledItemTargetOrRepresentationItemRef::ToroidalSurface(i) => EntityKey::ToroidalSurface(*i),
-            StyledItemTargetOrRepresentationItemRef::TrimmedCurve(i) => EntityKey::TrimmedCurve(*i),
-            StyledItemTargetOrRepresentationItemRef::TwoDirectionRepeatFactor(i) => EntityKey::TwoDirectionRepeatFactor(*i),
-            StyledItemTargetOrRepresentationItemRef::UniformCurve(i) => EntityKey::UniformCurve(*i),
-            StyledItemTargetOrRepresentationItemRef::UniformSurface(i) => EntityKey::UniformSurface(*i),
-            StyledItemTargetOrRepresentationItemRef::ValueRepresentationItem(i) => EntityKey::ValueRepresentationItem(*i),
-            StyledItemTargetOrRepresentationItemRef::Vector(i) => EntityKey::Vector(*i),
-            StyledItemTargetOrRepresentationItemRef::Vertex(i) => EntityKey::Vertex(*i),
-            StyledItemTargetOrRepresentationItemRef::VertexLoop(i) => EntityKey::VertexLoop(*i),
-            StyledItemTargetOrRepresentationItemRef::VertexPoint(i) => EntityKey::VertexPoint(*i),
-            StyledItemTargetOrRepresentationItemRef::VertexShell(i) => EntityKey::VertexShell(*i),
-            StyledItemTargetOrRepresentationItemRef::WireShell(i) => EntityKey::WireShell(*i),
-            StyledItemTargetOrRepresentationItemRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -23462,6 +23948,7 @@ impl SymbolStyleSelectRef {
 #[derive(Clone, Copy, Debug)]
 pub enum SymbolTargetRefView<'m> {
     SymbolTarget(&'m SymbolTarget),
+    Complex(&'m ComplexEntity),
 }
 impl SymbolTargetRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SymbolTargetRefView<'m> {
@@ -23469,11 +23956,15 @@ impl SymbolTargetRef {
             SymbolTargetRef::SymbolTarget(i) => {
                 SymbolTargetRefView::SymbolTarget(model.symbol_target_arena.get(i.0))
             }
+            SymbolTargetRef::Complex(i) => {
+                SymbolTargetRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SymbolTargetRef::SymbolTarget(i) => EntityKey::SymbolTarget(*i),
+            SymbolTargetRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -23735,6 +24226,7 @@ impl ToleranceMethodDefinitionRef {
 pub enum ToleranceSelectRefView<'m> {
     ApproximationToleranceDeviation(&'m ApproximationToleranceDeviation),
     ApproximationToleranceParameter(&'m ApproximationToleranceParameter),
+    Complex(&'m ComplexEntity),
 }
 impl ToleranceSelectRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ToleranceSelectRefView<'m> {
@@ -23749,6 +24241,9 @@ impl ToleranceSelectRef {
                     model.approximation_tolerance_parameter_arena.get(i.0),
                 )
             }
+            ToleranceSelectRef::Complex(i) => {
+                ToleranceSelectRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -23759,6 +24254,54 @@ impl ToleranceSelectRef {
             ToleranceSelectRef::ApproximationToleranceParameter(i) => {
                 EntityKey::ApproximationToleranceParameter(*i)
             }
+            ToleranceSelectRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum ToleranceValueRefView<'m> {
+    ToleranceValue(&'m ToleranceValue),
+}
+impl ToleranceValueRef {
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> ToleranceValueRefView<'m> {
+        match self {
+            ToleranceValueRef::ToleranceValue(i) => {
+                ToleranceValueRefView::ToleranceValue(model.tolerance_value_arena.get(i.0))
+            }
+        }
+    }
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            ToleranceValueRef::ToleranceValue(i) => EntityKey::ToleranceValue(*i),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum ToleranceValueOrLimitsAndFitsRefView<'m> {
+    LimitsAndFits(&'m LimitsAndFits),
+    ToleranceValue(&'m ToleranceValue),
+}
+impl ToleranceValueOrLimitsAndFitsRef {
+    pub fn resolve<'m>(&self, model: &'m StepModel) -> ToleranceValueOrLimitsAndFitsRefView<'m> {
+        match self {
+            ToleranceValueOrLimitsAndFitsRef::LimitsAndFits(i) => {
+                ToleranceValueOrLimitsAndFitsRefView::LimitsAndFits(
+                    model.limits_and_fits_arena.get(i.0),
+                )
+            }
+            ToleranceValueOrLimitsAndFitsRef::ToleranceValue(i) => {
+                ToleranceValueOrLimitsAndFitsRefView::ToleranceValue(
+                    model.tolerance_value_arena.get(i.0),
+                )
+            }
+        }
+    }
+    pub fn entity_key(&self) -> EntityKey {
+        match self {
+            ToleranceValueOrLimitsAndFitsRef::LimitsAndFits(i) => EntityKey::LimitsAndFits(*i),
+            ToleranceValueOrLimitsAndFitsRef::ToleranceValue(i) => EntityKey::ToleranceValue(*i),
         }
     }
 }
@@ -24116,8 +24659,8 @@ impl ToleranceZoneTargetRef {
 pub enum TransformationRefView<'m> {
     FunctionallyDefinedTransformation(&'m FunctionallyDefinedTransformation),
     ItemDefinedTransformation(&'m ItemDefinedTransformation),
-    ListItemDefinedTransformation(&'m [ItemDefinedTransformationRef]),
     SetItemDefinedTransformation(&'m [ItemDefinedTransformationRef]),
+    ListItemDefinedTransformation(&'m [ItemDefinedTransformationRef]),
     Complex(&'m ComplexEntity),
 }
 impl TransformationRef {
@@ -24133,11 +24676,11 @@ impl TransformationRef {
                     model.item_defined_transformation_arena.get(i.0),
                 )
             }
-            TransformationRef::ListItemDefinedTransformation(v) => {
-                TransformationRefView::ListItemDefinedTransformation(v)
-            }
             TransformationRef::SetItemDefinedTransformation(v) => {
                 TransformationRefView::SetItemDefinedTransformation(v)
+            }
+            TransformationRef::ListItemDefinedTransformation(v) => {
+                TransformationRefView::ListItemDefinedTransformation(v)
             }
             TransformationRef::Complex(i) => {
                 TransformationRefView::Complex(model.complex_entity_arena.get(i.0))
@@ -24177,6 +24720,7 @@ impl TwoDirectionRepeatFactorRef {
 #[derive(Clone, Copy, Debug)]
 pub enum UncertaintyMeasureWithUnitRefView<'m> {
     UncertaintyMeasureWithUnit(&'m UncertaintyMeasureWithUnit),
+    Complex(&'m ComplexEntity),
 }
 impl UncertaintyMeasureWithUnitRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> UncertaintyMeasureWithUnitRefView<'m> {
@@ -24186,6 +24730,9 @@ impl UncertaintyMeasureWithUnitRef {
                     model.uncertainty_measure_with_unit_arena.get(i.0),
                 )
             }
+            UncertaintyMeasureWithUnitRef::Complex(i) => {
+                UncertaintyMeasureWithUnitRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
@@ -24193,6 +24740,7 @@ impl UncertaintyMeasureWithUnitRef {
             UncertaintyMeasureWithUnitRef::UncertaintyMeasureWithUnit(i) => {
                 EntityKey::UncertaintyMeasureWithUnit(*i)
             }
+            UncertaintyMeasureWithUnitRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }
@@ -24372,6 +24920,7 @@ impl VertexRef {
 #[derive(Clone, Copy, Debug)]
 pub enum VertexLoopRefView<'m> {
     VertexLoop(&'m VertexLoop),
+    Complex(&'m ComplexEntity),
 }
 impl VertexLoopRef {
     pub fn resolve<'m>(&self, model: &'m StepModel) -> VertexLoopRefView<'m> {
@@ -24379,11 +24928,15 @@ impl VertexLoopRef {
             VertexLoopRef::VertexLoop(i) => {
                 VertexLoopRefView::VertexLoop(model.vertex_loop_arena.get(i.0))
             }
+            VertexLoopRef::Complex(i) => {
+                VertexLoopRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
     pub fn entity_key(&self) -> EntityKey {
         match self {
             VertexLoopRef::VertexLoop(i) => EntityKey::VertexLoop(*i),
+            VertexLoopRef::Complex(i) => EntityKey::ComplexEntity(*i),
         }
     }
 }

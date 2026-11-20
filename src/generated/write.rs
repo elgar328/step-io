@@ -75,6 +75,7 @@ pub struct Writer<'a> {
     action_resource_ids: Vec<Option<u64>>,
     action_resource_relationship_ids: Vec<Option<u64>>,
     action_resource_requirement_ids: Vec<Option<u64>>,
+    action_resource_requirement_relationship_ids: Vec<Option<u64>>,
     action_resource_type_ids: Vec<Option<u64>>,
     address_ids: Vec<Option<u64>>,
     advanced_brep_shape_representation_ids: Vec<Option<u64>>,
@@ -132,6 +133,7 @@ pub struct Writer<'a> {
     b_spline_curve_with_knots_ids: Vec<Option<u64>>,
     b_spline_surface_ids: Vec<Option<u64>>,
     b_spline_surface_with_knots_ids: Vec<Option<u64>>,
+    basic_round_hole_ids: Vec<Option<u64>>,
     bezier_curve_ids: Vec<Option<u64>>,
     bezier_surface_ids: Vec<Option<u64>>,
     bounded_curve_ids: Vec<Option<u64>>,
@@ -175,8 +177,10 @@ pub struct Writer<'a> {
     composite_curve_ids: Vec<Option<u64>>,
     composite_curve_segment_ids: Vec<Option<u64>>,
     composite_group_shape_aspect_ids: Vec<Option<u64>>,
+    composite_hole_ids: Vec<Option<u64>>,
     composite_shape_aspect_ids: Vec<Option<u64>>,
     composite_text_ids: Vec<Option<u64>>,
+    compound_feature_ids: Vec<Option<u64>>,
     compound_representation_item_ids: Vec<Option<u64>>,
     concentricity_tolerance_ids: Vec<Option<u64>>,
     configuration_design_ids: Vec<Option<u64>>,
@@ -196,6 +200,9 @@ pub struct Writer<'a> {
     conversion_based_unit_ids: Vec<Option<u64>>,
     coordinated_universal_time_offset_ids: Vec<Option<u64>>,
     coordinates_list_ids: Vec<Option<u64>>,
+    counterbore_hole_definition_ids: Vec<Option<u64>>,
+    counterdrill_hole_definition_ids: Vec<Option<u64>>,
+    countersink_hole_definition_ids: Vec<Option<u64>>,
     curve_ids: Vec<Option<u64>>,
     curve_style_ids: Vec<Option<u64>>,
     curve_style_font_ids: Vec<Option<u64>>,
@@ -261,8 +268,11 @@ pub struct Writer<'a> {
     effectivity_ids: Vec<Option<u64>>,
     elementary_surface_ids: Vec<Option<u64>>,
     ellipse_ids: Vec<Option<u64>>,
+    explicit_composite_hole_ids: Vec<Option<u64>>,
+    explicit_round_hole_ids: Vec<Option<u64>>,
     expression_ids: Vec<Option<u64>>,
     external_identification_assignment_ids: Vec<Option<u64>>,
+    external_image_placement_in_callout_ids: Vec<Option<u64>>,
     external_source_ids: Vec<Option<u64>>,
     externally_defined_character_glyph_ids: Vec<Option<u64>>,
     externally_defined_curve_font_ids: Vec<Option<u64>>,
@@ -277,6 +287,7 @@ pub struct Writer<'a> {
     face_bound_ids: Vec<Option<u64>>,
     face_outer_bound_ids: Vec<Option<u64>>,
     face_surface_ids: Vec<Option<u64>>,
+    feature_definition_ids: Vec<Option<u64>>,
     feature_for_datum_target_relationship_ids: Vec<Option<u64>>,
     fill_area_style_ids: Vec<Option<u64>>,
     fill_area_style_colour_ids: Vec<Option<u64>>,
@@ -394,6 +405,8 @@ pub struct Writer<'a> {
     poly_loop_ids: Vec<Option<u64>>,
     polyline_ids: Vec<Option<u64>>,
     position_tolerance_ids: Vec<Option<u64>>,
+    positive_length_measure_with_unit_ids: Vec<Option<u64>>,
+    positive_plane_angle_measure_with_unit_ids: Vec<Option<u64>>,
     pre_defined_character_glyph_ids: Vec<Option<u64>>,
     pre_defined_colour_ids: Vec<Option<u64>>,
     pre_defined_curve_font_ids: Vec<Option<u64>>,
@@ -465,6 +478,8 @@ pub struct Writer<'a> {
     resource_property_ids: Vec<Option<u64>>,
     resource_requirement_type_ids: Vec<Option<u64>>,
     role_association_ids: Vec<Option<u64>>,
+    round_hole_ids: Vec<Option<u64>>,
+    round_hole_bottom_condition_ids: Vec<Option<u64>>,
     roundness_tolerance_ids: Vec<Option<u64>>,
     seam_curve_ids: Vec<Option<u64>>,
     security_classification_ids: Vec<Option<u64>>,
@@ -601,6 +616,13 @@ impl<'a> Writer<'a> {
                 None;
                 model
                     .action_resource_requirement_arena
+                    .items
+                    .len()
+            ],
+            action_resource_requirement_relationship_ids: vec![
+                None;
+                model
+                    .action_resource_requirement_relationship_arena
                     .items
                     .len()
             ],
@@ -820,6 +842,7 @@ impl<'a> Writer<'a> {
                     .items
                     .len()
             ],
+            basic_round_hole_ids: vec![None; model.basic_round_hole_arena.items.len()],
             bezier_curve_ids: vec![None; model.bezier_curve_arena.items.len()],
             bezier_surface_ids: vec![None; model.bezier_surface_arena.items.len()],
             bounded_curve_ids: vec![None; model.bounded_curve_arena.items.len()],
@@ -938,8 +961,10 @@ impl<'a> Writer<'a> {
                     .items
                     .len()
             ],
+            composite_hole_ids: vec![None; model.composite_hole_arena.items.len()],
             composite_shape_aspect_ids: vec![None; model.composite_shape_aspect_arena.items.len()],
             composite_text_ids: vec![None; model.composite_text_arena.items.len()],
+            compound_feature_ids: vec![None; model.compound_feature_arena.items.len()],
             compound_representation_item_ids: vec![
                 None;
                 model
@@ -1004,6 +1029,27 @@ impl<'a> Writer<'a> {
                     .len()
             ],
             coordinates_list_ids: vec![None; model.coordinates_list_arena.items.len()],
+            counterbore_hole_definition_ids: vec![
+                None;
+                model
+                    .counterbore_hole_definition_arena
+                    .items
+                    .len()
+            ],
+            counterdrill_hole_definition_ids: vec![
+                None;
+                model
+                    .counterdrill_hole_definition_arena
+                    .items
+                    .len()
+            ],
+            countersink_hole_definition_ids: vec![
+                None;
+                model
+                    .countersink_hole_definition_arena
+                    .items
+                    .len()
+            ],
             curve_ids: vec![None; model.curve_arena.items.len()],
             curve_style_ids: vec![None; model.curve_style_arena.items.len()],
             curve_style_font_ids: vec![None; model.curve_style_font_arena.items.len()],
@@ -1222,11 +1268,23 @@ impl<'a> Writer<'a> {
             effectivity_ids: vec![None; model.effectivity_arena.items.len()],
             elementary_surface_ids: vec![None; model.elementary_surface_arena.items.len()],
             ellipse_ids: vec![None; model.ellipse_arena.items.len()],
+            explicit_composite_hole_ids: vec![
+                None;
+                model.explicit_composite_hole_arena.items.len()
+            ],
+            explicit_round_hole_ids: vec![None; model.explicit_round_hole_arena.items.len()],
             expression_ids: vec![None; model.expression_arena.items.len()],
             external_identification_assignment_ids: vec![
                 None;
                 model
                     .external_identification_assignment_arena
+                    .items
+                    .len()
+            ],
+            external_image_placement_in_callout_ids: vec![
+                None;
+                model
+                    .external_image_placement_in_callout_arena
                     .items
                     .len()
             ],
@@ -1286,6 +1344,7 @@ impl<'a> Writer<'a> {
             face_bound_ids: vec![None; model.face_bound_arena.items.len()],
             face_outer_bound_ids: vec![None; model.face_outer_bound_arena.items.len()],
             face_surface_ids: vec![None; model.face_surface_arena.items.len()],
+            feature_definition_ids: vec![None; model.feature_definition_arena.items.len()],
             feature_for_datum_target_relationship_ids: vec![
                 None;
                 model
@@ -1670,6 +1729,20 @@ impl<'a> Writer<'a> {
             poly_loop_ids: vec![None; model.poly_loop_arena.items.len()],
             polyline_ids: vec![None; model.polyline_arena.items.len()],
             position_tolerance_ids: vec![None; model.position_tolerance_arena.items.len()],
+            positive_length_measure_with_unit_ids: vec![
+                None;
+                model
+                    .positive_length_measure_with_unit_arena
+                    .items
+                    .len()
+            ],
+            positive_plane_angle_measure_with_unit_ids: vec![
+                None;
+                model
+                    .positive_plane_angle_measure_with_unit_arena
+                    .items
+                    .len()
+            ],
             pre_defined_character_glyph_ids: vec![
                 None;
                 model
@@ -1957,6 +2030,14 @@ impl<'a> Writer<'a> {
                 model.resource_requirement_type_arena.items.len()
             ],
             role_association_ids: vec![None; model.role_association_arena.items.len()],
+            round_hole_ids: vec![None; model.round_hole_arena.items.len()],
+            round_hole_bottom_condition_ids: vec![
+                None;
+                model
+                    .round_hole_bottom_condition_arena
+                    .items
+                    .len()
+            ],
             roundness_tolerance_ids: vec![None; model.roundness_tolerance_arena.items.len()],
             seam_curve_ids: vec![None; model.seam_curve_arena.items.len()],
             security_classification_ids: vec![
@@ -2290,6 +2371,9 @@ impl<'a> Writer<'a> {
             EntityKey::ActionResourceRequirement(i) => {
                 self.action_resource_requirement_ids[i.0 as usize]
             }
+            EntityKey::ActionResourceRequirementRelationship(i) => {
+                self.action_resource_requirement_relationship_ids[i.0 as usize]
+            }
             EntityKey::ActionResourceType(i) => self.action_resource_type_ids[i.0 as usize],
             EntityKey::Address(i) => self.address_ids[i.0 as usize],
             EntityKey::AdvancedBrepShapeRepresentation(i) => {
@@ -2397,6 +2481,7 @@ impl<'a> Writer<'a> {
             EntityKey::BSplineSurfaceWithKnots(i) => {
                 self.b_spline_surface_with_knots_ids[i.0 as usize]
             }
+            EntityKey::BasicRoundHole(i) => self.basic_round_hole_ids[i.0 as usize],
             EntityKey::BezierCurve(i) => self.bezier_curve_ids[i.0 as usize],
             EntityKey::BezierSurface(i) => self.bezier_surface_ids[i.0 as usize],
             EntityKey::BoundedCurve(i) => self.bounded_curve_ids[i.0 as usize],
@@ -2468,8 +2553,10 @@ impl<'a> Writer<'a> {
             EntityKey::CompositeGroupShapeAspect(i) => {
                 self.composite_group_shape_aspect_ids[i.0 as usize]
             }
+            EntityKey::CompositeHole(i) => self.composite_hole_ids[i.0 as usize],
             EntityKey::CompositeShapeAspect(i) => self.composite_shape_aspect_ids[i.0 as usize],
             EntityKey::CompositeText(i) => self.composite_text_ids[i.0 as usize],
+            EntityKey::CompoundFeature(i) => self.compound_feature_ids[i.0 as usize],
             EntityKey::CompoundRepresentationItem(i) => {
                 self.compound_representation_item_ids[i.0 as usize]
             }
@@ -2503,6 +2590,15 @@ impl<'a> Writer<'a> {
                 self.coordinated_universal_time_offset_ids[i.0 as usize]
             }
             EntityKey::CoordinatesList(i) => self.coordinates_list_ids[i.0 as usize],
+            EntityKey::CounterboreHoleDefinition(i) => {
+                self.counterbore_hole_definition_ids[i.0 as usize]
+            }
+            EntityKey::CounterdrillHoleDefinition(i) => {
+                self.counterdrill_hole_definition_ids[i.0 as usize]
+            }
+            EntityKey::CountersinkHoleDefinition(i) => {
+                self.countersink_hole_definition_ids[i.0 as usize]
+            }
             EntityKey::Curve(i) => self.curve_ids[i.0 as usize],
             EntityKey::CurveStyle(i) => self.curve_style_ids[i.0 as usize],
             EntityKey::CurveStyleFont(i) => self.curve_style_font_ids[i.0 as usize],
@@ -2616,9 +2712,14 @@ impl<'a> Writer<'a> {
             EntityKey::Effectivity(i) => self.effectivity_ids[i.0 as usize],
             EntityKey::ElementarySurface(i) => self.elementary_surface_ids[i.0 as usize],
             EntityKey::Ellipse(i) => self.ellipse_ids[i.0 as usize],
+            EntityKey::ExplicitCompositeHole(i) => self.explicit_composite_hole_ids[i.0 as usize],
+            EntityKey::ExplicitRoundHole(i) => self.explicit_round_hole_ids[i.0 as usize],
             EntityKey::Expression(i) => self.expression_ids[i.0 as usize],
             EntityKey::ExternalIdentificationAssignment(i) => {
                 self.external_identification_assignment_ids[i.0 as usize]
+            }
+            EntityKey::ExternalImagePlacementInCallout(i) => {
+                self.external_image_placement_in_callout_ids[i.0 as usize]
             }
             EntityKey::ExternalSource(i) => self.external_source_ids[i.0 as usize],
             EntityKey::ExternallyDefinedCharacterGlyph(i) => {
@@ -2646,6 +2747,7 @@ impl<'a> Writer<'a> {
             EntityKey::FaceBound(i) => self.face_bound_ids[i.0 as usize],
             EntityKey::FaceOuterBound(i) => self.face_outer_bound_ids[i.0 as usize],
             EntityKey::FaceSurface(i) => self.face_surface_ids[i.0 as usize],
+            EntityKey::FeatureDefinition(i) => self.feature_definition_ids[i.0 as usize],
             EntityKey::FeatureForDatumTargetRelationship(i) => {
                 self.feature_for_datum_target_relationship_ids[i.0 as usize]
             }
@@ -2849,6 +2951,12 @@ impl<'a> Writer<'a> {
             EntityKey::PolyLoop(i) => self.poly_loop_ids[i.0 as usize],
             EntityKey::Polyline(i) => self.polyline_ids[i.0 as usize],
             EntityKey::PositionTolerance(i) => self.position_tolerance_ids[i.0 as usize],
+            EntityKey::PositiveLengthMeasureWithUnit(i) => {
+                self.positive_length_measure_with_unit_ids[i.0 as usize]
+            }
+            EntityKey::PositivePlaneAngleMeasureWithUnit(i) => {
+                self.positive_plane_angle_measure_with_unit_ids[i.0 as usize]
+            }
             EntityKey::PreDefinedCharacterGlyph(i) => {
                 self.pre_defined_character_glyph_ids[i.0 as usize]
             }
@@ -2990,6 +3098,10 @@ impl<'a> Writer<'a> {
                 self.resource_requirement_type_ids[i.0 as usize]
             }
             EntityKey::RoleAssociation(i) => self.role_association_ids[i.0 as usize],
+            EntityKey::RoundHole(i) => self.round_hole_ids[i.0 as usize],
+            EntityKey::RoundHoleBottomCondition(i) => {
+                self.round_hole_bottom_condition_ids[i.0 as usize]
+            }
             EntityKey::RoundnessTolerance(i) => self.roundness_tolerance_ids[i.0 as usize],
             EntityKey::SeamCurve(i) => self.seam_curve_ids[i.0 as usize],
             EntityKey::SecurityClassification(i) => self.security_classification_ids[i.0 as usize],
@@ -3191,6 +3303,9 @@ impl<'a> Writer<'a> {
             EntityKey::ActionResourceRequirement(i) => {
                 self.action_resource_requirement_ids[i.0 as usize] = Some(n)
             }
+            EntityKey::ActionResourceRequirementRelationship(i) => {
+                self.action_resource_requirement_relationship_ids[i.0 as usize] = Some(n)
+            }
             EntityKey::ActionResourceType(i) => {
                 self.action_resource_type_ids[i.0 as usize] = Some(n)
             }
@@ -3324,6 +3439,7 @@ impl<'a> Writer<'a> {
             EntityKey::BSplineSurfaceWithKnots(i) => {
                 self.b_spline_surface_with_knots_ids[i.0 as usize] = Some(n)
             }
+            EntityKey::BasicRoundHole(i) => self.basic_round_hole_ids[i.0 as usize] = Some(n),
             EntityKey::BezierCurve(i) => self.bezier_curve_ids[i.0 as usize] = Some(n),
             EntityKey::BezierSurface(i) => self.bezier_surface_ids[i.0 as usize] = Some(n),
             EntityKey::BoundedCurve(i) => self.bounded_curve_ids[i.0 as usize] = Some(n),
@@ -3405,10 +3521,12 @@ impl<'a> Writer<'a> {
             EntityKey::CompositeGroupShapeAspect(i) => {
                 self.composite_group_shape_aspect_ids[i.0 as usize] = Some(n)
             }
+            EntityKey::CompositeHole(i) => self.composite_hole_ids[i.0 as usize] = Some(n),
             EntityKey::CompositeShapeAspect(i) => {
                 self.composite_shape_aspect_ids[i.0 as usize] = Some(n)
             }
             EntityKey::CompositeText(i) => self.composite_text_ids[i.0 as usize] = Some(n),
+            EntityKey::CompoundFeature(i) => self.compound_feature_ids[i.0 as usize] = Some(n),
             EntityKey::CompoundRepresentationItem(i) => {
                 self.compound_representation_item_ids[i.0 as usize] = Some(n)
             }
@@ -3452,6 +3570,15 @@ impl<'a> Writer<'a> {
                 self.coordinated_universal_time_offset_ids[i.0 as usize] = Some(n)
             }
             EntityKey::CoordinatesList(i) => self.coordinates_list_ids[i.0 as usize] = Some(n),
+            EntityKey::CounterboreHoleDefinition(i) => {
+                self.counterbore_hole_definition_ids[i.0 as usize] = Some(n)
+            }
+            EntityKey::CounterdrillHoleDefinition(i) => {
+                self.counterdrill_hole_definition_ids[i.0 as usize] = Some(n)
+            }
+            EntityKey::CountersinkHoleDefinition(i) => {
+                self.countersink_hole_definition_ids[i.0 as usize] = Some(n)
+            }
             EntityKey::Curve(i) => self.curve_ids[i.0 as usize] = Some(n),
             EntityKey::CurveStyle(i) => self.curve_style_ids[i.0 as usize] = Some(n),
             EntityKey::CurveStyleFont(i) => self.curve_style_font_ids[i.0 as usize] = Some(n),
@@ -3590,9 +3717,16 @@ impl<'a> Writer<'a> {
             EntityKey::Effectivity(i) => self.effectivity_ids[i.0 as usize] = Some(n),
             EntityKey::ElementarySurface(i) => self.elementary_surface_ids[i.0 as usize] = Some(n),
             EntityKey::Ellipse(i) => self.ellipse_ids[i.0 as usize] = Some(n),
+            EntityKey::ExplicitCompositeHole(i) => {
+                self.explicit_composite_hole_ids[i.0 as usize] = Some(n)
+            }
+            EntityKey::ExplicitRoundHole(i) => self.explicit_round_hole_ids[i.0 as usize] = Some(n),
             EntityKey::Expression(i) => self.expression_ids[i.0 as usize] = Some(n),
             EntityKey::ExternalIdentificationAssignment(i) => {
                 self.external_identification_assignment_ids[i.0 as usize] = Some(n)
+            }
+            EntityKey::ExternalImagePlacementInCallout(i) => {
+                self.external_image_placement_in_callout_ids[i.0 as usize] = Some(n)
             }
             EntityKey::ExternalSource(i) => self.external_source_ids[i.0 as usize] = Some(n),
             EntityKey::ExternallyDefinedCharacterGlyph(i) => {
@@ -3626,6 +3760,7 @@ impl<'a> Writer<'a> {
             EntityKey::FaceBound(i) => self.face_bound_ids[i.0 as usize] = Some(n),
             EntityKey::FaceOuterBound(i) => self.face_outer_bound_ids[i.0 as usize] = Some(n),
             EntityKey::FaceSurface(i) => self.face_surface_ids[i.0 as usize] = Some(n),
+            EntityKey::FeatureDefinition(i) => self.feature_definition_ids[i.0 as usize] = Some(n),
             EntityKey::FeatureForDatumTargetRelationship(i) => {
                 self.feature_for_datum_target_relationship_ids[i.0 as usize] = Some(n)
             }
@@ -3875,6 +4010,12 @@ impl<'a> Writer<'a> {
             EntityKey::PolyLoop(i) => self.poly_loop_ids[i.0 as usize] = Some(n),
             EntityKey::Polyline(i) => self.polyline_ids[i.0 as usize] = Some(n),
             EntityKey::PositionTolerance(i) => self.position_tolerance_ids[i.0 as usize] = Some(n),
+            EntityKey::PositiveLengthMeasureWithUnit(i) => {
+                self.positive_length_measure_with_unit_ids[i.0 as usize] = Some(n)
+            }
+            EntityKey::PositivePlaneAngleMeasureWithUnit(i) => {
+                self.positive_plane_angle_measure_with_unit_ids[i.0 as usize] = Some(n)
+            }
             EntityKey::PreDefinedCharacterGlyph(i) => {
                 self.pre_defined_character_glyph_ids[i.0 as usize] = Some(n)
             }
@@ -4044,6 +4185,10 @@ impl<'a> Writer<'a> {
                 self.resource_requirement_type_ids[i.0 as usize] = Some(n)
             }
             EntityKey::RoleAssociation(i) => self.role_association_ids[i.0 as usize] = Some(n),
+            EntityKey::RoundHole(i) => self.round_hole_ids[i.0 as usize] = Some(n),
+            EntityKey::RoundHoleBottomCondition(i) => {
+                self.round_hole_bottom_condition_ids[i.0 as usize] = Some(n)
+            }
             EntityKey::RoundnessTolerance(i) => {
                 self.roundness_tolerance_ids[i.0 as usize] = Some(n)
             }
@@ -4297,6 +4442,29 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_action_resource_requirement(&self, r: &ActionResourceRequirementRef) -> u64 {
+        match r {
+            ActionResourceRequirementRef::ActionResourceRequirement(i) => {
+                self.action_resource_requirement_ids[i.0 as usize].expect("dep id assigned")
+            }
+            ActionResourceRequirementRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_action_resource_requirement(
+        r: &ActionResourceRequirementRef,
+        out: &mut Vec<EntityKey>,
+    ) {
+        match r {
+            ActionResourceRequirementRef::ActionResourceRequirement(i) => {
+                out.push(EntityKey::ActionResourceRequirement(*i))
+            }
+            ActionResourceRequirementRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
+        }
+    }
+
     fn id_of_ref_action_resource_type(&self, r: &ActionResourceTypeRef) -> u64 {
         match r {
             ActionResourceTypeRef::ActionResourceType(i) => {
@@ -4366,6 +4534,9 @@ impl<'a> Writer<'a> {
             AnnotationOccurrenceRef::DraughtingAnnotationOccurrence(i) => {
                 self.draughting_annotation_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
+            AnnotationOccurrenceRef::ExternalImagePlacementInCallout(i) => {
+                self.external_image_placement_in_callout_ids[i.0 as usize].expect("dep id assigned")
+            }
             AnnotationOccurrenceRef::LeaderCurve(i) => {
                 self.leader_curve_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -4408,6 +4579,9 @@ impl<'a> Writer<'a> {
             AnnotationOccurrenceRef::DraughtingAnnotationOccurrence(i) => {
                 out.push(EntityKey::DraughtingAnnotationOccurrence(*i))
             }
+            AnnotationOccurrenceRef::ExternalImagePlacementInCallout(i) => {
+                out.push(EntityKey::ExternalImagePlacementInCallout(*i))
+            }
             AnnotationOccurrenceRef::LeaderCurve(i) => out.push(EntityKey::LeaderCurve(*i)),
             AnnotationOccurrenceRef::LeaderTerminator(i) => {
                 out.push(EntityKey::LeaderTerminator(*i))
@@ -4439,6 +4613,9 @@ impl<'a> Writer<'a> {
             AnnotationPlaceholderLeaderLineRef::AuxiliaryLeaderLine(i) => {
                 self.auxiliary_leader_line_ids[i.0 as usize].expect("dep id assigned")
             }
+            AnnotationPlaceholderLeaderLineRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
         }
     }
 
@@ -4458,6 +4635,9 @@ impl<'a> Writer<'a> {
             }
             AnnotationPlaceholderLeaderLineRef::AuxiliaryLeaderLine(i) => {
                 out.push(EntityKey::AuxiliaryLeaderLine(*i))
+            }
+            AnnotationPlaceholderLeaderLineRef::Complex(i) => {
+                out.push(EntityKey::ComplexEntity(*i))
             }
         }
     }
@@ -4529,6 +4709,9 @@ impl<'a> Writer<'a> {
             AnnotationPlaneElementRef::DraughtingCallout(i) => {
                 self.draughting_callout_ids[i.0 as usize].expect("dep id assigned")
             }
+            AnnotationPlaneElementRef::ExternalImagePlacementInCallout(i) => {
+                self.external_image_placement_in_callout_ids[i.0 as usize].expect("dep id assigned")
+            }
             AnnotationPlaneElementRef::LeaderCurve(i) => {
                 self.leader_curve_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -4587,6 +4770,9 @@ impl<'a> Writer<'a> {
             }
             AnnotationPlaneElementRef::DraughtingCallout(i) => {
                 out.push(EntityKey::DraughtingCallout(*i))
+            }
+            AnnotationPlaneElementRef::ExternalImagePlacementInCallout(i) => {
+                out.push(EntityKey::ExternalImagePlacementInCallout(*i))
             }
             AnnotationPlaneElementRef::LeaderCurve(i) => out.push(EntityKey::LeaderCurve(*i)),
             AnnotationPlaneElementRef::LeaderDirectedCallout(i) => {
@@ -4661,6 +4847,9 @@ impl<'a> Writer<'a> {
             AnnotationSymbolOccurrenceItemRef::DefinedSymbol(i) => {
                 self.defined_symbol_ids[i.0 as usize].expect("dep id assigned")
             }
+            AnnotationSymbolOccurrenceItemRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
         }
     }
 
@@ -4672,6 +4861,7 @@ impl<'a> Writer<'a> {
             AnnotationSymbolOccurrenceItemRef::DefinedSymbol(i) => {
                 out.push(EntityKey::DefinedSymbol(*i))
             }
+            AnnotationSymbolOccurrenceItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -4763,6 +4953,9 @@ impl<'a> Writer<'a> {
             AnnotationToModelLeaderLineRef::AnnotationToModelLeaderLine(i) => {
                 self.annotation_to_model_leader_line_ids[i.0 as usize].expect("dep id assigned")
             }
+            AnnotationToModelLeaderLineRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
         }
     }
 
@@ -4774,6 +4967,7 @@ impl<'a> Writer<'a> {
             AnnotationToModelLeaderLineRef::AnnotationToModelLeaderLine(i) => {
                 out.push(EntityKey::AnnotationToModelLeaderLine(*i))
             }
+            AnnotationToModelLeaderLineRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -5081,6 +5275,9 @@ impl<'a> Writer<'a> {
                 self.elementary_surface_ids[i.0 as usize].expect("dep id assigned")
             }
             ApprovalItemRef::Ellipse(i) => self.ellipse_ids[i.0 as usize].expect("dep id assigned"),
+            ApprovalItemRef::ExternalImagePlacementInCallout(i) => {
+                self.external_image_placement_in_callout_ids[i.0 as usize].expect("dep id assigned")
+            }
             ApprovalItemRef::ExternallyDefinedHatchStyle(i) => {
                 self.externally_defined_hatch_style_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -5662,6 +5859,9 @@ impl<'a> Writer<'a> {
             ApprovalItemRef::Effectivity(i) => out.push(EntityKey::Effectivity(*i)),
             ApprovalItemRef::ElementarySurface(i) => out.push(EntityKey::ElementarySurface(*i)),
             ApprovalItemRef::Ellipse(i) => out.push(EntityKey::Ellipse(*i)),
+            ApprovalItemRef::ExternalImagePlacementInCallout(i) => {
+                out.push(EntityKey::ExternalImagePlacementInCallout(*i))
+            }
             ApprovalItemRef::ExternallyDefinedHatchStyle(i) => {
                 out.push(EntityKey::ExternallyDefinedHatchStyle(*i))
             }
@@ -6068,12 +6268,16 @@ impl<'a> Writer<'a> {
             Axis1PlacementRef::Axis1Placement(i) => {
                 self.axis1_placement_ids[i.0 as usize].expect("dep id assigned")
             }
+            Axis1PlacementRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
         }
     }
 
     fn deps_ref_axis1_placement(r: &Axis1PlacementRef, out: &mut Vec<EntityKey>) {
         match r {
             Axis1PlacementRef::Axis1Placement(i) => out.push(EntityKey::Axis1Placement(*i)),
+            Axis1PlacementRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -6082,12 +6286,16 @@ impl<'a> Writer<'a> {
             Axis2Placement3dRef::Axis2Placement3d(i) => {
                 self.axis2_placement3d_ids[i.0 as usize].expect("dep id assigned")
             }
+            Axis2Placement3dRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
         }
     }
 
     fn deps_ref_axis2_placement3d(r: &Axis2Placement3dRef, out: &mut Vec<EntityKey>) {
         match r {
             Axis2Placement3dRef::Axis2Placement3d(i) => out.push(EntityKey::Axis2Placement3d(*i)),
+            Axis2Placement3dRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -6099,6 +6307,9 @@ impl<'a> Writer<'a> {
             Axis2PlacementRef::Axis2Placement3d(i) => {
                 self.axis2_placement3d_ids[i.0 as usize].expect("dep id assigned")
             }
+            Axis2PlacementRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
         }
     }
 
@@ -6106,6 +6317,43 @@ impl<'a> Writer<'a> {
         match r {
             Axis2PlacementRef::Axis2Placement2d(i) => out.push(EntityKey::Axis2Placement2d(*i)),
             Axis2PlacementRef::Axis2Placement3d(i) => out.push(EntityKey::Axis2Placement3d(*i)),
+            Axis2PlacementRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
+        }
+    }
+
+    fn id_of_ref_bottom_condition_target(&self, r: &BottomConditionTargetRef) -> u64 {
+        match r {
+            BottomConditionTargetRef::BasicRoundHole(i) => {
+                self.basic_round_hole_ids[i.0 as usize].expect("dep id assigned")
+            }
+            BottomConditionTargetRef::CounterboreHoleDefinition(i) => {
+                self.counterbore_hole_definition_ids[i.0 as usize].expect("dep id assigned")
+            }
+            BottomConditionTargetRef::CounterdrillHoleDefinition(i) => {
+                self.counterdrill_hole_definition_ids[i.0 as usize].expect("dep id assigned")
+            }
+            BottomConditionTargetRef::CountersinkHoleDefinition(i) => {
+                self.countersink_hole_definition_ids[i.0 as usize].expect("dep id assigned")
+            }
+            BottomConditionTargetRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_bottom_condition_target(r: &BottomConditionTargetRef, out: &mut Vec<EntityKey>) {
+        match r {
+            BottomConditionTargetRef::BasicRoundHole(i) => out.push(EntityKey::BasicRoundHole(*i)),
+            BottomConditionTargetRef::CounterboreHoleDefinition(i) => {
+                out.push(EntityKey::CounterboreHoleDefinition(*i))
+            }
+            BottomConditionTargetRef::CounterdrillHoleDefinition(i) => {
+                out.push(EntityKey::CounterdrillHoleDefinition(*i))
+            }
+            BottomConditionTargetRef::CountersinkHoleDefinition(i) => {
+                out.push(EntityKey::CountersinkHoleDefinition(*i))
+            }
+            BottomConditionTargetRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -6117,6 +6365,9 @@ impl<'a> Writer<'a> {
             CameraModelD3MultiClippingIntersectionSelectRef::Plane(i) => {
                 self.plane_ids[i.0 as usize].expect("dep id assigned")
             }
+            CameraModelD3MultiClippingIntersectionSelectRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
         }
     }
 
@@ -6127,6 +6378,9 @@ impl<'a> Writer<'a> {
         match r {
             CameraModelD3MultiClippingIntersectionSelectRef::Plane(i) => {
                 out.push(EntityKey::Plane(*i))
+            }
+            CameraModelD3MultiClippingIntersectionSelectRef::Complex(i) => {
+                out.push(EntityKey::ComplexEntity(*i))
             }
         }
     }
@@ -6220,6 +6474,9 @@ impl<'a> Writer<'a> {
             CartesianPointRef::CartesianPoint(i) => {
                 self.cartesian_point_ids[i.0 as usize].expect("dep id assigned")
             }
+            CartesianPointRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
         }
     }
 
@@ -6230,6 +6487,7 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::ApllPointWithSurface(*i))
             }
             CartesianPointRef::CartesianPoint(i) => out.push(EntityKey::CartesianPoint(*i)),
+            CartesianPointRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -6481,6 +6739,9 @@ impl<'a> Writer<'a> {
             CharacterizedDefinitionRef::AssemblyComponentUsage(i) => {
                 self.assembly_component_usage_ids[i.0 as usize].expect("dep id assigned")
             }
+            CharacterizedDefinitionRef::BasicRoundHole(i) => {
+                self.basic_round_hole_ids[i.0 as usize].expect("dep id assigned")
+            }
             CharacterizedDefinitionRef::CentreOfSymmetry(i) => {
                 self.centre_of_symmetry_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -6505,14 +6766,29 @@ impl<'a> Writer<'a> {
             CharacterizedDefinitionRef::CompositeGroupShapeAspect(i) => {
                 self.composite_group_shape_aspect_ids[i.0 as usize].expect("dep id assigned")
             }
+            CharacterizedDefinitionRef::CompositeHole(i) => {
+                self.composite_hole_ids[i.0 as usize].expect("dep id assigned")
+            }
             CharacterizedDefinitionRef::CompositeShapeAspect(i) => {
                 self.composite_shape_aspect_ids[i.0 as usize].expect("dep id assigned")
+            }
+            CharacterizedDefinitionRef::CompoundFeature(i) => {
+                self.compound_feature_ids[i.0 as usize].expect("dep id assigned")
             }
             CharacterizedDefinitionRef::ConcentricityTolerance(i) => {
                 self.concentricity_tolerance_ids[i.0 as usize].expect("dep id assigned")
             }
             CharacterizedDefinitionRef::ContinuousShapeAspect(i) => {
                 self.continuous_shape_aspect_ids[i.0 as usize].expect("dep id assigned")
+            }
+            CharacterizedDefinitionRef::CounterboreHoleDefinition(i) => {
+                self.counterbore_hole_definition_ids[i.0 as usize].expect("dep id assigned")
+            }
+            CharacterizedDefinitionRef::CounterdrillHoleDefinition(i) => {
+                self.counterdrill_hole_definition_ids[i.0 as usize].expect("dep id assigned")
+            }
+            CharacterizedDefinitionRef::CountersinkHoleDefinition(i) => {
+                self.countersink_hole_definition_ids[i.0 as usize].expect("dep id assigned")
             }
             CharacterizedDefinitionRef::CylindricityTolerance(i) => {
                 self.cylindricity_tolerance_ids[i.0 as usize].expect("dep id assigned")
@@ -6568,6 +6844,15 @@ impl<'a> Writer<'a> {
             CharacterizedDefinitionRef::DraughtingModelItemAssociationWithPlaceholder(i) => self
                 .draughting_model_item_association_with_placeholder_ids[i.0 as usize]
                 .expect("dep id assigned"),
+            CharacterizedDefinitionRef::ExplicitCompositeHole(i) => {
+                self.explicit_composite_hole_ids[i.0 as usize].expect("dep id assigned")
+            }
+            CharacterizedDefinitionRef::ExplicitRoundHole(i) => {
+                self.explicit_round_hole_ids[i.0 as usize].expect("dep id assigned")
+            }
+            CharacterizedDefinitionRef::FeatureDefinition(i) => {
+                self.feature_definition_ids[i.0 as usize].expect("dep id assigned")
+            }
             CharacterizedDefinitionRef::FeatureForDatumTargetRelationship(i) => self
                 .feature_for_datum_target_relationship_ids[i.0 as usize]
                 .expect("dep id assigned"),
@@ -6649,6 +6934,9 @@ impl<'a> Writer<'a> {
             CharacterizedDefinitionRef::ProductDefinitionWithAssociatedDocuments(i) => self
                 .product_definition_with_associated_documents_ids[i.0 as usize]
                 .expect("dep id assigned"),
+            CharacterizedDefinitionRef::RoundHole(i) => {
+                self.round_hole_ids[i.0 as usize].expect("dep id assigned")
+            }
             CharacterizedDefinitionRef::RoundnessTolerance(i) => {
                 self.roundness_tolerance_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -6706,6 +6994,9 @@ impl<'a> Writer<'a> {
             CharacterizedDefinitionRef::AssemblyComponentUsage(i) => {
                 out.push(EntityKey::AssemblyComponentUsage(*i))
             }
+            CharacterizedDefinitionRef::BasicRoundHole(i) => {
+                out.push(EntityKey::BasicRoundHole(*i))
+            }
             CharacterizedDefinitionRef::CentreOfSymmetry(i) => {
                 out.push(EntityKey::CentreOfSymmetry(*i))
             }
@@ -6728,14 +7019,27 @@ impl<'a> Writer<'a> {
             CharacterizedDefinitionRef::CompositeGroupShapeAspect(i) => {
                 out.push(EntityKey::CompositeGroupShapeAspect(*i))
             }
+            CharacterizedDefinitionRef::CompositeHole(i) => out.push(EntityKey::CompositeHole(*i)),
             CharacterizedDefinitionRef::CompositeShapeAspect(i) => {
                 out.push(EntityKey::CompositeShapeAspect(*i))
+            }
+            CharacterizedDefinitionRef::CompoundFeature(i) => {
+                out.push(EntityKey::CompoundFeature(*i))
             }
             CharacterizedDefinitionRef::ConcentricityTolerance(i) => {
                 out.push(EntityKey::ConcentricityTolerance(*i))
             }
             CharacterizedDefinitionRef::ContinuousShapeAspect(i) => {
                 out.push(EntityKey::ContinuousShapeAspect(*i))
+            }
+            CharacterizedDefinitionRef::CounterboreHoleDefinition(i) => {
+                out.push(EntityKey::CounterboreHoleDefinition(*i))
+            }
+            CharacterizedDefinitionRef::CounterdrillHoleDefinition(i) => {
+                out.push(EntityKey::CounterdrillHoleDefinition(*i))
+            }
+            CharacterizedDefinitionRef::CountersinkHoleDefinition(i) => {
+                out.push(EntityKey::CountersinkHoleDefinition(*i))
             }
             CharacterizedDefinitionRef::CylindricityTolerance(i) => {
                 out.push(EntityKey::CylindricityTolerance(*i))
@@ -6780,6 +7084,15 @@ impl<'a> Writer<'a> {
             }
             CharacterizedDefinitionRef::DraughtingModelItemAssociationWithPlaceholder(i) => {
                 out.push(EntityKey::DraughtingModelItemAssociationWithPlaceholder(*i))
+            }
+            CharacterizedDefinitionRef::ExplicitCompositeHole(i) => {
+                out.push(EntityKey::ExplicitCompositeHole(*i))
+            }
+            CharacterizedDefinitionRef::ExplicitRoundHole(i) => {
+                out.push(EntityKey::ExplicitRoundHole(*i))
+            }
+            CharacterizedDefinitionRef::FeatureDefinition(i) => {
+                out.push(EntityKey::FeatureDefinition(*i))
             }
             CharacterizedDefinitionRef::FeatureForDatumTargetRelationship(i) => {
                 out.push(EntityKey::FeatureForDatumTargetRelationship(*i))
@@ -6862,6 +7175,7 @@ impl<'a> Writer<'a> {
             CharacterizedDefinitionRef::ProductDefinitionWithAssociatedDocuments(i) => {
                 out.push(EntityKey::ProductDefinitionWithAssociatedDocuments(*i))
             }
+            CharacterizedDefinitionRef::RoundHole(i) => out.push(EntityKey::RoundHole(*i)),
             CharacterizedDefinitionRef::RoundnessTolerance(i) => {
                 out.push(EntityKey::RoundnessTolerance(*i))
             }
@@ -6912,6 +7226,9 @@ impl<'a> Writer<'a> {
             CharacterizedResourceDefinitionRef::ActionResourceRequirement(i) => {
                 self.action_resource_requirement_ids[i.0 as usize].expect("dep id assigned")
             }
+            CharacterizedResourceDefinitionRef::ActionResourceRequirementRelationship(i) => self
+                .action_resource_requirement_relationship_ids[i.0 as usize]
+                .expect("dep id assigned"),
             CharacterizedResourceDefinitionRef::Complex(i) => {
                 self.complex_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -6931,6 +7248,9 @@ impl<'a> Writer<'a> {
             }
             CharacterizedResourceDefinitionRef::ActionResourceRequirement(i) => {
                 out.push(EntityKey::ActionResourceRequirement(*i))
+            }
+            CharacterizedResourceDefinitionRef::ActionResourceRequirementRelationship(i) => {
+                out.push(EntityKey::ActionResourceRequirementRelationship(*i))
             }
             CharacterizedResourceDefinitionRef::Complex(i) => {
                 out.push(EntityKey::ComplexEntity(*i))
@@ -7198,6 +7518,9 @@ impl<'a> Writer<'a> {
             }
             CompoundItemDefinitionRef::Ellipse(i) => {
                 self.ellipse_ids[i.0 as usize].expect("dep id assigned")
+            }
+            CompoundItemDefinitionRef::ExternalImagePlacementInCallout(i) => {
+                self.external_image_placement_in_callout_ids[i.0 as usize].expect("dep id assigned")
             }
             CompoundItemDefinitionRef::ExternallyDefinedHatchStyle(i) => {
                 self.externally_defined_hatch_style_ids[i.0 as usize].expect("dep id assigned")
@@ -7596,6 +7919,9 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::ElementarySurface(*i))
             }
             CompoundItemDefinitionRef::Ellipse(i) => out.push(EntityKey::Ellipse(*i)),
+            CompoundItemDefinitionRef::ExternalImagePlacementInCallout(i) => {
+                out.push(EntityKey::ExternalImagePlacementInCallout(*i))
+            }
             CompoundItemDefinitionRef::ExternallyDefinedHatchStyle(i) => {
                 out.push(EntityKey::ExternallyDefinedHatchStyle(*i))
             }
@@ -7897,42 +8223,6 @@ impl<'a> Writer<'a> {
         }
     }
 
-    fn id_of_ref_constructive_geometry_representation_or_shape_representation(
-        &self,
-        r: &ConstructiveGeometryRepresentationOrShapeRepresentationRef,
-    ) -> u64 {
-        match r {
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::AdvancedBrepShapeRepresentation(i) => self.advanced_brep_shape_representation_ids[i.0 as usize].expect("dep id assigned"),
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::ConstructiveGeometryRepresentation(i) => self.constructive_geometry_representation_ids[i.0 as usize].expect("dep id assigned"),
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self.geometrically_bounded_surface_shape_representation_ids[i.0 as usize].expect("dep id assigned"),
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self.geometrically_bounded_wireframe_shape_representation_ids[i.0 as usize].expect("dep id assigned"),
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::ManifoldSurfaceShapeRepresentation(i) => self.manifold_surface_shape_representation_ids[i.0 as usize].expect("dep id assigned"),
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeDimensionRepresentation(i) => self.shape_dimension_representation_ids[i.0 as usize].expect("dep id assigned"),
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentation(i) => self.shape_representation_ids[i.0 as usize].expect("dep id assigned"),
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentationWithParameters(i) => self.shape_representation_with_parameters_ids[i.0 as usize].expect("dep id assigned"),
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::TessellatedShapeRepresentation(i) => self.tessellated_shape_representation_ids[i.0 as usize].expect("dep id assigned"),
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::Complex(i) => self.complex_ids[i.0 as usize].expect("dep id assigned"),
-    }
-    }
-
-    fn deps_ref_constructive_geometry_representation_or_shape_representation(
-        r: &ConstructiveGeometryRepresentationOrShapeRepresentationRef,
-        out: &mut Vec<EntityKey>,
-    ) {
-        match r {
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::AdvancedBrepShapeRepresentation(i) => out.push(EntityKey::AdvancedBrepShapeRepresentation(*i)),
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::ConstructiveGeometryRepresentation(i) => out.push(EntityKey::ConstructiveGeometryRepresentation(*i)),
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => out.push(EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(*i)),
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => out.push(EntityKey::GeometricallyBoundedWireframeShapeRepresentation(*i)),
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::ManifoldSurfaceShapeRepresentation(i) => out.push(EntityKey::ManifoldSurfaceShapeRepresentation(*i)),
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeDimensionRepresentation(i) => out.push(EntityKey::ShapeDimensionRepresentation(*i)),
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentation(i) => out.push(EntityKey::ShapeRepresentation(*i)),
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::ShapeRepresentationWithParameters(i) => out.push(EntityKey::ShapeRepresentationWithParameters(*i)),
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::TessellatedShapeRepresentation(i) => out.push(EntityKey::TessellatedShapeRepresentation(*i)),
-        ConstructiveGeometryRepresentationOrShapeRepresentationRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
-    }
-    }
-
     fn id_of_ref_contract_type(&self, r: &ContractTypeRef) -> u64 {
         match r {
             ContractTypeRef::ContractType(i) => {
@@ -7974,12 +8264,16 @@ impl<'a> Writer<'a> {
             CoordinatesListRef::CoordinatesList(i) => {
                 self.coordinates_list_ids[i.0 as usize].expect("dep id assigned")
             }
+            CoordinatesListRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
         }
     }
 
     fn deps_ref_coordinates_list(r: &CoordinatesListRef, out: &mut Vec<EntityKey>) {
         match r {
             CoordinatesListRef::CoordinatesList(i) => out.push(EntityKey::CoordinatesList(*i)),
+            CoordinatesListRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -9054,6 +9348,9 @@ impl<'a> Writer<'a> {
             DatumReferenceCompartmentRef::DatumReferenceCompartment(i) => {
                 self.datum_reference_compartment_ids[i.0 as usize].expect("dep id assigned")
             }
+            DatumReferenceCompartmentRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
         }
     }
 
@@ -9065,6 +9362,7 @@ impl<'a> Writer<'a> {
             DatumReferenceCompartmentRef::DatumReferenceCompartment(i) => {
                 out.push(EntityKey::DatumReferenceCompartment(*i))
             }
+            DatumReferenceCompartmentRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -9072,6 +9370,9 @@ impl<'a> Writer<'a> {
         match r {
             DatumReferenceElementRef::DatumReferenceElement(i) => {
                 self.datum_reference_element_ids[i.0 as usize].expect("dep id assigned")
+            }
+            DatumReferenceElementRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
             }
         }
     }
@@ -9081,6 +9382,7 @@ impl<'a> Writer<'a> {
             DatumReferenceElementRef::DatumReferenceElement(i) => {
                 out.push(EntityKey::DatumReferenceElement(*i))
             }
+            DatumReferenceElementRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -9495,6 +9797,9 @@ impl<'a> Writer<'a> {
             DesApllPointSelectRef::ApllPointWithSurface(i) => {
                 self.apll_point_with_surface_ids[i.0 as usize].expect("dep id assigned")
             }
+            DesApllPointSelectRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
         }
     }
 
@@ -9504,6 +9809,7 @@ impl<'a> Writer<'a> {
             DesApllPointSelectRef::ApllPointWithSurface(i) => {
                 out.push(EntityKey::ApllPointWithSurface(*i))
             }
+            DesApllPointSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -9825,6 +10131,9 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::BSplineSurfaceWithKnots(i) => {
                 self.b_spline_surface_with_knots_ids[i.0 as usize].expect("dep id assigned")
             }
+            DocumentReferenceItemRef::BasicRoundHole(i) => {
+                self.basic_round_hole_ids[i.0 as usize].expect("dep id assigned")
+            }
             DocumentReferenceItemRef::BezierCurve(i) => {
                 self.bezier_curve_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -9906,11 +10215,17 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::CompositeGroupShapeAspect(i) => {
                 self.composite_group_shape_aspect_ids[i.0 as usize].expect("dep id assigned")
             }
+            DocumentReferenceItemRef::CompositeHole(i) => {
+                self.composite_hole_ids[i.0 as usize].expect("dep id assigned")
+            }
             DocumentReferenceItemRef::CompositeShapeAspect(i) => {
                 self.composite_shape_aspect_ids[i.0 as usize].expect("dep id assigned")
             }
             DocumentReferenceItemRef::CompositeText(i) => {
                 self.composite_text_ids[i.0 as usize].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CompoundFeature(i) => {
+                self.compound_feature_ids[i.0 as usize].expect("dep id assigned")
             }
             DocumentReferenceItemRef::CompoundRepresentationItem(i) => {
                 self.compound_representation_item_ids[i.0 as usize].expect("dep id assigned")
@@ -9950,6 +10265,15 @@ impl<'a> Writer<'a> {
             }
             DocumentReferenceItemRef::CoordinatesList(i) => {
                 self.coordinates_list_ids[i.0 as usize].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CounterboreHoleDefinition(i) => {
+                self.counterbore_hole_definition_ids[i.0 as usize].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CounterdrillHoleDefinition(i) => {
+                self.counterdrill_hole_definition_ids[i.0 as usize].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::CountersinkHoleDefinition(i) => {
+                self.countersink_hole_definition_ids[i.0 as usize].expect("dep id assigned")
             }
             DocumentReferenceItemRef::Curve(i) => {
                 self.curve_ids[i.0 as usize].expect("dep id assigned")
@@ -10060,6 +10384,15 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::Ellipse(i) => {
                 self.ellipse_ids[i.0 as usize].expect("dep id assigned")
             }
+            DocumentReferenceItemRef::ExplicitCompositeHole(i) => {
+                self.explicit_composite_hole_ids[i.0 as usize].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ExplicitRoundHole(i) => {
+                self.explicit_round_hole_ids[i.0 as usize].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::ExternalImagePlacementInCallout(i) => {
+                self.external_image_placement_in_callout_ids[i.0 as usize].expect("dep id assigned")
+            }
             DocumentReferenceItemRef::ExternallyDefinedCharacterGlyph(i) => {
                 self.externally_defined_character_glyph_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -10098,6 +10431,9 @@ impl<'a> Writer<'a> {
             }
             DocumentReferenceItemRef::FaceSurface(i) => {
                 self.face_surface_ids[i.0 as usize].expect("dep id assigned")
+            }
+            DocumentReferenceItemRef::FeatureDefinition(i) => {
+                self.feature_definition_ids[i.0 as usize].expect("dep id assigned")
             }
             DocumentReferenceItemRef::FeatureForDatumTargetRelationship(i) => self
                 .feature_for_datum_target_relationship_ids[i.0 as usize]
@@ -10369,6 +10705,9 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::ResourceRequirementType(i) => {
                 self.resource_requirement_type_ids[i.0 as usize].expect("dep id assigned")
             }
+            DocumentReferenceItemRef::RoundHole(i) => {
+                self.round_hole_ids[i.0 as usize].expect("dep id assigned")
+            }
             DocumentReferenceItemRef::SeamCurve(i) => {
                 self.seam_curve_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -10627,6 +10966,7 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::BSplineSurfaceWithKnots(i) => {
                 out.push(EntityKey::BSplineSurfaceWithKnots(*i))
             }
+            DocumentReferenceItemRef::BasicRoundHole(i) => out.push(EntityKey::BasicRoundHole(*i)),
             DocumentReferenceItemRef::BezierCurve(i) => out.push(EntityKey::BezierCurve(*i)),
             DocumentReferenceItemRef::BezierSurface(i) => out.push(EntityKey::BezierSurface(*i)),
             DocumentReferenceItemRef::BoundedCurve(i) => out.push(EntityKey::BoundedCurve(*i)),
@@ -10678,10 +11018,14 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::CompositeGroupShapeAspect(i) => {
                 out.push(EntityKey::CompositeGroupShapeAspect(*i))
             }
+            DocumentReferenceItemRef::CompositeHole(i) => out.push(EntityKey::CompositeHole(*i)),
             DocumentReferenceItemRef::CompositeShapeAspect(i) => {
                 out.push(EntityKey::CompositeShapeAspect(*i))
             }
             DocumentReferenceItemRef::CompositeText(i) => out.push(EntityKey::CompositeText(*i)),
+            DocumentReferenceItemRef::CompoundFeature(i) => {
+                out.push(EntityKey::CompoundFeature(*i))
+            }
             DocumentReferenceItemRef::CompoundRepresentationItem(i) => {
                 out.push(EntityKey::CompoundRepresentationItem(*i))
             }
@@ -10715,6 +11059,15 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::Contract(i) => out.push(EntityKey::Contract(*i)),
             DocumentReferenceItemRef::CoordinatesList(i) => {
                 out.push(EntityKey::CoordinatesList(*i))
+            }
+            DocumentReferenceItemRef::CounterboreHoleDefinition(i) => {
+                out.push(EntityKey::CounterboreHoleDefinition(*i))
+            }
+            DocumentReferenceItemRef::CounterdrillHoleDefinition(i) => {
+                out.push(EntityKey::CounterdrillHoleDefinition(*i))
+            }
+            DocumentReferenceItemRef::CountersinkHoleDefinition(i) => {
+                out.push(EntityKey::CountersinkHoleDefinition(*i))
             }
             DocumentReferenceItemRef::Curve(i) => out.push(EntityKey::Curve(*i)),
             DocumentReferenceItemRef::CylindricalSurface(i) => {
@@ -10796,6 +11149,15 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::ElementarySurface(*i))
             }
             DocumentReferenceItemRef::Ellipse(i) => out.push(EntityKey::Ellipse(*i)),
+            DocumentReferenceItemRef::ExplicitCompositeHole(i) => {
+                out.push(EntityKey::ExplicitCompositeHole(*i))
+            }
+            DocumentReferenceItemRef::ExplicitRoundHole(i) => {
+                out.push(EntityKey::ExplicitRoundHole(*i))
+            }
+            DocumentReferenceItemRef::ExternalImagePlacementInCallout(i) => {
+                out.push(EntityKey::ExternalImagePlacementInCallout(*i))
+            }
             DocumentReferenceItemRef::ExternallyDefinedCharacterGlyph(i) => {
                 out.push(EntityKey::ExternallyDefinedCharacterGlyph(*i))
             }
@@ -10827,6 +11189,9 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::FaceBound(i) => out.push(EntityKey::FaceBound(*i)),
             DocumentReferenceItemRef::FaceOuterBound(i) => out.push(EntityKey::FaceOuterBound(*i)),
             DocumentReferenceItemRef::FaceSurface(i) => out.push(EntityKey::FaceSurface(*i)),
+            DocumentReferenceItemRef::FeatureDefinition(i) => {
+                out.push(EntityKey::FeatureDefinition(*i))
+            }
             DocumentReferenceItemRef::FeatureForDatumTargetRelationship(i) => {
                 out.push(EntityKey::FeatureForDatumTargetRelationship(*i))
             }
@@ -11047,6 +11412,7 @@ impl<'a> Writer<'a> {
             DocumentReferenceItemRef::ResourceRequirementType(i) => {
                 out.push(EntityKey::ResourceRequirementType(*i))
             }
+            DocumentReferenceItemRef::RoundHole(i) => out.push(EntityKey::RoundHole(*i)),
             DocumentReferenceItemRef::SeamCurve(i) => out.push(EntityKey::SeamCurve(*i)),
             DocumentReferenceItemRef::SecurityClassification(i) => {
                 out.push(EntityKey::SecurityClassification(*i))
@@ -11196,6 +11562,9 @@ impl<'a> Writer<'a> {
             DraughtingCalloutElementRef::AnnotationTextOccurrence(i) => {
                 self.annotation_text_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
+            DraughtingCalloutElementRef::ExternalImagePlacementInCallout(i) => {
+                self.external_image_placement_in_callout_ids[i.0 as usize].expect("dep id assigned")
+            }
             DraughtingCalloutElementRef::LeaderCurve(i) => {
                 self.leader_curve_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -11233,6 +11602,9 @@ impl<'a> Writer<'a> {
             }
             DraughtingCalloutElementRef::AnnotationTextOccurrence(i) => {
                 out.push(EntityKey::AnnotationTextOccurrence(*i))
+            }
+            DraughtingCalloutElementRef::ExternalImagePlacementInCallout(i) => {
+                out.push(EntityKey::ExternalImagePlacementInCallout(*i))
             }
             DraughtingCalloutElementRef::LeaderCurve(i) => out.push(EntityKey::LeaderCurve(*i)),
             DraughtingCalloutElementRef::LeaderTerminator(i) => {
@@ -11288,6 +11660,7 @@ impl<'a> Writer<'a> {
         DraughtingModelItemAssociationSelectRef::AnnotationTextOccurrence(i) => self.annotation_text_occurrence_ids[i.0 as usize].expect("dep id assigned"),
         DraughtingModelItemAssociationSelectRef::DraughtingAnnotationOccurrence(i) => self.draughting_annotation_occurrence_ids[i.0 as usize].expect("dep id assigned"),
         DraughtingModelItemAssociationSelectRef::DraughtingCallout(i) => self.draughting_callout_ids[i.0 as usize].expect("dep id assigned"),
+        DraughtingModelItemAssociationSelectRef::ExternalImagePlacementInCallout(i) => self.external_image_placement_in_callout_ids[i.0 as usize].expect("dep id assigned"),
         DraughtingModelItemAssociationSelectRef::LeaderCurve(i) => self.leader_curve_ids[i.0 as usize].expect("dep id assigned"),
         DraughtingModelItemAssociationSelectRef::LeaderDirectedCallout(i) => self.leader_directed_callout_ids[i.0 as usize].expect("dep id assigned"),
         DraughtingModelItemAssociationSelectRef::LeaderTerminator(i) => self.leader_terminator_ids[i.0 as usize].expect("dep id assigned"),
@@ -11311,6 +11684,7 @@ impl<'a> Writer<'a> {
         DraughtingModelItemAssociationSelectRef::AnnotationTextOccurrence(i) => out.push(EntityKey::AnnotationTextOccurrence(*i)),
         DraughtingModelItemAssociationSelectRef::DraughtingAnnotationOccurrence(i) => out.push(EntityKey::DraughtingAnnotationOccurrence(*i)),
         DraughtingModelItemAssociationSelectRef::DraughtingCallout(i) => out.push(EntityKey::DraughtingCallout(*i)),
+        DraughtingModelItemAssociationSelectRef::ExternalImagePlacementInCallout(i) => out.push(EntityKey::ExternalImagePlacementInCallout(*i)),
         DraughtingModelItemAssociationSelectRef::LeaderCurve(i) => out.push(EntityKey::LeaderCurve(*i)),
         DraughtingModelItemAssociationSelectRef::LeaderDirectedCallout(i) => out.push(EntityKey::LeaderDirectedCallout(*i)),
         DraughtingModelItemAssociationSelectRef::LeaderTerminator(i) => out.push(EntityKey::LeaderTerminator(*i)),
@@ -11742,6 +12116,26 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_explicit_round_hole(&self, r: &ExplicitRoundHoleRef) -> u64 {
+        match r {
+            ExplicitRoundHoleRef::ExplicitRoundHole(i) => {
+                self.explicit_round_hole_ids[i.0 as usize].expect("dep id assigned")
+            }
+            ExplicitRoundHoleRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_explicit_round_hole(r: &ExplicitRoundHoleRef, out: &mut Vec<EntityKey>) {
+        match r {
+            ExplicitRoundHoleRef::ExplicitRoundHole(i) => {
+                out.push(EntityKey::ExplicitRoundHole(*i))
+            }
+            ExplicitRoundHoleRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
+        }
+    }
+
     fn id_of_ref_external_identification_item(&self, r: &ExternalIdentificationItemRef) -> u64 {
         match r {
         ExternalIdentificationItemRef::ActionDirective(i) => self.action_directive_ids[i.0 as usize].expect("dep id assigned"),
@@ -11835,6 +12229,7 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::Effectivity(i) => self.effectivity_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::ElementarySurface(i) => self.elementary_surface_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::Ellipse(i) => self.ellipse_ids[i.0 as usize].expect("dep id assigned"),
+        ExternalIdentificationItemRef::ExternalImagePlacementInCallout(i) => self.external_image_placement_in_callout_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::ExternalSource(i) => self.external_source_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::ExternallyDefinedHatchStyle(i) => self.externally_defined_hatch_style_ids[i.0 as usize].expect("dep id assigned"),
         ExternalIdentificationItemRef::ExternallyDefinedTileStyle(i) => self.externally_defined_tile_style_ids[i.0 as usize].expect("dep id assigned"),
@@ -12075,6 +12470,7 @@ impl<'a> Writer<'a> {
         ExternalIdentificationItemRef::Effectivity(i) => out.push(EntityKey::Effectivity(*i)),
         ExternalIdentificationItemRef::ElementarySurface(i) => out.push(EntityKey::ElementarySurface(*i)),
         ExternalIdentificationItemRef::Ellipse(i) => out.push(EntityKey::Ellipse(*i)),
+        ExternalIdentificationItemRef::ExternalImagePlacementInCallout(i) => out.push(EntityKey::ExternalImagePlacementInCallout(*i)),
         ExternalIdentificationItemRef::ExternalSource(i) => out.push(EntityKey::ExternalSource(*i)),
         ExternalIdentificationItemRef::ExternallyDefinedHatchStyle(i) => out.push(EntityKey::ExternallyDefinedHatchStyle(*i)),
         ExternalIdentificationItemRef::ExternallyDefinedTileStyle(i) => out.push(EntityKey::ExternallyDefinedTileStyle(*i)),
@@ -12923,6 +13319,9 @@ impl<'a> Writer<'a> {
             GeometricModelItemRef::Ellipse(i) => {
                 self.ellipse_ids[i.0 as usize].expect("dep id assigned")
             }
+            GeometricModelItemRef::ExternalImagePlacementInCallout(i) => {
+                self.external_image_placement_in_callout_ids[i.0 as usize].expect("dep id assigned")
+            }
             GeometricModelItemRef::ExternallyDefinedHatchStyle(i) => {
                 self.externally_defined_hatch_style_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -13197,6 +13596,9 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::ElementarySurface(*i))
             }
             GeometricModelItemRef::Ellipse(i) => out.push(EntityKey::Ellipse(*i)),
+            GeometricModelItemRef::ExternalImagePlacementInCallout(i) => {
+                out.push(EntityKey::ExternalImagePlacementInCallout(*i))
+            }
             GeometricModelItemRef::ExternallyDefinedHatchStyle(i) => {
                 out.push(EntityKey::ExternallyDefinedHatchStyle(*i))
             }
@@ -13829,6 +14231,9 @@ impl<'a> Writer<'a> {
             GeometricToleranceTargetRef::DirectedDimensionalLocation(i) => {
                 self.directed_dimensional_location_ids[i.0 as usize].expect("dep id assigned")
             }
+            GeometricToleranceTargetRef::FeatureForDatumTargetRelationship(i) => self
+                .feature_for_datum_target_relationship_ids[i.0 as usize]
+                .expect("dep id assigned"),
             GeometricToleranceTargetRef::GeneralDatumReference(i) => {
                 self.general_datum_reference_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -13840,6 +14245,15 @@ impl<'a> Writer<'a> {
             }
             GeometricToleranceTargetRef::ShapeAspect(i) => {
                 self.shape_aspect_ids[i.0 as usize].expect("dep id assigned")
+            }
+            GeometricToleranceTargetRef::ShapeAspectAssociativity(i) => {
+                self.shape_aspect_associativity_ids[i.0 as usize].expect("dep id assigned")
+            }
+            GeometricToleranceTargetRef::ShapeAspectDerivingRelationship(i) => {
+                self.shape_aspect_deriving_relationship_ids[i.0 as usize].expect("dep id assigned")
+            }
+            GeometricToleranceTargetRef::ShapeAspectRelationship(i) => {
+                self.shape_aspect_relationship_ids[i.0 as usize].expect("dep id assigned")
             }
             GeometricToleranceTargetRef::ToleranceZone(i) => {
                 self.tolerance_zone_ids[i.0 as usize].expect("dep id assigned")
@@ -13912,6 +14326,9 @@ impl<'a> Writer<'a> {
             GeometricToleranceTargetRef::DirectedDimensionalLocation(i) => {
                 out.push(EntityKey::DirectedDimensionalLocation(*i))
             }
+            GeometricToleranceTargetRef::FeatureForDatumTargetRelationship(i) => {
+                out.push(EntityKey::FeatureForDatumTargetRelationship(*i))
+            }
             GeometricToleranceTargetRef::GeneralDatumReference(i) => {
                 out.push(EntityKey::GeneralDatumReference(*i))
             }
@@ -13922,6 +14339,15 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::ProductDefinitionShape(*i))
             }
             GeometricToleranceTargetRef::ShapeAspect(i) => out.push(EntityKey::ShapeAspect(*i)),
+            GeometricToleranceTargetRef::ShapeAspectAssociativity(i) => {
+                out.push(EntityKey::ShapeAspectAssociativity(*i))
+            }
+            GeometricToleranceTargetRef::ShapeAspectDerivingRelationship(i) => {
+                out.push(EntityKey::ShapeAspectDerivingRelationship(*i))
+            }
+            GeometricToleranceTargetRef::ShapeAspectRelationship(i) => {
+                out.push(EntityKey::ShapeAspectRelationship(*i))
+            }
             GeometricToleranceTargetRef::ToleranceZone(i) => out.push(EntityKey::ToleranceZone(*i)),
             GeometricToleranceTargetRef::ToleranceZoneWithDatum(i) => {
                 out.push(EntityKey::ToleranceZoneWithDatum(*i))
@@ -14299,6 +14725,9 @@ impl<'a> Writer<'a> {
             GroupableItemRef::Ellipse(i) => {
                 self.ellipse_ids[i.0 as usize].expect("dep id assigned")
             }
+            GroupableItemRef::ExternalImagePlacementInCallout(i) => {
+                self.external_image_placement_in_callout_ids[i.0 as usize].expect("dep id assigned")
+            }
             GroupableItemRef::ExternalSource(i) => {
                 self.external_source_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -14523,6 +14952,12 @@ impl<'a> Writer<'a> {
             GroupableItemRef::Polyline(i) => {
                 self.polyline_ids[i.0 as usize].expect("dep id assigned")
             }
+            GroupableItemRef::PositiveLengthMeasureWithUnit(i) => {
+                self.positive_length_measure_with_unit_ids[i.0 as usize].expect("dep id assigned")
+            }
+            GroupableItemRef::PositivePlaneAngleMeasureWithUnit(i) => self
+                .positive_plane_angle_measure_with_unit_ids[i.0 as usize]
+                .expect("dep id assigned"),
             GroupableItemRef::PrecisionQualifier(i) => {
                 self.precision_qualifier_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -15031,6 +15466,9 @@ impl<'a> Writer<'a> {
             GroupableItemRef::Effectivity(i) => out.push(EntityKey::Effectivity(*i)),
             GroupableItemRef::ElementarySurface(i) => out.push(EntityKey::ElementarySurface(*i)),
             GroupableItemRef::Ellipse(i) => out.push(EntityKey::Ellipse(*i)),
+            GroupableItemRef::ExternalImagePlacementInCallout(i) => {
+                out.push(EntityKey::ExternalImagePlacementInCallout(*i))
+            }
             GroupableItemRef::ExternalSource(i) => out.push(EntityKey::ExternalSource(*i)),
             GroupableItemRef::ExternallyDefinedHatchStyle(i) => {
                 out.push(EntityKey::ExternallyDefinedHatchStyle(*i))
@@ -15191,6 +15629,12 @@ impl<'a> Writer<'a> {
             GroupableItemRef::Point(i) => out.push(EntityKey::Point(*i)),
             GroupableItemRef::PolyLoop(i) => out.push(EntityKey::PolyLoop(*i)),
             GroupableItemRef::Polyline(i) => out.push(EntityKey::Polyline(*i)),
+            GroupableItemRef::PositiveLengthMeasureWithUnit(i) => {
+                out.push(EntityKey::PositiveLengthMeasureWithUnit(*i))
+            }
+            GroupableItemRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                out.push(EntityKey::PositivePlaneAngleMeasureWithUnit(*i))
+            }
             GroupableItemRef::PrecisionQualifier(i) => out.push(EntityKey::PrecisionQualifier(*i)),
             GroupableItemRef::PresentationArea(i) => out.push(EntityKey::PresentationArea(*i)),
             GroupableItemRef::PresentationRepresentation(i) => {
@@ -15636,6 +16080,9 @@ impl<'a> Writer<'a> {
             IdAttributeSelectRef::Representation(i) => {
                 self.representation_ids[i.0 as usize].expect("dep id assigned")
             }
+            IdAttributeSelectRef::RoundHoleBottomCondition(i) => {
+                self.round_hole_bottom_condition_ids[i.0 as usize].expect("dep id assigned")
+            }
             IdAttributeSelectRef::RoundnessTolerance(i) => {
                 self.roundness_tolerance_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -15908,6 +16355,9 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::PropertyDefinition(*i))
             }
             IdAttributeSelectRef::Representation(i) => out.push(EntityKey::Representation(*i)),
+            IdAttributeSelectRef::RoundHoleBottomCondition(i) => {
+                out.push(EntityKey::RoundHoleBottomCondition(*i))
+            }
             IdAttributeSelectRef::RoundnessTolerance(i) => {
                 out.push(EntityKey::RoundnessTolerance(*i))
             }
@@ -16030,6 +16480,9 @@ impl<'a> Writer<'a> {
             InvisibleItemRef::DraughtingModel(i) => {
                 self.draughting_model_ids[i.0 as usize].expect("dep id assigned")
             }
+            InvisibleItemRef::ExternalImagePlacementInCallout(i) => {
+                self.external_image_placement_in_callout_ids[i.0 as usize].expect("dep id assigned")
+            }
             InvisibleItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self
                 .geometrically_bounded_surface_shape_representation_ids[i.0 as usize]
                 .expect("dep id assigned"),
@@ -16146,6 +16599,9 @@ impl<'a> Writer<'a> {
             }
             InvisibleItemRef::DraughtingCallout(i) => out.push(EntityKey::DraughtingCallout(*i)),
             InvisibleItemRef::DraughtingModel(i) => out.push(EntityKey::DraughtingModel(*i)),
+            InvisibleItemRef::ExternalImagePlacementInCallout(i) => {
+                out.push(EntityKey::ExternalImagePlacementInCallout(*i))
+            }
             InvisibleItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => out.push(
                 EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(*i),
             ),
@@ -16244,6 +16700,7 @@ impl<'a> Writer<'a> {
         ItemIdentifiedRepresentationUsageDefinitionRef::AppliedGroupAssignment(i) => self.applied_group_assignment_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::AppliedPersonAndOrganizationAssignment(i) => self.applied_person_and_organization_assignment_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::AssemblyComponentUsage(i) => self.assembly_component_usage_ids[i.0 as usize].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::BasicRoundHole(i) => self.basic_round_hole_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::CentreOfSymmetry(i) => self.centre_of_symmetry_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::CharacterizedItemWithinRepresentation(i) => self.characterized_item_within_representation_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::CharacterizedObject(i) => self.characterized_object_ids[i.0 as usize].expect("dep id assigned"),
@@ -16252,9 +16709,14 @@ impl<'a> Writer<'a> {
         ItemIdentifiedRepresentationUsageDefinitionRef::CoaxialityTolerance(i) => self.coaxiality_tolerance_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::CommonDatum(i) => self.common_datum_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::CompositeGroupShapeAspect(i) => self.composite_group_shape_aspect_ids[i.0 as usize].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CompositeHole(i) => self.composite_hole_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::CompositeShapeAspect(i) => self.composite_shape_aspect_ids[i.0 as usize].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CompoundFeature(i) => self.compound_feature_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::ConcentricityTolerance(i) => self.concentricity_tolerance_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::ContinuousShapeAspect(i) => self.continuous_shape_aspect_ids[i.0 as usize].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CounterboreHoleDefinition(i) => self.counterbore_hole_definition_ids[i.0 as usize].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CounterdrillHoleDefinition(i) => self.counterdrill_hole_definition_ids[i.0 as usize].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CountersinkHoleDefinition(i) => self.countersink_hole_definition_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::CylindricityTolerance(i) => self.cylindricity_tolerance_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::Datum(i) => self.datum_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::DatumFeature(i) => self.datum_feature_ids[i.0 as usize].expect("dep id assigned"),
@@ -16271,6 +16733,9 @@ impl<'a> Writer<'a> {
         ItemIdentifiedRepresentationUsageDefinitionRef::DimensionalSizeWithPath(i) => self.dimensional_size_with_path_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::DirectedDimensionalLocation(i) => self.directed_dimensional_location_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::DocumentFile(i) => self.document_file_ids[i.0 as usize].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ExplicitCompositeHole(i) => self.explicit_composite_hole_ids[i.0 as usize].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ExplicitRoundHole(i) => self.explicit_round_hole_ids[i.0 as usize].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::FeatureDefinition(i) => self.feature_definition_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::FeatureForDatumTargetRelationship(i) => self.feature_for_datum_target_relationship_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::FlatnessTolerance(i) => self.flatness_tolerance_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::GeneralDatumReference(i) => self.general_datum_reference_ids[i.0 as usize].expect("dep id assigned"),
@@ -16295,6 +16760,7 @@ impl<'a> Writer<'a> {
         ItemIdentifiedRepresentationUsageDefinitionRef::ProductDefinitionUsage(i) => self.product_definition_usage_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::PropertyDefinition(i) => self.property_definition_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::PropertyDefinitionRelationship(i) => self.property_definition_relationship_ids[i.0 as usize].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageDefinitionRef::RoundHole(i) => self.round_hole_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::RoundnessTolerance(i) => self.roundness_tolerance_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspect(i) => self.shape_aspect_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspectAssociativity(i) => self.shape_aspect_associativity_ids[i.0 as usize].expect("dep id assigned"),
@@ -16327,6 +16793,7 @@ impl<'a> Writer<'a> {
         ItemIdentifiedRepresentationUsageDefinitionRef::AppliedGroupAssignment(i) => out.push(EntityKey::AppliedGroupAssignment(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::AppliedPersonAndOrganizationAssignment(i) => out.push(EntityKey::AppliedPersonAndOrganizationAssignment(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::AssemblyComponentUsage(i) => out.push(EntityKey::AssemblyComponentUsage(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::BasicRoundHole(i) => out.push(EntityKey::BasicRoundHole(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::CentreOfSymmetry(i) => out.push(EntityKey::CentreOfSymmetry(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::CharacterizedItemWithinRepresentation(i) => out.push(EntityKey::CharacterizedItemWithinRepresentation(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::CharacterizedObject(i) => out.push(EntityKey::CharacterizedObject(*i)),
@@ -16335,9 +16802,14 @@ impl<'a> Writer<'a> {
         ItemIdentifiedRepresentationUsageDefinitionRef::CoaxialityTolerance(i) => out.push(EntityKey::CoaxialityTolerance(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::CommonDatum(i) => out.push(EntityKey::CommonDatum(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::CompositeGroupShapeAspect(i) => out.push(EntityKey::CompositeGroupShapeAspect(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CompositeHole(i) => out.push(EntityKey::CompositeHole(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::CompositeShapeAspect(i) => out.push(EntityKey::CompositeShapeAspect(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CompoundFeature(i) => out.push(EntityKey::CompoundFeature(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::ConcentricityTolerance(i) => out.push(EntityKey::ConcentricityTolerance(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::ContinuousShapeAspect(i) => out.push(EntityKey::ContinuousShapeAspect(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CounterboreHoleDefinition(i) => out.push(EntityKey::CounterboreHoleDefinition(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CounterdrillHoleDefinition(i) => out.push(EntityKey::CounterdrillHoleDefinition(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::CountersinkHoleDefinition(i) => out.push(EntityKey::CountersinkHoleDefinition(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::CylindricityTolerance(i) => out.push(EntityKey::CylindricityTolerance(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::Datum(i) => out.push(EntityKey::Datum(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::DatumFeature(i) => out.push(EntityKey::DatumFeature(*i)),
@@ -16354,6 +16826,9 @@ impl<'a> Writer<'a> {
         ItemIdentifiedRepresentationUsageDefinitionRef::DimensionalSizeWithPath(i) => out.push(EntityKey::DimensionalSizeWithPath(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::DirectedDimensionalLocation(i) => out.push(EntityKey::DirectedDimensionalLocation(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::DocumentFile(i) => out.push(EntityKey::DocumentFile(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ExplicitCompositeHole(i) => out.push(EntityKey::ExplicitCompositeHole(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::ExplicitRoundHole(i) => out.push(EntityKey::ExplicitRoundHole(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::FeatureDefinition(i) => out.push(EntityKey::FeatureDefinition(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::FeatureForDatumTargetRelationship(i) => out.push(EntityKey::FeatureForDatumTargetRelationship(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::FlatnessTolerance(i) => out.push(EntityKey::FlatnessTolerance(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::GeneralDatumReference(i) => out.push(EntityKey::GeneralDatumReference(*i)),
@@ -16378,6 +16853,7 @@ impl<'a> Writer<'a> {
         ItemIdentifiedRepresentationUsageDefinitionRef::ProductDefinitionUsage(i) => out.push(EntityKey::ProductDefinitionUsage(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::PropertyDefinition(i) => out.push(EntityKey::PropertyDefinition(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::PropertyDefinitionRelationship(i) => out.push(EntityKey::PropertyDefinitionRelationship(*i)),
+        ItemIdentifiedRepresentationUsageDefinitionRef::RoundHole(i) => out.push(EntityKey::RoundHole(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::RoundnessTolerance(i) => out.push(EntityKey::RoundnessTolerance(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspect(i) => out.push(EntityKey::ShapeAspect(*i)),
         ItemIdentifiedRepresentationUsageDefinitionRef::ShapeAspectAssociativity(i) => out.push(EntityKey::ShapeAspectAssociativity(*i)),
@@ -16462,6 +16938,7 @@ impl<'a> Writer<'a> {
         ItemIdentifiedRepresentationUsageSelectRef::EdgeLoop(i) => self.edge_loop_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::ElementarySurface(i) => self.elementary_surface_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::Ellipse(i) => self.ellipse_ids[i.0 as usize].expect("dep id assigned"),
+        ItemIdentifiedRepresentationUsageSelectRef::ExternalImagePlacementInCallout(i) => self.external_image_placement_in_callout_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::ExternallyDefinedHatchStyle(i) => self.externally_defined_hatch_style_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::ExternallyDefinedTileStyle(i) => self.externally_defined_tile_style_ids[i.0 as usize].expect("dep id assigned"),
         ItemIdentifiedRepresentationUsageSelectRef::Face(i) => self.face_ids[i.0 as usize].expect("dep id assigned"),
@@ -16620,6 +17097,7 @@ impl<'a> Writer<'a> {
         ItemIdentifiedRepresentationUsageSelectRef::EdgeLoop(i) => out.push(EntityKey::EdgeLoop(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::ElementarySurface(i) => out.push(EntityKey::ElementarySurface(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::Ellipse(i) => out.push(EntityKey::Ellipse(*i)),
+        ItemIdentifiedRepresentationUsageSelectRef::ExternalImagePlacementInCallout(i) => out.push(EntityKey::ExternalImagePlacementInCallout(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::ExternallyDefinedHatchStyle(i) => out.push(EntityKey::ExternallyDefinedHatchStyle(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::ExternallyDefinedTileStyle(i) => out.push(EntityKey::ExternallyDefinedTileStyle(*i)),
         ItemIdentifiedRepresentationUsageSelectRef::Face(i) => out.push(EntityKey::Face(*i)),
@@ -16891,6 +17369,9 @@ impl<'a> Writer<'a> {
                 self.elementary_surface_ids[i.0 as usize].expect("dep id assigned")
             }
             LayeredItemRef::Ellipse(i) => self.ellipse_ids[i.0 as usize].expect("dep id assigned"),
+            LayeredItemRef::ExternalImagePlacementInCallout(i) => {
+                self.external_image_placement_in_callout_ids[i.0 as usize].expect("dep id assigned")
+            }
             LayeredItemRef::ExternallyDefinedHatchStyle(i) => {
                 self.externally_defined_hatch_style_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -17249,6 +17730,9 @@ impl<'a> Writer<'a> {
             LayeredItemRef::EdgeLoop(i) => out.push(EntityKey::EdgeLoop(*i)),
             LayeredItemRef::ElementarySurface(i) => out.push(EntityKey::ElementarySurface(*i)),
             LayeredItemRef::Ellipse(i) => out.push(EntityKey::Ellipse(*i)),
+            LayeredItemRef::ExternalImagePlacementInCallout(i) => {
+                out.push(EntityKey::ExternalImagePlacementInCallout(*i))
+            }
             LayeredItemRef::ExternallyDefinedHatchStyle(i) => {
                 out.push(EntityKey::ExternallyDefinedHatchStyle(*i))
             }
@@ -17399,6 +17883,9 @@ impl<'a> Writer<'a> {
             LengthMeasureWithUnitRef::LengthMeasureWithUnit(i) => {
                 self.length_measure_with_unit_ids[i.0 as usize].expect("dep id assigned")
             }
+            LengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
+                self.positive_length_measure_with_unit_ids[i.0 as usize].expect("dep id assigned")
+            }
             LengthMeasureWithUnitRef::Complex(i) => {
                 self.complex_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -17409,6 +17896,9 @@ impl<'a> Writer<'a> {
         match r {
             LengthMeasureWithUnitRef::LengthMeasureWithUnit(i) => {
                 out.push(EntityKey::LengthMeasureWithUnit(*i))
+            }
+            LengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
+                out.push(EntityKey::PositiveLengthMeasureWithUnit(*i))
             }
             LengthMeasureWithUnitRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
@@ -17424,6 +17914,13 @@ impl<'a> Writer<'a> {
             }
             LengthOrPlaneAngleMeasureWithUnitSelectRef::PlaneAngleMeasureWithUnit(i) => {
                 self.plane_angle_measure_with_unit_ids[i.0 as usize].expect("dep id assigned")
+            }
+            LengthOrPlaneAngleMeasureWithUnitSelectRef::PositiveLengthMeasureWithUnit(i) => {
+                self.positive_length_measure_with_unit_ids[i.0 as usize].expect("dep id assigned")
+            }
+            LengthOrPlaneAngleMeasureWithUnitSelectRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                self.positive_plane_angle_measure_with_unit_ids[i.0 as usize]
+                    .expect("dep id assigned")
             }
             LengthOrPlaneAngleMeasureWithUnitSelectRef::Complex(i) => {
                 self.complex_ids[i.0 as usize].expect("dep id assigned")
@@ -17441,6 +17938,12 @@ impl<'a> Writer<'a> {
             }
             LengthOrPlaneAngleMeasureWithUnitSelectRef::PlaneAngleMeasureWithUnit(i) => {
                 out.push(EntityKey::PlaneAngleMeasureWithUnit(*i))
+            }
+            LengthOrPlaneAngleMeasureWithUnitSelectRef::PositiveLengthMeasureWithUnit(i) => {
+                out.push(EntityKey::PositiveLengthMeasureWithUnit(*i))
+            }
+            LengthOrPlaneAngleMeasureWithUnitSelectRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                out.push(EntityKey::PositivePlaneAngleMeasureWithUnit(*i))
             }
             LengthOrPlaneAngleMeasureWithUnitSelectRef::Complex(i) => {
                 out.push(EntityKey::ComplexEntity(*i))
@@ -17547,6 +18050,12 @@ impl<'a> Writer<'a> {
             MeasureWithUnitRef::PlaneAngleMeasureWithUnit(i) => {
                 self.plane_angle_measure_with_unit_ids[i.0 as usize].expect("dep id assigned")
             }
+            MeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
+                self.positive_length_measure_with_unit_ids[i.0 as usize].expect("dep id assigned")
+            }
+            MeasureWithUnitRef::PositivePlaneAngleMeasureWithUnit(i) => self
+                .positive_plane_angle_measure_with_unit_ids[i.0 as usize]
+                .expect("dep id assigned"),
             MeasureWithUnitRef::RatioMeasureWithUnit(i) => {
                 self.ratio_measure_with_unit_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -17573,6 +18082,12 @@ impl<'a> Writer<'a> {
             MeasureWithUnitRef::MeasureWithUnit(i) => out.push(EntityKey::MeasureWithUnit(*i)),
             MeasureWithUnitRef::PlaneAngleMeasureWithUnit(i) => {
                 out.push(EntityKey::PlaneAngleMeasureWithUnit(*i))
+            }
+            MeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
+                out.push(EntityKey::PositiveLengthMeasureWithUnit(*i))
+            }
+            MeasureWithUnitRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                out.push(EntityKey::PositivePlaneAngleMeasureWithUnit(*i))
             }
             MeasureWithUnitRef::RatioMeasureWithUnit(i) => {
                 out.push(EntityKey::RatioMeasureWithUnit(*i))
@@ -18305,6 +18820,60 @@ impl<'a> Writer<'a> {
             PointRef::CartesianPoint(i) => out.push(EntityKey::CartesianPoint(*i)),
             PointRef::Point(i) => out.push(EntityKey::Point(*i)),
             PointRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
+        }
+    }
+
+    fn id_of_ref_positive_length_measure_with_unit(
+        &self,
+        r: &PositiveLengthMeasureWithUnitRef,
+    ) -> u64 {
+        match r {
+            PositiveLengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
+                self.positive_length_measure_with_unit_ids[i.0 as usize].expect("dep id assigned")
+            }
+            PositiveLengthMeasureWithUnitRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_positive_length_measure_with_unit(
+        r: &PositiveLengthMeasureWithUnitRef,
+        out: &mut Vec<EntityKey>,
+    ) {
+        match r {
+            PositiveLengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
+                out.push(EntityKey::PositiveLengthMeasureWithUnit(*i))
+            }
+            PositiveLengthMeasureWithUnitRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
+        }
+    }
+
+    fn id_of_ref_positive_plane_angle_measure_with_unit(
+        &self,
+        r: &PositivePlaneAngleMeasureWithUnitRef,
+    ) -> u64 {
+        match r {
+            PositivePlaneAngleMeasureWithUnitRef::PositivePlaneAngleMeasureWithUnit(i) => self
+                .positive_plane_angle_measure_with_unit_ids[i.0 as usize]
+                .expect("dep id assigned"),
+            PositivePlaneAngleMeasureWithUnitRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_positive_plane_angle_measure_with_unit(
+        r: &PositivePlaneAngleMeasureWithUnitRef,
+        out: &mut Vec<EntityKey>,
+    ) {
+        match r {
+            PositivePlaneAngleMeasureWithUnitRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                out.push(EntityKey::PositivePlaneAngleMeasureWithUnit(*i))
+            }
+            PositivePlaneAngleMeasureWithUnitRef::Complex(i) => {
+                out.push(EntityKey::ComplexEntity(*i))
+            }
         }
     }
 
@@ -19325,6 +19894,9 @@ impl<'a> Writer<'a> {
             RepresentationItemRef::Ellipse(i) => {
                 self.ellipse_ids[i.0 as usize].expect("dep id assigned")
             }
+            RepresentationItemRef::ExternalImagePlacementInCallout(i) => {
+                self.external_image_placement_in_callout_ids[i.0 as usize].expect("dep id assigned")
+            }
             RepresentationItemRef::ExternallyDefinedHatchStyle(i) => {
                 self.externally_defined_hatch_style_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -19698,6 +20270,9 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::ElementarySurface(*i))
             }
             RepresentationItemRef::Ellipse(i) => out.push(EntityKey::Ellipse(*i)),
+            RepresentationItemRef::ExternalImagePlacementInCallout(i) => {
+                out.push(EntityKey::ExternalImagePlacementInCallout(*i))
+            }
             RepresentationItemRef::ExternallyDefinedHatchStyle(i) => {
                 out.push(EntityKey::ExternallyDefinedHatchStyle(*i))
             }
@@ -20726,6 +21301,69 @@ impl<'a> Writer<'a> {
         }
     }
 
+    fn id_of_ref_shape_representation(&self, r: &ShapeRepresentationRef) -> u64 {
+        match r {
+            ShapeRepresentationRef::AdvancedBrepShapeRepresentation(i) => {
+                self.advanced_brep_shape_representation_ids[i.0 as usize].expect("dep id assigned")
+            }
+            ShapeRepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => self
+                .geometrically_bounded_surface_shape_representation_ids[i.0 as usize]
+                .expect("dep id assigned"),
+            ShapeRepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => self
+                .geometrically_bounded_wireframe_shape_representation_ids[i.0 as usize]
+                .expect("dep id assigned"),
+            ShapeRepresentationRef::ManifoldSurfaceShapeRepresentation(i) => self
+                .manifold_surface_shape_representation_ids[i.0 as usize]
+                .expect("dep id assigned"),
+            ShapeRepresentationRef::ShapeDimensionRepresentation(i) => {
+                self.shape_dimension_representation_ids[i.0 as usize].expect("dep id assigned")
+            }
+            ShapeRepresentationRef::ShapeRepresentation(i) => {
+                self.shape_representation_ids[i.0 as usize].expect("dep id assigned")
+            }
+            ShapeRepresentationRef::ShapeRepresentationWithParameters(i) => self
+                .shape_representation_with_parameters_ids[i.0 as usize]
+                .expect("dep id assigned"),
+            ShapeRepresentationRef::TessellatedShapeRepresentation(i) => {
+                self.tessellated_shape_representation_ids[i.0 as usize].expect("dep id assigned")
+            }
+            ShapeRepresentationRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_shape_representation(r: &ShapeRepresentationRef, out: &mut Vec<EntityKey>) {
+        match r {
+            ShapeRepresentationRef::AdvancedBrepShapeRepresentation(i) => {
+                out.push(EntityKey::AdvancedBrepShapeRepresentation(*i))
+            }
+            ShapeRepresentationRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => out.push(
+                EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(*i),
+            ),
+            ShapeRepresentationRef::GeometricallyBoundedWireframeShapeRepresentation(i) => out
+                .push(EntityKey::GeometricallyBoundedWireframeShapeRepresentation(
+                    *i,
+                )),
+            ShapeRepresentationRef::ManifoldSurfaceShapeRepresentation(i) => {
+                out.push(EntityKey::ManifoldSurfaceShapeRepresentation(*i))
+            }
+            ShapeRepresentationRef::ShapeDimensionRepresentation(i) => {
+                out.push(EntityKey::ShapeDimensionRepresentation(*i))
+            }
+            ShapeRepresentationRef::ShapeRepresentation(i) => {
+                out.push(EntityKey::ShapeRepresentation(*i))
+            }
+            ShapeRepresentationRef::ShapeRepresentationWithParameters(i) => {
+                out.push(EntityKey::ShapeRepresentationWithParameters(*i))
+            }
+            ShapeRepresentationRef::TessellatedShapeRepresentation(i) => {
+                out.push(EntityKey::TessellatedShapeRepresentation(*i))
+            }
+            ShapeRepresentationRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
+        }
+    }
+
     fn id_of_ref_shape_representation_relationship(
         &self,
         r: &ShapeRepresentationRelationshipRef,
@@ -20799,6 +21437,12 @@ impl<'a> Writer<'a> {
             SizeSelectRef::PlaneAngleMeasureWithUnit(i) => {
                 self.plane_angle_measure_with_unit_ids[i.0 as usize].expect("dep id assigned")
             }
+            SizeSelectRef::PositiveLengthMeasureWithUnit(i) => {
+                self.positive_length_measure_with_unit_ids[i.0 as usize].expect("dep id assigned")
+            }
+            SizeSelectRef::PositivePlaneAngleMeasureWithUnit(i) => self
+                .positive_plane_angle_measure_with_unit_ids[i.0 as usize]
+                .expect("dep id assigned"),
             SizeSelectRef::RatioMeasureWithUnit(i) => {
                 self.ratio_measure_with_unit_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -20823,6 +21467,12 @@ impl<'a> Writer<'a> {
             SizeSelectRef::MeasureWithUnit(i) => out.push(EntityKey::MeasureWithUnit(*i)),
             SizeSelectRef::PlaneAngleMeasureWithUnit(i) => {
                 out.push(EntityKey::PlaneAngleMeasureWithUnit(*i))
+            }
+            SizeSelectRef::PositiveLengthMeasureWithUnit(i) => {
+                out.push(EntityKey::PositiveLengthMeasureWithUnit(*i))
+            }
+            SizeSelectRef::PositivePlaneAngleMeasureWithUnit(i) => {
+                out.push(EntityKey::PositivePlaneAngleMeasureWithUnit(*i))
             }
             SizeSelectRef::RatioMeasureWithUnit(i) => out.push(EntityKey::RatioMeasureWithUnit(*i)),
             SizeSelectRef::UncertaintyMeasureWithUnit(i) => {
@@ -21109,6 +21759,9 @@ impl<'a> Writer<'a> {
             }
             StyleContextSelectRef::Ellipse(i) => {
                 self.ellipse_ids[i.0 as usize].expect("dep id assigned")
+            }
+            StyleContextSelectRef::ExternalImagePlacementInCallout(i) => {
+                self.external_image_placement_in_callout_ids[i.0 as usize].expect("dep id assigned")
             }
             StyleContextSelectRef::ExternallyDefinedHatchStyle(i) => {
                 self.externally_defined_hatch_style_ids[i.0 as usize].expect("dep id assigned")
@@ -21578,6 +22231,9 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::ElementarySurface(*i))
             }
             StyleContextSelectRef::Ellipse(i) => out.push(EntityKey::Ellipse(*i)),
+            StyleContextSelectRef::ExternalImagePlacementInCallout(i) => {
+                out.push(EntityKey::ExternalImagePlacementInCallout(*i))
+            }
             StyleContextSelectRef::ExternallyDefinedHatchStyle(i) => {
                 out.push(EntityKey::ExternallyDefinedHatchStyle(*i))
             }
@@ -21826,6 +22482,9 @@ impl<'a> Writer<'a> {
             StyledItemRef::DraughtingAnnotationOccurrence(i) => {
                 self.draughting_annotation_occurrence_ids[i.0 as usize].expect("dep id assigned")
             }
+            StyledItemRef::ExternalImagePlacementInCallout(i) => {
+                self.external_image_placement_in_callout_ids[i.0 as usize].expect("dep id assigned")
+            }
             StyledItemRef::LeaderCurve(i) => {
                 self.leader_curve_ids[i.0 as usize].expect("dep id assigned")
             }
@@ -21872,6 +22531,9 @@ impl<'a> Writer<'a> {
             }
             StyledItemRef::DraughtingAnnotationOccurrence(i) => {
                 out.push(EntityKey::DraughtingAnnotationOccurrence(*i))
+            }
+            StyledItemRef::ExternalImagePlacementInCallout(i) => {
+                out.push(EntityKey::ExternalImagePlacementInCallout(*i))
             }
             StyledItemRef::LeaderCurve(i) => out.push(EntityKey::LeaderCurve(*i)),
             StyledItemRef::LeaderTerminator(i) => out.push(EntityKey::LeaderTerminator(*i)),
@@ -21958,6 +22620,7 @@ impl<'a> Writer<'a> {
         StyledItemTargetOrRepresentationItemRef::EdgeLoop(i) => self.edge_loop_ids[i.0 as usize].expect("dep id assigned"),
         StyledItemTargetOrRepresentationItemRef::ElementarySurface(i) => self.elementary_surface_ids[i.0 as usize].expect("dep id assigned"),
         StyledItemTargetOrRepresentationItemRef::Ellipse(i) => self.ellipse_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::ExternalImagePlacementInCallout(i) => self.external_image_placement_in_callout_ids[i.0 as usize].expect("dep id assigned"),
         StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(i) => self.externally_defined_hatch_style_ids[i.0 as usize].expect("dep id assigned"),
         StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(i) => self.externally_defined_tile_style_ids[i.0 as usize].expect("dep id assigned"),
         StyledItemTargetOrRepresentationItemRef::Face(i) => self.face_ids[i.0 as usize].expect("dep id assigned"),
@@ -22059,6 +22722,7 @@ impl<'a> Writer<'a> {
         StyledItemTargetOrRepresentationItemRef::VertexShell(i) => self.vertex_shell_ids[i.0 as usize].expect("dep id assigned"),
         StyledItemTargetOrRepresentationItemRef::WireShell(i) => self.wire_shell_ids[i.0 as usize].expect("dep id assigned"),
         StyledItemTargetOrRepresentationItemRef::Complex(i) => self.complex_ids[i.0 as usize].expect("dep id assigned"),
+        StyledItemTargetOrRepresentationItemRef::SetRepresentationItem(_) => panic!("aggregate via single id_of"),
     }
     }
 
@@ -22135,6 +22799,7 @@ impl<'a> Writer<'a> {
         StyledItemTargetOrRepresentationItemRef::EdgeLoop(i) => out.push(EntityKey::EdgeLoop(*i)),
         StyledItemTargetOrRepresentationItemRef::ElementarySurface(i) => out.push(EntityKey::ElementarySurface(*i)),
         StyledItemTargetOrRepresentationItemRef::Ellipse(i) => out.push(EntityKey::Ellipse(*i)),
+        StyledItemTargetOrRepresentationItemRef::ExternalImagePlacementInCallout(i) => out.push(EntityKey::ExternalImagePlacementInCallout(*i)),
         StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(i) => out.push(EntityKey::ExternallyDefinedHatchStyle(*i)),
         StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(i) => out.push(EntityKey::ExternallyDefinedTileStyle(*i)),
         StyledItemTargetOrRepresentationItemRef::Face(i) => out.push(EntityKey::Face(*i)),
@@ -22236,6 +22901,7 @@ impl<'a> Writer<'a> {
         StyledItemTargetOrRepresentationItemRef::VertexShell(i) => out.push(EntityKey::VertexShell(*i)),
         StyledItemTargetOrRepresentationItemRef::WireShell(i) => out.push(EntityKey::WireShell(*i)),
         StyledItemTargetOrRepresentationItemRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
+        StyledItemTargetOrRepresentationItemRef::SetRepresentationItem(vs) => { for e in vs { Self::deps_ref_representation_item(e, out); } },
     }
     }
 
@@ -22484,12 +23150,14 @@ impl<'a> Writer<'a> {
             SymbolTargetRef::SymbolTarget(i) => {
                 self.symbol_target_ids[i.0 as usize].expect("dep id assigned")
             }
+            SymbolTargetRef::Complex(i) => self.complex_ids[i.0 as usize].expect("dep id assigned"),
         }
     }
 
     fn deps_ref_symbol_target(r: &SymbolTargetRef, out: &mut Vec<EntityKey>) {
         match r {
             SymbolTargetRef::SymbolTarget(i) => out.push(EntityKey::SymbolTarget(*i)),
+            SymbolTargetRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -22698,6 +23366,9 @@ impl<'a> Writer<'a> {
             ToleranceSelectRef::ApproximationToleranceParameter(i) => {
                 self.approximation_tolerance_parameter_ids[i.0 as usize].expect("dep id assigned")
             }
+            ToleranceSelectRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
         }
     }
 
@@ -22709,6 +23380,49 @@ impl<'a> Writer<'a> {
             ToleranceSelectRef::ApproximationToleranceParameter(i) => {
                 out.push(EntityKey::ApproximationToleranceParameter(*i))
             }
+            ToleranceSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
+        }
+    }
+
+    fn id_of_ref_tolerance_value_or_limits_and_fits(
+        &self,
+        r: &ToleranceValueOrLimitsAndFitsRef,
+    ) -> u64 {
+        match r {
+            ToleranceValueOrLimitsAndFitsRef::LimitsAndFits(i) => {
+                self.limits_and_fits_ids[i.0 as usize].expect("dep id assigned")
+            }
+            ToleranceValueOrLimitsAndFitsRef::ToleranceValue(i) => {
+                self.tolerance_value_ids[i.0 as usize].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_tolerance_value_or_limits_and_fits(
+        r: &ToleranceValueOrLimitsAndFitsRef,
+        out: &mut Vec<EntityKey>,
+    ) {
+        match r {
+            ToleranceValueOrLimitsAndFitsRef::LimitsAndFits(i) => {
+                out.push(EntityKey::LimitsAndFits(*i))
+            }
+            ToleranceValueOrLimitsAndFitsRef::ToleranceValue(i) => {
+                out.push(EntityKey::ToleranceValue(*i))
+            }
+        }
+    }
+
+    fn id_of_ref_tolerance_value(&self, r: &ToleranceValueRef) -> u64 {
+        match r {
+            ToleranceValueRef::ToleranceValue(i) => {
+                self.tolerance_value_ids[i.0 as usize].expect("dep id assigned")
+            }
+        }
+    }
+
+    fn deps_ref_tolerance_value(r: &ToleranceValueRef, out: &mut Vec<EntityKey>) {
+        match r {
+            ToleranceValueRef::ToleranceValue(i) => out.push(EntityKey::ToleranceValue(*i)),
         }
     }
 
@@ -22975,10 +23689,10 @@ impl<'a> Writer<'a> {
             TransformationRef::Complex(i) => {
                 self.complex_ids[i.0 as usize].expect("dep id assigned")
             }
-            TransformationRef::ListItemDefinedTransformation(_) => {
+            TransformationRef::SetItemDefinedTransformation(_) => {
                 panic!("aggregate via single id_of")
             }
-            TransformationRef::SetItemDefinedTransformation(_) => {
+            TransformationRef::ListItemDefinedTransformation(_) => {
                 panic!("aggregate via single id_of")
             }
         }
@@ -22993,12 +23707,12 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::ItemDefinedTransformation(*i))
             }
             TransformationRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
-            TransformationRef::ListItemDefinedTransformation(vs) => {
+            TransformationRef::SetItemDefinedTransformation(vs) => {
                 for e in vs {
                     Self::deps_ref_item_defined_transformation(e, out);
                 }
             }
-            TransformationRef::SetItemDefinedTransformation(vs) => {
+            TransformationRef::ListItemDefinedTransformation(vs) => {
                 for e in vs {
                     Self::deps_ref_item_defined_transformation(e, out);
                 }
@@ -23017,6 +23731,9 @@ impl<'a> Writer<'a> {
             TrimmingSelectRef::CartesianPoint(i) => {
                 self.cartesian_point_ids[i.0 as usize].expect("dep id assigned")
             }
+            TrimmingSelectRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
             TrimmingSelectRef::ParameterValue(_) => panic!("scalar via single id_of"),
         }
     }
@@ -23028,6 +23745,7 @@ impl<'a> Writer<'a> {
                 out.push(EntityKey::ApllPointWithSurface(*i))
             }
             TrimmingSelectRef::CartesianPoint(i) => out.push(EntityKey::CartesianPoint(*i)),
+            TrimmingSelectRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
             TrimmingSelectRef::ParameterValue(_) => {}
         }
     }
@@ -23060,6 +23778,9 @@ impl<'a> Writer<'a> {
             UncertaintyMeasureWithUnitRef::UncertaintyMeasureWithUnit(i) => {
                 self.uncertainty_measure_with_unit_ids[i.0 as usize].expect("dep id assigned")
             }
+            UncertaintyMeasureWithUnitRef::Complex(i) => {
+                self.complex_ids[i.0 as usize].expect("dep id assigned")
+            }
         }
     }
 
@@ -23071,6 +23792,7 @@ impl<'a> Writer<'a> {
             UncertaintyMeasureWithUnitRef::UncertaintyMeasureWithUnit(i) => {
                 out.push(EntityKey::UncertaintyMeasureWithUnit(*i))
             }
+            UncertaintyMeasureWithUnitRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -23187,12 +23909,14 @@ impl<'a> Writer<'a> {
             VertexLoopRef::VertexLoop(i) => {
                 self.vertex_loop_ids[i.0 as usize].expect("dep id assigned")
             }
+            VertexLoopRef::Complex(i) => self.complex_ids[i.0 as usize].expect("dep id assigned"),
         }
     }
 
     fn deps_ref_vertex_loop(r: &VertexLoopRef, out: &mut Vec<EntityKey>) {
         match r {
             VertexLoopRef::VertexLoop(i) => out.push(EntityKey::VertexLoop(*i)),
+            VertexLoopRef::Complex(i) => out.push(EntityKey::ComplexEntity(*i)),
         }
     }
 
@@ -23312,6 +24036,19 @@ impl<'a> Writer<'a> {
                 for e in &it.operations {
                     Self::deps_ref_characterized_action_definition(e, out);
                 }
+            }
+            EntityKey::ActionResourceRequirementRelationship(id) => {
+                let it = model
+                    .action_resource_requirement_relationship_arena
+                    .get(id.0);
+                Self::deps_ref_action_resource_requirement(
+                    &it.relating_action_resource_requirement,
+                    out,
+                );
+                Self::deps_ref_action_resource_requirement(
+                    &it.related_action_resource_requirement,
+                    out,
+                );
             }
             EntityKey::ActionResourceType(_) => {}
             EntityKey::Address(_) => {}
@@ -23642,6 +24379,20 @@ impl<'a> Writer<'a> {
                     }
                 }
             }
+            EntityKey::BasicRoundHole(id) => {
+                let it = model.basic_round_hole_arena.get(id.0);
+                if let Some(r) = &it.depth {
+                    Self::deps_ref_positive_length_measure_with_unit(r, out);
+                }
+                if let Some(r) = &it.depth_tolerance {
+                    Self::deps_ref_tolerance_value(r, out);
+                }
+                Self::deps_ref_positive_length_measure_with_unit(&it.diameter, out);
+                if let Some(r) = &it.diameter_tolerance {
+                    Self::deps_ref_tolerance_value_or_limits_and_fits(r, out);
+                }
+                Self::deps_ref_shape_representation(&it.placement, out);
+            }
             EntityKey::BezierCurve(id) => {
                 let it = model.bezier_curve_arena.get(id.0);
                 for e in &it.control_points_list {
@@ -23853,6 +24604,7 @@ impl<'a> Writer<'a> {
                 let it = model.composite_group_shape_aspect_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
             }
+            EntityKey::CompositeHole(_) => {}
             EntityKey::CompositeShapeAspect(id) => {
                 let it = model.composite_shape_aspect_arena.get(id.0);
                 Self::deps_ref_product_definition_shape(&it.of_shape, out);
@@ -23863,6 +24615,7 @@ impl<'a> Writer<'a> {
                     Self::deps_ref_text_or_character(e, out);
                 }
             }
+            EntityKey::CompoundFeature(_) => {}
             EntityKey::CompoundRepresentationItem(id) => {
                 let it = model.compound_representation_item_arena.get(id.0);
                 Self::deps_ref_compound_item_definition(&it.item_element, out);
@@ -23918,9 +24671,7 @@ impl<'a> Writer<'a> {
                 let it = model
                     .constructive_geometry_representation_relationship_arena
                     .get(id.0);
-                Self::deps_ref_constructive_geometry_representation_or_shape_representation(
-                    &it.rep_1, out,
-                );
+                Self::deps_ref_representation_or_representation_reference(&it.rep_1, out);
                 Self::deps_ref_representation_or_representation_reference(&it.rep_2, out);
             }
             EntityKey::ContextDependentOverRidingStyledItem(id) => {
@@ -23961,6 +24712,64 @@ impl<'a> Writer<'a> {
             }
             EntityKey::CoordinatedUniversalTimeOffset(_) => {}
             EntityKey::CoordinatesList(_) => {}
+            EntityKey::CounterboreHoleDefinition(id) => {
+                let it = model.counterbore_hole_definition_arena.get(id.0);
+                Self::deps_ref_shape_representation(&it.placement, out);
+                for e in &it.counterbore {
+                    Self::deps_ref_explicit_round_hole(e, out);
+                }
+                if let Some(r) = &it.drilled_hole_depth {
+                    Self::deps_ref_positive_length_measure_with_unit(r, out);
+                }
+                if let Some(r) = &it.drilled_hole_depth_tolerance {
+                    Self::deps_ref_tolerance_value(r, out);
+                }
+                Self::deps_ref_positive_length_measure_with_unit(&it.drilled_hole_diameter, out);
+                if let Some(r) = &it.drilled_hole_diameter_tolerance {
+                    Self::deps_ref_tolerance_value_or_limits_and_fits(r, out);
+                }
+            }
+            EntityKey::CounterdrillHoleDefinition(id) => {
+                let it = model.counterdrill_hole_definition_arena.get(id.0);
+                Self::deps_ref_shape_representation(&it.placement, out);
+                Self::deps_ref_explicit_round_hole(&it.counterbore, out);
+                Self::deps_ref_positive_plane_angle_measure_with_unit(&it.counterdrill_angle, out);
+                if let Some(r) = &it.counterdrill_angle_tolerance {
+                    Self::deps_ref_tolerance_value(r, out);
+                }
+                if let Some(r) = &it.drilled_hole_depth {
+                    Self::deps_ref_positive_length_measure_with_unit(r, out);
+                }
+                if let Some(r) = &it.drilled_hole_depth_tolerance {
+                    Self::deps_ref_tolerance_value(r, out);
+                }
+                Self::deps_ref_positive_length_measure_with_unit(&it.drilled_hole_diameter, out);
+                if let Some(r) = &it.drilled_hole_diameter_tolerance {
+                    Self::deps_ref_tolerance_value_or_limits_and_fits(r, out);
+                }
+            }
+            EntityKey::CountersinkHoleDefinition(id) => {
+                let it = model.countersink_hole_definition_arena.get(id.0);
+                Self::deps_ref_shape_representation(&it.placement, out);
+                Self::deps_ref_positive_plane_angle_measure_with_unit(&it.countersink_angle, out);
+                if let Some(r) = &it.countersink_angle_tolerance {
+                    Self::deps_ref_tolerance_value(r, out);
+                }
+                Self::deps_ref_positive_length_measure_with_unit(&it.countersink_diameter, out);
+                if let Some(r) = &it.countersink_diameter_tolerance {
+                    Self::deps_ref_tolerance_value_or_limits_and_fits(r, out);
+                }
+                if let Some(r) = &it.drilled_hole_depth {
+                    Self::deps_ref_positive_length_measure_with_unit(r, out);
+                }
+                if let Some(r) = &it.drilled_hole_depth_tolerance {
+                    Self::deps_ref_tolerance_value(r, out);
+                }
+                Self::deps_ref_positive_length_measure_with_unit(&it.drilled_hole_diameter, out);
+                if let Some(r) = &it.drilled_hole_diameter_tolerance {
+                    Self::deps_ref_tolerance_value_or_limits_and_fits(r, out);
+                }
+            }
             EntityKey::Curve(_) => {}
             EntityKey::CurveStyle(id) => {
                 let it = model.curve_style_arena.get(id.0);
@@ -24263,11 +25072,35 @@ impl<'a> Writer<'a> {
                 let it = model.ellipse_arena.get(id.0);
                 Self::deps_ref_axis2_placement(&it.position, out);
             }
+            EntityKey::ExplicitCompositeHole(id) => {
+                let it = model.explicit_composite_hole_arena.get(id.0);
+                Self::deps_ref_shape_representation(&it.placement, out);
+            }
+            EntityKey::ExplicitRoundHole(id) => {
+                let it = model.explicit_round_hole_arena.get(id.0);
+                Self::deps_ref_positive_length_measure_with_unit(&it.depth, out);
+                if let Some(r) = &it.depth_tolerance {
+                    Self::deps_ref_tolerance_value(r, out);
+                }
+                Self::deps_ref_positive_length_measure_with_unit(&it.diameter, out);
+                if let Some(r) = &it.diameter_tolerance {
+                    Self::deps_ref_tolerance_value_or_limits_and_fits(r, out);
+                }
+                Self::deps_ref_shape_representation(&it.placement, out);
+            }
             EntityKey::Expression(_) => {}
             EntityKey::ExternalIdentificationAssignment(id) => {
                 let it = model.external_identification_assignment_arena.get(id.0);
                 Self::deps_ref_identification_role(&it.role, out);
                 Self::deps_ref_external_source(&it.source, out);
+            }
+            EntityKey::ExternalImagePlacementInCallout(id) => {
+                let it = model.external_image_placement_in_callout_arena.get(id.0);
+                for e in &it.styles {
+                    Self::deps_ref_presentation_style_assignment(e, out);
+                }
+                Self::deps_ref_geometric_set(&it.item, out);
+                Self::deps_ref_document(&it.image, out);
             }
             EntityKey::ExternalSource(_) => {}
             EntityKey::ExternallyDefinedCharacterGlyph(id) => {
@@ -24327,6 +25160,7 @@ impl<'a> Writer<'a> {
                 }
                 Self::deps_ref_surface(&it.face_geometry, out);
             }
+            EntityKey::FeatureDefinition(_) => {}
             EntityKey::FeatureForDatumTargetRelationship(id) => {
                 let it = model.feature_for_datum_target_relationship_arena.get(id.0);
                 Self::deps_ref_shape_aspect(&it.relating_shape_aspect, out);
@@ -24907,6 +25741,14 @@ impl<'a> Writer<'a> {
                 }
                 Self::deps_ref_geometric_tolerance_target(&it.toleranced_shape_aspect, out);
             }
+            EntityKey::PositiveLengthMeasureWithUnit(id) => {
+                let it = model.positive_length_measure_with_unit_arena.get(id.0);
+                Self::deps_ref_unit(&it.unit_component, out);
+            }
+            EntityKey::PositivePlaneAngleMeasureWithUnit(id) => {
+                let it = model.positive_plane_angle_measure_with_unit_arena.get(id.0);
+                Self::deps_ref_unit(&it.unit_component, out);
+            }
             EntityKey::PreDefinedCharacterGlyph(_) => {}
             EntityKey::PreDefinedColour(_) => {}
             EntityKey::PreDefinedCurveFont(_) => {}
@@ -25197,6 +26039,26 @@ impl<'a> Writer<'a> {
                 let it = model.role_association_arena.get(id.0);
                 Self::deps_ref_object_role(&it.role, out);
                 Self::deps_ref_role_select(&it.item_with_role, out);
+            }
+            EntityKey::RoundHole(_) => {}
+            EntityKey::RoundHoleBottomCondition(id) => {
+                let it = model.round_hole_bottom_condition_arena.get(id.0);
+                Self::deps_ref_bottom_condition_target(&it.target, out);
+                if let Some(r) = &it.radius {
+                    Self::deps_ref_positive_length_measure_with_unit(r, out);
+                }
+                if let Some(r) = &it.final_diameter {
+                    Self::deps_ref_positive_length_measure_with_unit(r, out);
+                }
+                if let Some(r) = &it.taper_angle {
+                    Self::deps_ref_positive_plane_angle_measure_with_unit(r, out);
+                }
+                if let Some(r) = &it.tip_angle {
+                    Self::deps_ref_positive_plane_angle_measure_with_unit(r, out);
+                }
+                if let Some(r) = &it.tip_radius {
+                    Self::deps_ref_positive_length_measure_with_unit(r, out);
+                }
             }
             EntityKey::RoundnessTolerance(id) => {
                 let it = model.roundness_tolerance_arena.get(id.0);
@@ -25649,6 +26511,11 @@ impl<'a> Writer<'a> {
                         PartialEntity::Action { chosen_method, .. } => {
                             Self::deps_ref_action_method(chosen_method, out);
                         }
+                        PartialEntity::ActionAssignment {
+                            assigned_action, ..
+                        } => {
+                            Self::deps_ref_action(assigned_action, out);
+                        }
                         PartialEntity::ActionMethodRelationship {
                             relating_method,
                             related_method,
@@ -25699,6 +26566,14 @@ impl<'a> Writer<'a> {
                                 out,
                             );
                         }
+                        PartialEntity::AnnotationPlaceholderLeaderLine {
+                            geometric_elements,
+                            ..
+                        } => {
+                            for e in geometric_elements {
+                                Self::deps_ref_des_apll_point_select(e, out);
+                            }
+                        }
                         PartialEntity::AnnotationPlaceholderOccurrenceWithLeaderLine {
                             leader_line,
                             ..
@@ -25713,6 +26588,11 @@ impl<'a> Writer<'a> {
                                     Self::deps_ref_annotation_plane_element(e, out);
                                 }
                             }
+                        }
+                        PartialEntity::ApllPointWithSurface {
+                            associated_surface, ..
+                        } => {
+                            Self::deps_ref_face_surface(associated_surface, out);
                         }
                         PartialEntity::ApplicationContextElement {
                             frame_of_reference, ..
@@ -25768,6 +26648,9 @@ impl<'a> Writer<'a> {
                         } => {
                             Self::deps_ref_approval(assigned_approval, out);
                         }
+                        PartialEntity::ApproximationTolerance { tolerance, .. } => {
+                            Self::deps_ref_tolerance_select(tolerance, out);
+                        }
                         PartialEntity::AreaInSet { area, in_set, .. } => {
                             Self::deps_ref_presentation_area(area, out);
                             Self::deps_ref_presentation_set(in_set, out);
@@ -25779,6 +26662,37 @@ impl<'a> Writer<'a> {
                         } => {
                             Self::deps_ref_ascribable_state(relating_ascribable_state, out);
                             Self::deps_ref_ascribable_state(related_ascribable_state, out);
+                        }
+                        PartialEntity::AuxiliaryLeaderLine {
+                            controlling_leader_line,
+                            ..
+                        } => {
+                            Self::deps_ref_annotation_to_model_leader_line(
+                                controlling_leader_line,
+                                out,
+                            );
+                        }
+                        PartialEntity::Axis1Placement { axis, .. } => {
+                            if let Some(r) = axis {
+                                Self::deps_ref_direction(r, out);
+                            }
+                        }
+                        PartialEntity::Axis2Placement2d { ref_direction, .. } => {
+                            if let Some(r) = ref_direction {
+                                Self::deps_ref_direction(r, out);
+                            }
+                        }
+                        PartialEntity::Axis2Placement3d {
+                            axis,
+                            ref_direction,
+                            ..
+                        } => {
+                            if let Some(r) = axis {
+                                Self::deps_ref_direction(r, out);
+                            }
+                            if let Some(r) = ref_direction {
+                                Self::deps_ref_direction(r, out);
+                            }
                         }
                         PartialEntity::BSplineCurve {
                             control_points_list,
@@ -25797,6 +26711,26 @@ impl<'a> Writer<'a> {
                                     Self::deps_ref_cartesian_point(e, out);
                                 }
                             }
+                        }
+                        PartialEntity::BasicRoundHole {
+                            depth,
+                            depth_tolerance,
+                            diameter,
+                            diameter_tolerance,
+                            placement,
+                            ..
+                        } => {
+                            if let Some(r) = depth {
+                                Self::deps_ref_positive_length_measure_with_unit(r, out);
+                            }
+                            if let Some(r) = depth_tolerance {
+                                Self::deps_ref_tolerance_value(r, out);
+                            }
+                            Self::deps_ref_positive_length_measure_with_unit(diameter, out);
+                            if let Some(r) = diameter_tolerance {
+                                Self::deps_ref_tolerance_value_or_limits_and_fits(r, out);
+                            }
+                            Self::deps_ref_shape_representation(placement, out);
                         }
                         PartialEntity::BrepWithVoids { voids, .. } => {
                             for e in voids {
@@ -25840,6 +26774,11 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_cc_classified_item(e, out);
                             }
                         }
+                        PartialEntity::Change { items, .. } => {
+                            for e in items {
+                                Self::deps_ref_work_item(e, out);
+                            }
+                        }
                         PartialEntity::ChangeRequest { items, .. } => {
                             for e in items {
                                 Self::deps_ref_change_request_item(e, out);
@@ -25879,6 +26818,9 @@ impl<'a> Writer<'a> {
                         PartialEntity::ConfigurationItem { item_concept, .. } => {
                             Self::deps_ref_product_concept(item_concept, out);
                         }
+                        PartialEntity::Conic { position, .. } => {
+                            Self::deps_ref_axis2_placement(position, out);
+                        }
                         PartialEntity::ConnectedFaceSet { cfs_faces, .. } => {
                             if let Some(v) = cfs_faces {
                                 for e in v {
@@ -25898,6 +26840,102 @@ impl<'a> Writer<'a> {
                             conversion_factor, ..
                         } => {
                             Self::deps_ref_measure_with_unit(conversion_factor, out);
+                        }
+                        PartialEntity::CounterboreHoleDefinition {
+                            counterbore,
+                            drilled_hole_depth,
+                            drilled_hole_depth_tolerance,
+                            drilled_hole_diameter,
+                            drilled_hole_diameter_tolerance,
+                            ..
+                        } => {
+                            for e in counterbore {
+                                Self::deps_ref_explicit_round_hole(e, out);
+                            }
+                            if let Some(r) = drilled_hole_depth {
+                                Self::deps_ref_positive_length_measure_with_unit(r, out);
+                            }
+                            if let Some(r) = drilled_hole_depth_tolerance {
+                                Self::deps_ref_tolerance_value(r, out);
+                            }
+                            Self::deps_ref_positive_length_measure_with_unit(
+                                drilled_hole_diameter,
+                                out,
+                            );
+                            if let Some(r) = drilled_hole_diameter_tolerance {
+                                Self::deps_ref_tolerance_value_or_limits_and_fits(r, out);
+                            }
+                        }
+                        PartialEntity::CounterdrillHoleDefinition {
+                            counterbore,
+                            counterdrill_angle,
+                            counterdrill_angle_tolerance,
+                            drilled_hole_depth,
+                            drilled_hole_depth_tolerance,
+                            drilled_hole_diameter,
+                            drilled_hole_diameter_tolerance,
+                            ..
+                        } => {
+                            Self::deps_ref_explicit_round_hole(counterbore, out);
+                            Self::deps_ref_positive_plane_angle_measure_with_unit(
+                                counterdrill_angle,
+                                out,
+                            );
+                            if let Some(r) = counterdrill_angle_tolerance {
+                                Self::deps_ref_tolerance_value(r, out);
+                            }
+                            if let Some(r) = drilled_hole_depth {
+                                Self::deps_ref_positive_length_measure_with_unit(r, out);
+                            }
+                            if let Some(r) = drilled_hole_depth_tolerance {
+                                Self::deps_ref_tolerance_value(r, out);
+                            }
+                            Self::deps_ref_positive_length_measure_with_unit(
+                                drilled_hole_diameter,
+                                out,
+                            );
+                            if let Some(r) = drilled_hole_diameter_tolerance {
+                                Self::deps_ref_tolerance_value_or_limits_and_fits(r, out);
+                            }
+                        }
+                        PartialEntity::CountersinkHoleDefinition {
+                            countersink_angle,
+                            countersink_angle_tolerance,
+                            countersink_diameter,
+                            countersink_diameter_tolerance,
+                            drilled_hole_depth,
+                            drilled_hole_depth_tolerance,
+                            drilled_hole_diameter,
+                            drilled_hole_diameter_tolerance,
+                            ..
+                        } => {
+                            Self::deps_ref_positive_plane_angle_measure_with_unit(
+                                countersink_angle,
+                                out,
+                            );
+                            if let Some(r) = countersink_angle_tolerance {
+                                Self::deps_ref_tolerance_value(r, out);
+                            }
+                            Self::deps_ref_positive_length_measure_with_unit(
+                                countersink_diameter,
+                                out,
+                            );
+                            if let Some(r) = countersink_diameter_tolerance {
+                                Self::deps_ref_tolerance_value_or_limits_and_fits(r, out);
+                            }
+                            if let Some(r) = drilled_hole_depth {
+                                Self::deps_ref_positive_length_measure_with_unit(r, out);
+                            }
+                            if let Some(r) = drilled_hole_depth_tolerance {
+                                Self::deps_ref_tolerance_value(r, out);
+                            }
+                            Self::deps_ref_positive_length_measure_with_unit(
+                                drilled_hole_diameter,
+                                out,
+                            );
+                            if let Some(r) = drilled_hole_diameter_tolerance {
+                                Self::deps_ref_tolerance_value_or_limits_and_fits(r, out);
+                            }
                         }
                         PartialEntity::CurveStyle {
                             curve_font,
@@ -25949,13 +26987,41 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_datum_reference_compartment(e, out);
                             }
                         }
+                        PartialEntity::DefinedCharacterGlyph {
+                            definition,
+                            placement,
+                            ..
+                        } => {
+                            Self::deps_ref_defined_glyph_select(definition, out);
+                            Self::deps_ref_axis2_placement(placement, out);
+                        }
+                        PartialEntity::DefinedSymbol {
+                            definition, target, ..
+                        } => {
+                            Self::deps_ref_defined_symbol_select(definition, out);
+                            Self::deps_ref_symbol_target(target, out);
+                        }
                         PartialEntity::DerivedUnit { elements, .. } => {
                             for e in elements {
                                 Self::deps_ref_derived_unit_element(e, out);
                             }
                         }
+                        PartialEntity::DimensionalCharacteristicRepresentation {
+                            dimension,
+                            representation,
+                            ..
+                        } => {
+                            Self::deps_ref_dimensional_characteristic(dimension, out);
+                            Self::deps_ref_shape_dimension_representation(representation, out);
+                        }
+                        PartialEntity::DimensionalLocationWithPath { path, .. } => {
+                            Self::deps_ref_shape_aspect(path, out);
+                        }
                         PartialEntity::DimensionalSize { applies_to, .. } => {
                             Self::deps_ref_shape_aspect(applies_to, out);
+                        }
+                        PartialEntity::DimensionalSizeWithPath { path, .. } => {
+                            Self::deps_ref_shape_aspect(path, out);
                         }
                         PartialEntity::Document { kind, .. } => {
                             Self::deps_ref_document_type(kind, out);
@@ -26013,8 +27079,32 @@ impl<'a> Writer<'a> {
                         PartialEntity::ElementarySurface { position, .. } => {
                             Self::deps_ref_axis2_placement3d(position, out);
                         }
+                        PartialEntity::ExplicitCompositeHole { placement, .. } => {
+                            Self::deps_ref_shape_representation(placement, out);
+                        }
+                        PartialEntity::ExplicitRoundHole {
+                            depth,
+                            depth_tolerance,
+                            diameter,
+                            diameter_tolerance,
+                            placement,
+                            ..
+                        } => {
+                            Self::deps_ref_positive_length_measure_with_unit(depth, out);
+                            if let Some(r) = depth_tolerance {
+                                Self::deps_ref_tolerance_value(r, out);
+                            }
+                            Self::deps_ref_positive_length_measure_with_unit(diameter, out);
+                            if let Some(r) = diameter_tolerance {
+                                Self::deps_ref_tolerance_value_or_limits_and_fits(r, out);
+                            }
+                            Self::deps_ref_shape_representation(placement, out);
+                        }
                         PartialEntity::ExternalIdentificationAssignment { source, .. } => {
                             Self::deps_ref_external_source(source, out);
+                        }
+                        PartialEntity::ExternalImagePlacementInCallout { image, .. } => {
+                            Self::deps_ref_document(image, out);
                         }
                         PartialEntity::ExternallyDefinedItem { source, .. } => {
                             Self::deps_ref_external_source(source, out);
@@ -26049,6 +27139,17 @@ impl<'a> Writer<'a> {
                             );
                             Self::deps_ref_cartesian_point(point_of_reference_hatch_line, out);
                             Self::deps_ref_cartesian_point(pattern_start, out);
+                        }
+                        PartialEntity::FillAreaStyleTileColouredRegion {
+                            closed_curve,
+                            region_colour,
+                            ..
+                        } => {
+                            Self::deps_ref_curve_or_annotation_curve_occurrence(closed_curve, out);
+                            Self::deps_ref_colour(region_colour, out);
+                        }
+                        PartialEntity::FillAreaStyleTileCurveWithStyle { styled_curve, .. } => {
+                            Self::deps_ref_annotation_curve_occurrence(styled_curve, out);
                         }
                         PartialEntity::FillAreaStyleTileSymbolWithStyle { symbol, .. } => {
                             Self::deps_ref_annotation_symbol_occurrence(symbol, out);
@@ -26164,6 +27265,13 @@ impl<'a> Writer<'a> {
                                 out,
                             );
                         }
+                        PartialEntity::Line { pnt, dir, .. } => {
+                            Self::deps_ref_cartesian_point(pnt, out);
+                            Self::deps_ref_vector(dir, out);
+                        }
+                        PartialEntity::MakeFromUsageOption { quantity, .. } => {
+                            Self::deps_ref_measure_with_unit(quantity, out);
+                        }
                         PartialEntity::ManifoldSolidBrep { outer, .. } => {
                             Self::deps_ref_closed_shell(outer, out);
                         }
@@ -26182,6 +27290,9 @@ impl<'a> Writer<'a> {
                             if let Some(r) = dimensions {
                                 Self::deps_ref_dimensional_exponents(r, out);
                             }
+                        }
+                        PartialEntity::OffsetSurface { basis_surface, .. } => {
+                            Self::deps_ref_surface(basis_surface, out);
                         }
                         PartialEntity::OneDirectionRepeatFactor { repeat_factor, .. } => {
                             Self::deps_ref_vector(repeat_factor, out);
@@ -26258,6 +27369,11 @@ impl<'a> Writer<'a> {
                         }
                         PartialEntity::PolyLoop { polygon, .. } => {
                             for e in polygon {
+                                Self::deps_ref_cartesian_point(e, out);
+                            }
+                        }
+                        PartialEntity::Polyline { points, .. } => {
+                            for e in points {
                                 Self::deps_ref_cartesian_point(e, out);
                             }
                         }
@@ -26430,6 +27546,11 @@ impl<'a> Writer<'a> {
                                 Self::deps_ref_start_request_item(e, out);
                             }
                         }
+                        PartialEntity::StartWork { items, .. } => {
+                            for e in items {
+                                Self::deps_ref_work_item(e, out);
+                            }
+                        }
                         PartialEntity::StyledItem { styles, item, .. } => {
                             for e in styles {
                                 Self::deps_ref_presentation_style_assignment(e, out);
@@ -26445,6 +27566,12 @@ impl<'a> Writer<'a> {
                             for e in associated_geometry {
                                 Self::deps_ref_pcurve_or_surface(e, out);
                             }
+                        }
+                        PartialEntity::SurfaceOfLinearExtrusion { extrusion_axis, .. } => {
+                            Self::deps_ref_vector(extrusion_axis, out);
+                        }
+                        PartialEntity::SurfaceOfRevolution { axis_position, .. } => {
+                            Self::deps_ref_axis1_placement(axis_position, out);
                         }
                         PartialEntity::SurfaceSideStyle { styles, .. } => {
                             for e in styles {
@@ -26496,20 +27623,66 @@ impl<'a> Writer<'a> {
                         PartialEntity::SurfaceStyleUsage { style, .. } => {
                             Self::deps_ref_surface_side_style_select(style, out);
                         }
+                        PartialEntity::SweptSurface { swept_curve, .. } => {
+                            Self::deps_ref_curve(swept_curve, out);
+                        }
                         PartialEntity::SymbolStyle {
                             style_of_symbol, ..
                         } => {
                             Self::deps_ref_symbol_style_select(style_of_symbol, out);
+                        }
+                        PartialEntity::SymbolTarget { placement, .. } => {
+                            Self::deps_ref_axis2_placement(placement, out);
                         }
                         PartialEntity::TerminatorSymbol {
                             annotated_curve, ..
                         } => {
                             Self::deps_ref_annotation_curve_occurrence(annotated_curve, out);
                         }
+                        PartialEntity::TessellatedCurveSet { coordinates, .. } => {
+                            Self::deps_ref_coordinates_list(coordinates, out);
+                        }
+                        PartialEntity::TessellatedFace {
+                            coordinates,
+                            geometric_link,
+                            ..
+                        } => {
+                            Self::deps_ref_coordinates_list(coordinates, out);
+                            if let Some(r) = geometric_link {
+                                Self::deps_ref_face_or_surface(r, out);
+                            }
+                        }
                         PartialEntity::TessellatedGeometricSet { children, .. } => {
                             for e in children {
                                 Self::deps_ref_tessellated_item(e, out);
                             }
+                        }
+                        PartialEntity::TessellatedShell {
+                            items,
+                            topological_link,
+                            ..
+                        } => {
+                            for e in items {
+                                Self::deps_ref_tessellated_structured_item(e, out);
+                            }
+                            if let Some(r) = topological_link {
+                                Self::deps_ref_connected_face_set(r, out);
+                            }
+                        }
+                        PartialEntity::TessellatedSolid {
+                            items,
+                            geometric_link,
+                            ..
+                        } => {
+                            for e in items {
+                                Self::deps_ref_tessellated_structured_item(e, out);
+                            }
+                            if let Some(r) = geometric_link {
+                                Self::deps_ref_manifold_solid_brep(r, out);
+                            }
+                        }
+                        PartialEntity::TessellatedSurfaceSet { coordinates, .. } => {
+                            Self::deps_ref_coordinates_list(coordinates, out);
                         }
                         PartialEntity::TextLiteral {
                             placement, font, ..
@@ -26546,6 +27719,20 @@ impl<'a> Writer<'a> {
                         } => {
                             Self::deps_ref_datum_system(datum_reference, out);
                         }
+                        PartialEntity::TrimmedCurve {
+                            basis_curve,
+                            trim_1,
+                            trim_2,
+                            ..
+                        } => {
+                            Self::deps_ref_curve(basis_curve, out);
+                            for e in trim_1 {
+                                Self::deps_ref_trimming_select(e, out);
+                            }
+                            for e in trim_2 {
+                                Self::deps_ref_trimming_select(e, out);
+                            }
+                        }
                         PartialEntity::TwoDirectionRepeatFactor {
                             second_repeat_factor,
                             ..
@@ -26560,10 +27747,19 @@ impl<'a> Writer<'a> {
                         PartialEntity::Vector { orientation, .. } => {
                             Self::deps_ref_direction(orientation, out);
                         }
+                        PartialEntity::VertexLoop { loop_vertex, .. } => {
+                            Self::deps_ref_vertex(loop_vertex, out);
+                        }
                         PartialEntity::VertexPoint {
                             vertex_geometry, ..
                         } => {
                             Self::deps_ref_point(vertex_geometry, out);
+                        }
+                        PartialEntity::VertexShell {
+                            vertex_shell_extent,
+                            ..
+                        } => {
+                            Self::deps_ref_vertex_loop(vertex_shell_extent, out);
                         }
                         PartialEntity::ViewVolume {
                             projection_point,
@@ -26572,6 +27768,13 @@ impl<'a> Writer<'a> {
                         } => {
                             Self::deps_ref_cartesian_point(projection_point, out);
                             Self::deps_ref_planar_box(view_window, out);
+                        }
+                        PartialEntity::WireShell {
+                            wire_shell_extent, ..
+                        } => {
+                            for e in wire_shell_extent {
+                                Self::deps_ref_loop(e, out);
+                            }
                         }
                         _ => {}
                     }
@@ -26761,6 +27964,31 @@ impl<'a> Writer<'a> {
                             ))
                             .collect::<Vec<_>>()
                             .join(",")
+                    ),
+                ];
+                format!("#{n} = {kw}({});\n", attrs.join(","))
+            }
+            EntityKey::ActionResourceRequirementRelationship(id) => {
+                let it = self
+                    .model
+                    .action_resource_requirement_relationship_arena
+                    .get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let kw = Self::name_of(any);
+                let attrs: Vec<String> = vec![
+                    step_str(self.model.text(it.name)),
+                    step_str(self.model.text(it.description)),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_action_resource_requirement(
+                            &it.relating_action_resource_requirement
+                        )
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_action_resource_requirement(
+                            &it.related_action_resource_requirement
+                        )
                     ),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -26983,10 +28211,21 @@ impl<'a> Writer<'a> {
                             .collect::<Vec<_>>()
                             .join(",")
                     ),
-                    format!(
-                        "#{}",
-                        self.id_of_ref_styled_item_target_or_representation_item(&it.item)
-                    ),
+                    match &it.item {
+                        StyledItemTargetOrRepresentationItemRef::SetRepresentationItem(vs) => {
+                            format!(
+                                "SET_REPRESENTATION_ITEM(({}))",
+                                vs.iter()
+                                    .map(|e| format!("#{}", self.id_of_ref_representation_item(e)))
+                                    .collect::<Vec<_>>()
+                                    .join(",")
+                            )
+                        }
+                        other => format!(
+                            "#{}",
+                            self.id_of_ref_styled_item_target_or_representation_item(other)
+                        ),
+                    },
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -27893,6 +29132,41 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
+            EntityKey::BasicRoundHole(id) => {
+                let it = self.model.basic_round_hole_arena.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let kw = Self::name_of(any);
+                let attrs: Vec<String> = vec![
+                    step_str(self.model.text(it.name)),
+                    match &it.description {
+                        Some(x) => step_str(self.model.text(*x)),
+                        None => "$".to_string(),
+                    },
+                    match &it.depth {
+                        Some(r) => {
+                            format!("#{}", self.id_of_ref_positive_length_measure_with_unit(r))
+                        }
+                        None => "$".to_string(),
+                    },
+                    match &it.depth_tolerance {
+                        Some(r) => format!("#{}", self.id_of_ref_tolerance_value(r)),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_positive_length_measure_with_unit(&it.diameter)
+                    ),
+                    match &it.diameter_tolerance {
+                        Some(r) => {
+                            format!("#{}", self.id_of_ref_tolerance_value_or_limits_and_fits(r))
+                        }
+                        None => "$".to_string(),
+                    },
+                    format!("#{}", self.id_of_ref_shape_representation(&it.placement)),
+                    (if it.through_hole { ".T." } else { ".F." }).to_string(),
+                ];
+                format!("#{n} = {kw}({});\n", attrs.join(","))
+            }
             EntityKey::BezierCurve(id) => {
                 let it = self.model.bezier_curve_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -28652,6 +29926,19 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
+            EntityKey::CompositeHole(id) => {
+                let it = self.model.composite_hole_arena.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let kw = Self::name_of(any);
+                let attrs: Vec<String> = vec![
+                    step_str(self.model.text(it.name)),
+                    match &it.description {
+                        Some(x) => step_str(self.model.text(*x)),
+                        None => "$".to_string(),
+                    },
+                ];
+                format!("#{n} = {kw}({});\n", attrs.join(","))
+            }
             EntityKey::CompositeShapeAspect(id) => {
                 let it = self.model.composite_shape_aspect_arena.get(id.0);
                 let n = self.get_id(any).expect("id assigned");
@@ -28681,6 +29968,19 @@ impl<'a> Writer<'a> {
                             .collect::<Vec<_>>()
                             .join(",")
                     ),
+                ];
+                format!("#{n} = {kw}({});\n", attrs.join(","))
+            }
+            EntityKey::CompoundFeature(id) => {
+                let it = self.model.compound_feature_arena.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let kw = Self::name_of(any);
+                let attrs: Vec<String> = vec![
+                    step_str(self.model.text(it.name)),
+                    match &it.description {
+                        Some(x) => step_str(self.model.text(*x)),
+                        None => "$".to_string(),
+                    },
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -28857,7 +30157,21 @@ impl<'a> Writer<'a> {
                     .get(id.0);
                 let n = self.get_id(any).expect("id assigned");
                 let kw = Self::name_of(any);
-                let attrs: Vec<String> = vec![step_str(self.model.text(it.name)), match &it.description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_constructive_geometry_representation_or_shape_representation(&it.rep_1)), format!("#{}", self.id_of_ref_representation_or_representation_reference(&it.rep_2))];
+                let attrs: Vec<String> = vec![
+                    step_str(self.model.text(it.name)),
+                    match &it.description {
+                        Some(x) => step_str(self.model.text(*x)),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_representation_or_representation_reference(&it.rep_1)
+                    ),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_representation_or_representation_reference(&it.rep_2)
+                    ),
+                ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
             EntityKey::ContextDependentOverRidingStyledItem(id) => {
@@ -28880,10 +30194,21 @@ impl<'a> Writer<'a> {
                             .collect::<Vec<_>>()
                             .join(",")
                     ),
-                    format!(
-                        "#{}",
-                        self.id_of_ref_styled_item_target_or_representation_item(&it.item)
-                    ),
+                    match &it.item {
+                        StyledItemTargetOrRepresentationItemRef::SetRepresentationItem(vs) => {
+                            format!(
+                                "SET_REPRESENTATION_ITEM(({}))",
+                                vs.iter()
+                                    .map(|e| format!("#{}", self.id_of_ref_representation_item(e)))
+                                    .collect::<Vec<_>>()
+                                    .join(",")
+                            )
+                        }
+                        other => format!(
+                            "#{}",
+                            self.id_of_ref_styled_item_target_or_representation_item(other)
+                        ),
+                    },
                     format!("#{}", self.id_of_ref_styled_item(&it.over_ridden_style)),
                     format!(
                         "({})",
@@ -29006,6 +30331,150 @@ impl<'a> Writer<'a> {
                             .collect::<Vec<_>>()
                             .join(",")
                     ),
+                ];
+                format!("#{n} = {kw}({});\n", attrs.join(","))
+            }
+            EntityKey::CounterboreHoleDefinition(id) => {
+                let it = self.model.counterbore_hole_definition_arena.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let kw = Self::name_of(any);
+                let attrs: Vec<String> = vec![
+                    step_str(self.model.text(it.name)),
+                    match &it.description {
+                        Some(x) => step_str(self.model.text(*x)),
+                        None => "$".to_string(),
+                    },
+                    format!("#{}", self.id_of_ref_shape_representation(&it.placement)),
+                    format!(
+                        "({})",
+                        it.counterbore
+                            .iter()
+                            .map(|e| format!("#{}", self.id_of_ref_explicit_round_hole(e)))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    match &it.drilled_hole_depth {
+                        Some(r) => {
+                            format!("#{}", self.id_of_ref_positive_length_measure_with_unit(r))
+                        }
+                        None => "$".to_string(),
+                    },
+                    match &it.drilled_hole_depth_tolerance {
+                        Some(r) => format!("#{}", self.id_of_ref_tolerance_value(r)),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_positive_length_measure_with_unit(&it.drilled_hole_diameter)
+                    ),
+                    match &it.drilled_hole_diameter_tolerance {
+                        Some(r) => {
+                            format!("#{}", self.id_of_ref_tolerance_value_or_limits_and_fits(r))
+                        }
+                        None => "$".to_string(),
+                    },
+                    (if it.through_hole { ".T." } else { ".F." }).to_string(),
+                ];
+                format!("#{n} = {kw}({});\n", attrs.join(","))
+            }
+            EntityKey::CounterdrillHoleDefinition(id) => {
+                let it = self.model.counterdrill_hole_definition_arena.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let kw = Self::name_of(any);
+                let attrs: Vec<String> = vec![
+                    step_str(self.model.text(it.name)),
+                    match &it.description {
+                        Some(x) => step_str(self.model.text(*x)),
+                        None => "$".to_string(),
+                    },
+                    format!("#{}", self.id_of_ref_shape_representation(&it.placement)),
+                    format!("#{}", self.id_of_ref_explicit_round_hole(&it.counterbore)),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_positive_plane_angle_measure_with_unit(
+                            &it.counterdrill_angle
+                        )
+                    ),
+                    match &it.counterdrill_angle_tolerance {
+                        Some(r) => format!("#{}", self.id_of_ref_tolerance_value(r)),
+                        None => "$".to_string(),
+                    },
+                    match &it.drilled_hole_depth {
+                        Some(r) => {
+                            format!("#{}", self.id_of_ref_positive_length_measure_with_unit(r))
+                        }
+                        None => "$".to_string(),
+                    },
+                    match &it.drilled_hole_depth_tolerance {
+                        Some(r) => format!("#{}", self.id_of_ref_tolerance_value(r)),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_positive_length_measure_with_unit(&it.drilled_hole_diameter)
+                    ),
+                    match &it.drilled_hole_diameter_tolerance {
+                        Some(r) => {
+                            format!("#{}", self.id_of_ref_tolerance_value_or_limits_and_fits(r))
+                        }
+                        None => "$".to_string(),
+                    },
+                    (if it.through_hole { ".T." } else { ".F." }).to_string(),
+                ];
+                format!("#{n} = {kw}({});\n", attrs.join(","))
+            }
+            EntityKey::CountersinkHoleDefinition(id) => {
+                let it = self.model.countersink_hole_definition_arena.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let kw = Self::name_of(any);
+                let attrs: Vec<String> = vec![
+                    step_str(self.model.text(it.name)),
+                    match &it.description {
+                        Some(x) => step_str(self.model.text(*x)),
+                        None => "$".to_string(),
+                    },
+                    format!("#{}", self.id_of_ref_shape_representation(&it.placement)),
+                    format!(
+                        "#{}",
+                        self.id_of_ref_positive_plane_angle_measure_with_unit(
+                            &it.countersink_angle
+                        )
+                    ),
+                    match &it.countersink_angle_tolerance {
+                        Some(r) => format!("#{}", self.id_of_ref_tolerance_value(r)),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_positive_length_measure_with_unit(&it.countersink_diameter)
+                    ),
+                    match &it.countersink_diameter_tolerance {
+                        Some(r) => {
+                            format!("#{}", self.id_of_ref_tolerance_value_or_limits_and_fits(r))
+                        }
+                        None => "$".to_string(),
+                    },
+                    match &it.drilled_hole_depth {
+                        Some(r) => {
+                            format!("#{}", self.id_of_ref_positive_length_measure_with_unit(r))
+                        }
+                        None => "$".to_string(),
+                    },
+                    match &it.drilled_hole_depth_tolerance {
+                        Some(r) => format!("#{}", self.id_of_ref_tolerance_value(r)),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_positive_length_measure_with_unit(&it.drilled_hole_diameter)
+                    ),
+                    match &it.drilled_hole_diameter_tolerance {
+                        Some(r) => {
+                            format!("#{}", self.id_of_ref_tolerance_value_or_limits_and_fits(r))
+                        }
+                        None => "$".to_string(),
+                    },
+                    (if it.through_hole { ".T." } else { ".F." }).to_string(),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -29822,10 +31291,21 @@ impl<'a> Writer<'a> {
                             .collect::<Vec<_>>()
                             .join(",")
                     ),
-                    format!(
-                        "#{}",
-                        self.id_of_ref_styled_item_target_or_representation_item(&it.item)
-                    ),
+                    match &it.item {
+                        StyledItemTargetOrRepresentationItemRef::SetRepresentationItem(vs) => {
+                            format!(
+                                "SET_REPRESENTATION_ITEM(({}))",
+                                vs.iter()
+                                    .map(|e| format!("#{}", self.id_of_ref_representation_item(e)))
+                                    .collect::<Vec<_>>()
+                                    .join(",")
+                            )
+                        }
+                        other => format!(
+                            "#{}",
+                            self.id_of_ref_styled_item_target_or_representation_item(other)
+                        ),
+                    },
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -30043,6 +31523,52 @@ impl<'a> Writer<'a> {
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
+            EntityKey::ExplicitCompositeHole(id) => {
+                let it = self.model.explicit_composite_hole_arena.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let kw = Self::name_of(any);
+                let attrs: Vec<String> = vec![
+                    step_str(self.model.text(it.name)),
+                    match &it.description {
+                        Some(x) => step_str(self.model.text(*x)),
+                        None => "$".to_string(),
+                    },
+                    format!("#{}", self.id_of_ref_shape_representation(&it.placement)),
+                ];
+                format!("#{n} = {kw}({});\n", attrs.join(","))
+            }
+            EntityKey::ExplicitRoundHole(id) => {
+                let it = self.model.explicit_round_hole_arena.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let kw = Self::name_of(any);
+                let attrs: Vec<String> = vec![
+                    step_str(self.model.text(it.name)),
+                    match &it.description {
+                        Some(x) => step_str(self.model.text(*x)),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_positive_length_measure_with_unit(&it.depth)
+                    ),
+                    match &it.depth_tolerance {
+                        Some(r) => format!("#{}", self.id_of_ref_tolerance_value(r)),
+                        None => "$".to_string(),
+                    },
+                    format!(
+                        "#{}",
+                        self.id_of_ref_positive_length_measure_with_unit(&it.diameter)
+                    ),
+                    match &it.diameter_tolerance {
+                        Some(r) => {
+                            format!("#{}", self.id_of_ref_tolerance_value_or_limits_and_fits(r))
+                        }
+                        None => "$".to_string(),
+                    },
+                    format!("#{}", self.id_of_ref_shape_representation(&it.placement)),
+                ];
+                format!("#{n} = {kw}({});\n", attrs.join(","))
+            }
             EntityKey::Expression(_) => {
                 let n = self.get_id(any).expect("id assigned");
                 let kw = Self::name_of(any);
@@ -30060,6 +31586,32 @@ impl<'a> Writer<'a> {
                     step_str(self.model.text(it.assigned_id)),
                     format!("#{}", self.id_of_ref_identification_role(&it.role)),
                     format!("#{}", self.id_of_ref_external_source(&it.source)),
+                ];
+                format!("#{n} = {kw}({});\n", attrs.join(","))
+            }
+            EntityKey::ExternalImagePlacementInCallout(id) => {
+                let it = self
+                    .model
+                    .external_image_placement_in_callout_arena
+                    .get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let kw = Self::name_of(any);
+                let attrs: Vec<String> = vec![
+                    step_str(self.model.text(it.name)),
+                    format!(
+                        "({})",
+                        it.styles
+                            .iter()
+                            .map(|e| format!(
+                                "#{}",
+                                self.id_of_ref_presentation_style_assignment(e)
+                            ))
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                    format!("#{}", self.id_of_ref_geometric_set(&it.item)),
+                    format!("#{}", self.id_of_ref_document(&it.image)),
+                    it.role.token().to_string(),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -30220,6 +31772,19 @@ impl<'a> Writer<'a> {
                     ),
                     format!("#{}", self.id_of_ref_surface(&it.face_geometry)),
                     (if it.same_sense { ".T." } else { ".F." }).to_string(),
+                ];
+                format!("#{n} = {kw}({});\n", attrs.join(","))
+            }
+            EntityKey::FeatureDefinition(id) => {
+                let it = self.model.feature_definition_arena.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let kw = Self::name_of(any);
+                let attrs: Vec<String> = vec![
+                    step_str(self.model.text(it.name)),
+                    match &it.description {
+                        Some(x) => step_str(self.model.text(*x)),
+                        None => "$".to_string(),
+                    },
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -31858,10 +33423,21 @@ impl<'a> Writer<'a> {
                             .collect::<Vec<_>>()
                             .join(",")
                     ),
-                    format!(
-                        "#{}",
-                        self.id_of_ref_styled_item_target_or_representation_item(&it.item)
-                    ),
+                    match &it.item {
+                        StyledItemTargetOrRepresentationItemRef::SetRepresentationItem(vs) => {
+                            format!(
+                                "SET_REPRESENTATION_ITEM(({}))",
+                                vs.iter()
+                                    .map(|e| format!("#{}", self.id_of_ref_representation_item(e)))
+                                    .collect::<Vec<_>>()
+                                    .join(",")
+                            )
+                        }
+                        other => format!(
+                            "#{}",
+                            self.id_of_ref_styled_item_target_or_representation_item(other)
+                        ),
+                    },
                     format!("#{}", self.id_of_ref_styled_item(&it.over_ridden_style)),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
@@ -32389,6 +33965,29 @@ impl<'a> Writer<'a> {
                         "#{}",
                         self.id_of_ref_geometric_tolerance_target(&it.toleranced_shape_aspect)
                     ),
+                ];
+                format!("#{n} = {kw}({});\n", attrs.join(","))
+            }
+            EntityKey::PositiveLengthMeasureWithUnit(id) => {
+                let it = self.model.positive_length_measure_with_unit_arena.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let kw = Self::name_of(any);
+                let attrs: Vec<String> = vec![
+                    measure(self.model, &it.value_component),
+                    format!("#{}", self.id_of_ref_unit(&it.unit_component)),
+                ];
+                format!("#{n} = {kw}({});\n", attrs.join(","))
+            }
+            EntityKey::PositivePlaneAngleMeasureWithUnit(id) => {
+                let it = self
+                    .model
+                    .positive_plane_angle_measure_with_unit_arena
+                    .get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let kw = Self::name_of(any);
+                let attrs: Vec<String> = vec![
+                    measure(self.model, &it.value_component),
+                    format!("#{}", self.id_of_ref_unit(&it.unit_component)),
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -33447,8 +35046,8 @@ impl<'a> Writer<'a> {
                         self.id_of_ref_representation_or_representation_reference(&it.rep_2)
                     ),
                     match &it.transformation_operator {
-                        TransformationRef::ListItemDefinedTransformation(vs) => format!(
-                            "LIST_ITEM_DEFINED_TRANSFORMATION(({}))",
+                        TransformationRef::SetItemDefinedTransformation(vs) => format!(
+                            "SET_ITEM_DEFINED_TRANSFORMATION(({}))",
                             vs.iter()
                                 .map(|e| format!(
                                     "#{}",
@@ -33457,8 +35056,8 @@ impl<'a> Writer<'a> {
                                 .collect::<Vec<_>>()
                                 .join(",")
                         ),
-                        TransformationRef::SetItemDefinedTransformation(vs) => format!(
-                            "SET_ITEM_DEFINED_TRANSFORMATION(({}))",
+                        TransformationRef::ListItemDefinedTransformation(vs) => format!(
+                            "LIST_ITEM_DEFINED_TRANSFORMATION(({}))",
                             vs.iter()
                                 .map(|e| format!(
                                     "#{}",
@@ -33503,6 +35102,61 @@ impl<'a> Writer<'a> {
                 let attrs: Vec<String> = vec![
                     format!("#{}", self.id_of_ref_object_role(&it.role)),
                     format!("#{}", self.id_of_ref_role_select(&it.item_with_role)),
+                ];
+                format!("#{n} = {kw}({});\n", attrs.join(","))
+            }
+            EntityKey::RoundHole(id) => {
+                let it = self.model.round_hole_arena.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let kw = Self::name_of(any);
+                let attrs: Vec<String> = vec![
+                    step_str(self.model.text(it.name)),
+                    match &it.description {
+                        Some(x) => step_str(self.model.text(*x)),
+                        None => "$".to_string(),
+                    },
+                ];
+                format!("#{n} = {kw}({});\n", attrs.join(","))
+            }
+            EntityKey::RoundHoleBottomCondition(id) => {
+                let it = self.model.round_hole_bottom_condition_arena.get(id.0);
+                let n = self.get_id(any).expect("id assigned");
+                let kw = Self::name_of(any);
+                let attrs: Vec<String> = vec![
+                    format!("#{}", self.id_of_ref_bottom_condition_target(&it.target)),
+                    it.bottom_condition.token().to_string(),
+                    match &it.radius {
+                        Some(r) => {
+                            format!("#{}", self.id_of_ref_positive_length_measure_with_unit(r))
+                        }
+                        None => "$".to_string(),
+                    },
+                    match &it.final_diameter {
+                        Some(r) => {
+                            format!("#{}", self.id_of_ref_positive_length_measure_with_unit(r))
+                        }
+                        None => "$".to_string(),
+                    },
+                    match &it.taper_angle {
+                        Some(r) => format!(
+                            "#{}",
+                            self.id_of_ref_positive_plane_angle_measure_with_unit(r)
+                        ),
+                        None => "$".to_string(),
+                    },
+                    match &it.tip_angle {
+                        Some(r) => format!(
+                            "#{}",
+                            self.id_of_ref_positive_plane_angle_measure_with_unit(r)
+                        ),
+                        None => "$".to_string(),
+                    },
+                    match &it.tip_radius {
+                        Some(r) => {
+                            format!("#{}", self.id_of_ref_positive_length_measure_with_unit(r))
+                        }
+                        None => "$".to_string(),
+                    },
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -33927,10 +35581,21 @@ impl<'a> Writer<'a> {
                             .collect::<Vec<_>>()
                             .join(",")
                     ),
-                    format!(
-                        "#{}",
-                        self.id_of_ref_styled_item_target_or_representation_item(&it.item)
-                    ),
+                    match &it.item {
+                        StyledItemTargetOrRepresentationItemRef::SetRepresentationItem(vs) => {
+                            format!(
+                                "SET_REPRESENTATION_ITEM(({}))",
+                                vs.iter()
+                                    .map(|e| format!("#{}", self.id_of_ref_representation_item(e)))
+                                    .collect::<Vec<_>>()
+                                    .join(",")
+                            )
+                        }
+                        other => format!(
+                            "#{}",
+                            self.id_of_ref_styled_item_target_or_representation_item(other)
+                        ),
+                    },
                 ];
                 format!("#{n} = {kw}({});\n", attrs.join(","))
             }
@@ -34986,6 +36651,7 @@ impl<'a> Writer<'a> {
                 for part in &cu.parts {
                     part_txt.push(match part {
                 PartialEntity::Action { name, description, chosen_method, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_action_method(chosen_method))]; format!("ACTION({})", a.join(",")) },
+                PartialEntity::ActionAssignment { assigned_action, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_action(assigned_action))]; format!("ACTION_ASSIGNMENT({})", a.join(",")) },
                 PartialEntity::ActionMethod { name, description, consequence, purpose, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, step_str(self.model.text(*consequence)), step_str(self.model.text(*purpose))]; format!("ACTION_METHOD({})", a.join(",")) },
                 PartialEntity::ActionMethodRelationship { name, description, relating_method, related_method, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_action_method(relating_method)), format!("#{}", self.id_of_ref_action_method(related_method))]; format!("ACTION_METHOD_RELATIONSHIP({})", a.join(",")) },
                 PartialEntity::ActionRelationship { name, description, relating_action, related_action, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_action(relating_action)), format!("#{}", self.id_of_ref_action(related_action))]; format!("ACTION_RELATIONSHIP({})", a.join(",")) },
@@ -34995,10 +36661,15 @@ impl<'a> Writer<'a> {
                 PartialEntity::Address { internal_location, street_number, street, postal_box, town, region, postal_code, country, facsimile_number, telephone_number, electronic_mail_address, telex_number, .. } => { let a: Vec<String> = vec![match internal_location { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match street_number { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match street { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match postal_box { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match town { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match region { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match postal_code { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match country { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match facsimile_number { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match telephone_number { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match electronic_mail_address { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, match telex_number { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("ADDRESS({})", a.join(",")) },
                 PartialEntity::AdvancedBrepShapeRepresentation => "ADVANCED_BREP_SHAPE_REPRESENTATION()".to_string(),
                 PartialEntity::AdvancedFace => "ADVANCED_FACE()".to_string(),
+                PartialEntity::AllAroundShapeAspect => "ALL_AROUND_SHAPE_ASPECT()".to_string(),
+                PartialEntity::AngularLocation { angle_selection, .. } => { let a: Vec<String> = vec![angle_selection.token().to_string()]; format!("ANGULAR_LOCATION({})", a.join(",")) },
+                PartialEntity::AngularSize { angle_selection, .. } => { let a: Vec<String> = vec![angle_selection.token().to_string()]; format!("ANGULAR_SIZE({})", a.join(",")) },
+                PartialEntity::AngularityTolerance => "ANGULARITY_TOLERANCE()".to_string(),
                 PartialEntity::AnnotationCurveOccurrence => "ANNOTATION_CURVE_OCCURRENCE()".to_string(),
                 PartialEntity::AnnotationOccurrence => "ANNOTATION_OCCURRENCE()".to_string(),
                 PartialEntity::AnnotationOccurrenceAssociativity => "ANNOTATION_OCCURRENCE_ASSOCIATIVITY()".to_string(),
                 PartialEntity::AnnotationOccurrenceRelationship { name, description, relating_annotation_occurrence, related_annotation_occurrence, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), step_str(self.model.text(*description)), format!("#{}", self.id_of_ref_annotation_occurrence(relating_annotation_occurrence)), format!("#{}", self.id_of_ref_annotation_occurrence(related_annotation_occurrence))]; format!("ANNOTATION_OCCURRENCE_RELATIONSHIP({})", a.join(",")) },
+                PartialEntity::AnnotationPlaceholderLeaderLine { geometric_elements, .. } => { let a: Vec<String> = vec![format!("({})", geometric_elements.iter().map(|e| format!("#{}", self.id_of_ref_des_apll_point_select(e))).collect::<Vec<_>>().join(","))]; format!("ANNOTATION_PLACEHOLDER_LEADER_LINE({})", a.join(",")) },
                 PartialEntity::AnnotationPlaceholderOccurrence { role, line_spacing, .. } => { let a: Vec<String> = vec![role.token().to_string(), real(*line_spacing)]; format!("ANNOTATION_PLACEHOLDER_OCCURRENCE({})", a.join(",")) },
                 PartialEntity::AnnotationPlaceholderOccurrenceWithLeaderLine { leader_line, .. } => { let a: Vec<String> = vec![format!("({})", leader_line.iter().map(|e| format!("#{}", self.id_of_ref_annotation_placeholder_leader_line(e))).collect::<Vec<_>>().join(","))]; format!("ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE({})", a.join(",")) },
                 PartialEntity::AnnotationPlane { elements, .. } => { let a: Vec<String> = vec![match elements { Some(v) => format!("({})", v.iter().map(|e| format!("#{}", self.id_of_ref_annotation_plane_element(e))).collect::<Vec<_>>().join(",")), None => "$".to_string() }]; format!("ANNOTATION_PLANE({})", a.join(",")) },
@@ -35006,6 +36677,10 @@ impl<'a> Writer<'a> {
                 PartialEntity::AnnotationText => "ANNOTATION_TEXT()".to_string(),
                 PartialEntity::AnnotationTextCharacter { alignment, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*alignment))]; format!("ANNOTATION_TEXT_CHARACTER({})", a.join(",")) },
                 PartialEntity::AnnotationTextOccurrence => "ANNOTATION_TEXT_OCCURRENCE()".to_string(),
+                PartialEntity::AnnotationToAnnotationLeaderLine => "ANNOTATION_TO_ANNOTATION_LEADER_LINE()".to_string(),
+                PartialEntity::AnnotationToModelLeaderLine => "ANNOTATION_TO_MODEL_LEADER_LINE()".to_string(),
+                PartialEntity::ApllPoint { symbol_applied, .. } => { let a: Vec<String> = vec![symbol_applied.token().to_string()]; format!("APLL_POINT({})", a.join(",")) },
+                PartialEntity::ApllPointWithSurface { symbol_applied, associated_surface, .. } => { let a: Vec<String> = vec![symbol_applied.token().to_string(), format!("#{}", self.id_of_ref_face_surface(associated_surface))]; format!("APLL_POINT_WITH_SURFACE({})", a.join(",")) },
                 PartialEntity::ApplicationContextElement { name, frame_of_reference, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("#{}", self.id_of_ref_application_context(frame_of_reference))]; format!("APPLICATION_CONTEXT_ELEMENT({})", a.join(",")) },
                 PartialEntity::AppliedApprovalAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_approval_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_APPROVAL_ASSIGNMENT({})", a.join(",")) },
                 PartialEntity::AppliedDateAndTimeAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_date_and_time_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_DATE_AND_TIME_ASSIGNMENT({})", a.join(",")) },
@@ -35016,13 +36691,22 @@ impl<'a> Writer<'a> {
                 PartialEntity::AppliedPresentedItem { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_presented_item_select(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_PRESENTED_ITEM({})", a.join(",")) },
                 PartialEntity::AppliedSecurityClassificationAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_security_classification_item(e))).collect::<Vec<_>>().join(","))]; format!("APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT({})", a.join(",")) },
                 PartialEntity::ApprovalAssignment { assigned_approval, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_approval(assigned_approval))]; format!("APPROVAL_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::ApproximationTolerance { tolerance, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_tolerance_select(tolerance))]; format!("APPROXIMATION_TOLERANCE({})", a.join(",")) },
+                PartialEntity::ApproximationToleranceDeviation { tessellation_type, tolerances, definition_space, .. } => { let a: Vec<String> = vec![tessellation_type.token().to_string(), format!("({})", tolerances.iter().map(|e| measure(self.model, e)).collect::<Vec<_>>().join(",")), definition_space.token().to_string()]; format!("APPROXIMATION_TOLERANCE_DEVIATION({})", a.join(",")) },
+                PartialEntity::ApproximationToleranceParameter { tolerances, .. } => { let a: Vec<String> = vec![format!("({})", tolerances.iter().map(|e| measure(self.model, e)).collect::<Vec<_>>().join(","))]; format!("APPROXIMATION_TOLERANCE_PARAMETER({})", a.join(",")) },
                 PartialEntity::AreaInSet { area, in_set, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_presentation_area(area)), format!("#{}", self.id_of_ref_presentation_set(in_set))]; format!("AREA_IN_SET({})", a.join(",")) },
+                PartialEntity::AreaUnit => "AREA_UNIT()".to_string(),
                 PartialEntity::AscribableStateRelationship { name, description, relating_ascribable_state, related_ascribable_state, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_ascribable_state(relating_ascribable_state)), format!("#{}", self.id_of_ref_ascribable_state(related_ascribable_state))]; format!("ASCRIBABLE_STATE_RELATIONSHIP({})", a.join(",")) },
                 PartialEntity::AssemblyComponentUsage { reference_designator, .. } => { let a: Vec<String> = vec![match reference_designator { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("ASSEMBLY_COMPONENT_USAGE({})", a.join(",")) },
+                PartialEntity::AuxiliaryLeaderLine { controlling_leader_line, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_annotation_to_model_leader_line(controlling_leader_line))]; format!("AUXILIARY_LEADER_LINE({})", a.join(",")) },
+                PartialEntity::Axis1Placement { axis, .. } => { let a: Vec<String> = vec![match axis { Some(r) => format!("#{}", self.id_of_ref_direction(r)), None => "$".to_string() }]; format!("AXIS1_PLACEMENT({})", a.join(",")) },
+                PartialEntity::Axis2Placement2d { ref_direction, .. } => { let a: Vec<String> = vec![match ref_direction { Some(r) => format!("#{}", self.id_of_ref_direction(r)), None => "$".to_string() }]; format!("AXIS2_PLACEMENT_2D({})", a.join(",")) },
+                PartialEntity::Axis2Placement3d { axis, ref_direction, .. } => { let a: Vec<String> = vec![match axis { Some(r) => format!("#{}", self.id_of_ref_direction(r)), None => "$".to_string() }, match ref_direction { Some(r) => format!("#{}", self.id_of_ref_direction(r)), None => "$".to_string() }]; format!("AXIS2_PLACEMENT_3D({})", a.join(",")) },
                 PartialEntity::BSplineCurve { degree, control_points_list, curve_form, closed_curve, self_intersect, .. } => { let a: Vec<String> = vec![format!("{}", degree), format!("({})", control_points_list.iter().map(|e| format!("#{}", self.id_of_ref_cartesian_point(e))).collect::<Vec<_>>().join(",")), curve_form.token().to_string(), closed_curve.token().to_string(), self_intersect.token().to_string()]; format!("B_SPLINE_CURVE({})", a.join(",")) },
                 PartialEntity::BSplineCurveWithKnots { knot_multiplicities, knots, knot_spec, .. } => { let a: Vec<String> = vec![format!("({})", knot_multiplicities.iter().map(|e| format!("{e}")).collect::<Vec<_>>().join(",")), format!("({})", knots.iter().map(|e| real(*e)).collect::<Vec<_>>().join(",")), knot_spec.token().to_string()]; format!("B_SPLINE_CURVE_WITH_KNOTS({})", a.join(",")) },
                 PartialEntity::BSplineSurface { u_degree, v_degree, control_points_list, surface_form, u_closed, v_closed, self_intersect, .. } => { let a: Vec<String> = vec![format!("{}", u_degree), format!("{}", v_degree), format!("({})", control_points_list.iter().map(|e| { let row: Vec<String> = e.iter().map(|e| format!("#{}", self.id_of_ref_cartesian_point(e))).collect(); format!("({})", row.join(",")) }).collect::<Vec<_>>().join(",")), surface_form.token().to_string(), u_closed.token().to_string(), v_closed.token().to_string(), self_intersect.token().to_string()]; format!("B_SPLINE_SURFACE({})", a.join(",")) },
                 PartialEntity::BSplineSurfaceWithKnots { u_multiplicities, v_multiplicities, u_knots, v_knots, knot_spec, .. } => { let a: Vec<String> = vec![format!("({})", u_multiplicities.iter().map(|e| format!("{e}")).collect::<Vec<_>>().join(",")), format!("({})", v_multiplicities.iter().map(|e| format!("{e}")).collect::<Vec<_>>().join(",")), format!("({})", u_knots.iter().map(|e| real(*e)).collect::<Vec<_>>().join(",")), format!("({})", v_knots.iter().map(|e| real(*e)).collect::<Vec<_>>().join(",")), knot_spec.token().to_string()]; format!("B_SPLINE_SURFACE_WITH_KNOTS({})", a.join(",")) },
+                PartialEntity::BasicRoundHole { depth, depth_tolerance, diameter, diameter_tolerance, placement, through_hole, .. } => { let a: Vec<String> = vec![match depth { Some(r) => format!("#{}", self.id_of_ref_positive_length_measure_with_unit(r)), None => "$".to_string() }, match depth_tolerance { Some(r) => format!("#{}", self.id_of_ref_tolerance_value(r)), None => "$".to_string() }, format!("#{}", self.id_of_ref_positive_length_measure_with_unit(diameter)), match diameter_tolerance { Some(r) => format!("#{}", self.id_of_ref_tolerance_value_or_limits_and_fits(r)), None => "$".to_string() }, format!("#{}", self.id_of_ref_shape_representation(placement)), (if *through_hole { ".T." } else { ".F." }).to_string()]; format!("BASIC_ROUND_HOLE({})", a.join(",")) },
                 PartialEntity::BezierCurve => "BEZIER_CURVE()".to_string(),
                 PartialEntity::BezierSurface => "BEZIER_SURFACE()".to_string(),
                 PartialEntity::BoundedCurve => "BOUNDED_CURVE()".to_string(),
@@ -35030,6 +36714,7 @@ impl<'a> Writer<'a> {
                 PartialEntity::BoundedSurface => "BOUNDED_SURFACE()".to_string(),
                 PartialEntity::BoundedSurfaceCurve => "BOUNDED_SURFACE_CURVE()".to_string(),
                 PartialEntity::BrepWithVoids { voids, .. } => { let a: Vec<String> = vec![format!("({})", voids.iter().map(|e| format!("#{}", self.id_of_ref_oriented_closed_shell(e))).collect::<Vec<_>>().join(","))]; format!("BREP_WITH_VOIDS({})", a.join(",")) },
+                PartialEntity::CalendarDate { day_component, month_component, .. } => { let a: Vec<String> = vec![format!("{}", day_component), format!("{}", month_component)]; format!("CALENDAR_DATE({})", a.join(",")) },
                 PartialEntity::CameraImage => "CAMERA_IMAGE()".to_string(),
                 PartialEntity::CameraImage3dWithScale => "CAMERA_IMAGE_3D_WITH_SCALE()".to_string(),
                 PartialEntity::CameraModel => "CAMERA_MODEL()".to_string(),
@@ -35037,40 +36722,59 @@ impl<'a> Writer<'a> {
                 PartialEntity::CameraModelD3MultiClipping { shape_clipping, .. } => { let a: Vec<String> = vec![format!("({})", shape_clipping.iter().map(|e| format!("#{}", self.id_of_ref_camera_model_d3_multi_clipping_intersection_select(e))).collect::<Vec<_>>().join(","))]; format!("CAMERA_MODEL_D3_MULTI_CLIPPING({})", a.join(",")) },
                 PartialEntity::CameraModelD3WithHlhsr { hidden_line_surface_removal, .. } => { let a: Vec<String> = vec![(if *hidden_line_surface_removal { ".T." } else { ".F." }).to_string()]; format!("CAMERA_MODEL_D3_WITH_HLHSR({})", a.join(",")) },
                 PartialEntity::CameraUsage => "CAMERA_USAGE()".to_string(),
+                PartialEntity::CartesianPoint { coordinates, .. } => { let a: Vec<String> = vec![format!("({})", coordinates.iter().map(|e| real(*e)).collect::<Vec<_>>().join(","))]; format!("CARTESIAN_POINT({})", a.join(",")) },
                 PartialEntity::CcDesignApproval { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_approved_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_APPROVAL({})", a.join(",")) },
                 PartialEntity::CcDesignDateAndTimeAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_date_time_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_DATE_AND_TIME_ASSIGNMENT({})", a.join(",")) },
                 PartialEntity::CcDesignPersonAndOrganizationAssignment { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_cc_person_organization_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT({})", a.join(",")) },
                 PartialEntity::CcDesignSecurityClassification { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_cc_classified_item(e))).collect::<Vec<_>>().join(","))]; format!("CC_DESIGN_SECURITY_CLASSIFICATION({})", a.join(",")) },
+                PartialEntity::CentreOfSymmetry => "CENTRE_OF_SYMMETRY()".to_string(),
+                PartialEntity::Change { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_work_item(e))).collect::<Vec<_>>().join(","))]; format!("CHANGE({})", a.join(",")) },
                 PartialEntity::ChangeRequest { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_change_request_item(e))).collect::<Vec<_>>().join(","))]; format!("CHANGE_REQUEST({})", a.join(",")) },
                 PartialEntity::CharacterGlyphStyleOutline { outline_style, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_style(outline_style))]; format!("CHARACTER_GLYPH_STYLE_OUTLINE({})", a.join(",")) },
                 PartialEntity::CharacterGlyphStyleStroke { stroke_style, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_style(stroke_style))]; format!("CHARACTER_GLYPH_STYLE_STROKE({})", a.join(",")) },
                 PartialEntity::CharacterizedItemWithinRepresentation { item, rep, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_representation_item(item)), format!("#{}", self.id_of_ref_representation(rep))]; format!("CHARACTERIZED_ITEM_WITHIN_REPRESENTATION({})", a.join(",")) },
                 PartialEntity::CharacterizedObject { name, description, .. } => { let a: Vec<String> = vec![match name { Some(x) => step_str(self.model.text(*x)), None => "*".to_string() }, match description { Some(x) => step_str(self.model.text(*x)), None => "*".to_string() }]; format!("CHARACTERIZED_OBJECT({})", a.join(",")) },
                 PartialEntity::CharacterizedRepresentation => "CHARACTERIZED_REPRESENTATION()".to_string(),
+                PartialEntity::Circle { radius, .. } => { let a: Vec<String> = vec![real(*radius)]; format!("CIRCLE({})", a.join(",")) },
                 PartialEntity::CircularRunoutTolerance => "CIRCULAR_RUNOUT_TOLERANCE()".to_string(),
                 PartialEntity::ClosedShell => "CLOSED_SHELL()".to_string(),
+                PartialEntity::CoaxialityTolerance => "COAXIALITY_TOLERANCE()".to_string(),
                 PartialEntity::Colour => "COLOUR()".to_string(),
                 PartialEntity::ColourRgb { red, green, blue, .. } => { let a: Vec<String> = vec![real(*red), real(*green), real(*blue)]; format!("COLOUR_RGB({})", a.join(",")) },
                 PartialEntity::ColourSpecification { name, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name))]; format!("COLOUR_SPECIFICATION({})", a.join(",")) },
                 PartialEntity::CommonDatum => "COMMON_DATUM()".to_string(),
+                PartialEntity::ComplexTriangulatedFace { pnindex, triangle_strips, triangle_fans, .. } => { let a: Vec<String> = vec![format!("({})", pnindex.iter().map(|e| format!("{e}")).collect::<Vec<_>>().join(",")), format!("({})", triangle_strips.iter().map(|e| { let row: Vec<String> = e.iter().map(|e| format!("{e}")).collect(); format!("({})", row.join(",")) }).collect::<Vec<_>>().join(",")), format!("({})", triangle_fans.iter().map(|e| { let row: Vec<String> = e.iter().map(|e| format!("{e}")).collect(); format!("({})", row.join(",")) }).collect::<Vec<_>>().join(","))]; format!("COMPLEX_TRIANGULATED_FACE({})", a.join(",")) },
+                PartialEntity::ComplexTriangulatedSurfaceSet { pnindex, triangle_strips, triangle_fans, .. } => { let a: Vec<String> = vec![format!("({})", pnindex.iter().map(|e| format!("{e}")).collect::<Vec<_>>().join(",")), format!("({})", triangle_strips.iter().map(|e| { let row: Vec<String> = e.iter().map(|e| format!("{e}")).collect(); format!("({})", row.join(",")) }).collect::<Vec<_>>().join(",")), format!("({})", triangle_fans.iter().map(|e| { let row: Vec<String> = e.iter().map(|e| format!("{e}")).collect(); format!("({})", row.join(",")) }).collect::<Vec<_>>().join(","))]; format!("COMPLEX_TRIANGULATED_SURFACE_SET({})", a.join(",")) },
                 PartialEntity::CompositeCurve { segments, self_intersect, .. } => { let a: Vec<String> = vec![format!("({})", segments.iter().map(|e| format!("#{}", self.id_of_ref_composite_curve_segment(e))).collect::<Vec<_>>().join(",")), self_intersect.token().to_string()]; format!("COMPOSITE_CURVE({})", a.join(",")) },
                 PartialEntity::CompositeCurveSegment { transition, same_sense, parent_curve, .. } => { let a: Vec<String> = vec![transition.token().to_string(), (if *same_sense { ".T." } else { ".F." }).to_string(), format!("#{}", self.id_of_ref_curve(parent_curve))]; format!("COMPOSITE_CURVE_SEGMENT({})", a.join(",")) },
                 PartialEntity::CompositeGroupShapeAspect => "COMPOSITE_GROUP_SHAPE_ASPECT()".to_string(),
+                PartialEntity::CompositeHole => "COMPOSITE_HOLE()".to_string(),
                 PartialEntity::CompositeShapeAspect => "COMPOSITE_SHAPE_ASPECT()".to_string(),
                 PartialEntity::CompositeText { collected_text, .. } => { let a: Vec<String> = vec![format!("({})", collected_text.iter().map(|e| format!("#{}", self.id_of_ref_text_or_character(e))).collect::<Vec<_>>().join(","))]; format!("COMPOSITE_TEXT({})", a.join(",")) },
+                PartialEntity::CompoundFeature => "COMPOUND_FEATURE()".to_string(),
                 PartialEntity::CompoundRepresentationItem { item_element, .. } => { let a: Vec<String> = vec![match item_element { CompoundItemDefinitionRef::ListRepresentationItem(vs) => format!("LIST_REPRESENTATION_ITEM(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_representation_item(e))).collect::<Vec<_>>().join(",")), CompoundItemDefinitionRef::SetRepresentationItem(vs) => format!("SET_REPRESENTATION_ITEM(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_representation_item(e))).collect::<Vec<_>>().join(",")), other => format!("#{}", self.id_of_ref_compound_item_definition(other)) }]; format!("COMPOUND_REPRESENTATION_ITEM({})", a.join(",")) },
+                PartialEntity::ConcentricityTolerance => "CONCENTRICITY_TOLERANCE()".to_string(),
                 PartialEntity::ConfigurationEffectivity { configuration, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_configuration_design(configuration))]; format!("CONFIGURATION_EFFECTIVITY({})", a.join(",")) },
                 PartialEntity::ConfigurationItem { id, name, description, item_concept, purpose, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_concept(item_concept)), match purpose { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("CONFIGURATION_ITEM({})", a.join(",")) },
+                PartialEntity::Conic { position, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement(position))]; format!("CONIC({})", a.join(",")) },
+                PartialEntity::ConicalSurface { radius, semi_angle, .. } => { let a: Vec<String> = vec![real(*radius), real(*semi_angle)]; format!("CONICAL_SURFACE({})", a.join(",")) },
                 PartialEntity::ConnectedFaceSet { cfs_faces, .. } => { let a: Vec<String> = vec![match cfs_faces { Some(v) => format!("({})", v.iter().map(|e| format!("#{}", self.id_of_ref_face(e))).collect::<Vec<_>>().join(",")), None => "*".to_string() }]; format!("CONNECTED_FACE_SET({})", a.join(",")) },
+                PartialEntity::ConstructiveGeometryRepresentation => "CONSTRUCTIVE_GEOMETRY_REPRESENTATION()".to_string(),
                 PartialEntity::ConstructiveGeometryRepresentationRelationship => "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP()".to_string(),
                 PartialEntity::ContextDependentOverRidingStyledItem { style_context, .. } => { let a: Vec<String> = vec![format!("({})", style_context.iter().map(|e| format!("#{}", self.id_of_ref_style_context_select(e))).collect::<Vec<_>>().join(","))]; format!("CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM({})", a.join(",")) },
                 PartialEntity::ContextDependentUnit { name, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name))]; format!("CONTEXT_DEPENDENT_UNIT({})", a.join(",")) },
+                PartialEntity::ContinuousShapeAspect => "CONTINUOUS_SHAPE_ASPECT()".to_string(),
                 PartialEntity::ConversionBasedUnit { name, conversion_factor, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("#{}", self.id_of_ref_measure_with_unit(conversion_factor))]; format!("CONVERSION_BASED_UNIT({})", a.join(",")) },
+                PartialEntity::CoordinatesList { npoints, position_coords, .. } => { let a: Vec<String> = vec![format!("{}", npoints), format!("({})", position_coords.iter().map(|e| { let row: Vec<String> = e.iter().map(|e| real(*e)).collect(); format!("({})", row.join(",")) }).collect::<Vec<_>>().join(","))]; format!("COORDINATES_LIST({})", a.join(",")) },
+                PartialEntity::CounterboreHoleDefinition { counterbore, drilled_hole_depth, drilled_hole_depth_tolerance, drilled_hole_diameter, drilled_hole_diameter_tolerance, through_hole, .. } => { let a: Vec<String> = vec![format!("({})", counterbore.iter().map(|e| format!("#{}", self.id_of_ref_explicit_round_hole(e))).collect::<Vec<_>>().join(",")), match drilled_hole_depth { Some(r) => format!("#{}", self.id_of_ref_positive_length_measure_with_unit(r)), None => "$".to_string() }, match drilled_hole_depth_tolerance { Some(r) => format!("#{}", self.id_of_ref_tolerance_value(r)), None => "$".to_string() }, format!("#{}", self.id_of_ref_positive_length_measure_with_unit(drilled_hole_diameter)), match drilled_hole_diameter_tolerance { Some(r) => format!("#{}", self.id_of_ref_tolerance_value_or_limits_and_fits(r)), None => "$".to_string() }, (if *through_hole { ".T." } else { ".F." }).to_string()]; format!("COUNTERBORE_HOLE_DEFINITION({})", a.join(",")) },
+                PartialEntity::CounterdrillHoleDefinition { counterbore, counterdrill_angle, counterdrill_angle_tolerance, drilled_hole_depth, drilled_hole_depth_tolerance, drilled_hole_diameter, drilled_hole_diameter_tolerance, through_hole, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_explicit_round_hole(counterbore)), format!("#{}", self.id_of_ref_positive_plane_angle_measure_with_unit(counterdrill_angle)), match counterdrill_angle_tolerance { Some(r) => format!("#{}", self.id_of_ref_tolerance_value(r)), None => "$".to_string() }, match drilled_hole_depth { Some(r) => format!("#{}", self.id_of_ref_positive_length_measure_with_unit(r)), None => "$".to_string() }, match drilled_hole_depth_tolerance { Some(r) => format!("#{}", self.id_of_ref_tolerance_value(r)), None => "$".to_string() }, format!("#{}", self.id_of_ref_positive_length_measure_with_unit(drilled_hole_diameter)), match drilled_hole_diameter_tolerance { Some(r) => format!("#{}", self.id_of_ref_tolerance_value_or_limits_and_fits(r)), None => "$".to_string() }, (if *through_hole { ".T." } else { ".F." }).to_string()]; format!("COUNTERDRILL_HOLE_DEFINITION({})", a.join(",")) },
+                PartialEntity::CountersinkHoleDefinition { countersink_angle, countersink_angle_tolerance, countersink_diameter, countersink_diameter_tolerance, drilled_hole_depth, drilled_hole_depth_tolerance, drilled_hole_diameter, drilled_hole_diameter_tolerance, through_hole, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_positive_plane_angle_measure_with_unit(countersink_angle)), match countersink_angle_tolerance { Some(r) => format!("#{}", self.id_of_ref_tolerance_value(r)), None => "$".to_string() }, format!("#{}", self.id_of_ref_positive_length_measure_with_unit(countersink_diameter)), match countersink_diameter_tolerance { Some(r) => format!("#{}", self.id_of_ref_tolerance_value_or_limits_and_fits(r)), None => "$".to_string() }, match drilled_hole_depth { Some(r) => format!("#{}", self.id_of_ref_positive_length_measure_with_unit(r)), None => "$".to_string() }, match drilled_hole_depth_tolerance { Some(r) => format!("#{}", self.id_of_ref_tolerance_value(r)), None => "$".to_string() }, format!("#{}", self.id_of_ref_positive_length_measure_with_unit(drilled_hole_diameter)), match drilled_hole_diameter_tolerance { Some(r) => format!("#{}", self.id_of_ref_tolerance_value_or_limits_and_fits(r)), None => "$".to_string() }, (if *through_hole { ".T." } else { ".F." }).to_string()]; format!("COUNTERSINK_HOLE_DEFINITION({})", a.join(",")) },
                 PartialEntity::Curve => "CURVE()".to_string(),
                 PartialEntity::CurveStyle { name, curve_font, curve_width, curve_colour, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match curve_font { Some(r) => format!("#{}", self.id_of_ref_curve_font_or_scaled_curve_font_select(r)), None => "$".to_string() }, match curve_width { Some(r) => match r { SizeSelectRef::DescriptiveMeasure(x) => format!("DESCRIPTIVE_MEASURE({})", step_str(self.model.text(*x))), SizeSelectRef::PositiveLengthMeasure(x) => format!("POSITIVE_LENGTH_MEASURE({})", real(*x)), other => format!("#{}", self.id_of_ref_size_select(other)) }, None => "$".to_string() }, match curve_colour { Some(r) => format!("#{}", self.id_of_ref_colour(r)), None => "$".to_string() }]; format!("CURVE_STYLE({})", a.join(",")) },
                 PartialEntity::CurveStyleFont { name, pattern_list, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("({})", pattern_list.iter().map(|e| format!("#{}", self.id_of_ref_curve_style_font_pattern(e))).collect::<Vec<_>>().join(","))]; format!("CURVE_STYLE_FONT({})", a.join(",")) },
                 PartialEntity::CurveStyleFontAndScaling { name, curve_font, curve_font_scaling, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("#{}", self.id_of_ref_curve_style_font_select(curve_font)), real(*curve_font_scaling)]; format!("CURVE_STYLE_FONT_AND_SCALING({})", a.join(",")) },
                 PartialEntity::CurveStyleFontPattern { visible_segment_length, invisible_segment_length, .. } => { let a: Vec<String> = vec![real(*visible_segment_length), real(*invisible_segment_length)]; format!("CURVE_STYLE_FONT_PATTERN({})", a.join(",")) },
+                PartialEntity::CylindricalSurface { radius, .. } => { let a: Vec<String> = vec![real(*radius)]; format!("CYLINDRICAL_SURFACE({})", a.join(",")) },
                 PartialEntity::CylindricityTolerance => "CYLINDRICITY_TOLERANCE()".to_string(),
                 PartialEntity::Date { year_component, .. } => { let a: Vec<String> = vec![format!("{}", year_component)]; format!("DATE({})", a.join(",")) },
                 PartialEntity::DateAndTime { date_component, time_component, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_date(date_component)), format!("#{}", self.id_of_ref_local_time(time_component))]; format!("DATE_AND_TIME({})", a.join(",")) },
@@ -35078,16 +36782,28 @@ impl<'a> Writer<'a> {
                 PartialEntity::Datum { identification, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*identification))]; format!("DATUM({})", a.join(",")) },
                 PartialEntity::DatumFeature => "DATUM_FEATURE()".to_string(),
                 PartialEntity::DatumReference { precedence, referenced_datum, .. } => { let a: Vec<String> = vec![format!("{}", precedence), format!("#{}", self.id_of_ref_datum(referenced_datum))]; format!("DATUM_REFERENCE({})", a.join(",")) },
+                PartialEntity::DatumReferenceCompartment => "DATUM_REFERENCE_COMPARTMENT()".to_string(),
+                PartialEntity::DatumReferenceElement => "DATUM_REFERENCE_ELEMENT()".to_string(),
                 PartialEntity::DatumSystem { constituents, .. } => { let a: Vec<String> = vec![format!("({})", constituents.iter().map(|e| format!("#{}", self.id_of_ref_datum_reference_compartment(e))).collect::<Vec<_>>().join(","))]; format!("DATUM_SYSTEM({})", a.join(",")) },
                 PartialEntity::DatumTarget { target_id, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*target_id))]; format!("DATUM_TARGET({})", a.join(",")) },
                 PartialEntity::DefaultModelGeometricView => "DEFAULT_MODEL_GEOMETRIC_VIEW()".to_string(),
+                PartialEntity::DefinedCharacterGlyph { definition, placement, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_defined_glyph_select(definition)), format!("#{}", self.id_of_ref_axis2_placement(placement))]; format!("DEFINED_CHARACTER_GLYPH({})", a.join(",")) },
+                PartialEntity::DefinedSymbol { definition, target, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_defined_symbol_select(definition)), format!("#{}", self.id_of_ref_symbol_target(target))]; format!("DEFINED_SYMBOL({})", a.join(",")) },
                 PartialEntity::DefinitionalRepresentation => "DEFINITIONAL_REPRESENTATION()".to_string(),
                 PartialEntity::DefinitionalRepresentationRelationship => "DEFINITIONAL_REPRESENTATION_RELATIONSHIP()".to_string(),
                 PartialEntity::DefinitionalRepresentationRelationshipWithSameContext => "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT()".to_string(),
                 PartialEntity::DegenerateToroidalSurface { select_outer, .. } => { let a: Vec<String> = vec![(if *select_outer { ".T." } else { ".F." }).to_string()]; format!("DEGENERATE_TOROIDAL_SURFACE({})", a.join(",")) },
+                PartialEntity::DerivedShapeAspect => "DERIVED_SHAPE_ASPECT()".to_string(),
                 PartialEntity::DerivedUnit { elements, .. } => { let a: Vec<String> = vec![format!("({})", elements.iter().map(|e| format!("#{}", self.id_of_ref_derived_unit_element(e))).collect::<Vec<_>>().join(","))]; format!("DERIVED_UNIT({})", a.join(",")) },
+                PartialEntity::DescriptiveRepresentationItem { description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*description))]; format!("DESCRIPTIVE_REPRESENTATION_ITEM({})", a.join(",")) },
                 PartialEntity::DesignContext => "DESIGN_CONTEXT()".to_string(),
+                PartialEntity::DimensionalCharacteristicRepresentation { dimension, representation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_dimensional_characteristic(dimension)), format!("#{}", self.id_of_ref_shape_dimension_representation(representation))]; format!("DIMENSIONAL_CHARACTERISTIC_REPRESENTATION({})", a.join(",")) },
+                PartialEntity::DimensionalLocation => "DIMENSIONAL_LOCATION()".to_string(),
+                PartialEntity::DimensionalLocationWithPath { path, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_shape_aspect(path))]; format!("DIMENSIONAL_LOCATION_WITH_PATH({})", a.join(",")) },
                 PartialEntity::DimensionalSize { applies_to, name, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_shape_aspect(applies_to)), step_str(self.model.text(*name))]; format!("DIMENSIONAL_SIZE({})", a.join(",")) },
+                PartialEntity::DimensionalSizeWithDatumFeature => "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE()".to_string(),
+                PartialEntity::DimensionalSizeWithPath { path, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_shape_aspect(path))]; format!("DIMENSIONAL_SIZE_WITH_PATH({})", a.join(",")) },
+                PartialEntity::DirectedDimensionalLocation => "DIRECTED_DIMENSIONAL_LOCATION()".to_string(),
                 PartialEntity::Direction { direction_ratios, .. } => { let a: Vec<String> = vec![format!("({})", direction_ratios.iter().map(|e| real(*e)).collect::<Vec<_>>().join(","))]; format!("DIRECTION({})", a.join(",")) },
                 PartialEntity::Document { id, name, description, kind, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_document_type(kind))]; format!("DOCUMENT({})", a.join(",")) },
                 PartialEntity::DocumentFile => "DOCUMENT_FILE()".to_string(),
@@ -35108,8 +36824,12 @@ impl<'a> Writer<'a> {
                 PartialEntity::EdgeLoop => "EDGE_LOOP()".to_string(),
                 PartialEntity::Effectivity { id, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id))]; format!("EFFECTIVITY({})", a.join(",")) },
                 PartialEntity::ElementarySurface { position, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement3d(position))]; format!("ELEMENTARY_SURFACE({})", a.join(",")) },
+                PartialEntity::Ellipse { semi_axis_1, semi_axis_2, .. } => { let a: Vec<String> = vec![real(*semi_axis_1), real(*semi_axis_2)]; format!("ELLIPSE({})", a.join(",")) },
+                PartialEntity::ExplicitCompositeHole { placement, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_shape_representation(placement))]; format!("EXPLICIT_COMPOSITE_HOLE({})", a.join(",")) },
+                PartialEntity::ExplicitRoundHole { depth, depth_tolerance, diameter, diameter_tolerance, placement, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_positive_length_measure_with_unit(depth)), match depth_tolerance { Some(r) => format!("#{}", self.id_of_ref_tolerance_value(r)), None => "$".to_string() }, format!("#{}", self.id_of_ref_positive_length_measure_with_unit(diameter)), match diameter_tolerance { Some(r) => format!("#{}", self.id_of_ref_tolerance_value_or_limits_and_fits(r)), None => "$".to_string() }, format!("#{}", self.id_of_ref_shape_representation(placement))]; format!("EXPLICIT_ROUND_HOLE({})", a.join(",")) },
                 PartialEntity::Expression => "EXPRESSION()".to_string(),
                 PartialEntity::ExternalIdentificationAssignment { source, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_external_source(source))]; format!("EXTERNAL_IDENTIFICATION_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::ExternalImagePlacementInCallout { image, role, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_document(image)), role.token().to_string()]; format!("EXTERNAL_IMAGE_PLACEMENT_IN_CALLOUT({})", a.join(",")) },
                 PartialEntity::ExternalSource { source_id, .. } => { let a: Vec<String> = vec![string_select(self.model, source_id)]; format!("EXTERNAL_SOURCE({})", a.join(",")) },
                 PartialEntity::ExternallyDefinedCharacterGlyph => "EXTERNALLY_DEFINED_CHARACTER_GLYPH()".to_string(),
                 PartialEntity::ExternallyDefinedCurveFont => "EXTERNALLY_DEFINED_CURVE_FONT()".to_string(),
@@ -35124,8 +36844,12 @@ impl<'a> Writer<'a> {
                 PartialEntity::FaceBound { bound, orientation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_loop(bound)), (if *orientation { ".T." } else { ".F." }).to_string()]; format!("FACE_BOUND({})", a.join(",")) },
                 PartialEntity::FaceOuterBound => "FACE_OUTER_BOUND()".to_string(),
                 PartialEntity::FaceSurface { face_geometry, same_sense, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_surface(face_geometry)), (if *same_sense { ".T." } else { ".F." }).to_string()]; format!("FACE_SURFACE({})", a.join(",")) },
+                PartialEntity::FeatureDefinition => "FEATURE_DEFINITION()".to_string(),
+                PartialEntity::FeatureForDatumTargetRelationship => "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP()".to_string(),
                 PartialEntity::FillAreaStyle { name, fill_styles, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("({})", fill_styles.iter().map(|e| format!("#{}", self.id_of_ref_fill_style_select(e))).collect::<Vec<_>>().join(","))]; format!("FILL_AREA_STYLE({})", a.join(",")) },
                 PartialEntity::FillAreaStyleHatching { hatch_line_appearance, start_of_next_hatch_line, point_of_reference_hatch_line, pattern_start, hatch_line_angle, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_style(hatch_line_appearance)), format!("#{}", self.id_of_ref_one_direction_repeat_factor(start_of_next_hatch_line)), format!("#{}", self.id_of_ref_cartesian_point(point_of_reference_hatch_line)), format!("#{}", self.id_of_ref_cartesian_point(pattern_start)), real(*hatch_line_angle)]; format!("FILL_AREA_STYLE_HATCHING({})", a.join(",")) },
+                PartialEntity::FillAreaStyleTileColouredRegion { closed_curve, region_colour, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_annotation_curve_occurrence(closed_curve)), format!("#{}", self.id_of_ref_colour(region_colour))]; format!("FILL_AREA_STYLE_TILE_COLOURED_REGION({})", a.join(",")) },
+                PartialEntity::FillAreaStyleTileCurveWithStyle { styled_curve, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_annotation_curve_occurrence(styled_curve))]; format!("FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE({})", a.join(",")) },
                 PartialEntity::FillAreaStyleTileSymbolWithStyle { symbol, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_annotation_symbol_occurrence(symbol))]; format!("FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE({})", a.join(",")) },
                 PartialEntity::FillAreaStyleTiles { tiling_pattern, tiles, tiling_scale, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_two_direction_repeat_factor(tiling_pattern)), format!("({})", tiles.iter().map(|e| format!("#{}", self.id_of_ref_fill_area_style_tile_shape_select(e))).collect::<Vec<_>>().join(",")), real(*tiling_scale)]; format!("FILL_AREA_STYLE_TILES({})", a.join(",")) },
                 PartialEntity::FlatnessTolerance => "FLATNESS_TOLERANCE()".to_string(),
@@ -35153,6 +36877,7 @@ impl<'a> Writer<'a> {
                 PartialEntity::GlobalUnitAssignedContext { units, .. } => { let a: Vec<String> = vec![format!("({})", units.iter().map(|e| format!("#{}", self.id_of_ref_unit(e))).collect::<Vec<_>>().join(","))]; format!("GLOBAL_UNIT_ASSIGNED_CONTEXT({})", a.join(",")) },
                 PartialEntity::Group { name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("GROUP({})", a.join(",")) },
                 PartialEntity::GroupAssignment { assigned_group, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_group(assigned_group))]; format!("GROUP_ASSIGNMENT({})", a.join(",")) },
+                PartialEntity::Hyperbola { semi_axis, semi_imag_axis, .. } => { let a: Vec<String> = vec![real(*semi_axis), real(*semi_imag_axis)]; format!("HYPERBOLA({})", a.join(",")) },
                 PartialEntity::IdentificationAssignment { assigned_id, role, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*assigned_id)), format!("#{}", self.id_of_ref_identification_role(role))]; format!("IDENTIFICATION_ASSIGNMENT({})", a.join(",")) },
                 PartialEntity::IntLiteral => "INT_LITERAL()".to_string(),
                 PartialEntity::IntegerRepresentationItem => "INTEGER_REPRESENTATION_ITEM()".to_string(),
@@ -35165,28 +36890,36 @@ impl<'a> Writer<'a> {
                 PartialEntity::LeaderTerminator => "LEADER_TERMINATOR()".to_string(),
                 PartialEntity::LengthMeasureWithUnit => "LENGTH_MEASURE_WITH_UNIT()".to_string(),
                 PartialEntity::LengthUnit => "LENGTH_UNIT()".to_string(),
+                PartialEntity::Line { pnt, dir, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_cartesian_point(pnt)), format!("#{}", self.id_of_ref_vector(dir))]; format!("LINE({})", a.join(",")) },
                 PartialEntity::LineProfileTolerance => "LINE_PROFILE_TOLERANCE()".to_string(),
                 PartialEntity::LiteralNumber { the_value, .. } => { let a: Vec<String> = vec![real(*the_value)]; format!("LITERAL_NUMBER({})", a.join(",")) },
                 PartialEntity::Loop => "LOOP()".to_string(),
+                PartialEntity::MakeFromUsageOption { ranking, ranking_rationale, quantity, .. } => { let a: Vec<String> = vec![format!("{}", ranking), step_str(self.model.text(*ranking_rationale)), format!("#{}", self.id_of_ref_measure_with_unit(quantity))]; format!("MAKE_FROM_USAGE_OPTION({})", a.join(",")) },
                 PartialEntity::ManifoldSolidBrep { outer, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_closed_shell(outer))]; format!("MANIFOLD_SOLID_BREP({})", a.join(",")) },
                 PartialEntity::ManifoldSurfaceShapeRepresentation => "MANIFOLD_SURFACE_SHAPE_REPRESENTATION()".to_string(),
                 PartialEntity::MappedItem { mapping_source, mapping_target, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_representation_map(mapping_source)), format!("#{}", self.id_of_ref_representation_item(mapping_target))]; format!("MAPPED_ITEM({})", a.join(",")) },
+                PartialEntity::MassMeasureWithUnit => "MASS_MEASURE_WITH_UNIT()".to_string(),
                 PartialEntity::MassUnit => "MASS_UNIT()".to_string(),
                 PartialEntity::MeasureRepresentationItem => "MEASURE_REPRESENTATION_ITEM()".to_string(),
                 PartialEntity::MeasureWithUnit { value_component, unit_component, .. } => { let a: Vec<String> = vec![measure(self.model, value_component), format!("#{}", self.id_of_ref_unit(unit_component))]; format!("MEASURE_WITH_UNIT({})", a.join(",")) },
                 PartialEntity::MechanicalContext => "MECHANICAL_CONTEXT()".to_string(),
                 PartialEntity::MechanicalDesignAndDraughtingRelationship => "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP()".to_string(),
+                PartialEntity::MechanicalDesignGeometricPresentationRepresentation => "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION()".to_string(),
+                PartialEntity::MechanicalDesignPresentationRepresentationWithDraughting => "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING()".to_string(),
+                PartialEntity::MechanicalDesignShadedPresentationRepresentation => "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION()".to_string(),
                 PartialEntity::ModelGeometricView => "MODEL_GEOMETRIC_VIEW()".to_string(),
                 PartialEntity::ModifiedGeometricTolerance { modifier, .. } => { let a: Vec<String> = vec![modifier.token().to_string()]; format!("MODIFIED_GEOMETRIC_TOLERANCE({})", a.join(",")) },
                 PartialEntity::NamedUnit { dimensions, .. } => { let a: Vec<String> = vec![match dimensions { Some(r) => format!("#{}", self.id_of_ref_dimensional_exponents(r)), None => "*".to_string() }]; format!("NAMED_UNIT({})", a.join(",")) },
                 PartialEntity::NextAssemblyUsageOccurrence => "NEXT_ASSEMBLY_USAGE_OCCURRENCE()".to_string(),
                 PartialEntity::NumericExpression => "NUMERIC_EXPRESSION()".to_string(),
+                PartialEntity::OffsetSurface { basis_surface, distance, self_intersect, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_surface(basis_surface)), real(*distance), self_intersect.token().to_string()]; format!("OFFSET_SURFACE({})", a.join(",")) },
                 PartialEntity::OneDirectionRepeatFactor { repeat_factor, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_vector(repeat_factor))]; format!("ONE_DIRECTION_REPEAT_FACTOR({})", a.join(",")) },
                 PartialEntity::OpenShell => "OPEN_SHELL()".to_string(),
                 PartialEntity::OrganizationalAddress { organizations, description, .. } => { let a: Vec<String> = vec![format!("({})", organizations.iter().map(|e| format!("#{}", self.id_of_ref_organization(e))).collect::<Vec<_>>().join(",")), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("ORGANIZATIONAL_ADDRESS({})", a.join(",")) },
                 PartialEntity::OrientedClosedShell { closed_shell_element, orientation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_closed_shell(closed_shell_element)), (if *orientation { ".T." } else { ".F." }).to_string()]; format!("ORIENTED_CLOSED_SHELL({})", a.join(",")) },
                 PartialEntity::OrientedEdge { edge_element, orientation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_edge(edge_element)), (if *orientation { ".T." } else { ".F." }).to_string()]; format!("ORIENTED_EDGE({})", a.join(",")) },
                 PartialEntity::OverRidingStyledItem { over_ridden_style, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_styled_item(over_ridden_style))]; format!("OVER_RIDING_STYLED_ITEM({})", a.join(",")) },
+                PartialEntity::Parabola { focal_dist, .. } => { let a: Vec<String> = vec![real(*focal_dist)]; format!("PARABOLA({})", a.join(",")) },
                 PartialEntity::ParallelismTolerance => "PARALLELISM_TOLERANCE()".to_string(),
                 PartialEntity::ParametricRepresentationContext => "PARAMETRIC_REPRESENTATION_CONTEXT()".to_string(),
                 PartialEntity::Path { edge_list, .. } => { let a: Vec<String> = vec![format!("({})", edge_list.iter().map(|e| format!("#{}", self.id_of_ref_oriented_edge(e))).collect::<Vec<_>>().join(","))]; format!("PATH({})", a.join(",")) },
@@ -35199,12 +36932,16 @@ impl<'a> Writer<'a> {
                 PartialEntity::Placement { location, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_cartesian_point(location))]; format!("PLACEMENT({})", a.join(",")) },
                 PartialEntity::PlanarBox { placement, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement(placement))]; format!("PLANAR_BOX({})", a.join(",")) },
                 PartialEntity::PlanarExtent { size_in_x, size_in_y, .. } => { let a: Vec<String> = vec![real(*size_in_x), real(*size_in_y)]; format!("PLANAR_EXTENT({})", a.join(",")) },
+                PartialEntity::Plane => "PLANE()".to_string(),
                 PartialEntity::PlaneAngleMeasureWithUnit => "PLANE_ANGLE_MEASURE_WITH_UNIT()".to_string(),
                 PartialEntity::PlaneAngleUnit => "PLANE_ANGLE_UNIT()".to_string(),
                 PartialEntity::Point => "POINT()".to_string(),
                 PartialEntity::PointStyle { name, marker, marker_size, marker_colour, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match marker { Some(r) => match r { MarkerSelectRef::MarkerType(e) => format!("MARKER_TYPE({})", e.token()), other => format!("#{}", self.id_of_ref_marker_select(other)) }, None => "$".to_string() }, match marker_size { Some(r) => match r { SizeSelectRef::DescriptiveMeasure(x) => format!("DESCRIPTIVE_MEASURE({})", step_str(self.model.text(*x))), SizeSelectRef::PositiveLengthMeasure(x) => format!("POSITIVE_LENGTH_MEASURE({})", real(*x)), other => format!("#{}", self.id_of_ref_size_select(other)) }, None => "$".to_string() }, match marker_colour { Some(r) => format!("#{}", self.id_of_ref_colour(r)), None => "$".to_string() }]; format!("POINT_STYLE({})", a.join(",")) },
                 PartialEntity::PolyLoop { polygon, .. } => { let a: Vec<String> = vec![format!("({})", polygon.iter().map(|e| format!("#{}", self.id_of_ref_cartesian_point(e))).collect::<Vec<_>>().join(","))]; format!("POLY_LOOP({})", a.join(",")) },
+                PartialEntity::Polyline { points, .. } => { let a: Vec<String> = vec![format!("({})", points.iter().map(|e| format!("#{}", self.id_of_ref_cartesian_point(e))).collect::<Vec<_>>().join(","))]; format!("POLYLINE({})", a.join(",")) },
                 PartialEntity::PositionTolerance => "POSITION_TOLERANCE()".to_string(),
+                PartialEntity::PositiveLengthMeasureWithUnit => "POSITIVE_LENGTH_MEASURE_WITH_UNIT()".to_string(),
+                PartialEntity::PositivePlaneAngleMeasureWithUnit => "POSITIVE_PLANE_ANGLE_MEASURE_WITH_UNIT()".to_string(),
                 PartialEntity::PreDefinedCharacterGlyph => "PRE_DEFINED_CHARACTER_GLYPH()".to_string(),
                 PartialEntity::PreDefinedColour => "PRE_DEFINED_COLOUR()".to_string(),
                 PartialEntity::PreDefinedCurveFont => "PRE_DEFINED_CURVE_FONT()".to_string(),
@@ -35261,11 +36998,14 @@ impl<'a> Writer<'a> {
                 PartialEntity::RepresentationMap { mapping_origin, mapped_representation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_representation_item(mapping_origin)), format!("#{}", self.id_of_ref_representation(mapped_representation))]; format!("REPRESENTATION_MAP({})", a.join(",")) },
                 PartialEntity::RepresentationReference { id, context_of_items, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*id)), format!("#{}", self.id_of_ref_representation_context_reference(context_of_items))]; format!("REPRESENTATION_REFERENCE({})", a.join(",")) },
                 PartialEntity::RepresentationRelationship { name, description, rep_1, rep_2, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_representation_or_representation_reference(rep_1)), format!("#{}", self.id_of_ref_representation_or_representation_reference(rep_2))]; format!("REPRESENTATION_RELATIONSHIP({})", a.join(",")) },
-                PartialEntity::RepresentationRelationshipWithTransformation { transformation_operator, .. } => { let a: Vec<String> = vec![match transformation_operator { TransformationRef::ListItemDefinedTransformation(vs) => format!("LIST_ITEM_DEFINED_TRANSFORMATION(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_item_defined_transformation(e))).collect::<Vec<_>>().join(",")), TransformationRef::SetItemDefinedTransformation(vs) => format!("SET_ITEM_DEFINED_TRANSFORMATION(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_item_defined_transformation(e))).collect::<Vec<_>>().join(",")), other => format!("#{}", self.id_of_ref_transformation(other)) }]; format!("REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION({})", a.join(",")) },
+                PartialEntity::RepresentationRelationshipWithTransformation { transformation_operator, .. } => { let a: Vec<String> = vec![match transformation_operator { TransformationRef::SetItemDefinedTransformation(vs) => format!("SET_ITEM_DEFINED_TRANSFORMATION(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_item_defined_transformation(e))).collect::<Vec<_>>().join(",")), TransformationRef::ListItemDefinedTransformation(vs) => format!("LIST_ITEM_DEFINED_TRANSFORMATION(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_item_defined_transformation(e))).collect::<Vec<_>>().join(",")), other => format!("#{}", self.id_of_ref_transformation(other)) }]; format!("REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION({})", a.join(",")) },
+                PartialEntity::RoundHole => "ROUND_HOLE()".to_string(),
                 PartialEntity::RoundnessTolerance => "ROUNDNESS_TOLERANCE()".to_string(),
                 PartialEntity::SeamCurve => "SEAM_CURVE()".to_string(),
                 PartialEntity::SecurityClassificationAssignment { assigned_security_classification, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_security_classification(assigned_security_classification))]; format!("SECURITY_CLASSIFICATION_ASSIGNMENT({})", a.join(",")) },
                 PartialEntity::ShapeAspect { name, description, of_shape, product_definitional, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_product_definition_shape(of_shape)), match product_definitional { Some(x) => x.token().to_string(), None => "*".to_string() }]; format!("SHAPE_ASPECT({})", a.join(",")) },
+                PartialEntity::ShapeAspectAssociativity => "SHAPE_ASPECT_ASSOCIATIVITY()".to_string(),
+                PartialEntity::ShapeAspectDerivingRelationship => "SHAPE_ASPECT_DERIVING_RELATIONSHIP()".to_string(),
                 PartialEntity::ShapeAspectRelationship { name, description, relating_shape_aspect, related_shape_aspect, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }, format!("#{}", self.id_of_ref_shape_aspect(relating_shape_aspect)), format!("#{}", self.id_of_ref_shape_aspect(related_shape_aspect))]; format!("SHAPE_ASPECT_RELATIONSHIP({})", a.join(",")) },
                 PartialEntity::ShapeDefinitionRepresentation => "SHAPE_DEFINITION_REPRESENTATION()".to_string(),
                 PartialEntity::ShapeDimensionRepresentation => "SHAPE_DIMENSION_REPRESENTATION()".to_string(),
@@ -35278,13 +37018,17 @@ impl<'a> Writer<'a> {
                 PartialEntity::SimpleNumericExpression => "SIMPLE_NUMERIC_EXPRESSION()".to_string(),
                 PartialEntity::SolidAngleUnit => "SOLID_ANGLE_UNIT()".to_string(),
                 PartialEntity::SolidModel => "SOLID_MODEL()".to_string(),
+                PartialEntity::SphericalSurface { radius, .. } => { let a: Vec<String> = vec![real(*radius)]; format!("SPHERICAL_SURFACE({})", a.join(",")) },
                 PartialEntity::StartRequest { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_start_request_item(e))).collect::<Vec<_>>().join(","))]; format!("START_REQUEST({})", a.join(",")) },
+                PartialEntity::StartWork { items, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_work_item(e))).collect::<Vec<_>>().join(","))]; format!("START_WORK({})", a.join(",")) },
                 PartialEntity::StateObserved { name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("STATE_OBSERVED({})", a.join(",")) },
                 PartialEntity::StateType { name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("STATE_TYPE({})", a.join(",")) },
                 PartialEntity::StraightnessTolerance => "STRAIGHTNESS_TOLERANCE()".to_string(),
-                PartialEntity::StyledItem { styles, item, .. } => { let a: Vec<String> = vec![format!("({})", styles.iter().map(|e| format!("#{}", self.id_of_ref_presentation_style_assignment(e))).collect::<Vec<_>>().join(",")), format!("#{}", self.id_of_ref_styled_item_target_or_representation_item(item))]; format!("STYLED_ITEM({})", a.join(",")) },
+                PartialEntity::StyledItem { styles, item, .. } => { let a: Vec<String> = vec![format!("({})", styles.iter().map(|e| format!("#{}", self.id_of_ref_presentation_style_assignment(e))).collect::<Vec<_>>().join(",")), match item { StyledItemTargetOrRepresentationItemRef::SetRepresentationItem(vs) => format!("SET_REPRESENTATION_ITEM(({}))", vs.iter().map(|e| format!("#{}", self.id_of_ref_representation_item(e))).collect::<Vec<_>>().join(",")), other => format!("#{}", self.id_of_ref_styled_item_target_or_representation_item(other)) }]; format!("STYLED_ITEM({})", a.join(",")) },
                 PartialEntity::Surface => "SURFACE()".to_string(),
                 PartialEntity::SurfaceCurve { curve_3d, associated_geometry, master_representation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve(curve_3d)), format!("({})", associated_geometry.iter().map(|e| format!("#{}", self.id_of_ref_pcurve_or_surface(e))).collect::<Vec<_>>().join(",")), master_representation.token().to_string()]; format!("SURFACE_CURVE({})", a.join(",")) },
+                PartialEntity::SurfaceOfLinearExtrusion { extrusion_axis, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_vector(extrusion_axis))]; format!("SURFACE_OF_LINEAR_EXTRUSION({})", a.join(",")) },
+                PartialEntity::SurfaceOfRevolution { axis_position, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis1_placement(axis_position))]; format!("SURFACE_OF_REVOLUTION({})", a.join(",")) },
                 PartialEntity::SurfaceProfileTolerance => "SURFACE_PROFILE_TOLERANCE()".to_string(),
                 PartialEntity::SurfaceSideStyle { name, styles, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("({})", styles.iter().map(|e| format!("#{}", self.id_of_ref_surface_style_element_select(e))).collect::<Vec<_>>().join(","))]; format!("SURFACE_SIDE_STYLE({})", a.join(",")) },
                 PartialEntity::SurfaceStyleBoundary { style_of_boundary, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_render(style_of_boundary))]; format!("SURFACE_STYLE_BOUNDARY({})", a.join(",")) },
@@ -35297,13 +37041,22 @@ impl<'a> Writer<'a> {
                 PartialEntity::SurfaceStyleSegmentationCurve { style_of_segmentation_curve, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_render(style_of_segmentation_curve))]; format!("SURFACE_STYLE_SEGMENTATION_CURVE({})", a.join(",")) },
                 PartialEntity::SurfaceStyleSilhouette { style_of_silhouette, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve_or_render(style_of_silhouette))]; format!("SURFACE_STYLE_SILHOUETTE({})", a.join(",")) },
                 PartialEntity::SurfaceStyleUsage { side, style, .. } => { let a: Vec<String> = vec![side.token().to_string(), format!("#{}", self.id_of_ref_surface_side_style_select(style))]; format!("SURFACE_STYLE_USAGE({})", a.join(",")) },
+                PartialEntity::SweptSurface { swept_curve, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve(swept_curve))]; format!("SWEPT_SURFACE({})", a.join(",")) },
                 PartialEntity::SymbolRepresentation => "SYMBOL_REPRESENTATION()".to_string(),
                 PartialEntity::SymbolStyle { name, style_of_symbol, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("#{}", self.id_of_ref_symbol_style_select(style_of_symbol))]; format!("SYMBOL_STYLE({})", a.join(",")) },
+                PartialEntity::SymbolTarget { placement, x_scale, y_scale, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_axis2_placement(placement)), real(*x_scale), real(*y_scale)]; format!("SYMBOL_TARGET({})", a.join(",")) },
+                PartialEntity::SymmetryTolerance => "SYMMETRY_TOLERANCE()".to_string(),
                 PartialEntity::TerminatorSymbol { annotated_curve, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_annotation_curve_occurrence(annotated_curve))]; format!("TERMINATOR_SYMBOL({})", a.join(",")) },
+                PartialEntity::TessellatedAnnotationOccurrence => "TESSELLATED_ANNOTATION_OCCURRENCE()".to_string(),
+                PartialEntity::TessellatedCurveSet { coordinates, line_strips, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_coordinates_list(coordinates)), format!("({})", line_strips.iter().map(|e| { let row: Vec<String> = e.iter().map(|e| format!("{e}")).collect(); format!("({})", row.join(",")) }).collect::<Vec<_>>().join(","))]; format!("TESSELLATED_CURVE_SET({})", a.join(",")) },
+                PartialEntity::TessellatedFace { coordinates, pnmax, normals, geometric_link, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_coordinates_list(coordinates)), format!("{}", pnmax), format!("({})", normals.iter().map(|e| { let row: Vec<String> = e.iter().map(|e| real(*e)).collect(); format!("({})", row.join(",")) }).collect::<Vec<_>>().join(",")), match geometric_link { Some(r) => format!("#{}", self.id_of_ref_face_or_surface(r)), None => "$".to_string() }]; format!("TESSELLATED_FACE({})", a.join(",")) },
                 PartialEntity::TessellatedGeometricSet { children, .. } => { let a: Vec<String> = vec![format!("({})", children.iter().map(|e| format!("#{}", self.id_of_ref_tessellated_item(e))).collect::<Vec<_>>().join(","))]; format!("TESSELLATED_GEOMETRIC_SET({})", a.join(",")) },
                 PartialEntity::TessellatedItem => "TESSELLATED_ITEM()".to_string(),
                 PartialEntity::TessellatedShapeRepresentation => "TESSELLATED_SHAPE_REPRESENTATION()".to_string(),
+                PartialEntity::TessellatedShell { items, topological_link, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_tessellated_structured_item(e))).collect::<Vec<_>>().join(",")), match topological_link { Some(r) => format!("#{}", self.id_of_ref_connected_face_set(r)), None => "$".to_string() }]; format!("TESSELLATED_SHELL({})", a.join(",")) },
+                PartialEntity::TessellatedSolid { items, geometric_link, .. } => { let a: Vec<String> = vec![format!("({})", items.iter().map(|e| format!("#{}", self.id_of_ref_tessellated_structured_item(e))).collect::<Vec<_>>().join(",")), match geometric_link { Some(r) => format!("#{}", self.id_of_ref_manifold_solid_brep(r)), None => "$".to_string() }]; format!("TESSELLATED_SOLID({})", a.join(",")) },
                 PartialEntity::TessellatedStructuredItem => "TESSELLATED_STRUCTURED_ITEM()".to_string(),
+                PartialEntity::TessellatedSurfaceSet { coordinates, pnmax, normals, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_coordinates_list(coordinates)), format!("{}", pnmax), format!("({})", normals.iter().map(|e| { let row: Vec<String> = e.iter().map(|e| real(*e)).collect(); format!("({})", row.join(",")) }).collect::<Vec<_>>().join(","))]; format!("TESSELLATED_SURFACE_SET({})", a.join(",")) },
                 PartialEntity::TextLiteral { literal, placement, alignment, path, font, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*literal)), format!("#{}", self.id_of_ref_axis2_placement(placement)), step_str(self.model.text(*alignment)), path.token().to_string(), format!("#{}", self.id_of_ref_font_select(font))]; format!("TEXT_LITERAL({})", a.join(",")) },
                 PartialEntity::TextStyle { name, character_appearance, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), format!("#{}", self.id_of_ref_character_style_select(character_appearance))]; format!("TEXT_STYLE({})", a.join(",")) },
                 PartialEntity::TextStyleWithBoxCharacteristics { characteristics, .. } => { let a: Vec<String> = vec![format!("({})", characteristics.iter().map(|e| measure(self.model, e)).collect::<Vec<_>>().join(","))]; format!("TEXT_STYLE_WITH_BOX_CHARACTERISTICS({})", a.join(",")) },
@@ -35315,15 +37068,22 @@ impl<'a> Writer<'a> {
                 PartialEntity::ToleranceZoneWithDatum { datum_reference, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_datum_system(datum_reference))]; format!("TOLERANCE_ZONE_WITH_DATUM({})", a.join(",")) },
                 PartialEntity::TopologicalRepresentationItem => "TOPOLOGICAL_REPRESENTATION_ITEM()".to_string(),
                 PartialEntity::ToroidalSurface { major_radius, minor_radius, .. } => { let a: Vec<String> = vec![real(*major_radius), real(*minor_radius)]; format!("TOROIDAL_SURFACE({})", a.join(",")) },
+                PartialEntity::TotalRunoutTolerance => "TOTAL_RUNOUT_TOLERANCE()".to_string(),
+                PartialEntity::TrimmedCurve { basis_curve, trim_1, trim_2, sense_agreement, master_representation, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_curve(basis_curve)), format!("({})", trim_1.iter().map(|e| match e { TrimmingSelectRef::ParameterValue(x) => format!("PARAMETER_VALUE({})", real(*x)), other => format!("#{}", self.id_of_ref_trimming_select(other)) }).collect::<Vec<_>>().join(",")), format!("({})", trim_2.iter().map(|e| match e { TrimmingSelectRef::ParameterValue(x) => format!("PARAMETER_VALUE({})", real(*x)), other => format!("#{}", self.id_of_ref_trimming_select(other)) }).collect::<Vec<_>>().join(",")), (if *sense_agreement { ".T." } else { ".F." }).to_string(), master_representation.token().to_string()]; format!("TRIMMED_CURVE({})", a.join(",")) },
                 PartialEntity::TwoDirectionRepeatFactor { second_repeat_factor, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_vector(second_repeat_factor))]; format!("TWO_DIRECTION_REPEAT_FACTOR({})", a.join(",")) },
+                PartialEntity::UncertaintyMeasureWithUnit { name, description, .. } => { let a: Vec<String> = vec![step_str(self.model.text(*name)), match description { Some(x) => step_str(self.model.text(*x)), None => "$".to_string() }]; format!("UNCERTAINTY_MEASURE_WITH_UNIT({})", a.join(",")) },
                 PartialEntity::UnequallyDisposedGeometricTolerance { displacement, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_length_measure_with_unit(displacement))]; format!("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE({})", a.join(",")) },
                 PartialEntity::UniformCurve => "UNIFORM_CURVE()".to_string(),
                 PartialEntity::UniformSurface => "UNIFORM_SURFACE()".to_string(),
                 PartialEntity::ValueRepresentationItem { value_component, .. } => { let a: Vec<String> = vec![measure(self.model, value_component)]; format!("VALUE_REPRESENTATION_ITEM({})", a.join(",")) },
                 PartialEntity::Vector { orientation, magnitude, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_direction(orientation)), real(*magnitude)]; format!("VECTOR({})", a.join(",")) },
                 PartialEntity::Vertex => "VERTEX()".to_string(),
+                PartialEntity::VertexLoop { loop_vertex, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_vertex(loop_vertex))]; format!("VERTEX_LOOP({})", a.join(",")) },
                 PartialEntity::VertexPoint { vertex_geometry, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_point(vertex_geometry))]; format!("VERTEX_POINT({})", a.join(",")) },
+                PartialEntity::VertexShell { vertex_shell_extent, .. } => { let a: Vec<String> = vec![format!("#{}", self.id_of_ref_vertex_loop(vertex_shell_extent))]; format!("VERTEX_SHELL({})", a.join(",")) },
                 PartialEntity::ViewVolume { projection_type, projection_point, view_plane_distance, front_plane_distance, front_plane_clipping, back_plane_distance, back_plane_clipping, view_volume_sides_clipping, view_window, .. } => { let a: Vec<String> = vec![projection_type.token().to_string(), format!("#{}", self.id_of_ref_cartesian_point(projection_point)), real(*view_plane_distance), real(*front_plane_distance), (if *front_plane_clipping { ".T." } else { ".F." }).to_string(), real(*back_plane_distance), (if *back_plane_clipping { ".T." } else { ".F." }).to_string(), (if *view_volume_sides_clipping { ".T." } else { ".F." }).to_string(), format!("#{}", self.id_of_ref_planar_box(view_window))]; format!("VIEW_VOLUME({})", a.join(",")) },
+                PartialEntity::VolumeUnit => "VOLUME_UNIT()".to_string(),
+                PartialEntity::WireShell { wire_shell_extent, .. } => { let a: Vec<String> = vec![format!("({})", wire_shell_extent.iter().map(|e| format!("#{}", self.id_of_ref_loop(e))).collect::<Vec<_>>().join(","))]; format!("WIRE_SHELL({})", a.join(",")) },
             });
                 }
                 format!("#{n} = ( {} );\n", part_txt.join(" "))
@@ -35345,6 +37105,9 @@ impl<'a> Writer<'a> {
             EntityKey::ActionResource(_) => "ACTION_RESOURCE",
             EntityKey::ActionResourceRelationship(_) => "ACTION_RESOURCE_RELATIONSHIP",
             EntityKey::ActionResourceRequirement(_) => "ACTION_RESOURCE_REQUIREMENT",
+            EntityKey::ActionResourceRequirementRelationship(_) => {
+                "ACTION_RESOURCE_REQUIREMENT_RELATIONSHIP"
+            }
             EntityKey::ActionResourceType(_) => "ACTION_RESOURCE_TYPE",
             EntityKey::Address(_) => "ADDRESS",
             EntityKey::AdvancedBrepShapeRepresentation(_) => "ADVANCED_BREP_SHAPE_REPRESENTATION",
@@ -35414,6 +37177,7 @@ impl<'a> Writer<'a> {
             EntityKey::BSplineCurveWithKnots(_) => "B_SPLINE_CURVE_WITH_KNOTS",
             EntityKey::BSplineSurface(_) => "B_SPLINE_SURFACE",
             EntityKey::BSplineSurfaceWithKnots(_) => "B_SPLINE_SURFACE_WITH_KNOTS",
+            EntityKey::BasicRoundHole(_) => "BASIC_ROUND_HOLE",
             EntityKey::BezierCurve(_) => "BEZIER_CURVE",
             EntityKey::BezierSurface(_) => "BEZIER_SURFACE",
             EntityKey::BoundedCurve(_) => "BOUNDED_CURVE",
@@ -35461,8 +37225,10 @@ impl<'a> Writer<'a> {
             EntityKey::CompositeCurve(_) => "COMPOSITE_CURVE",
             EntityKey::CompositeCurveSegment(_) => "COMPOSITE_CURVE_SEGMENT",
             EntityKey::CompositeGroupShapeAspect(_) => "COMPOSITE_GROUP_SHAPE_ASPECT",
+            EntityKey::CompositeHole(_) => "COMPOSITE_HOLE",
             EntityKey::CompositeShapeAspect(_) => "COMPOSITE_SHAPE_ASPECT",
             EntityKey::CompositeText(_) => "COMPOSITE_TEXT",
+            EntityKey::CompoundFeature(_) => "COMPOUND_FEATURE",
             EntityKey::CompoundRepresentationItem(_) => "COMPOUND_REPRESENTATION_ITEM",
             EntityKey::ConcentricityTolerance(_) => "CONCENTRICITY_TOLERANCE",
             EntityKey::ConfigurationDesign(_) => "CONFIGURATION_DESIGN",
@@ -35490,6 +37256,9 @@ impl<'a> Writer<'a> {
             EntityKey::ConversionBasedUnit(_) => "CONVERSION_BASED_UNIT",
             EntityKey::CoordinatedUniversalTimeOffset(_) => "COORDINATED_UNIVERSAL_TIME_OFFSET",
             EntityKey::CoordinatesList(_) => "COORDINATES_LIST",
+            EntityKey::CounterboreHoleDefinition(_) => "COUNTERBORE_HOLE_DEFINITION",
+            EntityKey::CounterdrillHoleDefinition(_) => "COUNTERDRILL_HOLE_DEFINITION",
+            EntityKey::CountersinkHoleDefinition(_) => "COUNTERSINK_HOLE_DEFINITION",
             EntityKey::Curve(_) => "CURVE",
             EntityKey::CurveStyle(_) => "CURVE_STYLE",
             EntityKey::CurveStyleFont(_) => "CURVE_STYLE_FONT",
@@ -35563,8 +37332,11 @@ impl<'a> Writer<'a> {
             EntityKey::Effectivity(_) => "EFFECTIVITY",
             EntityKey::ElementarySurface(_) => "ELEMENTARY_SURFACE",
             EntityKey::Ellipse(_) => "ELLIPSE",
+            EntityKey::ExplicitCompositeHole(_) => "EXPLICIT_COMPOSITE_HOLE",
+            EntityKey::ExplicitRoundHole(_) => "EXPLICIT_ROUND_HOLE",
             EntityKey::Expression(_) => "EXPRESSION",
             EntityKey::ExternalIdentificationAssignment(_) => "EXTERNAL_IDENTIFICATION_ASSIGNMENT",
+            EntityKey::ExternalImagePlacementInCallout(_) => "EXTERNAL_IMAGE_PLACEMENT_IN_CALLOUT",
             EntityKey::ExternalSource(_) => "EXTERNAL_SOURCE",
             EntityKey::ExternallyDefinedCharacterGlyph(_) => "EXTERNALLY_DEFINED_CHARACTER_GLYPH",
             EntityKey::ExternallyDefinedCurveFont(_) => "EXTERNALLY_DEFINED_CURVE_FONT",
@@ -35579,6 +37351,7 @@ impl<'a> Writer<'a> {
             EntityKey::FaceBound(_) => "FACE_BOUND",
             EntityKey::FaceOuterBound(_) => "FACE_OUTER_BOUND",
             EntityKey::FaceSurface(_) => "FACE_SURFACE",
+            EntityKey::FeatureDefinition(_) => "FEATURE_DEFINITION",
             EntityKey::FeatureForDatumTargetRelationship(_) => {
                 "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP"
             }
@@ -35732,6 +37505,10 @@ impl<'a> Writer<'a> {
             EntityKey::PolyLoop(_) => "POLY_LOOP",
             EntityKey::Polyline(_) => "POLYLINE",
             EntityKey::PositionTolerance(_) => "POSITION_TOLERANCE",
+            EntityKey::PositiveLengthMeasureWithUnit(_) => "POSITIVE_LENGTH_MEASURE_WITH_UNIT",
+            EntityKey::PositivePlaneAngleMeasureWithUnit(_) => {
+                "POSITIVE_PLANE_ANGLE_MEASURE_WITH_UNIT"
+            }
             EntityKey::PreDefinedCharacterGlyph(_) => "PRE_DEFINED_CHARACTER_GLYPH",
             EntityKey::PreDefinedColour(_) => "PRE_DEFINED_COLOUR",
             EntityKey::PreDefinedCurveFont(_) => "PRE_DEFINED_CURVE_FONT",
@@ -35813,6 +37590,8 @@ impl<'a> Writer<'a> {
             EntityKey::ResourceProperty(_) => "RESOURCE_PROPERTY",
             EntityKey::ResourceRequirementType(_) => "RESOURCE_REQUIREMENT_TYPE",
             EntityKey::RoleAssociation(_) => "ROLE_ASSOCIATION",
+            EntityKey::RoundHole(_) => "ROUND_HOLE",
+            EntityKey::RoundHoleBottomCondition(_) => "ROUND_HOLE_BOTTOM_CONDITION",
             EntityKey::RoundnessTolerance(_) => "ROUNDNESS_TOLERANCE",
             EntityKey::SeamCurve(_) => "SEAM_CURVE",
             EntityKey::SecurityClassification(_) => "SECURITY_CLASSIFICATION",
@@ -35969,6 +37748,16 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.action_resource_requirement_arena.items.len() as u32 {
             roots.push(EntityKey::ActionResourceRequirement(
                 ActionResourceRequirementId(i),
+            ));
+        }
+        for i in 0..self
+            .model
+            .action_resource_requirement_relationship_arena
+            .items
+            .len() as u32
+        {
+            roots.push(EntityKey::ActionResourceRequirementRelationship(
+                ActionResourceRequirementRelationshipId(i),
             ));
         }
         for i in 0..self.model.action_resource_type_arena.items.len() as u32 {
@@ -36263,6 +38052,9 @@ impl<'a> Writer<'a> {
                 BSplineSurfaceWithKnotsId(i),
             ));
         }
+        for i in 0..self.model.basic_round_hole_arena.items.len() as u32 {
+            roots.push(EntityKey::BasicRoundHole(BasicRoundHoleId(i)));
+        }
         for i in 0..self.model.bezier_curve_arena.items.len() as u32 {
             roots.push(EntityKey::BezierCurve(BezierCurveId(i)));
         }
@@ -36445,11 +38237,17 @@ impl<'a> Writer<'a> {
                 CompositeGroupShapeAspectId(i),
             ));
         }
+        for i in 0..self.model.composite_hole_arena.items.len() as u32 {
+            roots.push(EntityKey::CompositeHole(CompositeHoleId(i)));
+        }
         for i in 0..self.model.composite_shape_aspect_arena.items.len() as u32 {
             roots.push(EntityKey::CompositeShapeAspect(CompositeShapeAspectId(i)));
         }
         for i in 0..self.model.composite_text_arena.items.len() as u32 {
             roots.push(EntityKey::CompositeText(CompositeTextId(i)));
+        }
+        for i in 0..self.model.compound_feature_arena.items.len() as u32 {
+            roots.push(EntityKey::CompoundFeature(CompoundFeatureId(i)));
         }
         for i in 0..self.model.compound_representation_item_arena.items.len() as u32 {
             roots.push(EntityKey::CompoundRepresentationItem(
@@ -36548,6 +38346,21 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.coordinates_list_arena.items.len() as u32 {
             roots.push(EntityKey::CoordinatesList(CoordinatesListId(i)));
+        }
+        for i in 0..self.model.counterbore_hole_definition_arena.items.len() as u32 {
+            roots.push(EntityKey::CounterboreHoleDefinition(
+                CounterboreHoleDefinitionId(i),
+            ));
+        }
+        for i in 0..self.model.counterdrill_hole_definition_arena.items.len() as u32 {
+            roots.push(EntityKey::CounterdrillHoleDefinition(
+                CounterdrillHoleDefinitionId(i),
+            ));
+        }
+        for i in 0..self.model.countersink_hole_definition_arena.items.len() as u32 {
+            roots.push(EntityKey::CountersinkHoleDefinition(
+                CountersinkHoleDefinitionId(i),
+            ));
         }
         for i in 0..self.model.curve_arena.items.len() as u32 {
             roots.push(EntityKey::Curve(CurveId(i)));
@@ -36844,6 +38657,12 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.ellipse_arena.items.len() as u32 {
             roots.push(EntityKey::Ellipse(EllipseId(i)));
         }
+        for i in 0..self.model.explicit_composite_hole_arena.items.len() as u32 {
+            roots.push(EntityKey::ExplicitCompositeHole(ExplicitCompositeHoleId(i)));
+        }
+        for i in 0..self.model.explicit_round_hole_arena.items.len() as u32 {
+            roots.push(EntityKey::ExplicitRoundHole(ExplicitRoundHoleId(i)));
+        }
         for i in 0..self.model.expression_arena.items.len() as u32 {
             roots.push(EntityKey::Expression(ExpressionId(i)));
         }
@@ -36855,6 +38674,16 @@ impl<'a> Writer<'a> {
         {
             roots.push(EntityKey::ExternalIdentificationAssignment(
                 ExternalIdentificationAssignmentId(i),
+            ));
+        }
+        for i in 0..self
+            .model
+            .external_image_placement_in_callout_arena
+            .items
+            .len() as u32
+        {
+            roots.push(EntityKey::ExternalImagePlacementInCallout(
+                ExternalImagePlacementInCalloutId(i),
             ));
         }
         for i in 0..self.model.external_source_arena.items.len() as u32 {
@@ -36917,6 +38746,9 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.face_surface_arena.items.len() as u32 {
             roots.push(EntityKey::FaceSurface(FaceSurfaceId(i)));
+        }
+        for i in 0..self.model.feature_definition_arena.items.len() as u32 {
+            roots.push(EntityKey::FeatureDefinition(FeatureDefinitionId(i)));
         }
         for i in 0..self
             .model
@@ -37484,6 +39316,26 @@ impl<'a> Writer<'a> {
         for i in 0..self.model.position_tolerance_arena.items.len() as u32 {
             roots.push(EntityKey::PositionTolerance(PositionToleranceId(i)));
         }
+        for i in 0..self
+            .model
+            .positive_length_measure_with_unit_arena
+            .items
+            .len() as u32
+        {
+            roots.push(EntityKey::PositiveLengthMeasureWithUnit(
+                PositiveLengthMeasureWithUnitId(i),
+            ));
+        }
+        for i in 0..self
+            .model
+            .positive_plane_angle_measure_with_unit_arena
+            .items
+            .len() as u32
+        {
+            roots.push(EntityKey::PositivePlaneAngleMeasureWithUnit(
+                PositivePlaneAngleMeasureWithUnitId(i),
+            ));
+        }
         for i in 0..self.model.pre_defined_character_glyph_arena.items.len() as u32 {
             roots.push(EntityKey::PreDefinedCharacterGlyph(
                 PreDefinedCharacterGlyphId(i),
@@ -37822,6 +39674,14 @@ impl<'a> Writer<'a> {
         }
         for i in 0..self.model.role_association_arena.items.len() as u32 {
             roots.push(EntityKey::RoleAssociation(RoleAssociationId(i)));
+        }
+        for i in 0..self.model.round_hole_arena.items.len() as u32 {
+            roots.push(EntityKey::RoundHole(RoundHoleId(i)));
+        }
+        for i in 0..self.model.round_hole_bottom_condition_arena.items.len() as u32 {
+            roots.push(EntityKey::RoundHoleBottomCondition(
+                RoundHoleBottomConditionId(i),
+            ));
         }
         for i in 0..self.model.roundness_tolerance_arena.items.len() as u32 {
             roots.push(EntityKey::RoundnessTolerance(RoundnessToleranceId(i)));

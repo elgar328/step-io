@@ -1428,16 +1428,7 @@ fn resolve_placement(cx: Ctx<'_>, item: &m::RepresentationItemRef) -> Option<Pla
 
 /// A cartesian point's coordinates as a 3-vector (missing components are 0).
 fn point3(cx: Ctx<'_>, r: &m::CartesianPointRef) -> [f64; 3] {
-    if let m::CartesianPointRef::CartesianPoint(id) = r {
-        let c = &cx.model.cartesian_point_arena.get(id.0).coordinates;
-        [
-            c.first().copied().unwrap_or(0.0),
-            c.get(1).copied().unwrap_or(0.0),
-            c.get(2).copied().unwrap_or(0.0),
-        ]
-    } else {
-        [0.0; 3]
-    }
+    crate::scene::nurbs::point_coords(cx, r).unwrap_or([0.0; 3])
 }
 
 /// A direction's ratios as a 3-vector (missing components are 0).

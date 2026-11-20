@@ -4,7 +4,7 @@
 //! > ⚠️ **Experimental** — early stage; expect breaking API changes at any time.
 //!
 //! - **Reads everything, writes AP242** — any mainstream AP comes in, legacy
-//!   included; only AP242 edition 2 (IS) goes out.
+//!   included; only AP242 edition 4 (IS) goes out.
 //! - **Lean** — one universal schema model instead of a per-schema
 //!   implementation; the supported entity set is curated to what real STEP
 //!   files actually use.
@@ -27,10 +27,10 @@
 //! matrix](https://github.com/elgar328/step-io/blob/main/docs/entities.md)
 //! lists exactly what is read and written.
 //!
-//! Output is AP242 edition 2 (IS) only — AP203 and AP214 were merged into
-//! it in 2014, and every modern tool reads it. When edition 3 reaches IS
-//! and takes over, the output moves up with it: one output schema,
-//! always the current one.
+//! Output is AP242 edition 4 (ISO 10303-242:2025, the current IS) only —
+//! AP203 and AP214 were merged into AP242 in 2014. When a later edition
+//! takes over, the output moves up with it: one output schema, always the
+//! current one.
 //!
 //! Most of the pipeline is generated from the schemas rather than written
 //! by hand — no drift, little to maintain.
@@ -100,14 +100,15 @@
 //! The write side is strict by construction. Its foundation is [`Ap242Author`],
 //! a generated low-level layer with one constructor per AP242 entity (exposed
 //! as [`StepBuilder::author`]); every argument is validated at insertion
-//! against the AP242 edition 2 schema — its types, aggregate sizes, references,
+//! against the AP242 edition 4 schema — its types, aggregate sizes, references,
 //! rules for combining types, and the `WHERE` rules that limit which types an
-//! attribute, or each of its elements, references, whether for every instance
+//! attribute, each of its elements, or each element of a set it holds
+//! references, whether for every instance
 //! or by the instance's own type (not those on one indexed element, on two
 //! attributes together or on a path through another entity, nor its other
 //! `WHERE` rules) — so there is no loss report to check afterwards.
 //!
-//! Some of the model's reference types are wider than AP242 edition 2 allows.
+//! Some of the model's reference types are wider than AP242 edition 4 allows.
 //! The model reads every edition, so an attribute a subtype narrows
 //! (`SELF\supertype.attribute : narrower;`) only from AP242 on, or a SELECT
 //! with members AP242 dropped, takes the wider type; and it does not hold an
@@ -121,7 +122,7 @@
 //! # fn f(a: &mut Ap242Author, shape: m::ProductDefinitionShapeId, rep: m::ShapeRepresentationId) {
 //! a.add_shape_definition_representation(
 //!     m::PropertyDefinitionRef::ProductDefinitionShape(shape),
-//!     m::Ap242ShapeRepresentationRef::ShapeRepresentation(rep),
+//!     m::ShapeRepresentationRef::ShapeRepresentation(rep),
 //! );
 //! # }
 //! ```
@@ -132,7 +133,7 @@
 //! // AP214 lets a shape aspect have a shape representation; AP242 does not.
 //! a.add_shape_definition_representation(
 //!     m::RepresentedDefinitionRef::ShapeAspect(aspect),
-//!     m::Ap242ShapeRepresentationRef::ShapeRepresentation(rep),
+//!     m::ShapeRepresentationRef::ShapeRepresentation(rep),
 //! );
 //! # }
 //! ```
@@ -257,30 +258,8 @@ pub use parser::lexer::{LexError, LexErrorKind};
 pub use parser::schema::{ApFamily, SchemaId, Stage};
 pub use refgraph::RefGraph;
 
-/// Compile-time checks of the AP242 edition 2 argument types, each paired
+/// Compile-time checks of the AP242 edition 4 argument types, each paired
 /// with a version that compiles, so a `compile_fail` fails for its reason.
-///
-/// AP242's `groupable_item` drops `ACTION_METHOD`:
-///
-/// ```
-/// # use step_io::{Ap242Author, model as m};
-/// # fn f(a: &mut Ap242Author, group: m::GroupId, aspect: m::ShapeAspectId) {
-/// let _ = a.add_applied_group_assignment(
-///     m::GroupRef::Group(group),
-///     vec![m::Ap242GroupableItemRef::ShapeAspect(aspect)],
-/// );
-/// # }
-/// ```
-///
-/// ```compile_fail,E0599
-/// # use step_io::{Ap242Author, model as m};
-/// # fn f(a: &mut Ap242Author, group: m::GroupId, method: m::ActionMethodId) {
-/// let _ = a.add_applied_group_assignment(
-///     m::GroupRef::Group(group),
-///     vec![m::Ap242GroupableItemRef::ActionMethod(method)],
-/// );
-/// # }
-/// ```
 ///
 /// AP242's `approved_item` drops `PRODUCT_DEFINITION`, which AP203 allows:
 ///
@@ -329,8 +308,9 @@ pub use refgraph::RefGraph;
 /// # }
 /// ```
 ///
-/// `STYLED_ITEM.WR3` lets a styled item style only a mapped item or a
-/// geometric item, unless it is a context-dependent over-riding styled item:
+/// `STYLED_ITEM.WR3` lets a styled item style only a mapped item, a
+/// geometric item, or a set of them, a context-dependent over-riding styled
+/// item included:
 ///
 /// ```compile_fail,E0599
 /// # use step_io::{Ap242Author, model as m};
@@ -345,12 +325,38 @@ pub use refgraph::RefGraph;
 ///
 /// ```
 /// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, style: m::PresentationStyleAssignmentId, face: m::AdvancedFaceId) {
+/// let _ = a.add_styled_item(
+///     "",
+///     vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
+///     m::Ap242StyledItemItemRef::SetRepresentationItem(vec![
+///         m::Ap242StyledItemItemSetRepresentationItemRef::AdvancedFace(face),
+///     ]),
+/// );
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, style: m::PresentationStyleAssignmentId, shell: m::ClosedShellId) {
+/// let _ = a.add_styled_item(
+///     "",
+///     vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
+///     m::Ap242StyledItemItemRef::SetRepresentationItem(vec![
+///         m::Ap242StyledItemItemSetRepresentationItemRef::ClosedShell(shell),
+///     ]),
+/// );
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
 /// # fn f(a: &mut Ap242Author, style: m::PresentationStyleAssignmentId, shell: m::ClosedShellId,
 /// #      styled: m::StyledItemId, face: m::AdvancedFaceId) {
 /// let _ = a.add_context_dependent_over_riding_styled_item(
 ///     "",
 ///     vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
-///     m::Ap242ContextDependentOverRidingStyledItemItemRef::ClosedShell(shell),
+///     m::Ap242StyledItemItemRef::ClosedShell(shell),
 ///     m::StyledItemRef::StyledItem(styled),
 ///     vec![m::StyleContextSelectRef::AdvancedFace(face)],
 /// );
@@ -396,7 +402,7 @@ pub use refgraph::RefGraph;
 /// let _ = a.add_advanced_face(
 ///     "",
 ///     bounds,
-///     m::Ap242AdvancedFaceFaceGeometryRef::Plane(plane),
+///     m::Ap242AdvancedFaceGeometrySelectRef::Plane(plane),
 ///     true,
 /// );
 /// # }
@@ -408,22 +414,23 @@ pub use refgraph::RefGraph;
 /// let _ = a.add_advanced_face(
 ///     "",
 ///     bounds,
-///     m::Ap242AdvancedFaceFaceGeometryRef::OffsetSurface(offset),
+///     m::Ap242AdvancedFaceGeometrySelectRef::OffsetSurface(offset),
 ///     true,
 /// );
 /// # }
 /// ```
 ///
 /// `CONSTRUCTIVE_GEOMETRY_REPRESENTATION.WR2` lets each item be exactly one
-/// of a placement, curve, edge, face, point, surface, connected face or edge
-/// set, or vertex point:
+/// of the types it lists. Edition 4 lists supertypes with their subtypes
+/// (`point` and `cartesian_point`, `curve` and `line`), so an item that is
+/// both, such as a cartesian point, a line or a plane, is left out:
 ///
 /// ```
 /// # use step_io::{Ap242Author, model as m};
-/// # fn f(a: &mut Ap242Author, point: m::CartesianPointId, ctx: m::GeometricRepresentationContextId) {
+/// # fn f(a: &mut Ap242Author, axis: m::Axis1PlacementId, ctx: m::GeometricRepresentationContextId) {
 /// let _ = a.add_constructive_geometry_representation(
 ///     "",
-///     vec![m::Ap242ConstructiveGeometryRepresentationItemsRef::CartesianPoint(point)],
+///     vec![m::Ap242ConstructiveGeometryRepresentationItemsRef::Axis1Placement(axis)],
 ///     m::GeometricRepresentationContextRef::GeometricRepresentationContext(ctx),
 /// );
 /// # }
@@ -431,10 +438,10 @@ pub use refgraph::RefGraph;
 ///
 /// ```compile_fail,E0599
 /// # use step_io::{Ap242Author, model as m};
-/// # fn f(a: &mut Ap242Author, item: m::MappedItemId, ctx: m::GeometricRepresentationContextId) {
+/// # fn f(a: &mut Ap242Author, point: m::CartesianPointId, ctx: m::GeometricRepresentationContextId) {
 /// let _ = a.add_constructive_geometry_representation(
 ///     "",
-///     vec![m::Ap242ConstructiveGeometryRepresentationItemsRef::MappedItem(item)],
+///     vec![m::Ap242ConstructiveGeometryRepresentationItemsRef::CartesianPoint(point)],
 ///     m::GeometricRepresentationContextRef::GeometricRepresentationContext(ctx),
 /// );
 /// # }

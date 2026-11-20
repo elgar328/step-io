@@ -213,13 +213,33 @@ impl<'m> Mesh<'m> {
     /// the vertex that [`Mesh::triangles`] refers to as `n` (0-based).
     pub fn points(&self) -> Vec<[f64; 3]> {
         let (_, coords, _, pnindex, ..) = self.parts();
-        let m::CoordinatesListRef::CoordinatesList(id) = coords;
-        let all = &self
-            .cx
-            .model
-            .coordinates_list_arena
-            .get(id.0)
-            .position_coords;
+        let model = self.cx.model;
+        let all: &[m::Reals3] = match coords {
+            m::CoordinatesListRef::CoordinatesList(id) => {
+                &model.coordinates_list_arena.get(id.0).position_coords
+            }
+            m::CoordinatesListRef::Complex(cuid) => {
+                let Some(all) = model
+                    .complex_entity_arena
+                    .get(cuid.0)
+                    .parts
+                    .iter()
+                    .find_map(|p| match p {
+                        m::PartialEntity::CoordinatesList {
+                            position_coords, ..
+                        } => Some(position_coords),
+                        _ => None,
+                    })
+                else {
+                    self.cx.warn(
+                        "mesh coordinates are a complex instance without a coordinate list"
+                            .to_owned(),
+                    );
+                    return Vec::new();
+                };
+                all
+            }
+        };
         if pnindex.is_empty() {
             all.iter().map(|row| row3(row)).collect()
         } else {

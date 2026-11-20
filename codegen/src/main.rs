@@ -121,10 +121,10 @@ fn main() {
     // Emit into step-io's own `src/generated`, where the parser types are reached
     // as `crate::` (the generated code lives inside step-io).
     // Output profile (legal set / downgrade / header), baked from the vendored
-    // schema/ap242e2.toml. AP242 ed2 is the single output schema (step-io
-    // reads all APs but always writes ed2); its FILE_SCHEMA identity is baked
+    // schema/ap242e4.toml. AP242 ed4 is the single output schema (step-io
+    // reads all APs but always writes ed4); its FILE_SCHEMA identity is baked
     // into src/generated/schema.rs for the authoring layer to stamp.
-    let profile_specs = [("AP242E2", "Ap242", "ap242e2")];
+    let profile_specs = [("AP242E4", "Ap242", "ap242e4")];
     let parsed: Vec<(&str, &str, schema::ProfileToml)> = profile_specs
         .iter()
         .map(|(prefix, variant, stem)| {

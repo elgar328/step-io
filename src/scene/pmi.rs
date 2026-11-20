@@ -439,6 +439,14 @@ fn tolerance_magnitude_f64(cx: Ctx<'_>, r: &m::MeasureWithUnitRef) -> Option<f64
                 .value
                 .as_f64(),
         ),
+        m::MeasureWithUnitRef::PositiveLengthMeasureWithUnit(id) => Some(
+            model
+                .positive_length_measure_with_unit_arena
+                .get(id.0)
+                .value_component
+                .value
+                .as_f64(),
+        ),
         m::MeasureWithUnitRef::MeasureWithUnit(id) => {
             length(&model.measure_with_unit_arena.get(id.0).value_component)
         }
@@ -460,6 +468,7 @@ fn tolerance_magnitude_f64(cx: Ctx<'_>, r: &m::MeasureWithUnitRef) -> Option<f64
         }
         m::MeasureWithUnitRef::MassMeasureWithUnit(_)
         | m::MeasureWithUnitRef::PlaneAngleMeasureWithUnit(_)
+        | m::MeasureWithUnitRef::PositivePlaneAngleMeasureWithUnit(_)
         | m::MeasureWithUnitRef::RatioMeasureWithUnit(_) => {
             cx.warn("tolerance magnitude is not a length measure".to_owned());
             None
@@ -654,7 +663,11 @@ impl<'m> Tolerance<'m> {
             m::DatumSystemOrReferenceRef::DatumSystem(id) => {
                 let ds = self.cx.model.datum_system_arena.get(id.0);
                 for (idx, c) in ds.constituents.iter().enumerate() {
-                    let m::DatumReferenceCompartmentRef::DatumReferenceCompartment(cid) = c;
+                    let m::DatumReferenceCompartmentRef::DatumReferenceCompartment(cid) = c else {
+                        self.cx
+                            .warn("datum system compartment is a complex instance".to_owned());
+                        continue;
+                    };
                     let comp = self.cx.model.datum_reference_compartment_arena.get(cid.0);
                     let key = i64::try_from(idx).unwrap_or(i64::MAX);
                     self.collect_base(key, &comp.base, out, 0);
@@ -708,7 +721,11 @@ impl<'m> Tolerance<'m> {
             }
             m::DatumOrCommonDatumRef::CommonDatumList(refs) => {
                 for er in refs {
-                    let m::DatumReferenceElementRef::DatumReferenceElement(eid) = er;
+                    let m::DatumReferenceElementRef::DatumReferenceElement(eid) = er else {
+                        self.cx
+                            .warn("datum reference element is a complex instance".to_owned());
+                        continue;
+                    };
                     let e = self.cx.model.datum_reference_element_arena.get(eid.0);
                     self.collect_base(key, &e.base, out, depth + 1);
                 }
@@ -933,7 +950,8 @@ impl<'m> Tolerance<'m> {
     /// The shape feature this tolerance applies to (its `toleranced_shape_aspect`).
     ///
     /// `None` when the target is not a named shape aspect — a tolerance placed on
-    /// a dimension or on the whole part (`PRODUCT_DEFINITION_SHAPE`) — or when the
+    /// a dimension, on the whole part (`PRODUCT_DEFINITION_SHAPE`) or on a
+    /// relationship between shape aspects — or when the
     /// target is a complex instance the walk cannot resolve (reported via
     /// [`Scene::warnings`]).
     pub fn feature(&self) -> Option<Feature<'m>> {

@@ -80,16 +80,59 @@ fn normalize(a: [f64; 3]) -> Option<[f64; 3]> {
 
 // --- reference resolution ---
 
-fn point_coords(cx: Ctx<'_>, r: &m::CartesianPointRef) -> Option<[f64; 3]> {
-    let m::CartesianPointRef::CartesianPoint(id) = r else {
-        return None;
+pub(crate) fn point_coords(cx: Ctx<'_>, r: &m::CartesianPointRef) -> Option<[f64; 3]> {
+    let c: &[f64] = match r {
+        m::CartesianPointRef::CartesianPoint(id) => {
+            &cx.model.cartesian_point_arena.get(id.0).coordinates
+        }
+        m::CartesianPointRef::ApllPoint(id) => &cx.model.apll_point_arena.get(id.0).coordinates,
+        m::CartesianPointRef::ApllPointWithSurface(id) => {
+            &cx.model.apll_point_with_surface_arena.get(id.0).coordinates
+        }
+        m::CartesianPointRef::Complex(id) => complex_point(cx, *id)?,
     };
-    let c = &cx.model.cartesian_point_arena.get(id.0).coordinates;
-    Some([
+    Some(xyz(c))
+}
+
+/// The coordinates of a complex instance's `CARTESIAN_POINT` part.
+fn complex_point(cx: Ctx<'_>, id: m::ComplexEntityId) -> Option<&[f64]> {
+    let coords = cx
+        .model
+        .complex_entity_arena
+        .get(id.0)
+        .parts
+        .iter()
+        .find_map(|p| match p {
+            m::PartialEntity::CartesianPoint { coordinates } => Some(&coordinates[..]),
+            _ => None,
+        });
+    if coords.is_none() {
+        cx.warn("point is a complex instance without a cartesian point".to_owned());
+    }
+    coords
+}
+
+/// Coordinates as a 3-vector, missing components padded with `0.0`.
+fn xyz(c: &[f64]) -> [f64; 3] {
+    [
         c.first().copied().unwrap_or(0.0),
         c.get(1).copied().unwrap_or(0.0),
         c.get(2).copied().unwrap_or(0.0),
-    ])
+    ]
+}
+
+/// The point a trim names, if it names one rather than a parameter.
+fn trim_point(cx: Ctx<'_>, s: &m::TrimmingSelectRef) -> Option<[f64; 3]> {
+    let r = match s {
+        m::TrimmingSelectRef::CartesianPoint(id) => m::CartesianPointRef::CartesianPoint(*id),
+        m::TrimmingSelectRef::ApllPoint(id) => m::CartesianPointRef::ApllPoint(*id),
+        m::TrimmingSelectRef::ApllPointWithSurface(id) => {
+            m::CartesianPointRef::ApllPointWithSurface(*id)
+        }
+        m::TrimmingSelectRef::Complex(id) => m::CartesianPointRef::Complex(*id),
+        m::TrimmingSelectRef::ParameterValue(_) => return None,
+    };
+    point_coords(cx, &r)
 }
 
 fn dir_ratios(cx: Ctx<'_>, r: &m::DirectionRef) -> Option<[f64; 3]> {
@@ -153,15 +196,22 @@ fn frame_of(cx: Ctx<'_>, id: m::Axis2Placement3dId) -> Option<Frame> {
 /// The frame of a curve's placement (2D parameter-space placements return
 /// `None`).
 fn placement_frame_3d(cx: Ctx<'_>, r: &m::Axis2PlacementRef) -> Option<Frame> {
-    let m::Axis2PlacementRef::Axis2Placement3d(id) = r else {
-        return None;
-    };
-    frame_of(cx, *id)
+    match r {
+        m::Axis2PlacementRef::Axis2Placement3d(id) => frame_of(cx, *id),
+        m::Axis2PlacementRef::Complex(_) => {
+            cx.warn("placement is a complex instance".to_owned());
+            None
+        }
+        m::Axis2PlacementRef::Axis2Placement2d(_) => None,
+    }
 }
 
 /// The frame of a surface's placement (always 3D).
 fn frame_of_3dref(cx: Ctx<'_>, r: &m::Axis2Placement3dRef) -> Option<Frame> {
-    let m::Axis2Placement3dRef::Axis2Placement3d(id) = r;
+    let m::Axis2Placement3dRef::Axis2Placement3d(id) = r else {
+        cx.warn("placement is a complex instance".to_owned());
+        return None;
+    };
     frame_of(cx, *id)
 }
 
@@ -169,7 +219,10 @@ fn frame_of_3dref(cx: Ctx<'_>, r: &m::Axis2Placement3dRef) -> Option<Frame> {
 /// no reference direction, so x/y are an arbitrary perpendicular pair — a full
 /// revolution makes the u-origin choice immaterial.
 pub(crate) fn axis1_frame(cx: Ctx<'_>, r: &m::Axis1PlacementRef) -> Option<Frame> {
-    let m::Axis1PlacementRef::Axis1Placement(id) = r;
+    let m::Axis1PlacementRef::Axis1Placement(id) = r else {
+        cx.warn("axis placement is a complex instance".to_owned());
+        return None;
+    };
     let p = cx.model.axis1_placement_arena.get(id.0);
     let center = point_coords(cx, &p.location)?;
     let z = match &p.axis {
@@ -469,16 +522,8 @@ fn line_trim_point(
     dir: [f64; 3],
 ) -> Option<[f64; 3]> {
     trim.iter().find_map(|s| match s {
-        m::TrimmingSelectRef::CartesianPoint(id) => {
-            let c = &cx.model.cartesian_point_arena.get(id.0).coordinates;
-            Some([
-                c.first().copied().unwrap_or(0.0),
-                c.get(1).copied().unwrap_or(0.0),
-                c.get(2).copied().unwrap_or(0.0),
-            ])
-        }
         m::TrimmingSelectRef::ParameterValue(t) => Some(add(base, scale(dir, *t))),
-        _ => None,
+        _ => trim_point(cx, s),
     })
 }
 
@@ -497,17 +542,7 @@ fn conic_trim_angle(
     let (a, b) = ab;
     // From a CartesianPoint on the curve — geometric, unit-independent.
     let cartesian = || {
-        let p = trim.iter().find_map(|s| match s {
-            m::TrimmingSelectRef::CartesianPoint(id) => {
-                let c = &cx.model.cartesian_point_arena.get(id.0).coordinates;
-                Some([
-                    c.first().copied().unwrap_or(0.0),
-                    c.get(1).copied().unwrap_or(0.0),
-                    c.get(2).copied().unwrap_or(0.0),
-                ])
-            }
-            _ => None,
-        })?;
+        let p = trim.iter().find_map(|s| trim_point(cx, s))?;
         let d = sub(p, center);
         Some((dot(d, y) / b).atan2(dot(d, x) / a))
     };
@@ -959,17 +994,7 @@ fn bspline_trim_param(
         })
     };
     let cartesian = || {
-        let p = trim.iter().find_map(|s| match s {
-            m::TrimmingSelectRef::CartesianPoint(id) => {
-                let c = &cx.model.cartesian_point_arena.get(id.0).coordinates;
-                Some([
-                    c.first().copied().unwrap_or(0.0),
-                    c.get(1).copied().unwrap_or(0.0),
-                    c.get(2).copied().unwrap_or(0.0),
-                ])
-            }
-            _ => None,
-        })?;
+        let p = trim.iter().find_map(|s| trim_point(cx, s))?;
         hc.invert_point(p)
     };
     let t = match master {
@@ -1363,17 +1388,7 @@ fn open_conic_trim_param(
     conic: OpenConic,
     frame: Frame,
 ) -> Option<f64> {
-    let point = trim.iter().find_map(|s| match s {
-        m::TrimmingSelectRef::CartesianPoint(id) => {
-            let c = &cx.model.cartesian_point_arena.get(id.0).coordinates;
-            Some([
-                c.first().copied().unwrap_or(0.0),
-                c.get(1).copied().unwrap_or(0.0),
-                c.get(2).copied().unwrap_or(0.0),
-            ])
-        }
-        _ => None,
-    });
+    let point = trim.iter().find_map(|s| trim_point(cx, s));
     if let Some(p) = point {
         return Some(conic.param(frame, p));
     }

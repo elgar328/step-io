@@ -3,18 +3,18 @@
 
 //! Output `FILE_SCHEMA` identities for the write side.
 
-pub static AP242E2_FILE_SCHEMA: &[&str] =
-    &["AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF { 1 0 10303 442 3 1 4 }"];
+pub static AP242E4_FILE_SCHEMA: &[&str] =
+    &["AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF { 1 0 10303 442 7 1 4 }"];
 
 /// The output schema's `APPLICATION_PROTOCOL_DEFINITION` values.
-pub const AP242E2_APD_STATUS: &str = "international standard";
-pub const AP242E2_APD_NAME: &str = "ap242_managed_model_based_3d_engineering_mim_lf";
-pub const AP242E2_APD_YEAR: i64 = 2020;
+pub const AP242E4_APD_STATUS: &str = "international standard";
+pub const AP242E4_APD_NAME: &str = "ap242_managed_model_based_3d_engineering_mim_lf";
+pub const AP242E4_APD_YEAR: i64 = 2025;
 
 /// The schema identity the authoring layer stamps on its output header.
-pub fn ap242e2_schema_id() -> crate::parser::SchemaId {
+pub fn ap242e4_schema_id() -> crate::parser::SchemaId {
     crate::parser::schema::identify_schema(
-        &AP242E2_FILE_SCHEMA
+        &AP242E4_FILE_SCHEMA
             .iter()
             .map(|s| (*s).to_string())
             .collect::<Vec<_>>(),

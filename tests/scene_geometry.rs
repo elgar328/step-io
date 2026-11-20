@@ -47,6 +47,55 @@ const COLOUR: &str = "\
 #38=STYLED_ITEM('',(#37),#25);\n\
 #39=MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION('',(#38),#30);\n";
 
+/// AP242 edition 4 lets a styled item style a set of items: the colour
+/// reaches each of them, and the set reads and writes back whole.
+#[test]
+fn reads_a_colour_styled_onto_a_set_of_items() {
+    let colour = COLOUR.replace(
+        "#38=STYLED_ITEM('',(#37),#25);",
+        "#38=STYLED_ITEM('',(#37),SET_REPRESENTATION_ITEM((#25,#16)));",
+    );
+    let src = format!("{HEADER}{BREP}{colour}{FOOTER}");
+    let (model, report) = read(src.as_bytes()).expect("read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    let scene = model.scene();
+    let face = scene.all_faces().next().expect("a face");
+    let c = face.color().expect("the face is coloured through the set");
+    assert!((c.red - 0.8).abs() < 1e-9, "colour = {c:?}");
+
+    // The styled item's `item` resolves to the set's elements.
+    let (_, styled) = model
+        .all::<step_io::model::StyledItem>()
+        .next()
+        .expect("a styled item");
+    let step_io::model::StyledItemTargetOrRepresentationItemRefView::SetRepresentationItem(
+        elements,
+    ) = styled.item.resolve(&model)
+    else {
+        panic!("expected a set of items");
+    };
+    assert_eq!(elements.len(), 2);
+
+    let mut out = Vec::new();
+    step_io::write(&model, &mut out).expect("write");
+    let text = String::from_utf8(out).expect("utf-8");
+    assert!(
+        text.contains("SET_REPRESENTATION_ITEM((#"),
+        "the set is written as a typed aggregate: {text}"
+    );
+    let (again, report) = read(text.as_bytes()).expect("re-read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    assert!(
+        again
+            .scene()
+            .all_faces()
+            .next()
+            .expect("a face")
+            .color()
+            .is_some()
+    );
+}
+
 #[test]
 fn reads_face_colour() {
     let src = format!("{HEADER}{BREP}{COLOUR}{FOOTER}");
@@ -272,6 +321,34 @@ fn reads_edge_and_point_styles() {
         "{pc:?}"
     );
     assert_eq!(point.layer(), Some("marks"));
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
+/// A point written as a complex instance (AP242 edition 4 lets
+/// `CARTESIAN_POINT` combine) places the circle through its coordinates.
+#[test]
+fn a_complex_point_places_a_circle() {
+    let brep = BREP
+        .replace(
+            "#10=CARTESIAN_POINT('',(0.0,0.0,0.0));",
+            "#10=(CARTESIAN_POINT((0.0,0.0,5.0))GEOMETRIC_REPRESENTATION_ITEM()POINT()\
+             REPRESENTATION_ITEM(''));",
+        )
+        .replace("#18=LINE('',#10,#17);", "#18=CIRCLE('',#15,1.0);");
+    let src = format!("{HEADER}{brep}{FOOTER}");
+    let (model, report) = read(src.as_bytes()).expect("read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    let scene = model.scene();
+    let edge = scene.all_edges().next().expect("an edge");
+    let circle = edge.curve().to_nurbs().expect("a circle converts");
+    assert!(
+        circle
+            .control_points
+            .iter()
+            .all(|p| (p[2] - 5.0).abs() < 1e-12),
+        "{:?}",
+        circle.control_points
+    );
     assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
 }
 

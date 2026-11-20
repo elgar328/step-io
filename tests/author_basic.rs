@@ -52,36 +52,20 @@ fn authored_model_round_trips_with_zero_drops() {
 #[test]
 fn illegal_reference_is_rejected_at_insertion() {
     let mut a = Ap242Author::new();
-    // A trimming select pointing at an APLL point: the entity kind exists in
-    // the universal model but is not AP242 — the constructor refuses it.
-    let base = a
-        .add_cartesian_point("", [0.0, 0.0, 0.0].into())
-        .expect("point");
-    let dir = a.add_direction("", [1.0, 0.0, 0.0].into()).expect("dir");
-    let vec_ = a
-        .add_vector("", m::DirectionRef::Direction(dir), 1.0)
-        .expect("vector");
-    let line = a
-        .add_line(
-            "",
-            m::CartesianPointRef::CartesianPoint(base),
-            m::VectorRef::Vector(vec_),
-        )
-        .expect("line");
+    // A presentation style select pointing at a pre-defined presentation
+    // style: the entity kind exists in the universal model but is not
+    // AP242 — the constructor refuses it.
     let err = a
-        .add_trimmed_curve(
-            "",
-            m::CurveRef::Line(line),
-            vec![m::TrimmingSelectRef::ApllPoint(m::ApllPointId(0))],
-            vec![m::TrimmingSelectRef::ParameterValue(1.0)],
-            true,
-            m::TrimmingPreference::Parameter,
-        )
-        .expect_err("apll trim must be rejected");
+        .add_presentation_style_assignment(vec![
+            m::PresentationStyleSelectRef::PreDefinedPresentationStyle(
+                m::PreDefinedPresentationStyleId(0),
+            ),
+        ])
+        .expect_err("a pre-defined presentation style must be rejected");
     assert!(matches!(
         err,
         AuthorError::NotAp242 {
-            entity: "APLL_POINT"
+            entity: "PRE_DEFINED_PRESENTATION_STYLE"
         }
     ));
 }
@@ -262,18 +246,18 @@ fn invalid_complex_part_sets_are_rejected() {
         }
     ));
 
-    // A part outside AP242 (ed3 leader-line PMI).
+    // A part outside AP242 (an approximation tolerance, which AP214 has).
     let err = a
-        .add_complex(vec![
-            m::PartialEntity::AnnotationPlaceholderOccurrenceWithLeaderLine {
-                leader_line: vec![],
-            },
-        ])
+        .add_complex(vec![m::PartialEntity::ApproximationTolerance {
+            tolerance: m::ToleranceSelectRef::ApproximationToleranceDeviation(
+                m::ApproximationToleranceDeviationId(0),
+            ),
+        }])
         .expect_err("non-AP242 part must be rejected");
     assert!(matches!(
         err,
         AuthorError::NotAp242 {
-            entity: "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE"
+            entity: "APPROXIMATION_TOLERANCE"
         }
     ));
 
@@ -784,25 +768,15 @@ fn narrowed_attributes_are_checked_where_the_type_cannot() {
         "{err:?}"
     );
 
-    // AP242's groupable_item drops ACTION_METHOD, which older editions allow.
+    // AP242 edition 4's groupable_item takes ACTION_METHOD again, as older
+    // editions do.
     let group = a.add_group("g", None).expect("group");
     let method = a.add_action_method("m", None, "", "").expect("method");
-    let err = a
-        .add_applied_group_assignment_cyclic(|_| m::AppliedGroupAssignment {
-            assigned_group: m::GroupRef::Group(group),
-            items: vec![m::GroupableItemRef::ActionMethod(method)],
-        })
-        .unwrap_err();
-    assert!(
-        matches!(
-            err,
-            AuthorError::NarrowedReference {
-                entity: "APPLIED_GROUP_ASSIGNMENT",
-                attribute: "items"
-            }
-        ),
-        "{err:?}"
-    );
+    a.add_applied_group_assignment_cyclic(|_| m::AppliedGroupAssignment {
+        assigned_group: m::GroupRef::Group(group),
+        items: vec![m::GroupableItemRef::ActionMethod(method)],
+    })
+    .expect("an action method may be grouped");
 }
 
 /// Attributes the model takes wider, as older editions declare them, are
@@ -1006,13 +980,12 @@ fn ap242_aggregate_bounds_apply() {
 #[test]
 fn narrower_arguments_convert_into_the_model_type() {
     let r: m::RepresentationRef =
-        m::Ap242ShapeRepresentationRef::ShapeRepresentation(m::ShapeRepresentationId(3)).into();
+        m::ShapeRepresentationRef::ShapeRepresentation(m::ShapeRepresentationId(3)).into();
     assert_eq!(
         r,
         m::RepresentationRef::ShapeRepresentation(m::ShapeRepresentationId(3))
     );
-    let r: m::RepresentationRef =
-        m::Ap242ShapeRepresentationRef::Complex(m::ComplexEntityId(1)).into();
+    let r: m::RepresentationRef = m::ShapeRepresentationRef::Complex(m::ComplexEntityId(1)).into();
     assert_eq!(r, m::RepresentationRef::Complex(m::ComplexEntityId(1)));
 }
 
@@ -1021,20 +994,24 @@ fn narrower_arguments_convert_into_the_model_type() {
 #[test]
 fn a_self_referencing_entity_plain_constructor_takes_the_ap242_type() {
     let mut a = Ap242Author::new();
-    let group = a.add_group("g", None).expect("group");
     let point = a
         .add_cartesian_point("", [0.0, 0.0, 0.0].into())
         .expect("point");
+    let styled = a
+        .add_styled_item("", vec![], m::Ap242StyledItemItemRef::CartesianPoint(point))
+        .expect("styled item");
     let id = a
-        .add_applied_group_assignment(
-            m::GroupRef::Group(group),
-            vec![m::Ap242GroupableItemRef::CartesianPoint(point)],
+        .add_over_riding_styled_item(
+            "",
+            vec![],
+            m::Ap242StyledItemItemRef::CartesianPoint(point),
+            m::StyledItemRef::StyledItem(styled),
         )
-        .expect("assignment");
+        .expect("over-riding styled item");
     let model = a.finish();
     assert_eq!(
-        model[id].items,
-        vec![m::GroupableItemRef::CartesianPoint(point)]
+        model[id].item,
+        m::StyledItemTargetOrRepresentationItemRef::CartesianPoint(point)
     );
 }
 
@@ -1153,9 +1130,6 @@ fn exactly_one_of_several_types_counts_every_part() {
     let p = a
         .add_cartesian_point("", [0.0, 0.0, 0.0].into())
         .expect("point");
-    let origin = a
-        .add_vertex_point("", m::PointRef::CartesianPoint(p))
-        .expect("vertex");
 
     // A rational B-spline curve is one curve, though it has seven parts.
     let curve = a
@@ -1190,26 +1164,28 @@ fn exactly_one_of_several_types_counts_every_part() {
     )
     .expect("one curve");
 
-    // CONSTRUCTIVE_GEOMETRY_REPRESENTATION.WR2: each item is exactly one of a
-    // placement, curve, edge, face, point, ...; a value that is both a point
-    // and an edge breaks it, though each part alone is allowed.
-    let point_edge = a
+    // CONSTRUCTIVE_GEOMETRY_REPRESENTATION.WR2: each item is exactly one of
+    // the types it lists; edition 4 lists `circle`, `conic` and `curve`, so a
+    // circle is three of them, though a curve alone is allowed.
+    let axis = a
+        .add_axis2_placement3d("", m::CartesianPointRef::CartesianPoint(p), None, None)
+        .expect("axis");
+    let circle = a
         .add_complex(vec![
-            m::PartialEntity::Edge {
-                edge_start: Some(m::VertexRef::VertexPoint(origin)),
-                edge_end: Some(m::VertexRef::VertexPoint(origin)),
+            m::PartialEntity::Circle { radius: 1.0 },
+            m::PartialEntity::Conic {
+                position: m::Axis2PlacementRef::Axis2Placement3d(axis),
             },
+            m::PartialEntity::Curve,
             m::PartialEntity::GeometricRepresentationItem,
-            m::PartialEntity::Point,
             m::PartialEntity::RepresentationItem { name },
-            m::PartialEntity::TopologicalRepresentationItem,
         ])
-        .expect("point and edge complex");
+        .expect("circle complex");
     let err = a
         .add_constructive_geometry_representation(
             "",
             vec![m::Ap242ConstructiveGeometryRepresentationItemsRef::Complex(
-                point_edge,
+                circle,
             )],
             ctx,
         )
@@ -1226,11 +1202,11 @@ fn exactly_one_of_several_types_counts_every_part() {
     );
 }
 
-/// `STYLED_ITEM.WR3`, a `WHERE` rule by the instance's own type: only a
-/// context-dependent over-riding styled item may style a topological item. A
-/// complex instance's type is its parts.
+/// `STYLED_ITEM.WR3` (AP242 edition 4): a styled item styles a mapped item,
+/// a geometric item, or a set of them — a context-dependent over-riding
+/// styled item included. A complex instance's type is its parts.
 #[test]
-fn a_where_rule_lifted_by_the_instances_type_is_checked() {
+fn a_styled_item_styles_mapped_and_geometric_items_or_a_set_of_them() {
     let mut a = Ap242Author::new();
     let name = a.text("");
     let style = a
@@ -1242,25 +1218,24 @@ fn a_where_rule_lifted_by_the_instances_type_is_checked() {
     let point = a
         .add_cartesian_point("", [0.0, 0.0, 0.0].into())
         .expect("point");
-    let overridden = a
+    let other = a
+        .add_cartesian_point("", [1.0, 0.0, 0.0].into())
+        .expect("point");
+    let set = a
         .add_styled_item(
             "",
             styles.clone(),
-            m::Ap242StyledItemItemRef::CartesianPoint(point),
+            m::Ap242StyledItemItemRef::SetRepresentationItem(vec![
+                m::Ap242StyledItemItemSetRepresentationItemRef::CartesianPoint(point),
+                m::Ap242StyledItemItemSetRepresentationItemRef::CartesianPoint(other),
+            ]),
         )
-        .expect("styled item");
+        .expect("a styled set of geometric items");
     let vertex = a.add_vertex("").expect("vertex");
     let context = vec![m::StyleContextSelectRef::CartesianPoint(point)];
-    a.add_context_dependent_over_riding_styled_item(
-        "",
-        styles.clone(),
-        m::Ap242ContextDependentOverRidingStyledItemItemRef::Vertex(vertex),
-        m::StyledItemRef::StyledItem(overridden),
-        context.clone(),
-    )
-    .expect("a context-dependent over-riding styled item may style a vertex");
 
-    let over_riding = |context: Option<Vec<m::StyleContextSelectRef>>| {
+    let over_riding = |context: Option<Vec<m::StyleContextSelectRef>>,
+                       item: m::StyledItemTargetOrRepresentationItemRef| {
         let mut parts: Vec<m::PartialEntity> = context
             .into_iter()
             .map(
@@ -1271,29 +1246,95 @@ fn a_where_rule_lifted_by_the_instances_type_is_checked() {
             .collect();
         parts.extend([
             m::PartialEntity::OverRidingStyledItem {
-                over_ridden_style: m::StyledItemRef::StyledItem(overridden),
+                over_ridden_style: m::StyledItemRef::StyledItem(set),
             },
             m::PartialEntity::RepresentationItem { name },
             m::PartialEntity::StyledItem {
                 styles: styles.clone(),
-                item: m::StyledItemTargetOrRepresentationItemRef::Vertex(vertex),
+                item,
             },
         ]);
         parts
     };
-    let err = a.add_complex(over_riding(None)).unwrap_err();
-    assert!(
+    let narrowed = |err: AuthorError| {
         matches!(
             err,
             AuthorError::NarrowedReference {
                 entity: "STYLED_ITEM",
                 attribute: "item"
             }
+        )
+    };
+    for context in [None, Some(context.clone())] {
+        let vertex_alone = m::StyledItemTargetOrRepresentationItemRef::Vertex(vertex);
+        let err = a
+            .add_complex(over_riding(context.clone(), vertex_alone))
+            .unwrap_err();
+        assert!(narrowed(err.clone()), "{err:?}");
+        let vertex_in_a_set =
+            m::StyledItemTargetOrRepresentationItemRef::SetRepresentationItem(vec![
+                m::RepresentationItemRef::CartesianPoint(point),
+                m::RepresentationItemRef::Vertex(vertex),
+            ]);
+        let err = a
+            .add_complex(over_riding(context.clone(), vertex_in_a_set))
+            .unwrap_err();
+        assert!(narrowed(err.clone()), "{err:?}");
+    }
+    let points = m::StyledItemTargetOrRepresentationItemRef::SetRepresentationItem(vec![
+        m::RepresentationItemRef::CartesianPoint(point),
+        m::RepresentationItemRef::CartesianPoint(other),
+    ]);
+    a.add_complex(over_riding(Some(context), points))
+        .expect("a set of geometric items may be styled");
+
+    let model = a.finish();
+    assert_eq!(
+        model[set].item,
+        m::StyledItemTargetOrRepresentationItemRef::SetRepresentationItem(vec![
+            m::RepresentationItemRef::CartesianPoint(point),
+            m::RepresentationItemRef::CartesianPoint(other),
+        ])
+    );
+}
+
+/// A self-referencing constructor checks a set's elements at run time.
+#[test]
+fn a_self_referencing_styled_item_checks_its_set_elements() {
+    let mut a = Ap242Author::new();
+    let name = a.text("");
+    let point = a
+        .add_cartesian_point("", [0.0, 0.0, 0.0].into())
+        .expect("point");
+    let styled = a
+        .add_styled_item("", vec![], m::Ap242StyledItemItemRef::CartesianPoint(point))
+        .expect("styled item");
+    let vertex = a.add_vertex("").expect("vertex");
+    let over_riding = |element| m::OverRidingStyledItem {
+        name,
+        styles: vec![],
+        item: m::StyledItemTargetOrRepresentationItemRef::SetRepresentationItem(vec![element]),
+        over_ridden_style: m::StyledItemRef::StyledItem(styled),
+    };
+    let err = a
+        .add_over_riding_styled_item_cyclic(|_| {
+            over_riding(m::RepresentationItemRef::Vertex(vertex))
+        })
+        .unwrap_err();
+    assert!(
+        matches!(
+            err,
+            AuthorError::NarrowedReference {
+                entity: "OVER_RIDING_STYLED_ITEM",
+                attribute: "item"
+            }
         ),
         "{err:?}"
     );
-    a.add_complex(over_riding(Some(context)))
-        .expect("with a context-dependent part, a vertex may be styled");
+    a.add_over_riding_styled_item_cyclic(|_| {
+        over_riding(m::RepresentationItemRef::CartesianPoint(point))
+    })
+    .expect("a set of a geometric item");
 }
 
 /// `DRAUGHTING_ANNOTATION_OCCURRENCE.WR7` holds one that is also an annotation
@@ -1359,8 +1400,105 @@ fn a_where_rule_for_one_instance_type_is_checked_in_a_complex() {
         ),
         "{err:?}"
     );
+    // A set of text literals is none of them: no rule on a text occurrence
+    // admits a set.
+    let err = a
+        .add_complex(text_occurrence(
+            m::StyledItemTargetOrRepresentationItemRef::SetRepresentationItem(vec![
+                m::RepresentationItemRef::TextLiteral(text),
+            ]),
+        ))
+        .unwrap_err();
+    assert!(
+        matches!(
+            err,
+            AuthorError::NarrowedReference {
+                attribute: "item",
+                ..
+            }
+        ),
+        "{err:?}"
+    );
     a.add_complex(text_occurrence(
         m::StyledItemTargetOrRepresentationItemRef::TextLiteral(text),
     ))
     .expect("a draughting text occurrence of a text literal");
+}
+
+/// `datum_or_common_datum` takes a datum reference element only in a list:
+/// a self-referencing constructor, which takes the model's type, rejects one
+/// alone on insertion and keeps a list of them.
+#[test]
+fn a_datum_reference_element_alone_is_rejected_in_a_cyclic_constructor() {
+    let mut a = Ap242Author::new();
+    let ac = a.add_application_context("mim").expect("ac");
+    let ac = m::ApplicationContextRef::ApplicationContext(ac);
+    let pc = a
+        .add_product_context("", ac.clone(), "mechanical")
+        .expect("pc");
+    let pdc = a
+        .add_product_definition_context("part definition", ac, "design")
+        .expect("pdc");
+    let product = a
+        .add_product(
+            "P1",
+            "part",
+            None,
+            vec![m::ProductContextRef::ProductContext(pc)],
+        )
+        .expect("product");
+    let pdf = a
+        .add_product_definition_formation("1", None, m::ProductRef::Product(product))
+        .expect("pdf");
+    let pd = a
+        .add_product_definition(
+            "design",
+            None,
+            m::ProductDefinitionFormationRef::ProductDefinitionFormation(pdf),
+            m::ProductDefinitionContextRef::ProductDefinitionContext(pdc),
+        )
+        .expect("pd");
+    let pds = a
+        .add_product_definition_shape(
+            "",
+            None,
+            m::Ap242ProductDefinitionShapeDefinitionRef::ProductDefinition(pd),
+        )
+        .expect("pds");
+    let of_shape = m::ProductDefinitionShapeRef::ProductDefinitionShape(pds);
+    let name = a.text("");
+    let element = |base| m::DatumReferenceElement {
+        name,
+        description: None,
+        of_shape: of_shape.clone(),
+        product_definitional: m::Logical::False,
+        base,
+        modifiers: None,
+    };
+
+    let err = a
+        .add_datum_reference_element_cyclic(|id| {
+            element(m::DatumOrCommonDatumRef::DatumReferenceElement(id))
+        })
+        .unwrap_err();
+    assert!(
+        matches!(
+            err,
+            AuthorError::NarrowedReference {
+                entity: "DATUM_REFERENCE_ELEMENT",
+                attribute: "base"
+            }
+        ),
+        "{err:?}"
+    );
+
+    let first = a
+        .add_datum_reference_element_cyclic(|id| {
+            element(m::DatumOrCommonDatumRef::CommonDatumList(vec![
+                m::DatumReferenceElementRef::DatumReferenceElement(id),
+                m::DatumReferenceElementRef::DatumReferenceElement(id),
+            ]))
+        })
+        .expect("a list of datum reference elements");
+    assert_eq!(first.0, 0, "the rejected element was rolled back");
 }

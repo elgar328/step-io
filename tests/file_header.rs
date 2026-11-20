@@ -55,19 +55,26 @@ fn write_round_trips_header() {
 
 #[test]
 fn builder_output_carries_ap242_schema() {
-    // The authoring layer stamps the AP242 ed2 identity on the header.
+    // The authoring layer stamps the AP242 ed4 identity on the header, and
+    // the application protocol definition agrees with it.
     let mut b = StepBuilder::new();
     b.part("wheel");
     let text = common::text(&b.finish());
     assert!(
         text.contains(
-            "FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF { 1 0 10303 442 3 1 4 }'))"
+            "FILE_SCHEMA(('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF { 1 0 10303 442 7 1 4 }'))"
+        ),
+        "{text}"
+    );
+    assert!(
+        text.contains(
+            "APPLICATION_PROTOCOL_DEFINITION('international standard','ap242_managed_model_based_3d_engineering_mim_lf',2025,"
         ),
         "{text}"
     );
     let (model, _report) = read(text.as_bytes()).expect("re-read ok");
     assert_eq!(model.header().schema.family, ApFamily::Ap242);
-    assert_eq!(model.header().schema.edition, Some(2));
+    assert_eq!(model.header().schema.edition, Some(4));
 }
 
 #[test]

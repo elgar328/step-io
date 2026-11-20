@@ -9,28 +9,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `read()` recognizes AP242 edition 4 in `FILE_SCHEMA`: module version 7
+  (`{ 1 0 10303 442 7 1 4 }`) as edition 4 IS, versions 5 and 6 as edition 4
+  of an unknown stage.
+- The model reads what AP242 edition 4 adds within step-io's support
+  boundary: the round, composite and counter-bored, -drilled or -sunk hole
+  features (`ROUND_HOLE`, `BASIC_ROUND_HOLE`, `EXPLICIT_ROUND_HOLE`,
+  `COMPOSITE_HOLE`, `EXPLICIT_COMPOSITE_HOLE`, `COUNTERBORE_HOLE_DEFINITION`,
+  `COUNTERDRILL_HOLE_DEFINITION`, `COUNTERSINK_HOLE_DEFINITION`,
+  `ROUND_HOLE_BOTTOM_CONDITION`, `COMPOUND_FEATURE`, `FEATURE_DEFINITION`),
+  `POSITIVE_LENGTH_MEASURE_WITH_UNIT`, `POSITIVE_PLANE_ANGLE_MEASURE_WITH_UNIT`,
+  `EXTERNAL_IMAGE_PLACEMENT_IN_CALLOUT` and
+  `ACTION_RESOURCE_REQUIREMENT_RELATIONSHIP`, each with an `Ap242Author`
+  constructor.
+- `Ap242Author` constructors for what edition 4 allows and edition 2 did not:
+  `add_apll_point`, `add_apll_point_with_surface`,
+  `add_annotation_placeholder_occurrence_with_leader_line`,
+  `add_annotation_to_annotation_leader_line`,
+  `add_annotation_to_model_leader_line` and `add_auxiliary_leader_line`.
+- A styled item may style a set of items (`SET_REPRESENTATION_ITEM`), as AP242
+  edition 4 allows: `StyledItemTargetOrRepresentationItemRef` gains a
+  `SetRepresentationItem` arm, and a colour styled onto a set reaches each of
+  its items.
+- `GeometricToleranceModifier` gains edition 4's values: `ContinuousFeatures`,
+  `DerivedFeature`, `EachElement`, `Individually`, `OffsetZone`,
+  `SeparateZones`, `Stock`, `UnspecifiedAngularToleranceZoneOffset`,
+  `UnspecifiedLinearToleranceZoneOffset` and `VariableAngle`.
+- `resolve()` on reference enums with an aggregate arm
+  (`StyledItemTargetOrRepresentationItemRef`, `DatumOrCommonDatumRef`,
+  `CompoundItemDefinitionRef`, `TransformationRef`,
+  `ItemIdentifiedRepresentationUsageSelectRef`), the aggregate viewed as its
+  elements; `entity_key()` stays with enums whose every arm is one entity.
 - `AuthorError::NarrowedReference` reports a reference AP242 narrows in an
   entity that names a type the narrower attribute does not allow, where the
   argument's type cannot rule it out: in `add_complex`, and in a
-  self-referencing constructor (`add_applied_group_assignment_cyclic`,
-  `add_over_riding_styled_item_cyclic`,
-  `add_context_dependent_over_riding_styled_item_cyclic`).
+  self-referencing constructor (`add_…_cyclic`), which takes the model's
+  type.
 - `Ap242ApprovedItemRef`, `Ap242ConstructiveGeometryRepresentationRef`,
-  `Ap242ContextDependentOverRidingStyledItemItemRef`,
   `Ap242DerivedShapeAspectRef`, `Ap242DraughtingModelItemSelectRef`,
-  `Ap242GroupableItemRef`,
+  `Ap242AdvancedBrepShapeRepresentationItemsSelectRef`,
+  `Ap242AdvancedFaceGeometrySelectRef`, `Ap242FaceOrSurfaceRef`,
+  `Ap242ManifoldSurfaceShapeRepresentationSelectRef`,
   `Ap242MechanicalDesignGeometricPresentationRepresentationItemsRef`,
   `Ap242MechanicalDesignShadedPresentationRepresentationItemsRef`,
-  `Ap242ShapeDimensionRepresentationItemRef`, `Ap242ShapeRepresentationRef`,
-  `Ap242ShapeRepresentationWithParametersItemsRef` and
-  `Ap242StyledItemItemRef`: what AP242 edition 2
-  allows where the model, read from every edition, allows more. Each converts
-  into the model's reference with `From`, as do `PropertyDefinitionRef` into
-  `RepresentedDefinitionRef`, and `LengthMeasureWithUnitRef` and
-  `LengthOrPlaneAngleMeasureWithUnitSelectRef` into `MeasureWithUnitRef`.
-- `Ap242AdvancedBrepShapeRepresentationItemsRef`,
-  `Ap242AdvancedFaceFaceGeometryRef`,
-  `Ap242AnnotationOccurrenceAssociativityRelatedAnnotationOccurrenceRef`,
+  `Ap242ShapeDimensionRepresentationItemRef`,
+  `Ap242ShapeRepresentationWithParametersItemsRef`,
+  `Ap242CompoundItemDefinitionRef`, `Ap242DatumOrCommonDatumRef` and
+  `Ap242TransformationRef`: what AP242 edition 4 allows where the model, read
+  from every edition, allows more. Each converts into the model's reference
+  with `From`, as do `PropertyDefinitionRef` into `RepresentedDefinitionRef`,
+  `ShapeRepresentationRef` into `RepresentationRef`, `ShapeModelRef` into
+  `RepresentationOrRepresentationReferenceRef`, and
+  `LengthMeasureWithUnitRef` and `LengthOrPlaneAngleMeasureWithUnitSelectRef`
+  into `MeasureWithUnitRef`.
+- `Ap242AnnotationOccurrenceAssociativityRelatedAnnotationOccurrenceRef`,
   `Ap242BoundedCurveRef`, `Ap242BoundedSurfaceCurveCurve3dRef`,
   `Ap242CameraUsageMappedRepresentationRef`,
   `Ap242ConstructiveGeometryRepresentationItemsRef`,
@@ -38,15 +70,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef`,
   `Ap242GeometricallyBoundedWireframeShapeRepresentationItemsRef`,
   `Ap242GlobalUnitAssignedContextRef`, `Ap242LeaderCurveRef`,
-  `Ap242LengthUnitRef`, `Ap242ManifoldSurfaceShapeRepresentationItemsRef`,
-  `Ap242MassUnitRef`, `Ap242MeasureQualificationQualifiedMeasureRef`,
+  `Ap242LengthUnitRef`, `Ap242MassUnitRef`,
+  `Ap242MeasureQualificationQualifiedMeasureRef`,
   `Ap242OrientedClosedShellClosedShellElementRef`,
   `Ap242OrientedEdgeEdgeElementRef`,
   `Ap242ParametricRepresentationContextRef`, `Ap242PlaneAngleUnitRef`,
+  `Ap242ProductDefinitionOccurrenceDefinitionRef`,
   `Ap242ProductDefinitionShapeDefinitionRef`,
-  `Ap242ProductDefinitionUsageRef`, `Ap242RatioUnitRef` and
-  `Ap242SurfaceCurveCurve3dRef`: what an AP242 edition 2 `WHERE` rule lets an
-  attribute reference. Each converts into the model's reference with `From`,
+  `Ap242ProductDefinitionUsageRef`, `Ap242RatioUnitRef`,
+  `Ap242StyledItemItemRef`, `Ap242StyledItemItemSetRepresentationItemRef`
+  and `Ap242SurfaceCurveCurve3dRef`: what an AP242 edition 4 `WHERE` rule
+  lets an attribute, or each element of a set it holds, reference. Each converts into the model's reference with `From`,
   as does `GeometricRepresentationContextRef` into
   `RepresentationContextRef`.
 - `StyledItemTargetOrRepresentationItemRef`: what a styled item's `item` takes
@@ -55,11 +89,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `Ap242Author` constructors take AP242 edition 2's narrower reference type
+- Output is AP242 edition 4 (ISO 10303-242:2025): `Ap242Author::finish` and
+  `StepBuilder` stamp `FILE_SCHEMA` `{ 1 0 10303 442 7 1 4 }`, and
+  `StepBuilder` writes the application protocol definition's year as 2025.
+  The constructors follow edition 4's types and `WHERE` rules; where they
+  differ from edition 2's, as listed below.
+- The model reads the union of seven editions, AP242 edition 4 included: a
+  complex instance is allowed wherever the EXPRESS rules let the entity
+  combine in any edition, so `CartesianPointRef`, `Axis1PlacementRef`,
+  `Axis2PlacementRef`, `Axis2Placement3dRef`, `CoordinatesListRef`,
+  `DatumReferenceCompartmentRef`, `DatumReferenceElementRef`,
+  `UncertaintyMeasureWithUnitRef`, `TrimmingSelectRef`, `VertexLoopRef`,
+  `ToleranceSelectRef`, `SymbolTargetRef`, `DesApllPointSelectRef`,
+  `AnnotationPlaceholderLeaderLineRef`, `AnnotationToModelLeaderLineRef` and
+  `CameraModelD3MultiClippingIntersectionSelectRef` gain a `Complex` arm,
+  `MeasureWithUnitRef` and `SizeSelectRef` gain the positive measures, and
+  `GeometricToleranceTargetRef` gains edition 4's shape aspect relationships
+  (`ShapeAspectRelationship`, `ShapeAspectAssociativity`,
+  `ShapeAspectDerivingRelationship`, `FeatureForDatumTargetRelationship`).
+  The scene reads a complex point, mesh coordinate list or model uncertainty
+  from its parts, and reports a complex placement or datum reference it
+  cannot follow as a warning.
+- `Ap242Author` constructors take AP242 edition 4's narrower reference type
   where the model's is wider, and store it as the model's:
   - `add_shape_definition_representation`: `definition` takes a
-    `PropertyDefinitionRef`, `used_representation` an
-    `Ap242ShapeRepresentationRef`
+    `PropertyDefinitionRef`, `used_representation` a
+    `ShapeRepresentationRef`
+  - `add_advanced_brep_shape_representation` and
+    `add_manifold_surface_shape_representation`: `items` takes the matching
+    `Ap242…SelectRef`
+  - `add_advanced_face`: `face_geometry` takes an
+    `Ap242AdvancedFaceGeometrySelectRef` (an elementary, B-spline or swept
+    surface)
+  - `add_tessellated_face` and `add_complex_triangulated_face`:
+    `geometric_link` takes an `Ap242FaceOrSurfaceRef` (a face surface or a
+    surface, where edition 2 allowed any face)
+  - `add_compound_representation_item`: `item_element` takes an
+    `Ap242CompoundItemDefinitionRef` (a list or set of items, not one alone);
+    `add_datum_reference_compartment`, `add_datum_reference_element` and
+    `add_general_datum_reference`: `base` takes an
+    `Ap242DatumOrCommonDatumRef` (a datum reference element only in a list)
   - `add_draughting_model`, `add_mechanical_design_geometric_presentation_representation`,
     `add_mechanical_design_shaded_presentation_representation`,
     `add_shape_dimension_representation` and
@@ -67,43 +136,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `Ap242…Ref`
   - `add_shape_aspect_deriving_relationship`: `relating_shape_aspect` takes an
     `Ap242DerivedShapeAspectRef`
-  - `add_constructive_geometry_representation_relationship`: `rep_2` takes an
-    `Ap242ConstructiveGeometryRepresentationRef`
+  - `add_constructive_geometry_representation_relationship`: `rep_1` takes a
+    `ShapeModelRef`, `rep_2` an `Ap242ConstructiveGeometryRepresentationRef`
   - `add_cc_design_approval`: `items` takes `Ap242ApprovedItemRef`s
-  - `add_applied_group_assignment`: `items` takes `Ap242GroupableItemRef`s
-  - `add_context_dependent_over_riding_styled_item`: `item` takes an
-    `Ap242ContextDependentOverRidingStyledItemItemRef`, which also leaves out
-    styled items (`STYLED_ITEM.WR2`)
+  - `add_representation_relationship_with_transformation`:
+    `transformation_operator` takes an `Ap242TransformationRef` (not a
+    `list_item_defined_transformation`, which edition 2 allowed)
 - `Ap242Author` constructors also take a narrower reference type where an
-  AP242 edition 2 `WHERE` rule limits which types an attribute, or each of
-  its elements, references
+  AP242 edition 4 `WHERE` rule limits which types an attribute, each of its
+  elements, or each element of a set it holds references
   (such as `'LENGTH_UNIT' IN TYPEOF(SELF\measure_with_unit.unit_component)`;
   not rules on one indexed element, on two attributes together or on a path
   through another entity), for every instance or by the instance's own type
-  (`STYLED_ITEM.WR3`, which does not hold for a context-dependent over-riding
-  styled item). A complex argument's parts count together: where
+  (`DRAUGHTING_ANNOTATION_OCCURRENCE.WR7`). A complex argument's parts count
+  together: where
   a rule excludes a type, one holding a part of that type, and where it asks
   for exactly one of several types, one whose parts are of more than one of
   them, is rejected on insertion with `AuthorError::NarrowedReference`:
   - `add_styled_item`, `add_over_riding_styled_item`,
+    `add_context_dependent_over_riding_styled_item`,
     `add_annotation_occurrence` and `add_draughting_annotation_occurrence`:
     `item` takes an `Ap242StyledItemItemRef`: a mapped item or a geometric
-    item that is not a styled item (`STYLED_ITEM.WR2`, `WR3`)
-  - `add_length_measure_with_unit`, `add_mass_measure_with_unit`,
-    `add_plane_angle_measure_with_unit` and `add_ratio_measure_with_unit`:
-    `unit_component` takes the matching `Ap242…UnitRef`
-  - `add_advanced_face`: `face_geometry` takes an
-    `Ap242AdvancedFaceFaceGeometryRef` (an elementary, B-spline or swept
-    surface)
-  - `add_advanced_brep_shape_representation`,
-    `add_geometrically_bounded_surface_shape_representation`,
-    `add_geometrically_bounded_wireframe_shape_representation` and
-    `add_manifold_surface_shape_representation`: `items` takes the matching
+    item that is not a styled item, or a set of mapped and geometric items
+    (`STYLED_ITEM.WR2`, `WR3`; edition 4 no longer exempts a
+    context-dependent over-riding styled item)
+  - `add_length_measure_with_unit`, `add_positive_length_measure_with_unit`,
+    `add_mass_measure_with_unit`, `add_plane_angle_measure_with_unit`,
+    `add_positive_plane_angle_measure_with_unit` and
+    `add_ratio_measure_with_unit`: `unit_component` takes the matching
+    `Ap242…UnitRef`
+  - `add_product_definition_occurrence`: `definition` takes an
+    `Ap242ProductDefinitionOccurrenceDefinitionRef`
+  - `add_constructive_geometry_representation`: `items` takes an
+    `Ap242ConstructiveGeometryRepresentationItemsRef`. Edition 4's
+    `CONSTRUCTIVE_GEOMETRY_REPRESENTATION.WR2` asks each item to be exactly
+    one of a list that names supertypes with their subtypes, so it leaves out
+    a cartesian point, a line, a circle or a plane, which edition 2 allowed
+  - `add_geometrically_bounded_surface_shape_representation` and
+    `add_geometrically_bounded_wireframe_shape_representation`: `items`
+    takes the matching
     `Ap242…ItemsRef`
-  - `add_constructive_geometry_representation`: `items` takes
-    `Ap242ConstructiveGeometryRepresentationItemsRef`s (each exactly one of a
-    placement, curve, edge, face, point, surface, connected face or edge set,
-    or vertex point)
   - `add_product_definition_shape`: `definition` takes an
     `Ap242ProductDefinitionShapeDefinitionRef` (a product definition or its
     relationship, or a characterized object; not a shape aspect)
@@ -126,11 +198,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     (`qualified_measure`) and `add_camera_usage` (`mapped_representation`):
     the matching `Ap242…Ref`
 - `add_complex` and the self-referencing constructors check the same
-  narrowings at run time (in `add_complex`, a rule by the instance's own type
-  by its parts: `STYLED_ITEM.WR3` where no part is a context-dependent
-  over-riding styled item, `DRAUGHTING_ANNOTATION_OCCURRENCE.WR7` — exactly
-  one composite text or text literal — where a part is an annotation text
-  occurrence), and `add_person_and_organization_address` takes
+  narrowings at run time, a set's elements included (in `add_complex`, a
+  rule by the instance's own type by its parts:
+  `DRAUGHTING_ANNOTATION_OCCURRENCE.WR7` — exactly one composite text or text
+  literal — where a part is an annotation text occurrence), and `add_person_and_organization_address` takes
   exactly one organization and one person, as AP242 requires.
 - Attributes that every STEP edition narrows with a redeclaration
   (`SELF\supertype.attribute : narrower;`) now have the narrower type in the
@@ -165,6 +236,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `ContextDependentOverRidingStyledItem`, `AnnotationOccurrence` and
     `DraughtingAnnotationOccurrence` (and of the `STYLED_ITEM` part):
     `StyledItemTargetOrRepresentationItemRef`
+  - `ConstructiveGeometryRepresentationRelationship::rep_1`:
+    `RepresentationOrRepresentationReferenceRef`, as `representation_relationship`
+    declares it; AP242 narrows it to a shape model only for `Ap242Author`
 
 ### Removed
 
@@ -178,9 +252,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   gone.
 - `StyledItemTargetRef`, replaced by `StyledItemTargetOrRepresentationItemRef`
   in the model and `Ap242StyledItemItemRef` in the constructors.
-- `add_oriented_edge_cyclic`, `add_oriented_closed_shell_cyclic` and
-  `add_product_definition_shape_cyclic`: AP242's `WHERE` rules do not let
-  these entities reference themselves.
+- `ConstructiveGeometryRepresentationOrShapeRepresentationRef`, replaced by
+  `RepresentationOrRepresentationReferenceRef` in the model and
+  `ShapeModelRef` in `add_constructive_geometry_representation_relationship`.
+- `add_oriented_edge_cyclic`, `add_oriented_closed_shell_cyclic`,
+  `add_product_definition_shape_cyclic`,
+  `add_product_definition_occurrence_cyclic`,
+  `add_annotation_placeholder_occurrence_cyclic`, `add_camera_image_cyclic`
+  and `add_camera_image3d_with_scale_cyclic`: AP242's types and `WHERE` rules
+  do not let these entities reference themselves.
 
 ### Fixed
 

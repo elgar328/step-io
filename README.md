@@ -13,7 +13,7 @@ writes only modern AP242.
 ## Features
 
 - **Reads everything, writes AP242** — any mainstream AP comes in, legacy
-  included; only AP242 edition 2 (IS) goes out.
+  included; only AP242 edition 4 (IS) goes out.
 - **Lean** — one universal schema model instead of a per-schema
   implementation; the supported entity set is curated to what real STEP
   files actually use.
@@ -89,10 +89,10 @@ single pipeline. The supported entity set is curated, guided by what
 50,000+ real-world files contain — the [entity coverage
 matrix](docs/entities.md) lists exactly what is read and written.
 
-Output is AP242 edition 2 (IS) only — AP203 and AP214 were merged into
-it in 2014, and every modern tool reads it. When edition 3 reaches IS
-and takes over, the output moves up with it: one output schema,
-always the current one.
+Output is AP242 edition 4 (ISO 10303-242:2025, the current IS) only —
+AP203 and AP214 were merged into AP242 in 2014. When a later edition
+takes over, the output moves up with it: one output schema, always the
+current one.
 
 Most of the pipeline is generated from the schemas rather than written
 by hand — no drift, little to maintain.

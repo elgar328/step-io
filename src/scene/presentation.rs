@@ -404,6 +404,12 @@ fn size_f64(cx: Ctx<'_>, r: &m::SizeSelectRef) -> Option<f64> {
                 .get(i.0)
                 .value_component
         }
+        m::SizeSelectRef::PositiveLengthMeasureWithUnit(i) => {
+            &cx.model
+                .positive_length_measure_with_unit_arena
+                .get(i.0)
+                .value_component
+        }
         m::SizeSelectRef::MeasureWithUnit(i) => {
             &cx.model.measure_with_unit_arena.get(i.0).value_component
         }
@@ -416,6 +422,12 @@ fn size_f64(cx: Ctx<'_>, r: &m::SizeSelectRef) -> Option<f64> {
         m::SizeSelectRef::PlaneAngleMeasureWithUnit(i) => {
             &cx.model
                 .plane_angle_measure_with_unit_arena
+                .get(i.0)
+                .value_component
+        }
+        m::SizeSelectRef::PositivePlaneAngleMeasureWithUnit(i) => {
+            &cx.model
+                .positive_plane_angle_measure_with_unit_arena
                 .get(i.0)
                 .value_component
         }

@@ -438,12 +438,11 @@ pmi_annotation = [
     "leader_curve", "pre_defined_terminator_symbol", "pre_defined_point_marker_symbol",
     "draughting_callout_relationship", "model_geometric_view", "centre_of_symmetry",
 ]
-# PMI leader-line cluster (ed3). Output targets ed2, but read/round-trip must
-# accept all schemas (ed3 included) — so these are seeded for round-trip fidelity,
-# not dropped. apll_point/apll_point_with_surface are cartesian_point subtypes
-# (symbol_applied = des_apll_point_symbol ENUM); annotation_placeholder_leader_line
-# (abstract) is pulled via ref. All deps covered (cartesian_point/face_surface/
-# geometric_representation_item/annotation_placeholder_occurrence).
+# PMI leader-line cluster (ed3 and ed4). apll_point/apll_point_with_surface are
+# cartesian_point subtypes (symbol_applied = des_apll_point_symbol ENUM);
+# annotation_placeholder_leader_line (abstract) is pulled via ref. All deps covered
+# (cartesian_point/face_surface/geometric_representation_item/
+# annotation_placeholder_occurrence).
 pmi_leader_line = [
     "annotation_placeholder_occurrence_with_leader_line", "annotation_to_model_leader_line",
     "annotation_to_annotation_leader_line", "auxiliary_leader_line",

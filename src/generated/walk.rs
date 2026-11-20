@@ -50,6 +50,15 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
             ActionResourceRequirementId(i),
         ));
     }
+    for i in 0..model
+        .action_resource_requirement_relationship_arena
+        .items
+        .len() as u32
+    {
+        f(EntityKey::ActionResourceRequirementRelationship(
+            ActionResourceRequirementRelationshipId(i),
+        ));
+    }
     for i in 0..model.action_resource_type_arena.items.len() as u32 {
         f(EntityKey::ActionResourceType(ActionResourceTypeId(i)));
     }
@@ -293,6 +302,9 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
             BSplineSurfaceWithKnotsId(i),
         ));
     }
+    for i in 0..model.basic_round_hole_arena.items.len() as u32 {
+        f(EntityKey::BasicRoundHole(BasicRoundHoleId(i)));
+    }
     for i in 0..model.bezier_curve_arena.items.len() as u32 {
         f(EntityKey::BezierCurve(BezierCurveId(i)));
     }
@@ -458,11 +470,17 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
             CompositeGroupShapeAspectId(i),
         ));
     }
+    for i in 0..model.composite_hole_arena.items.len() as u32 {
+        f(EntityKey::CompositeHole(CompositeHoleId(i)));
+    }
     for i in 0..model.composite_shape_aspect_arena.items.len() as u32 {
         f(EntityKey::CompositeShapeAspect(CompositeShapeAspectId(i)));
     }
     for i in 0..model.composite_text_arena.items.len() as u32 {
         f(EntityKey::CompositeText(CompositeTextId(i)));
+    }
+    for i in 0..model.compound_feature_arena.items.len() as u32 {
+        f(EntityKey::CompoundFeature(CompoundFeatureId(i)));
     }
     for i in 0..model.compound_representation_item_arena.items.len() as u32 {
         f(EntityKey::CompoundRepresentationItem(
@@ -548,6 +566,21 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     }
     for i in 0..model.coordinates_list_arena.items.len() as u32 {
         f(EntityKey::CoordinatesList(CoordinatesListId(i)));
+    }
+    for i in 0..model.counterbore_hole_definition_arena.items.len() as u32 {
+        f(EntityKey::CounterboreHoleDefinition(
+            CounterboreHoleDefinitionId(i),
+        ));
+    }
+    for i in 0..model.counterdrill_hole_definition_arena.items.len() as u32 {
+        f(EntityKey::CounterdrillHoleDefinition(
+            CounterdrillHoleDefinitionId(i),
+        ));
+    }
+    for i in 0..model.countersink_hole_definition_arena.items.len() as u32 {
+        f(EntityKey::CountersinkHoleDefinition(
+            CountersinkHoleDefinitionId(i),
+        ));
     }
     for i in 0..model.curve_arena.items.len() as u32 {
         f(EntityKey::Curve(CurveId(i)));
@@ -810,12 +843,23 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model.ellipse_arena.items.len() as u32 {
         f(EntityKey::Ellipse(EllipseId(i)));
     }
+    for i in 0..model.explicit_composite_hole_arena.items.len() as u32 {
+        f(EntityKey::ExplicitCompositeHole(ExplicitCompositeHoleId(i)));
+    }
+    for i in 0..model.explicit_round_hole_arena.items.len() as u32 {
+        f(EntityKey::ExplicitRoundHole(ExplicitRoundHoleId(i)));
+    }
     for i in 0..model.expression_arena.items.len() as u32 {
         f(EntityKey::Expression(ExpressionId(i)));
     }
     for i in 0..model.external_identification_assignment_arena.items.len() as u32 {
         f(EntityKey::ExternalIdentificationAssignment(
             ExternalIdentificationAssignmentId(i),
+        ));
+    }
+    for i in 0..model.external_image_placement_in_callout_arena.items.len() as u32 {
+        f(EntityKey::ExternalImagePlacementInCallout(
+            ExternalImagePlacementInCalloutId(i),
         ));
     }
     for i in 0..model.external_source_arena.items.len() as u32 {
@@ -873,6 +917,9 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     }
     for i in 0..model.face_surface_arena.items.len() as u32 {
         f(EntityKey::FaceSurface(FaceSurfaceId(i)));
+    }
+    for i in 0..model.feature_definition_arena.items.len() as u32 {
+        f(EntityKey::FeatureDefinition(FeatureDefinitionId(i)));
     }
     for i in 0..model
         .feature_for_datum_target_relationship_arena
@@ -1371,6 +1418,20 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     for i in 0..model.position_tolerance_arena.items.len() as u32 {
         f(EntityKey::PositionTolerance(PositionToleranceId(i)));
     }
+    for i in 0..model.positive_length_measure_with_unit_arena.items.len() as u32 {
+        f(EntityKey::PositiveLengthMeasureWithUnit(
+            PositiveLengthMeasureWithUnitId(i),
+        ));
+    }
+    for i in 0..model
+        .positive_plane_angle_measure_with_unit_arena
+        .items
+        .len() as u32
+    {
+        f(EntityKey::PositivePlaneAngleMeasureWithUnit(
+            PositivePlaneAngleMeasureWithUnitId(i),
+        ));
+    }
     for i in 0..model.pre_defined_character_glyph_arena.items.len() as u32 {
         f(EntityKey::PreDefinedCharacterGlyph(
             PreDefinedCharacterGlyphId(i),
@@ -1679,6 +1740,14 @@ pub fn for_each_entity(model: &StepModel, mut f: impl FnMut(EntityKey)) {
     }
     for i in 0..model.role_association_arena.items.len() as u32 {
         f(EntityKey::RoleAssociation(RoleAssociationId(i)));
+    }
+    for i in 0..model.round_hole_arena.items.len() as u32 {
+        f(EntityKey::RoundHole(RoundHoleId(i)));
+    }
+    for i in 0..model.round_hole_bottom_condition_arena.items.len() as u32 {
+        f(EntityKey::RoundHoleBottomCondition(
+            RoundHoleBottomConditionId(i),
+        ));
     }
     for i in 0..model.roundness_tolerance_arena.items.len() as u32 {
         f(EntityKey::RoundnessTolerance(RoundnessToleranceId(i)));

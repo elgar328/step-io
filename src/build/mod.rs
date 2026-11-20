@@ -600,7 +600,7 @@ struct PendingPart {
     definition: m::ProductDefinitionId,
     shape: m::ProductDefinitionShapeId,
     origin: m::Axis2Placement3dId,
-    items: Vec<m::Ap242AdvancedBrepShapeRepresentationItemsRef>,
+    items: Vec<m::Ap242AdvancedBrepShapeRepresentationItemsSelectRef>,
     meshes: Vec<m::TessellatedSolidId>,
     /// The placements of this part's children, by index.
     placements: Vec<usize>,
@@ -687,9 +687,9 @@ impl StepBuilder {
 
         let ac = a.add_application_context("managed model based 3d engineering")?;
         a.add_application_protocol_definition(
-            schema::AP242E2_APD_STATUS,
-            schema::AP242E2_APD_NAME,
-            schema::AP242E2_APD_YEAR,
+            schema::AP242E4_APD_STATUS,
+            schema::AP242E4_APD_NAME,
+            schema::AP242E4_APD_YEAR,
             m::ApplicationContextRef::ApplicationContext(ac),
         )?;
         let product_context = a.add_product_context(
@@ -1050,7 +1050,7 @@ impl StepBuilder {
     fn nurbs_surface_geometry(
         &mut self,
         s: &NurbsSurface,
-    ) -> Result<m::Ap242AdvancedFaceFaceGeometryRef, AuthorError> {
+    ) -> Result<m::Ap242AdvancedFaceGeometrySelectRef, AuthorError> {
         let n_u = s.control_points.len();
         let n_v = s.control_points.first().map_or(0, Vec::len);
         if n_v == 0 || s.control_points.iter().any(|row| row.len() != n_v) {
@@ -1092,7 +1092,7 @@ impl StepBuilder {
                 v_knots,
                 m::KnotType::Unspecified,
             )?;
-            Ok(m::Ap242AdvancedFaceFaceGeometryRef::BSplineSurfaceWithKnots(id))
+            Ok(m::Ap242AdvancedFaceGeometrySelectRef::BSplineSurfaceWithKnots(id))
         } else {
             let no_name = self.author.text("");
             let id = self.author.add_complex(vec![
@@ -1120,7 +1120,7 @@ impl StepBuilder {
                 m::PartialEntity::RepresentationItem { name: no_name },
                 m::PartialEntity::Surface,
             ])?;
-            Ok(m::Ap242AdvancedFaceFaceGeometryRef::Complex(id))
+            Ok(m::Ap242AdvancedFaceGeometrySelectRef::Complex(id))
         }
     }
 
@@ -1245,14 +1245,14 @@ impl StepBuilder {
     fn surface_geometry(
         &mut self,
         surface: SurfaceInput,
-    ) -> Result<m::Ap242AdvancedFaceFaceGeometryRef, AuthorError> {
+    ) -> Result<m::Ap242AdvancedFaceGeometrySelectRef, AuthorError> {
         Ok(match surface {
             SurfaceInput::Plane(frame) => {
                 let position = self.placement(&frame)?;
                 let plane = self
                     .author
                     .add_plane("", m::Axis2Placement3dRef::Axis2Placement3d(position))?;
-                m::Ap242AdvancedFaceFaceGeometryRef::Plane(plane)
+                m::Ap242AdvancedFaceGeometrySelectRef::Plane(plane)
             }
             SurfaceInput::Cylinder(frame, radius) => {
                 let position = self.placement(&frame)?;
@@ -1261,7 +1261,7 @@ impl StepBuilder {
                     m::Axis2Placement3dRef::Axis2Placement3d(position),
                     radius,
                 )?;
-                m::Ap242AdvancedFaceFaceGeometryRef::CylindricalSurface(cyl)
+                m::Ap242AdvancedFaceGeometrySelectRef::CylindricalSurface(cyl)
             }
             SurfaceInput::Sphere(frame, radius) => {
                 let position = self.placement(&frame)?;
@@ -1270,7 +1270,7 @@ impl StepBuilder {
                     m::Axis2Placement3dRef::Axis2Placement3d(position),
                     radius,
                 )?;
-                m::Ap242AdvancedFaceFaceGeometryRef::SphericalSurface(sphere)
+                m::Ap242AdvancedFaceGeometrySelectRef::SphericalSurface(sphere)
             }
             SurfaceInput::Torus(frame, major_radius, minor_radius) => {
                 let position = self.placement(&frame)?;
@@ -1280,7 +1280,7 @@ impl StepBuilder {
                     major_radius,
                     minor_radius,
                 )?;
-                m::Ap242AdvancedFaceFaceGeometryRef::ToroidalSurface(torus)
+                m::Ap242AdvancedFaceGeometrySelectRef::ToroidalSurface(torus)
             }
             SurfaceInput::Cone(frame, radius, semi_angle) => {
                 let position = self.placement(&frame)?;
@@ -1290,7 +1290,7 @@ impl StepBuilder {
                     radius,
                     semi_angle,
                 )?;
-                m::Ap242AdvancedFaceFaceGeometryRef::ConicalSurface(cone)
+                m::Ap242AdvancedFaceGeometrySelectRef::ConicalSurface(cone)
             }
             SurfaceInput::LinearExtrusion(profile, sweep) => {
                 let swept_curve = self.profile_geometry(&profile)?;
@@ -1308,7 +1308,7 @@ impl StepBuilder {
                     swept_curve,
                     m::VectorRef::Vector(vector),
                 )?;
-                m::Ap242AdvancedFaceFaceGeometryRef::SurfaceOfLinearExtrusion(surf)
+                m::Ap242AdvancedFaceGeometrySelectRef::SurfaceOfLinearExtrusion(surf)
             }
             SurfaceInput::Revolution(profile, origin, axis) => {
                 let swept_curve = self.profile_geometry(&profile)?;
@@ -1325,7 +1325,7 @@ impl StepBuilder {
                     swept_curve,
                     m::Axis1PlacementRef::Axis1Placement(position),
                 )?;
-                m::Ap242AdvancedFaceFaceGeometryRef::SurfaceOfRevolution(surf)
+                m::Ap242AdvancedFaceGeometrySelectRef::SurfaceOfRevolution(surf)
             }
             SurfaceInput::Nurbs(surface) => self.nurbs_surface_geometry(&surface)?,
         })
@@ -1401,7 +1401,7 @@ impl StepBuilder {
             .add_manifold_solid_brep(name, m::ClosedShellRef::ClosedShell(shell))?;
         self.parts[part.0]
             .items
-            .push(m::Ap242AdvancedBrepShapeRepresentationItemsRef::ManifoldSolidBrep(solid));
+            .push(m::Ap242AdvancedBrepShapeRepresentationItemsSelectRef::ManifoldSolidBrep(solid));
         Ok(solid)
     }
 
@@ -1490,7 +1490,7 @@ impl StepBuilder {
         )?;
         self.parts[part.0]
             .items
-            .push(m::Ap242AdvancedBrepShapeRepresentationItemsRef::BrepWithVoids(solid));
+            .push(m::Ap242AdvancedBrepShapeRepresentationItemsSelectRef::BrepWithVoids(solid));
         Ok(solid)
     }
 
@@ -1925,8 +1925,10 @@ fn bind_part(
 ) -> Result<m::RepresentationOrRepresentationReferenceRef, AuthorError> {
     // The origin, then where each child is placed, then the shape.
     let mut items =
-        vec![m::Ap242AdvancedBrepShapeRepresentationItemsRef::Axis2Placement3d(part.origin)];
-    items.extend(children.map(m::Ap242AdvancedBrepShapeRepresentationItemsRef::Axis2Placement3d));
+        vec![m::Ap242AdvancedBrepShapeRepresentationItemsSelectRef::Axis2Placement3d(part.origin)];
+    items.extend(
+        children.map(m::Ap242AdvancedBrepShapeRepresentationItemsSelectRef::Axis2Placement3d),
+    );
     items.extend(part.items.iter().cloned());
     let has_solid = !part.items.is_empty();
     let (rep, rep_or_ref) = if has_solid {
@@ -1936,7 +1938,7 @@ fn bind_part(
             m::RepresentationContextRef::Complex(ctx),
         )?;
         (
-            m::Ap242ShapeRepresentationRef::AdvancedBrepShapeRepresentation(id),
+            m::ShapeRepresentationRef::AdvancedBrepShapeRepresentation(id),
             m::RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(id),
         )
     } else {
@@ -1946,7 +1948,7 @@ fn bind_part(
             m::RepresentationContextRef::Complex(ctx),
         )?;
         (
-            m::Ap242ShapeRepresentationRef::ShapeRepresentation(id),
+            m::ShapeRepresentationRef::ShapeRepresentation(id),
             m::RepresentationOrRepresentationReferenceRef::ShapeRepresentation(id),
         )
     };
@@ -1968,7 +1970,7 @@ fn bind_part(
         )?;
         a.add_shape_definition_representation(
             m::PropertyDefinitionRef::ProductDefinitionShape(part.shape),
-            m::Ap242ShapeRepresentationRef::TessellatedShapeRepresentation(tsr),
+            m::ShapeRepresentationRef::TessellatedShapeRepresentation(tsr),
         )?;
     }
     Ok(rep_or_ref)
