@@ -3767,6 +3767,778 @@ impl CompositeCurveSegmentRef {
 }
 
 #[derive(Clone, Copy, Debug)]
+pub enum CompoundItemDefinitionRefView<'m> {
+    AdvancedFace(&'m AdvancedFace),
+    AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
+    AnnotationOccurrence(&'m AnnotationOccurrence),
+    AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
+    AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(
+        &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
+    ),
+    AnnotationPlane(&'m AnnotationPlane),
+    AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
+    AnnotationText(&'m AnnotationText),
+    AnnotationTextCharacter(&'m AnnotationTextCharacter),
+    AnnotationTextOccurrence(&'m AnnotationTextOccurrence),
+    AnnotationToAnnotationLeaderLine(&'m AnnotationToAnnotationLeaderLine),
+    AnnotationToModelLeaderLine(&'m AnnotationToModelLeaderLine),
+    ApllPoint(&'m ApllPoint),
+    ApllPointWithSurface(&'m ApllPointWithSurface),
+    AuxiliaryLeaderLine(&'m AuxiliaryLeaderLine),
+    Axis1Placement(&'m Axis1Placement),
+    Axis2Placement2d(&'m Axis2Placement2d),
+    Axis2Placement3d(&'m Axis2Placement3d),
+    BSplineCurve(&'m BSplineCurve),
+    BSplineCurveWithKnots(&'m BSplineCurveWithKnots),
+    BSplineSurface(&'m BSplineSurface),
+    BSplineSurfaceWithKnots(&'m BSplineSurfaceWithKnots),
+    BezierCurve(&'m BezierCurve),
+    BezierSurface(&'m BezierSurface),
+    BoundedCurve(&'m BoundedCurve),
+    BoundedPcurve(&'m BoundedPcurve),
+    BoundedSurface(&'m BoundedSurface),
+    BoundedSurfaceCurve(&'m BoundedSurfaceCurve),
+    BrepWithVoids(&'m BrepWithVoids),
+    CameraImage(&'m CameraImage),
+    CameraImage3dWithScale(&'m CameraImage3dWithScale),
+    CameraModel(&'m CameraModel),
+    CameraModelD3(&'m CameraModelD3),
+    CameraModelD3MultiClipping(&'m CameraModelD3MultiClipping),
+    CameraModelD3WithHlhsr(&'m CameraModelD3WithHlhsr),
+    CartesianPoint(&'m CartesianPoint),
+    Circle(&'m Circle),
+    ClosedShell(&'m ClosedShell),
+    ComplexTriangulatedFace(&'m ComplexTriangulatedFace),
+    ComplexTriangulatedSurfaceSet(&'m ComplexTriangulatedSurfaceSet),
+    CompositeCurve(&'m CompositeCurve),
+    CompositeText(&'m CompositeText),
+    CompoundRepresentationItem(&'m CompoundRepresentationItem),
+    Conic(&'m Conic),
+    ConicalSurface(&'m ConicalSurface),
+    ConnectedFaceSet(&'m ConnectedFaceSet),
+    ContextDependentOverRidingStyledItem(&'m ContextDependentOverRidingStyledItem),
+    CoordinatesList(&'m CoordinatesList),
+    Curve(&'m Curve),
+    CylindricalSurface(&'m CylindricalSurface),
+    DefinedCharacterGlyph(&'m DefinedCharacterGlyph),
+    DefinedSymbol(&'m DefinedSymbol),
+    DegenerateToroidalSurface(&'m DegenerateToroidalSurface),
+    DescriptiveRepresentationItem(&'m DescriptiveRepresentationItem),
+    Direction(&'m Direction),
+    DraughtingAnnotationOccurrence(&'m DraughtingAnnotationOccurrence),
+    DraughtingCallout(&'m DraughtingCallout),
+    Edge(&'m Edge),
+    EdgeCurve(&'m EdgeCurve),
+    EdgeLoop(&'m EdgeLoop),
+    ElementarySurface(&'m ElementarySurface),
+    Ellipse(&'m Ellipse),
+    ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
+    ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
+    Face(&'m Face),
+    FaceBound(&'m FaceBound),
+    FaceOuterBound(&'m FaceOuterBound),
+    FaceSurface(&'m FaceSurface),
+    FillAreaStyleHatching(&'m FillAreaStyleHatching),
+    FillAreaStyleTileColouredRegion(&'m FillAreaStyleTileColouredRegion),
+    FillAreaStyleTileCurveWithStyle(&'m FillAreaStyleTileCurveWithStyle),
+    FillAreaStyleTileSymbolWithStyle(&'m FillAreaStyleTileSymbolWithStyle),
+    FillAreaStyleTiles(&'m FillAreaStyleTiles),
+    GeometricCurveSet(&'m GeometricCurveSet),
+    GeometricRepresentationItem(&'m GeometricRepresentationItem),
+    GeometricSet(&'m GeometricSet),
+    Hyperbola(&'m Hyperbola),
+    IntegerRepresentationItem(&'m IntegerRepresentationItem),
+    IntersectionCurve(&'m IntersectionCurve),
+    LeaderCurve(&'m LeaderCurve),
+    LeaderDirectedCallout(&'m LeaderDirectedCallout),
+    LeaderTerminator(&'m LeaderTerminator),
+    Line(&'m Line),
+    Loop(&'m Loop),
+    ManifoldSolidBrep(&'m ManifoldSolidBrep),
+    MappedItem(&'m MappedItem),
+    MeasureRepresentationItem(&'m MeasureRepresentationItem),
+    OffsetSurface(&'m OffsetSurface),
+    OneDirectionRepeatFactor(&'m OneDirectionRepeatFactor),
+    OpenShell(&'m OpenShell),
+    OrientedClosedShell(&'m OrientedClosedShell),
+    OrientedEdge(&'m OrientedEdge),
+    OverRidingStyledItem(&'m OverRidingStyledItem),
+    Parabola(&'m Parabola),
+    Path(&'m Path),
+    Pcurve(&'m Pcurve),
+    Placement(&'m Placement),
+    PlanarBox(&'m PlanarBox),
+    PlanarExtent(&'m PlanarExtent),
+    Plane(&'m Plane),
+    Point(&'m Point),
+    PolyLoop(&'m PolyLoop),
+    Polyline(&'m Polyline),
+    QualifiedRepresentationItem(&'m QualifiedRepresentationItem),
+    QuasiUniformCurve(&'m QuasiUniformCurve),
+    QuasiUniformSurface(&'m QuasiUniformSurface),
+    RationalBSplineCurve(&'m RationalBSplineCurve),
+    RationalBSplineSurface(&'m RationalBSplineSurface),
+    RealRepresentationItem(&'m RealRepresentationItem),
+    RepositionedTessellatedItem(&'m RepositionedTessellatedItem),
+    RepresentationItem(&'m RepresentationItem),
+    SeamCurve(&'m SeamCurve),
+    ShellBasedSurfaceModel(&'m ShellBasedSurfaceModel),
+    SolidModel(&'m SolidModel),
+    SphericalSurface(&'m SphericalSurface),
+    StyledItem(&'m StyledItem),
+    Surface(&'m Surface),
+    SurfaceCurve(&'m SurfaceCurve),
+    SurfaceOfLinearExtrusion(&'m SurfaceOfLinearExtrusion),
+    SurfaceOfRevolution(&'m SurfaceOfRevolution),
+    SweptSurface(&'m SweptSurface),
+    SymbolTarget(&'m SymbolTarget),
+    TerminatorSymbol(&'m TerminatorSymbol),
+    TessellatedAnnotationOccurrence(&'m TessellatedAnnotationOccurrence),
+    TessellatedCurveSet(&'m TessellatedCurveSet),
+    TessellatedFace(&'m TessellatedFace),
+    TessellatedGeometricSet(&'m TessellatedGeometricSet),
+    TessellatedItem(&'m TessellatedItem),
+    TessellatedShell(&'m TessellatedShell),
+    TessellatedSolid(&'m TessellatedSolid),
+    TessellatedStructuredItem(&'m TessellatedStructuredItem),
+    TessellatedSurfaceSet(&'m TessellatedSurfaceSet),
+    TextLiteral(&'m TextLiteral),
+    TopologicalRepresentationItem(&'m TopologicalRepresentationItem),
+    ToroidalSurface(&'m ToroidalSurface),
+    TrimmedCurve(&'m TrimmedCurve),
+    TwoDirectionRepeatFactor(&'m TwoDirectionRepeatFactor),
+    UniformCurve(&'m UniformCurve),
+    UniformSurface(&'m UniformSurface),
+    ValueRepresentationItem(&'m ValueRepresentationItem),
+    Vector(&'m Vector),
+    Vertex(&'m Vertex),
+    VertexLoop(&'m VertexLoop),
+    VertexPoint(&'m VertexPoint),
+    VertexShell(&'m VertexShell),
+    WireShell(&'m WireShell),
+    ListRepresentationItem(&'m [RepresentationItemRef]),
+    SetRepresentationItem(&'m [RepresentationItemRef]),
+    Complex(&'m ComplexEntity),
+}
+impl CompoundItemDefinitionRef {
+    pub fn resolve<'m>(&'m self, model: &'m StepModel) -> CompoundItemDefinitionRefView<'m> {
+        match self {
+            CompoundItemDefinitionRef::AdvancedFace(i) => {
+                CompoundItemDefinitionRefView::AdvancedFace(model.advanced_face_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::AnnotationCurveOccurrence(i) => {
+                CompoundItemDefinitionRefView::AnnotationCurveOccurrence(
+                    model.annotation_curve_occurrence_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationOccurrence(i) => {
+                CompoundItemDefinitionRefView::AnnotationOccurrence(
+                    model.annotation_occurrence_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationPlaceholderLeaderLine(i) => {
+                CompoundItemDefinitionRefView::AnnotationPlaceholderLeaderLine(
+                    model.annotation_placeholder_leader_line_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationPlaceholderOccurrence(i) => {
+                CompoundItemDefinitionRefView::AnnotationPlaceholderOccurrence(
+                    model.annotation_placeholder_occurrence_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                CompoundItemDefinitionRefView::AnnotationPlaceholderOccurrenceWithLeaderLine(
+                    model
+                        .annotation_placeholder_occurrence_with_leader_line_arena
+                        .get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationPlane(i) => {
+                CompoundItemDefinitionRefView::AnnotationPlane(
+                    model.annotation_plane_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationSymbolOccurrence(i) => {
+                CompoundItemDefinitionRefView::AnnotationSymbolOccurrence(
+                    model.annotation_symbol_occurrence_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationText(i) => {
+                CompoundItemDefinitionRefView::AnnotationText(model.annotation_text_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::AnnotationTextCharacter(i) => {
+                CompoundItemDefinitionRefView::AnnotationTextCharacter(
+                    model.annotation_text_character_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationTextOccurrence(i) => {
+                CompoundItemDefinitionRefView::AnnotationTextOccurrence(
+                    model.annotation_text_occurrence_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationToAnnotationLeaderLine(i) => {
+                CompoundItemDefinitionRefView::AnnotationToAnnotationLeaderLine(
+                    model.annotation_to_annotation_leader_line_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AnnotationToModelLeaderLine(i) => {
+                CompoundItemDefinitionRefView::AnnotationToModelLeaderLine(
+                    model.annotation_to_model_leader_line_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::ApllPoint(i) => {
+                CompoundItemDefinitionRefView::ApllPoint(model.apll_point_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ApllPointWithSurface(i) => {
+                CompoundItemDefinitionRefView::ApllPointWithSurface(
+                    model.apll_point_with_surface_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::AuxiliaryLeaderLine(i) => {
+                CompoundItemDefinitionRefView::AuxiliaryLeaderLine(
+                    model.auxiliary_leader_line_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Axis1Placement(i) => {
+                CompoundItemDefinitionRefView::Axis1Placement(model.axis1_placement_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Axis2Placement2d(i) => {
+                CompoundItemDefinitionRefView::Axis2Placement2d(
+                    model.axis2_placement2d_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Axis2Placement3d(i) => {
+                CompoundItemDefinitionRefView::Axis2Placement3d(
+                    model.axis2_placement3d_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::BSplineCurve(i) => {
+                CompoundItemDefinitionRefView::BSplineCurve(model.b_spline_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::BSplineCurveWithKnots(i) => {
+                CompoundItemDefinitionRefView::BSplineCurveWithKnots(
+                    model.b_spline_curve_with_knots_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::BSplineSurface(i) => {
+                CompoundItemDefinitionRefView::BSplineSurface(model.b_spline_surface_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::BSplineSurfaceWithKnots(i) => {
+                CompoundItemDefinitionRefView::BSplineSurfaceWithKnots(
+                    model.b_spline_surface_with_knots_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::BezierCurve(i) => {
+                CompoundItemDefinitionRefView::BezierCurve(model.bezier_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::BezierSurface(i) => {
+                CompoundItemDefinitionRefView::BezierSurface(model.bezier_surface_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::BoundedCurve(i) => {
+                CompoundItemDefinitionRefView::BoundedCurve(model.bounded_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::BoundedPcurve(i) => {
+                CompoundItemDefinitionRefView::BoundedPcurve(model.bounded_pcurve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::BoundedSurface(i) => {
+                CompoundItemDefinitionRefView::BoundedSurface(model.bounded_surface_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::BoundedSurfaceCurve(i) => {
+                CompoundItemDefinitionRefView::BoundedSurfaceCurve(
+                    model.bounded_surface_curve_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::BrepWithVoids(i) => {
+                CompoundItemDefinitionRefView::BrepWithVoids(model.brep_with_voids_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::CameraImage(i) => {
+                CompoundItemDefinitionRefView::CameraImage(model.camera_image_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::CameraImage3dWithScale(i) => {
+                CompoundItemDefinitionRefView::CameraImage3dWithScale(
+                    model.camera_image3d_with_scale_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::CameraModel(i) => {
+                CompoundItemDefinitionRefView::CameraModel(model.camera_model_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::CameraModelD3(i) => {
+                CompoundItemDefinitionRefView::CameraModelD3(model.camera_model_d3_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::CameraModelD3MultiClipping(i) => {
+                CompoundItemDefinitionRefView::CameraModelD3MultiClipping(
+                    model.camera_model_d3_multi_clipping_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::CameraModelD3WithHlhsr(i) => {
+                CompoundItemDefinitionRefView::CameraModelD3WithHlhsr(
+                    model.camera_model_d3_with_hlhsr_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::CartesianPoint(i) => {
+                CompoundItemDefinitionRefView::CartesianPoint(model.cartesian_point_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Circle(i) => {
+                CompoundItemDefinitionRefView::Circle(model.circle_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ClosedShell(i) => {
+                CompoundItemDefinitionRefView::ClosedShell(model.closed_shell_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ComplexTriangulatedFace(i) => {
+                CompoundItemDefinitionRefView::ComplexTriangulatedFace(
+                    model.complex_triangulated_face_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::ComplexTriangulatedSurfaceSet(i) => {
+                CompoundItemDefinitionRefView::ComplexTriangulatedSurfaceSet(
+                    model.complex_triangulated_surface_set_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::CompositeCurve(i) => {
+                CompoundItemDefinitionRefView::CompositeCurve(model.composite_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::CompositeText(i) => {
+                CompoundItemDefinitionRefView::CompositeText(model.composite_text_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::CompoundRepresentationItem(i) => {
+                CompoundItemDefinitionRefView::CompoundRepresentationItem(
+                    model.compound_representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Conic(i) => {
+                CompoundItemDefinitionRefView::Conic(model.conic_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ConicalSurface(i) => {
+                CompoundItemDefinitionRefView::ConicalSurface(model.conical_surface_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ConnectedFaceSet(i) => {
+                CompoundItemDefinitionRefView::ConnectedFaceSet(
+                    model.connected_face_set_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::ContextDependentOverRidingStyledItem(i) => {
+                CompoundItemDefinitionRefView::ContextDependentOverRidingStyledItem(
+                    model
+                        .context_dependent_over_riding_styled_item_arena
+                        .get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::CoordinatesList(i) => {
+                CompoundItemDefinitionRefView::CoordinatesList(
+                    model.coordinates_list_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Curve(i) => {
+                CompoundItemDefinitionRefView::Curve(model.curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::CylindricalSurface(i) => {
+                CompoundItemDefinitionRefView::CylindricalSurface(
+                    model.cylindrical_surface_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::DefinedCharacterGlyph(i) => {
+                CompoundItemDefinitionRefView::DefinedCharacterGlyph(
+                    model.defined_character_glyph_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::DefinedSymbol(i) => {
+                CompoundItemDefinitionRefView::DefinedSymbol(model.defined_symbol_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::DegenerateToroidalSurface(i) => {
+                CompoundItemDefinitionRefView::DegenerateToroidalSurface(
+                    model.degenerate_toroidal_surface_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::DescriptiveRepresentationItem(i) => {
+                CompoundItemDefinitionRefView::DescriptiveRepresentationItem(
+                    model.descriptive_representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Direction(i) => {
+                CompoundItemDefinitionRefView::Direction(model.direction_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::DraughtingAnnotationOccurrence(i) => {
+                CompoundItemDefinitionRefView::DraughtingAnnotationOccurrence(
+                    model.draughting_annotation_occurrence_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::DraughtingCallout(i) => {
+                CompoundItemDefinitionRefView::DraughtingCallout(
+                    model.draughting_callout_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Edge(i) => {
+                CompoundItemDefinitionRefView::Edge(model.edge_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::EdgeCurve(i) => {
+                CompoundItemDefinitionRefView::EdgeCurve(model.edge_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::EdgeLoop(i) => {
+                CompoundItemDefinitionRefView::EdgeLoop(model.edge_loop_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ElementarySurface(i) => {
+                CompoundItemDefinitionRefView::ElementarySurface(
+                    model.elementary_surface_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Ellipse(i) => {
+                CompoundItemDefinitionRefView::Ellipse(model.ellipse_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ExternallyDefinedHatchStyle(i) => {
+                CompoundItemDefinitionRefView::ExternallyDefinedHatchStyle(
+                    model.externally_defined_hatch_style_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::ExternallyDefinedTileStyle(i) => {
+                CompoundItemDefinitionRefView::ExternallyDefinedTileStyle(
+                    model.externally_defined_tile_style_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Face(i) => {
+                CompoundItemDefinitionRefView::Face(model.face_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::FaceBound(i) => {
+                CompoundItemDefinitionRefView::FaceBound(model.face_bound_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::FaceOuterBound(i) => {
+                CompoundItemDefinitionRefView::FaceOuterBound(model.face_outer_bound_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::FaceSurface(i) => {
+                CompoundItemDefinitionRefView::FaceSurface(model.face_surface_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::FillAreaStyleHatching(i) => {
+                CompoundItemDefinitionRefView::FillAreaStyleHatching(
+                    model.fill_area_style_hatching_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::FillAreaStyleTileColouredRegion(i) => {
+                CompoundItemDefinitionRefView::FillAreaStyleTileColouredRegion(
+                    model.fill_area_style_tile_coloured_region_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::FillAreaStyleTileCurveWithStyle(i) => {
+                CompoundItemDefinitionRefView::FillAreaStyleTileCurveWithStyle(
+                    model.fill_area_style_tile_curve_with_style_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::FillAreaStyleTileSymbolWithStyle(i) => {
+                CompoundItemDefinitionRefView::FillAreaStyleTileSymbolWithStyle(
+                    model.fill_area_style_tile_symbol_with_style_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::FillAreaStyleTiles(i) => {
+                CompoundItemDefinitionRefView::FillAreaStyleTiles(
+                    model.fill_area_style_tiles_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::GeometricCurveSet(i) => {
+                CompoundItemDefinitionRefView::GeometricCurveSet(
+                    model.geometric_curve_set_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::GeometricRepresentationItem(i) => {
+                CompoundItemDefinitionRefView::GeometricRepresentationItem(
+                    model.geometric_representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::GeometricSet(i) => {
+                CompoundItemDefinitionRefView::GeometricSet(model.geometric_set_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Hyperbola(i) => {
+                CompoundItemDefinitionRefView::Hyperbola(model.hyperbola_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::IntegerRepresentationItem(i) => {
+                CompoundItemDefinitionRefView::IntegerRepresentationItem(
+                    model.integer_representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::IntersectionCurve(i) => {
+                CompoundItemDefinitionRefView::IntersectionCurve(
+                    model.intersection_curve_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::LeaderCurve(i) => {
+                CompoundItemDefinitionRefView::LeaderCurve(model.leader_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::LeaderDirectedCallout(i) => {
+                CompoundItemDefinitionRefView::LeaderDirectedCallout(
+                    model.leader_directed_callout_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::LeaderTerminator(i) => {
+                CompoundItemDefinitionRefView::LeaderTerminator(
+                    model.leader_terminator_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Line(i) => {
+                CompoundItemDefinitionRefView::Line(model.line_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Loop(i) => {
+                CompoundItemDefinitionRefView::Loop(model.loop_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ManifoldSolidBrep(i) => {
+                CompoundItemDefinitionRefView::ManifoldSolidBrep(
+                    model.manifold_solid_brep_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::MappedItem(i) => {
+                CompoundItemDefinitionRefView::MappedItem(model.mapped_item_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::MeasureRepresentationItem(i) => {
+                CompoundItemDefinitionRefView::MeasureRepresentationItem(
+                    model.measure_representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::OffsetSurface(i) => {
+                CompoundItemDefinitionRefView::OffsetSurface(model.offset_surface_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::OneDirectionRepeatFactor(i) => {
+                CompoundItemDefinitionRefView::OneDirectionRepeatFactor(
+                    model.one_direction_repeat_factor_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::OpenShell(i) => {
+                CompoundItemDefinitionRefView::OpenShell(model.open_shell_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::OrientedClosedShell(i) => {
+                CompoundItemDefinitionRefView::OrientedClosedShell(
+                    model.oriented_closed_shell_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::OrientedEdge(i) => {
+                CompoundItemDefinitionRefView::OrientedEdge(model.oriented_edge_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::OverRidingStyledItem(i) => {
+                CompoundItemDefinitionRefView::OverRidingStyledItem(
+                    model.over_riding_styled_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Parabola(i) => {
+                CompoundItemDefinitionRefView::Parabola(model.parabola_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Path(i) => {
+                CompoundItemDefinitionRefView::Path(model.path_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Pcurve(i) => {
+                CompoundItemDefinitionRefView::Pcurve(model.pcurve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Placement(i) => {
+                CompoundItemDefinitionRefView::Placement(model.placement_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::PlanarBox(i) => {
+                CompoundItemDefinitionRefView::PlanarBox(model.planar_box_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::PlanarExtent(i) => {
+                CompoundItemDefinitionRefView::PlanarExtent(model.planar_extent_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Plane(i) => {
+                CompoundItemDefinitionRefView::Plane(model.plane_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Point(i) => {
+                CompoundItemDefinitionRefView::Point(model.point_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::PolyLoop(i) => {
+                CompoundItemDefinitionRefView::PolyLoop(model.poly_loop_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Polyline(i) => {
+                CompoundItemDefinitionRefView::Polyline(model.polyline_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::QualifiedRepresentationItem(i) => {
+                CompoundItemDefinitionRefView::QualifiedRepresentationItem(
+                    model.qualified_representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::QuasiUniformCurve(i) => {
+                CompoundItemDefinitionRefView::QuasiUniformCurve(
+                    model.quasi_uniform_curve_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::QuasiUniformSurface(i) => {
+                CompoundItemDefinitionRefView::QuasiUniformSurface(
+                    model.quasi_uniform_surface_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::RationalBSplineCurve(i) => {
+                CompoundItemDefinitionRefView::RationalBSplineCurve(
+                    model.rational_b_spline_curve_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::RationalBSplineSurface(i) => {
+                CompoundItemDefinitionRefView::RationalBSplineSurface(
+                    model.rational_b_spline_surface_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::RealRepresentationItem(i) => {
+                CompoundItemDefinitionRefView::RealRepresentationItem(
+                    model.real_representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::RepositionedTessellatedItem(i) => {
+                CompoundItemDefinitionRefView::RepositionedTessellatedItem(
+                    model.repositioned_tessellated_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::RepresentationItem(i) => {
+                CompoundItemDefinitionRefView::RepresentationItem(
+                    model.representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::SeamCurve(i) => {
+                CompoundItemDefinitionRefView::SeamCurve(model.seam_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ShellBasedSurfaceModel(i) => {
+                CompoundItemDefinitionRefView::ShellBasedSurfaceModel(
+                    model.shell_based_surface_model_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::SolidModel(i) => {
+                CompoundItemDefinitionRefView::SolidModel(model.solid_model_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::SphericalSurface(i) => {
+                CompoundItemDefinitionRefView::SphericalSurface(
+                    model.spherical_surface_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::StyledItem(i) => {
+                CompoundItemDefinitionRefView::StyledItem(model.styled_item_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Surface(i) => {
+                CompoundItemDefinitionRefView::Surface(model.surface_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::SurfaceCurve(i) => {
+                CompoundItemDefinitionRefView::SurfaceCurve(model.surface_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::SurfaceOfLinearExtrusion(i) => {
+                CompoundItemDefinitionRefView::SurfaceOfLinearExtrusion(
+                    model.surface_of_linear_extrusion_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::SurfaceOfRevolution(i) => {
+                CompoundItemDefinitionRefView::SurfaceOfRevolution(
+                    model.surface_of_revolution_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::SweptSurface(i) => {
+                CompoundItemDefinitionRefView::SweptSurface(model.swept_surface_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::SymbolTarget(i) => {
+                CompoundItemDefinitionRefView::SymbolTarget(model.symbol_target_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::TerminatorSymbol(i) => {
+                CompoundItemDefinitionRefView::TerminatorSymbol(
+                    model.terminator_symbol_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TessellatedAnnotationOccurrence(i) => {
+                CompoundItemDefinitionRefView::TessellatedAnnotationOccurrence(
+                    model.tessellated_annotation_occurrence_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TessellatedCurveSet(i) => {
+                CompoundItemDefinitionRefView::TessellatedCurveSet(
+                    model.tessellated_curve_set_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TessellatedFace(i) => {
+                CompoundItemDefinitionRefView::TessellatedFace(
+                    model.tessellated_face_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TessellatedGeometricSet(i) => {
+                CompoundItemDefinitionRefView::TessellatedGeometricSet(
+                    model.tessellated_geometric_set_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TessellatedItem(i) => {
+                CompoundItemDefinitionRefView::TessellatedItem(
+                    model.tessellated_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TessellatedShell(i) => {
+                CompoundItemDefinitionRefView::TessellatedShell(
+                    model.tessellated_shell_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TessellatedSolid(i) => {
+                CompoundItemDefinitionRefView::TessellatedSolid(
+                    model.tessellated_solid_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TessellatedStructuredItem(i) => {
+                CompoundItemDefinitionRefView::TessellatedStructuredItem(
+                    model.tessellated_structured_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TessellatedSurfaceSet(i) => {
+                CompoundItemDefinitionRefView::TessellatedSurfaceSet(
+                    model.tessellated_surface_set_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TextLiteral(i) => {
+                CompoundItemDefinitionRefView::TextLiteral(model.text_literal_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::TopologicalRepresentationItem(i) => {
+                CompoundItemDefinitionRefView::TopologicalRepresentationItem(
+                    model.topological_representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::ToroidalSurface(i) => {
+                CompoundItemDefinitionRefView::ToroidalSurface(
+                    model.toroidal_surface_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::TrimmedCurve(i) => {
+                CompoundItemDefinitionRefView::TrimmedCurve(model.trimmed_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::TwoDirectionRepeatFactor(i) => {
+                CompoundItemDefinitionRefView::TwoDirectionRepeatFactor(
+                    model.two_direction_repeat_factor_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::UniformCurve(i) => {
+                CompoundItemDefinitionRefView::UniformCurve(model.uniform_curve_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::UniformSurface(i) => {
+                CompoundItemDefinitionRefView::UniformSurface(model.uniform_surface_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ValueRepresentationItem(i) => {
+                CompoundItemDefinitionRefView::ValueRepresentationItem(
+                    model.value_representation_item_arena.get(i.0),
+                )
+            }
+            CompoundItemDefinitionRef::Vector(i) => {
+                CompoundItemDefinitionRefView::Vector(model.vector_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::Vertex(i) => {
+                CompoundItemDefinitionRefView::Vertex(model.vertex_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::VertexLoop(i) => {
+                CompoundItemDefinitionRefView::VertexLoop(model.vertex_loop_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::VertexPoint(i) => {
+                CompoundItemDefinitionRefView::VertexPoint(model.vertex_point_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::VertexShell(i) => {
+                CompoundItemDefinitionRefView::VertexShell(model.vertex_shell_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::WireShell(i) => {
+                CompoundItemDefinitionRefView::WireShell(model.wire_shell_arena.get(i.0))
+            }
+            CompoundItemDefinitionRef::ListRepresentationItem(v) => {
+                CompoundItemDefinitionRefView::ListRepresentationItem(v)
+            }
+            CompoundItemDefinitionRef::SetRepresentationItem(v) => {
+                CompoundItemDefinitionRefView::SetRepresentationItem(v)
+            }
+            CompoundItemDefinitionRef::Complex(i) => {
+                CompoundItemDefinitionRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
 pub enum ConfigurationDesignRefView<'m> {
     ConfigurationDesign(&'m ConfigurationDesign),
 }
@@ -5420,6 +6192,38 @@ impl DatumRef {
             DatumRef::CommonDatum(i) => EntityKey::CommonDatum(*i),
             DatumRef::Datum(i) => EntityKey::Datum(*i),
             DatumRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum DatumOrCommonDatumRefView<'m> {
+    CommonDatum(&'m CommonDatum),
+    Datum(&'m Datum),
+    DatumReferenceElement(&'m DatumReferenceElement),
+    CommonDatumList(&'m [DatumReferenceElementRef]),
+    Complex(&'m ComplexEntity),
+}
+impl DatumOrCommonDatumRef {
+    pub fn resolve<'m>(&'m self, model: &'m StepModel) -> DatumOrCommonDatumRefView<'m> {
+        match self {
+            DatumOrCommonDatumRef::CommonDatum(i) => {
+                DatumOrCommonDatumRefView::CommonDatum(model.common_datum_arena.get(i.0))
+            }
+            DatumOrCommonDatumRef::Datum(i) => {
+                DatumOrCommonDatumRefView::Datum(model.datum_arena.get(i.0))
+            }
+            DatumOrCommonDatumRef::DatumReferenceElement(i) => {
+                DatumOrCommonDatumRefView::DatumReferenceElement(
+                    model.datum_reference_element_arena.get(i.0),
+                )
+            }
+            DatumOrCommonDatumRef::CommonDatumList(v) => {
+                DatumOrCommonDatumRefView::CommonDatumList(v)
+            }
+            DatumOrCommonDatumRef::Complex(i) => {
+                DatumOrCommonDatumRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
 }
@@ -14620,6 +15424,321 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
 }
 
 #[derive(Clone, Copy, Debug)]
+pub enum ItemIdentifiedRepresentationUsageSelectRefView<'m> {
+    AdvancedFace(&'m AdvancedFace),
+    AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
+    AnnotationOccurrence(&'m AnnotationOccurrence),
+    AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
+    AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(
+        &'m AnnotationPlaceholderOccurrenceWithLeaderLine,
+    ),
+    AnnotationPlane(&'m AnnotationPlane),
+    AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
+    AnnotationText(&'m AnnotationText),
+    AnnotationTextCharacter(&'m AnnotationTextCharacter),
+    AnnotationTextOccurrence(&'m AnnotationTextOccurrence),
+    AnnotationToAnnotationLeaderLine(&'m AnnotationToAnnotationLeaderLine),
+    AnnotationToModelLeaderLine(&'m AnnotationToModelLeaderLine),
+    ApllPoint(&'m ApllPoint),
+    ApllPointWithSurface(&'m ApllPointWithSurface),
+    AuxiliaryLeaderLine(&'m AuxiliaryLeaderLine),
+    Axis1Placement(&'m Axis1Placement),
+    Axis2Placement2d(&'m Axis2Placement2d),
+    Axis2Placement3d(&'m Axis2Placement3d),
+    BSplineCurve(&'m BSplineCurve),
+    BSplineCurveWithKnots(&'m BSplineCurveWithKnots),
+    BSplineSurface(&'m BSplineSurface),
+    BSplineSurfaceWithKnots(&'m BSplineSurfaceWithKnots),
+    BezierCurve(&'m BezierCurve),
+    BezierSurface(&'m BezierSurface),
+    BoundedCurve(&'m BoundedCurve),
+    BoundedPcurve(&'m BoundedPcurve),
+    BoundedSurface(&'m BoundedSurface),
+    BoundedSurfaceCurve(&'m BoundedSurfaceCurve),
+    BrepWithVoids(&'m BrepWithVoids),
+    CameraImage(&'m CameraImage),
+    CameraImage3dWithScale(&'m CameraImage3dWithScale),
+    CameraModel(&'m CameraModel),
+    CameraModelD3(&'m CameraModelD3),
+    CameraModelD3MultiClipping(&'m CameraModelD3MultiClipping),
+    CameraModelD3WithHlhsr(&'m CameraModelD3WithHlhsr),
+    CartesianPoint(&'m CartesianPoint),
+    Circle(&'m Circle),
+    ClosedShell(&'m ClosedShell),
+    ComplexTriangulatedFace(&'m ComplexTriangulatedFace),
+    ComplexTriangulatedSurfaceSet(&'m ComplexTriangulatedSurfaceSet),
+    CompositeCurve(&'m CompositeCurve),
+    CompositeText(&'m CompositeText),
+    CompoundRepresentationItem(&'m CompoundRepresentationItem),
+    Conic(&'m Conic),
+    ConicalSurface(&'m ConicalSurface),
+    ConnectedFaceSet(&'m ConnectedFaceSet),
+    ContextDependentOverRidingStyledItem(&'m ContextDependentOverRidingStyledItem),
+    CoordinatesList(&'m CoordinatesList),
+    Curve(&'m Curve),
+    CylindricalSurface(&'m CylindricalSurface),
+    DefinedCharacterGlyph(&'m DefinedCharacterGlyph),
+    DefinedSymbol(&'m DefinedSymbol),
+    DegenerateToroidalSurface(&'m DegenerateToroidalSurface),
+    DescriptiveRepresentationItem(&'m DescriptiveRepresentationItem),
+    Direction(&'m Direction),
+    DraughtingAnnotationOccurrence(&'m DraughtingAnnotationOccurrence),
+    DraughtingCallout(&'m DraughtingCallout),
+    Edge(&'m Edge),
+    EdgeCurve(&'m EdgeCurve),
+    EdgeLoop(&'m EdgeLoop),
+    ElementarySurface(&'m ElementarySurface),
+    Ellipse(&'m Ellipse),
+    ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
+    ExternallyDefinedTileStyle(&'m ExternallyDefinedTileStyle),
+    Face(&'m Face),
+    FaceBound(&'m FaceBound),
+    FaceOuterBound(&'m FaceOuterBound),
+    FaceSurface(&'m FaceSurface),
+    FillAreaStyleHatching(&'m FillAreaStyleHatching),
+    FillAreaStyleTileColouredRegion(&'m FillAreaStyleTileColouredRegion),
+    FillAreaStyleTileCurveWithStyle(&'m FillAreaStyleTileCurveWithStyle),
+    FillAreaStyleTileSymbolWithStyle(&'m FillAreaStyleTileSymbolWithStyle),
+    FillAreaStyleTiles(&'m FillAreaStyleTiles),
+    GeometricCurveSet(&'m GeometricCurveSet),
+    GeometricRepresentationItem(&'m GeometricRepresentationItem),
+    GeometricSet(&'m GeometricSet),
+    Hyperbola(&'m Hyperbola),
+    IntegerRepresentationItem(&'m IntegerRepresentationItem),
+    IntersectionCurve(&'m IntersectionCurve),
+    LeaderCurve(&'m LeaderCurve),
+    LeaderDirectedCallout(&'m LeaderDirectedCallout),
+    LeaderTerminator(&'m LeaderTerminator),
+    Line(&'m Line),
+    Loop(&'m Loop),
+    ManifoldSolidBrep(&'m ManifoldSolidBrep),
+    MappedItem(&'m MappedItem),
+    MeasureRepresentationItem(&'m MeasureRepresentationItem),
+    OffsetSurface(&'m OffsetSurface),
+    OneDirectionRepeatFactor(&'m OneDirectionRepeatFactor),
+    OpenShell(&'m OpenShell),
+    OrientedClosedShell(&'m OrientedClosedShell),
+    OrientedEdge(&'m OrientedEdge),
+    OverRidingStyledItem(&'m OverRidingStyledItem),
+    Parabola(&'m Parabola),
+    Path(&'m Path),
+    Pcurve(&'m Pcurve),
+    Placement(&'m Placement),
+    PlanarBox(&'m PlanarBox),
+    PlanarExtent(&'m PlanarExtent),
+    Plane(&'m Plane),
+    Point(&'m Point),
+    PolyLoop(&'m PolyLoop),
+    Polyline(&'m Polyline),
+    QualifiedRepresentationItem(&'m QualifiedRepresentationItem),
+    QuasiUniformCurve(&'m QuasiUniformCurve),
+    QuasiUniformSurface(&'m QuasiUniformSurface),
+    RationalBSplineCurve(&'m RationalBSplineCurve),
+    RationalBSplineSurface(&'m RationalBSplineSurface),
+    RealRepresentationItem(&'m RealRepresentationItem),
+    RepositionedTessellatedItem(&'m RepositionedTessellatedItem),
+    RepresentationItem(&'m RepresentationItem),
+    SeamCurve(&'m SeamCurve),
+    ShellBasedSurfaceModel(&'m ShellBasedSurfaceModel),
+    SolidModel(&'m SolidModel),
+    SphericalSurface(&'m SphericalSurface),
+    StyledItem(&'m StyledItem),
+    Surface(&'m Surface),
+    SurfaceCurve(&'m SurfaceCurve),
+    SurfaceOfLinearExtrusion(&'m SurfaceOfLinearExtrusion),
+    SurfaceOfRevolution(&'m SurfaceOfRevolution),
+    SweptSurface(&'m SweptSurface),
+    SymbolTarget(&'m SymbolTarget),
+    TerminatorSymbol(&'m TerminatorSymbol),
+    TessellatedAnnotationOccurrence(&'m TessellatedAnnotationOccurrence),
+    TessellatedCurveSet(&'m TessellatedCurveSet),
+    TessellatedFace(&'m TessellatedFace),
+    TessellatedGeometricSet(&'m TessellatedGeometricSet),
+    TessellatedItem(&'m TessellatedItem),
+    TessellatedShell(&'m TessellatedShell),
+    TessellatedSolid(&'m TessellatedSolid),
+    TessellatedStructuredItem(&'m TessellatedStructuredItem),
+    TessellatedSurfaceSet(&'m TessellatedSurfaceSet),
+    TextLiteral(&'m TextLiteral),
+    TopologicalRepresentationItem(&'m TopologicalRepresentationItem),
+    ToroidalSurface(&'m ToroidalSurface),
+    TrimmedCurve(&'m TrimmedCurve),
+    TwoDirectionRepeatFactor(&'m TwoDirectionRepeatFactor),
+    UniformCurve(&'m UniformCurve),
+    UniformSurface(&'m UniformSurface),
+    ValueRepresentationItem(&'m ValueRepresentationItem),
+    Vector(&'m Vector),
+    Vertex(&'m Vertex),
+    VertexLoop(&'m VertexLoop),
+    VertexPoint(&'m VertexPoint),
+    VertexShell(&'m VertexShell),
+    WireShell(&'m WireShell),
+    ListRepresentationItem(&'m [RepresentationItemRef]),
+    SetRepresentationItem(&'m [RepresentationItemRef]),
+    Complex(&'m ComplexEntity),
+}
+impl ItemIdentifiedRepresentationUsageSelectRef {
+    pub fn resolve<'m>(
+        &'m self,
+        model: &'m StepModel,
+    ) -> ItemIdentifiedRepresentationUsageSelectRefView<'m> {
+        match self {
+            ItemIdentifiedRepresentationUsageSelectRef::AdvancedFace(i) => ItemIdentifiedRepresentationUsageSelectRefView::AdvancedFace(model.advanced_face_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationCurveOccurrence(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationCurveOccurrence(model.annotation_curve_occurrence_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationOccurrence(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationOccurrence(model.annotation_occurrence_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderLeaderLine(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationPlaceholderLeaderLine(model.annotation_placeholder_leader_line_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderOccurrence(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationPlaceholderOccurrence(model.annotation_placeholder_occurrence_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationPlaceholderOccurrenceWithLeaderLine(model.annotation_placeholder_occurrence_with_leader_line_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlane(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationPlane(model.annotation_plane_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationSymbolOccurrence(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationSymbolOccurrence(model.annotation_symbol_occurrence_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationText(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationText(model.annotation_text_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationTextCharacter(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationTextCharacter(model.annotation_text_character_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationTextOccurrence(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationTextOccurrence(model.annotation_text_occurrence_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationToAnnotationLeaderLine(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationToAnnotationLeaderLine(model.annotation_to_annotation_leader_line_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationToModelLeaderLine(i) => ItemIdentifiedRepresentationUsageSelectRefView::AnnotationToModelLeaderLine(model.annotation_to_model_leader_line_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ApllPoint(i) => ItemIdentifiedRepresentationUsageSelectRefView::ApllPoint(model.apll_point_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ApllPointWithSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::ApllPointWithSurface(model.apll_point_with_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::AuxiliaryLeaderLine(i) => ItemIdentifiedRepresentationUsageSelectRefView::AuxiliaryLeaderLine(model.auxiliary_leader_line_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Axis1Placement(i) => ItemIdentifiedRepresentationUsageSelectRefView::Axis1Placement(model.axis1_placement_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Axis2Placement2d(i) => ItemIdentifiedRepresentationUsageSelectRefView::Axis2Placement2d(model.axis2_placement2d_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Axis2Placement3d(i) => ItemIdentifiedRepresentationUsageSelectRefView::Axis2Placement3d(model.axis2_placement3d_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BSplineCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::BSplineCurve(model.b_spline_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BSplineCurveWithKnots(i) => ItemIdentifiedRepresentationUsageSelectRefView::BSplineCurveWithKnots(model.b_spline_curve_with_knots_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BSplineSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::BSplineSurface(model.b_spline_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BSplineSurfaceWithKnots(i) => ItemIdentifiedRepresentationUsageSelectRefView::BSplineSurfaceWithKnots(model.b_spline_surface_with_knots_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BezierCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::BezierCurve(model.bezier_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BezierSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::BezierSurface(model.bezier_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BoundedCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::BoundedCurve(model.bounded_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BoundedPcurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::BoundedPcurve(model.bounded_pcurve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BoundedSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::BoundedSurface(model.bounded_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BoundedSurfaceCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::BoundedSurfaceCurve(model.bounded_surface_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::BrepWithVoids(i) => ItemIdentifiedRepresentationUsageSelectRefView::BrepWithVoids(model.brep_with_voids_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraImage(i) => ItemIdentifiedRepresentationUsageSelectRefView::CameraImage(model.camera_image_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraImage3dWithScale(i) => ItemIdentifiedRepresentationUsageSelectRefView::CameraImage3dWithScale(model.camera_image3d_with_scale_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraModel(i) => ItemIdentifiedRepresentationUsageSelectRefView::CameraModel(model.camera_model_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3(i) => ItemIdentifiedRepresentationUsageSelectRefView::CameraModelD3(model.camera_model_d3_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3MultiClipping(i) => ItemIdentifiedRepresentationUsageSelectRefView::CameraModelD3MultiClipping(model.camera_model_d3_multi_clipping_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3WithHlhsr(i) => ItemIdentifiedRepresentationUsageSelectRefView::CameraModelD3WithHlhsr(model.camera_model_d3_with_hlhsr_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CartesianPoint(i) => ItemIdentifiedRepresentationUsageSelectRefView::CartesianPoint(model.cartesian_point_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Circle(i) => ItemIdentifiedRepresentationUsageSelectRefView::Circle(model.circle_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ClosedShell(i) => ItemIdentifiedRepresentationUsageSelectRefView::ClosedShell(model.closed_shell_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ComplexTriangulatedFace(i) => ItemIdentifiedRepresentationUsageSelectRefView::ComplexTriangulatedFace(model.complex_triangulated_face_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ComplexTriangulatedSurfaceSet(i) => ItemIdentifiedRepresentationUsageSelectRefView::ComplexTriangulatedSurfaceSet(model.complex_triangulated_surface_set_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CompositeCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::CompositeCurve(model.composite_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CompositeText(i) => ItemIdentifiedRepresentationUsageSelectRefView::CompositeText(model.composite_text_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CompoundRepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::CompoundRepresentationItem(model.compound_representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Conic(i) => ItemIdentifiedRepresentationUsageSelectRefView::Conic(model.conic_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ConicalSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::ConicalSurface(model.conical_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ConnectedFaceSet(i) => ItemIdentifiedRepresentationUsageSelectRefView::ConnectedFaceSet(model.connected_face_set_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ContextDependentOverRidingStyledItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::ContextDependentOverRidingStyledItem(model.context_dependent_over_riding_styled_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CoordinatesList(i) => ItemIdentifiedRepresentationUsageSelectRefView::CoordinatesList(model.coordinates_list_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Curve(i) => ItemIdentifiedRepresentationUsageSelectRefView::Curve(model.curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::CylindricalSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::CylindricalSurface(model.cylindrical_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::DefinedCharacterGlyph(i) => ItemIdentifiedRepresentationUsageSelectRefView::DefinedCharacterGlyph(model.defined_character_glyph_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::DefinedSymbol(i) => ItemIdentifiedRepresentationUsageSelectRefView::DefinedSymbol(model.defined_symbol_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::DegenerateToroidalSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::DegenerateToroidalSurface(model.degenerate_toroidal_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::DescriptiveRepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::DescriptiveRepresentationItem(model.descriptive_representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Direction(i) => ItemIdentifiedRepresentationUsageSelectRefView::Direction(model.direction_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::DraughtingAnnotationOccurrence(i) => ItemIdentifiedRepresentationUsageSelectRefView::DraughtingAnnotationOccurrence(model.draughting_annotation_occurrence_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::DraughtingCallout(i) => ItemIdentifiedRepresentationUsageSelectRefView::DraughtingCallout(model.draughting_callout_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Edge(i) => ItemIdentifiedRepresentationUsageSelectRefView::Edge(model.edge_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::EdgeCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::EdgeCurve(model.edge_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::EdgeLoop(i) => ItemIdentifiedRepresentationUsageSelectRefView::EdgeLoop(model.edge_loop_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ElementarySurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::ElementarySurface(model.elementary_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Ellipse(i) => ItemIdentifiedRepresentationUsageSelectRefView::Ellipse(model.ellipse_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ExternallyDefinedHatchStyle(i) => ItemIdentifiedRepresentationUsageSelectRefView::ExternallyDefinedHatchStyle(model.externally_defined_hatch_style_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ExternallyDefinedTileStyle(i) => ItemIdentifiedRepresentationUsageSelectRefView::ExternallyDefinedTileStyle(model.externally_defined_tile_style_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Face(i) => ItemIdentifiedRepresentationUsageSelectRefView::Face(model.face_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::FaceBound(i) => ItemIdentifiedRepresentationUsageSelectRefView::FaceBound(model.face_bound_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::FaceOuterBound(i) => ItemIdentifiedRepresentationUsageSelectRefView::FaceOuterBound(model.face_outer_bound_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::FaceSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::FaceSurface(model.face_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleHatching(i) => ItemIdentifiedRepresentationUsageSelectRefView::FillAreaStyleHatching(model.fill_area_style_hatching_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTileColouredRegion(i) => ItemIdentifiedRepresentationUsageSelectRefView::FillAreaStyleTileColouredRegion(model.fill_area_style_tile_coloured_region_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTileCurveWithStyle(i) => ItemIdentifiedRepresentationUsageSelectRefView::FillAreaStyleTileCurveWithStyle(model.fill_area_style_tile_curve_with_style_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTileSymbolWithStyle(i) => ItemIdentifiedRepresentationUsageSelectRefView::FillAreaStyleTileSymbolWithStyle(model.fill_area_style_tile_symbol_with_style_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTiles(i) => ItemIdentifiedRepresentationUsageSelectRefView::FillAreaStyleTiles(model.fill_area_style_tiles_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::GeometricCurveSet(i) => ItemIdentifiedRepresentationUsageSelectRefView::GeometricCurveSet(model.geometric_curve_set_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::GeometricRepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::GeometricRepresentationItem(model.geometric_representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::GeometricSet(i) => ItemIdentifiedRepresentationUsageSelectRefView::GeometricSet(model.geometric_set_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Hyperbola(i) => ItemIdentifiedRepresentationUsageSelectRefView::Hyperbola(model.hyperbola_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::IntegerRepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::IntegerRepresentationItem(model.integer_representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::IntersectionCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::IntersectionCurve(model.intersection_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::LeaderCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::LeaderCurve(model.leader_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::LeaderDirectedCallout(i) => ItemIdentifiedRepresentationUsageSelectRefView::LeaderDirectedCallout(model.leader_directed_callout_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::LeaderTerminator(i) => ItemIdentifiedRepresentationUsageSelectRefView::LeaderTerminator(model.leader_terminator_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Line(i) => ItemIdentifiedRepresentationUsageSelectRefView::Line(model.line_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Loop(i) => ItemIdentifiedRepresentationUsageSelectRefView::Loop(model.loop_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ManifoldSolidBrep(i) => ItemIdentifiedRepresentationUsageSelectRefView::ManifoldSolidBrep(model.manifold_solid_brep_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::MappedItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::MappedItem(model.mapped_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::MeasureRepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::MeasureRepresentationItem(model.measure_representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::OffsetSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::OffsetSurface(model.offset_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::OneDirectionRepeatFactor(i) => ItemIdentifiedRepresentationUsageSelectRefView::OneDirectionRepeatFactor(model.one_direction_repeat_factor_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::OpenShell(i) => ItemIdentifiedRepresentationUsageSelectRefView::OpenShell(model.open_shell_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::OrientedClosedShell(i) => ItemIdentifiedRepresentationUsageSelectRefView::OrientedClosedShell(model.oriented_closed_shell_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::OrientedEdge(i) => ItemIdentifiedRepresentationUsageSelectRefView::OrientedEdge(model.oriented_edge_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::OverRidingStyledItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::OverRidingStyledItem(model.over_riding_styled_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Parabola(i) => ItemIdentifiedRepresentationUsageSelectRefView::Parabola(model.parabola_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Path(i) => ItemIdentifiedRepresentationUsageSelectRefView::Path(model.path_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Pcurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::Pcurve(model.pcurve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Placement(i) => ItemIdentifiedRepresentationUsageSelectRefView::Placement(model.placement_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::PlanarBox(i) => ItemIdentifiedRepresentationUsageSelectRefView::PlanarBox(model.planar_box_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::PlanarExtent(i) => ItemIdentifiedRepresentationUsageSelectRefView::PlanarExtent(model.planar_extent_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Plane(i) => ItemIdentifiedRepresentationUsageSelectRefView::Plane(model.plane_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Point(i) => ItemIdentifiedRepresentationUsageSelectRefView::Point(model.point_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::PolyLoop(i) => ItemIdentifiedRepresentationUsageSelectRefView::PolyLoop(model.poly_loop_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Polyline(i) => ItemIdentifiedRepresentationUsageSelectRefView::Polyline(model.polyline_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::QualifiedRepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::QualifiedRepresentationItem(model.qualified_representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::QuasiUniformCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::QuasiUniformCurve(model.quasi_uniform_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::QuasiUniformSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::QuasiUniformSurface(model.quasi_uniform_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::RationalBSplineCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::RationalBSplineCurve(model.rational_b_spline_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::RationalBSplineSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::RationalBSplineSurface(model.rational_b_spline_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::RealRepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::RealRepresentationItem(model.real_representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::RepositionedTessellatedItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::RepositionedTessellatedItem(model.repositioned_tessellated_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::RepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::RepresentationItem(model.representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::SeamCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::SeamCurve(model.seam_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ShellBasedSurfaceModel(i) => ItemIdentifiedRepresentationUsageSelectRefView::ShellBasedSurfaceModel(model.shell_based_surface_model_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::SolidModel(i) => ItemIdentifiedRepresentationUsageSelectRefView::SolidModel(model.solid_model_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::SphericalSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::SphericalSurface(model.spherical_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::StyledItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::StyledItem(model.styled_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Surface(i) => ItemIdentifiedRepresentationUsageSelectRefView::Surface(model.surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::SurfaceCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::SurfaceCurve(model.surface_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::SurfaceOfLinearExtrusion(i) => ItemIdentifiedRepresentationUsageSelectRefView::SurfaceOfLinearExtrusion(model.surface_of_linear_extrusion_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::SurfaceOfRevolution(i) => ItemIdentifiedRepresentationUsageSelectRefView::SurfaceOfRevolution(model.surface_of_revolution_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::SweptSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::SweptSurface(model.swept_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::SymbolTarget(i) => ItemIdentifiedRepresentationUsageSelectRefView::SymbolTarget(model.symbol_target_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TerminatorSymbol(i) => ItemIdentifiedRepresentationUsageSelectRefView::TerminatorSymbol(model.terminator_symbol_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedAnnotationOccurrence(i) => ItemIdentifiedRepresentationUsageSelectRefView::TessellatedAnnotationOccurrence(model.tessellated_annotation_occurrence_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedCurveSet(i) => ItemIdentifiedRepresentationUsageSelectRefView::TessellatedCurveSet(model.tessellated_curve_set_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedFace(i) => ItemIdentifiedRepresentationUsageSelectRefView::TessellatedFace(model.tessellated_face_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedGeometricSet(i) => ItemIdentifiedRepresentationUsageSelectRefView::TessellatedGeometricSet(model.tessellated_geometric_set_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::TessellatedItem(model.tessellated_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedShell(i) => ItemIdentifiedRepresentationUsageSelectRefView::TessellatedShell(model.tessellated_shell_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedSolid(i) => ItemIdentifiedRepresentationUsageSelectRefView::TessellatedSolid(model.tessellated_solid_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedStructuredItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::TessellatedStructuredItem(model.tessellated_structured_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedSurfaceSet(i) => ItemIdentifiedRepresentationUsageSelectRefView::TessellatedSurfaceSet(model.tessellated_surface_set_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TextLiteral(i) => ItemIdentifiedRepresentationUsageSelectRefView::TextLiteral(model.text_literal_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TopologicalRepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::TopologicalRepresentationItem(model.topological_representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ToroidalSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::ToroidalSurface(model.toroidal_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TrimmedCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::TrimmedCurve(model.trimmed_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::TwoDirectionRepeatFactor(i) => ItemIdentifiedRepresentationUsageSelectRefView::TwoDirectionRepeatFactor(model.two_direction_repeat_factor_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::UniformCurve(i) => ItemIdentifiedRepresentationUsageSelectRefView::UniformCurve(model.uniform_curve_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::UniformSurface(i) => ItemIdentifiedRepresentationUsageSelectRefView::UniformSurface(model.uniform_surface_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ValueRepresentationItem(i) => ItemIdentifiedRepresentationUsageSelectRefView::ValueRepresentationItem(model.value_representation_item_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Vector(i) => ItemIdentifiedRepresentationUsageSelectRefView::Vector(model.vector_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::Vertex(i) => ItemIdentifiedRepresentationUsageSelectRefView::Vertex(model.vertex_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::VertexLoop(i) => ItemIdentifiedRepresentationUsageSelectRefView::VertexLoop(model.vertex_loop_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::VertexPoint(i) => ItemIdentifiedRepresentationUsageSelectRefView::VertexPoint(model.vertex_point_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::VertexShell(i) => ItemIdentifiedRepresentationUsageSelectRefView::VertexShell(model.vertex_shell_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::WireShell(i) => ItemIdentifiedRepresentationUsageSelectRefView::WireShell(model.wire_shell_arena.get(i.0)),
+            ItemIdentifiedRepresentationUsageSelectRef::ListRepresentationItem(v) => ItemIdentifiedRepresentationUsageSelectRefView::ListRepresentationItem(v),
+            ItemIdentifiedRepresentationUsageSelectRef::SetRepresentationItem(v) => ItemIdentifiedRepresentationUsageSelectRefView::SetRepresentationItem(v),
+            ItemIdentifiedRepresentationUsageSelectRef::Complex(i) => ItemIdentifiedRepresentationUsageSelectRefView::Complex(model.complex_entity_arena.get(i.0)),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
 pub enum LayeredItemRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
@@ -22989,6 +24108,40 @@ impl ToleranceZoneTargetRef {
                 EntityKey::UnequallyDisposedGeometricTolerance(*i)
             }
             ToleranceZoneTargetRef::Complex(i) => EntityKey::ComplexEntity(*i),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum TransformationRefView<'m> {
+    FunctionallyDefinedTransformation(&'m FunctionallyDefinedTransformation),
+    ItemDefinedTransformation(&'m ItemDefinedTransformation),
+    ListItemDefinedTransformation(&'m [ItemDefinedTransformationRef]),
+    SetItemDefinedTransformation(&'m [ItemDefinedTransformationRef]),
+    Complex(&'m ComplexEntity),
+}
+impl TransformationRef {
+    pub fn resolve<'m>(&'m self, model: &'m StepModel) -> TransformationRefView<'m> {
+        match self {
+            TransformationRef::FunctionallyDefinedTransformation(i) => {
+                TransformationRefView::FunctionallyDefinedTransformation(
+                    model.functionally_defined_transformation_arena.get(i.0),
+                )
+            }
+            TransformationRef::ItemDefinedTransformation(i) => {
+                TransformationRefView::ItemDefinedTransformation(
+                    model.item_defined_transformation_arena.get(i.0),
+                )
+            }
+            TransformationRef::ListItemDefinedTransformation(v) => {
+                TransformationRefView::ListItemDefinedTransformation(v)
+            }
+            TransformationRef::SetItemDefinedTransformation(v) => {
+                TransformationRefView::SetItemDefinedTransformation(v)
+            }
+            TransformationRef::Complex(i) => {
+                TransformationRefView::Complex(model.complex_entity_arena.get(i.0))
+            }
         }
     }
 }

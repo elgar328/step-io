@@ -68,3 +68,33 @@ fn entity_keys_name_their_keyword() {
     );
     assert_eq!(EntityKey::ComplexEntity(ComplexEntityId(0)).keyword(), None);
 }
+
+/// An aggregate member of a SELECT resolves to its elements, the model's
+/// references.
+#[test]
+fn resolves_an_aggregate_member_to_its_elements() {
+    use step_io::model::{CompoundItemDefinitionRefView, CompoundRepresentationItemId};
+
+    let body =
+        format!("{BODY}#5=COMPOUND_REPRESENTATION_ITEM('c',SET_REPRESENTATION_ITEM((#1,#4)));\n");
+    let src = format!("{HEADER}{body}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+
+    let item = &model[CompoundRepresentationItemId(0)];
+    let CompoundItemDefinitionRefView::SetRepresentationItem(elements) =
+        item.item_element.resolve(&model)
+    else {
+        panic!("expected a set of representation items");
+    };
+    let targets: Vec<_> = elements
+        .iter()
+        .map(step_io::model::RepresentationItemRef::entity_key)
+        .collect();
+    assert_eq!(
+        targets,
+        [
+            step_io::EntityKey::CartesianPoint(step_io::model::CartesianPointId(0)),
+            step_io::EntityKey::Line(step_io::model::LineId(0)),
+        ]
+    );
+}

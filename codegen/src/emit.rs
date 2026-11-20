@@ -623,10 +623,12 @@ pub fn emit_walk(ir: &ModelIr) -> String {
     s
 }
 
-/// Emit `resolve.rs`: forward reference resolution. For every **pure
-/// entity-reference** enum (only `simple_arms`, no aggregate/enum/scalar select
-/// arms), emit a `{R}View<'m>` (the borrowed concrete target per variant) and
-/// `{R}::resolve(model) -> {R}View`. This is the forward dual of `RefGraph`'s
+/// Emit `resolve.rs`: forward reference resolution. For every
+/// entity-reference enum (`simple_arms`, possibly aggregate arms, no
+/// enum/scalar select arms), emit a `{R}View<'m>` (the borrowed concrete target
+/// per variant, an aggregate arm's elements as a slice) and
+/// `{R}::resolve(model) -> {R}View`, plus `entity_key()` where every arm is a
+/// single entity. This is the forward dual of `RefGraph`'s
 /// backward `referrers`: follow a reference you hold to the object it points at,
 /// uniformly across every navigation ref — so consumers (the kernel, handles)
 /// never hand-write the per-variant `match … => model.<arena>.get(..)` switch.
@@ -634,14 +636,11 @@ pub fn emit_resolvers(ir: &ModelIr) -> String {
     let mut s = String::from(HEADER);
     s.push_str("use super::model::*;\n\n");
     for re in ir.ref_enums.values() {
-        // Pure entity refs only: a non-empty simple-arm set and no aggregate /
-        // enum / scalar select arms (those hold Vec/enum/scalar, not a single
-        // entity — a different view shape, deferred).
-        if re.simple_arms.is_empty()
-            || !re.aggregate.is_empty()
-            || !re.enum_arms.is_empty()
-            || !re.scalar_arms.is_empty()
-        {
+        // Entity refs, and aggregate members of them: a non-empty simple-arm
+        // set and no enum / scalar select arms (those hold an enum or scalar,
+        // not an entity — a different view shape, deferred). An aggregate arm
+        // views as its elements, each resolved in turn.
+        if re.simple_arms.is_empty() || !re.enum_arms.is_empty() || !re.scalar_arms.is_empty() {
             continue;
         }
         let r = &re.rust;
@@ -649,14 +648,23 @@ pub fn emit_resolvers(ir: &ModelIr) -> String {
         for (variant, target) in &re.simple_arms {
             writeln!(s, "    {variant}(&'m {target}),").unwrap();
         }
+        for (variant, elem, _) in &re.aggregate {
+            writeln!(s, "    {variant}(&'m [{elem}]),").unwrap();
+        }
         if re.has_complex {
             writeln!(s, "    Complex(&'m ComplexEntity),").unwrap();
         }
         writeln!(s, "}}").unwrap();
         writeln!(s, "impl {r} {{").unwrap();
+        // An aggregate arm's elements live in the value itself, not the model.
+        let this = if re.aggregate.is_empty() {
+            "&self"
+        } else {
+            "&'m self"
+        };
         writeln!(
             s,
-            "    pub fn resolve<'m>(&self, model: &'m StepModel) -> {r}View<'m> {{"
+            "    pub fn resolve<'m>({this}, model: &'m StepModel) -> {r}View<'m> {{"
         )
         .unwrap();
         writeln!(s, "        match self {{").unwrap();
@@ -668,6 +676,9 @@ pub fn emit_resolvers(ir: &ModelIr) -> String {
             )
             .unwrap();
         }
+        for (variant, _, _) in &re.aggregate {
+            writeln!(s, "            {r}::{variant}(v) => {r}View::{variant}(v),").unwrap();
+        }
         if re.has_complex {
             writeln!(
                 s,
@@ -677,6 +688,11 @@ pub fn emit_resolvers(ir: &ModelIr) -> String {
         }
         writeln!(s, "        }}").unwrap();
         writeln!(s, "    }}").unwrap();
+        if !re.aggregate.is_empty() {
+            // An aggregate value is no single entity.
+            writeln!(s, "}}\n").unwrap();
+            continue;
+        }
         // entity_key(): the ref's target entity as an EntityKey (identity key for
         // maps / dedup). Same per-arm mapping as the writer's `deps_*`.
         writeln!(s, "    pub fn entity_key(&self) -> EntityKey {{").unwrap();

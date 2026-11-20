@@ -74,6 +74,31 @@ impl<'a> Resolver<'a> {
         })
     }
 
+    /// Members of the SELECT aliased by `alias` with every nested SELECT
+    /// member replaced by its own members (recursively, `narrow` applied at
+    /// each level), first occurrence kept. Part 21 writes a SELECT value as its
+    /// innermost named type, so a nested SELECT's aggregate, enum and scalar
+    /// members are written the same as direct ones. `None` when `alias` is not
+    /// a `SELECT(...)` type.
+    pub fn leaf_members(&self, alias: &str) -> Option<Vec<&'a str>> {
+        let mut out = Vec::new();
+        self.push_leaf_members(alias, &mut out, 0)?;
+        Some(out)
+    }
+
+    fn push_leaf_members(&self, alias: &str, out: &mut Vec<&'a str>, depth: u32) -> Option<()> {
+        assert!(
+            depth < MAX_DEPTH,
+            "leaf_members: `{alias}` too deep (cycle?)"
+        );
+        for m in self.select_members(alias)? {
+            if self.push_leaf_members(m, out, depth + 1).is_none() && !out.contains(&m) {
+                out.push(m);
+            }
+        }
+        Some(())
+    }
+
     /// True when `ty` resolves to an entity reference (encodes as a bare `#N`).
     pub fn ref_like(&self, ty: &str, depth: u32) -> bool {
         assert!(depth < MAX_DEPTH, "ref_like: ty `{ty}` too deep (cycle?)");
@@ -211,13 +236,15 @@ impl<'a> Resolver<'a> {
                 if self.is_measure_select(&members, depth + 1) {
                     return Kind::MeasureSelect(t.to_string());
                 }
-                // Discriminated ref over the SELECT alias when every member is an
-                // entity ref, an aggregate-of-entity (SELECT(X, LIST OF X, ..)),
-                // an ENUM (SELECT(X, some_enum)), or a named scalar (SELECT(X,
+                // Discriminated ref over the SELECT alias when every member,
+                // nested SELECTs expanded, is an entity ref, an
+                // aggregate-of-entity (SELECT(X, LIST OF X, ..)), an ENUM
+                // (SELECT(X, some_enum)), or a named scalar (SELECT(X,
                 // parameter_value)). model_ir splits single/aggregate/enum/scalar
                 // arms. Reached only after the all-string/all-numeric checks, so a
                 // scalar member here means an entity is mixed in.
-                if members.iter().all(|m| {
+                let leaves = self.leaf_members(t).unwrap_or_default();
+                if leaves.iter().all(|m| {
                     self.ref_like(m, 0)
                         || self.agg_of_ref(m)
                         || self.enum_alias(m, 0).is_some()
