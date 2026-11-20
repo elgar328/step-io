@@ -228,15 +228,21 @@ fn report_closure_change(matrix: &str, closure: &BTreeSet<String>) {
     let Ok(text) = std::fs::read_to_string(matrix) else {
         return;
     };
+    let cols = |l: &str| -> Vec<String> { l.split('|').map(|c| c.trim().to_string()).collect() };
+    // The read column's position, from the entity table's header row.
+    let Some(read) = text
+        .lines()
+        .find(|l| l.starts_with("| Entity |"))
+        .and_then(|h| cols(h).iter().position(|c| c == "step-io (read)"))
+    else {
+        return;
+    };
     let before: BTreeSet<String> = text
         .lines()
         .filter_map(|l| {
-            let mut cols = l.split('|').map(str::trim);
-            cols.next();
-            let name = cols.next()?.strip_prefix('`')?.strip_suffix('`')?;
-            let cols: Vec<&str> = cols.collect();
-            // `| name | 6 schema columns | read | write |`
-            (cols.len() >= 9 && cols[6] == "o").then(|| name.to_string())
+            let cols = cols(l);
+            let name = cols.get(1)?.strip_prefix('`')?.strip_suffix('`')?;
+            (cols.get(read).map(String::as_str) == Some("o")).then(|| name.to_string())
         })
         .collect();
     let added: Vec<&String> = closure.difference(&before).collect();

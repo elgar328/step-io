@@ -282,6 +282,15 @@ pub struct ProfileOneof {
 #[derive(Deserialize)]
 pub struct ProfileMeta {
     pub file_schema: Vec<String>,
+    pub apd: ProfileApd,
+}
+
+/// The output schema's application protocol definition values.
+#[derive(Deserialize)]
+pub struct ProfileApd {
+    pub status: String,
+    pub name: String,
+    pub year: i64,
 }
 
 /// Inner element of a `LIST/SET/BAG/ARRAY [n:m] OF X` aggregation (bounds

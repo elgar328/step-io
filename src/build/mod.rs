@@ -140,6 +140,7 @@ use std::collections::HashSet;
 use crate::Orientation;
 use crate::generated::author::{Ap242Author, AuthorError};
 use crate::generated::model as m;
+use crate::generated::schema;
 use crate::header::FileHeader;
 use crate::scene::{NurbsCurve, NurbsSurface, Rgb};
 
@@ -686,9 +687,9 @@ impl StepBuilder {
 
         let ac = a.add_application_context("managed model based 3d engineering")?;
         a.add_application_protocol_definition(
-            "international standard",
-            "ap242_managed_model_based_3d_engineering_mim_lf",
-            2020,
+            schema::AP242E2_APD_STATUS,
+            schema::AP242E2_APD_NAME,
+            schema::AP242E2_APD_YEAR,
             m::ApplicationContextRef::ApplicationContext(ac),
         )?;
         let product_context = a.add_product_context(
