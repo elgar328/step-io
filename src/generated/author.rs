@@ -3392,9 +3392,9 @@ impl Ap242Author {
     pub fn add_compound_representation_item(
         &mut self,
         name: &str,
-        item_element: CompoundItemDefinitionRef,
+        item_element: Ap242CompoundItemDefinitionRef,
     ) -> Result<CompoundRepresentationItemId, AuthorError> {
-        check_compound_item_definition_ref(&self.model, &item_element)?;
+        check_ap242_compound_item_definition_ref(&self.model, &item_element)?;
         let name = {
             let v = name;
             self.text(v)
@@ -3402,7 +3402,10 @@ impl Ap242Author {
         Ok(CompoundRepresentationItemId(
             self.model
                 .compound_representation_item_arena
-                .push(CompoundRepresentationItem { name, item_element }),
+                .push(CompoundRepresentationItem {
+                    name,
+                    item_element: item_element.into(),
+                }),
         ))
     }
 
@@ -4278,11 +4281,11 @@ impl Ap242Author {
         description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
-        base: DatumOrCommonDatumRef,
+        base: Ap242DatumOrCommonDatumRef,
         modifiers: Option<Vec<DatumReferenceModifierRef>>,
     ) -> Result<DatumReferenceCompartmentId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
-        check_datum_or_common_datum_ref(&self.model, &base)?;
+        check_ap242_datum_or_common_datum_ref(&self.model, &base)?;
         if let Some(x) = &modifiers {
             if x.len() < 1 {
                 return Err(AuthorError::Cardinality {
@@ -4312,7 +4315,7 @@ impl Ap242Author {
                     description,
                     of_shape,
                     product_definitional,
-                    base,
+                    base: base.into(),
                     modifiers,
                 }),
         ))
@@ -4325,11 +4328,11 @@ impl Ap242Author {
         description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
-        base: DatumOrCommonDatumRef,
+        base: Ap242DatumOrCommonDatumRef,
         modifiers: Option<Vec<DatumReferenceModifierRef>>,
     ) -> Result<DatumReferenceElementId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
-        check_datum_or_common_datum_ref(&self.model, &base)?;
+        check_ap242_datum_or_common_datum_ref(&self.model, &base)?;
         if let Some(x) = &modifiers {
             if x.len() < 1 {
                 return Err(AuthorError::Cardinality {
@@ -4359,7 +4362,7 @@ impl Ap242Author {
                     description,
                     of_shape,
                     product_definitional,
-                    base,
+                    base: base.into(),
                     modifiers,
                 }),
         ))
@@ -6222,11 +6225,11 @@ impl Ap242Author {
         description: Option<&str>,
         of_shape: ProductDefinitionShapeRef,
         product_definitional: Logical,
-        base: DatumOrCommonDatumRef,
+        base: Ap242DatumOrCommonDatumRef,
         modifiers: Option<Vec<DatumReferenceModifierRef>>,
     ) -> Result<GeneralDatumReferenceId, AuthorError> {
         check_product_definition_shape_ref(&self.model, &of_shape)?;
-        check_datum_or_common_datum_ref(&self.model, &base)?;
+        check_ap242_datum_or_common_datum_ref(&self.model, &base)?;
         if let Some(x) = &modifiers {
             if x.len() < 1 {
                 return Err(AuthorError::Cardinality {
@@ -6256,7 +6259,7 @@ impl Ap242Author {
                     description,
                     of_shape,
                     product_definitional,
-                    base,
+                    base: base.into(),
                     modifiers,
                 }),
         ))
@@ -14939,6 +14942,576 @@ fn cyclic_check_compound_representation_item(
     model: &StepModel,
     id: u32,
 ) -> Result<(), AuthorError> {
+    {
+        let x = &model.compound_representation_item_arena.items[id as usize].item_element;
+        match x {
+            CompoundItemDefinitionRef::ListRepresentationItem(es) => {
+                for e in es.iter() {
+                    match e {
+                        RepresentationItemRef::AdvancedFace(_)
+                        | RepresentationItemRef::AnnotationCurveOccurrence(_)
+                        | RepresentationItemRef::AnnotationOccurrence(_)
+                        | RepresentationItemRef::AnnotationPlaceholderOccurrence(_)
+                        | RepresentationItemRef::AnnotationPlane(_)
+                        | RepresentationItemRef::AnnotationSymbolOccurrence(_)
+                        | RepresentationItemRef::AnnotationText(_)
+                        | RepresentationItemRef::AnnotationTextCharacter(_)
+                        | RepresentationItemRef::AnnotationTextOccurrence(_)
+                        | RepresentationItemRef::Axis1Placement(_)
+                        | RepresentationItemRef::Axis2Placement2d(_)
+                        | RepresentationItemRef::Axis2Placement3d(_)
+                        | RepresentationItemRef::BSplineCurve(_)
+                        | RepresentationItemRef::BSplineCurveWithKnots(_)
+                        | RepresentationItemRef::BSplineSurface(_)
+                        | RepresentationItemRef::BSplineSurfaceWithKnots(_)
+                        | RepresentationItemRef::BezierCurve(_)
+                        | RepresentationItemRef::BezierSurface(_)
+                        | RepresentationItemRef::BoundedCurve(_)
+                        | RepresentationItemRef::BoundedPcurve(_)
+                        | RepresentationItemRef::BoundedSurface(_)
+                        | RepresentationItemRef::BoundedSurfaceCurve(_)
+                        | RepresentationItemRef::BrepWithVoids(_)
+                        | RepresentationItemRef::CameraImage(_)
+                        | RepresentationItemRef::CameraImage3dWithScale(_)
+                        | RepresentationItemRef::CameraModel(_)
+                        | RepresentationItemRef::CameraModelD3(_)
+                        | RepresentationItemRef::CameraModelD3MultiClipping(_)
+                        | RepresentationItemRef::CameraModelD3WithHlhsr(_)
+                        | RepresentationItemRef::CartesianPoint(_)
+                        | RepresentationItemRef::Circle(_)
+                        | RepresentationItemRef::ClosedShell(_)
+                        | RepresentationItemRef::ComplexTriangulatedFace(_)
+                        | RepresentationItemRef::ComplexTriangulatedSurfaceSet(_)
+                        | RepresentationItemRef::CompositeCurve(_)
+                        | RepresentationItemRef::CompositeText(_)
+                        | RepresentationItemRef::CompoundRepresentationItem(_)
+                        | RepresentationItemRef::Conic(_)
+                        | RepresentationItemRef::ConicalSurface(_)
+                        | RepresentationItemRef::ConnectedFaceSet(_)
+                        | RepresentationItemRef::ContextDependentOverRidingStyledItem(_)
+                        | RepresentationItemRef::CoordinatesList(_)
+                        | RepresentationItemRef::Curve(_)
+                        | RepresentationItemRef::CylindricalSurface(_)
+                        | RepresentationItemRef::DefinedCharacterGlyph(_)
+                        | RepresentationItemRef::DefinedSymbol(_)
+                        | RepresentationItemRef::DegenerateToroidalSurface(_)
+                        | RepresentationItemRef::DescriptiveRepresentationItem(_)
+                        | RepresentationItemRef::Direction(_)
+                        | RepresentationItemRef::DraughtingAnnotationOccurrence(_)
+                        | RepresentationItemRef::DraughtingCallout(_)
+                        | RepresentationItemRef::Edge(_)
+                        | RepresentationItemRef::EdgeCurve(_)
+                        | RepresentationItemRef::EdgeLoop(_)
+                        | RepresentationItemRef::ElementarySurface(_)
+                        | RepresentationItemRef::Ellipse(_)
+                        | RepresentationItemRef::ExternallyDefinedHatchStyle(_)
+                        | RepresentationItemRef::ExternallyDefinedTileStyle(_)
+                        | RepresentationItemRef::Face(_)
+                        | RepresentationItemRef::FaceBound(_)
+                        | RepresentationItemRef::FaceOuterBound(_)
+                        | RepresentationItemRef::FaceSurface(_)
+                        | RepresentationItemRef::FillAreaStyleHatching(_)
+                        | RepresentationItemRef::FillAreaStyleTileColouredRegion(_)
+                        | RepresentationItemRef::FillAreaStyleTileCurveWithStyle(_)
+                        | RepresentationItemRef::FillAreaStyleTileSymbolWithStyle(_)
+                        | RepresentationItemRef::FillAreaStyleTiles(_)
+                        | RepresentationItemRef::GeometricCurveSet(_)
+                        | RepresentationItemRef::GeometricRepresentationItem(_)
+                        | RepresentationItemRef::GeometricSet(_)
+                        | RepresentationItemRef::Hyperbola(_)
+                        | RepresentationItemRef::IntegerRepresentationItem(_)
+                        | RepresentationItemRef::IntersectionCurve(_)
+                        | RepresentationItemRef::LeaderCurve(_)
+                        | RepresentationItemRef::LeaderDirectedCallout(_)
+                        | RepresentationItemRef::LeaderTerminator(_)
+                        | RepresentationItemRef::Line(_)
+                        | RepresentationItemRef::Loop(_)
+                        | RepresentationItemRef::ManifoldSolidBrep(_)
+                        | RepresentationItemRef::MappedItem(_)
+                        | RepresentationItemRef::MeasureRepresentationItem(_)
+                        | RepresentationItemRef::OffsetSurface(_)
+                        | RepresentationItemRef::OneDirectionRepeatFactor(_)
+                        | RepresentationItemRef::OpenShell(_)
+                        | RepresentationItemRef::OrientedClosedShell(_)
+                        | RepresentationItemRef::OrientedEdge(_)
+                        | RepresentationItemRef::OverRidingStyledItem(_)
+                        | RepresentationItemRef::Parabola(_)
+                        | RepresentationItemRef::Path(_)
+                        | RepresentationItemRef::Pcurve(_)
+                        | RepresentationItemRef::Placement(_)
+                        | RepresentationItemRef::PlanarBox(_)
+                        | RepresentationItemRef::PlanarExtent(_)
+                        | RepresentationItemRef::Plane(_)
+                        | RepresentationItemRef::Point(_)
+                        | RepresentationItemRef::PolyLoop(_)
+                        | RepresentationItemRef::Polyline(_)
+                        | RepresentationItemRef::QualifiedRepresentationItem(_)
+                        | RepresentationItemRef::QuasiUniformCurve(_)
+                        | RepresentationItemRef::QuasiUniformSurface(_)
+                        | RepresentationItemRef::RationalBSplineCurve(_)
+                        | RepresentationItemRef::RationalBSplineSurface(_)
+                        | RepresentationItemRef::RealRepresentationItem(_)
+                        | RepresentationItemRef::RepositionedTessellatedItem(_)
+                        | RepresentationItemRef::RepresentationItem(_)
+                        | RepresentationItemRef::SeamCurve(_)
+                        | RepresentationItemRef::ShellBasedSurfaceModel(_)
+                        | RepresentationItemRef::SolidModel(_)
+                        | RepresentationItemRef::SphericalSurface(_)
+                        | RepresentationItemRef::StyledItem(_)
+                        | RepresentationItemRef::Surface(_)
+                        | RepresentationItemRef::SurfaceCurve(_)
+                        | RepresentationItemRef::SurfaceOfLinearExtrusion(_)
+                        | RepresentationItemRef::SurfaceOfRevolution(_)
+                        | RepresentationItemRef::SweptSurface(_)
+                        | RepresentationItemRef::SymbolTarget(_)
+                        | RepresentationItemRef::TerminatorSymbol(_)
+                        | RepresentationItemRef::TessellatedAnnotationOccurrence(_)
+                        | RepresentationItemRef::TessellatedCurveSet(_)
+                        | RepresentationItemRef::TessellatedFace(_)
+                        | RepresentationItemRef::TessellatedGeometricSet(_)
+                        | RepresentationItemRef::TessellatedItem(_)
+                        | RepresentationItemRef::TessellatedShell(_)
+                        | RepresentationItemRef::TessellatedSolid(_)
+                        | RepresentationItemRef::TessellatedStructuredItem(_)
+                        | RepresentationItemRef::TessellatedSurfaceSet(_)
+                        | RepresentationItemRef::TextLiteral(_)
+                        | RepresentationItemRef::TopologicalRepresentationItem(_)
+                        | RepresentationItemRef::ToroidalSurface(_)
+                        | RepresentationItemRef::TrimmedCurve(_)
+                        | RepresentationItemRef::TwoDirectionRepeatFactor(_)
+                        | RepresentationItemRef::UniformCurve(_)
+                        | RepresentationItemRef::UniformSurface(_)
+                        | RepresentationItemRef::ValueRepresentationItem(_)
+                        | RepresentationItemRef::Vector(_)
+                        | RepresentationItemRef::Vertex(_)
+                        | RepresentationItemRef::VertexLoop(_)
+                        | RepresentationItemRef::VertexPoint(_)
+                        | RepresentationItemRef::VertexShell(_)
+                        | RepresentationItemRef::WireShell(_) => {}
+                        RepresentationItemRef::Complex(i) => {
+                            if !model
+                                .complex_entity_arena
+                                .items
+                                .get(i.0 as usize)
+                                .is_some_and(|c| {
+                                    c.parts.iter().any(|p| {
+                                        [
+                                            "ADVANCED_FACE",
+                                            "ANNOTATION_CURVE_OCCURRENCE",
+                                            "ANNOTATION_OCCURRENCE",
+                                            "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                                            "ANNOTATION_PLANE",
+                                            "ANNOTATION_SYMBOL_OCCURRENCE",
+                                            "ANNOTATION_TEXT",
+                                            "ANNOTATION_TEXT_CHARACTER",
+                                            "ANNOTATION_TEXT_OCCURRENCE",
+                                            "BEZIER_CURVE",
+                                            "BEZIER_SURFACE",
+                                            "BOUNDED_CURVE",
+                                            "BOUNDED_PCURVE",
+                                            "BOUNDED_SURFACE",
+                                            "BOUNDED_SURFACE_CURVE",
+                                            "BREP_WITH_VOIDS",
+                                            "B_SPLINE_CURVE",
+                                            "B_SPLINE_CURVE_WITH_KNOTS",
+                                            "B_SPLINE_SURFACE",
+                                            "B_SPLINE_SURFACE_WITH_KNOTS",
+                                            "CAMERA_IMAGE",
+                                            "CAMERA_IMAGE_3D_WITH_SCALE",
+                                            "CAMERA_MODEL",
+                                            "CAMERA_MODEL_D3",
+                                            "CAMERA_MODEL_D3_MULTI_CLIPPING",
+                                            "CAMERA_MODEL_D3_WITH_HLHSR",
+                                            "CLOSED_SHELL",
+                                            "COMPOSITE_CURVE",
+                                            "COMPOSITE_TEXT",
+                                            "COMPOUND_REPRESENTATION_ITEM",
+                                            "CONNECTED_FACE_SET",
+                                            "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                                            "CURVE",
+                                            "DEGENERATE_TOROIDAL_SURFACE",
+                                            "DIRECTION",
+                                            "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                                            "DRAUGHTING_CALLOUT",
+                                            "EDGE",
+                                            "EDGE_CURVE",
+                                            "EDGE_LOOP",
+                                            "ELEMENTARY_SURFACE",
+                                            "EXTERNALLY_DEFINED_HATCH_STYLE",
+                                            "EXTERNALLY_DEFINED_TILE_STYLE",
+                                            "FACE",
+                                            "FACE_BOUND",
+                                            "FACE_OUTER_BOUND",
+                                            "FACE_SURFACE",
+                                            "FILL_AREA_STYLE_HATCHING",
+                                            "FILL_AREA_STYLE_TILES",
+                                            "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                                            "GEOMETRIC_CURVE_SET",
+                                            "GEOMETRIC_REPRESENTATION_ITEM",
+                                            "GEOMETRIC_SET",
+                                            "INTEGER_REPRESENTATION_ITEM",
+                                            "INTERSECTION_CURVE",
+                                            "LEADER_CURVE",
+                                            "LEADER_DIRECTED_CALLOUT",
+                                            "LEADER_TERMINATOR",
+                                            "LOOP",
+                                            "MANIFOLD_SOLID_BREP",
+                                            "MAPPED_ITEM",
+                                            "MEASURE_REPRESENTATION_ITEM",
+                                            "ONE_DIRECTION_REPEAT_FACTOR",
+                                            "OPEN_SHELL",
+                                            "ORIENTED_CLOSED_SHELL",
+                                            "ORIENTED_EDGE",
+                                            "OVER_RIDING_STYLED_ITEM",
+                                            "PATH",
+                                            "PCURVE",
+                                            "PLACEMENT",
+                                            "PLANAR_BOX",
+                                            "PLANAR_EXTENT",
+                                            "POINT",
+                                            "POLY_LOOP",
+                                            "QUALIFIED_REPRESENTATION_ITEM",
+                                            "QUASI_UNIFORM_CURVE",
+                                            "QUASI_UNIFORM_SURFACE",
+                                            "RATIONAL_B_SPLINE_CURVE",
+                                            "RATIONAL_B_SPLINE_SURFACE",
+                                            "REAL_REPRESENTATION_ITEM",
+                                            "REPOSITIONED_TESSELLATED_ITEM",
+                                            "REPRESENTATION_ITEM",
+                                            "SEAM_CURVE",
+                                            "SHELL_BASED_SURFACE_MODEL",
+                                            "SOLID_MODEL",
+                                            "STYLED_ITEM",
+                                            "SURFACE",
+                                            "SURFACE_CURVE",
+                                            "TERMINATOR_SYMBOL",
+                                            "TESSELLATED_GEOMETRIC_SET",
+                                            "TESSELLATED_ITEM",
+                                            "TESSELLATED_STRUCTURED_ITEM",
+                                            "TEXT_LITERAL",
+                                            "TOPOLOGICAL_REPRESENTATION_ITEM",
+                                            "TOROIDAL_SURFACE",
+                                            "TWO_DIRECTION_REPEAT_FACTOR",
+                                            "UNIFORM_CURVE",
+                                            "UNIFORM_SURFACE",
+                                            "VALUE_REPRESENTATION_ITEM",
+                                            "VECTOR",
+                                            "VERTEX",
+                                            "VERTEX_POINT",
+                                        ]
+                                        .contains(&part_name(p))
+                                    })
+                                })
+                            {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "COMPOUND_REPRESENTATION_ITEM",
+                                    attribute: "item_element",
+                                });
+                            }
+                        }
+                        _ => {
+                            return Err(AuthorError::NarrowedReference {
+                                entity: "COMPOUND_REPRESENTATION_ITEM",
+                                attribute: "item_element",
+                            });
+                        }
+                    }
+                }
+            }
+            CompoundItemDefinitionRef::SetRepresentationItem(es) => {
+                for e in es.iter() {
+                    match e {
+                        RepresentationItemRef::AdvancedFace(_)
+                        | RepresentationItemRef::AnnotationCurveOccurrence(_)
+                        | RepresentationItemRef::AnnotationOccurrence(_)
+                        | RepresentationItemRef::AnnotationPlaceholderOccurrence(_)
+                        | RepresentationItemRef::AnnotationPlane(_)
+                        | RepresentationItemRef::AnnotationSymbolOccurrence(_)
+                        | RepresentationItemRef::AnnotationText(_)
+                        | RepresentationItemRef::AnnotationTextCharacter(_)
+                        | RepresentationItemRef::AnnotationTextOccurrence(_)
+                        | RepresentationItemRef::Axis1Placement(_)
+                        | RepresentationItemRef::Axis2Placement2d(_)
+                        | RepresentationItemRef::Axis2Placement3d(_)
+                        | RepresentationItemRef::BSplineCurve(_)
+                        | RepresentationItemRef::BSplineCurveWithKnots(_)
+                        | RepresentationItemRef::BSplineSurface(_)
+                        | RepresentationItemRef::BSplineSurfaceWithKnots(_)
+                        | RepresentationItemRef::BezierCurve(_)
+                        | RepresentationItemRef::BezierSurface(_)
+                        | RepresentationItemRef::BoundedCurve(_)
+                        | RepresentationItemRef::BoundedPcurve(_)
+                        | RepresentationItemRef::BoundedSurface(_)
+                        | RepresentationItemRef::BoundedSurfaceCurve(_)
+                        | RepresentationItemRef::BrepWithVoids(_)
+                        | RepresentationItemRef::CameraImage(_)
+                        | RepresentationItemRef::CameraImage3dWithScale(_)
+                        | RepresentationItemRef::CameraModel(_)
+                        | RepresentationItemRef::CameraModelD3(_)
+                        | RepresentationItemRef::CameraModelD3MultiClipping(_)
+                        | RepresentationItemRef::CameraModelD3WithHlhsr(_)
+                        | RepresentationItemRef::CartesianPoint(_)
+                        | RepresentationItemRef::Circle(_)
+                        | RepresentationItemRef::ClosedShell(_)
+                        | RepresentationItemRef::ComplexTriangulatedFace(_)
+                        | RepresentationItemRef::ComplexTriangulatedSurfaceSet(_)
+                        | RepresentationItemRef::CompositeCurve(_)
+                        | RepresentationItemRef::CompositeText(_)
+                        | RepresentationItemRef::CompoundRepresentationItem(_)
+                        | RepresentationItemRef::Conic(_)
+                        | RepresentationItemRef::ConicalSurface(_)
+                        | RepresentationItemRef::ConnectedFaceSet(_)
+                        | RepresentationItemRef::ContextDependentOverRidingStyledItem(_)
+                        | RepresentationItemRef::CoordinatesList(_)
+                        | RepresentationItemRef::Curve(_)
+                        | RepresentationItemRef::CylindricalSurface(_)
+                        | RepresentationItemRef::DefinedCharacterGlyph(_)
+                        | RepresentationItemRef::DefinedSymbol(_)
+                        | RepresentationItemRef::DegenerateToroidalSurface(_)
+                        | RepresentationItemRef::DescriptiveRepresentationItem(_)
+                        | RepresentationItemRef::Direction(_)
+                        | RepresentationItemRef::DraughtingAnnotationOccurrence(_)
+                        | RepresentationItemRef::DraughtingCallout(_)
+                        | RepresentationItemRef::Edge(_)
+                        | RepresentationItemRef::EdgeCurve(_)
+                        | RepresentationItemRef::EdgeLoop(_)
+                        | RepresentationItemRef::ElementarySurface(_)
+                        | RepresentationItemRef::Ellipse(_)
+                        | RepresentationItemRef::ExternallyDefinedHatchStyle(_)
+                        | RepresentationItemRef::ExternallyDefinedTileStyle(_)
+                        | RepresentationItemRef::Face(_)
+                        | RepresentationItemRef::FaceBound(_)
+                        | RepresentationItemRef::FaceOuterBound(_)
+                        | RepresentationItemRef::FaceSurface(_)
+                        | RepresentationItemRef::FillAreaStyleHatching(_)
+                        | RepresentationItemRef::FillAreaStyleTileColouredRegion(_)
+                        | RepresentationItemRef::FillAreaStyleTileCurveWithStyle(_)
+                        | RepresentationItemRef::FillAreaStyleTileSymbolWithStyle(_)
+                        | RepresentationItemRef::FillAreaStyleTiles(_)
+                        | RepresentationItemRef::GeometricCurveSet(_)
+                        | RepresentationItemRef::GeometricRepresentationItem(_)
+                        | RepresentationItemRef::GeometricSet(_)
+                        | RepresentationItemRef::Hyperbola(_)
+                        | RepresentationItemRef::IntegerRepresentationItem(_)
+                        | RepresentationItemRef::IntersectionCurve(_)
+                        | RepresentationItemRef::LeaderCurve(_)
+                        | RepresentationItemRef::LeaderDirectedCallout(_)
+                        | RepresentationItemRef::LeaderTerminator(_)
+                        | RepresentationItemRef::Line(_)
+                        | RepresentationItemRef::Loop(_)
+                        | RepresentationItemRef::ManifoldSolidBrep(_)
+                        | RepresentationItemRef::MappedItem(_)
+                        | RepresentationItemRef::MeasureRepresentationItem(_)
+                        | RepresentationItemRef::OffsetSurface(_)
+                        | RepresentationItemRef::OneDirectionRepeatFactor(_)
+                        | RepresentationItemRef::OpenShell(_)
+                        | RepresentationItemRef::OrientedClosedShell(_)
+                        | RepresentationItemRef::OrientedEdge(_)
+                        | RepresentationItemRef::OverRidingStyledItem(_)
+                        | RepresentationItemRef::Parabola(_)
+                        | RepresentationItemRef::Path(_)
+                        | RepresentationItemRef::Pcurve(_)
+                        | RepresentationItemRef::Placement(_)
+                        | RepresentationItemRef::PlanarBox(_)
+                        | RepresentationItemRef::PlanarExtent(_)
+                        | RepresentationItemRef::Plane(_)
+                        | RepresentationItemRef::Point(_)
+                        | RepresentationItemRef::PolyLoop(_)
+                        | RepresentationItemRef::Polyline(_)
+                        | RepresentationItemRef::QualifiedRepresentationItem(_)
+                        | RepresentationItemRef::QuasiUniformCurve(_)
+                        | RepresentationItemRef::QuasiUniformSurface(_)
+                        | RepresentationItemRef::RationalBSplineCurve(_)
+                        | RepresentationItemRef::RationalBSplineSurface(_)
+                        | RepresentationItemRef::RealRepresentationItem(_)
+                        | RepresentationItemRef::RepositionedTessellatedItem(_)
+                        | RepresentationItemRef::RepresentationItem(_)
+                        | RepresentationItemRef::SeamCurve(_)
+                        | RepresentationItemRef::ShellBasedSurfaceModel(_)
+                        | RepresentationItemRef::SolidModel(_)
+                        | RepresentationItemRef::SphericalSurface(_)
+                        | RepresentationItemRef::StyledItem(_)
+                        | RepresentationItemRef::Surface(_)
+                        | RepresentationItemRef::SurfaceCurve(_)
+                        | RepresentationItemRef::SurfaceOfLinearExtrusion(_)
+                        | RepresentationItemRef::SurfaceOfRevolution(_)
+                        | RepresentationItemRef::SweptSurface(_)
+                        | RepresentationItemRef::SymbolTarget(_)
+                        | RepresentationItemRef::TerminatorSymbol(_)
+                        | RepresentationItemRef::TessellatedAnnotationOccurrence(_)
+                        | RepresentationItemRef::TessellatedCurveSet(_)
+                        | RepresentationItemRef::TessellatedFace(_)
+                        | RepresentationItemRef::TessellatedGeometricSet(_)
+                        | RepresentationItemRef::TessellatedItem(_)
+                        | RepresentationItemRef::TessellatedShell(_)
+                        | RepresentationItemRef::TessellatedSolid(_)
+                        | RepresentationItemRef::TessellatedStructuredItem(_)
+                        | RepresentationItemRef::TessellatedSurfaceSet(_)
+                        | RepresentationItemRef::TextLiteral(_)
+                        | RepresentationItemRef::TopologicalRepresentationItem(_)
+                        | RepresentationItemRef::ToroidalSurface(_)
+                        | RepresentationItemRef::TrimmedCurve(_)
+                        | RepresentationItemRef::TwoDirectionRepeatFactor(_)
+                        | RepresentationItemRef::UniformCurve(_)
+                        | RepresentationItemRef::UniformSurface(_)
+                        | RepresentationItemRef::ValueRepresentationItem(_)
+                        | RepresentationItemRef::Vector(_)
+                        | RepresentationItemRef::Vertex(_)
+                        | RepresentationItemRef::VertexLoop(_)
+                        | RepresentationItemRef::VertexPoint(_)
+                        | RepresentationItemRef::VertexShell(_)
+                        | RepresentationItemRef::WireShell(_) => {}
+                        RepresentationItemRef::Complex(i) => {
+                            if !model
+                                .complex_entity_arena
+                                .items
+                                .get(i.0 as usize)
+                                .is_some_and(|c| {
+                                    c.parts.iter().any(|p| {
+                                        [
+                                            "ADVANCED_FACE",
+                                            "ANNOTATION_CURVE_OCCURRENCE",
+                                            "ANNOTATION_OCCURRENCE",
+                                            "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                                            "ANNOTATION_PLANE",
+                                            "ANNOTATION_SYMBOL_OCCURRENCE",
+                                            "ANNOTATION_TEXT",
+                                            "ANNOTATION_TEXT_CHARACTER",
+                                            "ANNOTATION_TEXT_OCCURRENCE",
+                                            "BEZIER_CURVE",
+                                            "BEZIER_SURFACE",
+                                            "BOUNDED_CURVE",
+                                            "BOUNDED_PCURVE",
+                                            "BOUNDED_SURFACE",
+                                            "BOUNDED_SURFACE_CURVE",
+                                            "BREP_WITH_VOIDS",
+                                            "B_SPLINE_CURVE",
+                                            "B_SPLINE_CURVE_WITH_KNOTS",
+                                            "B_SPLINE_SURFACE",
+                                            "B_SPLINE_SURFACE_WITH_KNOTS",
+                                            "CAMERA_IMAGE",
+                                            "CAMERA_IMAGE_3D_WITH_SCALE",
+                                            "CAMERA_MODEL",
+                                            "CAMERA_MODEL_D3",
+                                            "CAMERA_MODEL_D3_MULTI_CLIPPING",
+                                            "CAMERA_MODEL_D3_WITH_HLHSR",
+                                            "CLOSED_SHELL",
+                                            "COMPOSITE_CURVE",
+                                            "COMPOSITE_TEXT",
+                                            "COMPOUND_REPRESENTATION_ITEM",
+                                            "CONNECTED_FACE_SET",
+                                            "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                                            "CURVE",
+                                            "DEGENERATE_TOROIDAL_SURFACE",
+                                            "DIRECTION",
+                                            "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                                            "DRAUGHTING_CALLOUT",
+                                            "EDGE",
+                                            "EDGE_CURVE",
+                                            "EDGE_LOOP",
+                                            "ELEMENTARY_SURFACE",
+                                            "EXTERNALLY_DEFINED_HATCH_STYLE",
+                                            "EXTERNALLY_DEFINED_TILE_STYLE",
+                                            "FACE",
+                                            "FACE_BOUND",
+                                            "FACE_OUTER_BOUND",
+                                            "FACE_SURFACE",
+                                            "FILL_AREA_STYLE_HATCHING",
+                                            "FILL_AREA_STYLE_TILES",
+                                            "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                                            "GEOMETRIC_CURVE_SET",
+                                            "GEOMETRIC_REPRESENTATION_ITEM",
+                                            "GEOMETRIC_SET",
+                                            "INTEGER_REPRESENTATION_ITEM",
+                                            "INTERSECTION_CURVE",
+                                            "LEADER_CURVE",
+                                            "LEADER_DIRECTED_CALLOUT",
+                                            "LEADER_TERMINATOR",
+                                            "LOOP",
+                                            "MANIFOLD_SOLID_BREP",
+                                            "MAPPED_ITEM",
+                                            "MEASURE_REPRESENTATION_ITEM",
+                                            "ONE_DIRECTION_REPEAT_FACTOR",
+                                            "OPEN_SHELL",
+                                            "ORIENTED_CLOSED_SHELL",
+                                            "ORIENTED_EDGE",
+                                            "OVER_RIDING_STYLED_ITEM",
+                                            "PATH",
+                                            "PCURVE",
+                                            "PLACEMENT",
+                                            "PLANAR_BOX",
+                                            "PLANAR_EXTENT",
+                                            "POINT",
+                                            "POLY_LOOP",
+                                            "QUALIFIED_REPRESENTATION_ITEM",
+                                            "QUASI_UNIFORM_CURVE",
+                                            "QUASI_UNIFORM_SURFACE",
+                                            "RATIONAL_B_SPLINE_CURVE",
+                                            "RATIONAL_B_SPLINE_SURFACE",
+                                            "REAL_REPRESENTATION_ITEM",
+                                            "REPOSITIONED_TESSELLATED_ITEM",
+                                            "REPRESENTATION_ITEM",
+                                            "SEAM_CURVE",
+                                            "SHELL_BASED_SURFACE_MODEL",
+                                            "SOLID_MODEL",
+                                            "STYLED_ITEM",
+                                            "SURFACE",
+                                            "SURFACE_CURVE",
+                                            "TERMINATOR_SYMBOL",
+                                            "TESSELLATED_GEOMETRIC_SET",
+                                            "TESSELLATED_ITEM",
+                                            "TESSELLATED_STRUCTURED_ITEM",
+                                            "TEXT_LITERAL",
+                                            "TOPOLOGICAL_REPRESENTATION_ITEM",
+                                            "TOROIDAL_SURFACE",
+                                            "TWO_DIRECTION_REPEAT_FACTOR",
+                                            "UNIFORM_CURVE",
+                                            "UNIFORM_SURFACE",
+                                            "VALUE_REPRESENTATION_ITEM",
+                                            "VECTOR",
+                                            "VERTEX",
+                                            "VERTEX_POINT",
+                                        ]
+                                        .contains(&part_name(p))
+                                    })
+                                })
+                            {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "COMPOUND_REPRESENTATION_ITEM",
+                                    attribute: "item_element",
+                                });
+                            }
+                        }
+                        _ => {
+                            return Err(AuthorError::NarrowedReference {
+                                entity: "COMPOUND_REPRESENTATION_ITEM",
+                                attribute: "item_element",
+                            });
+                        }
+                    }
+                }
+            }
+            CompoundItemDefinitionRef::Complex(i) => {
+                if !model
+                    .complex_entity_arena
+                    .items
+                    .get(i.0 as usize)
+                    .is_some_and(|c| c.parts.iter().any(|p| [].contains(&part_name(p))))
+                {
+                    return Err(AuthorError::NarrowedReference {
+                        entity: "COMPOUND_REPRESENTATION_ITEM",
+                        attribute: "item_element",
+                    });
+                }
+            }
+            _ => {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "COMPOUND_REPRESENTATION_ITEM",
+                    attribute: "item_element",
+                });
+            }
+        }
+    }
     check_compound_item_definition_ref(
         model,
         &model.compound_representation_item_arena.items[id as usize].item_element,
@@ -14995,6 +15568,42 @@ fn cyclic_check_datum_reference_element(model: &StepModel, id: u32) -> Result<()
         model,
         &model.datum_reference_element_arena.items[id as usize].of_shape,
     )?;
+    {
+        let x = &model.datum_reference_element_arena.items[id as usize].base;
+        match x {
+            DatumOrCommonDatumRef::CommonDatum(_) | DatumOrCommonDatumRef::Datum(_) => {}
+            DatumOrCommonDatumRef::CommonDatumList(es) => {
+                for e in es.iter() {
+                    match e {
+                        DatumReferenceElementRef::DatumReferenceElement(_) => {}
+                    }
+                }
+            }
+            DatumOrCommonDatumRef::Complex(i) => {
+                if !model
+                    .complex_entity_arena
+                    .items
+                    .get(i.0 as usize)
+                    .is_some_and(|c| {
+                        c.parts
+                            .iter()
+                            .any(|p| ["COMMON_DATUM", "DATUM"].contains(&part_name(p)))
+                    })
+                {
+                    return Err(AuthorError::NarrowedReference {
+                        entity: "DATUM_REFERENCE_ELEMENT",
+                        attribute: "base",
+                    });
+                }
+            }
+            _ => {
+                return Err(AuthorError::NarrowedReference {
+                    entity: "DATUM_REFERENCE_ELEMENT",
+                    attribute: "base",
+                });
+            }
+        }
+    }
     check_datum_or_common_datum_ref(
         model,
         &model.datum_reference_element_arena.items[id as usize].base,
@@ -20015,6 +20624,589 @@ _ => return Err(AuthorError::NarrowedReference { entity: "APPLIED_GROUP_ASSIGNME
     }
     if parts
         .iter()
+        .any(|p| matches!(p, PartialEntity::CompoundRepresentationItem { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::CompoundRepresentationItem { item_element, .. } = p {
+                {
+                    let x = item_element;
+                    match x {
+                        CompoundItemDefinitionRef::ListRepresentationItem(es) => {
+                            for e in es.iter() {
+                                match e {
+                                    RepresentationItemRef::AdvancedFace(_)
+                                    | RepresentationItemRef::AnnotationCurveOccurrence(_)
+                                    | RepresentationItemRef::AnnotationOccurrence(_)
+                                    | RepresentationItemRef::AnnotationPlaceholderOccurrence(_)
+                                    | RepresentationItemRef::AnnotationPlane(_)
+                                    | RepresentationItemRef::AnnotationSymbolOccurrence(_)
+                                    | RepresentationItemRef::AnnotationText(_)
+                                    | RepresentationItemRef::AnnotationTextCharacter(_)
+                                    | RepresentationItemRef::AnnotationTextOccurrence(_)
+                                    | RepresentationItemRef::Axis1Placement(_)
+                                    | RepresentationItemRef::Axis2Placement2d(_)
+                                    | RepresentationItemRef::Axis2Placement3d(_)
+                                    | RepresentationItemRef::BSplineCurve(_)
+                                    | RepresentationItemRef::BSplineCurveWithKnots(_)
+                                    | RepresentationItemRef::BSplineSurface(_)
+                                    | RepresentationItemRef::BSplineSurfaceWithKnots(_)
+                                    | RepresentationItemRef::BezierCurve(_)
+                                    | RepresentationItemRef::BezierSurface(_)
+                                    | RepresentationItemRef::BoundedCurve(_)
+                                    | RepresentationItemRef::BoundedPcurve(_)
+                                    | RepresentationItemRef::BoundedSurface(_)
+                                    | RepresentationItemRef::BoundedSurfaceCurve(_)
+                                    | RepresentationItemRef::BrepWithVoids(_)
+                                    | RepresentationItemRef::CameraImage(_)
+                                    | RepresentationItemRef::CameraImage3dWithScale(_)
+                                    | RepresentationItemRef::CameraModel(_)
+                                    | RepresentationItemRef::CameraModelD3(_)
+                                    | RepresentationItemRef::CameraModelD3MultiClipping(_)
+                                    | RepresentationItemRef::CameraModelD3WithHlhsr(_)
+                                    | RepresentationItemRef::CartesianPoint(_)
+                                    | RepresentationItemRef::Circle(_)
+                                    | RepresentationItemRef::ClosedShell(_)
+                                    | RepresentationItemRef::ComplexTriangulatedFace(_)
+                                    | RepresentationItemRef::ComplexTriangulatedSurfaceSet(_)
+                                    | RepresentationItemRef::CompositeCurve(_)
+                                    | RepresentationItemRef::CompositeText(_)
+                                    | RepresentationItemRef::CompoundRepresentationItem(_)
+                                    | RepresentationItemRef::Conic(_)
+                                    | RepresentationItemRef::ConicalSurface(_)
+                                    | RepresentationItemRef::ConnectedFaceSet(_)
+                                    | RepresentationItemRef::ContextDependentOverRidingStyledItem(
+                                        _,
+                                    )
+                                    | RepresentationItemRef::CoordinatesList(_)
+                                    | RepresentationItemRef::Curve(_)
+                                    | RepresentationItemRef::CylindricalSurface(_)
+                                    | RepresentationItemRef::DefinedCharacterGlyph(_)
+                                    | RepresentationItemRef::DefinedSymbol(_)
+                                    | RepresentationItemRef::DegenerateToroidalSurface(_)
+                                    | RepresentationItemRef::DescriptiveRepresentationItem(_)
+                                    | RepresentationItemRef::Direction(_)
+                                    | RepresentationItemRef::DraughtingAnnotationOccurrence(_)
+                                    | RepresentationItemRef::DraughtingCallout(_)
+                                    | RepresentationItemRef::Edge(_)
+                                    | RepresentationItemRef::EdgeCurve(_)
+                                    | RepresentationItemRef::EdgeLoop(_)
+                                    | RepresentationItemRef::ElementarySurface(_)
+                                    | RepresentationItemRef::Ellipse(_)
+                                    | RepresentationItemRef::ExternallyDefinedHatchStyle(_)
+                                    | RepresentationItemRef::ExternallyDefinedTileStyle(_)
+                                    | RepresentationItemRef::Face(_)
+                                    | RepresentationItemRef::FaceBound(_)
+                                    | RepresentationItemRef::FaceOuterBound(_)
+                                    | RepresentationItemRef::FaceSurface(_)
+                                    | RepresentationItemRef::FillAreaStyleHatching(_)
+                                    | RepresentationItemRef::FillAreaStyleTileColouredRegion(_)
+                                    | RepresentationItemRef::FillAreaStyleTileCurveWithStyle(_)
+                                    | RepresentationItemRef::FillAreaStyleTileSymbolWithStyle(_)
+                                    | RepresentationItemRef::FillAreaStyleTiles(_)
+                                    | RepresentationItemRef::GeometricCurveSet(_)
+                                    | RepresentationItemRef::GeometricRepresentationItem(_)
+                                    | RepresentationItemRef::GeometricSet(_)
+                                    | RepresentationItemRef::Hyperbola(_)
+                                    | RepresentationItemRef::IntegerRepresentationItem(_)
+                                    | RepresentationItemRef::IntersectionCurve(_)
+                                    | RepresentationItemRef::LeaderCurve(_)
+                                    | RepresentationItemRef::LeaderDirectedCallout(_)
+                                    | RepresentationItemRef::LeaderTerminator(_)
+                                    | RepresentationItemRef::Line(_)
+                                    | RepresentationItemRef::Loop(_)
+                                    | RepresentationItemRef::ManifoldSolidBrep(_)
+                                    | RepresentationItemRef::MappedItem(_)
+                                    | RepresentationItemRef::MeasureRepresentationItem(_)
+                                    | RepresentationItemRef::OffsetSurface(_)
+                                    | RepresentationItemRef::OneDirectionRepeatFactor(_)
+                                    | RepresentationItemRef::OpenShell(_)
+                                    | RepresentationItemRef::OrientedClosedShell(_)
+                                    | RepresentationItemRef::OrientedEdge(_)
+                                    | RepresentationItemRef::OverRidingStyledItem(_)
+                                    | RepresentationItemRef::Parabola(_)
+                                    | RepresentationItemRef::Path(_)
+                                    | RepresentationItemRef::Pcurve(_)
+                                    | RepresentationItemRef::Placement(_)
+                                    | RepresentationItemRef::PlanarBox(_)
+                                    | RepresentationItemRef::PlanarExtent(_)
+                                    | RepresentationItemRef::Plane(_)
+                                    | RepresentationItemRef::Point(_)
+                                    | RepresentationItemRef::PolyLoop(_)
+                                    | RepresentationItemRef::Polyline(_)
+                                    | RepresentationItemRef::QualifiedRepresentationItem(_)
+                                    | RepresentationItemRef::QuasiUniformCurve(_)
+                                    | RepresentationItemRef::QuasiUniformSurface(_)
+                                    | RepresentationItemRef::RationalBSplineCurve(_)
+                                    | RepresentationItemRef::RationalBSplineSurface(_)
+                                    | RepresentationItemRef::RealRepresentationItem(_)
+                                    | RepresentationItemRef::RepositionedTessellatedItem(_)
+                                    | RepresentationItemRef::RepresentationItem(_)
+                                    | RepresentationItemRef::SeamCurve(_)
+                                    | RepresentationItemRef::ShellBasedSurfaceModel(_)
+                                    | RepresentationItemRef::SolidModel(_)
+                                    | RepresentationItemRef::SphericalSurface(_)
+                                    | RepresentationItemRef::StyledItem(_)
+                                    | RepresentationItemRef::Surface(_)
+                                    | RepresentationItemRef::SurfaceCurve(_)
+                                    | RepresentationItemRef::SurfaceOfLinearExtrusion(_)
+                                    | RepresentationItemRef::SurfaceOfRevolution(_)
+                                    | RepresentationItemRef::SweptSurface(_)
+                                    | RepresentationItemRef::SymbolTarget(_)
+                                    | RepresentationItemRef::TerminatorSymbol(_)
+                                    | RepresentationItemRef::TessellatedAnnotationOccurrence(_)
+                                    | RepresentationItemRef::TessellatedCurveSet(_)
+                                    | RepresentationItemRef::TessellatedFace(_)
+                                    | RepresentationItemRef::TessellatedGeometricSet(_)
+                                    | RepresentationItemRef::TessellatedItem(_)
+                                    | RepresentationItemRef::TessellatedShell(_)
+                                    | RepresentationItemRef::TessellatedSolid(_)
+                                    | RepresentationItemRef::TessellatedStructuredItem(_)
+                                    | RepresentationItemRef::TessellatedSurfaceSet(_)
+                                    | RepresentationItemRef::TextLiteral(_)
+                                    | RepresentationItemRef::TopologicalRepresentationItem(_)
+                                    | RepresentationItemRef::ToroidalSurface(_)
+                                    | RepresentationItemRef::TrimmedCurve(_)
+                                    | RepresentationItemRef::TwoDirectionRepeatFactor(_)
+                                    | RepresentationItemRef::UniformCurve(_)
+                                    | RepresentationItemRef::UniformSurface(_)
+                                    | RepresentationItemRef::ValueRepresentationItem(_)
+                                    | RepresentationItemRef::Vector(_)
+                                    | RepresentationItemRef::Vertex(_)
+                                    | RepresentationItemRef::VertexLoop(_)
+                                    | RepresentationItemRef::VertexPoint(_)
+                                    | RepresentationItemRef::VertexShell(_)
+                                    | RepresentationItemRef::WireShell(_) => {}
+                                    RepresentationItemRef::Complex(i) => {
+                                        if !model
+                                            .complex_entity_arena
+                                            .items
+                                            .get(i.0 as usize)
+                                            .is_some_and(|c| {
+                                                c.parts.iter().any(|p| {
+                                                    [
+                                                        "ADVANCED_FACE",
+                                                        "ANNOTATION_CURVE_OCCURRENCE",
+                                                        "ANNOTATION_OCCURRENCE",
+                                                        "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                                                        "ANNOTATION_PLANE",
+                                                        "ANNOTATION_SYMBOL_OCCURRENCE",
+                                                        "ANNOTATION_TEXT",
+                                                        "ANNOTATION_TEXT_CHARACTER",
+                                                        "ANNOTATION_TEXT_OCCURRENCE",
+                                                        "BEZIER_CURVE",
+                                                        "BEZIER_SURFACE",
+                                                        "BOUNDED_CURVE",
+                                                        "BOUNDED_PCURVE",
+                                                        "BOUNDED_SURFACE",
+                                                        "BOUNDED_SURFACE_CURVE",
+                                                        "BREP_WITH_VOIDS",
+                                                        "B_SPLINE_CURVE",
+                                                        "B_SPLINE_CURVE_WITH_KNOTS",
+                                                        "B_SPLINE_SURFACE",
+                                                        "B_SPLINE_SURFACE_WITH_KNOTS",
+                                                        "CAMERA_IMAGE",
+                                                        "CAMERA_IMAGE_3D_WITH_SCALE",
+                                                        "CAMERA_MODEL",
+                                                        "CAMERA_MODEL_D3",
+                                                        "CAMERA_MODEL_D3_MULTI_CLIPPING",
+                                                        "CAMERA_MODEL_D3_WITH_HLHSR",
+                                                        "CLOSED_SHELL",
+                                                        "COMPOSITE_CURVE",
+                                                        "COMPOSITE_TEXT",
+                                                        "COMPOUND_REPRESENTATION_ITEM",
+                                                        "CONNECTED_FACE_SET",
+                                                        "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                                                        "CURVE",
+                                                        "DEGENERATE_TOROIDAL_SURFACE",
+                                                        "DIRECTION",
+                                                        "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                                                        "DRAUGHTING_CALLOUT",
+                                                        "EDGE",
+                                                        "EDGE_CURVE",
+                                                        "EDGE_LOOP",
+                                                        "ELEMENTARY_SURFACE",
+                                                        "EXTERNALLY_DEFINED_HATCH_STYLE",
+                                                        "EXTERNALLY_DEFINED_TILE_STYLE",
+                                                        "FACE",
+                                                        "FACE_BOUND",
+                                                        "FACE_OUTER_BOUND",
+                                                        "FACE_SURFACE",
+                                                        "FILL_AREA_STYLE_HATCHING",
+                                                        "FILL_AREA_STYLE_TILES",
+                                                        "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                                                        "GEOMETRIC_CURVE_SET",
+                                                        "GEOMETRIC_REPRESENTATION_ITEM",
+                                                        "GEOMETRIC_SET",
+                                                        "INTEGER_REPRESENTATION_ITEM",
+                                                        "INTERSECTION_CURVE",
+                                                        "LEADER_CURVE",
+                                                        "LEADER_DIRECTED_CALLOUT",
+                                                        "LEADER_TERMINATOR",
+                                                        "LOOP",
+                                                        "MANIFOLD_SOLID_BREP",
+                                                        "MAPPED_ITEM",
+                                                        "MEASURE_REPRESENTATION_ITEM",
+                                                        "ONE_DIRECTION_REPEAT_FACTOR",
+                                                        "OPEN_SHELL",
+                                                        "ORIENTED_CLOSED_SHELL",
+                                                        "ORIENTED_EDGE",
+                                                        "OVER_RIDING_STYLED_ITEM",
+                                                        "PATH",
+                                                        "PCURVE",
+                                                        "PLACEMENT",
+                                                        "PLANAR_BOX",
+                                                        "PLANAR_EXTENT",
+                                                        "POINT",
+                                                        "POLY_LOOP",
+                                                        "QUALIFIED_REPRESENTATION_ITEM",
+                                                        "QUASI_UNIFORM_CURVE",
+                                                        "QUASI_UNIFORM_SURFACE",
+                                                        "RATIONAL_B_SPLINE_CURVE",
+                                                        "RATIONAL_B_SPLINE_SURFACE",
+                                                        "REAL_REPRESENTATION_ITEM",
+                                                        "REPOSITIONED_TESSELLATED_ITEM",
+                                                        "REPRESENTATION_ITEM",
+                                                        "SEAM_CURVE",
+                                                        "SHELL_BASED_SURFACE_MODEL",
+                                                        "SOLID_MODEL",
+                                                        "STYLED_ITEM",
+                                                        "SURFACE",
+                                                        "SURFACE_CURVE",
+                                                        "TERMINATOR_SYMBOL",
+                                                        "TESSELLATED_GEOMETRIC_SET",
+                                                        "TESSELLATED_ITEM",
+                                                        "TESSELLATED_STRUCTURED_ITEM",
+                                                        "TEXT_LITERAL",
+                                                        "TOPOLOGICAL_REPRESENTATION_ITEM",
+                                                        "TOROIDAL_SURFACE",
+                                                        "TWO_DIRECTION_REPEAT_FACTOR",
+                                                        "UNIFORM_CURVE",
+                                                        "UNIFORM_SURFACE",
+                                                        "VALUE_REPRESENTATION_ITEM",
+                                                        "VECTOR",
+                                                        "VERTEX",
+                                                        "VERTEX_POINT",
+                                                    ]
+                                                    .contains(&part_name(p))
+                                                })
+                                            })
+                                        {
+                                            return Err(AuthorError::NarrowedReference {
+                                                entity: "COMPOUND_REPRESENTATION_ITEM",
+                                                attribute: "item_element",
+                                            });
+                                        }
+                                    }
+                                    _ => {
+                                        return Err(AuthorError::NarrowedReference {
+                                            entity: "COMPOUND_REPRESENTATION_ITEM",
+                                            attribute: "item_element",
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                        CompoundItemDefinitionRef::SetRepresentationItem(es) => {
+                            for e in es.iter() {
+                                match e {
+                                    RepresentationItemRef::AdvancedFace(_)
+                                    | RepresentationItemRef::AnnotationCurveOccurrence(_)
+                                    | RepresentationItemRef::AnnotationOccurrence(_)
+                                    | RepresentationItemRef::AnnotationPlaceholderOccurrence(_)
+                                    | RepresentationItemRef::AnnotationPlane(_)
+                                    | RepresentationItemRef::AnnotationSymbolOccurrence(_)
+                                    | RepresentationItemRef::AnnotationText(_)
+                                    | RepresentationItemRef::AnnotationTextCharacter(_)
+                                    | RepresentationItemRef::AnnotationTextOccurrence(_)
+                                    | RepresentationItemRef::Axis1Placement(_)
+                                    | RepresentationItemRef::Axis2Placement2d(_)
+                                    | RepresentationItemRef::Axis2Placement3d(_)
+                                    | RepresentationItemRef::BSplineCurve(_)
+                                    | RepresentationItemRef::BSplineCurveWithKnots(_)
+                                    | RepresentationItemRef::BSplineSurface(_)
+                                    | RepresentationItemRef::BSplineSurfaceWithKnots(_)
+                                    | RepresentationItemRef::BezierCurve(_)
+                                    | RepresentationItemRef::BezierSurface(_)
+                                    | RepresentationItemRef::BoundedCurve(_)
+                                    | RepresentationItemRef::BoundedPcurve(_)
+                                    | RepresentationItemRef::BoundedSurface(_)
+                                    | RepresentationItemRef::BoundedSurfaceCurve(_)
+                                    | RepresentationItemRef::BrepWithVoids(_)
+                                    | RepresentationItemRef::CameraImage(_)
+                                    | RepresentationItemRef::CameraImage3dWithScale(_)
+                                    | RepresentationItemRef::CameraModel(_)
+                                    | RepresentationItemRef::CameraModelD3(_)
+                                    | RepresentationItemRef::CameraModelD3MultiClipping(_)
+                                    | RepresentationItemRef::CameraModelD3WithHlhsr(_)
+                                    | RepresentationItemRef::CartesianPoint(_)
+                                    | RepresentationItemRef::Circle(_)
+                                    | RepresentationItemRef::ClosedShell(_)
+                                    | RepresentationItemRef::ComplexTriangulatedFace(_)
+                                    | RepresentationItemRef::ComplexTriangulatedSurfaceSet(_)
+                                    | RepresentationItemRef::CompositeCurve(_)
+                                    | RepresentationItemRef::CompositeText(_)
+                                    | RepresentationItemRef::CompoundRepresentationItem(_)
+                                    | RepresentationItemRef::Conic(_)
+                                    | RepresentationItemRef::ConicalSurface(_)
+                                    | RepresentationItemRef::ConnectedFaceSet(_)
+                                    | RepresentationItemRef::ContextDependentOverRidingStyledItem(
+                                        _,
+                                    )
+                                    | RepresentationItemRef::CoordinatesList(_)
+                                    | RepresentationItemRef::Curve(_)
+                                    | RepresentationItemRef::CylindricalSurface(_)
+                                    | RepresentationItemRef::DefinedCharacterGlyph(_)
+                                    | RepresentationItemRef::DefinedSymbol(_)
+                                    | RepresentationItemRef::DegenerateToroidalSurface(_)
+                                    | RepresentationItemRef::DescriptiveRepresentationItem(_)
+                                    | RepresentationItemRef::Direction(_)
+                                    | RepresentationItemRef::DraughtingAnnotationOccurrence(_)
+                                    | RepresentationItemRef::DraughtingCallout(_)
+                                    | RepresentationItemRef::Edge(_)
+                                    | RepresentationItemRef::EdgeCurve(_)
+                                    | RepresentationItemRef::EdgeLoop(_)
+                                    | RepresentationItemRef::ElementarySurface(_)
+                                    | RepresentationItemRef::Ellipse(_)
+                                    | RepresentationItemRef::ExternallyDefinedHatchStyle(_)
+                                    | RepresentationItemRef::ExternallyDefinedTileStyle(_)
+                                    | RepresentationItemRef::Face(_)
+                                    | RepresentationItemRef::FaceBound(_)
+                                    | RepresentationItemRef::FaceOuterBound(_)
+                                    | RepresentationItemRef::FaceSurface(_)
+                                    | RepresentationItemRef::FillAreaStyleHatching(_)
+                                    | RepresentationItemRef::FillAreaStyleTileColouredRegion(_)
+                                    | RepresentationItemRef::FillAreaStyleTileCurveWithStyle(_)
+                                    | RepresentationItemRef::FillAreaStyleTileSymbolWithStyle(_)
+                                    | RepresentationItemRef::FillAreaStyleTiles(_)
+                                    | RepresentationItemRef::GeometricCurveSet(_)
+                                    | RepresentationItemRef::GeometricRepresentationItem(_)
+                                    | RepresentationItemRef::GeometricSet(_)
+                                    | RepresentationItemRef::Hyperbola(_)
+                                    | RepresentationItemRef::IntegerRepresentationItem(_)
+                                    | RepresentationItemRef::IntersectionCurve(_)
+                                    | RepresentationItemRef::LeaderCurve(_)
+                                    | RepresentationItemRef::LeaderDirectedCallout(_)
+                                    | RepresentationItemRef::LeaderTerminator(_)
+                                    | RepresentationItemRef::Line(_)
+                                    | RepresentationItemRef::Loop(_)
+                                    | RepresentationItemRef::ManifoldSolidBrep(_)
+                                    | RepresentationItemRef::MappedItem(_)
+                                    | RepresentationItemRef::MeasureRepresentationItem(_)
+                                    | RepresentationItemRef::OffsetSurface(_)
+                                    | RepresentationItemRef::OneDirectionRepeatFactor(_)
+                                    | RepresentationItemRef::OpenShell(_)
+                                    | RepresentationItemRef::OrientedClosedShell(_)
+                                    | RepresentationItemRef::OrientedEdge(_)
+                                    | RepresentationItemRef::OverRidingStyledItem(_)
+                                    | RepresentationItemRef::Parabola(_)
+                                    | RepresentationItemRef::Path(_)
+                                    | RepresentationItemRef::Pcurve(_)
+                                    | RepresentationItemRef::Placement(_)
+                                    | RepresentationItemRef::PlanarBox(_)
+                                    | RepresentationItemRef::PlanarExtent(_)
+                                    | RepresentationItemRef::Plane(_)
+                                    | RepresentationItemRef::Point(_)
+                                    | RepresentationItemRef::PolyLoop(_)
+                                    | RepresentationItemRef::Polyline(_)
+                                    | RepresentationItemRef::QualifiedRepresentationItem(_)
+                                    | RepresentationItemRef::QuasiUniformCurve(_)
+                                    | RepresentationItemRef::QuasiUniformSurface(_)
+                                    | RepresentationItemRef::RationalBSplineCurve(_)
+                                    | RepresentationItemRef::RationalBSplineSurface(_)
+                                    | RepresentationItemRef::RealRepresentationItem(_)
+                                    | RepresentationItemRef::RepositionedTessellatedItem(_)
+                                    | RepresentationItemRef::RepresentationItem(_)
+                                    | RepresentationItemRef::SeamCurve(_)
+                                    | RepresentationItemRef::ShellBasedSurfaceModel(_)
+                                    | RepresentationItemRef::SolidModel(_)
+                                    | RepresentationItemRef::SphericalSurface(_)
+                                    | RepresentationItemRef::StyledItem(_)
+                                    | RepresentationItemRef::Surface(_)
+                                    | RepresentationItemRef::SurfaceCurve(_)
+                                    | RepresentationItemRef::SurfaceOfLinearExtrusion(_)
+                                    | RepresentationItemRef::SurfaceOfRevolution(_)
+                                    | RepresentationItemRef::SweptSurface(_)
+                                    | RepresentationItemRef::SymbolTarget(_)
+                                    | RepresentationItemRef::TerminatorSymbol(_)
+                                    | RepresentationItemRef::TessellatedAnnotationOccurrence(_)
+                                    | RepresentationItemRef::TessellatedCurveSet(_)
+                                    | RepresentationItemRef::TessellatedFace(_)
+                                    | RepresentationItemRef::TessellatedGeometricSet(_)
+                                    | RepresentationItemRef::TessellatedItem(_)
+                                    | RepresentationItemRef::TessellatedShell(_)
+                                    | RepresentationItemRef::TessellatedSolid(_)
+                                    | RepresentationItemRef::TessellatedStructuredItem(_)
+                                    | RepresentationItemRef::TessellatedSurfaceSet(_)
+                                    | RepresentationItemRef::TextLiteral(_)
+                                    | RepresentationItemRef::TopologicalRepresentationItem(_)
+                                    | RepresentationItemRef::ToroidalSurface(_)
+                                    | RepresentationItemRef::TrimmedCurve(_)
+                                    | RepresentationItemRef::TwoDirectionRepeatFactor(_)
+                                    | RepresentationItemRef::UniformCurve(_)
+                                    | RepresentationItemRef::UniformSurface(_)
+                                    | RepresentationItemRef::ValueRepresentationItem(_)
+                                    | RepresentationItemRef::Vector(_)
+                                    | RepresentationItemRef::Vertex(_)
+                                    | RepresentationItemRef::VertexLoop(_)
+                                    | RepresentationItemRef::VertexPoint(_)
+                                    | RepresentationItemRef::VertexShell(_)
+                                    | RepresentationItemRef::WireShell(_) => {}
+                                    RepresentationItemRef::Complex(i) => {
+                                        if !model
+                                            .complex_entity_arena
+                                            .items
+                                            .get(i.0 as usize)
+                                            .is_some_and(|c| {
+                                                c.parts.iter().any(|p| {
+                                                    [
+                                                        "ADVANCED_FACE",
+                                                        "ANNOTATION_CURVE_OCCURRENCE",
+                                                        "ANNOTATION_OCCURRENCE",
+                                                        "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+                                                        "ANNOTATION_PLANE",
+                                                        "ANNOTATION_SYMBOL_OCCURRENCE",
+                                                        "ANNOTATION_TEXT",
+                                                        "ANNOTATION_TEXT_CHARACTER",
+                                                        "ANNOTATION_TEXT_OCCURRENCE",
+                                                        "BEZIER_CURVE",
+                                                        "BEZIER_SURFACE",
+                                                        "BOUNDED_CURVE",
+                                                        "BOUNDED_PCURVE",
+                                                        "BOUNDED_SURFACE",
+                                                        "BOUNDED_SURFACE_CURVE",
+                                                        "BREP_WITH_VOIDS",
+                                                        "B_SPLINE_CURVE",
+                                                        "B_SPLINE_CURVE_WITH_KNOTS",
+                                                        "B_SPLINE_SURFACE",
+                                                        "B_SPLINE_SURFACE_WITH_KNOTS",
+                                                        "CAMERA_IMAGE",
+                                                        "CAMERA_IMAGE_3D_WITH_SCALE",
+                                                        "CAMERA_MODEL",
+                                                        "CAMERA_MODEL_D3",
+                                                        "CAMERA_MODEL_D3_MULTI_CLIPPING",
+                                                        "CAMERA_MODEL_D3_WITH_HLHSR",
+                                                        "CLOSED_SHELL",
+                                                        "COMPOSITE_CURVE",
+                                                        "COMPOSITE_TEXT",
+                                                        "COMPOUND_REPRESENTATION_ITEM",
+                                                        "CONNECTED_FACE_SET",
+                                                        "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+                                                        "CURVE",
+                                                        "DEGENERATE_TOROIDAL_SURFACE",
+                                                        "DIRECTION",
+                                                        "DRAUGHTING_ANNOTATION_OCCURRENCE",
+                                                        "DRAUGHTING_CALLOUT",
+                                                        "EDGE",
+                                                        "EDGE_CURVE",
+                                                        "EDGE_LOOP",
+                                                        "ELEMENTARY_SURFACE",
+                                                        "EXTERNALLY_DEFINED_HATCH_STYLE",
+                                                        "EXTERNALLY_DEFINED_TILE_STYLE",
+                                                        "FACE",
+                                                        "FACE_BOUND",
+                                                        "FACE_OUTER_BOUND",
+                                                        "FACE_SURFACE",
+                                                        "FILL_AREA_STYLE_HATCHING",
+                                                        "FILL_AREA_STYLE_TILES",
+                                                        "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
+                                                        "GEOMETRIC_CURVE_SET",
+                                                        "GEOMETRIC_REPRESENTATION_ITEM",
+                                                        "GEOMETRIC_SET",
+                                                        "INTEGER_REPRESENTATION_ITEM",
+                                                        "INTERSECTION_CURVE",
+                                                        "LEADER_CURVE",
+                                                        "LEADER_DIRECTED_CALLOUT",
+                                                        "LEADER_TERMINATOR",
+                                                        "LOOP",
+                                                        "MANIFOLD_SOLID_BREP",
+                                                        "MAPPED_ITEM",
+                                                        "MEASURE_REPRESENTATION_ITEM",
+                                                        "ONE_DIRECTION_REPEAT_FACTOR",
+                                                        "OPEN_SHELL",
+                                                        "ORIENTED_CLOSED_SHELL",
+                                                        "ORIENTED_EDGE",
+                                                        "OVER_RIDING_STYLED_ITEM",
+                                                        "PATH",
+                                                        "PCURVE",
+                                                        "PLACEMENT",
+                                                        "PLANAR_BOX",
+                                                        "PLANAR_EXTENT",
+                                                        "POINT",
+                                                        "POLY_LOOP",
+                                                        "QUALIFIED_REPRESENTATION_ITEM",
+                                                        "QUASI_UNIFORM_CURVE",
+                                                        "QUASI_UNIFORM_SURFACE",
+                                                        "RATIONAL_B_SPLINE_CURVE",
+                                                        "RATIONAL_B_SPLINE_SURFACE",
+                                                        "REAL_REPRESENTATION_ITEM",
+                                                        "REPOSITIONED_TESSELLATED_ITEM",
+                                                        "REPRESENTATION_ITEM",
+                                                        "SEAM_CURVE",
+                                                        "SHELL_BASED_SURFACE_MODEL",
+                                                        "SOLID_MODEL",
+                                                        "STYLED_ITEM",
+                                                        "SURFACE",
+                                                        "SURFACE_CURVE",
+                                                        "TERMINATOR_SYMBOL",
+                                                        "TESSELLATED_GEOMETRIC_SET",
+                                                        "TESSELLATED_ITEM",
+                                                        "TESSELLATED_STRUCTURED_ITEM",
+                                                        "TEXT_LITERAL",
+                                                        "TOPOLOGICAL_REPRESENTATION_ITEM",
+                                                        "TOROIDAL_SURFACE",
+                                                        "TWO_DIRECTION_REPEAT_FACTOR",
+                                                        "UNIFORM_CURVE",
+                                                        "UNIFORM_SURFACE",
+                                                        "VALUE_REPRESENTATION_ITEM",
+                                                        "VECTOR",
+                                                        "VERTEX",
+                                                        "VERTEX_POINT",
+                                                    ]
+                                                    .contains(&part_name(p))
+                                                })
+                                            })
+                                        {
+                                            return Err(AuthorError::NarrowedReference {
+                                                entity: "COMPOUND_REPRESENTATION_ITEM",
+                                                attribute: "item_element",
+                                            });
+                                        }
+                                    }
+                                    _ => {
+                                        return Err(AuthorError::NarrowedReference {
+                                            entity: "COMPOUND_REPRESENTATION_ITEM",
+                                            attribute: "item_element",
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                        CompoundItemDefinitionRef::Complex(i) => {
+                            if !model
+                                .complex_entity_arena
+                                .items
+                                .get(i.0 as usize)
+                                .is_some_and(|c| c.parts.iter().any(|p| [].contains(&part_name(p))))
+                            {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "COMPOUND_REPRESENTATION_ITEM",
+                                    attribute: "item_element",
+                                });
+                            }
+                        }
+                        _ => {
+                            return Err(AuthorError::NarrowedReference {
+                                entity: "COMPOUND_REPRESENTATION_ITEM",
+                                attribute: "item_element",
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
         .any(|p| matches!(p, PartialEntity::AdvancedFace { .. }))
     {
         for p in parts {
@@ -20088,6 +21280,52 @@ _ => return Err(AuthorError::NarrowedReference { entity: "APPLIED_GROUP_ASSIGNME
                             return Err(AuthorError::NarrowedReference {
                                 entity: "ADVANCED_FACE",
                                 attribute: "face_geometry",
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if parts
+        .iter()
+        .any(|p| matches!(p, PartialEntity::GeneralDatumReference { .. }))
+    {
+        for p in parts {
+            if let PartialEntity::GeneralDatumReference { base, .. } = p {
+                {
+                    let x = base;
+                    match x {
+                        DatumOrCommonDatumRef::CommonDatum(_) | DatumOrCommonDatumRef::Datum(_) => {
+                        }
+                        DatumOrCommonDatumRef::CommonDatumList(es) => {
+                            for e in es.iter() {
+                                match e {
+                                    DatumReferenceElementRef::DatumReferenceElement(_) => {}
+                                }
+                            }
+                        }
+                        DatumOrCommonDatumRef::Complex(i) => {
+                            if !model
+                                .complex_entity_arena
+                                .items
+                                .get(i.0 as usize)
+                                .is_some_and(|c| {
+                                    c.parts
+                                        .iter()
+                                        .any(|p| ["COMMON_DATUM", "DATUM"].contains(&part_name(p)))
+                                })
+                            {
+                                return Err(AuthorError::NarrowedReference {
+                                    entity: "GENERAL_DATUM_REFERENCE",
+                                    attribute: "base",
+                                });
+                            }
+                        }
+                        _ => {
+                            return Err(AuthorError::NarrowedReference {
+                                entity: "GENERAL_DATUM_REFERENCE",
+                                attribute: "base",
                             });
                         }
                     }
@@ -52900,6 +54138,24 @@ fn check_ap242_camera_usage_mapped_representation_ref(
     }
     Ok(())
 }
+fn check_ap242_compound_item_definition_ref(
+    model: &StepModel,
+    r: &Ap242CompoundItemDefinitionRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242CompoundItemDefinitionRef::ListRepresentationItem(v) => {
+            for e in v {
+                check_representation_item_ref(model, e)?;
+            }
+        }
+        Ap242CompoundItemDefinitionRef::SetRepresentationItem(v) => {
+            for e in v {
+                check_representation_item_ref(model, e)?;
+            }
+        }
+    }
+    Ok(())
+}
 fn check_ap242_constructive_geometry_representation_items_ref(
     model: &StepModel,
     r: &Ap242ConstructiveGeometryRepresentationItemsRef,
@@ -53508,6 +54764,45 @@ fn check_ap242_context_dependent_over_riding_styled_item_item_ref(
         Ap242ContextDependentOverRidingStyledItemItemRef::VertexShell(i) => { if i.0 as usize >= model.vertex_shell_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "VERTEX_SHELL" }); } }
         Ap242ContextDependentOverRidingStyledItemItemRef::WireShell(i) => { if i.0 as usize >= model.wire_shell_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "WIRE_SHELL" }); } }
         Ap242ContextDependentOverRidingStyledItemItemRef::Complex(i) => { let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else { return Err(AuthorError::DanglingRef { entity: "COMPLEX" }); }; if !c.parts.iter().any(|p| ["ADVANCED_BREP_SHAPE_REPRESENTATION", "ADVANCED_FACE", "ANNOTATION_TEXT", "ANNOTATION_TEXT_CHARACTER", "BEZIER_CURVE", "BEZIER_SURFACE", "BOUNDED_CURVE", "BOUNDED_PCURVE", "BOUNDED_SURFACE", "BOUNDED_SURFACE_CURVE", "BREP_WITH_VOIDS", "B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS", "CAMERA_IMAGE", "CAMERA_IMAGE_3D_WITH_SCALE", "CAMERA_MODEL", "CAMERA_MODEL_D3", "CAMERA_MODEL_D3_MULTI_CLIPPING", "CAMERA_MODEL_D3_WITH_HLHSR", "CHARACTERIZED_REPRESENTATION", "CLOSED_SHELL", "COMPOSITE_CURVE", "COMPOSITE_TEXT", "CONNECTED_FACE_SET", "CURVE", "DEFINITIONAL_REPRESENTATION", "DEGENERATE_TOROIDAL_SURFACE", "DIRECTION", "DRAUGHTING_CALLOUT", "DRAUGHTING_MODEL", "EDGE", "EDGE_CURVE", "EDGE_LOOP", "ELEMENTARY_SURFACE", "EXTERNALLY_DEFINED_HATCH_STYLE", "EXTERNALLY_DEFINED_TILE_STYLE", "FACE", "FACE_BOUND", "FACE_OUTER_BOUND", "FACE_SURFACE", "FILL_AREA_STYLE_HATCHING", "FILL_AREA_STYLE_TILES", "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE", "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION", "GEOMETRIC_CURVE_SET", "GEOMETRIC_REPRESENTATION_ITEM", "GEOMETRIC_SET", "INTERSECTION_CURVE", "LEADER_DIRECTED_CALLOUT", "LOOP", "MANIFOLD_SOLID_BREP", "MANIFOLD_SURFACE_SHAPE_REPRESENTATION", "MAPPED_ITEM", "ONE_DIRECTION_REPEAT_FACTOR", "OPEN_SHELL", "ORIENTED_CLOSED_SHELL", "ORIENTED_EDGE", "PATH", "PCURVE", "PLACEMENT", "PLANAR_BOX", "PLANAR_EXTENT", "POINT", "POLY_LOOP", "PRESENTATION_AREA", "PRESENTATION_REPRESENTATION", "PRESENTATION_VIEW", "QUASI_UNIFORM_CURVE", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_CURVE", "RATIONAL_B_SPLINE_SURFACE", "REPOSITIONED_TESSELLATED_ITEM", "REPRESENTATION", "REPRESENTATION_REFERENCE", "SEAM_CURVE", "SHAPE_DIMENSION_REPRESENTATION", "SHAPE_REPRESENTATION", "SHAPE_REPRESENTATION_WITH_PARAMETERS", "SHELL_BASED_SURFACE_MODEL", "SOLID_MODEL", "SURFACE", "SURFACE_CURVE", "SYMBOL_REPRESENTATION", "TESSELLATED_GEOMETRIC_SET", "TESSELLATED_ITEM", "TESSELLATED_SHAPE_REPRESENTATION", "TESSELLATED_STRUCTURED_ITEM", "TEXT_LITERAL", "TOPOLOGICAL_REPRESENTATION_ITEM", "TOROIDAL_SURFACE", "TWO_DIRECTION_REPEAT_FACTOR", "UNIFORM_CURVE", "UNIFORM_SURFACE", "VECTOR", "VERTEX", "VERTEX_POINT"].contains(&part_name(p))) { return Err(AuthorError::InvalidComplex { reason: "not allowed in CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.ITEM" }); } }
+    }
+    Ok(())
+}
+fn check_ap242_datum_or_common_datum_ref(
+    model: &StepModel,
+    r: &Ap242DatumOrCommonDatumRef,
+) -> Result<(), AuthorError> {
+    match r {
+        Ap242DatumOrCommonDatumRef::CommonDatum(i) => {
+            if i.0 as usize >= model.common_datum_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "COMMON_DATUM",
+                });
+            }
+        }
+        Ap242DatumOrCommonDatumRef::Datum(i) => {
+            if i.0 as usize >= model.datum_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "DATUM" });
+            }
+        }
+        Ap242DatumOrCommonDatumRef::CommonDatumList(v) => {
+            for e in v {
+                check_datum_reference_element_ref(model, e)?;
+            }
+        }
+        Ap242DatumOrCommonDatumRef::Complex(i) => {
+            let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else {
+                return Err(AuthorError::DanglingRef { entity: "COMPLEX" });
+            };
+            if !c
+                .parts
+                .iter()
+                .any(|p| ["COMMON_DATUM", "DATUM"].contains(&part_name(p)))
+            {
+                return Err(AuthorError::InvalidComplex {
+                    reason: "not a DATUM_OR_COMMON_DATUM",
+                });
+            }
+        }
     }
     Ok(())
 }

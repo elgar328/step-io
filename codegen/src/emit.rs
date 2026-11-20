@@ -820,6 +820,9 @@ fn emit_author_ref_enums(
         for (variant, target) in &re.simple_arms {
             writeln!(s, "    {variant}({target}Id),").unwrap();
         }
+        for (variant, elem, _) in &re.aggregate {
+            writeln!(s, "    {variant}(Vec<{elem}>),").unwrap();
+        }
         if re.has_complex {
             writeln!(s, "    Complex(ComplexEntityId),").unwrap();
         }
@@ -847,6 +850,19 @@ fn emit_author_ref_enums(
             writeln!(
                 s,
                 "            {narrow}::{variant}(i) => {wide}::{}(i),",
+                to.0
+            )
+            .unwrap();
+        }
+        for (variant, _, wire) in &n.aggregate {
+            let to = w
+                .aggregate
+                .iter()
+                .find(|(_, _, t)| t == wire)
+                .unwrap_or_else(|| panic!("{narrow}::{variant} has no arm in {wide}"));
+            writeln!(
+                s,
+                "            {narrow}::{variant}(v) => {wide}::{}(v.into_iter().map(Into::into).collect()),",
                 to.0
             )
             .unwrap();
@@ -3597,7 +3613,8 @@ fn with_e2_bounds(f: &Field, bounds: Option<&(u32, Option<u32>)>) -> Field {
 }
 
 /// Code returning `NarrowedReference` unless the reference(s) at `expr`
-/// (a model-typed field `f`) are among `n`'s arms or complex parts.
+/// (a model-typed field `f`) are among `n`'s arms or complex parts, or an
+/// admitted aggregate arm whose every element is.
 fn narrowed_check(
     ir: &ModelIr,
     n: &crate::author_narrow::RuntimeNarrowing,
@@ -3605,6 +3622,32 @@ fn narrowed_check(
     expr: &str,
     expr_is_ref: bool,
     entity_upper: &str,
+) -> String {
+    let err = format!(
+        "return Err(AuthorError::NarrowedReference {{ entity: {entity_upper:?}, attribute: {:?} }})",
+        f.name
+    );
+    let one = |v: &str| narrowed_match(ir, n, v, &err);
+    let amp = if expr_is_ref { "" } else { "&" };
+    let body = match f.kind {
+        Kind::Vec(_) => format!("for v in x.iter() {{\n{}}}\n", one("v")),
+        _ => one("x"),
+    };
+    if f.optional || f.derivable {
+        format!("        if let Some(x) = {amp}{expr} {{\n{body}        }}\n")
+    } else {
+        format!("        {{ let x = {amp}{expr};\n{body}        }}\n")
+    }
+}
+
+/// Code: a `match` on the reference `v` running `err` unless it is among
+/// `n`'s arms or complex parts, or an admitted aggregate arm whose every
+/// element is.
+fn narrowed_match(
+    ir: &ModelIr,
+    n: &crate::author_narrow::RuntimeNarrowing,
+    v: &str,
+    err: &str,
 ) -> String {
     let w = &n.wide;
     let wide = ir
@@ -3618,10 +3661,6 @@ fn narrowed_check(
         .filter(|(_, t)| n.allowed.contains(t))
         .map(|(v, _)| format!("{w}::{v}(_)"))
         .collect();
-    let err = format!(
-        "return Err(AuthorError::NarrowedReference {{ entity: {entity_upper:?}, attribute: {:?} }})",
-        f.name
-    );
     let fits: Vec<String> = n.fits.iter().map(|p| format!("{p:?}")).collect();
     let part_conds: String = n
         .part_rules
@@ -3648,9 +3687,23 @@ fn narrowed_check(
     } else {
         format!("{} => {{}}\n", arms.join(" | "))
     };
+    let aggregates: String = wide
+        .aggregate
+        .iter()
+        .filter_map(|(variant, _, _)| {
+            let en = n.aggregates.get(variant)?;
+            Some(format!(
+                "{w}::{variant}(es) => {{ for e in es.iter() {{\n{}}} }}\n",
+                narrowed_match(ir, en, "e", err)
+            ))
+        })
+        .collect();
     // Only excluded parts narrow it: every arm is matched above.
     let exhaustive = arms.len() == wide.simple_arms.len()
-        && wide.aggregate.is_empty()
+        && wide
+            .aggregate
+            .iter()
+            .all(|(variant, _, _)| n.aggregates.contains_key(variant))
         && wide.enum_arms.is_empty()
         && wide.scalar_arms.is_empty();
     let rest = if exhaustive {
@@ -3658,17 +3711,7 @@ fn narrowed_check(
     } else {
         format!("_ => {err},\n")
     };
-    let one = |v: &str| format!("match {v} {{\n{ok}{complex}{rest}}}\n");
-    let amp = if expr_is_ref { "" } else { "&" };
-    let body = match f.kind {
-        Kind::Vec(_) => format!("for v in x.iter() {{\n{}}}\n", one("v")),
-        _ => one("x"),
-    };
-    if f.optional || f.derivable {
-        format!("        if let Some(x) = {amp}{expr} {{\n{body}        }}\n")
-    } else {
-        format!("        {{ let x = {amp}{expr};\n{body}        }}\n")
-    }
+    format!("match {v} {{\n{ok}{aggregates}{complex}{rest}}}\n")
 }
 
 /// Code: whether complex `c` has a part in `parts`.

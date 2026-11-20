@@ -15744,6 +15744,15 @@ pub enum Ap242CameraUsageMappedRepresentationRef {
     Complex(ComplexEntityId),
 }
 
+/// A reference to what AP242 edition 2 allows as `compound_item_definition`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242CompoundItemDefinitionRef {
+    ListRepresentationItem(Vec<RepresentationItemRef>),
+    SetRepresentationItem(Vec<RepresentationItemRef>),
+}
+
 /// A reference to what AP242 edition 2 allows for `constructive_geometry_representation.items`, where the
 /// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
 /// takes it and stores it as the model's wider reference.
@@ -15973,6 +15982,17 @@ pub enum Ap242ContextDependentOverRidingStyledItemItemRef {
     VertexPoint(VertexPointId),
     VertexShell(VertexShellId),
     WireShell(WireShellId),
+    Complex(ComplexEntityId),
+}
+
+/// A reference to what AP242 edition 2 allows as `datum_or_common_datum`, where the
+/// model, read from every edition, allows more. [`Ap242Author`](crate::Ap242Author)
+/// takes it and stores it as the model's wider reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Ap242DatumOrCommonDatumRef {
+    CommonDatum(CommonDatumId),
+    Datum(DatumId),
+    CommonDatumList(Vec<DatumReferenceElementRef>),
     Complex(ComplexEntityId),
 }
 
@@ -16971,6 +16991,23 @@ impl From<Ap242CameraUsageMappedRepresentationRef> for RepresentationRef {
     }
 }
 
+impl From<Ap242CompoundItemDefinitionRef> for CompoundItemDefinitionRef {
+    fn from(r: Ap242CompoundItemDefinitionRef) -> Self {
+        match r {
+            Ap242CompoundItemDefinitionRef::ListRepresentationItem(v) => {
+                CompoundItemDefinitionRef::ListRepresentationItem(
+                    v.into_iter().map(Into::into).collect(),
+                )
+            }
+            Ap242CompoundItemDefinitionRef::SetRepresentationItem(v) => {
+                CompoundItemDefinitionRef::SetRepresentationItem(
+                    v.into_iter().map(Into::into).collect(),
+                )
+            }
+        }
+    }
+}
+
 impl From<Ap242ConstructiveGeometryRepresentationItemsRef> for RepresentationItemRef {
     fn from(r: Ap242ConstructiveGeometryRepresentationItemsRef) -> Self {
         match r {
@@ -17315,6 +17352,19 @@ impl From<Ap242ContextDependentOverRidingStyledItemItemRef>
             Ap242ContextDependentOverRidingStyledItemItemRef::VertexShell(i) => StyledItemTargetOrRepresentationItemRef::VertexShell(i),
             Ap242ContextDependentOverRidingStyledItemItemRef::WireShell(i) => StyledItemTargetOrRepresentationItemRef::WireShell(i),
             Ap242ContextDependentOverRidingStyledItemItemRef::Complex(i) => StyledItemTargetOrRepresentationItemRef::Complex(i),
+        }
+    }
+}
+
+impl From<Ap242DatumOrCommonDatumRef> for DatumOrCommonDatumRef {
+    fn from(r: Ap242DatumOrCommonDatumRef) -> Self {
+        match r {
+            Ap242DatumOrCommonDatumRef::CommonDatum(i) => DatumOrCommonDatumRef::CommonDatum(i),
+            Ap242DatumOrCommonDatumRef::Datum(i) => DatumOrCommonDatumRef::Datum(i),
+            Ap242DatumOrCommonDatumRef::CommonDatumList(v) => {
+                DatumOrCommonDatumRef::CommonDatumList(v.into_iter().map(Into::into).collect())
+            }
+            Ap242DatumOrCommonDatumRef::Complex(i) => DatumOrCommonDatumRef::Complex(i),
         }
     }
 }

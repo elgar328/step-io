@@ -184,12 +184,18 @@ pub struct Attr {
 }
 
 /// A WHERE rule's restriction of an attribute's types (output profile).
+/// Unknown fields fail the read, so a restriction the profile adds is not
+/// silently dropped.
 #[derive(Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct TypeRule {
     /// The restricted attribute.
     pub name: String,
     /// The entity declaring the attribute.
     pub owner: String,
+    /// The WHERE rule's label (provenance).
+    #[allow(dead_code)]
+    pub rule: String,
     /// The single type the rule names, else `<entity>_<attr>`: the name of a
     /// reference type made for it.
     pub type_name: String,
@@ -207,6 +213,21 @@ pub struct TypeRule {
     /// The rule does not hold for an instance of any of these entities.
     #[serde(default)]
     pub unless_self: Vec<String>,
+    /// The aggregate SELECT members the rule admits, each with the entities
+    /// its elements may reference; an aggregate member not listed is not
+    /// admitted.
+    #[serde(default)]
+    pub aggregates: Vec<AggregateRule>,
+}
+
+/// An aggregate SELECT member a type rule admits.
+#[derive(Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct AggregateRule {
+    /// The aggregate type's name.
+    pub type_name: String,
+    /// The entities (lowercase) each element may reference.
+    pub admits: BTreeSet<String>,
 }
 
 impl TypeRule {

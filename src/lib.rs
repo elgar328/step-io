@@ -455,5 +455,39 @@ pub use refgraph::RefGraph;
 /// let _ = a.add_length_measure_with_unit(value, m::Ap242LengthUnitRef::MassUnit(unit));
 /// # }
 /// ```
+///
+/// AP242's `datum_or_common_datum` takes datum reference elements as a list
+/// of two or more (`common_datum_list`), not one alone:
+///
+/// ```
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, pds: m::ProductDefinitionShapeRef, e: m::DatumReferenceElementId, g: m::DatumReferenceElementId) {
+/// let _ = a.add_datum_reference_compartment(
+///     "",
+///     None,
+///     pds,
+///     m::Logical::False,
+///     m::Ap242DatumOrCommonDatumRef::CommonDatumList(vec![
+///         m::DatumReferenceElementRef::DatumReferenceElement(e),
+///         m::DatumReferenceElementRef::DatumReferenceElement(g),
+///     ]),
+///     None,
+/// );
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, pds: m::ProductDefinitionShapeRef, e: m::DatumReferenceElementId) {
+/// let _ = a.add_datum_reference_compartment(
+///     "",
+///     None,
+///     pds,
+///     m::Logical::False,
+///     m::Ap242DatumOrCommonDatumRef::DatumReferenceElement(e),
+///     None,
+/// );
+/// # }
+/// ```
 #[cfg(doctest)]
 mod ap242_narrowed_arguments {}

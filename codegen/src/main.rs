@@ -139,7 +139,7 @@ fn main() {
     // The output schema read as a schema of its own (entities, attributes
     // with every redeclaration, SELECTs), for where it is narrower than the
     // model.
-    let e2_schema: Schema = toml::from_str(
+    let target_schema: Schema = toml::from_str(
         &std::fs::read_to_string(format!("{root}/schema/{}.toml", profile_specs[0].2))
             .expect("read output profile"),
     )
@@ -150,7 +150,7 @@ fn main() {
         .keys()
         .map(|k| k.to_uppercase())
         .collect();
-    let narrowing = author_narrow::AuthorNarrowing::build(&ir, &e2_schema, &legal);
+    let narrowing = author_narrow::AuthorNarrowing::build(&ir, &target_schema, &legal);
     for line in narrowing.report() {
         eprintln!("codegen: narrow {line}");
     }

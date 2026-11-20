@@ -1,16 +1,18 @@
-//! Where the AP242 edition 2 output schema is narrower than the model.
+//! Where the output schema (the AP242 edition `Ap242Author` writes) is
+//! narrower than the model.
 //!
 //! The model is typed by the union of every edition (so reading accepts what
-//! any of them allows), and `Ap242Author` writes edition 2 only. Where an
-//! edition 2 attribute — through its own declaration, a SELECT with fewer
-//! members, or a redeclaration — admits fewer entities than the model field,
-//! the constructor takes a narrower reference type and converts it into the
-//! field; a complex part checks the same at run time. Edition 2's `WHERE`
-//! rules that limit which types an attribute references (the profile's
-//! `type_rules`, inherited by subtypes) narrow the same way; what they ask of
-//! a complex value's parts together (none of a type, exactly one of several)
-//! is checked at run time. Edition 2's aggregate bounds replace the model's
-//! where they differ.
+//! any of them allows), and `Ap242Author` writes the output edition only.
+//! Where an output attribute — through its own declaration, a SELECT with
+//! fewer members, or a redeclaration — admits fewer entities, or fewer
+//! aggregate SELECT members or elements of them, than the model field, the
+//! constructor takes a narrower reference type and converts it into the
+//! field; a complex part checks the same at run time. The output edition's
+//! `WHERE` rules that limit which types an attribute references (the
+//! profile's `type_rules`, inherited by subtypes) narrow the same way; what
+//! they ask of a complex value's parts together (none of a type, exactly one
+//! of several) is checked at run time. The output edition's aggregate bounds
+//! replace the model's where they differ.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -29,22 +31,26 @@ pub struct NarrowParam {
 
 /// A run-time narrowing check: the value of `field` (a model-typed
 /// reference, or a list of them) must be one of `allowed` simple arms (Rust
-/// target names of `wide`) or a complex entity with a part in `fits` that
-/// meets every one of `part_rules`.
-#[derive(Debug, Clone)]
+/// target names of `wide`), a complex entity with a part in `fits` that
+/// meets every one of `part_rules`, or an aggregate arm in `aggregates`
+/// whose every element meets that arm's narrowing.
+#[derive(Debug, Clone, PartialEq)]
 pub struct RuntimeNarrowing {
     pub wide: String,
     pub allowed: BTreeSet<String>,
     pub fits: BTreeSet<String>,
     /// What WHERE rules ask of a complex value's parts.
     pub part_rules: Vec<PartRule>,
+    /// Aggregate arm (variant of `wide`) → what each element may be; an
+    /// aggregate arm not listed is not admitted.
+    pub aggregates: BTreeMap<String, RuntimeNarrowing>,
 }
 
 /// What a WHERE rule asks of a complex value's parts (upper-case part
 /// names). A complex value's `TYPEOF` is the union over its parts, and it
 /// holds every supertype as a part, so it holds a type exactly when some
 /// part is, or belongs to, that type.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum PartRule {
     /// No part is, or belongs to, any of these types.
     NoneOf(BTreeSet<String>),
@@ -72,7 +78,7 @@ fn merge_part_rules(into: &mut Vec<PartRule>, from: impl IntoIterator<Item = Par
     }
 }
 
-/// One edition 2 narrowing of a complex part's field: applies when the
+/// One output-edition narrowing of a complex part's field: applies when the
 /// instance holds part `by` (Rust variant name), a part of each `when` group
 /// and no part in `unless` (upper-case part names: a WHERE rule's condition
 /// on SELF's type).
@@ -100,7 +106,8 @@ pub struct AuthorNarrowing {
     /// field's constructor type admits the entity itself.
     pub self_referencing: BTreeSet<String>,
     /// Narrower enums no model enum matches, keyed by Rust name, with what
-    /// each stands for in edition 2 (``as `type` `` or ``for `entity.attr` ``).
+    /// each stands for in the output edition (``as `type` `` or
+    /// ``for `entity.attr` ``).
     pub new_enums: BTreeMap<String, (String, RefEnum)>,
     /// (entity Rust name, field name) → the argument's reference enum and
     /// what WHERE rules ask of a complex value's parts, checked in the
@@ -108,21 +115,65 @@ pub struct AuthorNarrowing {
     pub part_rules: BTreeMap<(String, String), (String, Vec<PartRule>)>,
     /// (narrow, wide) enum pairs a constructor converts between.
     pub conversions: BTreeSet<(String, String)>,
-    /// (entity Rust name, field name) → edition 2's outer aggregate bounds,
-    /// where they differ from the model's.
+    /// (entity Rust name, field name) → the output edition's outer aggregate
+    /// bounds, where they differ from the model's.
     pub bounds: BTreeMap<(String, String), (u32, Option<u32>)>,
     pub complex: Vec<ComplexAuthorNarrowing>,
 }
 
-/// Edition 2's view: entity hierarchy and SELECT table, unfiltered by the
-/// coverage `narrow` settings (which name members of the unioned SELECTs and
-/// would cut members edition 2 reaches through nested SELECTs).
-struct E2<'a> {
+/// What a type admits: the entities (lowercase) a reference may be, and its
+/// aggregate SELECT members (alias → element type), which hold elements
+/// rather than being one.
+#[derive(Default)]
+struct Admits {
+    entities: BTreeSet<String>,
+    aggregates: BTreeMap<String, String>,
+}
+
+/// What WHERE rules allow of an attribute: the entities, and per aggregate
+/// SELECT member the entities its elements may be (a member not listed is not
+/// allowed).
+#[derive(Clone)]
+struct Allowed {
+    entities: BTreeSet<String>,
+    aggregates: BTreeMap<String, BTreeSet<String>>,
+}
+
+impl Allowed {
+    fn of(r: &TypeRule) -> Self {
+        Self {
+            entities: r.admits.clone(),
+            aggregates: r
+                .aggregates
+                .iter()
+                .map(|a| (a.type_name.clone(), a.admits.clone()))
+                .collect(),
+        }
+    }
+
+    /// What `self` and `other` both allow.
+    fn and(mut self, other: &Self) -> Self {
+        self.entities.retain(|e| other.entities.contains(e));
+        self.aggregates.retain(|t, elements| {
+            other.aggregates.get(t).is_some_and(|o| {
+                elements.retain(|e| o.contains(e));
+                true
+            })
+        });
+        self
+    }
+}
+
+/// The output edition's view: entity hierarchy and SELECT table, unfiltered
+/// by the coverage `narrow` settings (which name members of the unioned
+/// SELECTs and would cut members the output edition reaches through nested
+/// SELECTs).
+struct Target<'a> {
     schema: &'a Schema,
     children: BTreeMap<&'a str, Vec<&'a str>>,
 }
 
-impl<'a> E2<'a> {
+impl<'a> Target<'a> {
     fn new(schema: &'a Schema) -> Self {
         let mut children: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
         for (n, e) in &schema.entity {
@@ -133,21 +184,27 @@ impl<'a> E2<'a> {
         Self { schema, children }
     }
 
-    /// The entities (lowercase) a type admits; empty for a non-reference.
-    fn admits(&self, ty: &str) -> BTreeSet<String> {
-        let mut out = BTreeSet::new();
+    /// What a type admits (of an aggregate attribute, each element); empty
+    /// for a non-reference.
+    fn admits(&self, ty: &str) -> Admits {
+        let mut out = Admits::default();
         self.admits_into(element(ty), &mut out, 0);
         out
     }
 
-    fn admits_into(&self, name: &str, out: &mut BTreeSet<String>, depth: u32) {
+    /// The entities (lowercase) a type admits.
+    fn entities(&self, ty: &str) -> BTreeSet<String> {
+        self.admits(ty).entities
+    }
+
+    fn admits_into(&self, name: &str, out: &mut Admits, depth: u32) {
         if depth > 32 {
             return;
         }
         if self.schema.entity.contains_key(name) {
             let mut stack = vec![name];
             while let Some(n) = stack.pop() {
-                if out.insert(n.to_string())
+                if out.entities.insert(n.to_string())
                     && let Some(kids) = self.children.get(n)
                 {
                     stack.extend(kids.iter().copied());
@@ -163,8 +220,15 @@ impl<'a> E2<'a> {
             .strip_prefix("SELECT(")
             .and_then(|m| m.strip_suffix(')'))
         {
-            for m in members.split(',') {
-                self.admits_into(element(m.trim()), out, depth + 1);
+            for m in members.split(',').map(str::trim) {
+                // An aggregate member holds elements; it is not one of them.
+                match self.schema.types.get(m) {
+                    Some(t) if outer_bounds(&t.aliased).is_some() => {
+                        out.aggregates
+                            .insert(m.to_string(), element(&t.aliased).to_string());
+                    }
+                    _ => self.admits_into(m, out, depth + 1),
+                }
             }
         } else {
             self.admits_into(element(&td.aliased), out, depth + 1);
@@ -228,8 +292,8 @@ fn ref_target(k: &Kind) -> Option<&str> {
 }
 
 impl AuthorNarrowing {
-    pub fn build(ir: &ModelIr, e2_schema: &Schema, legal: &BTreeSet<String>) -> Self {
-        let e2 = E2::new(e2_schema);
+    pub fn build(ir: &ModelIr, target_schema: &Schema, legal: &BTreeSet<String>) -> Self {
+        let target = Target::new(target_schema);
         let upper: BTreeMap<&str, &str> = ir
             .simples
             .iter()
@@ -244,7 +308,7 @@ impl AuthorNarrowing {
         };
         // The complex parts that are, or belong to, any of `names`.
         let parts_of = |names: &mut dyn Iterator<Item = &String>| -> BTreeSet<String> {
-            let entities: BTreeSet<String> = names.flat_map(|n| e2.admits(n)).collect();
+            let entities: BTreeSet<String> = names.flat_map(|n| target.entities(n)).collect();
             ir.parts
                 .iter()
                 .filter(|p| entities.contains(&p.name.to_lowercase()))
@@ -281,21 +345,9 @@ impl AuthorNarrowing {
             }
             out
         };
-        // What edition 2 admits of a model reference enum, for `ty` and
-        // within `rules` (the entities WHERE rules allow) if given, with a
-        // complex value meeting `part_rules`.
-        let narrowed = |re: &RefEnum,
-                        ty: &str,
-                        rules: Option<&BTreeSet<String>>,
-                        part_rules: &[PartRule]|
-         -> Option<RuntimeNarrowing> {
-            let mut admits = e2.admits(ty);
-            if admits.is_empty() {
-                return None;
-            }
-            if let Some(rules) = rules {
-                admits.retain(|a| rules.contains(a));
-            }
+        // Of a model reference enum, the AP242-legal simple arms and complex
+        // parts that are among `admits`, and all of them.
+        let arms_within = |re: &RefEnum, admits: &BTreeSet<String>| {
             let m = legal_arms(re);
             let allowed: BTreeSet<String> = m
                 .iter()
@@ -317,17 +369,77 @@ impl AuthorNarrowing {
                 .filter(|p| admits.contains(&p.to_lowercase()))
                 .cloned()
                 .collect();
+            (allowed, fits, m, fits_m)
+        };
+        // What the output edition admits of a model reference enum, for `ty`
+        // and within `rules` (what WHERE rules allow) if given, with a
+        // complex value meeting `part_rules`.
+        let narrowed = |re: &RefEnum,
+                        ty: &str,
+                        rules: Option<&Allowed>,
+                        part_rules: &[PartRule]|
+         -> Option<RuntimeNarrowing> {
+            let mut admits = target.admits(ty);
+            if admits.entities.is_empty() && admits.aggregates.is_empty() {
+                return None;
+            }
+            if let Some(rules) = rules {
+                admits.entities.retain(|a| rules.entities.contains(a));
+            }
+            let (allowed, fits, m, fits_m) = arms_within(re, &admits.entities);
+            // Each aggregate arm: admitted where the type has the member and
+            // every rule lists it, its elements within what they all allow.
+            let mut aggregates = BTreeMap::new();
+            let mut aggregates_narrower = false;
+            for (variant, elem_rust, wire) in &re.aggregate {
+                let alias = wire.to_lowercase();
+                let elem = ir
+                    .ref_enums
+                    .values()
+                    .find(|e| e.rust == *elem_rust)
+                    .expect("aggregate element enum");
+                let elements = admits.aggregates.get(&alias).map(|elem_ty| {
+                    let mut elements = target.entities(elem_ty);
+                    if let Some(rules) = rules {
+                        match rules.aggregates.get(&alias) {
+                            Some(r) => elements.retain(|e| r.contains(e)),
+                            None => elements.clear(),
+                        }
+                    }
+                    elements
+                });
+                let (e_allowed, e_fits, e_m, e_fits_m) =
+                    arms_within(elem, &elements.unwrap_or_default());
+                if e_allowed.is_empty() && e_fits.is_empty() {
+                    aggregates_narrower = true;
+                    continue;
+                }
+                aggregates_narrower |= e_allowed != e_m || e_fits != e_fits_m;
+                aggregates.insert(
+                    variant.clone(),
+                    RuntimeNarrowing {
+                        wide: elem.rust.clone(),
+                        allowed: e_allowed,
+                        fits: e_fits,
+                        part_rules: Vec::new(),
+                        aggregates: BTreeMap::new(),
+                    },
+                );
+            }
             let part_rules = if re.has_complex {
                 part_rules.to_vec()
             } else {
                 Vec::new()
             };
-            (allowed != m || fits != fits_m || !part_rules.is_empty()).then(|| RuntimeNarrowing {
-                wide: re.rust.clone(),
-                allowed,
-                fits,
-                part_rules,
-            })
+            (allowed != m || fits != fits_m || !part_rules.is_empty() || aggregates_narrower).then(
+                || RuntimeNarrowing {
+                    wide: re.rust.clone(),
+                    allowed,
+                    fits,
+                    part_rules,
+                    aggregates,
+                },
+            )
         };
 
         let mut out = AuthorNarrowing::default();
@@ -336,7 +448,7 @@ impl AuthorNarrowing {
             if !legal.contains(&se.name) {
                 continue;
             }
-            let attrs = e2_schema.flattened_attrs(&se.name.to_lowercase());
+            let attrs = target_schema.flattened_attrs(&se.name.to_lowercase());
             for f in &se.fields {
                 if f.derived {
                     continue;
@@ -351,18 +463,18 @@ impl AuthorNarrowing {
                 {
                     out.bounds.insert(key.clone(), b);
                 }
-                let Some(target) = ref_target(&f.kind) else {
+                let Some(ref_ty) = ref_target(&f.kind) else {
                     continue;
                 };
-                let re = &ir.ref_enums[target];
+                let re = &ir.ref_enums[ref_ty];
                 let lower = se.name.to_lowercase();
                 // The rules on this field holding for an instance of `ent`:
                 // SELF's type is fixed, so its conditions are settled here.
                 let rules_for = |ent: &str| -> Vec<(&str, &TypeRule)> {
-                    e2_schema
+                    target_schema
                         .type_rules_for(ent)
                         .into_iter()
-                        .filter(|(_, r)| r.name == f.name && r.holds_for(e2_schema, ent))
+                        .filter(|(_, r)| r.name == f.name && r.holds_for(target_schema, ent))
                         .collect()
                 };
                 let rules = rules_for(&lower);
@@ -373,22 +485,17 @@ impl AuthorNarrowing {
                         .all(|(_, t)| rules.iter().any(|(_, r)| std::ptr::eq(*t, *r)))
                 };
                 let same_rules = |ent: &str| rules_for(ent).len() == rules.len() && within(ent);
-                let allowed_by_rules = rules.iter().map(|(_, r)| &r.admits).fold(
-                    None::<BTreeSet<String>>,
-                    |acc, admits| {
-                        Some(match acc {
-                            None => admits.clone(),
-                            Some(acc) => acc.intersection(admits).cloned().collect(),
-                        })
-                    },
-                );
+                let allowed_by_rules = rules
+                    .iter()
+                    .map(|(_, r)| Allowed::of(r))
+                    .reduce(|acc, r| acc.and(&r));
                 let part_rules = part_rules_of(&mut rules.iter().map(|(_, r)| *r));
                 let Some(n) = narrowed(re, &a.ty, allowed_by_rules.as_ref(), &part_rules) else {
                     continue;
                 };
                 assert!(
-                    re.aggregate.is_empty() && re.enum_arms.is_empty() && re.scalar_arms.is_empty(),
-                    "{}.{}: edition 2 narrows a reference enum with non-entity arms ({})",
+                    re.enum_arms.is_empty() && re.scalar_arms.is_empty(),
+                    "{}.{}: the output edition narrows a reference enum with enum or scalar arms ({})",
                     se.name,
                     f.name,
                     re.rust
@@ -407,14 +514,15 @@ impl AuthorNarrowing {
                 // does so names, if the narrowing is all that type allows;
                 // else after that rule's attribute, or this attribute.
                 let same = |m: &Option<RuntimeNarrowing>| {
-                    m.as_ref()
-                        .is_some_and(|m| m.allowed == n.allowed && m.fits == n.fits)
+                    m.as_ref().is_some_and(|m| {
+                        m.allowed == n.allowed && m.fits == n.fits && m.aggregates == n.aggregates
+                    })
                 };
                 // A rule names the type only where it holds the same for
                 // its holder: not where this entity is exempt from another.
-                let alone = rules
-                    .iter()
-                    .find(|(h, r)| same(&narrowed(re, &a.ty, Some(&r.admits), none)) && within(h));
+                let alone = rules.iter().find(|(h, r)| {
+                    same(&narrowed(re, &a.ty, Some(&Allowed::of(r)), none)) && within(h)
+                });
                 let (name, what) = if same(&narrowed(re, &a.ty, None, none)) {
                     let ty = element(&a.ty);
                     (ty.to_string(), format!("as `{ty}`"))
@@ -427,13 +535,13 @@ impl AuthorNarrowing {
                     // Else after the most general entity with this field
                     // that the same rules hold for.
                     let general = || {
-                        let alike: Vec<&str> = e2_schema
+                        let alike: Vec<&str> = target_schema
                             .entity
                             .keys()
                             .map(String::as_str)
                             .filter(|e| {
-                                e2_schema.is_a(&lower, e)
-                                    && e2_schema
+                                target_schema.is_a(&lower, e)
+                                    && target_schema
                                         .flattened_attrs(e)
                                         .iter()
                                         .any(|a| a.name == f.name)
@@ -442,7 +550,7 @@ impl AuthorNarrowing {
                             .collect();
                         alike
                             .iter()
-                            .find(|g| alike.iter().all(|e| e2_schema.is_a(e, g)))
+                            .find(|g| alike.iter().all(|e| target_schema.is_a(e, g)))
                             .map_or(lower.clone(), |g| g.to_string())
                     };
                     let (holder, attr) = alone.map_or_else(
@@ -468,7 +576,7 @@ impl AuthorNarrowing {
             }
         }
 
-        // A self-referencing constructor exists where edition 2 lets the
+        // A self-referencing constructor exists where the output edition lets the
         // entity reference itself: through a field's narrower type where it
         // has one. It takes the model struct, so it checks the narrowings at
         // run time; the plain constructor still takes the narrower types.
@@ -495,8 +603,8 @@ impl AuthorNarrowing {
             }
         }
 
-        // Complex parts: edition 2's redeclarations of another part's field,
-        // and a part's own field typed narrower in edition 2.
+        // Complex parts: the output edition's redeclarations of another
+        // part's field, and a part's own field typed narrower in it.
         let part_rust: BTreeMap<String, &str> = ir
             .parts
             .iter()
@@ -504,13 +612,13 @@ impl AuthorNarrowing {
             .collect();
         for p in &ir.parts {
             let lower = p.name.to_lowercase();
-            let Some(ent) = e2_schema.entity.get(&lower) else {
+            let Some(ent) = target_schema.entity.get(&lower) else {
                 continue;
             };
             let add = |owner: &str,
                        field: &str,
                        ty: &str,
-                       rules: Option<&BTreeSet<String>>,
+                       rules: Option<&Allowed>,
                        part_rules: &[PartRule],
                        (when, unless): (Vec<BTreeSet<String>>, BTreeSet<String>),
                        out: &mut AuthorNarrowing| {
@@ -524,10 +632,10 @@ impl AuthorNarrowing {
                 if f.derived {
                     return;
                 }
-                let Some(target) = ref_target(&f.kind) else {
+                let Some(ref_ty) = ref_target(&f.kind) else {
                     return;
                 };
-                if let Some(check) = narrowed(&ir.ref_enums[target], ty, rules, part_rules) {
+                if let Some(check) = narrowed(&ir.ref_enums[ref_ty], ty, rules, part_rules) {
                     out.complex.push(ComplexAuthorNarrowing {
                         owner: owner.to_string(),
                         idx,
@@ -566,7 +674,7 @@ impl AuthorNarrowing {
                 let Some(owner) = part_rust.get(&r.owner) else {
                     continue;
                 };
-                let Some(declared) = e2_schema
+                let Some(declared) = target_schema
                     .entity
                     .get(&r.owner)
                     .and_then(|o| o.own_attrs.iter().find(|a| a.name == r.name))
@@ -590,7 +698,7 @@ impl AuthorNarrowing {
                     owner,
                     &r.name,
                     &declared.ty,
-                    Some(&r.admits),
+                    Some(&Allowed::of(r)),
                     &part_rules,
                     (when, unless),
                     &mut out,
@@ -617,12 +725,20 @@ impl AuthorNarrowing {
             k.allowed.retain(|a| next.check.allowed.contains(a));
             k.fits.retain(|p| next.check.fits.contains(p));
             merge_part_rules(&mut k.part_rules, next.check.part_rules.iter().cloned());
+            k.aggregates.retain(|v, e| {
+                next.check.aggregates.get(v).is_some_and(|n| {
+                    e.allowed.retain(|a| n.allowed.contains(a));
+                    e.fits.retain(|p| n.fits.contains(p));
+                    true
+                })
+            });
             true
         });
         out
     }
 
-    /// The narrower enum `rust`: a model enum or one made for edition 2.
+    /// The narrower enum `rust`: a model enum or one made for the output
+    /// edition.
     fn narrow_enum<'s>(&'s self, ir: &'s ModelIr, rust: &str) -> &'s RefEnum {
         self.new_enums
             .get(rust)
@@ -631,10 +747,15 @@ impl AuthorNarrowing {
             .unwrap_or_else(|| panic!("narrower enum {rust} not found"))
     }
 
-    /// The simple arms (Rust target names) of the narrower enum `rust`.
+    /// The simple arms (Rust target names) of the narrower enum `rust`, and
+    /// of its aggregate arms' element enums.
     fn narrow_arms(&self, ir: &ModelIr, rust: &str) -> BTreeSet<String> {
         let re = self.narrow_enum(ir, rust);
-        re.simple_arms.iter().map(|(_, t)| t.clone()).collect()
+        let mut arms: BTreeSet<String> = re.simple_arms.iter().map(|(_, t)| t.clone()).collect();
+        for (_, elem, _) in &re.aggregate {
+            arms.extend(self.narrow_arms(ir, elem));
+        }
+        arms
     }
 
     /// Whether the narrower enum `rust` has a complex arm.
@@ -643,42 +764,78 @@ impl AuthorNarrowing {
     }
 
     /// The enum a constructor takes for narrowing `n`: a model enum with
-    /// exactly those AP242-legal arms and complex parts, or a new `Ap242…Ref`
-    /// named after edition 2's type.
+    /// exactly those AP242-legal arms, complex parts and aggregate arms (each
+    /// element enum holding exactly what the narrowing allows of an
+    /// element), or a new `Ap242…Ref` named after the output edition's type.
     fn enum_for(
         &mut self,
         ir: &ModelIr,
         n: &RuntimeNarrowing,
-        e2_type: &str,
+        target_type: &str,
         what: &str,
         legal: &BTreeSet<String>,
         legal_arms: &impl Fn(&RefEnum) -> BTreeSet<String>,
     ) -> String {
-        let pure = |re: &RefEnum| {
-            re.aggregate.is_empty() && re.enum_arms.is_empty() && re.scalar_arms.is_empty()
+        let legal_fits = |re: &RefEnum| -> BTreeSet<String> {
+            re.complex_parts
+                .iter()
+                .filter(|p| legal.contains(p.as_str()))
+                .cloned()
+                .collect()
+        };
+        let model_enum = |rust: &str| {
+            ir.ref_enums
+                .values()
+                .find(|e| e.rust == rust)
+                .expect("model enum")
+        };
+        let holds = |re: &RefEnum, n: &RuntimeNarrowing| {
+            legal_arms(re) == n.allowed && legal_fits(re) == n.fits
         };
         let same = |re: &RefEnum| {
-            pure(re)
-                && legal_arms(re) == n.allowed
-                && re
-                    .complex_parts
-                    .iter()
-                    .filter(|p| legal.contains(p.as_str()))
-                    .cloned()
-                    .collect::<BTreeSet<_>>()
-                    == n.fits
+            re.enum_arms.is_empty()
+                && re.scalar_arms.is_empty()
+                && holds(re, n)
+                && re.aggregate.len() == n.aggregates.len()
+                && re.aggregate.iter().all(|(v, elem, _)| {
+                    n.aggregates
+                        .get(v)
+                        .is_some_and(|en| holds(model_enum(elem), en))
+                })
         };
-        if let Some(re) = ir.ref_enums.get(e2_type).filter(|re| same(re)) {
+        if let Some(re) = ir.ref_enums.get(target_type).filter(|re| same(re)) {
             return re.rust.clone();
         }
         if let Some(re) = ir.ref_enums.values().find(|re| same(re)) {
             return re.rust.clone();
         }
-        let rust = format!("Ap242{}Ref", pascal(e2_type));
+        // Each admitted aggregate arm, with an element enum of its own where
+        // the elements are narrowed.
+        let wide = model_enum(&n.wide);
+        let mut aggregate = Vec::new();
+        for (variant, elem_wide, wire) in &wide.aggregate {
+            let Some(en) = n.aggregates.get(variant) else {
+                continue;
+            };
+            let alias = wire.to_lowercase();
+            let elem = self.enum_for(
+                ir,
+                en,
+                &format!("{target_type}_{alias}"),
+                &format!("in a `{alias}` {what}"),
+                legal,
+                legal_arms,
+            );
+            if elem != *elem_wide {
+                self.conversions.insert((elem.clone(), elem_wide.clone()));
+            }
+            aggregate.push((variant.clone(), elem, wire.clone()));
+        }
+        let rust = format!("Ap242{}Ref", pascal(target_type));
         let re = RefEnum {
             rust: rust.clone(),
             simple_arms: n.allowed.iter().map(|t| (t.clone(), t.clone())).collect(),
-            aggregate: Vec::new(),
+            aggregate,
             enum_arms: Vec::new(),
             scalar_arms: Vec::new(),
             has_complex: !n.fits.is_empty(),
@@ -686,8 +843,10 @@ impl AuthorNarrowing {
         };
         if let Some((_, prev)) = self.new_enums.get(&rust) {
             assert!(
-                prev.simple_arms == re.simple_arms && prev.complex_parts == re.complex_parts,
-                "{rust}: two narrowings of edition 2's {e2_type} differ"
+                prev.simple_arms == re.simple_arms
+                    && prev.complex_parts == re.complex_parts
+                    && prev.aggregate == re.aggregate,
+                "{rust}: two narrowings of the output edition's {target_type} differ"
             );
         }
         assert!(
