@@ -118,6 +118,10 @@ pub struct AuthorNarrowing {
     /// (entity Rust name, field name) → the output edition's outer aggregate
     /// bounds, where they differ from the model's.
     pub bounds: BTreeMap<(String, String), (u32, Option<u32>)>,
+    /// Named LIST/SET/BAG type (lowercase) → its bounds in the output
+    /// edition, for each type with a bound to check; read by the aggregate
+    /// SELECT member that holds the type.
+    pub aggregate_bounds: BTreeMap<String, (u32, Option<u32>)>,
     pub complex: Vec<ComplexAuthorNarrowing>,
 }
 
@@ -443,6 +447,17 @@ impl AuthorNarrowing {
         };
 
         let mut out = AuthorNarrowing::default();
+        for (name, t) in &target_schema.types {
+            let aliased = t.aliased.trim_start();
+            if ["LIST", "SET", "BAG"]
+                .iter()
+                .any(|k| aliased.starts_with(k))
+                && let Some(b) = outer_bounds(aliased)
+                && b != (0, None)
+            {
+                out.aggregate_bounds.insert(name.clone(), b);
+            }
+        }
         let mut checks: BTreeMap<(String, String), RuntimeNarrowing> = BTreeMap::new();
         for se in &ir.simples {
             if !legal.contains(&se.name) {

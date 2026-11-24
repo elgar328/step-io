@@ -19,7 +19,9 @@ pub enum AuthorError {
     /// The part set of a complex instance violates a schema rule.
     InvalidComplex { reason: &'static str },
     /// An aggregate attribute's element count is outside the schema's
-    /// cardinality bounds (e.g. `SET [1:?]` given an empty set).
+    /// cardinality bounds (e.g. `SET [1:?]` given an empty set). For a list
+    /// held in a SELECT, `entity` is the list type (such as
+    /// `COMMON_DATUM_LIST`) and `attribute` is `"value"`.
     Cardinality {
         entity: &'static str,
         attribute: &'static str,
@@ -95,8 +97,9 @@ impl std::error::Error for AuthorError {}
 
 /// Strict AP242 authoring handle. Owns the model privately: entities enter
 /// only through the generated constructors, which check every value against
-/// the schema's types, the size of each aggregate attribute and of each list
-/// nested in one (such as a row of B-spline control points), every reference
+/// the schema's types, the size of each aggregate attribute, of each list
+/// nested in one (such as a row of B-spline control points) and of each list
+/// held in a SELECT (such as a `COMMON_DATUM_LIST`), every reference
 /// for an entity of a fitting type that exists in this model, every complex
 /// instance against the schema's rules for combining types, and every real
 /// for being finite. They do not check `WHERE` rules, and an id from another
@@ -32065,11 +32068,29 @@ fn check_compound_item_definition_ref(
             }
         }
         CompoundItemDefinitionRef::ListRepresentationItem(v) => {
+            if v.len() < 1 {
+                return Err(AuthorError::Cardinality {
+                    entity: "LIST_REPRESENTATION_ITEM",
+                    attribute: "value",
+                    got: v.len(),
+                    min: 1,
+                    max: None,
+                });
+            }
             for e in v {
                 check_representation_item_ref(model, e)?;
             }
         }
         CompoundItemDefinitionRef::SetRepresentationItem(v) => {
+            if v.len() < 1 {
+                return Err(AuthorError::Cardinality {
+                    entity: "SET_REPRESENTATION_ITEM",
+                    attribute: "value",
+                    got: v.len(),
+                    min: 1,
+                    max: None,
+                });
+            }
             for e in v {
                 check_representation_item_ref(model, e)?;
             }
@@ -34127,6 +34148,15 @@ fn check_datum_or_common_datum_ref(
             }
         }
         DatumOrCommonDatumRef::CommonDatumList(v) => {
+            if v.len() < 2 {
+                return Err(AuthorError::Cardinality {
+                    entity: "COMMON_DATUM_LIST",
+                    attribute: "value",
+                    got: v.len(),
+                    min: 2,
+                    max: None,
+                });
+            }
             for e in v {
                 check_datum_reference_element_ref(model, e)?;
             }
@@ -47843,8 +47873,8 @@ fn check_item_identified_representation_usage_select_ref(
         ItemIdentifiedRepresentationUsageSelectRef::VertexPoint(i) => { if i.0 as usize >= model.vertex_point_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "VERTEX_POINT" }); } }
         ItemIdentifiedRepresentationUsageSelectRef::VertexShell(i) => { if i.0 as usize >= model.vertex_shell_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "VERTEX_SHELL" }); } }
         ItemIdentifiedRepresentationUsageSelectRef::WireShell(i) => { if i.0 as usize >= model.wire_shell_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "WIRE_SHELL" }); } }
-        ItemIdentifiedRepresentationUsageSelectRef::ListRepresentationItem(v) => { for e in v { check_representation_item_ref(model, e)?; } }
-        ItemIdentifiedRepresentationUsageSelectRef::SetRepresentationItem(v) => { for e in v { check_representation_item_ref(model, e)?; } }
+        ItemIdentifiedRepresentationUsageSelectRef::ListRepresentationItem(v) => { if v.len() < 1 { return Err(AuthorError::Cardinality { entity: "LIST_REPRESENTATION_ITEM", attribute: "value", got: v.len(), min: 1, max: None }); } for e in v { check_representation_item_ref(model, e)?; } }
+        ItemIdentifiedRepresentationUsageSelectRef::SetRepresentationItem(v) => { if v.len() < 1 { return Err(AuthorError::Cardinality { entity: "SET_REPRESENTATION_ITEM", attribute: "value", got: v.len(), min: 1, max: None }); } for e in v { check_representation_item_ref(model, e)?; } }
         ItemIdentifiedRepresentationUsageSelectRef::Complex(i) => { let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else { return Err(AuthorError::DanglingRef { entity: "COMPLEX" }); }; if !c.parts.iter().any(|p| ["ADVANCED_FACE", "ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_LEADER_LINE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT", "ANNOTATION_TEXT_CHARACTER", "ANNOTATION_TEXT_OCCURRENCE", "ANNOTATION_TO_ANNOTATION_LEADER_LINE", "ANNOTATION_TO_MODEL_LEADER_LINE", "APLL_POINT", "APLL_POINT_WITH_SURFACE", "AUXILIARY_LEADER_LINE", "AXIS1_PLACEMENT", "AXIS2_PLACEMENT_2D", "AXIS2_PLACEMENT_3D", "B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS", "BEZIER_CURVE", "BEZIER_SURFACE", "BOUNDED_CURVE", "BOUNDED_PCURVE", "BOUNDED_SURFACE", "BOUNDED_SURFACE_CURVE", "BREP_WITH_VOIDS", "CAMERA_IMAGE", "CAMERA_IMAGE_3D_WITH_SCALE", "CAMERA_MODEL", "CAMERA_MODEL_D3", "CAMERA_MODEL_D3_MULTI_CLIPPING", "CAMERA_MODEL_D3_WITH_HLHSR", "CARTESIAN_POINT", "CIRCLE", "CLOSED_SHELL", "COMPLEX_TRIANGULATED_FACE", "COMPLEX_TRIANGULATED_SURFACE_SET", "COMPOSITE_CURVE", "COMPOSITE_TEXT", "COMPOUND_REPRESENTATION_ITEM", "CONIC", "CONICAL_SURFACE", "CONNECTED_FACE_SET", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "COORDINATES_LIST", "CURVE", "CYLINDRICAL_SURFACE", "DEFINED_CHARACTER_GLYPH", "DEFINED_SYMBOL", "DEGENERATE_TOROIDAL_SURFACE", "DESCRIPTIVE_REPRESENTATION_ITEM", "DIRECTION", "DRAUGHTING_ANNOTATION_OCCURRENCE", "DRAUGHTING_CALLOUT", "EDGE", "EDGE_CURVE", "EDGE_LOOP", "ELEMENTARY_SURFACE", "ELLIPSE", "EXTERNAL_IMAGE_PLACEMENT_IN_CALLOUT", "EXTERNALLY_DEFINED_HATCH_STYLE", "EXTERNALLY_DEFINED_TILE_STYLE", "FACE", "FACE_BOUND", "FACE_OUTER_BOUND", "FACE_SURFACE", "FILL_AREA_STYLE_HATCHING", "FILL_AREA_STYLE_TILE_COLOURED_REGION", "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE", "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE", "FILL_AREA_STYLE_TILES", "GEOMETRIC_CURVE_SET", "GEOMETRIC_REPRESENTATION_ITEM", "GEOMETRIC_SET", "HYPERBOLA", "INTEGER_REPRESENTATION_ITEM", "INTERSECTION_CURVE", "LEADER_CURVE", "LEADER_DIRECTED_CALLOUT", "LEADER_TERMINATOR", "LINE", "LOOP", "MANIFOLD_SOLID_BREP", "MAPPED_ITEM", "MEASURE_REPRESENTATION_ITEM", "OFFSET_SURFACE", "ONE_DIRECTION_REPEAT_FACTOR", "OPEN_SHELL", "ORIENTED_CLOSED_SHELL", "ORIENTED_EDGE", "OVER_RIDING_STYLED_ITEM", "PARABOLA", "PATH", "PCURVE", "PLACEMENT", "PLANAR_BOX", "PLANAR_EXTENT", "PLANE", "POINT", "POLY_LOOP", "POLYLINE", "QUALIFIED_REPRESENTATION_ITEM", "QUASI_UNIFORM_CURVE", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_CURVE", "RATIONAL_B_SPLINE_SURFACE", "REAL_REPRESENTATION_ITEM", "REPOSITIONED_TESSELLATED_ITEM", "REPRESENTATION_ITEM", "SEAM_CURVE", "SHELL_BASED_SURFACE_MODEL", "SOLID_MODEL", "SPHERICAL_SURFACE", "STYLED_ITEM", "SURFACE", "SURFACE_CURVE", "SURFACE_OF_LINEAR_EXTRUSION", "SURFACE_OF_REVOLUTION", "SWEPT_SURFACE", "SYMBOL_TARGET", "TERMINATOR_SYMBOL", "TESSELLATED_ANNOTATION_OCCURRENCE", "TESSELLATED_CURVE_SET", "TESSELLATED_FACE", "TESSELLATED_GEOMETRIC_SET", "TESSELLATED_ITEM", "TESSELLATED_SHELL", "TESSELLATED_SOLID", "TESSELLATED_STRUCTURED_ITEM", "TESSELLATED_SURFACE_SET", "TEXT_LITERAL", "TOPOLOGICAL_REPRESENTATION_ITEM", "TOROIDAL_SURFACE", "TRIMMED_CURVE", "TWO_DIRECTION_REPEAT_FACTOR", "UNIFORM_CURVE", "UNIFORM_SURFACE", "VALUE_REPRESENTATION_ITEM", "VECTOR", "VERTEX", "VERTEX_LOOP", "VERTEX_POINT", "VERTEX_SHELL", "WIRE_SHELL"].contains(&part_name(p))) { return Err(AuthorError::InvalidComplex { reason: "not a ITEM_IDENTIFIED_REPRESENTATION_USAGE_SELECT" }); } }
     }
     Ok(())
@@ -56962,7 +56992,7 @@ fn check_styled_item_target_or_representation_item_ref(
         StyledItemTargetOrRepresentationItemRef::VertexPoint(i) => { if i.0 as usize >= model.vertex_point_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "VERTEX_POINT" }); } }
         StyledItemTargetOrRepresentationItemRef::VertexShell(i) => { if i.0 as usize >= model.vertex_shell_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "VERTEX_SHELL" }); } }
         StyledItemTargetOrRepresentationItemRef::WireShell(i) => { if i.0 as usize >= model.wire_shell_arena.items.len() { return Err(AuthorError::DanglingRef { entity: "WIRE_SHELL" }); } }
-        StyledItemTargetOrRepresentationItemRef::SetRepresentationItem(v) => { for e in v { check_representation_item_ref(model, e)?; } }
+        StyledItemTargetOrRepresentationItemRef::SetRepresentationItem(v) => { if v.len() < 1 { return Err(AuthorError::Cardinality { entity: "SET_REPRESENTATION_ITEM", attribute: "value", got: v.len(), min: 1, max: None }); } for e in v { check_representation_item_ref(model, e)?; } }
         StyledItemTargetOrRepresentationItemRef::Complex(i) => { let Some(c) = model.complex_entity_arena.items.get(i.0 as usize) else { return Err(AuthorError::DanglingRef { entity: "COMPLEX" }); }; if !c.parts.iter().any(|p| ["ADVANCED_BREP_SHAPE_REPRESENTATION", "ADVANCED_FACE", "ANNOTATION_CURVE_OCCURRENCE", "ANNOTATION_OCCURRENCE", "ANNOTATION_PLACEHOLDER_LEADER_LINE", "ANNOTATION_PLACEHOLDER_OCCURRENCE", "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE", "ANNOTATION_PLANE", "ANNOTATION_SYMBOL_OCCURRENCE", "ANNOTATION_TEXT", "ANNOTATION_TEXT_CHARACTER", "ANNOTATION_TEXT_OCCURRENCE", "ANNOTATION_TO_ANNOTATION_LEADER_LINE", "ANNOTATION_TO_MODEL_LEADER_LINE", "APLL_POINT", "APLL_POINT_WITH_SURFACE", "AUXILIARY_LEADER_LINE", "AXIS1_PLACEMENT", "AXIS2_PLACEMENT_2D", "AXIS2_PLACEMENT_3D", "B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS", "BEZIER_CURVE", "BEZIER_SURFACE", "BOUNDED_CURVE", "BOUNDED_PCURVE", "BOUNDED_SURFACE", "BOUNDED_SURFACE_CURVE", "BREP_WITH_VOIDS", "CAMERA_IMAGE", "CAMERA_IMAGE_3D_WITH_SCALE", "CAMERA_MODEL", "CAMERA_MODEL_D3", "CAMERA_MODEL_D3_MULTI_CLIPPING", "CAMERA_MODEL_D3_WITH_HLHSR", "CARTESIAN_POINT", "CHARACTERIZED_REPRESENTATION", "CIRCLE", "CLOSED_SHELL", "COMPLEX_TRIANGULATED_FACE", "COMPLEX_TRIANGULATED_SURFACE_SET", "COMPOSITE_CURVE", "COMPOSITE_TEXT", "COMPOUND_REPRESENTATION_ITEM", "CONIC", "CONICAL_SURFACE", "CONNECTED_FACE_SET", "CONSTRUCTIVE_GEOMETRY_REPRESENTATION", "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", "COORDINATES_LIST", "CURVE", "CYLINDRICAL_SURFACE", "DEFINED_CHARACTER_GLYPH", "DEFINED_SYMBOL", "DEFINITIONAL_REPRESENTATION", "DEGENERATE_TOROIDAL_SURFACE", "DESCRIPTIVE_REPRESENTATION_ITEM", "DIRECTION", "DRAUGHTING_ANNOTATION_OCCURRENCE", "DRAUGHTING_CALLOUT", "DRAUGHTING_MODEL", "EDGE", "EDGE_CURVE", "EDGE_LOOP", "ELEMENTARY_SURFACE", "ELLIPSE", "EXTERNAL_IMAGE_PLACEMENT_IN_CALLOUT", "EXTERNALLY_DEFINED_HATCH_STYLE", "EXTERNALLY_DEFINED_TILE_STYLE", "FACE", "FACE_BOUND", "FACE_OUTER_BOUND", "FACE_SURFACE", "FILL_AREA_STYLE_HATCHING", "FILL_AREA_STYLE_TILE_COLOURED_REGION", "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE", "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE", "FILL_AREA_STYLE_TILES", "GEOMETRIC_CURVE_SET", "GEOMETRIC_REPRESENTATION_ITEM", "GEOMETRIC_SET", "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION", "HYPERBOLA", "INTEGER_REPRESENTATION_ITEM", "INTERSECTION_CURVE", "LEADER_CURVE", "LEADER_DIRECTED_CALLOUT", "LEADER_TERMINATOR", "LINE", "LOOP", "MANIFOLD_SOLID_BREP", "MANIFOLD_SURFACE_SHAPE_REPRESENTATION", "MAPPED_ITEM", "MEASURE_REPRESENTATION_ITEM", "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION", "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING", "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION", "OFFSET_SURFACE", "ONE_DIRECTION_REPEAT_FACTOR", "OPEN_SHELL", "ORIENTED_CLOSED_SHELL", "ORIENTED_EDGE", "OVER_RIDING_STYLED_ITEM", "PARABOLA", "PATH", "PCURVE", "PLACEMENT", "PLANAR_BOX", "PLANAR_EXTENT", "PLANE", "POINT", "POLY_LOOP", "POLYLINE", "PRESENTATION_AREA", "PRESENTATION_REPRESENTATION", "PRESENTATION_VIEW", "QUALIFIED_REPRESENTATION_ITEM", "QUASI_UNIFORM_CURVE", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_CURVE", "RATIONAL_B_SPLINE_SURFACE", "REAL_REPRESENTATION_ITEM", "REPOSITIONED_TESSELLATED_ITEM", "REPRESENTATION", "REPRESENTATION_ITEM", "REPRESENTATION_REFERENCE", "SEAM_CURVE", "SHAPE_DIMENSION_REPRESENTATION", "SHAPE_REPRESENTATION", "SHAPE_REPRESENTATION_WITH_PARAMETERS", "SHELL_BASED_SURFACE_MODEL", "SOLID_MODEL", "SPHERICAL_SURFACE", "STYLED_ITEM", "SURFACE", "SURFACE_CURVE", "SURFACE_OF_LINEAR_EXTRUSION", "SURFACE_OF_REVOLUTION", "SWEPT_SURFACE", "SYMBOL_REPRESENTATION", "SYMBOL_TARGET", "TERMINATOR_SYMBOL", "TESSELLATED_ANNOTATION_OCCURRENCE", "TESSELLATED_CURVE_SET", "TESSELLATED_FACE", "TESSELLATED_GEOMETRIC_SET", "TESSELLATED_ITEM", "TESSELLATED_SHAPE_REPRESENTATION", "TESSELLATED_SHELL", "TESSELLATED_SOLID", "TESSELLATED_STRUCTURED_ITEM", "TESSELLATED_SURFACE_SET", "TEXT_LITERAL", "TOPOLOGICAL_REPRESENTATION_ITEM", "TOROIDAL_SURFACE", "TRIMMED_CURVE", "TWO_DIRECTION_REPEAT_FACTOR", "UNIFORM_CURVE", "UNIFORM_SURFACE", "VALUE_REPRESENTATION_ITEM", "VECTOR", "VERTEX", "VERTEX_LOOP", "VERTEX_POINT", "VERTEX_SHELL", "WIRE_SHELL"].contains(&part_name(p))) { return Err(AuthorError::InvalidComplex { reason: "not a STYLED_ITEM_TARGET_OR_REPRESENTATION_ITEM" }); } }
     }
     Ok(())
@@ -58082,6 +58112,15 @@ fn check_transformation_ref(model: &StepModel, r: &TransformationRef) -> Result<
             }
         }
         TransformationRef::SetItemDefinedTransformation(v) => {
+            if v.len() < 1 {
+                return Err(AuthorError::Cardinality {
+                    entity: "SET_ITEM_DEFINED_TRANSFORMATION",
+                    attribute: "value",
+                    got: v.len(),
+                    min: 1,
+                    max: None,
+                });
+            }
             for e in v {
                 check_item_defined_transformation_ref(model, e)?;
             }
@@ -59138,11 +59177,29 @@ fn check_ap242_compound_item_definition_ref(
 ) -> Result<(), AuthorError> {
     match r {
         Ap242CompoundItemDefinitionRef::ListRepresentationItem(v) => {
+            if v.len() < 1 {
+                return Err(AuthorError::Cardinality {
+                    entity: "LIST_REPRESENTATION_ITEM",
+                    attribute: "value",
+                    got: v.len(),
+                    min: 1,
+                    max: None,
+                });
+            }
             for e in v {
                 check_representation_item_ref(model, e)?;
             }
         }
         Ap242CompoundItemDefinitionRef::SetRepresentationItem(v) => {
+            if v.len() < 1 {
+                return Err(AuthorError::Cardinality {
+                    entity: "SET_REPRESENTATION_ITEM",
+                    attribute: "value",
+                    got: v.len(),
+                    min: 1,
+                    max: None,
+                });
+            }
             for e in v {
                 check_representation_item_ref(model, e)?;
             }
@@ -59661,6 +59718,15 @@ fn check_ap242_datum_or_common_datum_ref(
             }
         }
         Ap242DatumOrCommonDatumRef::CommonDatumList(v) => {
+            if v.len() < 2 {
+                return Err(AuthorError::Cardinality {
+                    entity: "COMMON_DATUM_LIST",
+                    attribute: "value",
+                    got: v.len(),
+                    min: 2,
+                    max: None,
+                });
+            }
             for e in v {
                 check_datum_reference_element_ref(model, e)?;
             }
@@ -62296,6 +62362,15 @@ fn check_ap242_styled_item_item_ref(
             }
         }
         Ap242StyledItemItemRef::SetRepresentationItem(v) => {
+            if v.len() < 1 {
+                return Err(AuthorError::Cardinality {
+                    entity: "SET_REPRESENTATION_ITEM",
+                    attribute: "value",
+                    got: v.len(),
+                    min: 1,
+                    max: None,
+                });
+            }
             for e in v {
                 check_ap242_styled_item_item_set_representation_item_ref(model, e)?;
             }
@@ -62740,6 +62815,15 @@ fn check_ap242_transformation_ref(
             }
         }
         Ap242TransformationRef::SetItemDefinedTransformation(v) => {
+            if v.len() < 1 {
+                return Err(AuthorError::Cardinality {
+                    entity: "SET_ITEM_DEFINED_TRANSFORMATION",
+                    attribute: "value",
+                    got: v.len(),
+                    min: 1,
+                    max: None,
+                });
+            }
             for e in v {
                 check_item_defined_transformation_ref(model, e)?;
             }

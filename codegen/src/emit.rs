@@ -3003,7 +3003,9 @@ pub enum AuthorError {
     /// The part set of a complex instance violates a schema rule.
     InvalidComplex { reason: &'static str },
     /// An aggregate attribute's element count is outside the schema's
-    /// cardinality bounds (e.g. `SET [1:?]` given an empty set).
+    /// cardinality bounds (e.g. `SET [1:?]` given an empty set). For a list
+    /// held in a SELECT, `entity` is the list type (such as
+    /// `COMMON_DATUM_LIST`) and `attribute` is `"value"`.
     Cardinality {
         entity: &'static str,
         attribute: &'static str,
@@ -3076,8 +3078,9 @@ impl std::error::Error for AuthorError {}
 
 /// Strict AP242 authoring handle. Owns the model privately: entities enter
 /// only through the generated constructors, which check every value against
-/// the schema's types, the size of each aggregate attribute and of each list
-/// nested in one (such as a row of B-spline control points), every reference
+/// the schema's types, the size of each aggregate attribute, of each list
+/// nested in one (such as a row of B-spline control points) and of each list
+/// held in a SELECT (such as a `COMMON_DATUM_LIST`), every reference
 /// for an entity of a fitting type that exists in this model, every complex
 /// instance against the schema's rules for combining types, and every real
 /// for being finite. They do not check `WHERE` rules, and an id from another
@@ -3893,10 +3896,26 @@ fn emit_author_ref_checks(
                 .unwrap();
             }
         }
-        for (variant, elem_rust, _wire) in &re.aggregate {
+        for (variant, elem_rust, wire) in &re.aggregate {
+            let mut size = String::new();
+            if let Some(&(min, max)) = narrowing.aggregate_bounds.get(&wire.to_lowercase()) {
+                let mut cond = Vec::new();
+                if min > 0 {
+                    cond.push(format!("v.len() < {min}"));
+                }
+                if let Some(max) = max {
+                    cond.push(format!("v.len() > {max}"));
+                }
+                if !cond.is_empty() {
+                    size = format!(
+                        "if {} {{ return Err(AuthorError::Cardinality {{ entity: {wire:?}, attribute: \"value\", got: v.len(), min: {min}, max: {max:?} }}); }} ",
+                        cond.join(" || ")
+                    );
+                }
+            }
             writeln!(
                 s,
-                "        {r}::{variant}(v) => {{ for e in v {{ check_{}(model, e)?; }} }}",
+                "        {r}::{variant}(v) => {{ {size}for e in v {{ check_{}(model, e)?; }} }}",
                 snake_name(elem_rust)
             )
             .unwrap();

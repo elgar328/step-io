@@ -1570,4 +1570,102 @@ fn a_datum_reference_element_alone_is_rejected_in_a_cyclic_constructor() {
         })
         .expect("a list of datum reference elements");
     assert_eq!(first.0, 0, "the rejected element was rolled back");
+
+    // A common datum list holds at least two elements.
+    let short = AuthorError::Cardinality {
+        entity: "COMMON_DATUM_LIST",
+        attribute: "value",
+        got: 1,
+        min: 2,
+        max: None,
+    };
+    let err = a
+        .add_datum_reference_element_cyclic(|_| {
+            element(m::DatumOrCommonDatumRef::CommonDatumList(vec![
+                m::DatumReferenceElementRef::DatumReferenceElement(first),
+            ]))
+        })
+        .unwrap_err();
+    assert_eq!(err, short);
+    let err = a
+        .add_datum_reference_compartment(
+            "",
+            None,
+            of_shape.clone(),
+            m::Logical::False,
+            m::Ap242DatumOrCommonDatumRef::CommonDatumList(vec![
+                m::DatumReferenceElementRef::DatumReferenceElement(first),
+            ]),
+            None,
+        )
+        .unwrap_err();
+    assert_eq!(err, short);
+}
+
+#[test]
+fn a_list_held_in_a_select_is_checked_for_its_size() {
+    let mut a = Ap242Author::new();
+    let style = a
+        .add_presentation_style_assignment(vec![m::PresentationStyleSelectRef::NullStyle(
+            m::NullStyle::Null,
+        )])
+        .expect("style");
+    let err = a
+        .add_styled_item(
+            "",
+            vec![m::PresentationStyleAssignmentRef::PresentationStyleAssignment(style)],
+            m::Ap242StyledItemItemRef::SetRepresentationItem(vec![]),
+        )
+        .unwrap_err();
+    assert_eq!(
+        err,
+        AuthorError::Cardinality {
+            entity: "SET_REPRESENTATION_ITEM",
+            attribute: "value",
+            got: 0,
+            min: 1,
+            max: None,
+        }
+    );
+
+    // The same check runs on a part of a complex instance.
+    let ctx = a.add_representation_context("ctx", "3D").expect("context");
+    let point = a
+        .add_cartesian_point("", [0.0, 0.0, 0.0].into())
+        .expect("point");
+    let mut rep = |name| {
+        a.add_shape_representation(
+            name,
+            vec![m::RepresentationItemRef::CartesianPoint(point)],
+            m::RepresentationContextRef::RepresentationContext(ctx),
+        )
+        .map(m::RepresentationOrRepresentationReferenceRef::ShapeRepresentation)
+        .expect("shape representation")
+    };
+    let (child, parent) = (rep("child"), rep("parent"));
+    let name = a.text("");
+    let err = a
+        .add_complex(vec![
+            m::PartialEntity::RepresentationRelationship {
+                name,
+                description: None,
+                rep_1: child,
+                rep_2: parent,
+            },
+            m::PartialEntity::RepresentationRelationshipWithTransformation {
+                transformation_operator: m::TransformationRef::SetItemDefinedTransformation(vec![]),
+            },
+            m::PartialEntity::ShapeRepresentationRelationship,
+        ])
+        .unwrap_err();
+    assert_eq!(
+        err,
+        AuthorError::Cardinality {
+            entity: "SET_ITEM_DEFINED_TRANSFORMATION",
+            attribute: "value",
+            got: 0,
+            min: 1,
+            max: None,
+        }
+    );
 }

@@ -30,7 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A styled item may style a set of items (`SET_REPRESENTATION_ITEM`), as AP242
   edition 4 allows: `StyledItemTargetOrRepresentationItemRef` gains a
   `SetRepresentationItem` arm, and a colour styled onto a set reaches each of
-  its items.
+  its items. `Ap242Author` rejects an empty set there with
+  `AuthorError::Cardinality`.
 - `GeometricToleranceModifier` gains edition 4's values: `ContinuousFeatures`,
   `DerivedFeature`, `EachElement`, `Individually`, `OffsetZone`,
   `SeparateZones`, `Stock`, `UnspecifiedAngularToleranceZoneOffset`,
@@ -286,6 +287,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and AP214 allow. Both used to be dropped as a `NonstandardReference`.
 - `Tolerance::magnitude` reads a magnitude given as a plain
   `MEASURE_WITH_UNIT` when its value is a length measure.
+- `Ap242Author` checks the size of a list held in a SELECT, and rejects one
+  outside its bounds with `AuthorError::Cardinality`: a `COMMON_DATUM_LIST`
+  needs at least two elements, a `LIST_REPRESENTATION_ITEM`,
+  `SET_REPRESENTATION_ITEM` or `SET_ITEM_DEFINED_TRANSFORMATION` at least
+  one. It used to check only the elements.
 
 ## [0.3.1] - 2026-11-18
 
