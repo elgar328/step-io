@@ -16248,27 +16248,62 @@ pub enum Ap242CompoundItemDefinitionRef {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Ap242ConstructiveGeometryRepresentationItemsRef {
     AdvancedFace(AdvancedFaceId),
+    ApllPoint(ApllPointId),
+    ApllPointWithSurface(ApllPointWithSurfaceId),
     Axis1Placement(Axis1PlacementId),
+    Axis2Placement2d(Axis2Placement2dId),
+    Axis2Placement3d(Axis2Placement3dId),
     BSplineCurve(BSplineCurveId),
     BSplineCurveWithKnots(BSplineCurveWithKnotsId),
+    BSplineSurface(BSplineSurfaceId),
+    BSplineSurfaceWithKnots(BSplineSurfaceWithKnotsId),
     BezierCurve(BezierCurveId),
+    BezierSurface(BezierSurfaceId),
     BoundedCurve(BoundedCurveId),
+    BoundedPcurve(BoundedPcurveId),
+    BoundedSurface(BoundedSurfaceId),
+    BoundedSurfaceCurve(BoundedSurfaceCurveId),
+    CartesianPoint(CartesianPointId),
+    Circle(CircleId),
     ClosedShell(ClosedShellId),
     CompositeCurve(CompositeCurveId),
+    Conic(ConicId),
+    ConicalSurface(ConicalSurfaceId),
     ConnectedFaceSet(ConnectedFaceSetId),
     Curve(CurveId),
+    CylindricalSurface(CylindricalSurfaceId),
+    DegenerateToroidalSurface(DegenerateToroidalSurfaceId),
     EdgeCurve(EdgeCurveId),
+    ElementarySurface(ElementarySurfaceId),
+    Ellipse(EllipseId),
     FaceSurface(FaceSurfaceId),
+    Hyperbola(HyperbolaId),
+    IntersectionCurve(IntersectionCurveId),
+    Line(LineId),
+    OffsetSurface(OffsetSurfaceId),
     OpenShell(OpenShellId),
     OrientedClosedShell(OrientedClosedShellId),
+    Parabola(ParabolaId),
+    Pcurve(PcurveId),
     Placement(PlacementId),
+    Plane(PlaneId),
     Point(PointId),
     Polyline(PolylineId),
     QuasiUniformCurve(QuasiUniformCurveId),
+    QuasiUniformSurface(QuasiUniformSurfaceId),
     RationalBSplineCurve(RationalBSplineCurveId),
+    RationalBSplineSurface(RationalBSplineSurfaceId),
+    SeamCurve(SeamCurveId),
+    SphericalSurface(SphericalSurfaceId),
     Surface(SurfaceId),
+    SurfaceCurve(SurfaceCurveId),
+    SurfaceOfLinearExtrusion(SurfaceOfLinearExtrusionId),
+    SurfaceOfRevolution(SurfaceOfRevolutionId),
+    SweptSurface(SweptSurfaceId),
+    ToroidalSurface(ToroidalSurfaceId),
     TrimmedCurve(TrimmedCurveId),
     UniformCurve(UniformCurveId),
+    UniformSurface(UniformSurfaceId),
     VertexPoint(VertexPointId),
     Complex(ComplexEntityId),
 }
@@ -17187,8 +17222,20 @@ impl From<Ap242ConstructiveGeometryRepresentationItemsRef> for RepresentationIte
             Ap242ConstructiveGeometryRepresentationItemsRef::AdvancedFace(i) => {
                 RepresentationItemRef::AdvancedFace(i)
             }
+            Ap242ConstructiveGeometryRepresentationItemsRef::ApllPoint(i) => {
+                RepresentationItemRef::ApllPoint(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::ApllPointWithSurface(i) => {
+                RepresentationItemRef::ApllPointWithSurface(i)
+            }
             Ap242ConstructiveGeometryRepresentationItemsRef::Axis1Placement(i) => {
                 RepresentationItemRef::Axis1Placement(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Axis2Placement2d(i) => {
+                RepresentationItemRef::Axis2Placement2d(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Axis2Placement3d(i) => {
+                RepresentationItemRef::Axis2Placement3d(i)
             }
             Ap242ConstructiveGeometryRepresentationItemsRef::BSplineCurve(i) => {
                 RepresentationItemRef::BSplineCurve(i)
@@ -17196,11 +17243,35 @@ impl From<Ap242ConstructiveGeometryRepresentationItemsRef> for RepresentationIte
             Ap242ConstructiveGeometryRepresentationItemsRef::BSplineCurveWithKnots(i) => {
                 RepresentationItemRef::BSplineCurveWithKnots(i)
             }
+            Ap242ConstructiveGeometryRepresentationItemsRef::BSplineSurface(i) => {
+                RepresentationItemRef::BSplineSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::BSplineSurfaceWithKnots(i) => {
+                RepresentationItemRef::BSplineSurfaceWithKnots(i)
+            }
             Ap242ConstructiveGeometryRepresentationItemsRef::BezierCurve(i) => {
                 RepresentationItemRef::BezierCurve(i)
             }
+            Ap242ConstructiveGeometryRepresentationItemsRef::BezierSurface(i) => {
+                RepresentationItemRef::BezierSurface(i)
+            }
             Ap242ConstructiveGeometryRepresentationItemsRef::BoundedCurve(i) => {
                 RepresentationItemRef::BoundedCurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::BoundedPcurve(i) => {
+                RepresentationItemRef::BoundedPcurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::BoundedSurface(i) => {
+                RepresentationItemRef::BoundedSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::BoundedSurfaceCurve(i) => {
+                RepresentationItemRef::BoundedSurfaceCurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::CartesianPoint(i) => {
+                RepresentationItemRef::CartesianPoint(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Circle(i) => {
+                RepresentationItemRef::Circle(i)
             }
             Ap242ConstructiveGeometryRepresentationItemsRef::ClosedShell(i) => {
                 RepresentationItemRef::ClosedShell(i)
@@ -17208,17 +17279,47 @@ impl From<Ap242ConstructiveGeometryRepresentationItemsRef> for RepresentationIte
             Ap242ConstructiveGeometryRepresentationItemsRef::CompositeCurve(i) => {
                 RepresentationItemRef::CompositeCurve(i)
             }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Conic(i) => {
+                RepresentationItemRef::Conic(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::ConicalSurface(i) => {
+                RepresentationItemRef::ConicalSurface(i)
+            }
             Ap242ConstructiveGeometryRepresentationItemsRef::ConnectedFaceSet(i) => {
                 RepresentationItemRef::ConnectedFaceSet(i)
             }
             Ap242ConstructiveGeometryRepresentationItemsRef::Curve(i) => {
                 RepresentationItemRef::Curve(i)
             }
+            Ap242ConstructiveGeometryRepresentationItemsRef::CylindricalSurface(i) => {
+                RepresentationItemRef::CylindricalSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::DegenerateToroidalSurface(i) => {
+                RepresentationItemRef::DegenerateToroidalSurface(i)
+            }
             Ap242ConstructiveGeometryRepresentationItemsRef::EdgeCurve(i) => {
                 RepresentationItemRef::EdgeCurve(i)
             }
+            Ap242ConstructiveGeometryRepresentationItemsRef::ElementarySurface(i) => {
+                RepresentationItemRef::ElementarySurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Ellipse(i) => {
+                RepresentationItemRef::Ellipse(i)
+            }
             Ap242ConstructiveGeometryRepresentationItemsRef::FaceSurface(i) => {
                 RepresentationItemRef::FaceSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Hyperbola(i) => {
+                RepresentationItemRef::Hyperbola(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::IntersectionCurve(i) => {
+                RepresentationItemRef::IntersectionCurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Line(i) => {
+                RepresentationItemRef::Line(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::OffsetSurface(i) => {
+                RepresentationItemRef::OffsetSurface(i)
             }
             Ap242ConstructiveGeometryRepresentationItemsRef::OpenShell(i) => {
                 RepresentationItemRef::OpenShell(i)
@@ -17226,8 +17327,17 @@ impl From<Ap242ConstructiveGeometryRepresentationItemsRef> for RepresentationIte
             Ap242ConstructiveGeometryRepresentationItemsRef::OrientedClosedShell(i) => {
                 RepresentationItemRef::OrientedClosedShell(i)
             }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Parabola(i) => {
+                RepresentationItemRef::Parabola(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Pcurve(i) => {
+                RepresentationItemRef::Pcurve(i)
+            }
             Ap242ConstructiveGeometryRepresentationItemsRef::Placement(i) => {
                 RepresentationItemRef::Placement(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::Plane(i) => {
+                RepresentationItemRef::Plane(i)
             }
             Ap242ConstructiveGeometryRepresentationItemsRef::Point(i) => {
                 RepresentationItemRef::Point(i)
@@ -17238,17 +17348,47 @@ impl From<Ap242ConstructiveGeometryRepresentationItemsRef> for RepresentationIte
             Ap242ConstructiveGeometryRepresentationItemsRef::QuasiUniformCurve(i) => {
                 RepresentationItemRef::QuasiUniformCurve(i)
             }
+            Ap242ConstructiveGeometryRepresentationItemsRef::QuasiUniformSurface(i) => {
+                RepresentationItemRef::QuasiUniformSurface(i)
+            }
             Ap242ConstructiveGeometryRepresentationItemsRef::RationalBSplineCurve(i) => {
                 RepresentationItemRef::RationalBSplineCurve(i)
             }
+            Ap242ConstructiveGeometryRepresentationItemsRef::RationalBSplineSurface(i) => {
+                RepresentationItemRef::RationalBSplineSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::SeamCurve(i) => {
+                RepresentationItemRef::SeamCurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::SphericalSurface(i) => {
+                RepresentationItemRef::SphericalSurface(i)
+            }
             Ap242ConstructiveGeometryRepresentationItemsRef::Surface(i) => {
                 RepresentationItemRef::Surface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::SurfaceCurve(i) => {
+                RepresentationItemRef::SurfaceCurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::SurfaceOfLinearExtrusion(i) => {
+                RepresentationItemRef::SurfaceOfLinearExtrusion(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::SurfaceOfRevolution(i) => {
+                RepresentationItemRef::SurfaceOfRevolution(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::SweptSurface(i) => {
+                RepresentationItemRef::SweptSurface(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::ToroidalSurface(i) => {
+                RepresentationItemRef::ToroidalSurface(i)
             }
             Ap242ConstructiveGeometryRepresentationItemsRef::TrimmedCurve(i) => {
                 RepresentationItemRef::TrimmedCurve(i)
             }
             Ap242ConstructiveGeometryRepresentationItemsRef::UniformCurve(i) => {
                 RepresentationItemRef::UniformCurve(i)
+            }
+            Ap242ConstructiveGeometryRepresentationItemsRef::UniformSurface(i) => {
+                RepresentationItemRef::UniformSurface(i)
             }
             Ap242ConstructiveGeometryRepresentationItemsRef::VertexPoint(i) => {
                 RepresentationItemRef::VertexPoint(i)

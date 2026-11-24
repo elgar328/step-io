@@ -420,17 +420,19 @@ pub use refgraph::RefGraph;
 /// # }
 /// ```
 ///
-/// `CONSTRUCTIVE_GEOMETRY_REPRESENTATION.WR2` lets each item be exactly one
-/// of the types it lists. Edition 4 lists supertypes with their subtypes
-/// (`point` and `cartesian_point`, `curve` and `line`), so an item that is
-/// both, such as a cartesian point, a line or a plane, is left out:
+/// `CONSTRUCTIVE_GEOMETRY_REPRESENTATION.WR2` lets each item be one of the
+/// types it lists. Edition 4 asks for exactly one, though it lists
+/// supertypes with their subtypes (`point` and `cartesian_point`, `curve`,
+/// `conic` and `circle`), which would leave a cartesian point, a line or a
+/// plane out; this is a known issue of the edition, and the rule is read as
+/// asking for at least one. A mapped item is not listed:
 ///
 /// ```
 /// # use step_io::{Ap242Author, model as m};
-/// # fn f(a: &mut Ap242Author, axis: m::Axis1PlacementId, ctx: m::GeometricRepresentationContextId) {
+/// # fn f(a: &mut Ap242Author, point: m::CartesianPointId, ctx: m::GeometricRepresentationContextId) {
 /// let _ = a.add_constructive_geometry_representation(
 ///     "",
-///     vec![m::Ap242ConstructiveGeometryRepresentationItemsRef::Axis1Placement(axis)],
+///     vec![m::Ap242ConstructiveGeometryRepresentationItemsRef::CartesianPoint(point)],
 ///     m::GeometricRepresentationContextRef::GeometricRepresentationContext(ctx),
 /// );
 /// # }
@@ -438,10 +440,10 @@ pub use refgraph::RefGraph;
 ///
 /// ```compile_fail,E0599
 /// # use step_io::{Ap242Author, model as m};
-/// # fn f(a: &mut Ap242Author, point: m::CartesianPointId, ctx: m::GeometricRepresentationContextId) {
+/// # fn f(a: &mut Ap242Author, item: m::MappedItemId, ctx: m::GeometricRepresentationContextId) {
 /// let _ = a.add_constructive_geometry_representation(
 ///     "",
-///     vec![m::Ap242ConstructiveGeometryRepresentationItemsRef::CartesianPoint(point)],
+///     vec![m::Ap242ConstructiveGeometryRepresentationItemsRef::MappedItem(item)],
 ///     m::GeometricRepresentationContextRef::GeometricRepresentationContext(ctx),
 /// );
 /// # }

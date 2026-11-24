@@ -4015,18 +4015,6 @@ impl Ap242Author {
         for e0 in &items {
             check_ap242_constructive_geometry_representation_items_ref(&self.model, e0)?;
         }
-        {
-            let x = &items;
-            for v in x.iter() {
-                if matches!(v, Ap242ConstructiveGeometryRepresentationItemsRef::Complex(i) if self.model.complex_entity_arena.items.get(i.0 as usize).is_some_and(|c| [&["AXIS2_PLACEMENT_2D"][..], &["AXIS2_PLACEMENT_3D"][..], &["BEZIER_SURFACE", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_SURFACE", "UNIFORM_SURFACE"][..], &["BEZIER_SURFACE", "BOUNDED_SURFACE", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_SURFACE", "UNIFORM_SURFACE"][..], &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT"][..], &["CIRCLE"][..], &["CIRCLE", "CONIC", "ELLIPSE", "HYPERBOLA", "PARABOLA"][..], &["CONICAL_SURFACE"][..], &["BEZIER_CURVE", "BOUNDED_CURVE", "BOUNDED_PCURVE", "BOUNDED_SURFACE_CURVE", "B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "CIRCLE", "COMPOSITE_CURVE", "CONIC", "CURVE", "ELLIPSE", "HYPERBOLA", "INTERSECTION_CURVE", "LINE", "PARABOLA", "PCURVE", "POLYLINE", "QUASI_UNIFORM_CURVE", "RATIONAL_B_SPLINE_CURVE", "SEAM_CURVE", "SURFACE_CURVE", "TRIMMED_CURVE", "UNIFORM_CURVE"][..], &["CYLINDRICAL_SURFACE"][..], &["CONICAL_SURFACE", "CYLINDRICAL_SURFACE", "DEGENERATE_TOROIDAL_SURFACE", "ELEMENTARY_SURFACE", "PLANE", "SPHERICAL_SURFACE", "TOROIDAL_SURFACE"][..], &["ELLIPSE"][..], &["HYPERBOLA"][..], &["LINE"][..], &["OFFSET_SURFACE"][..], &["PARABOLA"][..], &["BOUNDED_PCURVE", "PCURVE"][..], &["AXIS1_PLACEMENT", "AXIS2_PLACEMENT_2D", "AXIS2_PLACEMENT_3D", "PLACEMENT"][..], &["PLANE"][..], &["APLL_POINT", "APLL_POINT_WITH_SURFACE", "CARTESIAN_POINT", "POINT"][..], &["SPHERICAL_SURFACE"][..], &["BEZIER_SURFACE", "BOUNDED_SURFACE", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS", "CONICAL_SURFACE", "CYLINDRICAL_SURFACE", "DEGENERATE_TOROIDAL_SURFACE", "ELEMENTARY_SURFACE", "OFFSET_SURFACE", "PLANE", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_SURFACE", "SPHERICAL_SURFACE", "SURFACE", "SURFACE_OF_LINEAR_EXTRUSION", "SURFACE_OF_REVOLUTION", "SWEPT_SURFACE", "TOROIDAL_SURFACE", "UNIFORM_SURFACE"][..], &["BOUNDED_SURFACE_CURVE", "INTERSECTION_CURVE", "SEAM_CURVE", "SURFACE_CURVE"][..], &["SURFACE_OF_LINEAR_EXTRUSION"][..], &["SURFACE_OF_REVOLUTION"][..], &["SURFACE_OF_LINEAR_EXTRUSION", "SURFACE_OF_REVOLUTION", "SWEPT_SURFACE"][..], &["DEGENERATE_TOROIDAL_SURFACE", "TOROIDAL_SURFACE"][..], &["EDGE_CURVE"][..], &["ADVANCED_FACE", "FACE_SURFACE"][..], &["VERTEX_POINT"][..], &["CLOSED_SHELL", "CONNECTED_FACE_SET", "OPEN_SHELL", "ORIENTED_CLOSED_SHELL"][..]].iter().filter(|g| c.parts.iter().any(|p| g.contains(&part_name(p)))).count() != 1))
-                {
-                    return Err(AuthorError::NarrowedReference {
-                        entity: "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
-                        attribute: "items",
-                    });
-                }
-            }
-        }
         check_geometric_representation_context_ref(&self.model, &context_of_items)?;
         let name = {
             let v = name;
@@ -24836,27 +24824,62 @@ _ => return Err(AuthorError::NarrowedReference { entity: "PRODUCT_DEFINITION_OCC
                     for v in x.iter() {
                         match v {
                             RepresentationItemRef::AdvancedFace(_)
+                            | RepresentationItemRef::ApllPoint(_)
+                            | RepresentationItemRef::ApllPointWithSurface(_)
                             | RepresentationItemRef::Axis1Placement(_)
+                            | RepresentationItemRef::Axis2Placement2d(_)
+                            | RepresentationItemRef::Axis2Placement3d(_)
                             | RepresentationItemRef::BSplineCurve(_)
                             | RepresentationItemRef::BSplineCurveWithKnots(_)
+                            | RepresentationItemRef::BSplineSurface(_)
+                            | RepresentationItemRef::BSplineSurfaceWithKnots(_)
                             | RepresentationItemRef::BezierCurve(_)
+                            | RepresentationItemRef::BezierSurface(_)
                             | RepresentationItemRef::BoundedCurve(_)
+                            | RepresentationItemRef::BoundedPcurve(_)
+                            | RepresentationItemRef::BoundedSurface(_)
+                            | RepresentationItemRef::BoundedSurfaceCurve(_)
+                            | RepresentationItemRef::CartesianPoint(_)
+                            | RepresentationItemRef::Circle(_)
                             | RepresentationItemRef::ClosedShell(_)
                             | RepresentationItemRef::CompositeCurve(_)
+                            | RepresentationItemRef::Conic(_)
+                            | RepresentationItemRef::ConicalSurface(_)
                             | RepresentationItemRef::ConnectedFaceSet(_)
                             | RepresentationItemRef::Curve(_)
+                            | RepresentationItemRef::CylindricalSurface(_)
+                            | RepresentationItemRef::DegenerateToroidalSurface(_)
                             | RepresentationItemRef::EdgeCurve(_)
+                            | RepresentationItemRef::ElementarySurface(_)
+                            | RepresentationItemRef::Ellipse(_)
                             | RepresentationItemRef::FaceSurface(_)
+                            | RepresentationItemRef::Hyperbola(_)
+                            | RepresentationItemRef::IntersectionCurve(_)
+                            | RepresentationItemRef::Line(_)
+                            | RepresentationItemRef::OffsetSurface(_)
                             | RepresentationItemRef::OpenShell(_)
                             | RepresentationItemRef::OrientedClosedShell(_)
+                            | RepresentationItemRef::Parabola(_)
+                            | RepresentationItemRef::Pcurve(_)
                             | RepresentationItemRef::Placement(_)
+                            | RepresentationItemRef::Plane(_)
                             | RepresentationItemRef::Point(_)
                             | RepresentationItemRef::Polyline(_)
                             | RepresentationItemRef::QuasiUniformCurve(_)
+                            | RepresentationItemRef::QuasiUniformSurface(_)
                             | RepresentationItemRef::RationalBSplineCurve(_)
+                            | RepresentationItemRef::RationalBSplineSurface(_)
+                            | RepresentationItemRef::SeamCurve(_)
+                            | RepresentationItemRef::SphericalSurface(_)
                             | RepresentationItemRef::Surface(_)
+                            | RepresentationItemRef::SurfaceCurve(_)
+                            | RepresentationItemRef::SurfaceOfLinearExtrusion(_)
+                            | RepresentationItemRef::SurfaceOfRevolution(_)
+                            | RepresentationItemRef::SweptSurface(_)
+                            | RepresentationItemRef::ToroidalSurface(_)
                             | RepresentationItemRef::TrimmedCurve(_)
                             | RepresentationItemRef::UniformCurve(_)
+                            | RepresentationItemRef::UniformSurface(_)
                             | RepresentationItemRef::VertexPoint(_) => {}
                             RepresentationItemRef::Complex(i) => {
                                 if !model
@@ -24867,174 +24890,66 @@ _ => return Err(AuthorError::NarrowedReference { entity: "PRODUCT_DEFINITION_OCC
                                         c.parts.iter().any(|p| {
                                             [
                                                 "ADVANCED_FACE",
+                                                "APLL_POINT",
+                                                "APLL_POINT_WITH_SURFACE",
                                                 "AXIS1_PLACEMENT",
+                                                "AXIS2_PLACEMENT_2D",
+                                                "AXIS2_PLACEMENT_3D",
                                                 "BEZIER_CURVE",
+                                                "BEZIER_SURFACE",
                                                 "BOUNDED_CURVE",
+                                                "BOUNDED_PCURVE",
+                                                "BOUNDED_SURFACE",
+                                                "BOUNDED_SURFACE_CURVE",
                                                 "B_SPLINE_CURVE",
                                                 "B_SPLINE_CURVE_WITH_KNOTS",
+                                                "B_SPLINE_SURFACE",
+                                                "B_SPLINE_SURFACE_WITH_KNOTS",
+                                                "CARTESIAN_POINT",
+                                                "CIRCLE",
                                                 "CLOSED_SHELL",
                                                 "COMPOSITE_CURVE",
+                                                "CONIC",
+                                                "CONICAL_SURFACE",
                                                 "CONNECTED_FACE_SET",
                                                 "CURVE",
+                                                "CYLINDRICAL_SURFACE",
+                                                "DEGENERATE_TOROIDAL_SURFACE",
                                                 "EDGE_CURVE",
+                                                "ELEMENTARY_SURFACE",
+                                                "ELLIPSE",
                                                 "FACE_SURFACE",
+                                                "HYPERBOLA",
+                                                "INTERSECTION_CURVE",
+                                                "LINE",
+                                                "OFFSET_SURFACE",
                                                 "OPEN_SHELL",
                                                 "ORIENTED_CLOSED_SHELL",
+                                                "PARABOLA",
+                                                "PCURVE",
                                                 "PLACEMENT",
+                                                "PLANE",
                                                 "POINT",
                                                 "POLYLINE",
                                                 "QUASI_UNIFORM_CURVE",
+                                                "QUASI_UNIFORM_SURFACE",
                                                 "RATIONAL_B_SPLINE_CURVE",
+                                                "RATIONAL_B_SPLINE_SURFACE",
+                                                "SEAM_CURVE",
+                                                "SPHERICAL_SURFACE",
                                                 "SURFACE",
+                                                "SURFACE_CURVE",
+                                                "SURFACE_OF_LINEAR_EXTRUSION",
+                                                "SURFACE_OF_REVOLUTION",
+                                                "SWEPT_SURFACE",
+                                                "TOROIDAL_SURFACE",
                                                 "TRIMMED_CURVE",
                                                 "UNIFORM_CURVE",
+                                                "UNIFORM_SURFACE",
                                                 "VERTEX_POINT",
                                             ]
                                             .contains(&part_name(p))
                                         })
-                                            && [
-                                                &["AXIS2_PLACEMENT_2D"][..],
-                                                &["AXIS2_PLACEMENT_3D"][..],
-                                                &[
-                                                    "BEZIER_SURFACE",
-                                                    "B_SPLINE_SURFACE",
-                                                    "B_SPLINE_SURFACE_WITH_KNOTS",
-                                                    "QUASI_UNIFORM_SURFACE",
-                                                    "RATIONAL_B_SPLINE_SURFACE",
-                                                    "UNIFORM_SURFACE",
-                                                ][..],
-                                                &[
-                                                    "BEZIER_SURFACE",
-                                                    "BOUNDED_SURFACE",
-                                                    "B_SPLINE_SURFACE",
-                                                    "B_SPLINE_SURFACE_WITH_KNOTS",
-                                                    "QUASI_UNIFORM_SURFACE",
-                                                    "RATIONAL_B_SPLINE_SURFACE",
-                                                    "UNIFORM_SURFACE",
-                                                ][..],
-                                                &[
-                                                    "APLL_POINT",
-                                                    "APLL_POINT_WITH_SURFACE",
-                                                    "CARTESIAN_POINT",
-                                                ][..],
-                                                &["CIRCLE"][..],
-                                                &[
-                                                    "CIRCLE",
-                                                    "CONIC",
-                                                    "ELLIPSE",
-                                                    "HYPERBOLA",
-                                                    "PARABOLA",
-                                                ][..],
-                                                &["CONICAL_SURFACE"][..],
-                                                &[
-                                                    "BEZIER_CURVE",
-                                                    "BOUNDED_CURVE",
-                                                    "BOUNDED_PCURVE",
-                                                    "BOUNDED_SURFACE_CURVE",
-                                                    "B_SPLINE_CURVE",
-                                                    "B_SPLINE_CURVE_WITH_KNOTS",
-                                                    "CIRCLE",
-                                                    "COMPOSITE_CURVE",
-                                                    "CONIC",
-                                                    "CURVE",
-                                                    "ELLIPSE",
-                                                    "HYPERBOLA",
-                                                    "INTERSECTION_CURVE",
-                                                    "LINE",
-                                                    "PARABOLA",
-                                                    "PCURVE",
-                                                    "POLYLINE",
-                                                    "QUASI_UNIFORM_CURVE",
-                                                    "RATIONAL_B_SPLINE_CURVE",
-                                                    "SEAM_CURVE",
-                                                    "SURFACE_CURVE",
-                                                    "TRIMMED_CURVE",
-                                                    "UNIFORM_CURVE",
-                                                ][..],
-                                                &["CYLINDRICAL_SURFACE"][..],
-                                                &[
-                                                    "CONICAL_SURFACE",
-                                                    "CYLINDRICAL_SURFACE",
-                                                    "DEGENERATE_TOROIDAL_SURFACE",
-                                                    "ELEMENTARY_SURFACE",
-                                                    "PLANE",
-                                                    "SPHERICAL_SURFACE",
-                                                    "TOROIDAL_SURFACE",
-                                                ][..],
-                                                &["ELLIPSE"][..],
-                                                &["HYPERBOLA"][..],
-                                                &["LINE"][..],
-                                                &["OFFSET_SURFACE"][..],
-                                                &["PARABOLA"][..],
-                                                &["BOUNDED_PCURVE", "PCURVE"][..],
-                                                &[
-                                                    "AXIS1_PLACEMENT",
-                                                    "AXIS2_PLACEMENT_2D",
-                                                    "AXIS2_PLACEMENT_3D",
-                                                    "PLACEMENT",
-                                                ][..],
-                                                &["PLANE"][..],
-                                                &[
-                                                    "APLL_POINT",
-                                                    "APLL_POINT_WITH_SURFACE",
-                                                    "CARTESIAN_POINT",
-                                                    "POINT",
-                                                ][..],
-                                                &["SPHERICAL_SURFACE"][..],
-                                                &[
-                                                    "BEZIER_SURFACE",
-                                                    "BOUNDED_SURFACE",
-                                                    "B_SPLINE_SURFACE",
-                                                    "B_SPLINE_SURFACE_WITH_KNOTS",
-                                                    "CONICAL_SURFACE",
-                                                    "CYLINDRICAL_SURFACE",
-                                                    "DEGENERATE_TOROIDAL_SURFACE",
-                                                    "ELEMENTARY_SURFACE",
-                                                    "OFFSET_SURFACE",
-                                                    "PLANE",
-                                                    "QUASI_UNIFORM_SURFACE",
-                                                    "RATIONAL_B_SPLINE_SURFACE",
-                                                    "SPHERICAL_SURFACE",
-                                                    "SURFACE",
-                                                    "SURFACE_OF_LINEAR_EXTRUSION",
-                                                    "SURFACE_OF_REVOLUTION",
-                                                    "SWEPT_SURFACE",
-                                                    "TOROIDAL_SURFACE",
-                                                    "UNIFORM_SURFACE",
-                                                ][..],
-                                                &[
-                                                    "BOUNDED_SURFACE_CURVE",
-                                                    "INTERSECTION_CURVE",
-                                                    "SEAM_CURVE",
-                                                    "SURFACE_CURVE",
-                                                ][..],
-                                                &["SURFACE_OF_LINEAR_EXTRUSION"][..],
-                                                &["SURFACE_OF_REVOLUTION"][..],
-                                                &[
-                                                    "SURFACE_OF_LINEAR_EXTRUSION",
-                                                    "SURFACE_OF_REVOLUTION",
-                                                    "SWEPT_SURFACE",
-                                                ][..],
-                                                &[
-                                                    "DEGENERATE_TOROIDAL_SURFACE",
-                                                    "TOROIDAL_SURFACE",
-                                                ][..],
-                                                &["EDGE_CURVE"][..],
-                                                &["ADVANCED_FACE", "FACE_SURFACE"][..],
-                                                &["VERTEX_POINT"][..],
-                                                &[
-                                                    "CLOSED_SHELL",
-                                                    "CONNECTED_FACE_SET",
-                                                    "OPEN_SHELL",
-                                                    "ORIENTED_CLOSED_SHELL",
-                                                ][..],
-                                            ]
-                                            .iter()
-                                            .filter(|g| {
-                                                c.parts.iter().any(|p| g.contains(&part_name(p)))
-                                            })
-                                            .count()
-                                                == 1
                                     })
                                 {
                                     return Err(AuthorError::NarrowedReference {
@@ -59247,10 +59162,38 @@ fn check_ap242_constructive_geometry_representation_items_ref(
                 });
             }
         }
+        Ap242ConstructiveGeometryRepresentationItemsRef::ApllPoint(i) => {
+            if i.0 as usize >= model.apll_point_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "APLL_POINT",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::ApllPointWithSurface(i) => {
+            if i.0 as usize >= model.apll_point_with_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "APLL_POINT_WITH_SURFACE",
+                });
+            }
+        }
         Ap242ConstructiveGeometryRepresentationItemsRef::Axis1Placement(i) => {
             if i.0 as usize >= model.axis1_placement_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "AXIS1_PLACEMENT",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Axis2Placement2d(i) => {
+            if i.0 as usize >= model.axis2_placement2d_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "AXIS2_PLACEMENT_2D",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Axis2Placement3d(i) => {
+            if i.0 as usize >= model.axis2_placement3d_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "AXIS2_PLACEMENT_3D",
                 });
             }
         }
@@ -59268,10 +59211,31 @@ fn check_ap242_constructive_geometry_representation_items_ref(
                 });
             }
         }
+        Ap242ConstructiveGeometryRepresentationItemsRef::BSplineSurface(i) => {
+            if i.0 as usize >= model.b_spline_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::BSplineSurfaceWithKnots(i) => {
+            if i.0 as usize >= model.b_spline_surface_with_knots_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "B_SPLINE_SURFACE_WITH_KNOTS",
+                });
+            }
+        }
         Ap242ConstructiveGeometryRepresentationItemsRef::BezierCurve(i) => {
             if i.0 as usize >= model.bezier_curve_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "BEZIER_CURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::BezierSurface(i) => {
+            if i.0 as usize >= model.bezier_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BEZIER_SURFACE",
                 });
             }
         }
@@ -59280,6 +59244,39 @@ fn check_ap242_constructive_geometry_representation_items_ref(
                 return Err(AuthorError::DanglingRef {
                     entity: "BOUNDED_CURVE",
                 });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::BoundedPcurve(i) => {
+            if i.0 as usize >= model.bounded_pcurve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_PCURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::BoundedSurface(i) => {
+            if i.0 as usize >= model.bounded_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::BoundedSurfaceCurve(i) => {
+            if i.0 as usize >= model.bounded_surface_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "BOUNDED_SURFACE_CURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::CartesianPoint(i) => {
+            if i.0 as usize >= model.cartesian_point_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CARTESIAN_POINT",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Circle(i) => {
+            if i.0 as usize >= model.circle_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "CIRCLE" });
             }
         }
         Ap242ConstructiveGeometryRepresentationItemsRef::ClosedShell(i) => {
@@ -59296,6 +59293,18 @@ fn check_ap242_constructive_geometry_representation_items_ref(
                 });
             }
         }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Conic(i) => {
+            if i.0 as usize >= model.conic_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "CONIC" });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::ConicalSurface(i) => {
+            if i.0 as usize >= model.conical_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CONICAL_SURFACE",
+                });
+            }
+        }
         Ap242ConstructiveGeometryRepresentationItemsRef::ConnectedFaceSet(i) => {
             if i.0 as usize >= model.connected_face_set_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
@@ -59308,6 +59317,20 @@ fn check_ap242_constructive_geometry_representation_items_ref(
                 return Err(AuthorError::DanglingRef { entity: "CURVE" });
             }
         }
+        Ap242ConstructiveGeometryRepresentationItemsRef::CylindricalSurface(i) => {
+            if i.0 as usize >= model.cylindrical_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "CYLINDRICAL_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::DegenerateToroidalSurface(i) => {
+            if i.0 as usize >= model.degenerate_toroidal_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "DEGENERATE_TOROIDAL_SURFACE",
+                });
+            }
+        }
         Ap242ConstructiveGeometryRepresentationItemsRef::EdgeCurve(i) => {
             if i.0 as usize >= model.edge_curve_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
@@ -59315,10 +59338,48 @@ fn check_ap242_constructive_geometry_representation_items_ref(
                 });
             }
         }
+        Ap242ConstructiveGeometryRepresentationItemsRef::ElementarySurface(i) => {
+            if i.0 as usize >= model.elementary_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "ELEMENTARY_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Ellipse(i) => {
+            if i.0 as usize >= model.ellipse_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "ELLIPSE" });
+            }
+        }
         Ap242ConstructiveGeometryRepresentationItemsRef::FaceSurface(i) => {
             if i.0 as usize >= model.face_surface_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "FACE_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Hyperbola(i) => {
+            if i.0 as usize >= model.hyperbola_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "HYPERBOLA",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::IntersectionCurve(i) => {
+            if i.0 as usize >= model.intersection_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "INTERSECTION_CURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Line(i) => {
+            if i.0 as usize >= model.line_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "LINE" });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::OffsetSurface(i) => {
+            if i.0 as usize >= model.offset_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "OFFSET_SURFACE",
                 });
             }
         }
@@ -59336,11 +59397,26 @@ fn check_ap242_constructive_geometry_representation_items_ref(
                 });
             }
         }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Parabola(i) => {
+            if i.0 as usize >= model.parabola_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PARABOLA" });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Pcurve(i) => {
+            if i.0 as usize >= model.pcurve_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PCURVE" });
+            }
+        }
         Ap242ConstructiveGeometryRepresentationItemsRef::Placement(i) => {
             if i.0 as usize >= model.placement_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "PLACEMENT",
                 });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::Plane(i) => {
+            if i.0 as usize >= model.plane_arena.items.len() {
+                return Err(AuthorError::DanglingRef { entity: "PLANE" });
             }
         }
         Ap242ConstructiveGeometryRepresentationItemsRef::Point(i) => {
@@ -59360,6 +59436,13 @@ fn check_ap242_constructive_geometry_representation_items_ref(
                 });
             }
         }
+        Ap242ConstructiveGeometryRepresentationItemsRef::QuasiUniformSurface(i) => {
+            if i.0 as usize >= model.quasi_uniform_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "QUASI_UNIFORM_SURFACE",
+                });
+            }
+        }
         Ap242ConstructiveGeometryRepresentationItemsRef::RationalBSplineCurve(i) => {
             if i.0 as usize >= model.rational_b_spline_curve_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
@@ -59367,9 +59450,65 @@ fn check_ap242_constructive_geometry_representation_items_ref(
                 });
             }
         }
+        Ap242ConstructiveGeometryRepresentationItemsRef::RationalBSplineSurface(i) => {
+            if i.0 as usize >= model.rational_b_spline_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "RATIONAL_B_SPLINE_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::SeamCurve(i) => {
+            if i.0 as usize >= model.seam_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SEAM_CURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::SphericalSurface(i) => {
+            if i.0 as usize >= model.spherical_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SPHERICAL_SURFACE",
+                });
+            }
+        }
         Ap242ConstructiveGeometryRepresentationItemsRef::Surface(i) => {
             if i.0 as usize >= model.surface_arena.items.len() {
                 return Err(AuthorError::DanglingRef { entity: "SURFACE" });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::SurfaceCurve(i) => {
+            if i.0 as usize >= model.surface_curve_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SURFACE_CURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::SurfaceOfLinearExtrusion(i) => {
+            if i.0 as usize >= model.surface_of_linear_extrusion_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SURFACE_OF_LINEAR_EXTRUSION",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::SurfaceOfRevolution(i) => {
+            if i.0 as usize >= model.surface_of_revolution_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SURFACE_OF_REVOLUTION",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::SweptSurface(i) => {
+            if i.0 as usize >= model.swept_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "SWEPT_SURFACE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::ToroidalSurface(i) => {
+            if i.0 as usize >= model.toroidal_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "TOROIDAL_SURFACE",
+                });
             }
         }
         Ap242ConstructiveGeometryRepresentationItemsRef::TrimmedCurve(i) => {
@@ -59383,6 +59522,13 @@ fn check_ap242_constructive_geometry_representation_items_ref(
             if i.0 as usize >= model.uniform_curve_arena.items.len() {
                 return Err(AuthorError::DanglingRef {
                     entity: "UNIFORM_CURVE",
+                });
+            }
+        }
+        Ap242ConstructiveGeometryRepresentationItemsRef::UniformSurface(i) => {
+            if i.0 as usize >= model.uniform_surface_arena.items.len() {
+                return Err(AuthorError::DanglingRef {
+                    entity: "UNIFORM_SURFACE",
                 });
             }
         }
@@ -59400,27 +59546,62 @@ fn check_ap242_constructive_geometry_representation_items_ref(
             if !c.parts.iter().any(|p| {
                 [
                     "ADVANCED_FACE",
+                    "APLL_POINT",
+                    "APLL_POINT_WITH_SURFACE",
                     "AXIS1_PLACEMENT",
+                    "AXIS2_PLACEMENT_2D",
+                    "AXIS2_PLACEMENT_3D",
                     "BEZIER_CURVE",
+                    "BEZIER_SURFACE",
                     "BOUNDED_CURVE",
+                    "BOUNDED_PCURVE",
+                    "BOUNDED_SURFACE",
+                    "BOUNDED_SURFACE_CURVE",
                     "B_SPLINE_CURVE",
                     "B_SPLINE_CURVE_WITH_KNOTS",
+                    "B_SPLINE_SURFACE",
+                    "B_SPLINE_SURFACE_WITH_KNOTS",
+                    "CARTESIAN_POINT",
+                    "CIRCLE",
                     "CLOSED_SHELL",
                     "COMPOSITE_CURVE",
+                    "CONIC",
+                    "CONICAL_SURFACE",
                     "CONNECTED_FACE_SET",
                     "CURVE",
+                    "CYLINDRICAL_SURFACE",
+                    "DEGENERATE_TOROIDAL_SURFACE",
                     "EDGE_CURVE",
+                    "ELEMENTARY_SURFACE",
+                    "ELLIPSE",
                     "FACE_SURFACE",
+                    "HYPERBOLA",
+                    "INTERSECTION_CURVE",
+                    "LINE",
+                    "OFFSET_SURFACE",
                     "OPEN_SHELL",
                     "ORIENTED_CLOSED_SHELL",
+                    "PARABOLA",
+                    "PCURVE",
                     "PLACEMENT",
+                    "PLANE",
                     "POINT",
                     "POLYLINE",
                     "QUASI_UNIFORM_CURVE",
+                    "QUASI_UNIFORM_SURFACE",
                     "RATIONAL_B_SPLINE_CURVE",
+                    "RATIONAL_B_SPLINE_SURFACE",
+                    "SEAM_CURVE",
+                    "SPHERICAL_SURFACE",
                     "SURFACE",
+                    "SURFACE_CURVE",
+                    "SURFACE_OF_LINEAR_EXTRUSION",
+                    "SURFACE_OF_REVOLUTION",
+                    "SWEPT_SURFACE",
+                    "TOROIDAL_SURFACE",
                     "TRIMMED_CURVE",
                     "UNIFORM_CURVE",
+                    "UNIFORM_SURFACE",
                     "VERTEX_POINT",
                 ]
                 .contains(&part_name(p))

@@ -170,8 +170,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `add_constructive_geometry_representation`: `items` takes an
     `Ap242ConstructiveGeometryRepresentationItemsRef`. Edition 4's
     `CONSTRUCTIVE_GEOMETRY_REPRESENTATION.WR2` asks each item to be exactly
-    one of a list that names supertypes with their subtypes, so it leaves out
-    a cartesian point, a line, a circle or a plane, which edition 2 allowed
+    one of a list that names supertypes with their subtypes, which would
+    leave out a cartesian point, a line, a circle or a plane; this is a known
+    issue of the edition, and the rule is read as asking for at least one
   - `add_geometrically_bounded_surface_shape_representation` and
     `add_geometrically_bounded_wireframe_shape_representation`: `items`
     takes the matching

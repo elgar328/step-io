@@ -1114,7 +1114,7 @@ fn where_rule_type_restrictions_are_checked() {
 }
 
 #[test]
-fn exactly_one_of_several_types_counts_every_part() {
+fn a_constructive_item_may_be_a_listed_subtype() {
     let mut a = Ap242Author::new();
     let name = a.text("");
     let ctx = a
@@ -1131,7 +1131,7 @@ fn exactly_one_of_several_types_counts_every_part() {
         .add_cartesian_point("", [0.0, 0.0, 0.0].into())
         .expect("point");
 
-    // A rational B-spline curve is one curve, though it has seven parts.
+    // A rational B-spline curve, written as seven parts, is a curve.
     let curve = a
         .add_complex(vec![
             m::PartialEntity::BoundedCurve,
@@ -1164,9 +1164,9 @@ fn exactly_one_of_several_types_counts_every_part() {
     )
     .expect("one curve");
 
-    // CONSTRUCTIVE_GEOMETRY_REPRESENTATION.WR2: each item is exactly one of
-    // the types it lists; edition 4 lists `circle`, `conic` and `curve`, so a
-    // circle is three of them, though a curve alone is allowed.
+    // CONSTRUCTIVE_GEOMETRY_REPRESENTATION.WR2 lists `circle` with `conic`
+    // and `curve`; read as asking for exactly one, it would leave a circle
+    // out, so it is read as asking for at least one.
     let axis = a
         .add_axis2_placement3d("", m::CartesianPointRef::CartesianPoint(p), None, None)
         .expect("axis");
@@ -1181,12 +1181,81 @@ fn exactly_one_of_several_types_counts_every_part() {
             m::PartialEntity::RepresentationItem { name },
         ])
         .expect("circle complex");
+    a.add_constructive_geometry_representation(
+        "",
+        vec![
+            m::Ap242ConstructiveGeometryRepresentationItemsRef::Complex(circle),
+            m::Ap242ConstructiveGeometryRepresentationItemsRef::CartesianPoint(p),
+        ],
+        ctx,
+    )
+    .expect("a circle and a cartesian point");
+}
+
+/// `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION.WR1`: each item is
+/// exactly one of a geometric set, a mapped item or an axis placement. A
+/// complex instance's type is its parts, counted once per listed type.
+#[test]
+fn exactly_one_of_several_types_counts_every_part() {
+    let mut a = Ap242Author::new();
+    let ctx = a
+        .add_geometric_representation_context("", "3D", 3)
+        .expect("context");
+    let ctx = m::RepresentationContextRef::GeometricRepresentationContext(ctx);
+    let p = a
+        .add_cartesian_point("", [0.0, 0.0, 0.0].into())
+        .expect("point");
+    let axis_parts = |a: &mut Ap242Author| {
+        let name = a.text("");
+        vec![
+            m::PartialEntity::Axis2Placement3d {
+                axis: None,
+                ref_direction: None,
+            },
+            m::PartialEntity::GeometricRepresentationItem,
+            m::PartialEntity::Placement {
+                location: m::CartesianPointRef::CartesianPoint(p),
+            },
+            m::PartialEntity::RepresentationItem { name },
+        ]
+    };
+
+    // An axis placement is one of them, though it has four parts.
+    let parts = axis_parts(&mut a);
+    let axis = a.add_complex(parts).expect("axis placement complex");
+    a.add_geometrically_bounded_surface_shape_representation(
+        "",
+        vec![m::Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::Complex(axis)],
+        ctx.clone(),
+    )
+    .expect("one axis placement");
+
+    // An axis placement that is also a mapped item is two of them.
+    let origin = a
+        .add_axis2_placement3d("", m::CartesianPointRef::CartesianPoint(p), None, None)
+        .expect("origin");
+    let origin = m::RepresentationItemRef::Axis2Placement3d(origin);
+    let shape = a
+        .add_shape_representation("", vec![origin.clone()], ctx.clone())
+        .expect("shape");
+    let map = a
+        .add_representation_map(
+            origin.clone(),
+            m::RepresentationRef::ShapeRepresentation(shape),
+        )
+        .expect("map");
+    let mut parts = axis_parts(&mut a);
+    parts.push(m::PartialEntity::MappedItem {
+        mapping_source: m::RepresentationMapRef::RepresentationMap(map),
+        mapping_target: origin,
+    });
+    let both = a
+        .add_complex(parts)
+        .expect("axis placement and mapped item");
     let err = a
-        .add_constructive_geometry_representation(
+        .add_geometrically_bounded_surface_shape_representation(
             "",
-            vec![m::Ap242ConstructiveGeometryRepresentationItemsRef::Complex(
-                circle,
-            )],
+            vec![m::Ap242GeometricallyBoundedSurfaceShapeRepresentationItemsRef::Complex(both)],
             ctx,
         )
         .unwrap_err();
@@ -1194,7 +1263,7 @@ fn exactly_one_of_several_types_counts_every_part() {
         matches!(
             err,
             AuthorError::NarrowedReference {
-                entity: "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+                entity: "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
                 attribute: "items"
             }
         ),
