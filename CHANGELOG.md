@@ -41,11 +41,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `CompoundItemDefinitionRef`, `TransformationRef`,
   `ItemIdentifiedRepresentationUsageSelectRef`), the aggregate viewed as its
   elements; `entity_key()` stays with enums whose every arm is one entity.
-- `AuthorError::NarrowedReference` reports a reference AP242 narrows in an
-  entity that names a type the narrower attribute does not allow, where the
-  argument's type cannot rule it out: in `add_complex`, and in a
-  self-referencing constructor (`add_…_cyclic`), which takes the model's
-  type.
+- `AuthorError::NarrowedReference`: a reference names a type that AP242 does
+  not allow in an attribute it narrows. It is raised where the argument's
+  type cannot rule that out: in `add_complex`, and in a self-referencing
+  constructor (`add_…_cyclic`), which takes the model's type.
 - `Ap242ApprovedItemRef`, `Ap242ConstructiveGeometryRepresentationRef`,
   `Ap242DerivedShapeAspectRef`, `Ap242DraughtingModelItemSelectRef`,
   `Ap242AdvancedBrepShapeRepresentationItemsSelectRef`,
@@ -81,9 +80,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Ap242ProductDefinitionUsageRef`, `Ap242RatioUnitRef`,
   `Ap242StyledItemItemRef`, `Ap242StyledItemItemSetRepresentationItemRef`
   and `Ap242SurfaceCurveCurve3dRef`: what an AP242 edition 4 `WHERE` rule
-  lets an attribute, or each element of a set it holds, reference. Each converts into the model's reference with `From`,
-  as does `GeometricRepresentationContextRef` into
-  `RepresentationContextRef`.
+  lets an attribute, or each element of a set it holds, reference. Each
+  converts into the model's reference with `From`, as does
+  `GeometricRepresentationContextRef` into `RepresentationContextRef`.
 - `StyledItemTargetOrRepresentationItemRef`: what a styled item's `item` takes
   in the model — AP242's `styled_item_target` or, as AP203 and AP214 allow,
   any representation item.
@@ -130,7 +129,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `add_datum_reference_compartment` and `add_datum_reference_element`:
     `base` takes an `Ap242DatumOrCommonDatumRef` (a datum reference element
     only in a list)
-  - `add_draughting_model`, `add_mechanical_design_geometric_presentation_representation`,
+  - `add_draughting_model`,
+    `add_mechanical_design_geometric_presentation_representation`,
     `add_mechanical_design_shaded_presentation_representation`,
     `add_shape_dimension_representation` and
     `add_shape_representation_with_parameters`: `items` takes the matching
@@ -144,16 +144,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `transformation_operator` takes an `Ap242TransformationRef` (not a
     `list_item_defined_transformation`, which edition 2 allowed)
 - `Ap242Author` constructors also take a narrower reference type where an
-  AP242 edition 4 `WHERE` rule limits which types an attribute, each of its
-  elements, or each element of a set it holds references
-  (such as `'LENGTH_UNIT' IN TYPEOF(SELF\measure_with_unit.unit_component)`;
-  not rules on one indexed element, on two attributes together or on a path
-  through another entity), for every instance or by the instance's own type
-  (`DRAUGHTING_ANNOTATION_OCCURRENCE.WR7`). A complex argument's parts count
-  together: where
-  a rule excludes a type, one holding a part of that type, and where it asks
-  for exactly one of several types, one whose parts are of more than one of
-  them, is rejected on insertion with `AuthorError::NarrowedReference`:
+  AP242 edition 4 `WHERE` rule limits the types an attribute, each of its
+  elements, or each element of a set it holds may reference, whether for
+  every instance or by the instance's own type (such as
+  `'LENGTH_UNIT' IN TYPEOF(SELF\measure_with_unit.unit_component)` or
+  `DRAUGHTING_ANNOTATION_OCCURRENCE.WR7`). Rules on one indexed element, on
+  two attributes together or on a path through another entity are not
+  checked. The parts of a complex argument count together: it is rejected on
+  insertion with `AuthorError::NarrowedReference` if a part is of a type the
+  rule excludes, or if the rule asks for exactly one of several types and its
+  parts are of more than one of them:
   - `add_styled_item`, `add_over_riding_styled_item`,
     `add_context_dependent_over_riding_styled_item`,
     `add_annotation_occurrence` and `add_draughting_annotation_occurrence`:
@@ -176,8 +176,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     issue of the edition, and the rule is read as asking for at least one
   - `add_geometrically_bounded_surface_shape_representation` and
     `add_geometrically_bounded_wireframe_shape_representation`: `items`
-    takes the matching
-    `Ap242…ItemsRef`
+    takes the matching `Ap242…ItemsRef`
   - `add_product_definition_shape`: `definition` takes an
     `Ap242ProductDefinitionShapeDefinitionRef` (a product definition or its
     relationship, or a characterized object; not a shape aspect)
@@ -200,11 +199,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     (`qualified_measure`) and `add_camera_usage` (`mapped_representation`):
     the matching `Ap242…Ref`
 - `add_complex` and the self-referencing constructors check the same
-  narrowings at run time, a set's elements included (in `add_complex`, a
-  rule by the instance's own type by its parts:
-  `DRAUGHTING_ANNOTATION_OCCURRENCE.WR7` — exactly one composite text or text
-  literal — where a part is an annotation text occurrence), and `add_person_and_organization_address` takes
-  exactly one organization and one person, as AP242 requires.
+  narrowings at run time, each element of a set included. In `add_complex`,
+  a rule that depends on the instance's own type is checked against its
+  parts: `DRAUGHTING_ANNOTATION_OCCURRENCE.WR7` (exactly one composite text
+  or text literal) applies where a part is an annotation text occurrence.
+- `add_person_and_organization_address` takes exactly one organization and
+  one person, as AP242 requires; it used to take one or more of each.
 - `add_complex` rejects a part of an entity AP242 declares `ABSTRACT` unless
   a part of one of its subtypes is beside it, with
   `AuthorError::InvalidComplex`.
@@ -242,8 +242,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `DraughtingAnnotationOccurrence` (and of the `STYLED_ITEM` part):
     `StyledItemTargetOrRepresentationItemRef`
   - `ConstructiveGeometryRepresentationRelationship::rep_1`:
-    `RepresentationOrRepresentationReferenceRef`, as `representation_relationship`
-    declares it; AP242 narrows it to a shape model only for `Ap242Author`
+    `RepresentationOrRepresentationReferenceRef`, as
+    `representation_relationship` declares it; AP242 narrows it to a shape
+    model only for `Ap242Author`
 
 ### Removed
 
@@ -290,10 +291,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `read()` drops an entity whose reference in one of the attributes above
-  names a type the narrower attribute does not allow, and reports it as a
-  `NonstandardReference`. Such an entity used to be kept, with a reference the
-  standard does not allow.
+- `read()` drops an entity whose reference, in one of the attributes every
+  STEP edition narrows (listed under Changed), names a type the narrower
+  attribute does not allow, and reports it as a `NonstandardReference`. Such
+  an entity used to be kept, with a reference the standard does not allow.
 - The same holds inside a complex entity: when one part narrows an attribute
   another part declares, and every edition shares that narrowing, `read()`
   drops the entity if the reference falls outside it (for example
