@@ -83,7 +83,7 @@ pub(crate) fn units_of(cx: Ctx<'_>) -> Units {
 
     let mut out = Units::default();
     for ur in unit_refs {
-        if let Some((kind, unit)) = classify_unit(cx, ur) {
+        if let Some((kind, unit)) = classify_unit(cx, ur, &mut Vec::new()) {
             match kind {
                 UnitKind::Length if out.length.is_none() => out.length = Some(unit),
                 UnitKind::PlaneAngle if out.angle.is_none() => out.angle = Some(unit),
@@ -138,8 +138,13 @@ fn find_unit_context(model: &StepModel) -> Option<(m::ComplexEntityId, &m::Compl
 }
 
 /// Classify a unit reference (SI, conversion-based, or complex-wrapped) into its
-/// kind and SI factor.
-fn classify_unit(cx: Ctx<'_>, ur: &m::UnitRef) -> Option<(UnitKind, Unit)> {
+/// kind and SI factor. `path` holds the conversion-based units being read, so
+/// one defined through itself stops instead of recursing forever.
+fn classify_unit(
+    cx: Ctx<'_>,
+    ur: &m::UnitRef,
+    path: &mut Vec<m::EntityKey>,
+) -> Option<(UnitKind, Unit)> {
     let model = cx.model;
     match ur {
         m::UnitRef::SiUnit(id) => {
@@ -148,30 +153,56 @@ fn classify_unit(cx: Ctx<'_>, ur: &m::UnitRef) -> Option<(UnitKind, Unit)> {
         }
         m::UnitRef::ConversionBasedUnit(id) => {
             let cbu = model.conversion_based_unit_arena.get(id.0);
-            classify_cbu(cx, model.text(cbu.name), &cbu.conversion_factor)
+            let cbu_ref = Cbu {
+                key: ur.entity_key(),
+                name: model.text(cbu.name),
+                factor: &cbu.conversion_factor,
+                length_or_angle: false,
+            };
+            classify_cbu(cx, cbu_ref, path)
         }
         m::UnitRef::Complex(cuid) => {
             let cu = model.complex_entity_arena.get(cuid.0);
-            let found = cu.parts.iter().find_map(|p| match p {
-                m::PartialEntity::SiUnit { prefix, name } => Some(classify_si(*prefix, *name)),
-                m::PartialEntity::ConversionBasedUnit {
-                    name,
-                    conversion_factor,
-                } => classify_cbu(cx, model.text(*name), conversion_factor),
-                _ => None,
-            });
             let length_or_angle = cu.parts.iter().any(|p| {
                 matches!(
                     p,
                     m::PartialEntity::LengthUnit | m::PartialEntity::PlaneAngleUnit
                 )
             });
-            if found.is_none() && length_or_angle {
+            let mut has_unit_part = false;
+            let found = cu.parts.iter().find_map(|p| match p {
+                m::PartialEntity::SiUnit { prefix, name } => {
+                    has_unit_part = true;
+                    Some(classify_si(*prefix, *name))
+                }
+                m::PartialEntity::ConversionBasedUnit {
+                    name,
+                    conversion_factor,
+                } => {
+                    has_unit_part = true;
+                    let cbu_ref = Cbu {
+                        key: ur.entity_key(),
+                        name: model.text(*name),
+                        factor: conversion_factor,
+                        length_or_angle,
+                    };
+                    classify_cbu(cx, cbu_ref, path)
+                }
+                _ => None,
+            });
+            if !length_or_angle {
+                return found;
+            }
+            if !has_unit_part {
                 cx.warn(
                     "length or angle unit is a complex instance without an SI_UNIT or \
                      CONVERSION_BASED_UNIT part; not read"
                         .to_owned(),
                 );
+            }
+            if matches!(found, Some((UnitKind::Other, _))) {
+                cx.warn("length or angle unit names a unit of another kind; not read".to_owned());
+                return None;
             }
             found
         }
@@ -214,21 +245,50 @@ fn classify_si(prefix: Option<m::SiPrefix>, name: m::SiUnitName) -> (UnitKind, U
     )
 }
 
+/// A conversion-based unit to classify, plain or a complex instance's part.
+#[derive(Clone, Copy)]
+struct Cbu<'m> {
+    /// The unit entity, to catch a unit defined through itself.
+    key: m::EntityKey,
+    name: &'m str,
+    factor: &'m m::MeasureWithUnitRef,
+    /// Whether the unit says it is a length or angle unit, so a base unit
+    /// that cannot be read is worth reporting.
+    length_or_angle: bool,
+}
+
 /// A conversion-based unit (e.g. inch, degree): its factor is the conversion
 /// value times the base unit's own factor to SI; its kind comes from the base.
 fn classify_cbu(
     cx: Ctx<'_>,
-    name: &str,
-    factor: &m::MeasureWithUnitRef,
+    cbu: Cbu<'_>,
+    path: &mut Vec<m::EntityKey>,
 ) -> Option<(UnitKind, Unit)> {
-    let Some((value, base)) = measure_with_unit(cx.model, factor) else {
+    let name = cbu.name;
+    if path.contains(&cbu.key) {
+        cx.warn(format!(
+            "CONVERSION_BASED_UNIT {name}: defined through itself; not read"
+        ));
+        return None;
+    }
+    let Some((value, base)) = measure_with_unit(cx.model, cbu.factor) else {
         cx.warn(format!(
             "CONVERSION_BASED_UNIT {name}: conversion factor is a complex instance without a \
              MEASURE_WITH_UNIT part; not read"
         ));
         return None;
     };
-    let (kind, base_unit) = classify_unit(cx, base)?;
+    path.push(cbu.key);
+    let base_unit = classify_unit(cx, base, path);
+    path.pop();
+    let Some((kind, base_unit)) = base_unit else {
+        if cbu.length_or_angle {
+            cx.warn(format!(
+                "CONVERSION_BASED_UNIT {name}: its base unit is not read"
+            ));
+        }
+        return None;
+    };
     Some((
         kind,
         Unit {

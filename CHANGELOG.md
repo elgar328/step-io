@@ -441,6 +441,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Dimension::value` takes the first measure item not named `upper limit` or
   `lower limit`; it used to take the first, a limit when the representation
   lists one before the nominal value, as NIST's test files can.
+- `Scene::units` stops at a conversion-based unit defined through itself and
+  reports it; such a unit used to overflow the stack. A length or angle unit
+  whose base is a unit of another kind, or cannot be read, is now reported
+  too, and a conversion factor that cannot be read no longer also reports
+  the unit as missing its `CONVERSION_BASED_UNIT` part.
 - A shape aspect written as a complex instance with a `SHAPE_ASPECT` part,
   as NIST's AP242 test files write a composite datum feature
   (`(COMPOSITE_SHAPE_ASPECT() DATUM_FEATURE() SHAPE_ASPECT(...))`), is a
