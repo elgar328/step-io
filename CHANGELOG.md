@@ -343,6 +343,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   scene used `[1, 0, 0]` every time, so on an X axis the frame was degenerate:
   `Transform::matrix` gave `None`, and so did `to_nurbs` for a curve or
   surface on such a placement.
+- `read()` repeats its drop pass until no kept entity fails, where it used to
+  stop after three rounds; an entity that failed in a fourth would have been
+  reported as dropped yet left in the model and counted as kept.
 - The scene reads a measure written as a complex instance, such as
   `(LENGTH_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM()
   MEASURE_WITH_UNIT(LENGTH_MEASURE(5.), #u) REPRESENTATION_ITEM(''))`, from

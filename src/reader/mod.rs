@@ -621,10 +621,6 @@ pub fn read(input: impl Read) -> Result<(StepModel, Report), Error> {
 /// [`read`] for a file of at most `limit` entities, synthetic ones
 /// included; past that it is [`Error::TooLarge`].
 fn read_at_most(input: impl Read, limit: usize) -> Result<(StepModel, Report), Error> {
-    /// ≤2 real iterations; one extra for slack (a violation degrades to dropping,
-    /// not hanging — `debug_assert` flags non-convergence in dev).
-    const MAX_ITERS: usize = 3;
-
     // The model has no place for the ANCHOR and REFERENCE sections.
     let mut stream = Stream::open(Parser::new(input).discarding_ed3())?;
     let header = crate::header::from_raw(stream.header(), stream.schema().clone());
@@ -671,10 +667,10 @@ fn read_at_most(input: impl Read, limit: usize) -> Result<(StepModel, Report), E
         .collect();
     let mut known_bad = vec![false; table.len()];
     let mut read_fail: BTreeMap<u64, String> = BTreeMap::new();
-    let mut dropped: Vec<(u64, DropReason)> = Vec::new();
-    let mut validated = 0usize;
-    let mut converged = false;
-    for _ in 0..MAX_ITERS {
+    // Until no kept entity fails. A failing entity is never kept again, so
+    // each round that fails marks at least one more `known_bad` and the loop
+    // ends within as many rounds as there are entities.
+    let (mut dropped, validated) = loop {
         let (kept, n_kept, kept_dropped) = drop_pass(&table, &refs, &mut labels, &known_bad);
         finalize(&mut model, &mut table, &kept);
         // No catch_unwind belt: the generated read is structurally panic-free
@@ -686,21 +682,14 @@ fn read_at_most(input: impl Read, limit: usize) -> Result<(StepModel, Report), E
             .map(|(p, _, e)| (*p, e.clone()))
             .collect();
         fails.extend(resolve(&mut model, &table, &refs, &kept, &mut dedup));
-        dropped = kept_dropped;
-        validated = n_kept;
         if fails.is_empty() {
-            converged = true;
-            break;
+            break (kept_dropped, n_kept);
         }
         for (pos, e) in fails {
             read_fail.entry(table.rows()[pos].id).or_insert(e);
             known_bad[pos] = true;
         }
-    }
-    debug_assert!(
-        converged,
-        "fallible read did not converge in {MAX_ITERS} iters"
-    );
+    };
     shrink_arenas(&mut model);
 
     // Finalize provenance: drop-pass drops (this iter) + nonstandard-value
