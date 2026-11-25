@@ -1124,7 +1124,9 @@ impl<'m> Edge<'m> {
     /// converts the *whole* curve — here an unbounded line becomes the finite
     /// segment, a circle the arc between the vertices, a parabola or hyperbola
     /// the exact span between them, and an edge whose vertices coincide (a
-    /// closed edge) the whole closed curve. `None` for a closed edge on a line,
+    /// closed edge) the whole closed curve, in the edge's direction but
+    /// starting at the curve's parameter origin, which need not be the vertex.
+    /// `None` for a closed edge on a line,
     /// parabola or hyperbola, and for a B-spline whose degree is outside 1–25
     /// or whose knot multiplicities do not match its control points.
     pub fn to_nurbs(&self) -> Option<crate::scene::nurbs::NurbsCurve> {

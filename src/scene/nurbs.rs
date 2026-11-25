@@ -1156,7 +1156,8 @@ pub(crate) fn surface_curve_3d_to_nurbs(cx: Ctx<'_>, r: &m::CurveRef) -> Option<
 /// Contrast with `Curve::to_nurbs`, which converts the whole curve — here an
 /// unbounded line becomes the finite segment and a partial arc/span is cut
 /// out; an edge whose two vertices coincide is a closed edge and yields the
-/// whole (closed) curve.
+/// whole (closed) curve, reversed when `same_sense` is false, starting at the
+/// curve's parameter origin rather than at the vertex.
 pub(crate) fn edge_to_nurbs(
     cx: Ctx<'_>,
     geometry: &m::CurveRef,
@@ -1183,7 +1184,12 @@ pub(crate) fn edge_to_nurbs(
             ));
             return None;
         }
-        return resolved_curve_to_nurbs(cx, r);
+        let whole = resolved_curve_to_nurbs(cx, r)?;
+        return Some(if same_sense {
+            whole
+        } else {
+            reverse_curve(&whole)
+        });
     }
     match r {
         m::CurveRef::Line(_) => Some(NurbsCurve {

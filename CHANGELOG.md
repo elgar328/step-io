@@ -331,6 +331,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a `NonstandardReference`.
 - `Tolerance::magnitude` reads a magnitude given as a plain
   `MEASURE_WITH_UNIT` when its value is a length measure.
+- `Edge::to_nurbs` gives a closed edge whose direction is against its
+  curve's (`same_sense` false) the other way round; it used to follow the
+  curve. The closed curve still starts at the curve's parameter origin.
 - The scene reads a measure written as a complex instance, such as
   `(LENGTH_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM()
   MEASURE_WITH_UNIT(LENGTH_MEASURE(5.), #u) REPRESENTATION_ITEM(''))`, from

@@ -822,6 +822,29 @@ const EDGES: &str = "\
 #59=CLOSED_SHELL('',(#58));\n\
 #60=MANIFOLD_SOLID_BREP('',#59);\n";
 
+/// A closed edge against its curve's direction (`same_sense` false) gives the
+/// whole circle the other way round, still from the curve's origin.
+#[test]
+fn a_closed_edge_against_its_curve_runs_backwards() {
+    for (sense, second) in [(".T.", [1., 1., 0.]), (".F.", [1., -1., 0.])] {
+        let edges = EDGES.replace(
+            "#43=EDGE_CURVE('',#22,#22,#8,.T.);",
+            &format!("#43=EDGE_CURVE('',#22,#22,#8,{sense});"),
+        );
+        let src = format!("{HEADER}{edges}{FOOTER}");
+        let (model, _rep) = read(src.as_bytes()).expect("read");
+        let scene = model.scene();
+        let full = scene
+            .all_edges()
+            .filter_map(|e| e.to_nurbs())
+            .find(|n| n.degree == 2 && n.control_points.len() == 9)
+            .expect("full circle");
+        assert!(approx(&full.control_points[0], &[1., 0., 0.]), "{sense}");
+        assert!(approx(&full.control_points[8], &[1., 0., 0.]), "{sense}");
+        assert!(approx(&full.control_points[1], &second), "{sense}");
+    }
+}
+
 #[test]
 fn edges_convert_to_bounded_nurbs() {
     let src = format!("{HEADER}{EDGES}{FOOTER}");
