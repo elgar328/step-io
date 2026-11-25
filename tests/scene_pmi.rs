@@ -3,6 +3,7 @@
 //! `SHAPE_DIMENSION_REPRESENTATION`'s `MEASURE_REPRESENTATION_ITEM`. The DCR is a
 //! root, so it anchors the whole chain through settling.
 
+use step_io::model::EntityKey;
 use step_io::read;
 use step_io::scene::{CurveKind, SurfaceKind};
 use step_io::scene::{DimensionKind, FeatureGeometry, FeatureKind, ToleranceKind};
@@ -277,6 +278,63 @@ fn a_datum_reaches_a_dimensional_size_with_datum_feature() {
     let datum = scene.all_datums().next().expect("a datum");
     let df = datum.datum_feature().expect("the datum feature");
     assert!(df.geometry().next().is_some(), "reaches its face");
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
+// A composite datum feature written as a complex instance, as NIST's AP242
+// test files write one: the complex is the datum feature of datum 'A', joins
+// two plain shape aspects on faces by SHAPE_ASPECT_RELATIONSHIPs, and carries
+// a dimension and a tolerance. It has no GISU of its own.
+fn complex_datum_feature() -> String {
+    DATUM_FEATURE
+        .replace(
+            "#50=DATUM_FEATURE('df','',#13,.T.);",
+            "#50=(COMPOSITE_SHAPE_ASPECT()DATUM_FEATURE()SHAPE_ASPECT('DF A','',#13,.T.));",
+        )
+        .replace(
+            "#53=GEOMETRIC_ITEM_SPECIFIC_USAGE('','datum feature',#50,#37,#35);",
+            "#54=SHAPE_ASPECT('side 1','',#13,.T.);\n\
+#55=SHAPE_ASPECT('side 2','',#13,.T.);\n\
+#56=SHAPE_ASPECT_RELATIONSHIP('','',#50,#54);\n\
+#57=SHAPE_ASPECT_RELATIONSHIP('','',#50,#55);\n\
+#58=GEOMETRIC_ITEM_SPECIFIC_USAGE('','',#54,#37,#35);\n\
+#59=GEOMETRIC_ITEM_SPECIFIC_USAGE('','',#55,#37,#35);\n\
+#60=DIMENSIONAL_SIZE(#50,'width');\n\
+#61=FLATNESS_TOLERANCE('flat',$,$,#50);",
+        )
+}
+
+/// A shape aspect written as a complex instance with a `SHAPE_ASPECT` part is
+/// a feature: the datum, the dimension and the tolerance reach it, and it
+/// belongs to its part.
+#[test]
+fn a_complex_datum_feature_is_a_feature() {
+    let src = format!("{HEADER}{}{FOOTER}", complex_datum_feature());
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+
+    let datum = scene.all_datums().next().expect("a datum");
+    let df = datum.datum_feature().expect("the datum feature");
+    assert_eq!(df.kind(), FeatureKind::Complex);
+    assert_eq!(df.name(), "DF A");
+    assert_eq!(df.description(), Some(""));
+    assert!(matches!(df.key(), EntityKey::ComplexEntity(_)));
+
+    assert!(scene.all_features().any(|f| f.key() == df.key()));
+    let part = scene
+        .all_product_definitions()
+        .find(|d| d.product().is_some_and(|p| p.name() == "Part"))
+        .expect("the part");
+    assert!(part.features().any(|f| f.key() == df.key()));
+
+    let dim = scene.all_dimensions().next().expect("a dimension");
+    assert!(dim.features().any(|f| f.key() == df.key()));
+    let tol = scene.all_tolerances().next().expect("a tolerance");
+    assert_eq!(tol.feature().map(|f| f.key()), Some(df.key()));
+    assert_eq!(part.dimensions().count(), 1);
+    assert_eq!(part.tolerances().count(), 1);
+
     assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
 }
 

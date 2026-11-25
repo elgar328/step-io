@@ -488,9 +488,10 @@ impl<'m> ProductDef<'m> {
         out
     }
 
-    /// The shape features of this part (`SHAPE_ASPECT`s whose `of_shape`
-    /// resolves to this definition). The model-wide [`Scene::all_features`] filtered
-    /// to this part. A feature on an occurrence's shape (the
+    /// The shape features of this part (`SHAPE_ASPECT`s, and complex instances
+    /// with a `SHAPE_ASPECT` part, whose `of_shape` resolves to this
+    /// definition). The model-wide [`Scene::all_features`] filtered to this
+    /// part. A feature on an occurrence's shape (the
     /// `PRODUCT_DEFINITION_SHAPE` of a `NEXT_ASSEMBLY_USAGE_OCCURRENCE`) belongs
     /// to no part here.
     pub fn features(&self) -> impl Iterator<Item = pmi::Feature<'m>> + 'm {

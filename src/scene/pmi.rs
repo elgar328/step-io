@@ -597,8 +597,9 @@ impl<'m> Datum<'m> {
     }
 
     /// The physical feature this datum is established from — the `DATUM_FEATURE`
-    /// (or `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`) linked to it by a
-    /// `SHAPE_ASPECT_RELATIONSHIP`. Returned as a [`Feature`],
+    /// (or `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`, or a complex instance with a
+    /// `DATUM_FEATURE` part, as a composite datum feature is written) linked to
+    /// it by a `SHAPE_ASPECT_RELATIONSHIP`. Returned as a [`Feature`],
     /// whose faces/edges are reachable via [`Feature::geometry`]. `None` when the
     /// datum is defined only by datum targets, or carries no such link.
     pub fn datum_feature(&self) -> Option<Feature<'m>> {
@@ -618,13 +619,23 @@ impl<'m> Datum<'m> {
                     m::ShapeAspectRef::DimensionalSizeWithDatumFeature(fid) => {
                         FeatureImpl::DimensionalSizeWithDatumFeature(*fid)
                     }
-                    m::ShapeAspectRef::Complex(_) => {
-                        cx.warn(
-                            "a datum's shape aspect relationship ends in a complex instance; \
-                             not read"
-                                .to_owned(),
-                        );
-                        continue;
+                    m::ShapeAspectRef::Complex(cid) => {
+                        let parts = &cx.model.complex_entity_arena.get(cid.0).parts;
+                        if !parts
+                            .iter()
+                            .any(|p| matches!(p, m::PartialEntity::DatumFeature))
+                        {
+                            continue;
+                        }
+                        let Some(which) = complex_feature(cx.model, *cid) else {
+                            cx.warn(
+                                "a datum's shape aspect relationship ends in a complex datum \
+                                 feature without a SHAPE_ASPECT part; not read"
+                                    .to_owned(),
+                            );
+                            continue;
+                        };
+                        which
                     }
                     _ => continue,
                 };
@@ -803,8 +814,10 @@ impl<'m> Tolerance<'m> {
 /// Every entity here is a `SHAPE_ASPECT` subtype in the schema (that is why the
 /// same set forms both `applies_to` and `toleranced_shape_aspect` targets), so a
 /// `Feature` can be a plain aspect, a datum feature, a composite/derived aspect,
-/// or occasionally a datum / tolerance-zone construct. [`key`](Feature::key)
-/// reveals the exact kind when it matters.
+/// or occasionally a datum / tolerance-zone construct — or a complex instance
+/// with a `SHAPE_ASPECT` part that combines several of them (a composite datum
+/// feature written as `(COMPOSITE_SHAPE_ASPECT DATUM_FEATURE SHAPE_ASPECT)`).
+/// [`key`](Feature::key) reveals the exact kind when it matters.
 #[derive(Clone, Copy)]
 pub struct Feature<'m> {
     cx: Ctx<'m>,
@@ -814,7 +827,9 @@ pub struct Feature<'m> {
 // The 20 SHAPE_ASPECT-family entities all share `name` / `description` / a
 // dedicated arena / an `EntityKey` variant. This table generates the cursor enum,
 // the accessors, and the two reference-union converters — all covering the full
-// family, since a dimension / tolerance target may point at any of them.
+// family, since a dimension / tolerance target may point at any of them — plus
+// the arms for a complex instance with a `SHAPE_ASPECT` part, which reads its
+// `name` / `description` / `of_shape` from that part.
 //
 // The family splits in two: `regions` are the SHAPE_ASPECT subtypes that denote a
 // portion of the part's shape (a feature) and are what `Scene::all_features` lists;
@@ -831,6 +846,7 @@ macro_rules! feature_family {
         enum FeatureImpl {
             $( $rent(m::$rid), )+
             $( $aent(m::$aid), )+
+            Complex(m::ComplexEntityId),
         }
 
         /// The concrete kind of a [`Feature`] — which `SHAPE_ASPECT`-family
@@ -840,6 +856,11 @@ macro_rules! feature_family {
         pub enum FeatureKind {
             $( $rent, )+
             $( $aent, )+
+            /// A complex instance with a `SHAPE_ASPECT` part, combining several
+            /// shape-aspect subtypes at once (a composite datum feature, for
+            /// one); its parts are on the model under [`Feature::key`]'s
+            /// `ComplexEntity`.
+            Complex,
         }
 
         impl<'m> Feature<'m> {
@@ -848,6 +869,7 @@ macro_rules! feature_family {
                 match self.which {
                     $( FeatureImpl::$rent(_) => FeatureKind::$rent, )+
                     $( FeatureImpl::$aent(_) => FeatureKind::$aent, )+
+                    FeatureImpl::Complex(_) => FeatureKind::Complex,
                 }
             }
             /// The feature's name.
@@ -855,6 +877,8 @@ macro_rules! feature_family {
                 match self.which {
                     $( FeatureImpl::$rent(i) => self.cx.model.text(self.cx.model.$rarena.get(i.0).name), )+
                     $( FeatureImpl::$aent(i) => self.cx.model.text(self.cx.model.$aarena.get(i.0).name), )+
+                    FeatureImpl::Complex(i) => complex_shape_aspect(self.cx.model, i)
+                        .map_or("", |(name, _, _)| self.cx.model.text(name)),
                 }
             }
 
@@ -867,6 +891,9 @@ macro_rules! feature_family {
                     $( FeatureImpl::$aent(i) => {
                         self.cx.model.$aarena.get(i.0).description.map(|t| self.cx.model.text(t))
                     } )+
+                    FeatureImpl::Complex(i) => complex_shape_aspect(self.cx.model, i)
+                        .and_then(|(_, description, _)| description)
+                        .map(|t| self.cx.model.text(t)),
                 }
             }
 
@@ -875,49 +902,72 @@ macro_rules! feature_family {
                 match self.which {
                     $( FeatureImpl::$rent(i) => m::EntityKey::$rent(i), )+
                     $( FeatureImpl::$aent(i) => m::EntityKey::$aent(i), )+
+                    FeatureImpl::Complex(i) => m::EntityKey::ComplexEntity(i),
                 }
             }
 
             /// The `of_shape` product-definition-shape this feature belongs to.
-            fn of_shape(&self) -> &'m m::ProductDefinitionShapeRef {
+            fn of_shape(&self) -> Option<&'m m::ProductDefinitionShapeRef> {
                 match self.which {
-                    $( FeatureImpl::$rent(i) => &self.cx.model.$rarena.get(i.0).of_shape, )+
-                    $( FeatureImpl::$aent(i) => &self.cx.model.$aarena.get(i.0).of_shape, )+
+                    $( FeatureImpl::$rent(i) => Some(&self.cx.model.$rarena.get(i.0).of_shape), )+
+                    $( FeatureImpl::$aent(i) => Some(&self.cx.model.$aarena.get(i.0).of_shape), )+
+                    FeatureImpl::Complex(i) => {
+                        complex_shape_aspect(self.cx.model, i).map(|(_, _, of_shape)| of_shape)
+                    }
                 }
             }
         }
 
         /// A `ShapeAspectRef` (a dimension's target) → a feature cursor. Every
-        /// non-`Complex` variant is a shape-aspect-family member.
-        fn feature_impl_from_shape_aspect_ref(r: &m::ShapeAspectRef) -> Option<FeatureImpl> {
+        /// non-`Complex` variant is a shape-aspect-family member; a complex
+        /// instance resolves when it has a `SHAPE_ASPECT` part.
+        fn feature_impl_from_shape_aspect_ref(
+            model: &m::StepModel,
+            r: &m::ShapeAspectRef,
+        ) -> Option<FeatureImpl> {
             match r {
                 $( m::ShapeAspectRef::$rent(i) => Some(FeatureImpl::$rent(*i)), )+
                 $( m::ShapeAspectRef::$aent(i) => Some(FeatureImpl::$aent(*i)), )+
-                m::ShapeAspectRef::Complex(_) => None,
+                m::ShapeAspectRef::Complex(i) => complex_feature(model, *i),
             }
         }
 
         /// A `GeometricToleranceTargetRef` (a tolerance's target) → a feature
-        /// cursor. The shape-aspect-family arms resolve; the dimension / product /
-        /// complex arms are not features and yield `None`.
+        /// cursor. The shape-aspect-family arms resolve, and so does a complex
+        /// instance with a `SHAPE_ASPECT` part; the dimension / product arms
+        /// are not features and yield `None`.
         fn feature_impl_from_tolerance_target(
+            model: &m::StepModel,
             r: &m::GeometricToleranceTargetRef,
         ) -> Option<FeatureImpl> {
             match r {
                 $( m::GeometricToleranceTargetRef::$rent(i) => Some(FeatureImpl::$rent(*i)), )+
                 $( m::GeometricToleranceTargetRef::$aent(i) => Some(FeatureImpl::$aent(*i)), )+
+                m::GeometricToleranceTargetRef::Complex(i) => complex_feature(model, *i),
                 _ => None,
             }
         }
 
         /// Every shape-region feature (the `regions` group) in the model — what
-        /// [`Scene::all_features`] enumerates.
+        /// [`Scene::all_features`] enumerates — then every complex instance
+        /// with a `SHAPE_ASPECT` part and no part from the `aspects` group.
         fn push_all_features<'m>(cx: Ctx<'m>, out: &mut Vec<Feature<'m>>) {
             $(
                 for i in cx.model.$rarena.indices() {
                     out.push(Feature { cx, which: FeatureImpl::$rent(m::$rid(i)) });
                 }
             )+
+            for i in cx.model.complex_entity_arena.indices() {
+                let id = m::ComplexEntityId(i);
+                let parts = &cx.model.complex_entity_arena.get(i).parts;
+                if complex_shape_aspect(cx.model, id).is_some()
+                    && !parts
+                        .iter()
+                        .any(|p| matches!(p, $( m::PartialEntity::$aent { .. } )|+))
+                {
+                    out.push(Feature { cx, which: FeatureImpl::Complex(id) });
+                }
+            }
         }
     };
 }
@@ -952,13 +1002,42 @@ feature_family! {
     }
 }
 
+/// The `SHAPE_ASPECT` part of a complex instance: its `name`, `description`
+/// and `of_shape`. `None` when it has no such part.
+fn complex_shape_aspect(
+    model: &m::StepModel,
+    id: m::ComplexEntityId,
+) -> Option<(m::Text, Option<m::Text>, &m::ProductDefinitionShapeRef)> {
+    model
+        .complex_entity_arena
+        .get(id.0)
+        .parts
+        .iter()
+        .find_map(|p| match p {
+            m::PartialEntity::ShapeAspect {
+                name,
+                description,
+                of_shape,
+                ..
+            } => Some((*name, *description, of_shape)),
+            _ => None,
+        })
+}
+
+/// A complex instance as a feature cursor, if it has a `SHAPE_ASPECT` part.
+fn complex_feature(model: &m::StepModel, id: m::ComplexEntityId) -> Option<FeatureImpl> {
+    complex_shape_aspect(model, id).map(|_| FeatureImpl::Complex(id))
+}
+
 impl Scene<'_> {
     /// Every geometric feature in the model — the `SHAPE_ASPECT` subtypes that
     /// denote a region of the part's shape (plain aspects, datum features,
     /// composite / derived / all-around / centre-of-symmetry / continuous
-    /// aspects). Datum callouts, datum-system references, tolerance zones, and
-    /// views are also `SHAPE_ASPECT`s in the schema but are not features here —
-    /// datums are reached via [`Scene::all_datums`], the rest via the raw model.
+    /// aspects), and complex instances with a `SHAPE_ASPECT` part (a composite
+    /// datum feature, for one) that carry none of the parts below. Datum
+    /// callouts, datum-system references, tolerance zones, and views are also
+    /// `SHAPE_ASPECT`s in the schema but are not features here — datums are
+    /// reached via [`Scene::all_datums`], the rest via the raw model.
     pub fn all_features(&self) -> impl Iterator<Item = Feature<'_>> + '_ {
         let cx = self.ctx();
         let mut out: Vec<Feature<'_>> = Vec::new();
@@ -992,12 +1071,13 @@ impl<'m> Dimension<'m> {
     }
 
     fn feature_from_sa_ref(&self, r: &m::ShapeAspectRef) -> Option<Feature<'m>> {
-        if matches!(r, m::ShapeAspectRef::Complex(_)) {
-            self.cx
-                .warn("dimension feature is a complex instance".to_owned());
-            return None;
+        let which = feature_impl_from_shape_aspect_ref(self.cx.model, r);
+        if which.is_none() {
+            self.cx.warn(
+                "dimension feature is a complex instance without a SHAPE_ASPECT part".to_owned(),
+            );
         }
-        feature_impl_from_shape_aspect_ref(r).map(|which| Feature { cx: self.cx, which })
+        which.map(|which| Feature { cx: self.cx, which })
     }
 }
 
@@ -1006,18 +1086,19 @@ impl<'m> Tolerance<'m> {
     ///
     /// `None` when the target is not a named shape aspect — a tolerance placed on
     /// a dimension, on the whole part (`PRODUCT_DEFINITION_SHAPE`) or on a
-    /// relationship between shape aspects — or when the
-    /// target is a complex instance the scene cannot resolve (reported via
+    /// relationship between shape aspects — or when the target is a complex
+    /// instance without a `SHAPE_ASPECT` part (reported via
     /// [`Scene::warnings`]).
     pub fn feature(&self) -> Option<Feature<'m>> {
         let this = self.about();
         let target = this.tolerance_target()?;
-        if matches!(target, m::GeometricToleranceTargetRef::Complex(_)) {
-            this.cx
-                .warn("tolerance target is a complex instance".to_owned());
-            return None;
+        let which = feature_impl_from_tolerance_target(this.cx.model, target);
+        if which.is_none() && matches!(target, m::GeometricToleranceTargetRef::Complex(_)) {
+            this.cx.warn(
+                "tolerance target is a complex instance without a SHAPE_ASPECT part".to_owned(),
+            );
         }
-        feature_impl_from_tolerance_target(target).map(|which| Feature { cx: this.cx, which })
+        which.map(|which| Feature { cx: this.cx, which })
     }
 
     /// The tolerance's `toleranced_shape_aspect`: from the dedicated arena for a
@@ -1172,7 +1253,7 @@ impl Feature<'_> {
     /// its `..._WITH_ASSOCIATED_DOCUMENTS` subtype.
     fn part_def_id(&self) -> Option<m::EntityKey> {
         let this = self.about();
-        product_def_of_shape(this.cx, this.of_shape())
+        product_def_of_shape(this.cx, this.of_shape()?)
     }
 }
 
@@ -1205,9 +1286,15 @@ impl Tolerance<'_> {
             m::GeometricToleranceTargetRef::ProductDefinitionShape(id) => {
                 return product_def_of_pds(cx, *id).into_iter().collect();
             }
-            m::GeometricToleranceTargetRef::Complex(_) => {
-                cx.warn("tolerance target is a complex instance".to_owned());
-                return Vec::new();
+            m::GeometricToleranceTargetRef::Complex(i) => {
+                let Some(which) = complex_feature(model, *i) else {
+                    cx.warn(
+                        "tolerance target is a complex instance without a SHAPE_ASPECT part"
+                            .to_owned(),
+                    );
+                    return Vec::new();
+                };
+                return Feature { cx, which }.part_def_id().into_iter().collect();
             }
             m::GeometricToleranceTargetRef::DimensionalSize(i) => {
                 vec![&model.dimensional_size_arena.get(i.0).applies_to]
@@ -1255,7 +1342,7 @@ impl Tolerance<'_> {
                 ]
             }
             other => {
-                let Some(which) = feature_impl_from_tolerance_target(other) else {
+                let Some(which) = feature_impl_from_tolerance_target(model, other) else {
                     return Vec::new();
                 };
                 return Feature { cx, which }.part_def_id().into_iter().collect();
@@ -1263,8 +1350,12 @@ impl Tolerance<'_> {
         };
         let mut parts = Vec::new();
         for aspect in aspects {
-            let Some(which) = feature_impl_from_shape_aspect_ref(aspect) else {
-                cx.warn("tolerance target's shape aspect is a complex instance".to_owned());
+            let Some(which) = feature_impl_from_shape_aspect_ref(model, aspect) else {
+                cx.warn(
+                    "tolerance target's shape aspect is a complex instance without a \
+                     SHAPE_ASPECT part"
+                        .to_owned(),
+                );
                 continue;
             };
             if let Some(part) = (Feature { cx, which }).part_def_id()

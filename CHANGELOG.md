@@ -109,6 +109,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `StyledItemTargetOrRepresentationItemRef`: what a styled item's `item` takes
   in the model — AP242's `styled_item_target` or, as AP203 and AP214 allow,
   any representation item.
+- `FeatureKind::Complex`: a feature written as a complex instance with a
+  `SHAPE_ASPECT` part; its parts are on the model under `Feature::key`.
 
 ### Changed
 
@@ -359,8 +361,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   direction, a 2D or degenerate placement, a complex B-spline without its
   B-spline part or knots, and a basis or 3D curve of a kind they do not
   convert. The product and PMI walks report a complex product, formation,
-  document, date, direction, shape representation, `of_shape` or tolerance
-  target, a placement whose transformation is not an
+  document, date, direction, shape representation or `of_shape`, a complex
+  dimension feature, tolerance target or datum feature without a
+  `SHAPE_ASPECT` part, a placement whose transformation is not an
   `ITEM_DEFINED_TRANSFORMATION`, and a shape relationship whose other end is
   not a representation. The presentation walks report a complex style, style
   element or rendering property and a bare `COLOUR`, and `Scene::units` a
@@ -423,6 +426,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   NIST's test files write them. `Scene::units` also reads a conversion factor
   given as any other subtype of `MEASURE_WITH_UNIT`, such as a
   `POSITIVE_LENGTH_MEASURE_WITH_UNIT`.
+- A shape aspect written as a complex instance with a `SHAPE_ASPECT` part,
+  as NIST's AP242 test files write a composite datum feature
+  (`(COMPOSITE_SHAPE_ASPECT() DATUM_FEATURE() SHAPE_ASPECT(...))`), is a
+  `Feature` of kind `FeatureKind::Complex`: `Scene::all_features`,
+  `ProductDef::features`, `Datum::datum_feature` (when it has a
+  `DATUM_FEATURE` part), `Dimension::features` and `Tolerance::feature` give
+  it, and a dimension or tolerance on it belongs to its part. It used to be
+  reported and left out.
 - `Ap242Author` checks the size of a list held in a SELECT, and rejects one
   outside its bounds with `AuthorError::Cardinality`: a `COMMON_DATUM_LIST`
   needs at least two elements, a `LIST_REPRESENTATION_ITEM`,
