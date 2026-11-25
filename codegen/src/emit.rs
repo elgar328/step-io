@@ -419,7 +419,7 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
     for se in &ir.simples {
         writeln!(
             s,
-            "/// The id of a `{}` entity: its index among the model's `{}` entities.\n#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct {}Id(pub u32);",
+            "/// The id of one `{}` entity: its index among the model's `{}` entities.\n#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct {}Id(pub u32);",
             se.name, se.name, se.rust
         )
         .unwrap();

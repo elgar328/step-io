@@ -142,8 +142,9 @@ impl<'m> Dimension<'m> {
     /// (`Size`/`Location` are lengths, `Angular*` are angles) and
     /// [`Scene::units`], exactly as point coordinates are read. A representation
     /// the scene cannot resolve (a complex one) is reported via
-    /// [`Scene::warnings`]; a dimension with no value representation simply
-    /// yields `None`.
+    /// [`Scene::warnings`]; a dimension with no value representation, or whose
+    /// representation holds no `MEASURE_REPRESENTATION_ITEM` (only a
+    /// `VALUE_RANGE` of limits, say), simply yields `None`.
     pub fn value(&self) -> Option<f64> {
         let this = self.about();
         let cx = this.cx;

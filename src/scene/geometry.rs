@@ -1168,7 +1168,8 @@ impl<'m> Edge<'m> {
     }
 
     /// The line width of this edge's style (`CURVE_STYLE.curve_width`, a raw
-    /// measure value), if any.
+    /// measure value), if any; `None` for a width given as text
+    /// (`DESCRIPTIVE_MEASURE`).
     pub fn width(&self) -> Option<f64> {
         let this = self.about();
         crate::scene::presentation::curve_width_of(this.cx, this.key())
@@ -1373,7 +1374,8 @@ impl<'m> Curve<'m> {
     }
 
     /// The line width of this curve's style (`CURVE_STYLE.curve_width`, a raw
-    /// measure value), if any.
+    /// measure value), if any; `None` for a width given as text
+    /// (`DESCRIPTIVE_MEASURE`).
     pub fn width(&self) -> Option<f64> {
         let this = self.about();
         crate::scene::presentation::curve_width_of(this.cx, this.key())
