@@ -156,20 +156,42 @@ fn complex_styling(
 /// The styled items whose styles apply to `target`: those no other styled
 /// item on `target` overrides (`OVER_RIDING_STYLED_ITEM.over_ridden_style`),
 /// over-riding ones first, then in referrer order (by entity type, then file
-/// order). Items that override each other in a cycle are reported, and all
-/// apply.
+/// order). An item whose chain of overrides leads back to itself is in a
+/// cycle: the cycle is reported and the overrides inside it are set aside, so
+/// its items apply unless an item outside the cycle overrides them.
 fn stylings_in_effect<'m>(cx: Ctx<'m>, target: m::EntityKey) -> Vec<Styling<'m>> {
     let all = stylings(cx, target);
-    let overridden: Vec<m::EntityKey> = all.iter().filter_map(|s| s.overrides).collect();
+    let overrides_of =
+        |key: m::EntityKey| all.iter().find(|s| s.key == key).and_then(|s| s.overrides);
+    // A cycle through `s` is at most `all.len()` overrides long.
+    let in_cycle = |s: &Styling<'_>| {
+        let mut at = s.overrides;
+        for _ in 0..all.len() {
+            match at {
+                Some(key) if key == s.key => return true,
+                Some(key) => at = overrides_of(key),
+                None => return false,
+            }
+        }
+        false
+    };
+    let cyclic: Vec<bool> = all.iter().map(in_cycle).collect();
+    if cyclic.contains(&true) {
+        cx.warn(
+            "styled items override each other in a cycle; those overrides are set aside".to_owned(),
+        );
+    }
+    let overridden: Vec<m::EntityKey> = all
+        .iter()
+        .zip(&cyclic)
+        .filter(|&(_, &c)| !c)
+        .filter_map(|(s, _)| s.overrides)
+        .collect();
     let mut winners: Vec<Styling<'m>> = all
         .iter()
         .copied()
         .filter(|s| !overridden.contains(&s.key))
         .collect();
-    if winners.is_empty() && !all.is_empty() {
-        cx.warn("styled items override each other in a cycle; all apply".to_owned());
-        winners = all;
-    }
     winners.sort_by_key(|s| s.overrides.is_none());
     winners
 }

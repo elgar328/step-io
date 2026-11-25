@@ -661,3 +661,59 @@ fn an_over_riding_styled_item_wins_and_a_context_dependent_one_does_not() {
     let c = face_colour("#47=CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM('',(#46),#25,#38,(#27));\n");
     assert!((c.red - 0.8).abs() < 1e-9, "the face's own colour: {c:?}");
 }
+
+/// An override whose style has no surface colour still hides the colour it
+/// overrides: the face has none.
+#[test]
+fn an_over_riding_styled_item_without_a_colour_hides_the_one_it_overrides() {
+    let curve_style = "#40=COLOUR_RGB('',0.0,0.0,1.0);\n\
+                       #41=DRAUGHTING_PRE_DEFINED_CURVE_FONT('continuous');\n\
+                       #42=CURVE_STYLE('cs',#41,POSITIVE_LENGTH_MEASURE(0.5),#40);\n\
+                       #43=PRESENTATION_STYLE_ASSIGNMENT((#42));\n\
+                       #47=OVER_RIDING_STYLED_ITEM('',(#43),#25,#38);\n";
+    let src = format!("{HEADER}{BREP}{COLOUR}{curve_style}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    assert_eq!(scene.all_faces().next().expect("a face").color(), None);
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
+/// Styled items that override each other in a cycle are reported; the
+/// overrides inside the cycle are set aside, so its items beat the plain
+/// styled item on the face, the first of them giving the colour.
+#[test]
+fn styled_items_overriding_each_other_in_a_cycle_are_reported() {
+    let blue_green = "#40=COLOUR_RGB('',0.0,0.0,1.0);\n\
+                      #41=FILL_AREA_STYLE_COLOUR('',#40);\n\
+                      #42=FILL_AREA_STYLE('',(#41));\n\
+                      #43=SURFACE_STYLE_FILL_AREA(#42);\n\
+                      #44=SURFACE_SIDE_STYLE('',(#43));\n\
+                      #45=SURFACE_STYLE_USAGE(.BOTH.,#44);\n\
+                      #46=PRESENTATION_STYLE_ASSIGNMENT((#45));\n\
+                      #50=COLOUR_RGB('',0.0,1.0,0.0);\n\
+                      #51=FILL_AREA_STYLE_COLOUR('',#50);\n\
+                      #52=FILL_AREA_STYLE('',(#51));\n\
+                      #53=SURFACE_STYLE_FILL_AREA(#52);\n\
+                      #54=SURFACE_SIDE_STYLE('',(#53));\n\
+                      #55=SURFACE_STYLE_USAGE(.BOTH.,#54);\n\
+                      #56=PRESENTATION_STYLE_ASSIGNMENT((#55));\n";
+    let face_colour = |extra: &str| {
+        let src = format!("{HEADER}{BREP}{COLOUR}{blue_green}{extra}{FOOTER}");
+        let (model, rep) = read(src.as_bytes()).expect("read");
+        assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+        let scene = model.scene();
+        let c = scene.all_faces().next().expect("a face").color();
+        let warnings = scene.warnings();
+        assert_eq!(warnings.len(), 1, "{warnings:?}");
+        assert!(warnings[0].message.contains("cycle"), "{warnings:?}");
+        c.expect("a colour")
+    };
+    let c = face_colour(
+        "#47=OVER_RIDING_STYLED_ITEM('',(#46),#25,#48);\n\
+         #48=OVER_RIDING_STYLED_ITEM('',(#56),#25,#47);\n",
+    );
+    assert_eq!((c.red, c.green, c.blue), (0.0, 0.0, 1.0), "{c:?}");
+    let c = face_colour("#47=OVER_RIDING_STYLED_ITEM('',(#46),#25,#47);\n");
+    assert_eq!((c.red, c.green, c.blue), (0.0, 0.0, 1.0), "{c:?}");
+}

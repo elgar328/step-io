@@ -401,7 +401,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `STYLED_ITEM`. An `OVER_RIDING_STYLED_ITEM` on a shape now beats the styled
   item it overrides, where it used to be ignored; a
   `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` is still not applied, as it
-  holds only in its assembly context.
+  holds only in its assembly context. Styled items that override each other
+  in a cycle are reported, and the overrides inside the cycle are set aside.
 - `Face::to_nurbs` converts a face on a `SURFACE_OF_LINEAR_EXTRUSION` of a
   `LINE`, bounding the line by the face's points as it bounds the extrusion;
   it used to give `None`. A face swept from a parabola or hyperbola is
