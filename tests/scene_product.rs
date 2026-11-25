@@ -770,3 +770,26 @@ fn root_definitions_exclude_assembly_children() {
     assert_eq!(roots.len(), 1);
     assert_eq!(roots[0].product().expect("product").name(), "Assembly");
 }
+
+/// A placement whose transformation is not an `ITEM_DEFINED_TRANSFORMATION`
+/// cannot be followed; the occurrence says so.
+#[test]
+fn a_functionally_defined_placement_is_reported() {
+    let rel = PART_FIRST.replace(
+        "#58=ITEM_DEFINED_TRANSFORMATION('','',#57,#55);",
+        "#58=FUNCTIONALLY_DEFINED_TRANSFORMATION('','');",
+    );
+    let src = turned_placement(BOTH_LINKED, &rel);
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let asm = def_for_product(&scene, "Assembly");
+    let occ = asm.occurrences().next().expect("one occurrence");
+    assert!(occ.transform().is_none());
+    let warnings = scene.warnings();
+    assert!(
+        warnings.iter().any(|w| w.entity == Some(occ.key())
+            && w.message.contains("FUNCTIONALLY_DEFINED_TRANSFORMATION")),
+        "{warnings:?}"
+    );
+}

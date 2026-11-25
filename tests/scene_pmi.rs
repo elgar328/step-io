@@ -262,6 +262,24 @@ fn datum_reaches_its_datum_feature_geometry() {
     }
 }
 
+/// A `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` is a datum feature too: the datum
+/// reaches it.
+#[test]
+fn a_datum_reaches_a_dimensional_size_with_datum_feature() {
+    let datum_feature = DATUM_FEATURE.replace(
+        "#50=DATUM_FEATURE('df','',#13,.T.);",
+        "#50=DIMENSIONAL_SIZE_WITH_DATUM_FEATURE('df','',#13,.T.,#50,'size');",
+    );
+    let src = format!("{HEADER}{datum_feature}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let datum = scene.all_datums().next().expect("a datum");
+    let df = datum.datum_feature().expect("the datum feature");
+    assert!(df.geometry().next().is_some(), "reaches its face");
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
 // Two parts (A, B), each with its own shape aspect + dimension; part A also has
 // a feature tolerance, a whole-part (PDS-targeted) tolerance, and a datum.
 // Per-part queries must return only that part's PMI.

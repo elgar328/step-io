@@ -343,8 +343,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   convert (a bare supertype such as `B_SPLINE_SURFACE` alone, or a `PCURVE`).
   The NURBS conversions also report a complex direction or vector, a 2D or
   degenerate placement, a complex B-spline without its B-spline part or
-  knots, and a basis or 3D curve of a kind they do not convert. The warnings
-  name the handle they concern. `MeshGroup::solid` follows a shell linked
+  knots, and a basis or 3D curve of a kind they do not convert. The product
+  and PMI walks report a complex product, formation, document, date,
+  direction, shape representation, `of_shape` or tolerance target, a
+  placement whose transformation is not an `ITEM_DEFINED_TRANSFORMATION`, and
+  a shape relationship whose other end is not a representation. The warnings
+  name the handle they concern. `Datum::datum_feature` also finds a
+  `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`. `MeshGroup::solid` follows a shell linked
   through an `ORIENTED_CLOSED_SHELL`.
 - `Edge::to_nurbs` gives a closed edge whose direction is against its
   curve's (`same_sense` false) the other way round; it used to follow the

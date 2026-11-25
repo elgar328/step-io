@@ -596,13 +596,15 @@ impl<'m> Datum<'m> {
     }
 
     /// The physical feature this datum is established from — the `DATUM_FEATURE`
-    /// linked to it by a `SHAPE_ASPECT_RELATIONSHIP`. Returned as a [`Feature`],
+    /// (or `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`) linked to it by a
+    /// `SHAPE_ASPECT_RELATIONSHIP`. Returned as a [`Feature`],
     /// whose faces/edges are reachable via [`Feature::geometry`]. `None` when the
     /// datum is defined only by datum targets, or carries no such link.
     pub fn datum_feature(&self) -> Option<Feature<'m>> {
-        let cx = self.cx;
+        let this = self.about();
+        let cx = this.cx;
         let rg = cx.ref_graph();
-        for r in rg.referrers(self.key()) {
+        for r in rg.referrers(this.key()) {
             let m::EntityKey::ShapeAspectRelationship(sid) = r else {
                 continue;
             };
@@ -610,12 +612,22 @@ impl<'m> Datum<'m> {
             // The datum is one end of the relationship; the datum feature is the
             // other (checking both ends naturally selects it).
             for aspect in [&sar.relating_shape_aspect, &sar.related_shape_aspect] {
-                if let m::ShapeAspectRef::DatumFeature(fid) = aspect {
-                    return Some(Feature {
-                        cx,
-                        which: FeatureImpl::DatumFeature(*fid),
-                    });
-                }
+                let which = match aspect {
+                    m::ShapeAspectRef::DatumFeature(fid) => FeatureImpl::DatumFeature(*fid),
+                    m::ShapeAspectRef::DimensionalSizeWithDatumFeature(fid) => {
+                        FeatureImpl::DimensionalSizeWithDatumFeature(*fid)
+                    }
+                    m::ShapeAspectRef::Complex(_) => {
+                        cx.warn(
+                            "a datum's shape aspect relationship ends in a complex instance; \
+                             not read"
+                                .to_owned(),
+                        );
+                        continue;
+                    }
+                    _ => continue,
+                };
+                return Some(Feature { cx: self.cx, which });
             }
         }
         None
@@ -1143,7 +1155,10 @@ fn product_def_of_pds(cx: Ctx<'_>, id: m::ProductDefinitionShapeId) -> Option<m:
 fn product_def_of_shape(cx: Ctx<'_>, r: &m::ProductDefinitionShapeRef) -> Option<m::EntityKey> {
     match r {
         m::ProductDefinitionShapeRef::ProductDefinitionShape(id) => product_def_of_pds(cx, *id),
-        m::ProductDefinitionShapeRef::Complex(_) => None,
+        m::ProductDefinitionShapeRef::Complex(_) => {
+            cx.warn("of_shape is a complex instance; its part is not read".to_owned());
+            None
+        }
     }
 }
 
@@ -1152,18 +1167,20 @@ impl Feature<'_> {
     /// definition), as an [`EntityKey`](m::EntityKey) — a `PRODUCT_DEFINITION` or
     /// its `..._WITH_ASSOCIATED_DOCUMENTS` subtype.
     fn part_def_id(&self) -> Option<m::EntityKey> {
-        product_def_of_shape(self.cx, self.of_shape())
+        let this = self.about();
+        product_def_of_shape(this.cx, this.of_shape())
     }
 }
 
 impl Datum<'_> {
     /// The product definition this datum belongs to (`of_shape` → PDS → part).
     fn part_def_id(&self) -> Option<m::EntityKey> {
-        let of_shape = match self.which {
-            DatumImpl::Datum(i) => &self.cx.model.datum_arena.get(i.0).of_shape,
-            DatumImpl::CommonDatum(i) => &self.cx.model.common_datum_arena.get(i.0).of_shape,
+        let this = self.about();
+        let of_shape = match this.which {
+            DatumImpl::Datum(i) => &this.cx.model.datum_arena.get(i.0).of_shape,
+            DatumImpl::CommonDatum(i) => &this.cx.model.common_datum_arena.get(i.0).of_shape,
         };
-        product_def_of_shape(self.cx, of_shape)
+        product_def_of_shape(this.cx, of_shape)
     }
 }
 
@@ -1172,12 +1189,21 @@ impl Tolerance<'_> {
     /// shape-aspect feature (→ that feature's part) or the whole part's
     /// `PRODUCT_DEFINITION_SHAPE` directly (an all-over tolerance).
     fn part_def_id(&self) -> Option<m::EntityKey> {
-        let target = self.tolerance_target()?;
-        if let m::GeometricToleranceTargetRef::ProductDefinitionShape(id) = target {
-            return product_def_of_pds(self.cx, *id);
+        let this = self.about();
+        let target = this.tolerance_target()?;
+        match target {
+            m::GeometricToleranceTargetRef::ProductDefinitionShape(id) => {
+                return product_def_of_pds(this.cx, *id);
+            }
+            m::GeometricToleranceTargetRef::Complex(_) => {
+                this.cx
+                    .warn("tolerance target is a complex instance".to_owned());
+                return None;
+            }
+            _ => {}
         }
         let which = feature_impl_from_tolerance_target(target)?;
-        Feature { cx: self.cx, which }.part_def_id()
+        Feature { cx: this.cx, which }.part_def_id()
     }
 }
 
@@ -1211,4 +1237,4 @@ pub(crate) fn tolerances_of(cx: Ctx<'_>, part: m::EntityKey) -> Vec<Tolerance<'_
     all
 }
 
-about_by_key!(Dimension, Tolerance);
+about_by_key!(Datum, Dimension, Feature, Tolerance);

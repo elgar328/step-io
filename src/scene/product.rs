@@ -261,10 +261,11 @@ impl<'m> Version<'m> {
     }
 
     /// The product this is a version of (`of_product`); `None` for a complex
-    /// product.
+    /// product (reported in [`Scene::warnings`](crate::scene::Scene::warnings)).
     pub fn product(&self) -> Option<Product<'m>> {
-        let model = self.cx.model;
-        let of_product = match self.which {
+        let this = self.about();
+        let model = this.cx.model;
+        let of_product = match this.which {
             FormImpl::Plain(i) => &model.product_definition_formation_arena.get(i.0).of_product,
             FormImpl::WithSource(i) => {
                 &model
@@ -273,13 +274,7 @@ impl<'m> Version<'m> {
                     .of_product
             }
         };
-        match of_product {
-            m::ProductRef::Product(id) => Some(Product {
-                cx: self.cx,
-                id: *id,
-            }),
-            m::ProductRef::Complex(_) => None,
-        }
+        product_of(this.cx, of_product)
     }
 
     /// The version description, if any.
@@ -393,8 +388,9 @@ impl<'m> ProductDef<'m> {
 
     /// The product this definition belongs to (forward: `formation → of_product`).
     pub fn product(&self) -> Option<Product<'m>> {
-        let model = self.cx.model;
-        let of_product: &m::ProductRef = match self.core().formation {
+        let this = self.about();
+        let model = this.cx.model;
+        let of_product: &m::ProductRef = match this.core().formation {
             m::ProductDefinitionFormationRef::ProductDefinitionFormation(i) => {
                 &model.product_definition_formation_arena.get(i.0).of_product
             }
@@ -404,15 +400,12 @@ impl<'m> ProductDef<'m> {
                     .get(i.0)
                     .of_product
             }
-            m::ProductDefinitionFormationRef::Complex(_) => return None,
+            m::ProductDefinitionFormationRef::Complex(_) => {
+                this.cx.warn(COMPLEX_FORMATION.to_owned());
+                return None;
+            }
         };
-        match of_product {
-            m::ProductRef::Product(pid) => Some(Product {
-                cx: self.cx,
-                id: *pid,
-            }),
-            m::ProductRef::Complex(_) => None,
-        }
+        product_of(this.cx, of_product)
     }
 
     /// The component occurrences directly under this definition — each a usage
@@ -443,7 +436,7 @@ impl<'m> ProductDef<'m> {
     /// Assembly definitions this one is a component of (reverse: a `NAUO` whose
     /// `related` is this definition → its `relating`).
     pub fn parents(&self) -> impl Iterator<Item = ProductDef<'m>> + 'm {
-        let cx = self.cx;
+        let cx = self.about().cx;
         let rg = cx.ref_graph();
         let me = self.key();
         let mut out: Vec<ProductDef<'m>> = Vec::new();
@@ -505,7 +498,7 @@ impl<'m> ProductDef<'m> {
     /// bridged to them, in order. An item shared by two representations comes
     /// twice.
     fn shape_items(&self) -> Vec<&'m m::RepresentationItemRef> {
-        let cx = self.cx;
+        let cx = self.about().cx;
         let mut out = Vec::new();
         // Shared across every representation reached: guards relationship cycles
         // and keeps a shape-equivalence bridge from re-collecting a rep.
@@ -541,14 +534,19 @@ impl<'m> ProductDef<'m> {
     }
 
     /// The version this part is a definition of — its
-    /// `PRODUCT_DEFINITION_FORMATION`. `None` for a complex formation.
+    /// `PRODUCT_DEFINITION_FORMATION`. `None` for a complex formation
+    /// (reported in [`Scene::warnings`](crate::scene::Scene::warnings)).
     pub fn version(&self) -> Option<Version<'m>> {
-        let which = match self.core().formation {
+        let this = self.about();
+        let which = match this.core().formation {
             m::ProductDefinitionFormationRef::ProductDefinitionFormation(i) => FormImpl::Plain(*i),
             m::ProductDefinitionFormationRef::ProductDefinitionFormationWithSpecifiedSource(i) => {
                 FormImpl::WithSource(*i)
             }
-            m::ProductDefinitionFormationRef::Complex(_) => return None,
+            m::ProductDefinitionFormationRef::Complex(_) => {
+                this.cx.warn(COMPLEX_FORMATION.to_owned());
+                return None;
+            }
         };
         Some(Version { cx: self.cx, which })
     }
@@ -617,7 +615,13 @@ impl<'m> ProductDef<'m> {
             let which = match dref {
                 m::DocumentRef::Document(i) => DocImpl::Document(*i),
                 m::DocumentRef::DocumentFile(i) => DocImpl::DocumentFile(*i),
-                m::DocumentRef::Complex(_) => continue,
+                m::DocumentRef::Complex(_) => {
+                    self.cx.warn(
+                        "a documentation_ids entry is a complex instance; document left unread"
+                            .to_owned(),
+                    );
+                    continue;
+                }
             };
             let doc = Document {
                 cx: self.cx,
@@ -1155,7 +1159,8 @@ impl<'m> Occurrence<'m> {
 
     /// The component definition this occurrence places (forward: `related`).
     pub fn definition(&self) -> Option<ProductDef<'m>> {
-        pdor_to_def(self.cx, &self.raw().related_product_definition)
+        let this = self.about();
+        pdor_to_def(this.cx, &this.raw().related_product_definition)
     }
 
     /// The component's placement transform in the assembly, if present (reverse:
@@ -1379,6 +1384,37 @@ fn rep_items<'m>(cx: Ctx<'m>, r: &m::RepresentationRef) -> Option<&'m [m::Repres
 /// `(…, REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION, …)` whose operator is an
 /// `ITEM_DEFINED_TRANSFORMATION`. Returned with the relationship's
 /// `(rep_1, rep_2)`.
+/// The warning for a complex `PRODUCT_DEFINITION_FORMATION`.
+const COMPLEX_FORMATION: &str = "product definition formation is a complex instance; not read";
+
+/// The product a formation is a version of; a complex product is reported.
+fn product_of<'m>(cx: Ctx<'m>, r: &m::ProductRef) -> Option<Product<'m>> {
+    match r {
+        m::ProductRef::Product(id) => Some(Product { cx, id: *id }),
+        m::ProductRef::Complex(_) => {
+            cx.warn("product is a complex instance; not read".to_owned());
+            None
+        }
+    }
+}
+
+/// The STEP keyword of a transformation operator, for a warning.
+fn op_keyword(op: &m::TransformationRef) -> &'static str {
+    match op {
+        m::TransformationRef::ItemDefinedTransformation(i) => {
+            Ctx::keyword(m::EntityKey::ItemDefinedTransformation(*i))
+        }
+        m::TransformationRef::FunctionallyDefinedTransformation(i) => {
+            Ctx::keyword(m::EntityKey::FunctionallyDefinedTransformation(*i))
+        }
+        m::TransformationRef::SetItemDefinedTransformation(_) => "SET_ITEM_DEFINED_TRANSFORMATION",
+        m::TransformationRef::ListItemDefinedTransformation(_) => {
+            "LIST_ITEM_DEFINED_TRANSFORMATION"
+        }
+        m::TransformationRef::Complex(_) => "COMPLEX",
+    }
+}
+
 fn idt_of_cdsr<'m>(
     cx: Ctx<'m>,
     rr: &m::ShapeRepresentationRelationshipRef,
@@ -1397,6 +1433,10 @@ fn idt_of_cdsr<'m>(
         _ => None,
     })?;
     let m::TransformationRef::ItemDefinedTransformation(id) = op else {
+        cx.warn(format!(
+            "placement transformation is a {}, not an ITEM_DEFINED_TRANSFORMATION; not followed",
+            op_keyword(op)
+        ));
         return None;
     };
     let reps = parts.iter().find_map(|p| match p {
@@ -1444,6 +1484,7 @@ fn dir3(cx: Ctx<'_>, r: &m::DirectionRef) -> [f64; 3] {
             c.get(2).copied().unwrap_or(0.0),
         ]
     } else {
+        cx.warn("direction is a complex instance; not read".to_owned());
         [0.0; 3]
     }
 }
@@ -1476,7 +1517,13 @@ fn pdor_to_def<'m>(cx: Ctx<'m>, r: &m::ProductDefinitionOrReferenceRef) -> Optio
                 m::EntityKey::ProductDefinitionWithAssociatedDocuments(*i),
             )
         }
-        _ => None,
+        other => {
+            cx.warn(format!(
+                "assembly usage names a {}, not a product definition; not followed",
+                Ctx::keyword(other.entity_key())
+            ));
+            None
+        }
     }
 }
 
@@ -1563,6 +1610,13 @@ fn shape_rep_items<'m>(
                 .get(i.0)
                 .items,
         ),
+        m::RepresentationRef::Complex(_) => {
+            cx.warn(
+                "shape representation is a complex instance; its items are not read".to_owned(),
+            );
+            return None;
+        }
+        // Representations that hold no solids, surface models or sets.
         _ => return None,
     })
 }
@@ -1606,8 +1660,12 @@ fn collect_shape_items<'m>(
         } else {
             continue;
         };
-        if let Ok(other_ref) = m::RepresentationRef::from_any(other) {
-            collect_shape_items(cx, &other_ref, out, visited);
+        match m::RepresentationRef::from_any(other) {
+            Ok(other_ref) => collect_shape_items(cx, &other_ref, out, visited),
+            Err(_) => cx.warn(format!(
+                "SHAPE_REPRESENTATION_RELATIONSHIP: the other end is a {}; not followed",
+                Ctx::keyword(other)
+            )),
         }
     }
 }
@@ -1782,7 +1840,9 @@ fn set_date(cx: Ctx<'_>, d: &mut ApprovalDate, r: &m::DateRef) {
     match r {
         m::DateRef::CalendarDate(i) => set_calendar(cx, d, *i),
         m::DateRef::Date(i) => d.year = Some(cx.model.date_arena.get(i.0).year_component),
-        m::DateRef::Complex(_) => {}
+        m::DateRef::Complex(_) => {
+            cx.warn("date is a complex instance; date left unread".to_owned());
+        }
     }
 }
 
@@ -2059,4 +2119,11 @@ impl<'m> SecurityClassification<'m> {
     }
 }
 
-about_by_key!(Approval, MappedInstance, Occurrence, Product, ProductDef);
+about_by_key!(
+    Approval,
+    MappedInstance,
+    Occurrence,
+    Product,
+    ProductDef,
+    Version
+);
