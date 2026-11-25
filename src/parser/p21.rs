@@ -292,8 +292,8 @@ impl<R: Read> Parser<R> {
 
         // Optional P21 edition 3 sections (ANCHOR / REFERENCE / SIGNATURE).
         // ANCHOR / REFERENCE are parsed (so external references survive);
-        // SIGNATURE and any unrecognised line shape fall back to a discard +
-        // ParseWarning.
+        // SIGNATURE is discarded, and a line of unrecognised shape is skipped,
+        // each with a ParseWarning.
         let mut external_references: BTreeMap<u64, String> = BTreeMap::new();
         let mut anchors: Vec<(String, u64)> = Vec::new();
         while self.peek_is_ed3_section()? {
@@ -357,10 +357,10 @@ impl<R: Read> Parser<R> {
     }
 
     /// Parse an ANCHOR or REFERENCE section into `external_references` /
-    /// `anchors`; SIGNATURE (and any line shape we don't recognise) falls back
-    /// to a discard + `Ed3SectionDiscarded` warning, so a line the parser
-    /// cannot read does not fail the parse.
-    /// Without `keep_ed3`, every section is reported discarded.
+    /// `anchors`. A line the parser cannot read is skipped
+    /// (`Ed3LinesSkipped`, or `Ed3SectionDiscarded` when no line was read), so
+    /// it does not fail the parse; SIGNATURE is discarded. Without
+    /// `keep_ed3`, every section is reported discarded.
     fn parse_or_skip_ed3_section(
         &mut self,
         external_references: &mut BTreeMap<u64, String>,
@@ -375,11 +375,11 @@ impl<R: Read> Parser<R> {
         self.expect_semicolon()?;
 
         let mut discarded = false;
+        let mut read_any = false;
         while !matches!(self.peek_kind()?, TokenKind::EndSec) {
             // Each entry is one `lhs = rhs ;` line. REFERENCE lines are
             // `#N = <anchor>`; ANCHOR lines are `<name> = #N`. Anything else
-            // (SIGNATURE bodies, unexpected shapes) is consumed and the whole
-            // section is flagged as discarded.
+            // (SIGNATURE bodies, unexpected shapes) is consumed and flagged.
             let lhs = self.next_token()?;
             if !matches!(self.peek_kind()?, TokenKind::Equals) {
                 discarded = true;
@@ -390,9 +390,11 @@ impl<R: Read> Parser<R> {
             match (section.as_str(), lhs.kind, rhs.kind) {
                 ("REFERENCE", TokenKind::EntityRef(id), TokenKind::AnchorRef(s)) => {
                     external_references.insert(id, s);
+                    read_any = true;
                 }
                 ("ANCHOR", TokenKind::AnchorRef(name), TokenKind::EntityRef(id)) => {
                     anchors.push((name, id));
+                    read_any = true;
                 }
                 _ => discarded = true,
             }
@@ -403,9 +405,12 @@ impl<R: Read> Parser<R> {
         }
         self.expect_token_kind(&TokenKind::EndSec, "ENDSEC")?;
         self.expect_semicolon()?;
-        if discarded || section == "SIGNATURE" || !self.keep_ed3 {
+        if section == "SIGNATURE" || !self.keep_ed3 || (discarded && !read_any) {
             self.warnings
                 .push(ParseWarning::Ed3SectionDiscarded { section, span });
+        } else if discarded {
+            self.warnings
+                .push(ParseWarning::Ed3LinesSkipped { section, span });
         }
         Ok(())
     }
@@ -1313,6 +1318,40 @@ mod tests {
                 .iter()
                 .any(|w| matches!(w, ParseWarning::Ed3SectionDiscarded { .. }))
         );
+    }
+
+    /// A REFERENCE line `parse` cannot read is skipped and reported; the
+    /// readable line stays. A section with no readable line is discarded.
+    #[test]
+    fn parse_skips_the_ed3_lines_it_cannot_read() {
+        let warned = |src: &str| -> (Graph, Vec<&'static str>) {
+            let graph = parse(src.as_bytes()).expect("parses");
+            let kinds = graph
+                .warnings
+                .iter()
+                .filter_map(|w| match w {
+                    ParseWarning::Ed3LinesSkipped { .. } => Some("lines"),
+                    ParseWarning::Ed3SectionDiscarded { .. } => Some("section"),
+                    _ => None,
+                })
+                .collect();
+            (graph, kinds)
+        };
+        let mixed = ED3_SECTIONS.replace(
+            "#123=<testAnchorAndData.stp#TestAnchor>;\n",
+            "#123=<testAnchorAndData.stp#TestAnchor>;\n#124=#5;\n",
+        );
+        let (graph, kinds) = warned(&mixed);
+        assert_eq!(kinds, ["lines"]);
+        assert_eq!(
+            graph.external_references.get(&123).map(String::as_str),
+            Some("<testAnchorAndData.stp#TestAnchor>")
+        );
+        let unreadable =
+            ED3_SECTIONS.replace("#123=<testAnchorAndData.stp#TestAnchor>;\n", "#124=#5;\n");
+        let (graph, kinds) = warned(&unreadable);
+        assert_eq!(kinds, ["section"]);
+        assert!(graph.external_references.is_empty());
     }
 
     /// `read` has no place for ANCHOR and REFERENCE, and says it drops them.

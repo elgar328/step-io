@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `ParseWarning::Ed3LinesSkipped`: `parser::parse()` and `parser::stream()`
+  report an `ANCHOR` or `REFERENCE` section that keeps some lines and skips
+  others it cannot read. Such a section used to be reported as
+  `Ed3SectionDiscarded`, though its readable lines were kept;
+  `Ed3SectionDiscarded` now means the whole section is gone.
 - `read()` recognizes AP242 edition 4 in `FILE_SCHEMA`: module version 7
   (`{ 1 0 10303 442 7 1 4 }`) as edition 4 IS, versions 5 and 6 as edition 4
   of an unknown stage.

@@ -98,7 +98,8 @@ pub struct Graph {
     /// entity, in file order.
     pub anchors: Vec<(String, u64)>,
     /// What the parser repaired or skipped without stopping, such as a
-    /// missing semicolon, a blank attribute slot or a SIGNATURE section.
+    /// missing semicolon, a blank attribute slot, a SIGNATURE section or an
+    /// `ANCHOR`/`REFERENCE` line it could not read.
     pub warnings: Vec<ParseWarning>,
 }
 
@@ -126,8 +127,15 @@ pub enum ParseWarning {
     /// no place for them; [`parse`](crate::parser::parse) and
     /// [`stream`](crate::parser::stream) keep `ANCHOR` and `REFERENCE` (in
     /// the [`Graph`], or shown by the [`Stream`](crate::parser::Stream)) and
-    /// discard `SIGNATURE`, or a section whose lines they cannot read.
+    /// discard `SIGNATURE`, or a section none of whose lines they can read.
     Ed3SectionDiscarded {
+        section: String,
+        span: super::lexer::Span,
+    },
+    /// An `ANCHOR` or `REFERENCE` section that [`parse`](crate::parser::parse)
+    /// or [`stream`](crate::parser::stream) keeps has lines it could not read;
+    /// those lines are skipped and the others kept.
+    Ed3LinesSkipped {
         section: String,
         span: super::lexer::Span,
     },
@@ -149,6 +157,10 @@ impl std::fmt::Display for ParseWarning {
                 format!("HEADER entity {entity_name} has no terminating ';'"),
             ),
             Self::EmptyAttribute { span } => (span, "blank attribute read as $".to_owned()),
+            Self::Ed3LinesSkipped { section, span } => (
+                span,
+                format!("{section} section: lines it could not read were skipped"),
+            ),
             Self::Ed3SectionDiscarded { section, span } => {
                 (span, format!("{section} section skipped (not supported)"))
             }
@@ -436,6 +448,13 @@ mod tests {
                     span,
                 },
                 "warning at line 12, column 5: ANCHOR section skipped (not supported)",
+            ),
+            (
+                ParseWarning::Ed3LinesSkipped {
+                    section: "REFERENCE".into(),
+                    span,
+                },
+                "warning at line 12, column 5: REFERENCE section: lines it could not read were skipped",
             ),
             (
                 ParseWarning::MalformedStringEscape { span },
