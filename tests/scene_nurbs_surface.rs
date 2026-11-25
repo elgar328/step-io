@@ -529,6 +529,36 @@ fn extruded_circle_face_becomes_ruled_patch() {
     );
 }
 
+/// A line extruded along z is a plane strip: the face's vertices bound the
+/// line (x 1..3) as they bound the extrusion (z 0..2).
+#[test]
+fn extruded_line_face_becomes_a_bounded_strip() {
+    let src = format!(
+        "{HEADER}{}{FOOTER}",
+        EXTRUDE_FACE
+            .replace(
+                "#7=CIRCLE('',#6,1.0);",
+                "#7=LINE('',#3,#21);\n#21=VECTOR('',#5,1.0);"
+            )
+            .replace(
+                "#2=CARTESIAN_POINT('',(1.,0.,2.));",
+                "#2=CARTESIAN_POINT('',(3.,0.,2.));"
+            )
+    );
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let face = find_face(&scene, |s| {
+        matches!(s.kind(), SurfaceKind::LinearExtrusion(_))
+    });
+    let n = face.to_nurbs().expect("the strip converts");
+    assert_eq!((n.degree_u, n.degree_v), (1, 1));
+    assert!(approx(&n.control_points[0][0], &[1., 0., 0.]));
+    assert!(approx(&n.control_points[0][1], &[1., 0., 2.]));
+    assert!(approx(&n.control_points[1][0], &[3., 0., 0.]));
+    assert!(approx(&n.control_points[1][1], &[3., 0., 2.]));
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
 // A trimmed line at rho=2 parallel to the axis (t 0..3), revolved a full turn:
 // a bounded profile converts whole at surface level, matching the CYL_FACE
 // cylinder patch values.

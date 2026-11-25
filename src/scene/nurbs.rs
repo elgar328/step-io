@@ -2157,6 +2157,57 @@ pub(crate) fn cylinder_cone_patch(
     })
 }
 
+/// The unbounded `LINE` profile of a `SURFACE_OF_LINEAR_EXTRUSION` bounded by
+/// a face into a finite degree-1 segment (which [`extrude_patch`] then
+/// sweeps): each boundary point lies on the plane the line sweeps, so it pins
+/// the line parameter along the extrusion direction.
+pub(crate) fn extruded_line_segment(
+    cx: Ctx<'_>,
+    line: &m::Line,
+    axis: &m::VectorRef,
+    points: &[[f64; 3]],
+) -> Option<NurbsCurve> {
+    let base = point_coords(cx, &line.pnt)?;
+    let line_dir = |r: &m::VectorRef| {
+        let m::VectorRef::Vector(id) = r else {
+            cx.warn("vector is a complex instance; not read".to_owned());
+            return None;
+        };
+        normalize(dir_ratios(
+            cx,
+            &cx.model.vector_arena.get(id.0).orientation,
+        )?)
+    };
+    let d = line_dir(&line.dir)?;
+    let v = line_dir(axis)?;
+    if points.is_empty() {
+        return None;
+    }
+    // Each boundary point lies on the plane base + s·d + t·v; solve for s.
+    let (dd, dv, vv) = (dot(d, d), dot(d, v), dot(v, v));
+    let det = dd * vv - dv * dv;
+    if det.abs() < 1e-12 {
+        cx.warn(
+            "SURFACE_OF_LINEAR_EXTRUSION face.to_nurbs: the line runs along the extrusion"
+                .to_owned(),
+        );
+        return None;
+    }
+    let (mut s_lo, mut s_hi) = (f64::MAX, f64::MIN);
+    for p in points {
+        let w = sub(*p, base);
+        let s = (vv * dot(d, w) - dv * dot(v, w)) / det;
+        s_lo = s_lo.min(s);
+        s_hi = s_hi.max(s);
+    }
+    Some(NurbsCurve {
+        degree: 1,
+        control_points: vec![add(base, scale(d, s_lo)), add(base, scale(d, s_hi))],
+        weights: vec![1.0, 1.0],
+        knots: vec![0.0, 0.0, 1.0, 1.0],
+    })
+}
+
 /// A `SURFACE_OF_LINEAR_EXTRUSION` bounded by a face into a finite ruled patch:
 /// the profile curve (u, already converted to NURBS) swept linearly (v) along
 /// the extrusion direction between two levels taken from the span of the face's

@@ -661,7 +661,20 @@ impl<'m> Face<'m> {
                 &pts,
             ),
             SurfaceKind::LinearExtrusion(s) => {
-                let profile = Curve::from_curve_ref(cx, &s.swept_curve).to_nurbs()?;
+                let curve = Curve::from_curve_ref(cx, &s.swept_curve);
+                // An unbounded line profile is bounded by the face's points.
+                let profile = if let CurveKind::Line(line) = curve.kind() {
+                    crate::scene::nurbs::extruded_line_segment(cx, line, &s.extrusion_axis, &pts)?
+                } else {
+                    let profile = curve.to_nurbs();
+                    if profile.is_none() && is_open_conic(&curve) {
+                        cx.warn(format!(
+                            "SURFACE_OF_LINEAR_EXTRUSION face.to_nurbs: profile {} is unbounded",
+                            Ctx::keyword(curve.key())
+                        ));
+                    }
+                    profile?
+                };
                 crate::scene::nurbs::extrude_patch(cx, &profile, &s.extrusion_axis, &pts)
             }
             // Bounded profiles were already handled whole by the surface-level
@@ -669,7 +682,14 @@ impl<'m> Face<'m> {
             // (a lathe-style cylinder/cone/hyperboloid), bounded here by the
             // face's vertices.
             SurfaceKind::Revolution(s) => {
-                let CurveKind::Line(line) = Curve::from_curve_ref(cx, &s.swept_curve).kind() else {
+                let curve = Curve::from_curve_ref(cx, &s.swept_curve);
+                let CurveKind::Line(line) = curve.kind() else {
+                    if is_open_conic(&curve) {
+                        cx.warn(format!(
+                            "SURFACE_OF_REVOLUTION face.to_nurbs: profile {} is unbounded",
+                            Ctx::keyword(curve.key())
+                        ));
+                    }
                     return None;
                 };
                 let frame = crate::scene::nurbs::axis1_frame(cx, &s.axis_position)?;
@@ -1298,6 +1318,14 @@ macro_rules! curve_impl {
             }
         }
     };
+}
+
+/// Whether a curve is a parabola or hyperbola, which no single NURBS covers.
+fn is_open_conic(curve: &Curve<'_>) -> bool {
+    matches!(
+        curve.kind(),
+        CurveKind::Parabola(_) | CurveKind::Hyperbola(_)
+    )
 }
 
 /// Whether a complex instance is a curve (has a `CURVE` part), such as a

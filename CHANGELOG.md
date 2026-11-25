@@ -368,6 +368,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   concern. A bare `PRE_DEFINED_COLOUR` now gives its colour. `Datum::datum_feature` also finds a
   `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`. `MeshGroup::solid` follows a shell linked
   through an `ORIENTED_CLOSED_SHELL`.
+- `Face::to_nurbs` converts a face on a `SURFACE_OF_LINEAR_EXTRUSION` of a
+  `LINE`, bounding the line by the face's points as it bounds the extrusion;
+  it used to give `None`. A face swept from a parabola or hyperbola is
+  reported in `Scene::warnings`.
 - `Edge::to_nurbs` gives a closed edge whose direction is against its
   curve's (`same_sense` false) the other way round; it used to follow the
   curve. The closed curve still starts at the curve's parameter origin.
