@@ -776,6 +776,61 @@ fn reads_a_complex_measure_as_a_dimension_value_and_a_tolerance_magnitude() {
     assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
 }
 
+// A toleranced dimension as NIST writes it: the representation lists the lower
+// limit, the nominal value and the upper limit, each a complex measure item.
+const LIMITS_SCAFFOLD: &str = "\
+#1=APPLICATION_CONTEXT('test');\n\
+#2=PRODUCT_CONTEXT('',#1,'mechanical');\n\
+#3=PRODUCT_DEFINITION_CONTEXT('',#1,'design');\n\
+#10=PRODUCT('p','Part','',(#2));\n\
+#11=PRODUCT_DEFINITION_FORMATION('1','',#10);\n\
+#12=PRODUCT_DEFINITION('design','',#11,#3);\n\
+#13=PRODUCT_DEFINITION_SHAPE('','',#12);\n\
+#14=SHAPE_ASPECT('feature','',#13,.T.);\n\
+#20=DIMENSIONAL_SIZE(#14,'radius');\n\
+#21=REPRESENTATION_CONTEXT('','');\n\
+#22=( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+#25=DIMENSIONAL_CHARACTERISTIC_REPRESENTATION(#20,#24);\n";
+
+fn dimension_value(items: &str) -> Option<f64> {
+    let src = format!("{HEADER}{LIMITS_SCAFFOLD}{items}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let v = scene.all_dimensions().next().expect("a dimension").value();
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+    v
+}
+
+#[test]
+fn a_dimension_value_is_not_one_of_its_limits() {
+    let complex = dimension_value(
+        "#30=( LENGTH_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM() MEASURE_WITH_UNIT(POSITIVE_LENGTH_MEASURE(0.012),#22) REPRESENTATION_ITEM('lower limit') );\n\
+         #31=( LENGTH_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM() MEASURE_WITH_UNIT(POSITIVE_LENGTH_MEASURE(0.017),#22) REPRESENTATION_ITEM('nominal value') );\n\
+         #32=( LENGTH_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM() MEASURE_WITH_UNIT(POSITIVE_LENGTH_MEASURE(0.022),#22) REPRESENTATION_ITEM('upper limit') );\n\
+         #24=SHAPE_DIMENSION_REPRESENTATION('',(#30,#31,#32),#21);\n",
+    );
+    assert_eq!(complex, Some(0.017));
+
+    let plain = dimension_value(
+        "#30=MEASURE_REPRESENTATION_ITEM('upper limit',LENGTH_MEASURE(10.1),#22);\n\
+         #31=MEASURE_REPRESENTATION_ITEM('lower limit',LENGTH_MEASURE(9.9),#22);\n\
+         #32=MEASURE_REPRESENTATION_ITEM('',LENGTH_MEASURE(10.),#22);\n\
+         #24=SHAPE_DIMENSION_REPRESENTATION('',(#30,#31,#32),#21);\n",
+    );
+    assert_eq!(plain, Some(10.0));
+}
+
+#[test]
+fn a_dimension_with_only_limits_has_no_value() {
+    let v = dimension_value(
+        "#30=MEASURE_REPRESENTATION_ITEM('upper limit',LENGTH_MEASURE(10.1),#22);\n\
+         #31=( LENGTH_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM() REPRESENTATION_ITEM('lower limit') );\n\
+         #24=SHAPE_DIMENSION_REPRESENTATION('',(#30,#31),#21);\n",
+    );
+    assert_eq!(v, None);
+}
+
 // Three geometric tolerances sharing the product/aspect/unit scaffold: a
 // standalone FLATNESS_TOLERANCE (dedicated arena), a complex position tolerance
 // (multi-supertype ComplexEntity), and a magnitude-less STRAIGHTNESS_TOLERANCE.

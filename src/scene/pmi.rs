@@ -135,18 +135,22 @@ impl<'m> Dimension<'m> {
     }
 
     /// The nominal value (reverse: a `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION`
-    /// referencing this dimension → its `SHAPE_DIMENSION_REPRESENTATION`'s first
+    /// referencing this dimension → its `SHAPE_DIMENSION_REPRESENTATION`'s
     /// `MEASURE_REPRESENTATION_ITEM`, plain or a complex instance with that part,
     /// such as `(LENGTH_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM()
-    /// MEASURE_WITH_UNIT(…) …)`).
+    /// MEASURE_WITH_UNIT(…) …)`). A representation may list the limits of the
+    /// dimension beside its nominal value, named `'upper limit'` and
+    /// `'lower limit'` as the standard names a value range's limits; the value
+    /// is the first measure item with neither name.
     ///
-    /// The number is raw: interpret its unit via [`kind`](Dimension::kind)
-    /// (`Size`/`Location` are lengths, `Angular*` are angles) and
-    /// [`Scene::units`], exactly as point coordinates are read. A representation
-    /// the scene cannot resolve (a complex one) is reported via
-    /// [`Scene::warnings`]; a dimension with no value representation, or whose
-    /// representation holds no `MEASURE_REPRESENTATION_ITEM` (only a
-    /// `VALUE_RANGE` of limits, say), simply yields `None`.
+    /// The number is raw, in the unit its measure names (`unit_component`,
+    /// not read here), normally the model's length or angle unit as
+    /// [`kind`](Dimension::kind) says (`Size`/`Location` are lengths,
+    /// `Angular*` are angles) — interpret it via [`Scene::units`], exactly as
+    /// point coordinates are read. A representation the scene cannot resolve
+    /// (a complex one) is reported via [`Scene::warnings`]; a dimension with no
+    /// value representation, or whose representation holds no such item (only
+    /// limits, or only a `VALUE_RANGE`, say), simply yields `None`.
     pub fn value(&self) -> Option<f64> {
         let this = self.about();
         let cx = this.cx;
@@ -170,26 +174,31 @@ impl<'m> Dimension<'m> {
             for item in &sdr.items {
                 match item {
                     m::RepresentationItemRef::MeasureRepresentationItem(mid) => {
-                        return Some(
-                            cx.model
-                                .measure_representation_item_arena
-                                .get(mid.0)
-                                .value_component
-                                .value
-                                .as_f64(),
-                        );
+                        let mri = cx.model.measure_representation_item_arena.get(mid.0);
+                        if is_limit_name(cx.model.text(mri.name)) {
+                            continue;
+                        }
+                        return Some(mri.value_component.value.as_f64());
                     }
                     // A complex item is a value only with a
                     // `MEASURE_REPRESENTATION_ITEM` part.
-                    m::RepresentationItemRef::Complex(cuid)
-                        if cx
-                            .model
-                            .complex_entity_arena
-                            .get(cuid.0)
-                            .parts
+                    m::RepresentationItemRef::Complex(cuid) => {
+                        let parts = &cx.model.complex_entity_arena.get(cuid.0).parts;
+                        if !parts
                             .iter()
-                            .any(|p| matches!(p, m::PartialEntity::MeasureRepresentationItem)) =>
-                    {
+                            .any(|p| matches!(p, m::PartialEntity::MeasureRepresentationItem))
+                        {
+                            continue;
+                        }
+                        let name = parts.iter().find_map(|p| match p {
+                            m::PartialEntity::RepresentationItem { name } => {
+                                Some(cx.model.text(*name))
+                            }
+                            _ => None,
+                        });
+                        if name.is_some_and(is_limit_name) {
+                            continue;
+                        }
                         if let Some((value, _)) =
                             crate::scene::units::complex_measure(cx.model, *cuid)
                         {
@@ -206,6 +215,12 @@ impl<'m> Dimension<'m> {
         }
         None
     }
+}
+
+/// Whether a measure item's name marks it as a limit rather than the nominal
+/// value.
+fn is_limit_name(name: &str) -> bool {
+    name == "upper limit" || name == "lower limit"
 }
 
 /// The GD&T characteristic a [`Tolerance`] specifies (its control-frame symbol).
