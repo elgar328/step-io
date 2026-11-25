@@ -355,16 +355,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   complex face, bound, oriented edge, edge or vertex; a mesh group item or a
   link to a solid it cannot read; and a curve or surface `to_nurbs` cannot
   convert (a bare supertype such as `B_SPLINE_SURFACE` alone, or a `PCURVE`).
-  The NURBS conversions also report a complex direction or vector, a 2D or
-  degenerate placement, a complex B-spline without its B-spline part or
-  knots, and a basis or 3D curve of a kind they do not convert. The product
-  and PMI walks report a complex product, formation, document, date,
-  direction, shape representation, `of_shape` or tolerance target, a
-  placement whose transformation is not an `ITEM_DEFINED_TRANSFORMATION`, and
-  a shape relationship whose other end is not a representation. The
-  presentation walks report a complex style, style element or rendering
-  property and a bare `COLOUR`, and `Scene::units` a length or angle unit it
-  cannot read, naming the unit context. The warnings name the handle they
+  The NURBS conversions also report a complex direction or vector, a zero
+  direction, a 2D or degenerate placement, a complex B-spline without its
+  B-spline part or knots, and a basis or 3D curve of a kind they do not
+  convert. The product and PMI walks report a complex product, formation,
+  document, date, direction, shape representation, `of_shape` or tolerance
+  target, a placement whose transformation is not an
+  `ITEM_DEFINED_TRANSFORMATION`, and a shape relationship whose other end is
+  not a representation. The presentation walks report a complex style, style
+  element or rendering property and a bare `COLOUR`, and `Scene::units` a
+  length or angle unit it cannot read, naming the unit context. The warnings name the handle they
   concern. A bare `PRE_DEFINED_COLOUR` now gives its colour. `Datum::datum_feature` also finds a
   `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`. `MeshGroup::solid` follows a shell linked
   through an `ORIENTED_CLOSED_SHELL`.
@@ -402,7 +402,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   STEP defines: `[0, 1, 0]` when the axis is along X, else `[1, 0, 0]`. The
   scene used `[1, 0, 0]` every time, so on an X axis the frame was degenerate:
   `Transform::matrix` gave `None`, and so did `to_nurbs` for a curve or
-  surface on such a placement.
+  surface on such a placement. An axis off X by floating-point noise alone
+  (NIST's test files write axes such as `(-1., -6.12323399574E-17, -0.)`)
+  still takes `[1, 0, 0]`, as the standard says, and its frame is now computed
+  from the values as written: it used to come out degenerate, because the
+  frame code took a projected reference direction shorter than 1e-12 for
+  zero. The frame is also right now for an axis of any length: one shorter
+  than 1e-12 used to give none, a very long one (around 1E154 and beyond) a
+  wrong one through overflow, and one near X a slightly skewed one through
+  rounding.
 - `read()` repeats its drop pass until no kept entity fails, where it used to
   stop after three rounds; an entity that failed in a fourth would have been
   reported as dropped yet left in the model and counted as kept.

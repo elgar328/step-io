@@ -1147,3 +1147,83 @@ fn an_offset_plane_face_becomes_bounded_patch() {
     assert!(approx(&n.control_points[1][1], &[1., 1., 0.]));
     assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
 }
+
+/// The warnings `scene` gathered, as messages.
+fn messages(scene: &Scene<'_>) -> Vec<String> {
+    scene.warnings().iter().map(|w| w.message.clone()).collect()
+}
+
+/// A plane on a placement with a zero axis has no frame: the face does not
+/// convert, and one warning says why.
+#[test]
+fn a_plane_face_on_a_zero_axis_is_reported_once() {
+    let src = format!(
+        "{HEADER}{}{FOOTER}",
+        PLANE_FACE.replace(
+            "#5=DIRECTION('',(0.,0.,1.));",
+            "#5=DIRECTION('',(0.,0.,0.));"
+        )
+    );
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let face = find_face(&scene, |s| matches!(s.kind(), SurfaceKind::Plane(_)));
+    assert!(face.to_nurbs().is_none());
+    let messages = messages(&scene);
+    assert_eq!(messages.len(), 1, "{messages:?}");
+    assert!(messages[0].starts_with("AXIS2_PLACEMENT_3D is degenerate"));
+}
+
+/// A sphere on a placement with a zero axis is reported once, by the frame.
+#[test]
+fn a_sphere_on_a_zero_axis_is_reported_once() {
+    let src = format!(
+        "{HEADER}{}{FOOTER}",
+        SURFACES.replace(
+            "#3=DIRECTION('',(0.,0.,1.));",
+            "#3=DIRECTION('',(0.,0.,0.));"
+        )
+    );
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let sphere = find(&scene, |s| matches!(s.kind(), SurfaceKind::Spherical(_)));
+    assert!(sphere.to_nurbs().is_none());
+    let messages = messages(&scene);
+    assert_eq!(messages.len(), 1, "{messages:?}");
+    assert!(messages[0].starts_with("AXIS2_PLACEMENT_3D is degenerate"));
+}
+
+/// A surface of revolution about a zero axis is reported.
+#[test]
+fn a_revolution_about_a_zero_axis_is_reported() {
+    let src = format!(
+        "{HEADER}{}{FOOTER}",
+        REVOLVE_SURF.replace(
+            "#7=AXIS1_PLACEMENT('',#2,#3);",
+            "#7=AXIS1_PLACEMENT('',#2,#9);\n#9=DIRECTION('',(0.,0.,0.));"
+        )
+    );
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let surface = find(&scene, |s| matches!(s.kind(), SurfaceKind::Revolution(_)));
+    assert!(surface.to_nurbs().is_none());
+    let messages = messages(&scene);
+    assert_eq!(messages, ["AXIS1_PLACEMENT is degenerate (a zero axis)"]);
+}
+
+/// A revolved LINE profile with a zero direction is reported.
+#[test]
+fn a_revolved_line_with_a_zero_direction_is_reported() {
+    let src = format!(
+        "{HEADER}{}{FOOTER}",
+        REVOLVE_LINE_FACE.replace(
+            "#4=VECTOR('',#3,1.0);",
+            "#4=VECTOR('',#9,1.0);\n#9=DIRECTION('',(0.,0.,0.));"
+        )
+    );
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let face = find_face(&scene, |s| matches!(s.kind(), SurfaceKind::Revolution(_)));
+    assert!(face.to_nurbs().is_none());
+    let messages = messages(&scene);
+    assert_eq!(messages, ["LINE direction is a zero vector"]);
+}

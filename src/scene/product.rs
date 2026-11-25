@@ -1046,42 +1046,13 @@ pub struct Transform {
     pub to: Placement,
 }
 
-// Small vector helpers for the frame math (local on purpose: the nurbs module
-// keeps its own private set, and a shared math module would be more coupling
-// than these one-liners are worth).
-fn vdot(a: [f64; 3], b: [f64; 3]) -> f64 {
-    a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
-}
-fn vsub(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
-    [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
-}
-fn vscale(a: [f64; 3], s: f64) -> [f64; 3] {
-    [a[0] * s, a[1] * s, a[2] * s]
-}
-fn vcross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
-    [
-        a[1] * b[2] - a[2] * b[1],
-        a[2] * b[0] - a[0] * b[2],
-        a[0] * b[1] - a[1] * b[0],
-    ]
-}
-fn vnorm(a: [f64; 3]) -> Option<[f64; 3]> {
-    let n = vdot(a, a).sqrt();
-    (n >= 1e-12).then(|| vscale(a, 1.0 / n))
-}
-
 impl Placement {
     /// The orthonormal frame `(x, y, z)` this placement defines: z is the
     /// axis, x is the reference direction projected orthogonal to z (the STEP
     /// derivation), y completes the right-handed set. `None` for a degenerate
-    /// placement (a zero axis, or a reference direction parallel to the axis).
+    /// placement (see [`Transform::matrix`]).
     fn frame(&self) -> Option<([f64; 3], [f64; 3], [f64; 3])> {
-        let z = vnorm(self.axis)?;
-        let x = vnorm(vsub(
-            self.ref_direction,
-            vscale(z, vdot(self.ref_direction, z)),
-        ))?;
-        Some((x, vcross(z, x), z))
+        crate::scene::nurbs::orthonormal_frame(self.axis, self.ref_direction)
     }
 }
 
@@ -1092,9 +1063,11 @@ impl Transform {
     ///
     /// Convention: `m[row][col]`, points map as column vectors `p' = M · p`,
     /// and the last row is `[0, 0, 0, 1]` (STEP placements carry rotation and
-    /// translation only). `None` if either placement is degenerate (a zero
-    /// axis, or a reference direction parallel to the axis) — the matrix is
-    /// not fabricated from bad frames.
+    /// translation only). `None` if either placement is degenerate — a zero
+    /// or non-finite axis or reference direction, or a reference direction
+    /// parallel to the axis: their cross product, computed in floating point
+    /// from the values as written up to a power-of-two scale, is zero. The
+    /// matrix is not fabricated from bad frames.
     // Matrix index arithmetic reads clearest with explicit indices.
     #[allow(clippy::needless_range_loop)]
     pub fn matrix(&self) -> Option<[[f64; 4]; 4]> {

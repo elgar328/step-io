@@ -857,6 +857,69 @@ fn an_x_axis_placement_without_a_reference_direction_takes_y() {
     assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
 }
 
+/// An axis off X by floating-point noise alone, as NIST's test files write
+/// it, still takes STEP's `[1, 0, 0]` as the reference direction; projected
+/// from the values as written it keeps the noise's direction, so the frame
+/// comes out (from an axis of any length) instead of degenerating.
+#[test]
+fn a_noisy_x_axis_projects_the_default_reference_direction() {
+    for (axis, x) in [
+        ("(-1.,-6.12323399574E-17,-0.)", [0., -1., 0.]),
+        ("(-1.,6.12323399574E-17,0.)", [0., 1., 0.]),
+        ("(1.,-0.,3.99680288865E-16)", [0., 0., -1.]),
+        ("(-49.,-3.E-15,0.)", [0., -1., 0.]),
+    ] {
+        let edges = EDGES.replace("#8=CIRCLE('',#4,1.0);", "#8=CIRCLE('',#90,1.0);")
+            + &format!("#90=AXIS2_PLACEMENT_3D('',#1,#91,$);\n#91=DIRECTION('',{axis});\n");
+        let src = format!("{HEADER}{edges}{FOOTER}");
+        let (model, _rep) = read(src.as_bytes()).expect("read");
+        let scene = model.scene();
+        let circle = find(&scene, |c| matches!(c.kind(), CurveKind::Circle(_)));
+        let nurbs = circle.to_nurbs().expect("the circle converts");
+        assert!(approx(&nurbs.control_points[0], &x), "{axis}");
+        assert!(
+            scene.warnings().is_empty(),
+            "{axis}: {:?}",
+            scene.warnings()
+        );
+    }
+}
+
+/// A very long axis does not overflow the frame: the circle's quarter point
+/// lies on its y axis, not at its centre.
+#[test]
+fn a_long_axis_keeps_its_frame() {
+    let edges = EDGES.replace("#8=CIRCLE('',#4,1.0);", "#8=CIRCLE('',#90,1.0);")
+        + "#90=AXIS2_PLACEMENT_3D('',#1,#91,$);\n#91=DIRECTION('',(0.,0.,1.E200));\n";
+    let src = format!("{HEADER}{edges}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let circle = find(&scene, |c| matches!(c.kind(), CurveKind::Circle(_)));
+    let nurbs = circle.to_nurbs().expect("the circle converts");
+    assert!(approx(&nurbs.control_points[0], &[1., 0., 0.]));
+    assert!(approx(&nurbs.control_points[2], &[0., 1., 0.]));
+}
+
+/// A reference direction written the same as the axis is parallel to it: the
+/// placement is degenerate, and the conversion says so.
+#[test]
+fn a_reference_direction_along_the_axis_is_degenerate() {
+    let edges = EDGES.replace("#8=CIRCLE('',#4,1.0);", "#8=CIRCLE('',#90,1.0);")
+        + "#90=AXIS2_PLACEMENT_3D('',#1,#91,#91);\n#91=DIRECTION('',(0.6,0.8,0.));\n";
+    let src = format!("{HEADER}{edges}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let circle = find(&scene, |c| matches!(c.kind(), CurveKind::Circle(_)));
+    assert!(circle.to_nurbs().is_none());
+    let warnings = scene.warnings();
+    assert_eq!(warnings.len(), 1, "{warnings:?}");
+    assert!(
+        warnings[0]
+            .message
+            .contains("AXIS2_PLACEMENT_3D is degenerate")
+    );
+}
+
 /// A closed edge against its curve's direction (`same_sense` false) gives the
 /// whole circle the other way round, still from the curve's origin.
 #[test]

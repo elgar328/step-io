@@ -75,7 +75,6 @@ fn cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
         a[0] * b[1] - a[1] * b[0],
     ]
 }
-/// Unit vector, or `None` for a (near-)zero-length input.
 /// The reference direction STEP takes for an `AXIS2_PLACEMENT_3D` that omits
 /// one (`first_proj_axis`): `[0, 1, 0]` when the normalised axis is `[1, 0, 0]`
 /// or `[-1, 0, 0]`, else `[1, 0, 0]`.
@@ -87,9 +86,64 @@ pub(crate) fn default_ref_direction(axis: [f64; 3]) -> [f64; 3] {
     }
 }
 
+/// Unit vector, or `None` for a zero vector or one with a non-finite
+/// component. Dividing by the largest component first keeps a tiny or huge
+/// vector from underflowing or overflowing.
 fn normalize(a: [f64; 3]) -> Option<[f64; 3]> {
-    let n = dot(a, a).sqrt();
-    (n >= 1e-12).then(|| scale(a, 1.0 / n))
+    if !a.iter().all(|c| c.is_finite()) {
+        return None;
+    }
+    let m = a[0].abs().max(a[1].abs()).max(a[2].abs());
+    if m == 0.0 {
+        return None;
+    }
+    let b = [a[0] / m, a[1] / m, a[2] / m];
+    let n = dot(b, b).sqrt();
+    Some([b[0] / n, b[1] / n, b[2] / n])
+}
+
+/// `a` scaled by a power of two that brings its largest component into
+/// `[1, 2)`. The scaling is exact while the results stay normal, so products of
+/// scaled vectors round as the products of the written ones do. A zero or
+/// non-finite vector comes back unchanged.
+fn pow2_scaled(a: [f64; 3]) -> [f64; 3] {
+    // 2^k for k in -1022..=1023, built from its exponent bits.
+    let pow2 = |k: i32| f64::from_bits(u64::from((k + 1023).unsigned_abs()) << 52);
+    let mut a = a;
+    let mut m = a[0].abs().max(a[1].abs()).max(a[2].abs());
+    if m == 0.0 || !m.is_finite() {
+        return a;
+    }
+    if m < f64::MIN_POSITIVE {
+        a = scale(a, pow2(64));
+        m *= pow2(64);
+    }
+    // The unbiased exponent of `m`, which is now normal and positive.
+    let e = i32::from(u16::try_from(m.to_bits() >> 52).unwrap_or(1023)) - 1023;
+    if e == 1023 {
+        // 2^-1023 is subnormal: apply it in two exact steps.
+        scale(scale(a, pow2(-1022)), 0.5)
+    } else {
+        scale(a, pow2(-e))
+    }
+}
+
+/// The orthonormal axes `(x, y, z)` of a placement with axis `axis` and
+/// reference direction `ref_direction`, as written (STEP's derivation: z is
+/// the axis, x the reference direction projected orthogonal to it, y = z × x).
+/// `None` for a zero or non-finite axis or reference direction, or a reference
+/// direction parallel to the axis: their cross product, computed in floating
+/// point from the values as written up to a power-of-two scale, is zero.
+pub(crate) fn orthonormal_frame(
+    axis: [f64; 3],
+    ref_direction: [f64; 3],
+) -> Option<([f64; 3], [f64; 3], [f64; 3])> {
+    let (a, r) = (pow2_scaled(axis), pow2_scaled(ref_direction));
+    let z = normalize(a)?;
+    // (a × r) × a is r − (r·â)â scaled by |a|²: the projection, without the
+    // cancellation that would round a small x away.
+    let x = normalize(cross(cross(a, r), a))?;
+    Some((x, cross(z, x), z))
 }
 
 // --- reference resolution ---
@@ -190,21 +244,26 @@ type Frame = ([f64; 3], [f64; 3], [f64; 3], [f64; 3]);
 type KnotsRef<'a> = (&'a [f64], &'a [i64]);
 
 /// The orthonormal local frame of an `AXIS2_PLACEMENT_3D` (z is the axis /
-/// revolution direction). `None` for a degenerate frame.
+/// revolution direction). `None` for a degenerate frame, which is reported.
 fn frame_of(cx: Ctx<'_>, id: m::Axis2Placement3dId) -> Option<Frame> {
     let p = cx.model.axis2_placement3d_arena.get(id.0);
     let center = point_coords(cx, &p.location)?;
-    let z = match &p.axis {
-        Some(a) => normalize(dir_ratios(cx, a)?)?,
+    let axis = match &p.axis {
+        Some(a) => dir_ratios(cx, a)?,
         None => [0.0, 0.0, 1.0],
     };
-    let x0 = match &p.ref_direction {
+    let ref_direction = match &p.ref_direction {
         Some(d) => dir_ratios(cx, d)?,
-        None => default_ref_direction(z),
+        None => default_ref_direction(axis),
     };
-    // STEP derives x by projecting ref_direction orthogonal to the axis.
-    let x = normalize(sub(x0, scale(z, dot(x0, z))))?;
-    let y = cross(z, x);
+    let Some((x, y, z)) = orthonormal_frame(axis, ref_direction) else {
+        cx.warn(
+            "AXIS2_PLACEMENT_3D is degenerate (a zero axis, or a reference direction that is \
+             zero or parallel to it)"
+                .to_owned(),
+        );
+        return None;
+    };
     Some((center, x, y, z))
 }
 
@@ -212,17 +271,7 @@ fn frame_of(cx: Ctx<'_>, id: m::Axis2Placement3dId) -> Option<Frame> {
 /// `None`).
 fn placement_frame_3d(cx: Ctx<'_>, r: &m::Axis2PlacementRef) -> Option<Frame> {
     match r {
-        m::Axis2PlacementRef::Axis2Placement3d(id) => {
-            let frame = frame_of(cx, *id);
-            if frame.is_none() {
-                cx.warn(
-                    "AXIS2_PLACEMENT_3D is degenerate (a zero axis, or a reference direction \
-                     along it)"
-                        .to_owned(),
-                );
-            }
-            frame
-        }
+        m::Axis2PlacementRef::Axis2Placement3d(id) => frame_of(cx, *id),
         m::Axis2PlacementRef::Complex(_) => {
             cx.warn("placement is a complex instance".to_owned());
             None
@@ -253,17 +302,22 @@ pub(crate) fn axis1_frame(cx: Ctx<'_>, r: &m::Axis1PlacementRef) -> Option<Frame
     };
     let p = cx.model.axis1_placement_arena.get(id.0);
     let center = point_coords(cx, &p.location)?;
-    let z = match &p.axis {
-        Some(a) => normalize(dir_ratios(cx, a)?)?,
+    let axis = match &p.axis {
+        Some(a) => dir_ratios(cx, a)?,
         None => [0.0, 0.0, 1.0],
+    };
+    let Some(z) = normalize(axis) else {
+        cx.warn("AXIS1_PLACEMENT is degenerate (a zero axis)".to_owned());
+        return None;
     };
     let x0 = if z[0].abs() < 0.9 {
         [1.0, 0.0, 0.0]
     } else {
         [0.0, 1.0, 0.0]
     };
-    let x = normalize(sub(x0, scale(z, dot(x0, z))))?;
-    Some((center, x, cross(z, x), z))
+    // x0 is never parallel to the axis, so this does not fail.
+    let (x, y, z) = orthonormal_frame(axis, x0)?;
+    Some((center, x, y, z))
 }
 
 /// A full circle/ellipse as a degree-2 rational B-spline (four 90° arcs, nine
@@ -1750,11 +1804,7 @@ pub(crate) fn revolve_curve(profile: &NurbsCurve, frame: Frame) -> NurbsSurface 
 }
 
 pub(crate) fn sphere_to_nurbs(cx: Ctx<'_>, s: &m::SphericalSurface) -> Option<NurbsSurface> {
-    let Some(frame) = frame_of_3dref(cx, &s.position) else {
-        cx.warn("SPHERICAL_SURFACE.to_nurbs: degenerate placement".to_owned());
-        return None;
-    };
-    Some(sphere_nurbs(frame, s.radius))
+    Some(sphere_nurbs(frame_of_3dref(cx, &s.position)?, s.radius))
 }
 
 /// A whole sphere of radius `r` about the frame's centre.
@@ -1773,11 +1823,11 @@ fn sphere_nurbs((center, x, y, z): Frame, r: f64) -> NurbsSurface {
 }
 
 pub(crate) fn torus_to_nurbs(cx: Ctx<'_>, t: &m::ToroidalSurface) -> Option<NurbsSurface> {
-    let Some(frame) = frame_of_3dref(cx, &t.position) else {
-        cx.warn("TOROIDAL_SURFACE.to_nurbs: degenerate placement".to_owned());
-        return None;
-    };
-    Some(torus_nurbs(frame, t.major_radius, t.minor_radius))
+    Some(torus_nurbs(
+        frame_of_3dref(cx, &t.position)?,
+        t.major_radius,
+        t.minor_radius,
+    ))
 }
 
 /// A whole torus about the frame's axis: tube radius `r` around the circle of
@@ -1810,10 +1860,7 @@ pub(crate) fn degenerate_torus_to_nurbs(
     cx: Ctx<'_>,
     t: &m::DegenerateToroidalSurface,
 ) -> Option<NurbsSurface> {
-    let Some(frame @ (center, x, _, z)) = frame_of_3dref(cx, &t.position) else {
-        cx.warn("DEGENERATE_TOROIDAL_SURFACE.to_nurbs: degenerate placement".to_owned());
-        return None;
-    };
+    let frame @ (center, x, _, z) = frame_of_3dref(cx, &t.position)?;
     let (big, r) = (t.major_radius, t.minor_radius);
     let crossing = (-big / r).clamp(-1.0, 1.0).acos();
     if crossing.is_nan() {
@@ -1979,7 +2026,7 @@ pub(crate) fn offset_to_nurbs(cx: Ctx<'_>, o: &m::OffsetSurface) -> Option<Nurbs
             if r <= 0.0 {
                 return None;
             }
-            Some(sphere_nurbs(offset_frame(cx, &s.position)?, r))
+            Some(sphere_nurbs(frame_of_3dref(cx, &s.position)?, r))
         }
         m::SurfaceRef::ToroidalSurface(i) => {
             let t = cx.model.toroidal_surface_arena.get(i.0);
@@ -1988,18 +2035,10 @@ pub(crate) fn offset_to_nurbs(cx: Ctx<'_>, o: &m::OffsetSurface) -> Option<Nurbs
             if r <= 0.0 || r > big * (1.0 + 1e-9) {
                 return None;
             }
-            Some(torus_nurbs(offset_frame(cx, &t.position)?, big, r))
+            Some(torus_nurbs(frame_of_3dref(cx, &t.position)?, big, r))
         }
         _ => None,
     }
-}
-
-fn offset_frame(cx: Ctx<'_>, position: &m::Axis2Placement3dRef) -> Option<Frame> {
-    let frame = frame_of_3dref(cx, position);
-    if frame.is_none() {
-        cx.warn("OFFSET_SURFACE.to_nurbs: degenerate basis placement".to_owned());
-    }
-    frame
 }
 
 /// An open offset surface bounded by a face, as [`plane_patch`] and
@@ -2168,18 +2207,25 @@ pub(crate) fn extruded_line_segment(
     points: &[[f64; 3]],
 ) -> Option<NurbsCurve> {
     let base = point_coords(cx, &line.pnt)?;
-    let line_dir = |r: &m::VectorRef| {
+    let line_dir = |r: &m::VectorRef, zero: &str| {
         let m::VectorRef::Vector(id) = r else {
             cx.warn("vector is a complex instance; not read".to_owned());
             return None;
         };
-        normalize(dir_ratios(
+        let d = normalize(dir_ratios(
             cx,
             &cx.model.vector_arena.get(id.0).orientation,
-        )?)
+        )?);
+        if d.is_none() {
+            cx.warn(zero.to_owned());
+        }
+        d
     };
-    let d = line_dir(&line.dir)?;
-    let v = line_dir(axis)?;
+    let d = line_dir(&line.dir, "LINE direction is a zero vector")?;
+    let v = line_dir(
+        axis,
+        "SURFACE_OF_LINEAR_EXTRUSION face.to_nurbs: degenerate direction",
+    )?;
     if points.is_empty() {
         return None;
     }
@@ -2284,7 +2330,10 @@ pub(crate) fn revolved_line_segment(
         return None;
     };
     let v = cx.model.vector_arena.get(vid.0);
-    let d = normalize(dir_ratios(cx, &v.orientation)?)?;
+    let Some(d) = normalize(dir_ratios(cx, &v.orientation)?) else {
+        cx.warn("LINE direction is a zero vector".to_owned());
+        return None;
+    };
     if points.is_empty() {
         return None;
     }
