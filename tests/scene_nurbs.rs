@@ -822,6 +822,26 @@ const EDGES: &str = "\
 #59=CLOSED_SHELL('',(#58));\n\
 #60=MANIFOLD_SOLID_BREP('',#59);\n";
 
+/// A circle on a 2D placement has no 3D frame; converting it says why.
+#[test]
+fn a_circle_on_a_2d_placement_is_reported() {
+    let edges = EDGES.replace("#8=CIRCLE('',#4,1.0);", "#8=CIRCLE('',#92,1.0);")
+        + "#92=AXIS2_PLACEMENT_2D('',#93,$);\n#93=CARTESIAN_POINT('',(0.,0.));\n";
+    let src = format!("{HEADER}{edges}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let circle = find(&scene, |c| matches!(c.kind(), CurveKind::Circle(_)));
+    assert!(circle.to_nurbs().is_none());
+    assert!(
+        scene
+            .warnings()
+            .iter()
+            .any(|w| w.entity == Some(circle.key()) && w.message.contains("AXIS2_PLACEMENT_2D")),
+        "{:?}",
+        scene.warnings()
+    );
+}
+
 /// A placement whose axis is X and whose reference direction is omitted takes
 /// STEP's default for that case, Y, so a circle on it still converts.
 #[test]

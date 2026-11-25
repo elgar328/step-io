@@ -151,6 +151,7 @@ fn trim_point(cx: Ctx<'_>, s: &m::TrimmingSelectRef) -> Option<[f64; 3]> {
 
 fn dir_ratios(cx: Ctx<'_>, r: &m::DirectionRef) -> Option<[f64; 3]> {
     let m::DirectionRef::Direction(id) = r else {
+        cx.warn("direction is a complex instance; not read".to_owned());
         return None;
     };
     let d = &cx.model.direction_arena.get(id.0).direction_ratios;
@@ -211,12 +212,25 @@ fn frame_of(cx: Ctx<'_>, id: m::Axis2Placement3dId) -> Option<Frame> {
 /// `None`).
 fn placement_frame_3d(cx: Ctx<'_>, r: &m::Axis2PlacementRef) -> Option<Frame> {
     match r {
-        m::Axis2PlacementRef::Axis2Placement3d(id) => frame_of(cx, *id),
+        m::Axis2PlacementRef::Axis2Placement3d(id) => {
+            let frame = frame_of(cx, *id);
+            if frame.is_none() {
+                cx.warn(
+                    "AXIS2_PLACEMENT_3D is degenerate (a zero axis, or a reference direction \
+                     along it)"
+                        .to_owned(),
+                );
+            }
+            frame
+        }
         m::Axis2PlacementRef::Complex(_) => {
             cx.warn("placement is a complex instance".to_owned());
             None
         }
-        m::Axis2PlacementRef::Axis2Placement2d(_) => None,
+        m::Axis2PlacementRef::Axis2Placement2d(_) => {
+            cx.warn("placement is an AXIS2_PLACEMENT_2D, not a 3D frame".to_owned());
+            None
+        }
     }
 }
 
@@ -269,21 +283,13 @@ fn conic_nurbs(center: [f64; 3], x: [f64; 3], y: [f64; 3], a: f64, b: f64) -> Nu
 }
 
 pub(crate) fn circle_to_nurbs(cx: Ctx<'_>, c: &m::Circle) -> Option<NurbsCurve> {
-    if let Some((center, x, y, _)) = placement_frame_3d(cx, &c.position) {
-        Some(conic_nurbs(center, x, y, c.radius, c.radius))
-    } else {
-        cx.warn("CIRCLE.to_nurbs: unsupported (2D or degenerate) placement".to_owned());
-        None
-    }
+    let (center, x, y, _) = placement_frame_3d(cx, &c.position)?;
+    Some(conic_nurbs(center, x, y, c.radius, c.radius))
 }
 
 pub(crate) fn ellipse_to_nurbs(cx: Ctx<'_>, e: &m::Ellipse) -> Option<NurbsCurve> {
-    if let Some((center, x, y, _)) = placement_frame_3d(cx, &e.position) {
-        Some(conic_nurbs(center, x, y, e.semi_axis_1, e.semi_axis_2))
-    } else {
-        cx.warn("ELLIPSE.to_nurbs: unsupported (2D or degenerate) placement".to_owned());
-        None
-    }
+    let (center, x, y, _) = placement_frame_3d(cx, &e.position)?;
+    Some(conic_nurbs(center, x, y, e.semi_axis_1, e.semi_axis_2))
 }
 
 /// The highest B-spline degree converted — OCCT's
@@ -480,14 +486,17 @@ pub(crate) fn complex_bspline_curve_to_nurbs(
     cx: Ctx<'_>,
     parts: &[m::PartialEntity],
 ) -> Option<NurbsCurve> {
-    let (degree, cp) = parts.iter().find_map(|p| match p {
+    let Some((degree, cp)) = parts.iter().find_map(|p| match p {
         m::PartialEntity::BSplineCurve {
             degree,
             control_points_list,
             ..
         } => Some((*degree, control_points_list)),
         _ => None,
-    })?;
+    }) else {
+        cx.warn("complex curve has no B_SPLINE_CURVE part; not converted".to_owned());
+        return None;
+    };
     let explicit = parts.iter().find_map(|p| match p {
         m::PartialEntity::BSplineCurveWithKnots {
             knots,
@@ -500,13 +509,23 @@ pub(crate) fn complex_bspline_curve_to_nurbs(
     let (knots, mults): (&[f64], &[i64]) = if let Some((k, m)) = explicit {
         (k, m)
     } else {
-        let family = parts.iter().find_map(|p| match p {
+        let Some(family) = parts.iter().find_map(|p| match p {
             m::PartialEntity::UniformCurve => Some(KnotFamily::Uniform),
             m::PartialEntity::QuasiUniformCurve => Some(KnotFamily::QuasiUniform),
             m::PartialEntity::BezierCurve => Some(KnotFamily::Bezier),
             _ => None,
-        })?;
-        derived = family_knots(family, degree, cp.len())?;
+        }) else {
+            cx.warn("B_SPLINE_CURVE.to_nurbs: a complex B-spline has no knots".to_owned());
+            return None;
+        };
+        let Some(knots) = family_knots(family, degree, cp.len()) else {
+            cx.warn(
+                "B_SPLINE_CURVE.to_nurbs: control-point count invalid for its knot family"
+                    .to_owned(),
+            );
+            return None;
+        };
+        derived = knots;
         (&derived.0, &derived.1)
     };
     let weights = parts.iter().find_map(|p| match p {
@@ -521,6 +540,7 @@ pub(crate) fn complex_bspline_curve_to_nurbs(
 /// The direction vector (orientation × magnitude) of a `VECTOR`.
 fn vector_dir(cx: Ctx<'_>, r: &m::VectorRef) -> Option<[f64; 3]> {
     let m::VectorRef::Vector(id) = r else {
+        cx.warn("vector is a complex instance; not read".to_owned());
         return None;
     };
     let v = cx.model.vector_arena.get(id.0);
@@ -716,11 +736,32 @@ pub(crate) fn trimmed_to_nurbs(cx: Ctx<'_>, t: &m::TrimmedCurve) -> Option<Nurbs
             };
             open_conic_segment(cx, conic, frame, u0, u1, "TRIMMED_CURVE")
         }
-        _ => {
-            let basis = trimmed_basis_nurbs(cx, &t.basis_curve)?;
+        r => {
+            if !converts_as_basis(r) {
+                cx.warn(format!(
+                    "TRIMMED_CURVE.to_nurbs: basis curve {} is not converted",
+                    Ctx::keyword(r.entity_key())
+                ));
+                return None;
+            }
+            let basis = trimmed_basis_nurbs(cx, r)?;
             trimmed_bspline_to_nurbs(cx, t, &basis)
         }
     }
+}
+
+/// Whether [`trimmed_basis_nurbs`] takes this kind (it reports a bad instance
+/// of one itself).
+fn converts_as_basis(r: &m::CurveRef) -> bool {
+    matches!(
+        r,
+        m::CurveRef::BSplineCurveWithKnots(_)
+            | m::CurveRef::Complex(_)
+            | m::CurveRef::UniformCurve(_)
+            | m::CurveRef::QuasiUniformCurve(_)
+            | m::CurveRef::BezierCurve(_)
+            | m::CurveRef::Polyline(_)
+    )
 }
 
 // --- bspline segment extraction (trimmed B-spline basis) ---
@@ -1152,7 +1193,16 @@ fn resolved_curve_to_nurbs(cx: Ctx<'_>, r: &m::CurveRef) -> Option<NurbsCurve> {
         m::CurveRef::CompositeCurve(id) => {
             composite_to_nurbs(cx, cx.model.composite_curve_arena.get(id.0))
         }
-        other => trimmed_basis_nurbs(cx, other),
+        // Unbounded: a caller with bounds handles them, or none applies.
+        m::CurveRef::Line(_) | m::CurveRef::Parabola(_) | m::CurveRef::Hyperbola(_) => None,
+        other if converts_as_basis(other) => trimmed_basis_nurbs(cx, other),
+        other => {
+            cx.warn(format!(
+                "{} is not converted to NURBS here",
+                Ctx::keyword(other.entity_key())
+            ));
+            None
+        }
     }
 }
 
@@ -1859,7 +1909,7 @@ pub(crate) fn complex_bspline_surface_to_nurbs(
     cx: Ctx<'_>,
     parts: &[m::PartialEntity],
 ) -> Option<NurbsSurface> {
-    let (u_degree, v_degree, cp) = parts.iter().find_map(|p| match p {
+    let Some((u_degree, v_degree, cp)) = parts.iter().find_map(|p| match p {
         m::PartialEntity::BSplineSurface {
             u_degree,
             v_degree,
@@ -1867,7 +1917,10 @@ pub(crate) fn complex_bspline_surface_to_nurbs(
             ..
         } => Some((*u_degree, *v_degree, control_points_list)),
         _ => None,
-    })?;
+    }) else {
+        cx.warn("complex surface has no B_SPLINE_SURFACE part; not converted".to_owned());
+        return None;
+    };
     let explicit = parts.iter().find_map(|p| match p {
         m::PartialEntity::BSplineSurfaceWithKnots {
             u_knots,
@@ -1882,17 +1935,27 @@ pub(crate) fn complex_bspline_surface_to_nurbs(
     let (u, v): (KnotsRef<'_>, KnotsRef<'_>) = if let Some((uk, um, vk, vm)) = explicit {
         ((uk, um), (vk, vm))
     } else {
-        let family = parts.iter().find_map(|p| match p {
+        let Some(family) = parts.iter().find_map(|p| match p {
             m::PartialEntity::UniformSurface => Some(KnotFamily::Uniform),
             m::PartialEntity::QuasiUniformSurface => Some(KnotFamily::QuasiUniform),
             m::PartialEntity::BezierSurface => Some(KnotFamily::Bezier),
             _ => None,
-        })?;
+        }) else {
+            cx.warn("B_SPLINE_SURFACE.to_nurbs: a complex B-spline has no knots".to_owned());
+            return None;
+        };
         let n_v = cp.first().map_or(0, Vec::len);
-        derived = (
-            family_knots(family, u_degree, cp.len())?,
-            family_knots(family, v_degree, n_v)?,
-        );
+        let (Some(u), Some(v)) = (
+            family_knots(family, u_degree, cp.len()),
+            family_knots(family, v_degree, n_v),
+        ) else {
+            cx.warn(
+                "B_SPLINE_SURFACE.to_nurbs: control-grid size invalid for its knot family"
+                    .to_owned(),
+            );
+            return None;
+        };
+        derived = (u, v);
         ((&derived.0.0, &derived.0.1), (&derived.1.0, &derived.1.1))
     };
     let weights = parts.iter().find_map(|p| match p {
@@ -2110,6 +2173,7 @@ pub(crate) fn extrude_patch(
     points: &[[f64; 3]],
 ) -> Option<NurbsSurface> {
     let m::VectorRef::Vector(id) = axis else {
+        cx.warn("vector is a complex instance; not read".to_owned());
         return None;
     };
     let v = cx.model.vector_arena.get(id.0);
@@ -2165,6 +2229,7 @@ pub(crate) fn revolved_line_segment(
     let (center, _, _, z) = frame;
     let base = point_coords(cx, &line.pnt)?;
     let m::VectorRef::Vector(vid) = &line.dir else {
+        cx.warn("vector is a complex instance; not read".to_owned());
         return None;
     };
     let v = cx.model.vector_arena.get(vid.0);

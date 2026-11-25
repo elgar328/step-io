@@ -341,8 +341,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   complex face, bound, oriented edge, edge or vertex; a mesh group item or a
   link to a solid it cannot read; and a curve or surface `to_nurbs` cannot
   convert (a bare supertype such as `B_SPLINE_SURFACE` alone, or a `PCURVE`).
-  The warnings name the handle they concern. `MeshGroup::solid` follows a
-  shell linked through an `ORIENTED_CLOSED_SHELL`.
+  The NURBS conversions also report a complex direction or vector, a 2D or
+  degenerate placement, a complex B-spline without its B-spline part or
+  knots, and a basis or 3D curve of a kind they do not convert. The warnings
+  name the handle they concern. `MeshGroup::solid` follows a shell linked
+  through an `ORIENTED_CLOSED_SHELL`.
 - `Edge::to_nurbs` gives a closed edge whose direction is against its
   curve's (`same_sense` false) the other way round; it used to follow the
   curve. The closed curve still starts at the curve's parameter origin.
