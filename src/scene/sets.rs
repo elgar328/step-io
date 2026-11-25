@@ -73,8 +73,8 @@ impl<'m> GeometricSet<'m> {
         Some(GeometricSet { cx, which })
     }
 
-    /// A set reached as a `GEOMETRIC_ITEM_SPECIFIC_USAGE` identified item (used
-    /// by `pmi` feature geometry); `None` for an item that is not a set.
+    /// A set a feature's usage identifies (used by `pmi` feature geometry);
+    /// `None` for an item that is not a set.
     pub(crate) fn from_model_item(cx: Ctx<'m>, r: &m::GeometricModelItemRef) -> Option<Self> {
         let which = match r {
             m::GeometricModelItemRef::GeometricSet(i) => SetImpl::Set(*i),

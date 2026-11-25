@@ -4991,6 +4991,295 @@ impl CompoundItemDefinitionRef {
             }
         }
     }
+    /// The key of the entity this reference names; `None` for an
+    /// aggregate value, whose elements carry their own keys.
+    pub(crate) fn entity_key(&self) -> Option<EntityKey> {
+        match self {
+            CompoundItemDefinitionRef::AdvancedFace(i) => Some(EntityKey::AdvancedFace(*i)),
+            CompoundItemDefinitionRef::AnnotationCurveOccurrence(i) => {
+                Some(EntityKey::AnnotationCurveOccurrence(*i))
+            }
+            CompoundItemDefinitionRef::AnnotationOccurrence(i) => {
+                Some(EntityKey::AnnotationOccurrence(*i))
+            }
+            CompoundItemDefinitionRef::AnnotationPlaceholderLeaderLine(i) => {
+                Some(EntityKey::AnnotationPlaceholderLeaderLine(*i))
+            }
+            CompoundItemDefinitionRef::AnnotationPlaceholderOccurrence(i) => {
+                Some(EntityKey::AnnotationPlaceholderOccurrence(*i))
+            }
+            CompoundItemDefinitionRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => {
+                Some(EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i))
+            }
+            CompoundItemDefinitionRef::AnnotationPlane(i) => Some(EntityKey::AnnotationPlane(*i)),
+            CompoundItemDefinitionRef::AnnotationSymbolOccurrence(i) => {
+                Some(EntityKey::AnnotationSymbolOccurrence(*i))
+            }
+            CompoundItemDefinitionRef::AnnotationText(i) => Some(EntityKey::AnnotationText(*i)),
+            CompoundItemDefinitionRef::AnnotationTextCharacter(i) => {
+                Some(EntityKey::AnnotationTextCharacter(*i))
+            }
+            CompoundItemDefinitionRef::AnnotationTextOccurrence(i) => {
+                Some(EntityKey::AnnotationTextOccurrence(*i))
+            }
+            CompoundItemDefinitionRef::AnnotationToAnnotationLeaderLine(i) => {
+                Some(EntityKey::AnnotationToAnnotationLeaderLine(*i))
+            }
+            CompoundItemDefinitionRef::AnnotationToModelLeaderLine(i) => {
+                Some(EntityKey::AnnotationToModelLeaderLine(*i))
+            }
+            CompoundItemDefinitionRef::ApllPoint(i) => Some(EntityKey::ApllPoint(*i)),
+            CompoundItemDefinitionRef::ApllPointWithSurface(i) => {
+                Some(EntityKey::ApllPointWithSurface(*i))
+            }
+            CompoundItemDefinitionRef::AuxiliaryLeaderLine(i) => {
+                Some(EntityKey::AuxiliaryLeaderLine(*i))
+            }
+            CompoundItemDefinitionRef::Axis1Placement(i) => Some(EntityKey::Axis1Placement(*i)),
+            CompoundItemDefinitionRef::Axis2Placement2d(i) => Some(EntityKey::Axis2Placement2d(*i)),
+            CompoundItemDefinitionRef::Axis2Placement3d(i) => Some(EntityKey::Axis2Placement3d(*i)),
+            CompoundItemDefinitionRef::BSplineCurve(i) => Some(EntityKey::BSplineCurve(*i)),
+            CompoundItemDefinitionRef::BSplineCurveWithKnots(i) => {
+                Some(EntityKey::BSplineCurveWithKnots(*i))
+            }
+            CompoundItemDefinitionRef::BSplineSurface(i) => Some(EntityKey::BSplineSurface(*i)),
+            CompoundItemDefinitionRef::BSplineSurfaceWithKnots(i) => {
+                Some(EntityKey::BSplineSurfaceWithKnots(*i))
+            }
+            CompoundItemDefinitionRef::BezierCurve(i) => Some(EntityKey::BezierCurve(*i)),
+            CompoundItemDefinitionRef::BezierSurface(i) => Some(EntityKey::BezierSurface(*i)),
+            CompoundItemDefinitionRef::BoundedCurve(i) => Some(EntityKey::BoundedCurve(*i)),
+            CompoundItemDefinitionRef::BoundedPcurve(i) => Some(EntityKey::BoundedPcurve(*i)),
+            CompoundItemDefinitionRef::BoundedSurface(i) => Some(EntityKey::BoundedSurface(*i)),
+            CompoundItemDefinitionRef::BoundedSurfaceCurve(i) => {
+                Some(EntityKey::BoundedSurfaceCurve(*i))
+            }
+            CompoundItemDefinitionRef::BrepWithVoids(i) => Some(EntityKey::BrepWithVoids(*i)),
+            CompoundItemDefinitionRef::CameraImage(i) => Some(EntityKey::CameraImage(*i)),
+            CompoundItemDefinitionRef::CameraImage3dWithScale(i) => {
+                Some(EntityKey::CameraImage3dWithScale(*i))
+            }
+            CompoundItemDefinitionRef::CameraModel(i) => Some(EntityKey::CameraModel(*i)),
+            CompoundItemDefinitionRef::CameraModelD3(i) => Some(EntityKey::CameraModelD3(*i)),
+            CompoundItemDefinitionRef::CameraModelD3MultiClipping(i) => {
+                Some(EntityKey::CameraModelD3MultiClipping(*i))
+            }
+            CompoundItemDefinitionRef::CameraModelD3WithHlhsr(i) => {
+                Some(EntityKey::CameraModelD3WithHlhsr(*i))
+            }
+            CompoundItemDefinitionRef::CartesianPoint(i) => Some(EntityKey::CartesianPoint(*i)),
+            CompoundItemDefinitionRef::Circle(i) => Some(EntityKey::Circle(*i)),
+            CompoundItemDefinitionRef::ClosedShell(i) => Some(EntityKey::ClosedShell(*i)),
+            CompoundItemDefinitionRef::ComplexTriangulatedFace(i) => {
+                Some(EntityKey::ComplexTriangulatedFace(*i))
+            }
+            CompoundItemDefinitionRef::ComplexTriangulatedSurfaceSet(i) => {
+                Some(EntityKey::ComplexTriangulatedSurfaceSet(*i))
+            }
+            CompoundItemDefinitionRef::CompositeCurve(i) => Some(EntityKey::CompositeCurve(*i)),
+            CompoundItemDefinitionRef::CompositeText(i) => Some(EntityKey::CompositeText(*i)),
+            CompoundItemDefinitionRef::CompoundRepresentationItem(i) => {
+                Some(EntityKey::CompoundRepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::Conic(i) => Some(EntityKey::Conic(*i)),
+            CompoundItemDefinitionRef::ConicalSurface(i) => Some(EntityKey::ConicalSurface(*i)),
+            CompoundItemDefinitionRef::ConnectedFaceSet(i) => Some(EntityKey::ConnectedFaceSet(*i)),
+            CompoundItemDefinitionRef::ContextDependentOverRidingStyledItem(i) => {
+                Some(EntityKey::ContextDependentOverRidingStyledItem(*i))
+            }
+            CompoundItemDefinitionRef::CoordinatesList(i) => Some(EntityKey::CoordinatesList(*i)),
+            CompoundItemDefinitionRef::Curve(i) => Some(EntityKey::Curve(*i)),
+            CompoundItemDefinitionRef::CylindricalSurface(i) => {
+                Some(EntityKey::CylindricalSurface(*i))
+            }
+            CompoundItemDefinitionRef::DefinedCharacterGlyph(i) => {
+                Some(EntityKey::DefinedCharacterGlyph(*i))
+            }
+            CompoundItemDefinitionRef::DefinedSymbol(i) => Some(EntityKey::DefinedSymbol(*i)),
+            CompoundItemDefinitionRef::DegenerateToroidalSurface(i) => {
+                Some(EntityKey::DegenerateToroidalSurface(*i))
+            }
+            CompoundItemDefinitionRef::DescriptiveRepresentationItem(i) => {
+                Some(EntityKey::DescriptiveRepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::Direction(i) => Some(EntityKey::Direction(*i)),
+            CompoundItemDefinitionRef::DraughtingAnnotationOccurrence(i) => {
+                Some(EntityKey::DraughtingAnnotationOccurrence(*i))
+            }
+            CompoundItemDefinitionRef::DraughtingCallout(i) => {
+                Some(EntityKey::DraughtingCallout(*i))
+            }
+            CompoundItemDefinitionRef::Edge(i) => Some(EntityKey::Edge(*i)),
+            CompoundItemDefinitionRef::EdgeCurve(i) => Some(EntityKey::EdgeCurve(*i)),
+            CompoundItemDefinitionRef::EdgeLoop(i) => Some(EntityKey::EdgeLoop(*i)),
+            CompoundItemDefinitionRef::ElementarySurface(i) => {
+                Some(EntityKey::ElementarySurface(*i))
+            }
+            CompoundItemDefinitionRef::Ellipse(i) => Some(EntityKey::Ellipse(*i)),
+            CompoundItemDefinitionRef::ExternalImagePlacementInCallout(i) => {
+                Some(EntityKey::ExternalImagePlacementInCallout(*i))
+            }
+            CompoundItemDefinitionRef::ExternallyDefinedHatchStyle(i) => {
+                Some(EntityKey::ExternallyDefinedHatchStyle(*i))
+            }
+            CompoundItemDefinitionRef::ExternallyDefinedTileStyle(i) => {
+                Some(EntityKey::ExternallyDefinedTileStyle(*i))
+            }
+            CompoundItemDefinitionRef::Face(i) => Some(EntityKey::Face(*i)),
+            CompoundItemDefinitionRef::FaceBound(i) => Some(EntityKey::FaceBound(*i)),
+            CompoundItemDefinitionRef::FaceOuterBound(i) => Some(EntityKey::FaceOuterBound(*i)),
+            CompoundItemDefinitionRef::FaceSurface(i) => Some(EntityKey::FaceSurface(*i)),
+            CompoundItemDefinitionRef::FillAreaStyleHatching(i) => {
+                Some(EntityKey::FillAreaStyleHatching(*i))
+            }
+            CompoundItemDefinitionRef::FillAreaStyleTileColouredRegion(i) => {
+                Some(EntityKey::FillAreaStyleTileColouredRegion(*i))
+            }
+            CompoundItemDefinitionRef::FillAreaStyleTileCurveWithStyle(i) => {
+                Some(EntityKey::FillAreaStyleTileCurveWithStyle(*i))
+            }
+            CompoundItemDefinitionRef::FillAreaStyleTileSymbolWithStyle(i) => {
+                Some(EntityKey::FillAreaStyleTileSymbolWithStyle(*i))
+            }
+            CompoundItemDefinitionRef::FillAreaStyleTiles(i) => {
+                Some(EntityKey::FillAreaStyleTiles(*i))
+            }
+            CompoundItemDefinitionRef::GeometricCurveSet(i) => {
+                Some(EntityKey::GeometricCurveSet(*i))
+            }
+            CompoundItemDefinitionRef::GeometricRepresentationItem(i) => {
+                Some(EntityKey::GeometricRepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::GeometricSet(i) => Some(EntityKey::GeometricSet(*i)),
+            CompoundItemDefinitionRef::Hyperbola(i) => Some(EntityKey::Hyperbola(*i)),
+            CompoundItemDefinitionRef::IntegerRepresentationItem(i) => {
+                Some(EntityKey::IntegerRepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::IntersectionCurve(i) => {
+                Some(EntityKey::IntersectionCurve(*i))
+            }
+            CompoundItemDefinitionRef::LeaderCurve(i) => Some(EntityKey::LeaderCurve(*i)),
+            CompoundItemDefinitionRef::LeaderDirectedCallout(i) => {
+                Some(EntityKey::LeaderDirectedCallout(*i))
+            }
+            CompoundItemDefinitionRef::LeaderTerminator(i) => Some(EntityKey::LeaderTerminator(*i)),
+            CompoundItemDefinitionRef::Line(i) => Some(EntityKey::Line(*i)),
+            CompoundItemDefinitionRef::Loop(i) => Some(EntityKey::Loop(*i)),
+            CompoundItemDefinitionRef::ManifoldSolidBrep(i) => {
+                Some(EntityKey::ManifoldSolidBrep(*i))
+            }
+            CompoundItemDefinitionRef::MappedItem(i) => Some(EntityKey::MappedItem(*i)),
+            CompoundItemDefinitionRef::MeasureRepresentationItem(i) => {
+                Some(EntityKey::MeasureRepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::OffsetSurface(i) => Some(EntityKey::OffsetSurface(*i)),
+            CompoundItemDefinitionRef::OneDirectionRepeatFactor(i) => {
+                Some(EntityKey::OneDirectionRepeatFactor(*i))
+            }
+            CompoundItemDefinitionRef::OpenShell(i) => Some(EntityKey::OpenShell(*i)),
+            CompoundItemDefinitionRef::OrientedClosedShell(i) => {
+                Some(EntityKey::OrientedClosedShell(*i))
+            }
+            CompoundItemDefinitionRef::OrientedEdge(i) => Some(EntityKey::OrientedEdge(*i)),
+            CompoundItemDefinitionRef::OverRidingStyledItem(i) => {
+                Some(EntityKey::OverRidingStyledItem(*i))
+            }
+            CompoundItemDefinitionRef::Parabola(i) => Some(EntityKey::Parabola(*i)),
+            CompoundItemDefinitionRef::Path(i) => Some(EntityKey::Path(*i)),
+            CompoundItemDefinitionRef::Pcurve(i) => Some(EntityKey::Pcurve(*i)),
+            CompoundItemDefinitionRef::Placement(i) => Some(EntityKey::Placement(*i)),
+            CompoundItemDefinitionRef::PlanarBox(i) => Some(EntityKey::PlanarBox(*i)),
+            CompoundItemDefinitionRef::PlanarExtent(i) => Some(EntityKey::PlanarExtent(*i)),
+            CompoundItemDefinitionRef::Plane(i) => Some(EntityKey::Plane(*i)),
+            CompoundItemDefinitionRef::Point(i) => Some(EntityKey::Point(*i)),
+            CompoundItemDefinitionRef::PolyLoop(i) => Some(EntityKey::PolyLoop(*i)),
+            CompoundItemDefinitionRef::Polyline(i) => Some(EntityKey::Polyline(*i)),
+            CompoundItemDefinitionRef::QualifiedRepresentationItem(i) => {
+                Some(EntityKey::QualifiedRepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::QuasiUniformCurve(i) => {
+                Some(EntityKey::QuasiUniformCurve(*i))
+            }
+            CompoundItemDefinitionRef::QuasiUniformSurface(i) => {
+                Some(EntityKey::QuasiUniformSurface(*i))
+            }
+            CompoundItemDefinitionRef::RationalBSplineCurve(i) => {
+                Some(EntityKey::RationalBSplineCurve(*i))
+            }
+            CompoundItemDefinitionRef::RationalBSplineSurface(i) => {
+                Some(EntityKey::RationalBSplineSurface(*i))
+            }
+            CompoundItemDefinitionRef::RealRepresentationItem(i) => {
+                Some(EntityKey::RealRepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::RepositionedTessellatedItem(i) => {
+                Some(EntityKey::RepositionedTessellatedItem(*i))
+            }
+            CompoundItemDefinitionRef::RepresentationItem(i) => {
+                Some(EntityKey::RepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::SeamCurve(i) => Some(EntityKey::SeamCurve(*i)),
+            CompoundItemDefinitionRef::ShellBasedSurfaceModel(i) => {
+                Some(EntityKey::ShellBasedSurfaceModel(*i))
+            }
+            CompoundItemDefinitionRef::SolidModel(i) => Some(EntityKey::SolidModel(*i)),
+            CompoundItemDefinitionRef::SphericalSurface(i) => Some(EntityKey::SphericalSurface(*i)),
+            CompoundItemDefinitionRef::StyledItem(i) => Some(EntityKey::StyledItem(*i)),
+            CompoundItemDefinitionRef::Surface(i) => Some(EntityKey::Surface(*i)),
+            CompoundItemDefinitionRef::SurfaceCurve(i) => Some(EntityKey::SurfaceCurve(*i)),
+            CompoundItemDefinitionRef::SurfaceOfLinearExtrusion(i) => {
+                Some(EntityKey::SurfaceOfLinearExtrusion(*i))
+            }
+            CompoundItemDefinitionRef::SurfaceOfRevolution(i) => {
+                Some(EntityKey::SurfaceOfRevolution(*i))
+            }
+            CompoundItemDefinitionRef::SweptSurface(i) => Some(EntityKey::SweptSurface(*i)),
+            CompoundItemDefinitionRef::SymbolTarget(i) => Some(EntityKey::SymbolTarget(*i)),
+            CompoundItemDefinitionRef::TerminatorSymbol(i) => Some(EntityKey::TerminatorSymbol(*i)),
+            CompoundItemDefinitionRef::TessellatedAnnotationOccurrence(i) => {
+                Some(EntityKey::TessellatedAnnotationOccurrence(*i))
+            }
+            CompoundItemDefinitionRef::TessellatedCurveSet(i) => {
+                Some(EntityKey::TessellatedCurveSet(*i))
+            }
+            CompoundItemDefinitionRef::TessellatedFace(i) => Some(EntityKey::TessellatedFace(*i)),
+            CompoundItemDefinitionRef::TessellatedGeometricSet(i) => {
+                Some(EntityKey::TessellatedGeometricSet(*i))
+            }
+            CompoundItemDefinitionRef::TessellatedItem(i) => Some(EntityKey::TessellatedItem(*i)),
+            CompoundItemDefinitionRef::TessellatedShell(i) => Some(EntityKey::TessellatedShell(*i)),
+            CompoundItemDefinitionRef::TessellatedSolid(i) => Some(EntityKey::TessellatedSolid(*i)),
+            CompoundItemDefinitionRef::TessellatedStructuredItem(i) => {
+                Some(EntityKey::TessellatedStructuredItem(*i))
+            }
+            CompoundItemDefinitionRef::TessellatedSurfaceSet(i) => {
+                Some(EntityKey::TessellatedSurfaceSet(*i))
+            }
+            CompoundItemDefinitionRef::TextLiteral(i) => Some(EntityKey::TextLiteral(*i)),
+            CompoundItemDefinitionRef::TopologicalRepresentationItem(i) => {
+                Some(EntityKey::TopologicalRepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::ToroidalSurface(i) => Some(EntityKey::ToroidalSurface(*i)),
+            CompoundItemDefinitionRef::TrimmedCurve(i) => Some(EntityKey::TrimmedCurve(*i)),
+            CompoundItemDefinitionRef::TwoDirectionRepeatFactor(i) => {
+                Some(EntityKey::TwoDirectionRepeatFactor(*i))
+            }
+            CompoundItemDefinitionRef::UniformCurve(i) => Some(EntityKey::UniformCurve(*i)),
+            CompoundItemDefinitionRef::UniformSurface(i) => Some(EntityKey::UniformSurface(*i)),
+            CompoundItemDefinitionRef::ValueRepresentationItem(i) => {
+                Some(EntityKey::ValueRepresentationItem(*i))
+            }
+            CompoundItemDefinitionRef::Vector(i) => Some(EntityKey::Vector(*i)),
+            CompoundItemDefinitionRef::Vertex(i) => Some(EntityKey::Vertex(*i)),
+            CompoundItemDefinitionRef::VertexLoop(i) => Some(EntityKey::VertexLoop(*i)),
+            CompoundItemDefinitionRef::VertexPoint(i) => Some(EntityKey::VertexPoint(*i)),
+            CompoundItemDefinitionRef::VertexShell(i) => Some(EntityKey::VertexShell(*i)),
+            CompoundItemDefinitionRef::WireShell(i) => Some(EntityKey::WireShell(*i)),
+            CompoundItemDefinitionRef::ListRepresentationItem(_) => None,
+            CompoundItemDefinitionRef::SetRepresentationItem(_) => None,
+            CompoundItemDefinitionRef::Complex(i) => Some(EntityKey::ComplexEntity(*i)),
+        }
+    }
 }
 
 /// What a [`ConfigurationDesignRef`] names, borrowed from the model: the entity, or an
@@ -6747,6 +7036,19 @@ impl DatumOrCommonDatumRef {
             DatumOrCommonDatumRef::Complex(i) => {
                 DatumOrCommonDatumRefView::Complex(model.complex_entity_arena.get(i.0))
             }
+        }
+    }
+    /// The key of the entity this reference names; `None` for an
+    /// aggregate value, whose elements carry their own keys.
+    pub(crate) fn entity_key(&self) -> Option<EntityKey> {
+        match self {
+            DatumOrCommonDatumRef::CommonDatum(i) => Some(EntityKey::CommonDatum(*i)),
+            DatumOrCommonDatumRef::Datum(i) => Some(EntityKey::Datum(*i)),
+            DatumOrCommonDatumRef::DatumReferenceElement(i) => {
+                Some(EntityKey::DatumReferenceElement(*i))
+            }
+            DatumOrCommonDatumRef::CommonDatumList(_) => None,
+            DatumOrCommonDatumRef::Complex(i) => Some(EntityKey::ComplexEntity(*i)),
         }
     }
 }
@@ -16734,6 +17036,163 @@ impl ItemIdentifiedRepresentationUsageSelectRef {
             ItemIdentifiedRepresentationUsageSelectRef::Complex(i) => ItemIdentifiedRepresentationUsageSelectRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names; `None` for an
+    /// aggregate value, whose elements carry their own keys.
+    pub(crate) fn entity_key(&self) -> Option<EntityKey> {
+        match self {
+            ItemIdentifiedRepresentationUsageSelectRef::AdvancedFace(i) => Some(EntityKey::AdvancedFace(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationCurveOccurrence(i) => Some(EntityKey::AnnotationCurveOccurrence(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationOccurrence(i) => Some(EntityKey::AnnotationOccurrence(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderLeaderLine(i) => Some(EntityKey::AnnotationPlaceholderLeaderLine(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderOccurrence(i) => Some(EntityKey::AnnotationPlaceholderOccurrence(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => Some(EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationPlane(i) => Some(EntityKey::AnnotationPlane(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationSymbolOccurrence(i) => Some(EntityKey::AnnotationSymbolOccurrence(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationText(i) => Some(EntityKey::AnnotationText(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationTextCharacter(i) => Some(EntityKey::AnnotationTextCharacter(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationTextOccurrence(i) => Some(EntityKey::AnnotationTextOccurrence(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationToAnnotationLeaderLine(i) => Some(EntityKey::AnnotationToAnnotationLeaderLine(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AnnotationToModelLeaderLine(i) => Some(EntityKey::AnnotationToModelLeaderLine(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ApllPoint(i) => Some(EntityKey::ApllPoint(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ApllPointWithSurface(i) => Some(EntityKey::ApllPointWithSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::AuxiliaryLeaderLine(i) => Some(EntityKey::AuxiliaryLeaderLine(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Axis1Placement(i) => Some(EntityKey::Axis1Placement(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Axis2Placement2d(i) => Some(EntityKey::Axis2Placement2d(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Axis2Placement3d(i) => Some(EntityKey::Axis2Placement3d(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BSplineCurve(i) => Some(EntityKey::BSplineCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BSplineCurveWithKnots(i) => Some(EntityKey::BSplineCurveWithKnots(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BSplineSurface(i) => Some(EntityKey::BSplineSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BSplineSurfaceWithKnots(i) => Some(EntityKey::BSplineSurfaceWithKnots(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BezierCurve(i) => Some(EntityKey::BezierCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BezierSurface(i) => Some(EntityKey::BezierSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BoundedCurve(i) => Some(EntityKey::BoundedCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BoundedPcurve(i) => Some(EntityKey::BoundedPcurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BoundedSurface(i) => Some(EntityKey::BoundedSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BoundedSurfaceCurve(i) => Some(EntityKey::BoundedSurfaceCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::BrepWithVoids(i) => Some(EntityKey::BrepWithVoids(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraImage(i) => Some(EntityKey::CameraImage(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraImage3dWithScale(i) => Some(EntityKey::CameraImage3dWithScale(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraModel(i) => Some(EntityKey::CameraModel(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3(i) => Some(EntityKey::CameraModelD3(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3MultiClipping(i) => Some(EntityKey::CameraModelD3MultiClipping(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CameraModelD3WithHlhsr(i) => Some(EntityKey::CameraModelD3WithHlhsr(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CartesianPoint(i) => Some(EntityKey::CartesianPoint(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Circle(i) => Some(EntityKey::Circle(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ClosedShell(i) => Some(EntityKey::ClosedShell(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ComplexTriangulatedFace(i) => Some(EntityKey::ComplexTriangulatedFace(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ComplexTriangulatedSurfaceSet(i) => Some(EntityKey::ComplexTriangulatedSurfaceSet(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CompositeCurve(i) => Some(EntityKey::CompositeCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CompositeText(i) => Some(EntityKey::CompositeText(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CompoundRepresentationItem(i) => Some(EntityKey::CompoundRepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Conic(i) => Some(EntityKey::Conic(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ConicalSurface(i) => Some(EntityKey::ConicalSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ConnectedFaceSet(i) => Some(EntityKey::ConnectedFaceSet(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ContextDependentOverRidingStyledItem(i) => Some(EntityKey::ContextDependentOverRidingStyledItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CoordinatesList(i) => Some(EntityKey::CoordinatesList(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Curve(i) => Some(EntityKey::Curve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::CylindricalSurface(i) => Some(EntityKey::CylindricalSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::DefinedCharacterGlyph(i) => Some(EntityKey::DefinedCharacterGlyph(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::DefinedSymbol(i) => Some(EntityKey::DefinedSymbol(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::DegenerateToroidalSurface(i) => Some(EntityKey::DegenerateToroidalSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::DescriptiveRepresentationItem(i) => Some(EntityKey::DescriptiveRepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Direction(i) => Some(EntityKey::Direction(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::DraughtingAnnotationOccurrence(i) => Some(EntityKey::DraughtingAnnotationOccurrence(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::DraughtingCallout(i) => Some(EntityKey::DraughtingCallout(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Edge(i) => Some(EntityKey::Edge(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::EdgeCurve(i) => Some(EntityKey::EdgeCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::EdgeLoop(i) => Some(EntityKey::EdgeLoop(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ElementarySurface(i) => Some(EntityKey::ElementarySurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Ellipse(i) => Some(EntityKey::Ellipse(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ExternalImagePlacementInCallout(i) => Some(EntityKey::ExternalImagePlacementInCallout(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ExternallyDefinedHatchStyle(i) => Some(EntityKey::ExternallyDefinedHatchStyle(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ExternallyDefinedTileStyle(i) => Some(EntityKey::ExternallyDefinedTileStyle(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Face(i) => Some(EntityKey::Face(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::FaceBound(i) => Some(EntityKey::FaceBound(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::FaceOuterBound(i) => Some(EntityKey::FaceOuterBound(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::FaceSurface(i) => Some(EntityKey::FaceSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleHatching(i) => Some(EntityKey::FillAreaStyleHatching(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTileColouredRegion(i) => Some(EntityKey::FillAreaStyleTileColouredRegion(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTileCurveWithStyle(i) => Some(EntityKey::FillAreaStyleTileCurveWithStyle(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTileSymbolWithStyle(i) => Some(EntityKey::FillAreaStyleTileSymbolWithStyle(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::FillAreaStyleTiles(i) => Some(EntityKey::FillAreaStyleTiles(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::GeometricCurveSet(i) => Some(EntityKey::GeometricCurveSet(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::GeometricRepresentationItem(i) => Some(EntityKey::GeometricRepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::GeometricSet(i) => Some(EntityKey::GeometricSet(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Hyperbola(i) => Some(EntityKey::Hyperbola(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::IntegerRepresentationItem(i) => Some(EntityKey::IntegerRepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::IntersectionCurve(i) => Some(EntityKey::IntersectionCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::LeaderCurve(i) => Some(EntityKey::LeaderCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::LeaderDirectedCallout(i) => Some(EntityKey::LeaderDirectedCallout(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::LeaderTerminator(i) => Some(EntityKey::LeaderTerminator(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Line(i) => Some(EntityKey::Line(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Loop(i) => Some(EntityKey::Loop(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ManifoldSolidBrep(i) => Some(EntityKey::ManifoldSolidBrep(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::MappedItem(i) => Some(EntityKey::MappedItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::MeasureRepresentationItem(i) => Some(EntityKey::MeasureRepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::OffsetSurface(i) => Some(EntityKey::OffsetSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::OneDirectionRepeatFactor(i) => Some(EntityKey::OneDirectionRepeatFactor(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::OpenShell(i) => Some(EntityKey::OpenShell(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::OrientedClosedShell(i) => Some(EntityKey::OrientedClosedShell(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::OrientedEdge(i) => Some(EntityKey::OrientedEdge(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::OverRidingStyledItem(i) => Some(EntityKey::OverRidingStyledItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Parabola(i) => Some(EntityKey::Parabola(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Path(i) => Some(EntityKey::Path(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Pcurve(i) => Some(EntityKey::Pcurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Placement(i) => Some(EntityKey::Placement(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::PlanarBox(i) => Some(EntityKey::PlanarBox(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::PlanarExtent(i) => Some(EntityKey::PlanarExtent(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Plane(i) => Some(EntityKey::Plane(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Point(i) => Some(EntityKey::Point(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::PolyLoop(i) => Some(EntityKey::PolyLoop(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Polyline(i) => Some(EntityKey::Polyline(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::QualifiedRepresentationItem(i) => Some(EntityKey::QualifiedRepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::QuasiUniformCurve(i) => Some(EntityKey::QuasiUniformCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::QuasiUniformSurface(i) => Some(EntityKey::QuasiUniformSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::RationalBSplineCurve(i) => Some(EntityKey::RationalBSplineCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::RationalBSplineSurface(i) => Some(EntityKey::RationalBSplineSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::RealRepresentationItem(i) => Some(EntityKey::RealRepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::RepositionedTessellatedItem(i) => Some(EntityKey::RepositionedTessellatedItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::RepresentationItem(i) => Some(EntityKey::RepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::SeamCurve(i) => Some(EntityKey::SeamCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ShellBasedSurfaceModel(i) => Some(EntityKey::ShellBasedSurfaceModel(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::SolidModel(i) => Some(EntityKey::SolidModel(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::SphericalSurface(i) => Some(EntityKey::SphericalSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::StyledItem(i) => Some(EntityKey::StyledItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Surface(i) => Some(EntityKey::Surface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::SurfaceCurve(i) => Some(EntityKey::SurfaceCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::SurfaceOfLinearExtrusion(i) => Some(EntityKey::SurfaceOfLinearExtrusion(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::SurfaceOfRevolution(i) => Some(EntityKey::SurfaceOfRevolution(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::SweptSurface(i) => Some(EntityKey::SweptSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::SymbolTarget(i) => Some(EntityKey::SymbolTarget(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TerminatorSymbol(i) => Some(EntityKey::TerminatorSymbol(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedAnnotationOccurrence(i) => Some(EntityKey::TessellatedAnnotationOccurrence(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedCurveSet(i) => Some(EntityKey::TessellatedCurveSet(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedFace(i) => Some(EntityKey::TessellatedFace(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedGeometricSet(i) => Some(EntityKey::TessellatedGeometricSet(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedItem(i) => Some(EntityKey::TessellatedItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedShell(i) => Some(EntityKey::TessellatedShell(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedSolid(i) => Some(EntityKey::TessellatedSolid(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedStructuredItem(i) => Some(EntityKey::TessellatedStructuredItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TessellatedSurfaceSet(i) => Some(EntityKey::TessellatedSurfaceSet(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TextLiteral(i) => Some(EntityKey::TextLiteral(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TopologicalRepresentationItem(i) => Some(EntityKey::TopologicalRepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ToroidalSurface(i) => Some(EntityKey::ToroidalSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TrimmedCurve(i) => Some(EntityKey::TrimmedCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::TwoDirectionRepeatFactor(i) => Some(EntityKey::TwoDirectionRepeatFactor(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::UniformCurve(i) => Some(EntityKey::UniformCurve(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::UniformSurface(i) => Some(EntityKey::UniformSurface(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ValueRepresentationItem(i) => Some(EntityKey::ValueRepresentationItem(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Vector(i) => Some(EntityKey::Vector(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::Vertex(i) => Some(EntityKey::Vertex(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::VertexLoop(i) => Some(EntityKey::VertexLoop(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::VertexPoint(i) => Some(EntityKey::VertexPoint(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::VertexShell(i) => Some(EntityKey::VertexShell(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::WireShell(i) => Some(EntityKey::WireShell(*i)),
+            ItemIdentifiedRepresentationUsageSelectRef::ListRepresentationItem(_) => None,
+            ItemIdentifiedRepresentationUsageSelectRef::SetRepresentationItem(_) => None,
+            ItemIdentifiedRepresentationUsageSelectRef::Complex(i) => Some(EntityKey::ComplexEntity(*i)),
+        }
+    }
 }
 
 /// What a [`LayeredItemRef`] names, borrowed from the model: the entity, or an
@@ -24579,6 +25038,183 @@ impl StyledItemTargetOrRepresentationItemRef {
             StyledItemTargetOrRepresentationItemRef::Complex(i) => StyledItemTargetOrRepresentationItemRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names; `None` for an
+    /// aggregate value, whose elements carry their own keys.
+    pub(crate) fn entity_key(&self) -> Option<EntityKey> {
+        match self {
+            StyledItemTargetOrRepresentationItemRef::AdvancedBrepShapeRepresentation(i) => Some(EntityKey::AdvancedBrepShapeRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::AdvancedFace(i) => Some(EntityKey::AdvancedFace(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationCurveOccurrence(i) => Some(EntityKey::AnnotationCurveOccurrence(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationOccurrence(i) => Some(EntityKey::AnnotationOccurrence(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderLeaderLine(i) => Some(EntityKey::AnnotationPlaceholderLeaderLine(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderOccurrence(i) => Some(EntityKey::AnnotationPlaceholderOccurrence(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationPlaceholderOccurrenceWithLeaderLine(i) => Some(EntityKey::AnnotationPlaceholderOccurrenceWithLeaderLine(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationPlane(i) => Some(EntityKey::AnnotationPlane(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationSymbolOccurrence(i) => Some(EntityKey::AnnotationSymbolOccurrence(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationText(i) => Some(EntityKey::AnnotationText(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationTextCharacter(i) => Some(EntityKey::AnnotationTextCharacter(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationTextOccurrence(i) => Some(EntityKey::AnnotationTextOccurrence(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationToAnnotationLeaderLine(i) => Some(EntityKey::AnnotationToAnnotationLeaderLine(*i)),
+            StyledItemTargetOrRepresentationItemRef::AnnotationToModelLeaderLine(i) => Some(EntityKey::AnnotationToModelLeaderLine(*i)),
+            StyledItemTargetOrRepresentationItemRef::ApllPoint(i) => Some(EntityKey::ApllPoint(*i)),
+            StyledItemTargetOrRepresentationItemRef::ApllPointWithSurface(i) => Some(EntityKey::ApllPointWithSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::AuxiliaryLeaderLine(i) => Some(EntityKey::AuxiliaryLeaderLine(*i)),
+            StyledItemTargetOrRepresentationItemRef::Axis1Placement(i) => Some(EntityKey::Axis1Placement(*i)),
+            StyledItemTargetOrRepresentationItemRef::Axis2Placement2d(i) => Some(EntityKey::Axis2Placement2d(*i)),
+            StyledItemTargetOrRepresentationItemRef::Axis2Placement3d(i) => Some(EntityKey::Axis2Placement3d(*i)),
+            StyledItemTargetOrRepresentationItemRef::BSplineCurve(i) => Some(EntityKey::BSplineCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::BSplineCurveWithKnots(i) => Some(EntityKey::BSplineCurveWithKnots(*i)),
+            StyledItemTargetOrRepresentationItemRef::BSplineSurface(i) => Some(EntityKey::BSplineSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::BSplineSurfaceWithKnots(i) => Some(EntityKey::BSplineSurfaceWithKnots(*i)),
+            StyledItemTargetOrRepresentationItemRef::BezierCurve(i) => Some(EntityKey::BezierCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::BezierSurface(i) => Some(EntityKey::BezierSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::BoundedCurve(i) => Some(EntityKey::BoundedCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::BoundedPcurve(i) => Some(EntityKey::BoundedPcurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::BoundedSurface(i) => Some(EntityKey::BoundedSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::BoundedSurfaceCurve(i) => Some(EntityKey::BoundedSurfaceCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::BrepWithVoids(i) => Some(EntityKey::BrepWithVoids(*i)),
+            StyledItemTargetOrRepresentationItemRef::CameraImage(i) => Some(EntityKey::CameraImage(*i)),
+            StyledItemTargetOrRepresentationItemRef::CameraImage3dWithScale(i) => Some(EntityKey::CameraImage3dWithScale(*i)),
+            StyledItemTargetOrRepresentationItemRef::CameraModel(i) => Some(EntityKey::CameraModel(*i)),
+            StyledItemTargetOrRepresentationItemRef::CameraModelD3(i) => Some(EntityKey::CameraModelD3(*i)),
+            StyledItemTargetOrRepresentationItemRef::CameraModelD3MultiClipping(i) => Some(EntityKey::CameraModelD3MultiClipping(*i)),
+            StyledItemTargetOrRepresentationItemRef::CameraModelD3WithHlhsr(i) => Some(EntityKey::CameraModelD3WithHlhsr(*i)),
+            StyledItemTargetOrRepresentationItemRef::CartesianPoint(i) => Some(EntityKey::CartesianPoint(*i)),
+            StyledItemTargetOrRepresentationItemRef::CharacterizedRepresentation(i) => Some(EntityKey::CharacterizedRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::Circle(i) => Some(EntityKey::Circle(*i)),
+            StyledItemTargetOrRepresentationItemRef::ClosedShell(i) => Some(EntityKey::ClosedShell(*i)),
+            StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedFace(i) => Some(EntityKey::ComplexTriangulatedFace(*i)),
+            StyledItemTargetOrRepresentationItemRef::ComplexTriangulatedSurfaceSet(i) => Some(EntityKey::ComplexTriangulatedSurfaceSet(*i)),
+            StyledItemTargetOrRepresentationItemRef::CompositeCurve(i) => Some(EntityKey::CompositeCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::CompositeText(i) => Some(EntityKey::CompositeText(*i)),
+            StyledItemTargetOrRepresentationItemRef::CompoundRepresentationItem(i) => Some(EntityKey::CompoundRepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::Conic(i) => Some(EntityKey::Conic(*i)),
+            StyledItemTargetOrRepresentationItemRef::ConicalSurface(i) => Some(EntityKey::ConicalSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::ConnectedFaceSet(i) => Some(EntityKey::ConnectedFaceSet(*i)),
+            StyledItemTargetOrRepresentationItemRef::ConstructiveGeometryRepresentation(i) => Some(EntityKey::ConstructiveGeometryRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::ContextDependentOverRidingStyledItem(i) => Some(EntityKey::ContextDependentOverRidingStyledItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::CoordinatesList(i) => Some(EntityKey::CoordinatesList(*i)),
+            StyledItemTargetOrRepresentationItemRef::Curve(i) => Some(EntityKey::Curve(*i)),
+            StyledItemTargetOrRepresentationItemRef::CylindricalSurface(i) => Some(EntityKey::CylindricalSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::DefinedCharacterGlyph(i) => Some(EntityKey::DefinedCharacterGlyph(*i)),
+            StyledItemTargetOrRepresentationItemRef::DefinedSymbol(i) => Some(EntityKey::DefinedSymbol(*i)),
+            StyledItemTargetOrRepresentationItemRef::DefinitionalRepresentation(i) => Some(EntityKey::DefinitionalRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::DegenerateToroidalSurface(i) => Some(EntityKey::DegenerateToroidalSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::DescriptiveRepresentationItem(i) => Some(EntityKey::DescriptiveRepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::Direction(i) => Some(EntityKey::Direction(*i)),
+            StyledItemTargetOrRepresentationItemRef::DraughtingAnnotationOccurrence(i) => Some(EntityKey::DraughtingAnnotationOccurrence(*i)),
+            StyledItemTargetOrRepresentationItemRef::DraughtingCallout(i) => Some(EntityKey::DraughtingCallout(*i)),
+            StyledItemTargetOrRepresentationItemRef::DraughtingModel(i) => Some(EntityKey::DraughtingModel(*i)),
+            StyledItemTargetOrRepresentationItemRef::Edge(i) => Some(EntityKey::Edge(*i)),
+            StyledItemTargetOrRepresentationItemRef::EdgeCurve(i) => Some(EntityKey::EdgeCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::EdgeLoop(i) => Some(EntityKey::EdgeLoop(*i)),
+            StyledItemTargetOrRepresentationItemRef::ElementarySurface(i) => Some(EntityKey::ElementarySurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::Ellipse(i) => Some(EntityKey::Ellipse(*i)),
+            StyledItemTargetOrRepresentationItemRef::ExternalImagePlacementInCallout(i) => Some(EntityKey::ExternalImagePlacementInCallout(*i)),
+            StyledItemTargetOrRepresentationItemRef::ExternallyDefinedHatchStyle(i) => Some(EntityKey::ExternallyDefinedHatchStyle(*i)),
+            StyledItemTargetOrRepresentationItemRef::ExternallyDefinedTileStyle(i) => Some(EntityKey::ExternallyDefinedTileStyle(*i)),
+            StyledItemTargetOrRepresentationItemRef::Face(i) => Some(EntityKey::Face(*i)),
+            StyledItemTargetOrRepresentationItemRef::FaceBound(i) => Some(EntityKey::FaceBound(*i)),
+            StyledItemTargetOrRepresentationItemRef::FaceOuterBound(i) => Some(EntityKey::FaceOuterBound(*i)),
+            StyledItemTargetOrRepresentationItemRef::FaceSurface(i) => Some(EntityKey::FaceSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::FillAreaStyleHatching(i) => Some(EntityKey::FillAreaStyleHatching(*i)),
+            StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileColouredRegion(i) => Some(EntityKey::FillAreaStyleTileColouredRegion(*i)),
+            StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileCurveWithStyle(i) => Some(EntityKey::FillAreaStyleTileCurveWithStyle(*i)),
+            StyledItemTargetOrRepresentationItemRef::FillAreaStyleTileSymbolWithStyle(i) => Some(EntityKey::FillAreaStyleTileSymbolWithStyle(*i)),
+            StyledItemTargetOrRepresentationItemRef::FillAreaStyleTiles(i) => Some(EntityKey::FillAreaStyleTiles(*i)),
+            StyledItemTargetOrRepresentationItemRef::GeometricCurveSet(i) => Some(EntityKey::GeometricCurveSet(*i)),
+            StyledItemTargetOrRepresentationItemRef::GeometricRepresentationItem(i) => Some(EntityKey::GeometricRepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::GeometricSet(i) => Some(EntityKey::GeometricSet(*i)),
+            StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedSurfaceShapeRepresentation(i) => Some(EntityKey::GeometricallyBoundedSurfaceShapeRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::GeometricallyBoundedWireframeShapeRepresentation(i) => Some(EntityKey::GeometricallyBoundedWireframeShapeRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::Hyperbola(i) => Some(EntityKey::Hyperbola(*i)),
+            StyledItemTargetOrRepresentationItemRef::IntegerRepresentationItem(i) => Some(EntityKey::IntegerRepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::IntersectionCurve(i) => Some(EntityKey::IntersectionCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::LeaderCurve(i) => Some(EntityKey::LeaderCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::LeaderDirectedCallout(i) => Some(EntityKey::LeaderDirectedCallout(*i)),
+            StyledItemTargetOrRepresentationItemRef::LeaderTerminator(i) => Some(EntityKey::LeaderTerminator(*i)),
+            StyledItemTargetOrRepresentationItemRef::Line(i) => Some(EntityKey::Line(*i)),
+            StyledItemTargetOrRepresentationItemRef::Loop(i) => Some(EntityKey::Loop(*i)),
+            StyledItemTargetOrRepresentationItemRef::ManifoldSolidBrep(i) => Some(EntityKey::ManifoldSolidBrep(*i)),
+            StyledItemTargetOrRepresentationItemRef::ManifoldSurfaceShapeRepresentation(i) => Some(EntityKey::ManifoldSurfaceShapeRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::MappedItem(i) => Some(EntityKey::MappedItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::MeasureRepresentationItem(i) => Some(EntityKey::MeasureRepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::MechanicalDesignGeometricPresentationRepresentation(i) => Some(EntityKey::MechanicalDesignGeometricPresentationRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::MechanicalDesignPresentationRepresentationWithDraughting(i) => Some(EntityKey::MechanicalDesignPresentationRepresentationWithDraughting(*i)),
+            StyledItemTargetOrRepresentationItemRef::MechanicalDesignShadedPresentationRepresentation(i) => Some(EntityKey::MechanicalDesignShadedPresentationRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::OffsetSurface(i) => Some(EntityKey::OffsetSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::OneDirectionRepeatFactor(i) => Some(EntityKey::OneDirectionRepeatFactor(*i)),
+            StyledItemTargetOrRepresentationItemRef::OpenShell(i) => Some(EntityKey::OpenShell(*i)),
+            StyledItemTargetOrRepresentationItemRef::OrientedClosedShell(i) => Some(EntityKey::OrientedClosedShell(*i)),
+            StyledItemTargetOrRepresentationItemRef::OrientedEdge(i) => Some(EntityKey::OrientedEdge(*i)),
+            StyledItemTargetOrRepresentationItemRef::OverRidingStyledItem(i) => Some(EntityKey::OverRidingStyledItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::Parabola(i) => Some(EntityKey::Parabola(*i)),
+            StyledItemTargetOrRepresentationItemRef::Path(i) => Some(EntityKey::Path(*i)),
+            StyledItemTargetOrRepresentationItemRef::Pcurve(i) => Some(EntityKey::Pcurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::Placement(i) => Some(EntityKey::Placement(*i)),
+            StyledItemTargetOrRepresentationItemRef::PlanarBox(i) => Some(EntityKey::PlanarBox(*i)),
+            StyledItemTargetOrRepresentationItemRef::PlanarExtent(i) => Some(EntityKey::PlanarExtent(*i)),
+            StyledItemTargetOrRepresentationItemRef::Plane(i) => Some(EntityKey::Plane(*i)),
+            StyledItemTargetOrRepresentationItemRef::Point(i) => Some(EntityKey::Point(*i)),
+            StyledItemTargetOrRepresentationItemRef::PolyLoop(i) => Some(EntityKey::PolyLoop(*i)),
+            StyledItemTargetOrRepresentationItemRef::Polyline(i) => Some(EntityKey::Polyline(*i)),
+            StyledItemTargetOrRepresentationItemRef::PresentationArea(i) => Some(EntityKey::PresentationArea(*i)),
+            StyledItemTargetOrRepresentationItemRef::PresentationRepresentation(i) => Some(EntityKey::PresentationRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::PresentationView(i) => Some(EntityKey::PresentationView(*i)),
+            StyledItemTargetOrRepresentationItemRef::QualifiedRepresentationItem(i) => Some(EntityKey::QualifiedRepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::QuasiUniformCurve(i) => Some(EntityKey::QuasiUniformCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::QuasiUniformSurface(i) => Some(EntityKey::QuasiUniformSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::RationalBSplineCurve(i) => Some(EntityKey::RationalBSplineCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::RationalBSplineSurface(i) => Some(EntityKey::RationalBSplineSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::RealRepresentationItem(i) => Some(EntityKey::RealRepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::RepositionedTessellatedItem(i) => Some(EntityKey::RepositionedTessellatedItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::Representation(i) => Some(EntityKey::Representation(*i)),
+            StyledItemTargetOrRepresentationItemRef::RepresentationItem(i) => Some(EntityKey::RepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::RepresentationReference(i) => Some(EntityKey::RepresentationReference(*i)),
+            StyledItemTargetOrRepresentationItemRef::SeamCurve(i) => Some(EntityKey::SeamCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::ShapeDimensionRepresentation(i) => Some(EntityKey::ShapeDimensionRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::ShapeRepresentation(i) => Some(EntityKey::ShapeRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::ShapeRepresentationWithParameters(i) => Some(EntityKey::ShapeRepresentationWithParameters(*i)),
+            StyledItemTargetOrRepresentationItemRef::ShellBasedSurfaceModel(i) => Some(EntityKey::ShellBasedSurfaceModel(*i)),
+            StyledItemTargetOrRepresentationItemRef::SolidModel(i) => Some(EntityKey::SolidModel(*i)),
+            StyledItemTargetOrRepresentationItemRef::SphericalSurface(i) => Some(EntityKey::SphericalSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::StyledItem(i) => Some(EntityKey::StyledItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::Surface(i) => Some(EntityKey::Surface(*i)),
+            StyledItemTargetOrRepresentationItemRef::SurfaceCurve(i) => Some(EntityKey::SurfaceCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::SurfaceOfLinearExtrusion(i) => Some(EntityKey::SurfaceOfLinearExtrusion(*i)),
+            StyledItemTargetOrRepresentationItemRef::SurfaceOfRevolution(i) => Some(EntityKey::SurfaceOfRevolution(*i)),
+            StyledItemTargetOrRepresentationItemRef::SweptSurface(i) => Some(EntityKey::SweptSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::SymbolRepresentation(i) => Some(EntityKey::SymbolRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::SymbolTarget(i) => Some(EntityKey::SymbolTarget(*i)),
+            StyledItemTargetOrRepresentationItemRef::TerminatorSymbol(i) => Some(EntityKey::TerminatorSymbol(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedAnnotationOccurrence(i) => Some(EntityKey::TessellatedAnnotationOccurrence(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedCurveSet(i) => Some(EntityKey::TessellatedCurveSet(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedFace(i) => Some(EntityKey::TessellatedFace(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedGeometricSet(i) => Some(EntityKey::TessellatedGeometricSet(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedItem(i) => Some(EntityKey::TessellatedItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedShapeRepresentation(i) => Some(EntityKey::TessellatedShapeRepresentation(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedShell(i) => Some(EntityKey::TessellatedShell(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedSolid(i) => Some(EntityKey::TessellatedSolid(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedStructuredItem(i) => Some(EntityKey::TessellatedStructuredItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::TessellatedSurfaceSet(i) => Some(EntityKey::TessellatedSurfaceSet(*i)),
+            StyledItemTargetOrRepresentationItemRef::TextLiteral(i) => Some(EntityKey::TextLiteral(*i)),
+            StyledItemTargetOrRepresentationItemRef::TopologicalRepresentationItem(i) => Some(EntityKey::TopologicalRepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::ToroidalSurface(i) => Some(EntityKey::ToroidalSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::TrimmedCurve(i) => Some(EntityKey::TrimmedCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::TwoDirectionRepeatFactor(i) => Some(EntityKey::TwoDirectionRepeatFactor(*i)),
+            StyledItemTargetOrRepresentationItemRef::UniformCurve(i) => Some(EntityKey::UniformCurve(*i)),
+            StyledItemTargetOrRepresentationItemRef::UniformSurface(i) => Some(EntityKey::UniformSurface(*i)),
+            StyledItemTargetOrRepresentationItemRef::ValueRepresentationItem(i) => Some(EntityKey::ValueRepresentationItem(*i)),
+            StyledItemTargetOrRepresentationItemRef::Vector(i) => Some(EntityKey::Vector(*i)),
+            StyledItemTargetOrRepresentationItemRef::Vertex(i) => Some(EntityKey::Vertex(*i)),
+            StyledItemTargetOrRepresentationItemRef::VertexLoop(i) => Some(EntityKey::VertexLoop(*i)),
+            StyledItemTargetOrRepresentationItemRef::VertexPoint(i) => Some(EntityKey::VertexPoint(*i)),
+            StyledItemTargetOrRepresentationItemRef::VertexShell(i) => Some(EntityKey::VertexShell(*i)),
+            StyledItemTargetOrRepresentationItemRef::WireShell(i) => Some(EntityKey::WireShell(*i)),
+            StyledItemTargetOrRepresentationItemRef::SetRepresentationItem(_) => None,
+            StyledItemTargetOrRepresentationItemRef::Complex(i) => Some(EntityKey::ComplexEntity(*i)),
+        }
+    }
 }
 
 /// What a [`SupportedItemRef`] names, borrowed from the model: the entity, or an
@@ -25725,6 +26361,21 @@ impl TransformationRef {
             TransformationRef::Complex(i) => {
                 TransformationRefView::Complex(model.complex_entity_arena.get(i.0))
             }
+        }
+    }
+    /// The key of the entity this reference names; `None` for an
+    /// aggregate value, whose elements carry their own keys.
+    pub(crate) fn entity_key(&self) -> Option<EntityKey> {
+        match self {
+            TransformationRef::FunctionallyDefinedTransformation(i) => {
+                Some(EntityKey::FunctionallyDefinedTransformation(*i))
+            }
+            TransformationRef::ItemDefinedTransformation(i) => {
+                Some(EntityKey::ItemDefinedTransformation(*i))
+            }
+            TransformationRef::SetItemDefinedTransformation(_) => None,
+            TransformationRef::ListItemDefinedTransformation(_) => None,
+            TransformationRef::Complex(i) => Some(EntityKey::ComplexEntity(*i)),
         }
     }
 }

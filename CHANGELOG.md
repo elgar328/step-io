@@ -255,7 +255,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on the shape aspects that plain `SHAPE_ASPECT_RELATIONSHIP`s name as its
   components, and on theirs in turn. Such features used to give nothing. A
   `DATUM` at the other end of a relationship is not a component, and each
-  item comes once even when several usages designate it.
+  item comes once even when several usages designate it. Any feature also
+  gives the items a plain `ITEM_IDENTIFIED_REPRESENTATION_USAGE` names, each
+  item of a `SET_REPRESENTATION_ITEM` or `LIST_REPRESENTATION_ITEM` among
+  them, as some of NIST's AP242 test files link a feature to its faces.
 - Attributes that every STEP edition narrows with a redeclaration
   (`SELF\supertype.attribute : narrower;`) now have the narrower type in the
   model, so both reading and `Ap242Author` take only what the schema allows

@@ -1258,8 +1258,8 @@ pub enum CurveKind<'m> {
 
 // The curve reference is one id per curve subtype. An id-based cursor (like
 // `Face`) keeps `Curve` `Copy` and lets it be built from an arena id — needed to
-// reach a curve through a feature's `GEOMETRIC_ITEM_SPECIFIC_USAGE`, where only
-// the id is available. This table generates the cursor enum, `key`, and the two
+// reach a curve a feature's usage (GISU or IIRU) identifies, where only the id
+// is available. This table generates the cursor enum, `key`, and the two
 // constructors; `kind` is hand-written below.
 macro_rules! curve_impl {
     ($( $V:ident, $id:ident );+ $(;)?) => {
@@ -1302,8 +1302,8 @@ macro_rules! curve_impl {
                 Some(Curve { cx, which })
             }
 
-            /// A curve reached as a `GEOMETRIC_ITEM_SPECIFIC_USAGE` identified item
-            /// (used by `pmi` feature geometry); `None` for a non-curve item.
+            /// A curve a feature's usage identifies (used by `pmi` feature
+            /// geometry); `None` for a non-curve item.
             pub(crate) fn from_model_item(
                 cx: Ctx<'m>,
                 r: &m::GeometricModelItemRef,

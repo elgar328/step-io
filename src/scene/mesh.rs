@@ -196,8 +196,8 @@ impl<'m> Mesh<'m> {
         crate::scene::presentation::is_visible(self.cx, self.key())
     }
 
-    /// A mesh reached as a `GEOMETRIC_ITEM_SPECIFIC_USAGE` identified item (used
-    /// by `pmi` feature geometry); `None` for an item that is not a mesh.
+    /// A mesh a feature's usage identifies (used by `pmi` feature geometry);
+    /// `None` for an item that is not a mesh.
     pub(crate) fn from_model_item(cx: Ctx<'m>, r: &m::GeometricModelItemRef) -> Option<Self> {
         let which = match r {
             m::GeometricModelItemRef::ComplexTriangulatedFace(i) => MeshImpl::ComplexFace(*i),

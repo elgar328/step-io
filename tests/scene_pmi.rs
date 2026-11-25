@@ -421,6 +421,53 @@ fn composite_and_datum_features_give_their_components_geometry() {
     assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
 }
 
+// Features linked to their geometry by a plain ITEM_IDENTIFIED_REPRESENTATION_USAGE
+// naming a set of items, as some of NIST's AP242 test files write them: a
+// datum feature on the face and the edge, and a group whose component aspect
+// is on the face. The aspect also has a GISU on the face, in a second
+// representation that holds the face too.
+const IIRU_FEATURES: &str = "\
+#38=SHAPE_REPRESENTATION('',(#35),#36);\n\
+#50=DATUM_FEATURE('df','',#13,.T.);\n\
+#51=DATUM('datum a','',#13,.T.,'A');\n\
+#52=SHAPE_ASPECT_RELATIONSHIP('','',#50,#51);\n\
+#53=ITEM_IDENTIFIED_REPRESENTATION_USAGE('','',#50,#37,SET_REPRESENTATION_ITEM((#35,#31)));\n\
+#70=COMPOSITE_GROUP_SHAPE_ASPECT('grp','',#13,.T.);\n\
+#72=SHAPE_ASPECT('a','',#13,.T.);\n\
+#73=SHAPE_ASPECT_RELATIONSHIP('','',#70,#72);\n\
+#74=ITEM_IDENTIFIED_REPRESENTATION_USAGE('','',#72,#37,SET_REPRESENTATION_ITEM((#35)));\n\
+#75=GEOMETRIC_ITEM_SPECIFIC_USAGE('','',#72,#38,#35);\n";
+
+/// A plain `ITEM_IDENTIFIED_REPRESENTATION_USAGE` gives a feature each item of
+/// the set it names; an item it shares with a GISU comes once.
+#[test]
+fn a_feature_gives_the_items_an_item_identified_representation_usage_names() {
+    let base = DATUM_FEATURE
+        .split("#50=")
+        .next()
+        .expect("the part and its geometry");
+    let src = format!("{HEADER}{base}{IIRU_FEATURES}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let df = scene
+        .all_datums()
+        .next()
+        .and_then(|d| d.datum_feature())
+        .expect("the datum feature");
+    let kinds: Vec<_> = df.geometry().map(|g| discriminant(&g)).collect();
+    assert_eq!(kinds, ["Face", "Edge"]);
+    for name in ["grp", "a"] {
+        let f = scene
+            .all_features()
+            .find(|f| f.name() == name)
+            .expect("the feature");
+        let kinds: Vec<_> = f.geometry().map(|g| discriminant(&g)).collect();
+        assert_eq!(kinds, ["Face"], "{name}");
+    }
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
 // Two parts (A, B), each with its own shape aspect + dimension; part A also has
 // a feature tolerance, a whole-part (PDS-targeted) tolerance, and a datum.
 // Per-part queries must return only that part's PMI.

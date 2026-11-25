@@ -636,8 +636,9 @@ pub fn emit_walk(ir: &ModelIr) -> String {
 /// entity-reference enum (`simple_arms`, possibly aggregate arms, no
 /// enum/scalar select arms), emit a `{R}View<'m>` (the borrowed concrete target
 /// per variant, an aggregate arm's elements as a slice) and
-/// `{R}::resolve(model) -> {R}View`, plus `entity_key()` where every arm is a
-/// single entity. This is the forward dual of `RefGraph`'s
+/// `{R}::resolve(model) -> {R}View`, plus `entity_key()`: public where every
+/// arm is a single entity, crate-internal and `None` for an aggregate value
+/// where some arm is an aggregate. This is the forward dual of `RefGraph`'s
 /// backward `referrers`: follow a reference you hold to the object it points at,
 /// uniformly across every navigation ref — so consumers (the kernel, handles)
 /// never hand-write the per-variant `match … => model.<arena>.get(..)` switch.
@@ -701,30 +702,40 @@ pub fn emit_resolvers(ir: &ModelIr) -> String {
         }
         writeln!(s, "        }}").unwrap();
         writeln!(s, "    }}").unwrap();
-        if !re.aggregate.is_empty() {
-            // An aggregate value is no single entity.
-            writeln!(s, "}}\n").unwrap();
-            continue;
-        }
         // entity_key(): the ref's target entity as an EntityKey (identity key for
-        // maps / dedup). Same per-arm mapping as the writer's `deps_*`.
-        writeln!(
-            s,
-            "    /// The key of the entity this reference names.\n    pub fn entity_key(&self) -> EntityKey {{"
-        )
-        .unwrap();
+        // maps / dedup). Same per-arm mapping as the writer's `deps_*`. An
+        // aggregate value is no single entity: where some arm is one, the
+        // method is crate-internal and gives `None` for it.
+        let aggregate = !re.aggregate.is_empty();
+        if aggregate {
+            writeln!(
+                s,
+                "    /// The key of the entity this reference names; `None` for an\n    /// aggregate value, whose elements carry their own keys.\n    pub(crate) fn entity_key(&self) -> Option<EntityKey> {{"
+            )
+            .unwrap();
+        } else {
+            writeln!(
+                s,
+                "    /// The key of the entity this reference names.\n    pub fn entity_key(&self) -> EntityKey {{"
+            )
+            .unwrap();
+        }
+        let (some, close) = if aggregate { ("Some(", ")") } else { ("", "") };
         writeln!(s, "        match self {{").unwrap();
         for (variant, target) in &re.simple_arms {
             writeln!(
                 s,
-                "            {r}::{variant}(i) => EntityKey::{target}(*i),"
+                "            {r}::{variant}(i) => {some}EntityKey::{target}(*i){close},"
             )
             .unwrap();
+        }
+        for (variant, _, _) in &re.aggregate {
+            writeln!(s, "            {r}::{variant}(_) => None,").unwrap();
         }
         if re.has_complex {
             writeln!(
                 s,
-                "            {r}::Complex(i) => EntityKey::ComplexEntity(*i),"
+                "            {r}::Complex(i) => {some}EntityKey::ComplexEntity(*i){close},"
             )
             .unwrap();
         }
