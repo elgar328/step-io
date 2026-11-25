@@ -613,3 +613,51 @@ fn a_vertex_reads_a_complex_point() {
     assert!(scene.all_points().any(|p| p.key() == point.key()));
     assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
 }
+
+/// A PMI annotation's curve is styled by an `ANNOTATION_CURVE_OCCURRENCE`, a
+/// subtype of `STYLED_ITEM`: the curve reads its style and layer.
+#[test]
+fn reads_a_curve_styled_by_an_annotation_occurrence() {
+    let style = CURVE_STYLE.replace(
+        "#35=STYLED_ITEM('',(#34),#18);",
+        "#35=ANNOTATION_CURVE_OCCURRENCE('',(#34),#18);\n\
+         #37=PRESENTATION_LAYER_ASSIGNMENT('pmi','',(#35));",
+    );
+    let src = format!("{HEADER}{BREP}{style}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let curve = scene.all_edges().next().expect("an edge").curve();
+    let c = curve.color().expect("the curve is coloured");
+    assert!((c.red - 0.1).abs() < 1e-9, "colour = {c:?}");
+    assert_eq!(curve.width(), Some(0.5));
+    assert_eq!(curve.layer(), Some("pmi"));
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
+/// An `OVER_RIDING_STYLED_ITEM` on a face beats the styled item it
+/// overrides; a context-dependent one applies only in its assembly context,
+/// so alone it leaves the face's own colour.
+#[test]
+fn an_over_riding_styled_item_wins_and_a_context_dependent_one_does_not() {
+    let blue = "#40=COLOUR_RGB('',0.0,0.0,1.0);\n\
+                #41=FILL_AREA_STYLE_COLOUR('',#40);\n\
+                #42=FILL_AREA_STYLE('',(#41));\n\
+                #43=SURFACE_STYLE_FILL_AREA(#42);\n\
+                #44=SURFACE_SIDE_STYLE('',(#43));\n\
+                #45=SURFACE_STYLE_USAGE(.BOTH.,#44);\n\
+                #46=PRESENTATION_STYLE_ASSIGNMENT((#45));\n";
+    let face_colour = |extra: &str| {
+        let src = format!("{HEADER}{BREP}{COLOUR}{blue}{extra}{FOOTER}");
+        let (model, rep) = read(src.as_bytes()).expect("read");
+        assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+        let scene = model.scene();
+        let c = scene.all_faces().next().expect("a face").color();
+        assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+        c.expect("a colour")
+    };
+    let c = face_colour("#47=OVER_RIDING_STYLED_ITEM('',(#46),#25,#38);\n");
+    assert_eq!((c.red, c.blue), (0.0, 1.0), "the override wins");
+    let c = face_colour("#47=CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM('',(#46),#25,#38,(#27));\n");
+    assert!((c.red - 0.8).abs() < 1e-9, "the face's own colour: {c:?}");
+}

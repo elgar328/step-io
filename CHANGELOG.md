@@ -368,6 +368,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   concern. A bare `PRE_DEFINED_COLOUR` now gives its colour. `Datum::datum_feature` also finds a
   `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`. `MeshGroup::solid` follows a shell linked
   through an `ORIENTED_CLOSED_SHELL`.
+- The presentation accessors (`color`, `transparency`, `width`,
+  `line_font`, `layer`, `is_visible`) read the subtypes of `STYLED_ITEM`
+  too — the annotation occurrences that style PMI geometry, and a complex
+  instance with a `STYLED_ITEM` part — where they read only a plain
+  `STYLED_ITEM`. An `OVER_RIDING_STYLED_ITEM` on a shape now beats the styled
+  item it overrides, where it used to be ignored; a
+  `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` is still not applied, as it
+  holds only in its assembly context.
 - `Face::to_nurbs` converts a face on a `SURFACE_OF_LINEAR_EXTRUSION` of a
   `LINE`, bounding the line by the face's points as it bounds the extrusion;
   it used to give `None`. A face swept from a parabola or hyperbola is

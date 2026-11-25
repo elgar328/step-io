@@ -38,7 +38,13 @@
 //! - **PMI** — the [`Dimension`]s, [`Tolerance`]s and [`Datum`]s of a shape,
 //!   and the [`Feature`] each applies to.
 //! - **presentation** — `.color()` (an [`Rgb`]), `.transparency()`,
-//!   `.layer()` and `.is_visible()` on the geometry handles.
+//!   `.layer()` and `.is_visible()` on the geometry handles, read from the
+//!   `STYLED_ITEM`s that style the shape — its annotation subtypes included,
+//!   for PMI geometry. Where an `OVER_RIDING_STYLED_ITEM` overrides another on
+//!   the same shape, its styles apply (all of them, whatever kind of style
+//!   each carries); a layer or an `INVISIBILITY` on either still counts. A
+//!   `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` applies only within its
+//!   assembly context, so these context-free accessors leave it out.
 //! - **units** — [`Scene::units`]: the length and angle [`Unit`]s, each with
 //!   a [`to_si`](Unit::to_si) factor to metres or radians.
 //!
