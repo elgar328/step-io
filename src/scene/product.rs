@@ -29,7 +29,8 @@ impl Scene<'_> {
         })
     }
 
-    /// Every product definition (`PRODUCT_DEFINITION`) in the model.
+    /// Every product definition (`PRODUCT_DEFINITION` and its
+    /// `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS` subtype) in the model.
     pub fn all_product_definitions(&self) -> impl Iterator<Item = ProductDef<'_>> + '_ {
         let cx = self.ctx();
         let plain = cx
@@ -305,8 +306,9 @@ impl<'m> Version<'m> {
 // ProductDef
 // ---------------------------------------------------------------------------
 
-/// A product definition (`PRODUCT_DEFINITION`) — a view of a product that owns
-/// shape and participates in the assembly tree.
+/// A product definition (`PRODUCT_DEFINITION`, or its
+/// `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS` subtype) — a view of a
+/// product that owns shape and participates in the assembly tree.
 #[derive(Clone, Copy)]
 pub struct ProductDef<'m> {
     cx: Ctx<'m>,
@@ -1160,7 +1162,7 @@ impl<'m> Occurrence<'m> {
     /// a `PRODUCT_DEFINITION_SHAPE` defined by this NAUO → a
     /// `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` → its transformation operator's
     /// two `AXIS2_PLACEMENT_3D` frames). A transform item that is not an
-    /// `AXIS2_PLACEMENT_3D` is reported via [`Scene::warnings`](crate::scene::Scene)
+    /// `AXIS2_PLACEMENT_3D` is reported via [`Scene::warnings`](crate::scene::Scene::warnings)
     /// and yields `None` rather than a silently wrong frame.
     ///
     /// `from` is the frame in the component's shape and `to` the frame in the
@@ -1169,7 +1171,7 @@ impl<'m> Occurrence<'m> {
     /// (as some exporters write it). The order is decided by matching `rep_1`
     /// and `rep_2` against both definitions' shape representations; a
     /// relationship matching neither order is read component-first and
-    /// reported via [`Scene::warnings`](crate::scene::Scene).
+    /// reported via [`Scene::warnings`](crate::scene::Scene::warnings).
     pub fn transform(&self) -> Option<Transform> {
         let this = self.about();
         let cx = this.cx;
@@ -1302,7 +1304,7 @@ impl<'m> MappedInstance<'m> {
     /// geometry is defined relative to `from` (the map's origin) and placed at
     /// `to` (this item's target). A frame that is not an `AXIS2_PLACEMENT_3D`
     /// (a camera origin, a 2D drawing target) is reported via
-    /// [`Scene::warnings`](crate::scene::Scene) and yields `None`.
+    /// [`Scene::warnings`](crate::scene::Scene::warnings) and yields `None`.
     pub fn transform(&self) -> Option<Transform> {
         let this = self.about();
         let cx = this.cx;
@@ -1519,7 +1521,7 @@ fn def_shape_reps(cx: Ctx<'_>, def: m::EntityKey) -> Vec<&m::RepresentationRef> 
     out
 }
 
-/// The key and `items` of a shape representation this layer reads geometry
+/// The key and `items` of a shape representation the scene reads geometry
 /// from: a plain, advanced b-rep, manifold surface, or geometrically bounded
 /// surface or wireframe `SHAPE_REPRESENTATION`.
 fn shape_rep_items<'m>(

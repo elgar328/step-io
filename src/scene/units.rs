@@ -114,8 +114,8 @@ pub(crate) fn units_of(model: &StepModel) -> Units {
     out
 }
 
-/// The first complex instance carrying a `GLOBAL_UNIT_ASSIGNED_CONTEXT` facet —
-/// the model's unit context (it also carries the uncertainty facet).
+/// The first complex instance carrying a `GLOBAL_UNIT_ASSIGNED_CONTEXT` part —
+/// the model's unit context (it also carries the uncertainty part).
 fn find_unit_context(model: &StepModel) -> Option<&m::ComplexEntity> {
     model.complex_entity_arena.items.iter().find(|cu| {
         cu.parts

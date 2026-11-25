@@ -139,7 +139,7 @@ impl<'m> Dimension<'m> {
     /// The number is raw: interpret its unit via [`kind`](Dimension::kind)
     /// (`Size`/`Location` are lengths, `Angular*` are angles) and
     /// [`Scene::units`], exactly as point coordinates are read. A representation
-    /// the walk cannot resolve (a complex one) is reported via
+    /// the scene cannot resolve (a complex one) is reported via
     /// [`Scene::warnings`]; a dimension with no value representation simply
     /// yields `None`.
     pub fn value(&self) -> Option<f64> {
@@ -311,7 +311,7 @@ leaf_tolerances! {
 impl Scene<'_> {
     /// Every geometric tolerance in the model. Covers both standalone leaf
     /// entities (in their dedicated arenas) and complex multi-supertype
-    /// instances (any `ComplexEntity` carrying a `GEOMETRIC_TOLERANCE` facet).
+    /// instances (any `ComplexEntity` carrying a `GEOMETRIC_TOLERANCE` part).
     pub fn all_tolerances(&self) -> impl Iterator<Item = Tolerance<'_>> + '_ {
         all_tolerances(self.ctx()).into_iter()
     }
@@ -348,11 +348,12 @@ impl<'m> Tolerance<'m> {
 
     /// The nominal magnitude (the tolerance-zone size).
     ///
-    /// The number is raw, in the model's length unit — interpret it via
+    /// The number is raw, in the unit its measure names (`unit_component`,
+    /// not read here), normally the model's length unit — interpret it via
     /// [`Scene::units`], exactly as point coordinates and dimension values are
     /// read. AP203 and AP214 allow a plain `MEASURE_WITH_UNIT` here; its value
     /// is taken when it is a length measure. `None` when the tolerance carries
-    /// no magnitude, or its magnitude is a complex measure instance the walk
+    /// no magnitude, or its magnitude is a complex measure instance the scene
     /// cannot resolve or not a length (reported via [`Scene::warnings`]).
     pub fn magnitude(&self) -> Option<f64> {
         let this = self.about();
@@ -362,7 +363,7 @@ impl<'m> Tolerance<'m> {
         mag.and_then(|r| tolerance_magnitude_f64(this.cx, r))
     }
 
-    /// The `GEOMETRIC_TOLERANCE` supertype facet of a complex tolerance, as
+    /// The `GEOMETRIC_TOLERANCE` supertype part of a complex tolerance, as
     /// `(name, magnitude)`; `None` for a dedicated-arena tolerance.
     fn complex_geometric_tolerance(&self) -> Option<(&'m str, Option<&'m m::MeasureWithUnitRef>)> {
         let TolImpl::Complex(cuid) = self.which else {
@@ -378,7 +379,7 @@ impl<'m> Tolerance<'m> {
     }
 
     /// The characteristic of a complex tolerance, read from its leaf-subtype
-    /// facet. Only the leaf markers that occur in real files exist as
+    /// part. Only the leaf markers that occur in real files exist as
     /// `PartialEntity` variants; a complex tolerance without a recognized one is
     /// surfaced as `Other`.
     fn complex_kind(&self, cuid: m::ComplexEntityId) -> ToleranceKind {
@@ -586,9 +587,10 @@ impl<'m> Tolerance<'m> {
     /// precedence order (primary → secondary → tertiary).
     ///
     /// Empty for a form tolerance (flatness, straightness, …) that references no
-    /// datum. A common datum (`A-B`) is flattened to its constituent datums; a
-    /// reference the walk cannot resolve (a complex facet) is reported via
-    /// [`Scene::warnings`].
+    /// datum. A common-datum list in a datum system compartment is flattened
+    /// to its constituent datums; a `COMMON_DATUM` comes back as one [`Datum`]
+    /// (its letter may read `A-B`). A reference the scene cannot resolve (a
+    /// complex instance) is reported via [`Scene::warnings`].
     pub fn datums(&self) -> impl Iterator<Item = Datum<'m>> + 'm {
         let this = self.about();
         // `precedence` is authored per DATUM_REFERENCE but a DATUM_SYSTEM orders
@@ -605,7 +607,7 @@ impl<'m> Tolerance<'m> {
 
     /// The tolerance's `datum_system` list: on the dedicated arena for the eight
     /// leaf subtypes that carry one, on the `GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE`
-    /// facet for a complex tolerance, and empty for the datum-free subtypes.
+    /// part for a complex tolerance, and empty for the datum-free subtypes.
     fn datum_system(&self) -> &'m [m::DatumSystemOrReferenceRef] {
         let model = self.cx.model;
         match self.which {
@@ -952,7 +954,7 @@ impl<'m> Tolerance<'m> {
     /// `None` when the target is not a named shape aspect — a tolerance placed on
     /// a dimension, on the whole part (`PRODUCT_DEFINITION_SHAPE`) or on a
     /// relationship between shape aspects — or when the
-    /// target is a complex instance the walk cannot resolve (reported via
+    /// target is a complex instance the scene cannot resolve (reported via
     /// [`Scene::warnings`]).
     pub fn feature(&self) -> Option<Feature<'m>> {
         let this = self.about();
@@ -966,7 +968,7 @@ impl<'m> Tolerance<'m> {
     }
 
     /// The tolerance's `toleranced_shape_aspect`: from the dedicated arena for a
-    /// leaf tolerance, or the `GEOMETRIC_TOLERANCE` facet for a complex one.
+    /// leaf tolerance, or the `GEOMETRIC_TOLERANCE` part for a complex one.
     fn tolerance_target(&self) -> Option<&'m m::GeometricToleranceTargetRef> {
         if let Some(t) = self.dedicated_target() {
             return Some(t);

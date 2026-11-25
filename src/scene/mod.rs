@@ -221,8 +221,8 @@ pub struct SceneWarning {
     /// or a handle that method went on to consult (a dimension's features
     /// walked for a part's dimensions, say).
     pub entity: Option<EntityKey>,
-    /// What went wrong, starting with the entity type it concerns where that
-    /// is not the handle's own (`TRIMMED_CURVE.to_nurbs: …`).
+    /// What went wrong, in prose; many messages start with the STEP entity
+    /// and the step it arose in (`TRIMMED_CURVE.to_nurbs: …`).
     pub message: String,
 }
 

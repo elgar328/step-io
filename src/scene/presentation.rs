@@ -1,9 +1,9 @@
 //! Presentation — the colour, transparency, layer, and visibility of a shape.
 //!
 //! These surface as accessors on the geometry handles: `.color()`,
-//! `.transparency()`, `.layer()`, and `.is_visible()`. A style the reader
+//! `.transparency()`, `.layer()`, and `.is_visible()`. A style the scene
 //! cannot follow to a value — a complex style, or an unknown pre-defined
-//! colour name — is recorded via [`Scene::warnings`](crate::scene::Scene)
+//! colour name — is recorded via [`Scene::warnings`](crate::scene::Scene::warnings)
 //! rather than skipped silently.
 
 use crate::generated::model as m;
@@ -191,8 +191,8 @@ fn predefined_rgb(name: &str) -> Option<Rgb> {
 // Transparency
 // ---------------------------------------------------------------------------
 
-/// Reverse-walk from `target` (a face or solid) to each surface-style element
-/// applied to it — `STYLED_ITEM` → presentation-style assignment →
+/// Reverse-walk from `target` (a geometry or mesh handle's entity) to each
+/// surface-style element applied to it — `STYLED_ITEM` → presentation-style assignment →
 /// `SURFACE_STYLE_USAGE` → `SURFACE_SIDE_STYLE` → element — running `leaf` on
 /// each and returning its first `Some`. Shared by any per-element surface-style
 /// query (currently transparency).
@@ -267,8 +267,9 @@ fn element_transparency(cx: Ctx<'_>, r: &m::SurfaceStyleElementSelectRef) -> Opt
         })
 }
 
-/// The transparency styled onto `target` (a face or solid), if any. Raw STEP
-/// value: `0.0` = opaque, `1.0` = fully transparent.
+/// The transparency styled onto `target` (a geometry or mesh handle's
+/// entity), if any. Raw STEP value: `0.0` = opaque, `1.0` = fully
+/// transparent.
 pub(crate) fn transparency_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<f64> {
     surface_elements_of(cx, target, element_transparency)
 }

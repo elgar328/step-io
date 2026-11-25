@@ -25,7 +25,8 @@ use crate::generated::model as m;
 /// handle (e.g. `solid.faces()`) is unprefixed and scoped to that element.
 /// `Scene::root_definitions` is unprefixed too: it filters the definitions
 /// rather than listing a type. A move from a handle to any number of other
-/// handles returns an iterator, to at most one an `Option`; computed data (a
+/// handles returns an iterator, a move to at most one an `Option`, and a move
+/// to exactly one the handle itself (`face.surface()`); computed data (a
 /// mesh's points, the warnings so far) comes as a `Vec`.
 impl Scene<'_> {
     /// Every b-rep solid in the model — `MANIFOLD_SOLID_BREP` and
@@ -196,7 +197,7 @@ impl<'m> Solid<'m> {
 
     /// The solid's outer shell and the way the solid uses it: `Reversed` when
     /// the shell is reached through an `ORIENTED_CLOSED_SHELL` with `.F.`
-    /// (wrappers compose). `None` for a shell this layer cannot resolve (a
+    /// (wrappers compose). `None` for a shell the scene cannot resolve (a
     /// complex instance, reported in [`Scene::warnings`]).
     pub fn outer(&self) -> Option<(Shell<'m>, Orientation)> {
         let this = self.about();
@@ -605,11 +606,11 @@ impl<'m> Face<'m> {
     /// [`Surface::to_nurbs`]. An *unbounded* surface (plane, cylinder, cone,
     /// linear extrusion, a surface of revolution over a line, an offset of a
     /// plane, cylinder or cone — see [`Surface::to_nurbs`] for which offsets
-    /// convert) is sized to the
-    /// control points of its boundary edges' NURBS forms and to the vertices
-    /// of its vertex loops — a guaranteed cover of the boundary; a cone
-    /// bounded at one level reaches its apex — and is the untrimmed base patch
-    /// (the edge loops trim it separately).
+    /// convert) is sized to the control points of its boundary edges' NURBS
+    /// forms and to the vertices of its vertex loops — a guaranteed cover of
+    /// the boundary where every edge converts (one that does not is covered by
+    /// its two vertices only); a cone bounded at one level reaches its apex —
+    /// and is the untrimmed base patch (the edge loops trim it separately).
     /// `None` if the kind is unsupported or the bounds are degenerate, or for a
     /// B-spline whose degree is outside 1–25 or whose knot multiplicities do
     /// not match its control points.
@@ -732,6 +733,8 @@ pub struct Surface<'m> {
 
 /// The concrete surface geometry. Common kinds are typed; everything else is
 /// `Other(keyword)` (the surface still exists — it is surfaced, not dropped).
+/// A complex instance is `Other("COMPLEX")`: a rational B-spline surface
+/// arrives this way, and [`Surface::to_nurbs`] still converts it.
 #[derive(Clone, Copy, Debug)]
 #[non_exhaustive]
 pub enum SurfaceKind<'m> {
@@ -1096,8 +1099,9 @@ impl<'m> Edge<'m> {
         crate::scene::presentation::curve_width_of(this.cx, this.key())
     }
 
-    /// The line font of this edge's style (`CURVE_STYLE.curve_font`) — a
-    /// pre-defined font name such as `continuous` or `dashed` — if any.
+    /// The name of this edge's line font (`CURVE_STYLE.curve_font`) — a
+    /// pre-defined name such as `continuous` or `dashed`, or a
+    /// `CURVE_STYLE_FONT`'s own name — if any.
     pub fn line_font(&self) -> Option<&'m str> {
         let this = self.about();
         crate::scene::presentation::curve_font_of(this.cx, this.key())
@@ -1149,7 +1153,8 @@ pub struct Curve<'m> {
 }
 
 /// The concrete curve geometry. Common kinds are typed; everything else is
-/// `Other(keyword)`.
+/// `Other(keyword)`. A complex instance is `Other("COMPLEX")`: a rational
+/// B-spline curve arrives this way, and [`Curve::to_nurbs`] still converts it.
 #[derive(Clone, Copy, Debug)]
 #[non_exhaustive]
 pub enum CurveKind<'m> {
@@ -1272,8 +1277,9 @@ impl<'m> Curve<'m> {
         crate::scene::presentation::curve_width_of(this.cx, this.key())
     }
 
-    /// The line-font name of this curve's style (`CURVE_STYLE.curve_font`, a line
-    /// pattern like `continuous` / `dashed`), if any.
+    /// The name of this curve's line font (`CURVE_STYLE.curve_font`) — a
+    /// pre-defined name such as `continuous` or `dashed`, or a
+    /// `CURVE_STYLE_FONT`'s own name — if any.
     pub fn line_font(&self) -> Option<&'m str> {
         let this = self.about();
         crate::scene::presentation::curve_font_of(this.cx, this.key())
@@ -1653,7 +1659,7 @@ fn resolve_oriented_closed_shell<'m>(
 }
 
 /// Resolve a `LoopRef` to an `EdgeLoop` (only edge loops carry edges; a vertex
-/// loop is reached through [`Bound::vertex`]). Loops this layer does not read
+/// loop is reached through [`Bound::vertex`]). Loops the scene does not read
 /// are reported.
 fn resolve_edge_loop<'m>(cx: Ctx<'m>, r: &m::LoopRef) -> Option<&'m m::EdgeLoop> {
     let what = match r {

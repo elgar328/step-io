@@ -1,9 +1,10 @@
-//! Opt-in NURBS (rational B-spline) views over analytic STEP curves.
+//! Opt-in NURBS (rational B-spline) views over analytic STEP curves and
+//! surfaces.
 //!
 //! The faithful model keeps curves in their original form (see
 //! [`Curve::kind`](crate::scene::geometry::Curve::kind)); `to_nurbs()` derives a
 //! single rational-B-spline representation on demand — e.g. for a geometry
-//! kernel that wants every curve as a NURBS. This is a *derived view*: it is
+//! kernel that wants every curve and surface as a NURBS. This is a *derived view*: it is
 //! computed from the original entity and never written back.
 
 // Vector math reads best with the conventional short axis/scale names (x, y, z,
@@ -22,7 +23,8 @@ use crate::scene::Ctx;
 pub struct NurbsCurve {
     /// Polynomial degree (order − 1).
     pub degree: usize,
-    /// Control points in world coordinates.
+    /// Control points in the representation's own coordinates and the file's
+    /// length unit (no placement applied).
     pub control_points: Vec<[f64; 3]>,
     /// One weight per control point (all `1.0` for a non-rational curve).
     pub weights: Vec<f64>,
@@ -41,7 +43,8 @@ pub struct NurbsSurface {
     pub degree_u: usize,
     /// Polynomial degree in v.
     pub degree_v: usize,
-    /// Control points in world coordinates, indexed `[u][v]`.
+    /// Control points in the representation's own coordinates and the file's
+    /// length unit (no placement applied), indexed `[u][v]`.
     pub control_points: Vec<Vec<[f64; 3]>>,
     /// One weight per control point, indexed `[u][v]`.
     pub weights: Vec<Vec<f64>>,
@@ -373,8 +376,9 @@ pub(crate) enum KnotFamily {
 }
 
 /// The standard knot vector of a knot family as `(knot values, multiplicities)`
-/// — the same OCCT synthesizes. Uniform: integers `0..n+d`, all multiplicity 1
-/// (unclamped). Quasi-uniform: integers `0..n−d`, clamped ends (`d+1`).
+/// — the same one OCCT synthesizes. Uniform: integers `0..=n+d`, all
+/// multiplicity 1 (unclamped). Quasi-uniform: integers `0..=n−d`, clamped
+/// ends (`d+1`).
 /// Bézier: piecewise, interior multiplicity `d` — requires `n = k·d + 1`
 /// control points (`None` otherwise, as for too few control points).
 #[allow(clippy::cast_precision_loss)] // knot indices are far below 2^52
@@ -459,8 +463,8 @@ pub(crate) fn polyline_to_nurbs(cx: Ctx<'_>, p: &m::Polyline) -> Option<NurbsCur
 /// Assemble a rational (or plain) B-spline curve from a complex instance's
 /// parts: `B_SPLINE_CURVE` (degree + control points), knots from a
 /// `B_SPLINE_CURVE_WITH_KNOTS` part or derived from a uniform-family marker
-/// part, and an optional `RATIONAL_B_SPLINE_CURVE` (weights). `None` if the
-/// complex is neither.
+/// part, and an optional `RATIONAL_B_SPLINE_CURVE` (weights). `None` if it has
+/// no `B_SPLINE_CURVE` part or no knots, explicit or derived.
 pub(crate) fn complex_bspline_curve_to_nurbs(
     cx: Ctx<'_>,
     parts: &[m::PartialEntity],
@@ -1832,7 +1836,8 @@ pub(crate) fn bspline_surf_wk_to_nurbs(
 
 /// Assemble a rational (or plain) B-spline surface from a complex instance's
 /// parts — knots from a `B_SPLINE_SURFACE_WITH_KNOTS` part or derived from a
-/// uniform-family marker part. `None` if the complex is neither.
+/// uniform-family marker part. `None` if it has no `B_SPLINE_SURFACE` part or
+/// no knots, explicit or derived.
 pub(crate) fn complex_bspline_surface_to_nurbs(
     cx: Ctx<'_>,
     parts: &[m::PartialEntity],
