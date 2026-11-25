@@ -260,7 +260,7 @@ impl<'a> Ctx<'a> {
 
     /// The model's units, resolved on first use.
     pub(crate) fn units(&self) -> &'a Units {
-        self.units.get_or_init(|| units::units_of(self.model))
+        self.units.get_or_init(|| units::units_of(*self))
     }
 
     /// The factor taking a plane angle in the model's unit to radians (1 when

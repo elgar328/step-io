@@ -567,3 +567,26 @@ fn a_bare_face_in_a_shell_is_reported() {
     assert_eq!(warnings[0].entity, Some(shell.key()));
     assert!(warnings[0].message.contains("bare FACE"));
 }
+
+/// A bare `PRE_DEFINED_COLOUR` names its colour the way a draughting one does.
+#[test]
+fn reads_a_pre_defined_colour() {
+    let colour = COLOUR.replace(
+        "#31=COLOUR_RGB('',0.8,0.2,0.1);",
+        "#31=PRE_DEFINED_COLOUR('blue');",
+    );
+    let src = format!("{HEADER}{BREP}{colour}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let c = scene.all_faces().next().expect("a face").color();
+    assert_eq!(
+        c,
+        Some(step_io::scene::Rgb {
+            red: 0.0,
+            green: 0.0,
+            blue: 1.0
+        })
+    );
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}

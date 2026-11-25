@@ -92,3 +92,25 @@ fn reads_a_complex_or_positive_conversion_factor() {
         );
     }
 }
+
+/// A length unit that is neither SI nor conversion-based cannot be read; the
+/// warning names the unit context.
+#[test]
+fn an_unreadable_length_unit_is_reported() {
+    let units = UNITS.replace(
+        "#10=( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );",
+        "#10=( CONTEXT_DEPENDENT_UNIT('foot') LENGTH_UNIT() NAMED_UNIT(#15) );\n\
+         #15=DIMENSIONAL_EXPONENTS(1.,0.,0.,0.,0.,0.,0.);",
+    );
+    let src = format!("{HEADER}{units}{FOOTER}");
+    let (model, report) = read(src.as_bytes()).expect("read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    let scene = model.scene();
+    assert!(scene.units().length.is_none());
+    let warnings = scene.warnings();
+    assert_eq!(warnings.len(), 1, "{warnings:?}");
+    assert!(matches!(
+        warnings[0].entity,
+        Some(step_io::model::EntityKey::ComplexEntity(_))
+    ));
+}

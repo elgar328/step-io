@@ -347,8 +347,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and PMI walks report a complex product, formation, document, date,
   direction, shape representation, `of_shape` or tolerance target, a
   placement whose transformation is not an `ITEM_DEFINED_TRANSFORMATION`, and
-  a shape relationship whose other end is not a representation. The warnings
-  name the handle they concern. `Datum::datum_feature` also finds a
+  a shape relationship whose other end is not a representation. The
+  presentation walks report a complex style, style element or rendering
+  property and a bare `COLOUR`, and `Scene::units` a length or angle unit it
+  cannot read, naming the unit context. The warnings name the handle they
+  concern. A bare `PRE_DEFINED_COLOUR` now gives its colour. `Datum::datum_feature` also finds a
   `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`. `MeshGroup::solid` follows a shell linked
   through an `ORIENTED_CLOSED_SHELL`.
 - `Edge::to_nurbs` gives a closed edge whose direction is against its

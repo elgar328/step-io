@@ -162,12 +162,23 @@ fn colour_to_rgb(cx: Ctx<'_>, r: &m::ColourRef) -> Option<Rgb> {
                 None
             })
         }
+        m::ColourRef::PreDefinedColour(i) => {
+            let name = cx
+                .model
+                .text(cx.model.pre_defined_colour_arena.get(i.0).name);
+            predefined_rgb(name).or_else(|| {
+                cx.warn(format!("unknown pre-defined colour: {name}"));
+                None
+            })
+        }
         m::ColourRef::Complex(_) => {
             cx.warn("complex colour".to_owned());
             None
         }
-        // Bare COLOUR / colour specification / other pre-defined colour.
-        _ => None,
+        m::ColourRef::Colour(_) | m::ColourRef::ColourSpecification(_) => {
+            cx.warn("a bare COLOUR or COLOUR_SPECIFICATION carries no RGB value".to_owned());
+            None
+        }
     }
 }
 
@@ -221,8 +232,13 @@ fn surface_elements_of<T>(
                 }
             };
             for style in styles {
-                let m::PresentationStyleSelectRef::SurfaceStyleUsage(i) = style else {
-                    continue;
+                let i = match style {
+                    m::PresentationStyleSelectRef::SurfaceStyleUsage(i) => i,
+                    m::PresentationStyleSelectRef::Complex(_) => {
+                        cx.warn("complex presentation style".to_owned());
+                        continue;
+                    }
+                    _ => continue,
                 };
                 let side = &cx.model.surface_style_usage_arena.get(i.0).style;
                 let elements: &[m::SurfaceStyleElementSelectRef] = match side {
@@ -248,8 +264,13 @@ fn surface_elements_of<T>(
 /// `SURFACE_STYLE_RENDERING_WITH_PROPERTIES`'s `SURFACE_STYLE_TRANSPARENT`
 /// property (the only place transparency lives).
 fn element_transparency(cx: Ctx<'_>, r: &m::SurfaceStyleElementSelectRef) -> Option<f64> {
-    let m::SurfaceStyleElementSelectRef::SurfaceStyleRenderingWithProperties(i) = r else {
-        return None;
+    let i = match r {
+        m::SurfaceStyleElementSelectRef::SurfaceStyleRenderingWithProperties(i) => i,
+        m::SurfaceStyleElementSelectRef::Complex(_) => {
+            cx.warn("complex surface style element".to_owned());
+            return None;
+        }
+        _ => return None,
     };
     cx.model
         .surface_style_rendering_with_properties_arena
@@ -263,7 +284,11 @@ fn element_transparency(cx: Ctx<'_>, r: &m::SurfaceStyleElementSelectRef) -> Opt
                     .get(t.0)
                     .transparency,
             ),
-            _ => None,
+            m::RenderingPropertiesSelectRef::Complex(_) => {
+                cx.warn("complex rendering property".to_owned());
+                None
+            }
+            m::RenderingPropertiesSelectRef::SurfaceStyleReflectanceAmbient(_) => None,
         })
 }
 
@@ -391,6 +416,10 @@ fn each_presentation_style<'m, T>(
 fn curve_style_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<&m::CurveStyle> {
     each_presentation_style(cx, target, |cx, s| match s {
         m::PresentationStyleSelectRef::CurveStyle(i) => Some(cx.model.curve_style_arena.get(i.0)),
+        m::PresentationStyleSelectRef::Complex(_) => {
+            cx.warn("complex presentation style".to_owned());
+            None
+        }
         _ => None,
     })
 }
@@ -515,6 +544,10 @@ pub(crate) fn curve_font_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<&str> {
 pub(crate) fn point_colour_of(cx: Ctx<'_>, target: m::EntityKey) -> Option<Rgb> {
     let style = each_presentation_style(cx, target, |cx, s| match s {
         m::PresentationStyleSelectRef::PointStyle(i) => Some(cx.model.point_style_arena.get(i.0)),
+        m::PresentationStyleSelectRef::Complex(_) => {
+            cx.warn("complex presentation style".to_owned());
+            None
+        }
         _ => None,
     })?;
     colour_to_rgb(cx, style.marker_colour.as_ref()?)
