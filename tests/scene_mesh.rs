@@ -70,8 +70,8 @@ fn a_mesh_group_reaches_its_solid_through_an_oriented_shell() {
 }
 
 /// A `pnindex` entry outside the coordinate list leaves the mesh without
-/// points, with a warning on the mesh, rather than shifting the vertices after
-/// it; its per-vertex normals still count against `pnindex`.
+/// points or triangles, with one warning on the mesh, rather than shifting the
+/// vertices after it; its per-vertex normals still count against `pnindex`.
 #[test]
 fn a_bad_point_index_gives_no_points() {
     let meshes = MESHES.replace(
@@ -87,6 +87,7 @@ fn a_bad_point_index_gives_no_points() {
         .find(|m| m.name() == "picked")
         .expect("picked");
     assert_eq!(picked.points(), Vec::<[f64; 3]>::new());
+    assert_eq!(picked.triangles(), Vec::<[usize; 3]>::new());
     assert!(matches!(picked.normals(), MeshNormals::PerVertex(n) if n.len() == 3));
     let warnings = scene.warnings();
     assert_eq!(warnings.len(), 1, "{warnings:?}");

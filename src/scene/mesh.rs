@@ -216,9 +216,13 @@ impl<'m> Mesh<'m> {
     /// [`Scene::warnings`](crate::scene::Scene::warnings), and the mesh then
     /// gives no points.
     pub fn points(&self) -> Vec<[f64; 3]> {
-        let this = self.about();
-        let (_, coords, _, pnindex, ..) = this.parts();
-        let model = this.cx.model;
+        self.about().read_points().unwrap_or_default()
+    }
+
+    /// [`Mesh::points`], `None` (and reported) when they cannot be read.
+    fn read_points(&self) -> Option<Vec<[f64; 3]>> {
+        let (_, coords, _, pnindex, ..) = self.parts();
+        let model = self.cx.model;
         let all: &[m::Reals3] = match coords {
             m::CoordinatesListRef::CoordinatesList(id) => {
                 &model.coordinates_list_arena.get(id.0).position_coords
@@ -236,17 +240,17 @@ impl<'m> Mesh<'m> {
                         _ => None,
                     })
                 else {
-                    this.cx.warn(
+                    self.cx.warn(
                         "mesh coordinates are a complex instance without a coordinate list"
                             .to_owned(),
                     );
-                    return Vec::new();
+                    return None;
                 };
                 all
             }
         };
         if pnindex.is_empty() {
-            return all.iter().map(|row| row3(row)).collect();
+            return Some(all.iter().map(|row| row3(row)).collect());
         }
         // Dropping a bad entry would shift every later vertex, so a bad entry
         // leaves the mesh without points.
@@ -257,11 +261,11 @@ impl<'m> Mesh<'m> {
                 all.get(idx).map(|row| row3(row))
             })
             .collect();
-        points.unwrap_or_else(|| {
-            this.cx
+        if points.is_none() {
+            self.cx
                 .warn("MESH.points: point index out of range".to_owned());
-            Vec::new()
-        })
+        }
+        points
     }
 
     /// The triangles as 0-based indices into [`Mesh::points`], expanded from
@@ -269,11 +273,15 @@ impl<'m> Mesh<'m> {
     /// only the emission order differs). Degenerate entries (repeated
     /// indices) are skipped per the encoding; an out-of-range index skips the
     /// triangle with a warning. A plain `TESSELLATED_FACE` stores no
-    /// triangles, so its list is empty.
+    /// triangles, so its list is empty, and points that cannot be read leave
+    /// no triangles.
     pub fn triangles(&self) -> Vec<[usize; 3]> {
         let this = self.about();
         let (_, _, _, _, strips, fans) = this.parts();
-        let n = this.points().len();
+        let Some(points) = this.read_points() else {
+            return Vec::new();
+        };
+        let n = points.len();
         let cx = this.cx;
         let mut out = Vec::new();
         let mut push = |a: i64, b: i64, c: i64| {
