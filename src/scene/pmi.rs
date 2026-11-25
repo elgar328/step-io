@@ -1514,10 +1514,10 @@ impl Tolerance<'_> {
                 );
                 continue;
             };
-            if let Some(part) = (Feature { cx, which }).part_def_id()
-                && !parts.contains(&part)
-            {
-                parts.push(part);
+            if let Some(part) = (Feature { cx, which }).part_def_id() {
+                if !parts.contains(&part) {
+                    parts.push(part);
+                }
             }
         }
         parts

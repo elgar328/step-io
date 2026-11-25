@@ -1487,10 +1487,10 @@ fn usages_of(cx: Ctx<'_>, def: m::EntityKey, side: Side) -> Vec<m::NextAssemblyU
             m::EntityKey::ProductDefinitionOccurrence(pid) => {
                 let pdo = m::EntityKey::ProductDefinitionOccurrence(pid);
                 for &u in rg.referrers(pdo) {
-                    if let m::EntityKey::NextAssemblyUsageOccurrence(nid) = u
-                        && end(nid).entity_key() == pdo
-                        && !out.contains(&nid)
-                    {
+                    let m::EntityKey::NextAssemblyUsageOccurrence(nid) = u else {
+                        continue;
+                    };
+                    if end(nid).entity_key() == pdo && !out.contains(&nid) {
                         out.push(nid);
                     }
                 }
