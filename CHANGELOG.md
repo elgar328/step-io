@@ -231,6 +231,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `add_complex` rejects a part of an entity AP242 declares `ABSTRACT` unless
   a part of one of its subtypes is beside it, with
   `AuthorError::InvalidComplex`.
+- `MappedInstance::solids`, `surface_models`, `geometric_sets` and
+  `mapped_children` follow a plain `SHAPE_REPRESENTATION_RELATIONSHIP` from
+  the source representation to an equivalent one, as `ProductDef::solids`
+  does. Neither crosses a relationship a `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION`
+  uses any more: it relates a component to its assembly, and crossing it
+  could pull the assembly's items into a part.
 - `Point` also covers `APLL_POINT`, `APLL_POINT_WITH_SURFACE` and a complex
   instance with a `CARTESIAN_POINT` part: `Vertex::point`, `Scene::all_points`,
   `SetElement::Point` and `FeatureGeometry::Point` give them, where they used

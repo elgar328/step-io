@@ -1320,59 +1320,68 @@ impl<'m> MappedInstance<'m> {
     }
 
     /// The b-rep solids of the source representation — the geometry this
-    /// instance stamps. A non-shape source (a presentation view) has none.
+    /// instance stamps — and of the representations it is bridged to by a
+    /// plain `SHAPE_REPRESENTATION_RELATIONSHIP`, as for
+    /// [`ProductDef::solids`]. A non-shape source (a presentation view) has
+    /// none.
     pub fn solids(&self) -> impl Iterator<Item = Solid<'m>> + 'm {
-        let this = self.about();
-        let cx = this.cx;
-        this.map()
-            .and_then(|map| rep_items(cx, &map.mapped_representation))
+        let cx = self.cx;
+        let mut seen: HashSet<m::EntityKey> = HashSet::new();
+        self.source_items()
             .into_iter()
-            .flatten()
             .filter_map(move |it| item_solid(cx, it))
+            .filter(move |s| seen.insert(s.key()))
     }
 
-    /// The surface models of the source representation.
+    /// The surface models of the source representation, found as
+    /// [`solids`](Self::solids) are.
     pub fn surface_models(&self) -> impl Iterator<Item = SurfaceModel<'m>> + 'm {
-        let this = self.about();
-        let cx = this.cx;
-        this.map()
-            .and_then(|map| rep_items(cx, &map.mapped_representation))
+        let cx = self.cx;
+        let mut seen: HashSet<m::EntityKey> = HashSet::new();
+        self.source_items()
             .into_iter()
-            .flatten()
             .filter_map(move |it| item_surface_model(cx, it))
+            .filter(move |s| seen.insert(s.key()))
     }
 
-    /// The geometric sets of the source representation.
+    /// The geometric sets of the source representation, found as
+    /// [`solids`](Self::solids) are.
     pub fn geometric_sets(&self) -> impl Iterator<Item = GeometricSet<'m>> + 'm {
-        let this = self.about();
-        let cx = this.cx;
-        this.map()
-            .and_then(|map| rep_items(cx, &map.mapped_representation))
+        let cx = self.cx;
+        let mut seen: HashSet<m::EntityKey> = HashSet::new();
+        self.source_items()
             .into_iter()
-            .flatten()
             .filter_map(move |it| GeometricSet::from_item(cx, it))
+            .filter(move |s| seen.insert(s.key()))
     }
 
-    /// Nested mapped items inside the source representation — one level of an
-    /// assembly chain; walk them to traverse the instance tree.
+    /// Nested mapped items inside the source representation (and those it is
+    /// bridged to) — one level of an assembly chain; walk them to traverse the
+    /// instance tree.
     pub fn mapped_children(&self) -> impl Iterator<Item = MappedInstance<'m>> + 'm {
-        let this = self.about();
-        let cx = this.cx;
-        this.map()
-            .and_then(|map| rep_items(cx, &map.mapped_representation))
+        let cx = self.cx;
+        let me = self.id;
+        let mut seen: HashSet<m::MappedItemId> = HashSet::new();
+        self.source_items()
             .into_iter()
-            .flatten()
             .filter_map(move |it| match it {
-                m::RepresentationItemRef::MappedItem(id) => Some(MappedInstance { cx, id: *id }),
+                m::RepresentationItemRef::MappedItem(id) if *id != me && seen.insert(*id) => {
+                    Some(MappedInstance { cx, id: *id })
+                }
                 _ => None,
             })
     }
-}
 
-/// The `items` of a shape representation (see [`shape_rep_items`]) — what a
-/// mapped item stamps; other representation kinds carry no shape items.
-fn rep_items<'m>(cx: Ctx<'m>, r: &m::RepresentationRef) -> Option<&'m [m::RepresentationItemRef]> {
-    shape_rep_items(cx, r).map(|(_, items)| items)
+    /// The items of the source representation and of those bridged to it.
+    fn source_items(&self) -> Vec<&'m m::RepresentationItemRef> {
+        let this = self.about();
+        let mut out = Vec::new();
+        if let Some(map) = this.map() {
+            let mut visited: HashSet<m::EntityKey> = HashSet::new();
+            collect_shape_items(this.cx, &map.mapped_representation, &mut out, &mut visited);
+        }
+        out
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -1648,6 +1657,15 @@ fn collect_shape_items<'m>(
         let m::EntityKey::ShapeRepresentationRelationship(srr_id) = referrer else {
             continue;
         };
+        // A relationship a CONTEXT_DEPENDENT_SHAPE_REPRESENTATION uses relates
+        // a component to its assembly, not one shape to an equivalent one.
+        let used_by_cdsr = rg
+            .referrers(*referrer)
+            .iter()
+            .any(|r| matches!(r, m::EntityKey::ContextDependentShapeRepresentation(_)));
+        if used_by_cdsr {
+            continue;
+        }
         let srr = cx
             .model
             .shape_representation_relationship_arena
