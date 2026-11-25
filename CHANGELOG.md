@@ -338,6 +338,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   falls outside the coordinate list; it used to leave the entry out, which
   shifted every later vertex under `Mesh::triangles`. Its warnings now name
   the mesh, and `Mesh::normals` counts per-vertex normals against `pnindex`.
+- An `AXIS2_PLACEMENT_3D` that omits its reference direction takes the one
+  STEP defines: `[0, 1, 0]` when the axis is along X, else `[1, 0, 0]`. The
+  scene used `[1, 0, 0]` every time, so on an X axis the frame was degenerate:
+  `Transform::matrix` gave `None`, and so did `to_nurbs` for a curve or
+  surface on such a placement.
 - The scene reads a measure written as a complex instance, such as
   `(LENGTH_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM()
   MEASURE_WITH_UNIT(LENGTH_MEASURE(5.), #u) REPRESENTATION_ITEM(''))`, from

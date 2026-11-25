@@ -76,6 +76,17 @@ fn cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     ]
 }
 /// Unit vector, or `None` for a (near-)zero-length input.
+/// The reference direction STEP takes for an `AXIS2_PLACEMENT_3D` that omits
+/// one (`first_proj_axis`): `[0, 1, 0]` when the normalised axis is `[1, 0, 0]`
+/// or `[-1, 0, 0]`, else `[1, 0, 0]`.
+#[allow(clippy::float_cmp)] // the standard compares the normalised axis exactly
+pub(crate) fn default_ref_direction(axis: [f64; 3]) -> [f64; 3] {
+    match normalize(axis) {
+        Some([x, y, z]) if x.abs() == 1.0 && y == 0.0 && z == 0.0 => [0.0, 1.0, 0.0],
+        _ => [1.0, 0.0, 0.0],
+    }
+}
+
 fn normalize(a: [f64; 3]) -> Option<[f64; 3]> {
     let n = dot(a, a).sqrt();
     (n >= 1e-12).then(|| scale(a, 1.0 / n))
@@ -188,7 +199,7 @@ fn frame_of(cx: Ctx<'_>, id: m::Axis2Placement3dId) -> Option<Frame> {
     };
     let x0 = match &p.ref_direction {
         Some(d) => dir_ratios(cx, d)?,
-        None => [1.0, 0.0, 0.0],
+        None => default_ref_direction(z),
     };
     // STEP derives x by projecting ref_direction orthogonal to the axis.
     let x = normalize(sub(x0, scale(z, dot(x0, z))))?;

@@ -1418,13 +1418,14 @@ fn resolve_placement(cx: Ctx<'_>, item: &m::RepresentationItemRef) -> Option<Pla
         return None;
     };
     let a = cx.model.axis2_placement3d_arena.get(id.0);
+    let axis = a.axis.as_ref().map_or([0.0, 0.0, 1.0], |d| dir3(cx, d));
     Some(Placement {
         origin: point3(cx, &a.location),
-        axis: a.axis.as_ref().map_or([0.0, 0.0, 1.0], |d| dir3(cx, d)),
-        ref_direction: a
-            .ref_direction
-            .as_ref()
-            .map_or([1.0, 0.0, 0.0], |d| dir3(cx, d)),
+        axis,
+        ref_direction: a.ref_direction.as_ref().map_or_else(
+            || crate::scene::nurbs::default_ref_direction(axis),
+            |d| dir3(cx, d),
+        ),
     })
 }
 

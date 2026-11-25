@@ -822,6 +822,21 @@ const EDGES: &str = "\
 #59=CLOSED_SHELL('',(#58));\n\
 #60=MANIFOLD_SOLID_BREP('',#59);\n";
 
+/// A placement whose axis is X and whose reference direction is omitted takes
+/// STEP's default for that case, Y, so a circle on it still converts.
+#[test]
+fn an_x_axis_placement_without_a_reference_direction_takes_y() {
+    let edges = EDGES.replace("#8=CIRCLE('',#4,1.0);", "#8=CIRCLE('',#90,1.0);")
+        + "#90=AXIS2_PLACEMENT_3D('',#1,#91,$);\n#91=DIRECTION('',(2.,0.,0.));\n";
+    let src = format!("{HEADER}{edges}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let circle = find(&scene, |c| matches!(c.kind(), CurveKind::Circle(_)));
+    let nurbs = circle.to_nurbs().expect("the circle converts");
+    assert!(approx(&nurbs.control_points[0], &[0., 1., 0.]));
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
 /// A closed edge against its curve's direction (`same_sense` false) gives the
 /// whole circle the other way round, still from the curve's origin.
 #[test]

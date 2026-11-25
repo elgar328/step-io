@@ -276,6 +276,28 @@ fn reads_occurrence_placement_transform() {
     );
 }
 
+/// A placement whose axis is X and whose reference direction is omitted takes
+/// STEP's default for that case, Y, so its transform has a matrix.
+#[test]
+fn an_x_axis_placement_without_a_reference_direction_takes_y() {
+    let assembly = ASSEMBLY.replace(
+        "#55=AXIS2_PLACEMENT_3D('',#52,#53,#54);",
+        "#55=AXIS2_PLACEMENT_3D('',#52,#54,$);",
+    );
+    let src = format!("{HEADER}{assembly}{FOOTER}");
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let asm = def_for_product(&scene, "Assembly");
+    let t = asm
+        .occurrences()
+        .next()
+        .and_then(|o| o.transform())
+        .expect("a placement transform");
+    assert!(approx(t.to.axis, [1.0, 0.0, 0.0]));
+    assert!(approx(t.to.ref_direction, [0.0, 1.0, 0.0]));
+    assert!(t.matrix().is_some());
+}
+
 /// A one-level assembly whose part is placed at (10,20,30), turned 90° about z.
 /// `#41` is the assembly's representation, `#51` the part's; `#55` is the
 /// turned frame and `#57` the identity. `links` holds the definitions'
