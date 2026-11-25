@@ -368,6 +368,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   concern. A bare `PRE_DEFINED_COLOUR` now gives its colour. `Datum::datum_feature` also finds a
   `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`. `MeshGroup::solid` follows a shell linked
   through an `ORIENTED_CLOSED_SHELL`.
+- `ProductDef::tolerances` includes a tolerance whose target is a dimension
+  or a relationship between shape aspects, under each part a feature it
+  joins is on, as `ProductDef::dimensions` places a dimension. Such a
+  tolerance used to belong to no part.
 - The assembly tree follows a `NEXT_ASSEMBLY_USAGE_OCCURRENCE` that names a
   definition through a `PRODUCT_DEFINITION_OCCURRENCE`, as AP242 edition 4
   may write it: `ProductDef::children`, `parents`, `occurrences`,

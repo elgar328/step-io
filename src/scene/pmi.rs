@@ -1188,25 +1188,91 @@ impl Datum<'_> {
 }
 
 impl Tolerance<'_> {
-    /// The product definition this tolerance belongs to: its target may be a
-    /// shape-aspect feature (→ that feature's part) or the whole part's
-    /// `PRODUCT_DEFINITION_SHAPE` directly (an all-over tolerance).
-    fn part_def_id(&self) -> Option<m::EntityKey> {
+    /// The product definitions this tolerance belongs to: its target may be a
+    /// shape-aspect feature (→ that feature's part), the whole part's
+    /// `PRODUCT_DEFINITION_SHAPE` (an all-over tolerance), or a dimension or
+    /// a relationship between shape aspects (→ the parts of the aspects it
+    /// joins, as for [`dimensions_of`]).
+    fn part_def_ids(&self) -> Vec<m::EntityKey> {
         let this = self.about();
-        let target = this.tolerance_target()?;
-        match target {
+        let cx = this.cx;
+        let model = cx.model;
+        let Some(target) = this.tolerance_target() else {
+            return Vec::new();
+        };
+        let aspects: Vec<&m::ShapeAspectRef> = match target {
             m::GeometricToleranceTargetRef::ProductDefinitionShape(id) => {
-                return product_def_of_pds(this.cx, *id);
+                return product_def_of_pds(cx, *id).into_iter().collect();
             }
             m::GeometricToleranceTargetRef::Complex(_) => {
-                this.cx
-                    .warn("tolerance target is a complex instance".to_owned());
-                return None;
+                cx.warn("tolerance target is a complex instance".to_owned());
+                return Vec::new();
             }
-            _ => {}
+            m::GeometricToleranceTargetRef::DimensionalSize(i) => {
+                vec![&model.dimensional_size_arena.get(i.0).applies_to]
+            }
+            m::GeometricToleranceTargetRef::AngularSize(i) => {
+                vec![&model.angular_size_arena.get(i.0).applies_to]
+            }
+            m::GeometricToleranceTargetRef::DimensionalSizeWithPath(i) => {
+                vec![&model.dimensional_size_with_path_arena.get(i.0).applies_to]
+            }
+            m::GeometricToleranceTargetRef::DimensionalLocation(i) => {
+                let d = model.dimensional_location_arena.get(i.0);
+                vec![&d.relating_shape_aspect, &d.related_shape_aspect]
+            }
+            m::GeometricToleranceTargetRef::AngularLocation(i) => {
+                let d = model.angular_location_arena.get(i.0);
+                vec![&d.relating_shape_aspect, &d.related_shape_aspect]
+            }
+            m::GeometricToleranceTargetRef::DimensionalLocationWithPath(i) => {
+                let d = model.dimensional_location_with_path_arena.get(i.0);
+                vec![&d.relating_shape_aspect, &d.related_shape_aspect]
+            }
+            m::GeometricToleranceTargetRef::DirectedDimensionalLocation(i) => {
+                let d = model.directed_dimensional_location_arena.get(i.0);
+                vec![&d.relating_shape_aspect, &d.related_shape_aspect]
+            }
+            m::GeometricToleranceTargetRef::ShapeAspectRelationship(i) => {
+                let d = model.shape_aspect_relationship_arena.get(i.0);
+                vec![&d.relating_shape_aspect, &d.related_shape_aspect]
+            }
+            m::GeometricToleranceTargetRef::ShapeAspectAssociativity(i) => {
+                let d = model.shape_aspect_associativity_arena.get(i.0);
+                vec![&d.relating_shape_aspect, &d.related_shape_aspect]
+            }
+            m::GeometricToleranceTargetRef::ShapeAspectDerivingRelationship(i) => {
+                let d = model.shape_aspect_deriving_relationship_arena.get(i.0);
+                vec![&d.relating_shape_aspect, &d.related_shape_aspect]
+            }
+            m::GeometricToleranceTargetRef::FeatureForDatumTargetRelationship(i) => {
+                vec![
+                    &model
+                        .feature_for_datum_target_relationship_arena
+                        .get(i.0)
+                        .relating_shape_aspect,
+                ]
+            }
+            other => {
+                let Some(which) = feature_impl_from_tolerance_target(other) else {
+                    return Vec::new();
+                };
+                return Feature { cx, which }.part_def_id().into_iter().collect();
+            }
+        };
+        let mut parts = Vec::new();
+        for aspect in aspects {
+            let Some(which) = feature_impl_from_shape_aspect_ref(aspect) else {
+                cx.warn("tolerance target's shape aspect is a complex instance".to_owned());
+                continue;
+            };
+            if let Some(part) = (Feature { cx, which }).part_def_id()
+                && !parts.contains(&part)
+            {
+                parts.push(part);
+            }
         }
-        let which = feature_impl_from_tolerance_target(target)?;
-        Feature { cx: this.cx, which }.part_def_id()
+        parts
     }
 }
 
@@ -1232,11 +1298,12 @@ pub(crate) fn dimensions_of(cx: Ctx<'_>, part: m::EntityKey) -> Vec<Dimension<'_
     all
 }
 
-/// The tolerances belonging to `part` — those whose target (feature or whole
-/// part) is on it.
+/// The tolerances belonging to `part` — those whose target (a feature, the
+/// whole part, or a dimension or relationship joining a feature on it) is on
+/// it.
 pub(crate) fn tolerances_of(cx: Ctx<'_>, part: m::EntityKey) -> Vec<Tolerance<'_>> {
     let mut all = all_tolerances(cx);
-    all.retain(|t| t.part_def_id() == Some(part));
+    all.retain(|t| t.part_def_ids().contains(&part));
     all
 }
 

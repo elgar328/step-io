@@ -817,3 +817,25 @@ fn feature_geometry_reaches_meshes_and_geometric_sets() {
         assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
     }
 }
+
+/// A tolerance on a dimension belongs to the part the dimension's feature is
+/// on.
+#[test]
+fn a_tolerance_on_a_dimension_belongs_to_its_part() {
+    let src = format!("{HEADER}{TWO_PARTS}#30=POSITION_TOLERANCE('posDA',$,$,#15);\n{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let names = |product: &str| -> Vec<String> {
+        scene
+            .all_product_definitions()
+            .find(|d| d.product().is_some_and(|p| p.name() == product))
+            .expect("the part")
+            .tolerances()
+            .map(|t| t.name().to_owned())
+            .collect()
+    };
+    assert!(names("partA").contains(&"posDA".to_owned()));
+    assert!(!names("partB").contains(&"posDA".to_owned()));
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}

@@ -501,8 +501,9 @@ impl<'m> ProductDef<'m> {
         pmi::dimensions_of(this.cx, this.key()).into_iter()
     }
 
-    /// The geometric tolerances of this part (those whose target — a feature or
-    /// the whole part — is on it).
+    /// The geometric tolerances of this part: those whose target is on it — a
+    /// feature, the whole part, or a dimension or shape-aspect relationship
+    /// with a feature on it (as for [`dimensions`](Self::dimensions)).
     pub fn tolerances(&self) -> impl Iterator<Item = pmi::Tolerance<'m>> + 'm {
         pmi::tolerances_of(self.cx, self.key()).into_iter()
     }
