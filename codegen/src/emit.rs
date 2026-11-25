@@ -3084,9 +3084,11 @@ impl std::error::Error for AuthorError {}
 /// nested in one (such as a row of B-spline control points) and of each list
 /// held in a SELECT (such as a `COMMON_DATUM_LIST`), every reference
 /// for an entity of a fitting type that exists in this model, every complex
-/// instance against the schema's rules for combining types, and every real
-/// for being finite. They do not check `WHERE` rules, and an id from another
-/// author that is in range here is taken as one of this model's.
+/// instance against the schema's rules for combining types, every real for
+/// being finite, and the `WHERE` rules that limit which types a reference may
+/// be ([the crate documentation](crate#writing-step) says which). They do
+/// not check the other `WHERE` rules, and an id from another author that is
+/// in range here is taken as one of this model's.
 /// [`Ap242Author::finish`] returns the model, for [`write`](crate::write) to
 /// send out as Part 21 text.
 #[derive(Default)]
