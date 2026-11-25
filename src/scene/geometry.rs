@@ -824,7 +824,8 @@ impl<'m> Surface<'m> {
     /// return `None` here — use [`Face::to_nurbs`] instead, which has the
     /// bounds. A B-spline whose
     /// degree is outside 1–25 or whose knot multiplicities do not match its
-    /// control points is `None` too.
+    /// control points is `None` too, and so is a bare `B_SPLINE_SURFACE` or
+    /// `RATIONAL_B_SPLINE_SURFACE` instance, which has no knots.
     ///
     /// An offset converts only over a plane, cylinder, cone, sphere or torus,
     /// and only where it keeps the surface's sense: not past a cylinder's axis or
@@ -903,6 +904,14 @@ impl<'m> Surface<'m> {
             | m::SurfaceRef::CylindricalSurface(_)
             | m::SurfaceRef::ConicalSurface(_)
             | m::SurfaceRef::SurfaceOfLinearExtrusion(_) => None,
+            // The knots are on a subtype; a bare instance has none.
+            m::SurfaceRef::BSplineSurface(_) | m::SurfaceRef::RationalBSplineSurface(_) => {
+                let kw = crate::scene::Ctx::keyword(this.key());
+                cx.warn(format!(
+                    "{kw}.to_nurbs: a bare {kw} has no knots to convert"
+                ));
+                None
+            }
             // A bare supertype instance carries no geometry to convert.
             _ => {
                 let kw = crate::scene::Ctx::keyword(this.key());
@@ -1409,7 +1418,8 @@ impl<'m> Curve<'m> {
     /// that needs bounds it alone lacks — an unbounded line, parabola or
     /// hyperbola; use [`Edge::to_nurbs`] there, or trim it — and for a B-spline
     /// whose degree is outside 1–25 or whose knot multiplicities do not match
-    /// its control points. A trimmed parabola or hyperbola converts exactly; a
+    /// its control points, or a bare `B_SPLINE_CURVE` or
+    /// `RATIONAL_B_SPLINE_CURVE` instance, which has no knots. A trimmed parabola or hyperbola converts exactly; a
     /// trim given as a point is followed rather than its parameter, which
     /// writers disagree on for a parabola.
     pub fn to_nurbs(&self) -> Option<crate::scene::nurbs::NurbsCurve> {
@@ -1494,6 +1504,14 @@ impl<'m> Curve<'m> {
                 cx.warn(format!(
                     "{}.to_nurbs: a curve in a surface's parameter space is not converted",
                     crate::scene::Ctx::keyword(this.key())
+                ));
+                None
+            }
+            // The knots are on a subtype; a bare instance has none.
+            CurveImpl::BSplineCurve(_) | CurveImpl::RationalBSplineCurve(_) => {
+                let kw = crate::scene::Ctx::keyword(this.key());
+                cx.warn(format!(
+                    "{kw}.to_nurbs: a bare {kw} has no knots to convert"
                 ));
                 None
             }

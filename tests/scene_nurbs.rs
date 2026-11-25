@@ -3,6 +3,7 @@
 //! unsupported kinds return `None`. Curves are reached through anchored
 //! `EDGE_CURVE`s (there is no standalone curve enumerator).
 
+use step_io::model::{BSplineCurveId, EntityKey};
 use step_io::read;
 use step_io::scene::{Curve, CurveKind};
 use step_io::scene::{NurbsCurve, Scene};
@@ -335,6 +336,39 @@ fn unsupported_curve_returns_none() {
         "unsupported kind is silent: {:?}",
         scene.warnings()
     );
+}
+
+/// A bare `B_SPLINE_CURVE` or `B_SPLINE_SURFACE` has no knots: no NURBS, and
+/// a warning that says so.
+#[test]
+fn a_bare_bspline_has_no_knots_to_convert() {
+    let curves = CURVES
+        .replace(
+            "#15=B_SPLINE_CURVE_WITH_KNOTS('',1,(#12,#13,#14),.UNSPECIFIED.,.F.,.F.,(2,1,2),(0.,1.,2.),.UNSPECIFIED.);",
+            "#15=B_SPLINE_CURVE('',1,(#12,#13,#14),.UNSPECIFIED.,.F.,.F.);",
+        )
+        .replace(
+            "#47=PLANE('',#5);",
+            "#47=B_SPLINE_SURFACE('',1,1,((#12,#13),(#14,#1)),.UNSPECIFIED.,.F.,.F.,.F.);",
+        );
+    let src = format!("{HEADER}{curves}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let curve = find(&scene, |c| {
+        c.key() == EntityKey::BSplineCurve(BSplineCurveId(0))
+    });
+    assert!(curve.to_nurbs().is_none());
+    let surface = scene.all_faces().next().expect("the face").surface();
+    assert!(surface.to_nurbs().is_none());
+    let warnings = scene.warnings();
+    assert_eq!(warnings.len(), 2, "{warnings:?}");
+    for (w, kw) in warnings.iter().zip(["B_SPLINE_CURVE", "B_SPLINE_SURFACE"]) {
+        assert_eq!(
+            w.message,
+            format!("{kw}.to_nurbs: a bare {kw} has no knots to convert")
+        );
+    }
 }
 
 // The uniform-knot family — subtypes that store no knots (a standard rule
