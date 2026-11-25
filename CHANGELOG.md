@@ -374,8 +374,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   B-spline part or knots, and a basis or 3D curve of a kind they do not
   convert. The product and PMI walks report a complex product, formation,
   document, date, direction, shape representation or `of_shape`, a complex
-  dimension feature, tolerance target or datum feature without a
-  `SHAPE_ASPECT` part, a placement whose transformation is not an
+  dimension feature or datum feature without a `SHAPE_ASPECT` part, a complex
+  tolerance target without a `SHAPE_ASPECT`, `SHAPE_ASPECT_RELATIONSHIP` or
+  `DIMENSIONAL_SIZE` part, a placement whose transformation is not an
   `ITEM_DEFINED_TRANSFORMATION`, and a shape relationship whose other end is
   not a representation. The presentation walks report a complex style, style
   element or rendering property and a bare `COLOUR`, and `Scene::units` a
@@ -384,9 +385,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`. `MeshGroup::solid` follows a shell linked
   through an `ORIENTED_CLOSED_SHELL`.
 - `ProductDef::tolerances` includes a tolerance whose target is a dimension
-  or a relationship between shape aspects, under each part a feature it
-  joins is on, as `ProductDef::dimensions` places a dimension. Such a
-  tolerance used to belong to no part.
+  or a relationship between shape aspects, also when that is a complex
+  instance, under each part a feature it joins is on, as
+  `ProductDef::dimensions` places a dimension. Such a tolerance used to
+  belong to no part.
 - The assembly tree follows a `NEXT_ASSEMBLY_USAGE_OCCURRENCE` that names a
   definition through a `PRODUCT_DEFINITION_OCCURRENCE`, as AP242 edition 4
   may write it: `ProductDef::children`, `parents`, `occurrences`,

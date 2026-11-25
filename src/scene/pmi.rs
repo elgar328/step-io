@@ -1103,17 +1103,20 @@ impl<'m> Tolerance<'m> {
     ///
     /// `None` when the target is not a named shape aspect — a tolerance placed on
     /// a dimension, on the whole part (`PRODUCT_DEFINITION_SHAPE`) or on a
-    /// relationship between shape aspects — or when the target is a complex
-    /// instance without a `SHAPE_ASPECT` part (reported via
-    /// [`Scene::warnings`]).
+    /// relationship between shape aspects, plain or a complex instance — or
+    /// when the target is a complex instance that is none of these (reported
+    /// via [`Scene::warnings`]).
     pub fn feature(&self) -> Option<Feature<'m>> {
         let this = self.about();
+        let model = this.cx.model;
         let target = this.tolerance_target()?;
-        let which = feature_impl_from_tolerance_target(this.cx.model, target);
-        if which.is_none() && matches!(target, m::GeometricToleranceTargetRef::Complex(_)) {
-            this.cx.warn(
-                "tolerance target is a complex instance without a SHAPE_ASPECT part".to_owned(),
-            );
+        let which = feature_impl_from_tolerance_target(model, target);
+        if which.is_none() {
+            if let m::GeometricToleranceTargetRef::Complex(i) = target {
+                if complex_target_ends(model, *i).is_none() {
+                    this.cx.warn(COMPLEX_TARGET_UNREAD.to_owned());
+                }
+            }
         }
         which.map(|which| Feature { cx: this.cx, which })
     }
@@ -1443,14 +1446,14 @@ impl Tolerance<'_> {
                 return product_def_of_pds(cx, *id).into_iter().collect();
             }
             m::GeometricToleranceTargetRef::Complex(i) => {
-                let Some(which) = complex_feature(model, *i) else {
-                    cx.warn(
-                        "tolerance target is a complex instance without a SHAPE_ASPECT part"
-                            .to_owned(),
-                    );
+                if let Some(which) = complex_feature(model, *i) {
+                    return Feature { cx, which }.part_def_id().into_iter().collect();
+                }
+                let Some(ends) = complex_target_ends(model, *i) else {
+                    cx.warn(COMPLEX_TARGET_UNREAD.to_owned());
                     return Vec::new();
                 };
-                return Feature { cx, which }.part_def_id().into_iter().collect();
+                ends
             }
             m::GeometricToleranceTargetRef::DimensionalSize(i) => {
                 vec![&model.dimensional_size_arena.get(i.0).applies_to]
@@ -1522,6 +1525,40 @@ impl Tolerance<'_> {
         }
         parts
     }
+}
+
+/// The warning for a complex tolerance target that is neither a shape aspect
+/// nor a dimension or relationship joining shape aspects. One text, so the
+/// two places that meet such a target report it once.
+const COMPLEX_TARGET_UNREAD: &str = "tolerance target is a complex instance without a \
+     SHAPE_ASPECT, SHAPE_ASPECT_RELATIONSHIP or DIMENSIONAL_SIZE part";
+
+/// The shape aspects a complex tolerance target joins when it is a dimension
+/// or a relationship between shape aspects: both ends of its
+/// `SHAPE_ASPECT_RELATIONSHIP` part (only the relating one with a
+/// `FEATURE_FOR_DATUM_TARGET_RELATIONSHIP` part, as for a plain one), or what
+/// its `DIMENSIONAL_SIZE` part applies to. `None` when it has neither part.
+fn complex_target_ends(
+    model: &m::StepModel,
+    id: m::ComplexEntityId,
+) -> Option<Vec<&m::ShapeAspectRef>> {
+    let parts = &model.complex_entity_arena.get(id.0).parts;
+    let datum_target = parts
+        .iter()
+        .any(|p| matches!(p, m::PartialEntity::FeatureForDatumTargetRelationship));
+    parts.iter().find_map(|p| match p {
+        m::PartialEntity::ShapeAspectRelationship {
+            relating_shape_aspect,
+            related_shape_aspect,
+            ..
+        } => Some(if datum_target {
+            vec![relating_shape_aspect]
+        } else {
+            vec![relating_shape_aspect, related_shape_aspect]
+        }),
+        m::PartialEntity::DimensionalSize { applies_to, .. } => Some(vec![applies_to]),
+        _ => None,
+    })
 }
 
 /// The shape-region features (narrow set) belonging to `part`.

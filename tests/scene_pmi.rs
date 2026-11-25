@@ -1061,6 +1061,56 @@ fn feature_geometry_reaches_meshes_and_geometric_sets() {
     }
 }
 
+/// A tolerance on a dimension or relationship that joins shape aspects,
+/// plain or a complex instance, belongs to the parts of the aspects it joins
+/// and has no feature of its own.
+#[test]
+fn a_tolerance_on_a_complex_dimension_belongs_to_its_parts() {
+    for (target, in_b) in [
+        (
+            "#31=( DIMENSIONAL_LOCATION() DIRECTED_DIMENSIONAL_LOCATION() SHAPE_ASPECT_RELATIONSHIP('loc',$,#14,#24) );",
+            true,
+        ),
+        (
+            "#31=( ANGULAR_SIZE(.EQUAL.) DIMENSIONAL_SIZE(#14,'a') );",
+            false,
+        ),
+        ("#31=DIMENSIONAL_LOCATION('loc',$,#14,#24);", true),
+        ("#31=SHAPE_ASPECT_RELATIONSHIP('rel',$,#14,#24);", true),
+    ] {
+        let src = format!(
+            "{HEADER}{TWO_PARTS}{target}\n#30=POSITION_TOLERANCE('pos',$,$,#31);\n{FOOTER}"
+        );
+        let (model, rep) = read(src.as_bytes()).expect("read");
+        assert!(
+            rep.dropped.is_empty(),
+            "{target}: dropped {:?}",
+            rep.dropped
+        );
+        let scene = model.scene();
+        let has = |product: &str| {
+            scene
+                .all_product_definitions()
+                .find(|d| d.product().is_some_and(|p| p.name() == product))
+                .expect("the part")
+                .tolerances()
+                .any(|t| t.name() == "pos")
+        };
+        assert!(has("partA"), "{target}");
+        assert_eq!(has("partB"), in_b, "{target}");
+        let tol = scene
+            .all_tolerances()
+            .find(|t| t.name() == "pos")
+            .expect("the tolerance");
+        assert!(tol.feature().is_none(), "{target}");
+        assert!(
+            scene.warnings().is_empty(),
+            "{target}: {:?}",
+            scene.warnings()
+        );
+    }
+}
+
 /// A tolerance on a dimension belongs to the part the dimension's feature is
 /// on.
 #[test]
