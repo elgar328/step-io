@@ -12,39 +12,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `read()` recognizes AP242 edition 4 in `FILE_SCHEMA`: module version 7
   (`{ 1 0 10303 442 7 1 4 }`) as edition 4 IS, versions 5 and 6 as edition 4
   of an unknown stage.
-- The model reads what AP242 edition 4 adds within step-io's support
-  boundary: the round, composite and counter-bored, -drilled or -sunk hole
-  features (`ROUND_HOLE`, `BASIC_ROUND_HOLE`, `EXPLICIT_ROUND_HOLE`,
-  `COMPOSITE_HOLE`, `EXPLICIT_COMPOSITE_HOLE`, `COUNTERBORE_HOLE_DEFINITION`,
-  `COUNTERDRILL_HOLE_DEFINITION`, `COUNTERSINK_HOLE_DEFINITION`,
-  `ROUND_HOLE_BOTTOM_CONDITION`, `COMPOUND_FEATURE`, `FEATURE_DEFINITION`),
+- The model reads more entities within step-io's support boundary, each
+  with an `Ap242Author` constructor: the round, composite and counter-bored,
+  -drilled or -sunk hole features (`ROUND_HOLE`, `BASIC_ROUND_HOLE`,
+  `EXPLICIT_ROUND_HOLE`, `COMPOSITE_HOLE`, `EXPLICIT_COMPOSITE_HOLE`,
+  `COUNTERBORE_HOLE_DEFINITION`, `COUNTERDRILL_HOLE_DEFINITION`,
+  `COUNTERSINK_HOLE_DEFINITION`, `ROUND_HOLE_BOTTOM_CONDITION`,
+  `COMPOUND_FEATURE`, `FEATURE_DEFINITION`),
   `POSITIVE_LENGTH_MEASURE_WITH_UNIT`, `POSITIVE_PLANE_ANGLE_MEASURE_WITH_UNIT`,
   `EXTERNAL_IMAGE_PLACEMENT_IN_CALLOUT` and
-  `ACTION_RESOURCE_REQUIREMENT_RELATIONSHIP`, each with an `Ap242Author`
-  constructor.
+  `ACTION_RESOURCE_REQUIREMENT_RELATIONSHIP`. `ROUND_HOLE_BOTTOM_CONDITION`,
+  `EXTERNAL_IMAGE_PLACEMENT_IN_CALLOUT` and
+  `ACTION_RESOURCE_REQUIREMENT_RELATIONSHIP` are new in edition 4; the others
+  are older, and come in because edition 4 references them. `EntityKey`, the
+  reference enums that admit them, and `PartialEntity` for those that can be
+  part of a complex instance gain arms for them:
+  - the hole features: `CharacterizedDefinitionRef`,
+    `DocumentReferenceItemRef` and
+    `ItemIdentifiedRepresentationUsageDefinitionRef`
+  - the positive measures: `MeasureWithUnitRef`, `LengthMeasureWithUnitRef`
+    (the length one), `LengthOrPlaneAngleMeasureWithUnitSelectRef`,
+    `SizeSelectRef` and `GroupableItemRef`
+  - `ExternalImagePlacementInCallout`: `RepresentationItemRef` and the
+    enums that list representation items, such as `StyledItemRef`,
+    `LayeredItemRef`, `InvisibleItemRef` and `AnnotationOccurrenceRef`
+  - `RoundHoleBottomCondition`: `IdAttributeSelectRef`;
+    `ActionResourceRequirementRelationship`:
+    `CharacterizedResourceDefinitionRef`
 - `Ap242Author` constructors for what edition 4 allows and edition 2 did not:
   `add_apll_point`, `add_apll_point_with_surface`,
   `add_annotation_placeholder_occurrence_with_leader_line`,
   `add_annotation_to_annotation_leader_line`,
   `add_annotation_to_model_leader_line` and `add_auxiliary_leader_line`.
 - A styled item may style a set of items (`SET_REPRESENTATION_ITEM`), as AP242
-  edition 4 allows: `StyledItemTargetOrRepresentationItemRef` gains a
+  edition 4 allows: `StyledItemTargetOrRepresentationItemRef` (below) has a
   `SetRepresentationItem` arm, and a colour styled onto a set reaches each of
-  its items. `Ap242Author` rejects an empty set there with
-  `AuthorError::Cardinality`.
+  its items.
 - `GeometricToleranceModifier` gains edition 4's values: `ContinuousFeatures`,
   `DerivedFeature`, `EachElement`, `Individually`, `OffsetZone`,
   `SeparateZones`, `Stock`, `UnspecifiedAngularToleranceZoneOffset`,
   `UnspecifiedLinearToleranceZoneOffset` and `VariableAngle`.
-- `resolve()` on reference enums with an aggregate arm
+- Reference enums with an aggregate arm
   (`StyledItemTargetOrRepresentationItemRef`, `DatumOrCommonDatumRef`,
   `CompoundItemDefinitionRef`, `TransformationRef`,
-  `ItemIdentifiedRepresentationUsageSelectRef`), the aggregate viewed as its
-  elements; `entity_key()` stays with enums whose every arm is one entity.
+  `ItemIdentifiedRepresentationUsageSelectRef`) have `resolve()`, which views
+  the aggregate as its elements; `entity_key()` stays with enums whose every
+  arm is one entity.
 - `AuthorError::NarrowedReference`: a reference names a type that AP242 does
   not allow in an attribute it narrows. It is raised where the argument's
-  type cannot rule that out: in `add_complex`, and in a self-referencing
-  constructor (`add_…_cyclic`), which takes the model's type.
+  type cannot rule that out: an argument that is a complex instance, a part
+  given to `add_complex`, and the struct a self-referencing constructor
+  (`add_…_cyclic`) takes, which has the model's types.
 - `Ap242ApprovedItemRef`, `Ap242ConstructiveGeometryRepresentationRef`,
   `Ap242DerivedShapeAspectRef`, `Ap242DraughtingModelItemSelectRef`,
   `Ap242AdvancedBrepShapeRepresentationItemsSelectRef`,
@@ -92,18 +110,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Output is AP242 edition 4 (ISO 10303-242:2025): `Ap242Author::finish` and
   `StepBuilder` stamp `FILE_SCHEMA` `{ 1 0 10303 442 7 1 4 }`, and
   `StepBuilder` writes the application protocol definition's year as 2025.
-  The constructors follow edition 4's types and `WHERE` rules; where they
-  differ from edition 2's, as listed below.
-- The model reads the union of seven editions, AP242 edition 4 included: a
+  The constructors follow edition 4's types and `WHERE` rules; the entries
+  below say what changes for them.
+- The model reads the union of seven editions, AP242 edition 4 included. A
   complex instance is allowed wherever the EXPRESS rules let the entity
-  combine in any edition, so `CartesianPointRef`, `Axis1PlacementRef`,
-  `Axis2PlacementRef`, `Axis2Placement3dRef`, `CoordinatesListRef`,
-  `DatumReferenceCompartmentRef`, `DatumReferenceElementRef`,
-  `UncertaintyMeasureWithUnitRef`, `TrimmingSelectRef`, `VertexLoopRef`,
-  `ToleranceSelectRef`, `SymbolTargetRef`, `DesApllPointSelectRef`,
+  combine in any edition, so `PartialEntity` gains a variant for each entity
+  some edition lets combine (82 that were modeled already, such as
+  `CartesianPoint`, `Circle` and `Line`), and `CartesianPointRef`,
+  `Axis1PlacementRef`, `Axis2PlacementRef`, `Axis2Placement3dRef`,
+  `CoordinatesListRef`, `DatumReferenceCompartmentRef`,
+  `DatumReferenceElementRef`, `UncertaintyMeasureWithUnitRef`,
+  `TrimmingSelectRef`, `VertexLoopRef`, `ToleranceSelectRef`,
+  `SymbolTargetRef`, `DesApllPointSelectRef`,
   `AnnotationPlaceholderLeaderLineRef`, `AnnotationToModelLeaderLineRef` and
-  `CameraModelD3MultiClippingIntersectionSelectRef` gain a `Complex` arm,
-  `MeasureWithUnitRef` and `SizeSelectRef` gain the positive measures, and
+  `CameraModelD3MultiClippingIntersectionSelectRef` gain a `Complex` arm.
   `GeometricToleranceTargetRef` gains edition 4's shape aspect relationships
   (`ShapeAspectRelationship`, `ShapeAspectAssociativity`,
   `ShapeAspectDerivingRelationship`, `FeatureForDatumTargetRelationship`).
@@ -203,8 +223,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a rule that depends on the instance's own type is checked against its
   parts: `DRAUGHTING_ANNOTATION_OCCURRENCE.WR7` (exactly one composite text
   or text literal) applies where a part is an annotation text occurrence.
-- `add_person_and_organization_address` takes exactly one organization and
-  one person, as AP242 requires; it used to take one or more of each.
 - `add_complex` rejects a part of an entity AP242 declares `ABSTRACT` unless
   a part of one of its subtypes is beside it, with
   `AuthorError::InvalidComplex`.
@@ -243,8 +261,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `StyledItemTargetOrRepresentationItemRef`
   - `ConstructiveGeometryRepresentationRelationship::rep_1`:
     `RepresentationOrRepresentationReferenceRef`, as
-    `representation_relationship` declares it; AP242 narrows it to a shape
-    model only for `Ap242Author`
+    `representation_relationship` declares it; `Ap242Author` still takes
+    AP242's `ShapeModelRef`
 
 ### Removed
 
@@ -268,7 +286,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   constructor, or `add_complex` with a subtype part beside the abstract one.
   `GENERIC_PRODUCT_DEFINITION_REFERENCE`, `TEXTURE_STYLE_SPECIFICATION` and
   `TEXTURE_STYLE_TESSELLATION_SPECIFICATION` can no longer be authored:
-  step-io does not model any of their subtypes.
+  step-io models none of their subtypes that are not themselves `ABSTRACT`.
 - `ANNOTATION_FILL_AREA_OCCURRENCE` and `ANNOTATION_SYMBOL` are no longer
   modeled. Every edition requires them to reference types step-io does not
   model (`ANNOTATION_FILL_AREA`, `SYMBOL_REPRESENTATION_MAP`), so a standard
@@ -306,10 +324,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   type. Such an entity used to be kept, and the reference went missing from
   the scene without a report: a face's surface read as `Other`, or a loop or
   edge was left out.
-- `read()` keeps a geometric tolerance whose magnitude, unit size or
-  projected length is a plain `MEASURE_WITH_UNIT`, and a styled item that
-  styles a representation item outside AP242's `styled_item_target`, as AP203
-  and AP214 allow. Both used to be dropped as a `NonstandardReference`.
+- `read()` keeps a geometric tolerance whose magnitude or unit size, or a
+  projected zone whose projected length, is a plain `MEASURE_WITH_UNIT`, and
+  a styled item that styles a representation item outside AP242's
+  `styled_item_target`, as AP203 and AP214 allow. These used to be dropped as
+  a `NonstandardReference`.
 - `Tolerance::magnitude` reads a magnitude given as a plain
   `MEASURE_WITH_UNIT` when its value is a length measure.
 - `Ap242Author` checks the size of a list held in a SELECT, and rejects one
@@ -317,6 +336,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   needs at least two elements, a `LIST_REPRESENTATION_ITEM`,
   `SET_REPRESENTATION_ITEM` or `SET_ITEM_DEFINED_TRANSFORMATION` at least
   one. It used to check only the elements.
+- `add_person_and_organization_address` rejects `organizations` or `people`
+  that do not hold exactly one element with `AuthorError::Cardinality`, as
+  AP242 requires; it used to accept more than one.
 
 ## [0.3.1] - 2026-11-18
 

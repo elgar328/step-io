@@ -139,8 +139,9 @@ This project follows [Semantic Versioning 2.0.0](https://semver.org/):
 - **MINOR** (`0.X.0`) — new functionality, backwards compatible.
 - **PATCH** (`0.0.X`) — backwards-compatible bug fixes.
 
-While the version is `0.x.y`, minor bumps may include breaking changes (the
-crate is experimental).
+While the version is `0.x.y`, a breaking change bumps the minor version and
+anything else, new features included, bumps the patch (the crate is
+experimental).
 
 ## CHANGELOG Guidelines
 

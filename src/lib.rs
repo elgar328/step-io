@@ -140,7 +140,9 @@
 //!
 //! Where an argument's type cannot rule it out — a complex instance's parts,
 //! the struct a self-referencing constructor takes — the check runs on
-//! insertion and returns [`AuthorError::NarrowedReference`].
+//! insertion and returns [`AuthorError::NarrowedReference`]. A reference to
+//! an entity type AP242 does not have at all compiles where the model's type
+//! names it, and is refused on insertion with [`AuthorError::NotAp242`].
 //!
 //! [`StepBuilder`] is the convenience layer on top, covering what exports
 //! touch most: parts and b-rep topology (vertex → edge → face → solid, over
@@ -259,7 +261,7 @@ pub use parser::schema::{ApFamily, SchemaId, Stage};
 pub use refgraph::RefGraph;
 
 /// Compile-time checks of the AP242 edition 4 argument types and
-/// constructors, each paired with a version that compiles, so a
+/// constructors, most paired with a version that compiles, so a
 /// `compile_fail` fails for its reason.
 ///
 /// AP242's `approved_item` drops `PRODUCT_DEFINITION`, which AP203 allows:
@@ -310,8 +312,8 @@ pub use refgraph::RefGraph;
 /// ```
 ///
 /// `STYLED_ITEM.WR3` lets a styled item style only a mapped item, a
-/// geometric item, or a set of them, a context-dependent over-riding styled
-/// item included:
+/// geometric item, or a set of them; edition 4 applies this to a
+/// context-dependent over-riding styled item too:
 ///
 /// ```compile_fail,E0599
 /// # use step_io::{Ap242Author, model as m};
@@ -423,10 +425,11 @@ pub use refgraph::RefGraph;
 ///
 /// `CONSTRUCTIVE_GEOMETRY_REPRESENTATION.WR2` lets each item be one of the
 /// types it lists. Edition 4 asks for exactly one, though it lists
-/// supertypes with their subtypes (`point` and `cartesian_point`, `curve`,
-/// `conic` and `circle`), which would leave a cartesian point, a line or a
-/// plane out; this is a known issue of the edition, and the rule is read as
-/// asking for at least one. A mapped item is not listed:
+/// supertypes with their subtypes (a cartesian point is also a `point`, a
+/// line a `curve`, a circle a `curve` and a `conic`, a plane a `surface` and
+/// an `elementary_surface`), which would leave out a cartesian point, a line,
+/// a circle or a plane; this is a known issue of the edition, and the rule is
+/// read as asking for at least one. A mapped item is not listed:
 ///
 /// ```
 /// # use step_io::{Ap242Author, model as m};
