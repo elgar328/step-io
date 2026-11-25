@@ -2,7 +2,7 @@
 // Schema-faithful model + generic 2-pass read + topo write.
 
 //! The strict authoring layer — [`Ap242Author`], one validated
-//! constructor per AP242 entity that is not `ABSTRACT`.
+//! constructor per AP242 entity step-io models that is not `ABSTRACT`.
 
 use super::model::*;
 
@@ -12,7 +12,8 @@ use super::model::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum AuthorError {
-    /// The referenced entity kind is not legal in AP242.
+    /// An entity kind that is not in AP242: a reference's target, or a part
+    /// of a complex instance.
     NotAp242 { entity: &'static str },
     /// The referenced id does not point at an existing entity.
     DanglingRef { entity: &'static str },
@@ -40,11 +41,13 @@ pub enum AuthorError {
     /// Builder input breaks a rule of the standard: a B-spline whose knots do
     /// not fit its degree and control points, a mesh index past its points.
     InvalidInput { reason: &'static str },
-    /// A reference AP242 narrows in `entity` (a `SELF\\supertype.attribute`
-    /// redeclaration, or a SELECT with fewer members than other editions')
-    /// names a type the narrower attribute does not allow. Raised where the
-    /// type of the argument cannot rule it out: a complex instance's parts,
-    /// and a self-referencing constructor's struct.
+    /// A reference AP242 narrows in `entity` — by a `SELF\supertype.attribute`
+    /// redeclaration, a SELECT with fewer members than other editions', or a
+    /// `WHERE` rule that limits its type — names a type the narrower attribute
+    /// does not allow. Raised where the type of the argument cannot rule it
+    /// out: an argument that is a complex instance, the parts given to
+    /// [`Ap242Author::add_complex`], and a self-referencing constructor's
+    /// struct.
     NarrowedReference {
         entity: &'static str,
         attribute: &'static str,
@@ -115,6 +118,7 @@ pub struct Ap242Author {
 }
 
 impl Ap242Author {
+    /// An empty author: no entities, and a header with every field empty.
     pub fn new() -> Self {
         Self::default()
     }
@@ -14321,8 +14325,9 @@ impl Ap242Author {
     /// Complex (multi-part) instance — rule-based strict AP242 assembler.
     /// The part-name set is validated by the schema name-set rule (legality,
     /// supertype-chain completeness, connectivity, ONEOF exclusivity, a
-    /// subtype part beside each `ABSTRACT` part), then every reference field
-    /// is checked; parts are stored in Part 21 order (alphabetical).
+    /// subtype part beside each `ABSTRACT` part), then every part's fields are
+    /// checked (types, sizes, references, finite reals, narrowings); parts are
+    /// stored in Part 21 order (alphabetical).
     pub fn add_complex(
         &mut self,
         mut parts: Vec<PartialEntity>,

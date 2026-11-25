@@ -255,15 +255,16 @@ impl TextDedup {
     }
 }
 
-/// select-of-scalars: `Some(type_name)` = typed member `TYPE(v)`; `None` = bare.
-/// `value` is int-or-real because EXPRESS `number` members (count_measure,
-/// numeric_measure) admit both; the token is preserved (2 stays 2, not 2.0).
+/// A measure's number as written, integer or real: EXPRESS `number` members
+/// such as `count_measure` admit both, and the token is kept (`2` stays `2`,
+/// not `2.0`).
 #[derive(Debug, Clone, PartialEq)]
 pub enum MeasureScalar {
     Int(i64),
     Real(f64),
 }
 impl MeasureScalar {
+    /// The number as an `f64`.
     pub fn as_f64(&self) -> f64 {
         match self {
             Self::Int(i) => *i as f64,
@@ -271,6 +272,8 @@ impl MeasureScalar {
         }
     }
 }
+/// A value of a SELECT of measure types: `type_name` is `Some` for the typed
+/// form `TYPE(v)`, `None` for a bare value.
 #[derive(Debug, Clone, PartialEq)]
 pub struct MeasureValue {
     pub type_name: Option<Text>,
@@ -1357,1037 +1360,1553 @@ impl TrimmingPreference {
     }
 }
 
+/// The id of a `ACTION` entity: its index among the model's `ACTION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ActionId(pub u32);
+/// The id of a `ACTION_ASSIGNMENT` entity: its index among the model's `ACTION_ASSIGNMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ActionAssignmentId(pub u32);
+/// The id of a `ACTION_DIRECTIVE` entity: its index among the model's `ACTION_DIRECTIVE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ActionDirectiveId(pub u32);
+/// The id of a `ACTION_METHOD` entity: its index among the model's `ACTION_METHOD` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ActionMethodId(pub u32);
+/// The id of a `ACTION_METHOD_RELATIONSHIP` entity: its index among the model's `ACTION_METHOD_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ActionMethodRelationshipId(pub u32);
+/// The id of a `ACTION_PROPERTY` entity: its index among the model's `ACTION_PROPERTY` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ActionPropertyId(pub u32);
+/// The id of a `ACTION_RELATIONSHIP` entity: its index among the model's `ACTION_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ActionRelationshipId(pub u32);
+/// The id of a `ACTION_REQUEST_ASSIGNMENT` entity: its index among the model's `ACTION_REQUEST_ASSIGNMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ActionRequestAssignmentId(pub u32);
+/// The id of a `ACTION_REQUEST_SOLUTION` entity: its index among the model's `ACTION_REQUEST_SOLUTION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ActionRequestSolutionId(pub u32);
+/// The id of a `ACTION_RESOURCE` entity: its index among the model's `ACTION_RESOURCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ActionResourceId(pub u32);
+/// The id of a `ACTION_RESOURCE_RELATIONSHIP` entity: its index among the model's `ACTION_RESOURCE_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ActionResourceRelationshipId(pub u32);
+/// The id of a `ACTION_RESOURCE_REQUIREMENT` entity: its index among the model's `ACTION_RESOURCE_REQUIREMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ActionResourceRequirementId(pub u32);
+/// The id of a `ACTION_RESOURCE_REQUIREMENT_RELATIONSHIP` entity: its index among the model's `ACTION_RESOURCE_REQUIREMENT_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ActionResourceRequirementRelationshipId(pub u32);
+/// The id of a `ACTION_RESOURCE_TYPE` entity: its index among the model's `ACTION_RESOURCE_TYPE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ActionResourceTypeId(pub u32);
+/// The id of a `ADDRESS` entity: its index among the model's `ADDRESS` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AddressId(pub u32);
+/// The id of a `ADVANCED_BREP_SHAPE_REPRESENTATION` entity: its index among the model's `ADVANCED_BREP_SHAPE_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AdvancedBrepShapeRepresentationId(pub u32);
+/// The id of a `ADVANCED_FACE` entity: its index among the model's `ADVANCED_FACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AdvancedFaceId(pub u32);
+/// The id of a `ALL_AROUND_SHAPE_ASPECT` entity: its index among the model's `ALL_AROUND_SHAPE_ASPECT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AllAroundShapeAspectId(pub u32);
+/// The id of a `ANGULAR_LOCATION` entity: its index among the model's `ANGULAR_LOCATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AngularLocationId(pub u32);
+/// The id of a `ANGULAR_SIZE` entity: its index among the model's `ANGULAR_SIZE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AngularSizeId(pub u32);
+/// The id of a `ANGULARITY_TOLERANCE` entity: its index among the model's `ANGULARITY_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AngularityToleranceId(pub u32);
+/// The id of a `ANNOTATION_CURVE_OCCURRENCE` entity: its index among the model's `ANNOTATION_CURVE_OCCURRENCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationCurveOccurrenceId(pub u32);
+/// The id of a `ANNOTATION_OCCURRENCE` entity: its index among the model's `ANNOTATION_OCCURRENCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationOccurrenceId(pub u32);
+/// The id of a `ANNOTATION_OCCURRENCE_ASSOCIATIVITY` entity: its index among the model's `ANNOTATION_OCCURRENCE_ASSOCIATIVITY` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationOccurrenceAssociativityId(pub u32);
+/// The id of a `ANNOTATION_OCCURRENCE_RELATIONSHIP` entity: its index among the model's `ANNOTATION_OCCURRENCE_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationOccurrenceRelationshipId(pub u32);
+/// The id of a `ANNOTATION_PLACEHOLDER_LEADER_LINE` entity: its index among the model's `ANNOTATION_PLACEHOLDER_LEADER_LINE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationPlaceholderLeaderLineId(pub u32);
+/// The id of a `ANNOTATION_PLACEHOLDER_OCCURRENCE` entity: its index among the model's `ANNOTATION_PLACEHOLDER_OCCURRENCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationPlaceholderOccurrenceId(pub u32);
+/// The id of a `ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE` entity: its index among the model's `ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationPlaceholderOccurrenceWithLeaderLineId(pub u32);
+/// The id of a `ANNOTATION_PLANE` entity: its index among the model's `ANNOTATION_PLANE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationPlaneId(pub u32);
+/// The id of a `ANNOTATION_SYMBOL_OCCURRENCE` entity: its index among the model's `ANNOTATION_SYMBOL_OCCURRENCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationSymbolOccurrenceId(pub u32);
+/// The id of a `ANNOTATION_TEXT` entity: its index among the model's `ANNOTATION_TEXT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationTextId(pub u32);
+/// The id of a `ANNOTATION_TEXT_CHARACTER` entity: its index among the model's `ANNOTATION_TEXT_CHARACTER` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationTextCharacterId(pub u32);
+/// The id of a `ANNOTATION_TEXT_OCCURRENCE` entity: its index among the model's `ANNOTATION_TEXT_OCCURRENCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationTextOccurrenceId(pub u32);
+/// The id of a `ANNOTATION_TO_ANNOTATION_LEADER_LINE` entity: its index among the model's `ANNOTATION_TO_ANNOTATION_LEADER_LINE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationToAnnotationLeaderLineId(pub u32);
+/// The id of a `ANNOTATION_TO_MODEL_LEADER_LINE` entity: its index among the model's `ANNOTATION_TO_MODEL_LEADER_LINE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AnnotationToModelLeaderLineId(pub u32);
+/// The id of a `APLL_POINT` entity: its index among the model's `APLL_POINT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApllPointId(pub u32);
+/// The id of a `APLL_POINT_WITH_SURFACE` entity: its index among the model's `APLL_POINT_WITH_SURFACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApllPointWithSurfaceId(pub u32);
+/// The id of a `APPLICATION_CONTEXT` entity: its index among the model's `APPLICATION_CONTEXT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApplicationContextId(pub u32);
+/// The id of a `APPLICATION_CONTEXT_ELEMENT` entity: its index among the model's `APPLICATION_CONTEXT_ELEMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApplicationContextElementId(pub u32);
+/// The id of a `APPLICATION_PROTOCOL_DEFINITION` entity: its index among the model's `APPLICATION_PROTOCOL_DEFINITION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApplicationProtocolDefinitionId(pub u32);
+/// The id of a `APPLIED_APPROVAL_ASSIGNMENT` entity: its index among the model's `APPLIED_APPROVAL_ASSIGNMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AppliedApprovalAssignmentId(pub u32);
+/// The id of a `APPLIED_DATE_AND_TIME_ASSIGNMENT` entity: its index among the model's `APPLIED_DATE_AND_TIME_ASSIGNMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AppliedDateAndTimeAssignmentId(pub u32);
+/// The id of a `APPLIED_DOCUMENT_REFERENCE` entity: its index among the model's `APPLIED_DOCUMENT_REFERENCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AppliedDocumentReferenceId(pub u32);
+/// The id of a `APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT` entity: its index among the model's `APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AppliedExternalIdentificationAssignmentId(pub u32);
+/// The id of a `APPLIED_GROUP_ASSIGNMENT` entity: its index among the model's `APPLIED_GROUP_ASSIGNMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AppliedGroupAssignmentId(pub u32);
+/// The id of a `APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT` entity: its index among the model's `APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AppliedPersonAndOrganizationAssignmentId(pub u32);
+/// The id of a `APPLIED_PRESENTED_ITEM` entity: its index among the model's `APPLIED_PRESENTED_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AppliedPresentedItemId(pub u32);
+/// The id of a `APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT` entity: its index among the model's `APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AppliedSecurityClassificationAssignmentId(pub u32);
+/// The id of a `APPROVAL` entity: its index among the model's `APPROVAL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApprovalId(pub u32);
+/// The id of a `APPROVAL_ASSIGNMENT` entity: its index among the model's `APPROVAL_ASSIGNMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApprovalAssignmentId(pub u32);
+/// The id of a `APPROVAL_DATE_TIME` entity: its index among the model's `APPROVAL_DATE_TIME` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApprovalDateTimeId(pub u32);
+/// The id of a `APPROVAL_PERSON_ORGANIZATION` entity: its index among the model's `APPROVAL_PERSON_ORGANIZATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApprovalPersonOrganizationId(pub u32);
+/// The id of a `APPROVAL_ROLE` entity: its index among the model's `APPROVAL_ROLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApprovalRoleId(pub u32);
+/// The id of a `APPROVAL_STATUS` entity: its index among the model's `APPROVAL_STATUS` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApprovalStatusId(pub u32);
+/// The id of a `APPROXIMATION_TOLERANCE` entity: its index among the model's `APPROXIMATION_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApproximationToleranceId(pub u32);
+/// The id of a `APPROXIMATION_TOLERANCE_DEVIATION` entity: its index among the model's `APPROXIMATION_TOLERANCE_DEVIATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApproximationToleranceDeviationId(pub u32);
+/// The id of a `APPROXIMATION_TOLERANCE_PARAMETER` entity: its index among the model's `APPROXIMATION_TOLERANCE_PARAMETER` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApproximationToleranceParameterId(pub u32);
+/// The id of a `AREA_IN_SET` entity: its index among the model's `AREA_IN_SET` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AreaInSetId(pub u32);
+/// The id of a `AREA_UNIT` entity: its index among the model's `AREA_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AreaUnitId(pub u32);
+/// The id of a `ASCRIBABLE_STATE` entity: its index among the model's `ASCRIBABLE_STATE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AscribableStateId(pub u32);
+/// The id of a `ASCRIBABLE_STATE_RELATIONSHIP` entity: its index among the model's `ASCRIBABLE_STATE_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AscribableStateRelationshipId(pub u32);
+/// The id of a `ASSEMBLY_COMPONENT_USAGE` entity: its index among the model's `ASSEMBLY_COMPONENT_USAGE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AssemblyComponentUsageId(pub u32);
+/// The id of a `AUXILIARY_LEADER_LINE` entity: its index among the model's `AUXILIARY_LEADER_LINE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AuxiliaryLeaderLineId(pub u32);
+/// The id of a `AXIS1_PLACEMENT` entity: its index among the model's `AXIS1_PLACEMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Axis1PlacementId(pub u32);
+/// The id of a `AXIS2_PLACEMENT_2D` entity: its index among the model's `AXIS2_PLACEMENT_2D` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Axis2Placement2dId(pub u32);
+/// The id of a `AXIS2_PLACEMENT_3D` entity: its index among the model's `AXIS2_PLACEMENT_3D` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Axis2Placement3dId(pub u32);
+/// The id of a `B_SPLINE_CURVE` entity: its index among the model's `B_SPLINE_CURVE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BSplineCurveId(pub u32);
+/// The id of a `B_SPLINE_CURVE_WITH_KNOTS` entity: its index among the model's `B_SPLINE_CURVE_WITH_KNOTS` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BSplineCurveWithKnotsId(pub u32);
+/// The id of a `B_SPLINE_SURFACE` entity: its index among the model's `B_SPLINE_SURFACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BSplineSurfaceId(pub u32);
+/// The id of a `B_SPLINE_SURFACE_WITH_KNOTS` entity: its index among the model's `B_SPLINE_SURFACE_WITH_KNOTS` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BSplineSurfaceWithKnotsId(pub u32);
+/// The id of a `BASIC_ROUND_HOLE` entity: its index among the model's `BASIC_ROUND_HOLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BasicRoundHoleId(pub u32);
+/// The id of a `BEZIER_CURVE` entity: its index among the model's `BEZIER_CURVE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BezierCurveId(pub u32);
+/// The id of a `BEZIER_SURFACE` entity: its index among the model's `BEZIER_SURFACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BezierSurfaceId(pub u32);
+/// The id of a `BOUNDED_CURVE` entity: its index among the model's `BOUNDED_CURVE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BoundedCurveId(pub u32);
+/// The id of a `BOUNDED_PCURVE` entity: its index among the model's `BOUNDED_PCURVE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BoundedPcurveId(pub u32);
+/// The id of a `BOUNDED_SURFACE` entity: its index among the model's `BOUNDED_SURFACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BoundedSurfaceId(pub u32);
+/// The id of a `BOUNDED_SURFACE_CURVE` entity: its index among the model's `BOUNDED_SURFACE_CURVE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BoundedSurfaceCurveId(pub u32);
+/// The id of a `BREP_WITH_VOIDS` entity: its index among the model's `BREP_WITH_VOIDS` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BrepWithVoidsId(pub u32);
+/// The id of a `CALENDAR_DATE` entity: its index among the model's `CALENDAR_DATE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CalendarDateId(pub u32);
+/// The id of a `CAMERA_IMAGE` entity: its index among the model's `CAMERA_IMAGE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CameraImageId(pub u32);
+/// The id of a `CAMERA_IMAGE_3D_WITH_SCALE` entity: its index among the model's `CAMERA_IMAGE_3D_WITH_SCALE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CameraImage3dWithScaleId(pub u32);
+/// The id of a `CAMERA_MODEL` entity: its index among the model's `CAMERA_MODEL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CameraModelId(pub u32);
+/// The id of a `CAMERA_MODEL_D3` entity: its index among the model's `CAMERA_MODEL_D3` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CameraModelD3Id(pub u32);
+/// The id of a `CAMERA_MODEL_D3_MULTI_CLIPPING` entity: its index among the model's `CAMERA_MODEL_D3_MULTI_CLIPPING` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CameraModelD3MultiClippingId(pub u32);
+/// The id of a `CAMERA_MODEL_D3_WITH_HLHSR` entity: its index among the model's `CAMERA_MODEL_D3_WITH_HLHSR` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CameraModelD3WithHlhsrId(pub u32);
+/// The id of a `CAMERA_USAGE` entity: its index among the model's `CAMERA_USAGE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CameraUsageId(pub u32);
+/// The id of a `CARTESIAN_POINT` entity: its index among the model's `CARTESIAN_POINT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CartesianPointId(pub u32);
+/// The id of a `CC_DESIGN_APPROVAL` entity: its index among the model's `CC_DESIGN_APPROVAL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CcDesignApprovalId(pub u32);
+/// The id of a `CC_DESIGN_DATE_AND_TIME_ASSIGNMENT` entity: its index among the model's `CC_DESIGN_DATE_AND_TIME_ASSIGNMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CcDesignDateAndTimeAssignmentId(pub u32);
+/// The id of a `CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT` entity: its index among the model's `CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CcDesignPersonAndOrganizationAssignmentId(pub u32);
+/// The id of a `CC_DESIGN_SECURITY_CLASSIFICATION` entity: its index among the model's `CC_DESIGN_SECURITY_CLASSIFICATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CcDesignSecurityClassificationId(pub u32);
+/// The id of a `CENTRE_OF_SYMMETRY` entity: its index among the model's `CENTRE_OF_SYMMETRY` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CentreOfSymmetryId(pub u32);
+/// The id of a `CERTIFICATION` entity: its index among the model's `CERTIFICATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CertificationId(pub u32);
+/// The id of a `CERTIFICATION_TYPE` entity: its index among the model's `CERTIFICATION_TYPE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CertificationTypeId(pub u32);
+/// The id of a `CHANGE` entity: its index among the model's `CHANGE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ChangeId(pub u32);
+/// The id of a `CHANGE_REQUEST` entity: its index among the model's `CHANGE_REQUEST` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ChangeRequestId(pub u32);
+/// The id of a `CHARACTER_GLYPH_STYLE_OUTLINE` entity: its index among the model's `CHARACTER_GLYPH_STYLE_OUTLINE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CharacterGlyphStyleOutlineId(pub u32);
+/// The id of a `CHARACTER_GLYPH_STYLE_STROKE` entity: its index among the model's `CHARACTER_GLYPH_STYLE_STROKE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CharacterGlyphStyleStrokeId(pub u32);
+/// The id of a `CHARACTERIZED_ITEM_WITHIN_REPRESENTATION` entity: its index among the model's `CHARACTERIZED_ITEM_WITHIN_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CharacterizedItemWithinRepresentationId(pub u32);
+/// The id of a `CHARACTERIZED_OBJECT` entity: its index among the model's `CHARACTERIZED_OBJECT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CharacterizedObjectId(pub u32);
+/// The id of a `CHARACTERIZED_REPRESENTATION` entity: its index among the model's `CHARACTERIZED_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CharacterizedRepresentationId(pub u32);
+/// The id of a `CIRCLE` entity: its index among the model's `CIRCLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CircleId(pub u32);
+/// The id of a `CIRCULAR_RUNOUT_TOLERANCE` entity: its index among the model's `CIRCULAR_RUNOUT_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CircularRunoutToleranceId(pub u32);
+/// The id of a `CLOSED_SHELL` entity: its index among the model's `CLOSED_SHELL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ClosedShellId(pub u32);
+/// The id of a `COAXIALITY_TOLERANCE` entity: its index among the model's `COAXIALITY_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CoaxialityToleranceId(pub u32);
+/// The id of a `COLOUR` entity: its index among the model's `COLOUR` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ColourId(pub u32);
+/// The id of a `COLOUR_RGB` entity: its index among the model's `COLOUR_RGB` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ColourRgbId(pub u32);
+/// The id of a `COLOUR_SPECIFICATION` entity: its index among the model's `COLOUR_SPECIFICATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ColourSpecificationId(pub u32);
+/// The id of a `COMMON_DATUM` entity: its index among the model's `COMMON_DATUM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CommonDatumId(pub u32);
+/// The id of a `COMPLEX_TRIANGULATED_FACE` entity: its index among the model's `COMPLEX_TRIANGULATED_FACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ComplexTriangulatedFaceId(pub u32);
+/// The id of a `COMPLEX_TRIANGULATED_SURFACE_SET` entity: its index among the model's `COMPLEX_TRIANGULATED_SURFACE_SET` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ComplexTriangulatedSurfaceSetId(pub u32);
+/// The id of a `COMPOSITE_CURVE` entity: its index among the model's `COMPOSITE_CURVE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CompositeCurveId(pub u32);
+/// The id of a `COMPOSITE_CURVE_SEGMENT` entity: its index among the model's `COMPOSITE_CURVE_SEGMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CompositeCurveSegmentId(pub u32);
+/// The id of a `COMPOSITE_GROUP_SHAPE_ASPECT` entity: its index among the model's `COMPOSITE_GROUP_SHAPE_ASPECT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CompositeGroupShapeAspectId(pub u32);
+/// The id of a `COMPOSITE_HOLE` entity: its index among the model's `COMPOSITE_HOLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CompositeHoleId(pub u32);
+/// The id of a `COMPOSITE_SHAPE_ASPECT` entity: its index among the model's `COMPOSITE_SHAPE_ASPECT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CompositeShapeAspectId(pub u32);
+/// The id of a `COMPOSITE_TEXT` entity: its index among the model's `COMPOSITE_TEXT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CompositeTextId(pub u32);
+/// The id of a `COMPOUND_FEATURE` entity: its index among the model's `COMPOUND_FEATURE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CompoundFeatureId(pub u32);
+/// The id of a `COMPOUND_REPRESENTATION_ITEM` entity: its index among the model's `COMPOUND_REPRESENTATION_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CompoundRepresentationItemId(pub u32);
+/// The id of a `CONCENTRICITY_TOLERANCE` entity: its index among the model's `CONCENTRICITY_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConcentricityToleranceId(pub u32);
+/// The id of a `CONFIGURATION_DESIGN` entity: its index among the model's `CONFIGURATION_DESIGN` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConfigurationDesignId(pub u32);
+/// The id of a `CONFIGURATION_EFFECTIVITY` entity: its index among the model's `CONFIGURATION_EFFECTIVITY` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConfigurationEffectivityId(pub u32);
+/// The id of a `CONFIGURATION_ITEM` entity: its index among the model's `CONFIGURATION_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConfigurationItemId(pub u32);
+/// The id of a `CONIC` entity: its index among the model's `CONIC` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConicId(pub u32);
+/// The id of a `CONICAL_SURFACE` entity: its index among the model's `CONICAL_SURFACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConicalSurfaceId(pub u32);
+/// The id of a `CONNECTED_FACE_SET` entity: its index among the model's `CONNECTED_FACE_SET` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConnectedFaceSetId(pub u32);
+/// The id of a `CONSTRUCTIVE_GEOMETRY_REPRESENTATION` entity: its index among the model's `CONSTRUCTIVE_GEOMETRY_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConstructiveGeometryRepresentationId(pub u32);
+/// The id of a `CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP` entity: its index among the model's `CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConstructiveGeometryRepresentationRelationshipId(pub u32);
+/// The id of a `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` entity: its index among the model's `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ContextDependentOverRidingStyledItemId(pub u32);
+/// The id of a `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` entity: its index among the model's `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ContextDependentShapeRepresentationId(pub u32);
+/// The id of a `CONTEXT_DEPENDENT_UNIT` entity: its index among the model's `CONTEXT_DEPENDENT_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ContextDependentUnitId(pub u32);
+/// The id of a `CONTINUOUS_SHAPE_ASPECT` entity: its index among the model's `CONTINUOUS_SHAPE_ASPECT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ContinuousShapeAspectId(pub u32);
+/// The id of a `CONTRACT` entity: its index among the model's `CONTRACT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ContractId(pub u32);
+/// The id of a `CONTRACT_TYPE` entity: its index among the model's `CONTRACT_TYPE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ContractTypeId(pub u32);
+/// The id of a `CONVERSION_BASED_UNIT` entity: its index among the model's `CONVERSION_BASED_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConversionBasedUnitId(pub u32);
+/// The id of a `COORDINATED_UNIVERSAL_TIME_OFFSET` entity: its index among the model's `COORDINATED_UNIVERSAL_TIME_OFFSET` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CoordinatedUniversalTimeOffsetId(pub u32);
+/// The id of a `COORDINATES_LIST` entity: its index among the model's `COORDINATES_LIST` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CoordinatesListId(pub u32);
+/// The id of a `COUNTERBORE_HOLE_DEFINITION` entity: its index among the model's `COUNTERBORE_HOLE_DEFINITION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CounterboreHoleDefinitionId(pub u32);
+/// The id of a `COUNTERDRILL_HOLE_DEFINITION` entity: its index among the model's `COUNTERDRILL_HOLE_DEFINITION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CounterdrillHoleDefinitionId(pub u32);
+/// The id of a `COUNTERSINK_HOLE_DEFINITION` entity: its index among the model's `COUNTERSINK_HOLE_DEFINITION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CountersinkHoleDefinitionId(pub u32);
+/// The id of a `CURVE` entity: its index among the model's `CURVE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CurveId(pub u32);
+/// The id of a `CURVE_STYLE` entity: its index among the model's `CURVE_STYLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CurveStyleId(pub u32);
+/// The id of a `CURVE_STYLE_FONT` entity: its index among the model's `CURVE_STYLE_FONT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CurveStyleFontId(pub u32);
+/// The id of a `CURVE_STYLE_FONT_AND_SCALING` entity: its index among the model's `CURVE_STYLE_FONT_AND_SCALING` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CurveStyleFontAndScalingId(pub u32);
+/// The id of a `CURVE_STYLE_FONT_PATTERN` entity: its index among the model's `CURVE_STYLE_FONT_PATTERN` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CurveStyleFontPatternId(pub u32);
+/// The id of a `CURVE_STYLE_RENDERING` entity: its index among the model's `CURVE_STYLE_RENDERING` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CurveStyleRenderingId(pub u32);
+/// The id of a `CYLINDRICAL_SURFACE` entity: its index among the model's `CYLINDRICAL_SURFACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CylindricalSurfaceId(pub u32);
+/// The id of a `CYLINDRICITY_TOLERANCE` entity: its index among the model's `CYLINDRICITY_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CylindricityToleranceId(pub u32);
+/// The id of a `DATE` entity: its index among the model's `DATE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DateId(pub u32);
+/// The id of a `DATE_AND_TIME` entity: its index among the model's `DATE_AND_TIME` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DateAndTimeId(pub u32);
+/// The id of a `DATE_AND_TIME_ASSIGNMENT` entity: its index among the model's `DATE_AND_TIME_ASSIGNMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DateAndTimeAssignmentId(pub u32);
+/// The id of a `DATE_ROLE` entity: its index among the model's `DATE_ROLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DateRoleId(pub u32);
+/// The id of a `DATE_TIME_ROLE` entity: its index among the model's `DATE_TIME_ROLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DateTimeRoleId(pub u32);
+/// The id of a `DATUM` entity: its index among the model's `DATUM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DatumId(pub u32);
+/// The id of a `DATUM_FEATURE` entity: its index among the model's `DATUM_FEATURE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DatumFeatureId(pub u32);
+/// The id of a `DATUM_REFERENCE` entity: its index among the model's `DATUM_REFERENCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DatumReferenceId(pub u32);
+/// The id of a `DATUM_REFERENCE_COMPARTMENT` entity: its index among the model's `DATUM_REFERENCE_COMPARTMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DatumReferenceCompartmentId(pub u32);
+/// The id of a `DATUM_REFERENCE_ELEMENT` entity: its index among the model's `DATUM_REFERENCE_ELEMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DatumReferenceElementId(pub u32);
+/// The id of a `DATUM_REFERENCE_MODIFIER_WITH_VALUE` entity: its index among the model's `DATUM_REFERENCE_MODIFIER_WITH_VALUE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DatumReferenceModifierWithValueId(pub u32);
+/// The id of a `DATUM_SYSTEM` entity: its index among the model's `DATUM_SYSTEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DatumSystemId(pub u32);
+/// The id of a `DATUM_TARGET` entity: its index among the model's `DATUM_TARGET` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DatumTargetId(pub u32);
+/// The id of a `DEFAULT_MODEL_GEOMETRIC_VIEW` entity: its index among the model's `DEFAULT_MODEL_GEOMETRIC_VIEW` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DefaultModelGeometricViewId(pub u32);
+/// The id of a `DEFINED_CHARACTER_GLYPH` entity: its index among the model's `DEFINED_CHARACTER_GLYPH` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DefinedCharacterGlyphId(pub u32);
+/// The id of a `DEFINED_SYMBOL` entity: its index among the model's `DEFINED_SYMBOL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DefinedSymbolId(pub u32);
+/// The id of a `DEFINITIONAL_REPRESENTATION` entity: its index among the model's `DEFINITIONAL_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DefinitionalRepresentationId(pub u32);
+/// The id of a `DEFINITIONAL_REPRESENTATION_RELATIONSHIP` entity: its index among the model's `DEFINITIONAL_REPRESENTATION_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DefinitionalRepresentationRelationshipId(pub u32);
+/// The id of a `DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT` entity: its index among the model's `DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DefinitionalRepresentationRelationshipWithSameContextId(pub u32);
+/// The id of a `DEGENERATE_TOROIDAL_SURFACE` entity: its index among the model's `DEGENERATE_TOROIDAL_SURFACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DegenerateToroidalSurfaceId(pub u32);
+/// The id of a `DERIVED_SHAPE_ASPECT` entity: its index among the model's `DERIVED_SHAPE_ASPECT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DerivedShapeAspectId(pub u32);
+/// The id of a `DERIVED_UNIT` entity: its index among the model's `DERIVED_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DerivedUnitId(pub u32);
+/// The id of a `DERIVED_UNIT_ELEMENT` entity: its index among the model's `DERIVED_UNIT_ELEMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DerivedUnitElementId(pub u32);
+/// The id of a `DESCRIPTION_ATTRIBUTE` entity: its index among the model's `DESCRIPTION_ATTRIBUTE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DescriptionAttributeId(pub u32);
+/// The id of a `DESCRIPTIVE_REPRESENTATION_ITEM` entity: its index among the model's `DESCRIPTIVE_REPRESENTATION_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DescriptiveRepresentationItemId(pub u32);
+/// The id of a `DESIGN_CONTEXT` entity: its index among the model's `DESIGN_CONTEXT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DesignContextId(pub u32);
+/// The id of a `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION` entity: its index among the model's `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DimensionalCharacteristicRepresentationId(pub u32);
+/// The id of a `DIMENSIONAL_EXPONENTS` entity: its index among the model's `DIMENSIONAL_EXPONENTS` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DimensionalExponentsId(pub u32);
+/// The id of a `DIMENSIONAL_LOCATION` entity: its index among the model's `DIMENSIONAL_LOCATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DimensionalLocationId(pub u32);
+/// The id of a `DIMENSIONAL_LOCATION_WITH_PATH` entity: its index among the model's `DIMENSIONAL_LOCATION_WITH_PATH` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DimensionalLocationWithPathId(pub u32);
+/// The id of a `DIMENSIONAL_SIZE` entity: its index among the model's `DIMENSIONAL_SIZE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DimensionalSizeId(pub u32);
+/// The id of a `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` entity: its index among the model's `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DimensionalSizeWithDatumFeatureId(pub u32);
+/// The id of a `DIMENSIONAL_SIZE_WITH_PATH` entity: its index among the model's `DIMENSIONAL_SIZE_WITH_PATH` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DimensionalSizeWithPathId(pub u32);
+/// The id of a `DIRECTED_DIMENSIONAL_LOCATION` entity: its index among the model's `DIRECTED_DIMENSIONAL_LOCATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DirectedDimensionalLocationId(pub u32);
+/// The id of a `DIRECTION` entity: its index among the model's `DIRECTION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DirectionId(pub u32);
+/// The id of a `DOCUMENT` entity: its index among the model's `DOCUMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DocumentId(pub u32);
+/// The id of a `DOCUMENT_FILE` entity: its index among the model's `DOCUMENT_FILE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DocumentFileId(pub u32);
+/// The id of a `DOCUMENT_PRODUCT_ASSOCIATION` entity: its index among the model's `DOCUMENT_PRODUCT_ASSOCIATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DocumentProductAssociationId(pub u32);
+/// The id of a `DOCUMENT_PRODUCT_EQUIVALENCE` entity: its index among the model's `DOCUMENT_PRODUCT_EQUIVALENCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DocumentProductEquivalenceId(pub u32);
+/// The id of a `DOCUMENT_REFERENCE` entity: its index among the model's `DOCUMENT_REFERENCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DocumentReferenceId(pub u32);
+/// The id of a `DOCUMENT_REPRESENTATION_TYPE` entity: its index among the model's `DOCUMENT_REPRESENTATION_TYPE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DocumentRepresentationTypeId(pub u32);
+/// The id of a `DOCUMENT_TYPE` entity: its index among the model's `DOCUMENT_TYPE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DocumentTypeId(pub u32);
+/// The id of a `DRAUGHTING_ANNOTATION_OCCURRENCE` entity: its index among the model's `DRAUGHTING_ANNOTATION_OCCURRENCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DraughtingAnnotationOccurrenceId(pub u32);
+/// The id of a `DRAUGHTING_CALLOUT` entity: its index among the model's `DRAUGHTING_CALLOUT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DraughtingCalloutId(pub u32);
+/// The id of a `DRAUGHTING_CALLOUT_RELATIONSHIP` entity: its index among the model's `DRAUGHTING_CALLOUT_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DraughtingCalloutRelationshipId(pub u32);
+/// The id of a `DRAUGHTING_MODEL` entity: its index among the model's `DRAUGHTING_MODEL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DraughtingModelId(pub u32);
+/// The id of a `DRAUGHTING_MODEL_ITEM_ASSOCIATION` entity: its index among the model's `DRAUGHTING_MODEL_ITEM_ASSOCIATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DraughtingModelItemAssociationId(pub u32);
+/// The id of a `DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER` entity: its index among the model's `DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DraughtingModelItemAssociationWithPlaceholderId(pub u32);
+/// The id of a `DRAUGHTING_PRE_DEFINED_COLOUR` entity: its index among the model's `DRAUGHTING_PRE_DEFINED_COLOUR` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DraughtingPreDefinedColourId(pub u32);
+/// The id of a `DRAUGHTING_PRE_DEFINED_CURVE_FONT` entity: its index among the model's `DRAUGHTING_PRE_DEFINED_CURVE_FONT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DraughtingPreDefinedCurveFontId(pub u32);
+/// The id of a `DRAUGHTING_PRE_DEFINED_TEXT_FONT` entity: its index among the model's `DRAUGHTING_PRE_DEFINED_TEXT_FONT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DraughtingPreDefinedTextFontId(pub u32);
+/// The id of a `EDGE` entity: its index among the model's `EDGE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EdgeId(pub u32);
+/// The id of a `EDGE_CURVE` entity: its index among the model's `EDGE_CURVE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EdgeCurveId(pub u32);
+/// The id of a `EDGE_LOOP` entity: its index among the model's `EDGE_LOOP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EdgeLoopId(pub u32);
+/// The id of a `EFFECTIVITY` entity: its index among the model's `EFFECTIVITY` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EffectivityId(pub u32);
+/// The id of a `ELEMENTARY_SURFACE` entity: its index among the model's `ELEMENTARY_SURFACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ElementarySurfaceId(pub u32);
+/// The id of a `ELLIPSE` entity: its index among the model's `ELLIPSE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EllipseId(pub u32);
+/// The id of a `EXPLICIT_COMPOSITE_HOLE` entity: its index among the model's `EXPLICIT_COMPOSITE_HOLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExplicitCompositeHoleId(pub u32);
+/// The id of a `EXPLICIT_ROUND_HOLE` entity: its index among the model's `EXPLICIT_ROUND_HOLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExplicitRoundHoleId(pub u32);
+/// The id of a `EXPRESSION` entity: its index among the model's `EXPRESSION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExpressionId(pub u32);
+/// The id of a `EXTERNAL_IDENTIFICATION_ASSIGNMENT` entity: its index among the model's `EXTERNAL_IDENTIFICATION_ASSIGNMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExternalIdentificationAssignmentId(pub u32);
+/// The id of a `EXTERNAL_IMAGE_PLACEMENT_IN_CALLOUT` entity: its index among the model's `EXTERNAL_IMAGE_PLACEMENT_IN_CALLOUT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExternalImagePlacementInCalloutId(pub u32);
+/// The id of a `EXTERNAL_SOURCE` entity: its index among the model's `EXTERNAL_SOURCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExternalSourceId(pub u32);
+/// The id of a `EXTERNALLY_DEFINED_CHARACTER_GLYPH` entity: its index among the model's `EXTERNALLY_DEFINED_CHARACTER_GLYPH` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExternallyDefinedCharacterGlyphId(pub u32);
+/// The id of a `EXTERNALLY_DEFINED_CURVE_FONT` entity: its index among the model's `EXTERNALLY_DEFINED_CURVE_FONT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExternallyDefinedCurveFontId(pub u32);
+/// The id of a `EXTERNALLY_DEFINED_HATCH_STYLE` entity: its index among the model's `EXTERNALLY_DEFINED_HATCH_STYLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExternallyDefinedHatchStyleId(pub u32);
+/// The id of a `EXTERNALLY_DEFINED_ITEM` entity: its index among the model's `EXTERNALLY_DEFINED_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExternallyDefinedItemId(pub u32);
+/// The id of a `EXTERNALLY_DEFINED_STYLE` entity: its index among the model's `EXTERNALLY_DEFINED_STYLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExternallyDefinedStyleId(pub u32);
+/// The id of a `EXTERNALLY_DEFINED_SYMBOL` entity: its index among the model's `EXTERNALLY_DEFINED_SYMBOL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExternallyDefinedSymbolId(pub u32);
+/// The id of a `EXTERNALLY_DEFINED_TEXT_FONT` entity: its index among the model's `EXTERNALLY_DEFINED_TEXT_FONT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExternallyDefinedTextFontId(pub u32);
+/// The id of a `EXTERNALLY_DEFINED_TILE` entity: its index among the model's `EXTERNALLY_DEFINED_TILE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExternallyDefinedTileId(pub u32);
+/// The id of a `EXTERNALLY_DEFINED_TILE_STYLE` entity: its index among the model's `EXTERNALLY_DEFINED_TILE_STYLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ExternallyDefinedTileStyleId(pub u32);
+/// The id of a `FACE` entity: its index among the model's `FACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FaceId(pub u32);
+/// The id of a `FACE_BOUND` entity: its index among the model's `FACE_BOUND` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FaceBoundId(pub u32);
+/// The id of a `FACE_OUTER_BOUND` entity: its index among the model's `FACE_OUTER_BOUND` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FaceOuterBoundId(pub u32);
+/// The id of a `FACE_SURFACE` entity: its index among the model's `FACE_SURFACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FaceSurfaceId(pub u32);
+/// The id of a `FEATURE_DEFINITION` entity: its index among the model's `FEATURE_DEFINITION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FeatureDefinitionId(pub u32);
+/// The id of a `FEATURE_FOR_DATUM_TARGET_RELATIONSHIP` entity: its index among the model's `FEATURE_FOR_DATUM_TARGET_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FeatureForDatumTargetRelationshipId(pub u32);
+/// The id of a `FILL_AREA_STYLE` entity: its index among the model's `FILL_AREA_STYLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FillAreaStyleId(pub u32);
+/// The id of a `FILL_AREA_STYLE_COLOUR` entity: its index among the model's `FILL_AREA_STYLE_COLOUR` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FillAreaStyleColourId(pub u32);
+/// The id of a `FILL_AREA_STYLE_HATCHING` entity: its index among the model's `FILL_AREA_STYLE_HATCHING` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FillAreaStyleHatchingId(pub u32);
+/// The id of a `FILL_AREA_STYLE_TILE_COLOURED_REGION` entity: its index among the model's `FILL_AREA_STYLE_TILE_COLOURED_REGION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FillAreaStyleTileColouredRegionId(pub u32);
+/// The id of a `FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE` entity: its index among the model's `FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FillAreaStyleTileCurveWithStyleId(pub u32);
+/// The id of a `FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE` entity: its index among the model's `FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FillAreaStyleTileSymbolWithStyleId(pub u32);
+/// The id of a `FILL_AREA_STYLE_TILES` entity: its index among the model's `FILL_AREA_STYLE_TILES` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FillAreaStyleTilesId(pub u32);
+/// The id of a `FLATNESS_TOLERANCE` entity: its index among the model's `FLATNESS_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FlatnessToleranceId(pub u32);
+/// The id of a `FOUNDED_ITEM` entity: its index among the model's `FOUNDED_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FoundedItemId(pub u32);
+/// The id of a `FUNCTIONALLY_DEFINED_TRANSFORMATION` entity: its index among the model's `FUNCTIONALLY_DEFINED_TRANSFORMATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FunctionallyDefinedTransformationId(pub u32);
+/// The id of a `GENERAL_DATUM_REFERENCE` entity: its index among the model's `GENERAL_DATUM_REFERENCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeneralDatumReferenceId(pub u32);
+/// The id of a `GENERAL_PROPERTY` entity: its index among the model's `GENERAL_PROPERTY` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeneralPropertyId(pub u32);
+/// The id of a `GENERAL_PROPERTY_ASSOCIATION` entity: its index among the model's `GENERAL_PROPERTY_ASSOCIATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeneralPropertyAssociationId(pub u32);
+/// The id of a `GENERIC_EXPRESSION` entity: its index among the model's `GENERIC_EXPRESSION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GenericExpressionId(pub u32);
+/// The id of a `GENERIC_LITERAL` entity: its index among the model's `GENERIC_LITERAL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GenericLiteralId(pub u32);
+/// The id of a `GENERIC_PRODUCT_DEFINITION_REFERENCE` entity: its index among the model's `GENERIC_PRODUCT_DEFINITION_REFERENCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GenericProductDefinitionReferenceId(pub u32);
+/// The id of a `GEOMETRIC_CURVE_SET` entity: its index among the model's `GEOMETRIC_CURVE_SET` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeometricCurveSetId(pub u32);
+/// The id of a `GEOMETRIC_ITEM_SPECIFIC_USAGE` entity: its index among the model's `GEOMETRIC_ITEM_SPECIFIC_USAGE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeometricItemSpecificUsageId(pub u32);
+/// The id of a `GEOMETRIC_REPRESENTATION_CONTEXT` entity: its index among the model's `GEOMETRIC_REPRESENTATION_CONTEXT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeometricRepresentationContextId(pub u32);
+/// The id of a `GEOMETRIC_REPRESENTATION_ITEM` entity: its index among the model's `GEOMETRIC_REPRESENTATION_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeometricRepresentationItemId(pub u32);
+/// The id of a `GEOMETRIC_SET` entity: its index among the model's `GEOMETRIC_SET` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeometricSetId(pub u32);
+/// The id of a `GEOMETRIC_TOLERANCE` entity: its index among the model's `GEOMETRIC_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeometricToleranceId(pub u32);
+/// The id of a `GEOMETRIC_TOLERANCE_RELATIONSHIP` entity: its index among the model's `GEOMETRIC_TOLERANCE_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeometricToleranceRelationshipId(pub u32);
+/// The id of a `GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE` entity: its index among the model's `GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeometricToleranceWithDatumReferenceId(pub u32);
+/// The id of a `GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT` entity: its index among the model's `GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeometricToleranceWithDefinedAreaUnitId(pub u32);
+/// The id of a `GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT` entity: its index among the model's `GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeometricToleranceWithDefinedUnitId(pub u32);
+/// The id of a `GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE` entity: its index among the model's `GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeometricToleranceWithMaximumToleranceId(pub u32);
+/// The id of a `GEOMETRIC_TOLERANCE_WITH_MODIFIERS` entity: its index among the model's `GEOMETRIC_TOLERANCE_WITH_MODIFIERS` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeometricToleranceWithModifiersId(pub u32);
+/// The id of a `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION` entity: its index among the model's `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeometricallyBoundedSurfaceShapeRepresentationId(pub u32);
+/// The id of a `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION` entity: its index among the model's `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GeometricallyBoundedWireframeShapeRepresentationId(pub u32);
+/// The id of a `GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT` entity: its index among the model's `GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GlobalUncertaintyAssignedContextId(pub u32);
+/// The id of a `GLOBAL_UNIT_ASSIGNED_CONTEXT` entity: its index among the model's `GLOBAL_UNIT_ASSIGNED_CONTEXT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GlobalUnitAssignedContextId(pub u32);
+/// The id of a `GROUP` entity: its index among the model's `GROUP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GroupId(pub u32);
+/// The id of a `GROUP_ASSIGNMENT` entity: its index among the model's `GROUP_ASSIGNMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct GroupAssignmentId(pub u32);
+/// The id of a `HYPERBOLA` entity: its index among the model's `HYPERBOLA` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct HyperbolaId(pub u32);
+/// The id of a `ID_ATTRIBUTE` entity: its index among the model's `ID_ATTRIBUTE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct IdAttributeId(pub u32);
+/// The id of a `IDENTIFICATION_ASSIGNMENT` entity: its index among the model's `IDENTIFICATION_ASSIGNMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct IdentificationAssignmentId(pub u32);
+/// The id of a `IDENTIFICATION_ROLE` entity: its index among the model's `IDENTIFICATION_ROLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct IdentificationRoleId(pub u32);
+/// The id of a `INT_LITERAL` entity: its index among the model's `INT_LITERAL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct IntLiteralId(pub u32);
+/// The id of a `INTEGER_REPRESENTATION_ITEM` entity: its index among the model's `INTEGER_REPRESENTATION_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct IntegerRepresentationItemId(pub u32);
+/// The id of a `INTERSECTION_CURVE` entity: its index among the model's `INTERSECTION_CURVE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct IntersectionCurveId(pub u32);
+/// The id of a `INVISIBILITY` entity: its index among the model's `INVISIBILITY` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct InvisibilityId(pub u32);
+/// The id of a `ITEM_DEFINED_TRANSFORMATION` entity: its index among the model's `ITEM_DEFINED_TRANSFORMATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ItemDefinedTransformationId(pub u32);
+/// The id of a `ITEM_IDENTIFIED_REPRESENTATION_USAGE` entity: its index among the model's `ITEM_IDENTIFIED_REPRESENTATION_USAGE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ItemIdentifiedRepresentationUsageId(pub u32);
+/// The id of a `LEADER_CURVE` entity: its index among the model's `LEADER_CURVE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LeaderCurveId(pub u32);
+/// The id of a `LEADER_DIRECTED_CALLOUT` entity: its index among the model's `LEADER_DIRECTED_CALLOUT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LeaderDirectedCalloutId(pub u32);
+/// The id of a `LEADER_TERMINATOR` entity: its index among the model's `LEADER_TERMINATOR` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LeaderTerminatorId(pub u32);
+/// The id of a `LENGTH_MEASURE_WITH_UNIT` entity: its index among the model's `LENGTH_MEASURE_WITH_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LengthMeasureWithUnitId(pub u32);
+/// The id of a `LENGTH_UNIT` entity: its index among the model's `LENGTH_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LengthUnitId(pub u32);
+/// The id of a `LIMITS_AND_FITS` entity: its index among the model's `LIMITS_AND_FITS` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LimitsAndFitsId(pub u32);
+/// The id of a `LINE` entity: its index among the model's `LINE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LineId(pub u32);
+/// The id of a `LINE_PROFILE_TOLERANCE` entity: its index among the model's `LINE_PROFILE_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LineProfileToleranceId(pub u32);
+/// The id of a `LITERAL_NUMBER` entity: its index among the model's `LITERAL_NUMBER` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LiteralNumberId(pub u32);
+/// The id of a `LOCAL_TIME` entity: its index among the model's `LOCAL_TIME` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LocalTimeId(pub u32);
+/// The id of a `LOOP` entity: its index among the model's `LOOP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LoopId(pub u32);
+/// The id of a `MAKE_FROM_USAGE_OPTION` entity: its index among the model's `MAKE_FROM_USAGE_OPTION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MakeFromUsageOptionId(pub u32);
+/// The id of a `MANIFOLD_SOLID_BREP` entity: its index among the model's `MANIFOLD_SOLID_BREP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ManifoldSolidBrepId(pub u32);
+/// The id of a `MANIFOLD_SURFACE_SHAPE_REPRESENTATION` entity: its index among the model's `MANIFOLD_SURFACE_SHAPE_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ManifoldSurfaceShapeRepresentationId(pub u32);
+/// The id of a `MAPPED_ITEM` entity: its index among the model's `MAPPED_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MappedItemId(pub u32);
+/// The id of a `MASS_MEASURE_WITH_UNIT` entity: its index among the model's `MASS_MEASURE_WITH_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MassMeasureWithUnitId(pub u32);
+/// The id of a `MASS_UNIT` entity: its index among the model's `MASS_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MassUnitId(pub u32);
+/// The id of a `MEASURE_QUALIFICATION` entity: its index among the model's `MEASURE_QUALIFICATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MeasureQualificationId(pub u32);
+/// The id of a `MEASURE_REPRESENTATION_ITEM` entity: its index among the model's `MEASURE_REPRESENTATION_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MeasureRepresentationItemId(pub u32);
+/// The id of a `MEASURE_WITH_UNIT` entity: its index among the model's `MEASURE_WITH_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MeasureWithUnitId(pub u32);
+/// The id of a `MECHANICAL_CONTEXT` entity: its index among the model's `MECHANICAL_CONTEXT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MechanicalContextId(pub u32);
+/// The id of a `MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP` entity: its index among the model's `MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MechanicalDesignAndDraughtingRelationshipId(pub u32);
+/// The id of a `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION` entity: its index among the model's `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MechanicalDesignGeometricPresentationRepresentationId(pub u32);
+/// The id of a `MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING` entity: its index among the model's `MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MechanicalDesignPresentationRepresentationWithDraughtingId(pub u32);
+/// The id of a `MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION` entity: its index among the model's `MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MechanicalDesignShadedPresentationRepresentationId(pub u32);
+/// The id of a `MODEL_GEOMETRIC_VIEW` entity: its index among the model's `MODEL_GEOMETRIC_VIEW` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ModelGeometricViewId(pub u32);
+/// The id of a `MODIFIED_GEOMETRIC_TOLERANCE` entity: its index among the model's `MODIFIED_GEOMETRIC_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ModifiedGeometricToleranceId(pub u32);
+/// The id of a `NAME_ATTRIBUTE` entity: its index among the model's `NAME_ATTRIBUTE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct NameAttributeId(pub u32);
+/// The id of a `NAMED_UNIT` entity: its index among the model's `NAMED_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct NamedUnitId(pub u32);
+/// The id of a `NEXT_ASSEMBLY_USAGE_OCCURRENCE` entity: its index among the model's `NEXT_ASSEMBLY_USAGE_OCCURRENCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct NextAssemblyUsageOccurrenceId(pub u32);
+/// The id of a `NUMERIC_EXPRESSION` entity: its index among the model's `NUMERIC_EXPRESSION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct NumericExpressionId(pub u32);
+/// The id of a `OBJECT_ROLE` entity: its index among the model's `OBJECT_ROLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ObjectRoleId(pub u32);
+/// The id of a `OFFSET_SURFACE` entity: its index among the model's `OFFSET_SURFACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OffsetSurfaceId(pub u32);
+/// The id of a `ONE_DIRECTION_REPEAT_FACTOR` entity: its index among the model's `ONE_DIRECTION_REPEAT_FACTOR` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OneDirectionRepeatFactorId(pub u32);
+/// The id of a `OPEN_SHELL` entity: its index among the model's `OPEN_SHELL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OpenShellId(pub u32);
+/// The id of a `ORGANIZATION` entity: its index among the model's `ORGANIZATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OrganizationId(pub u32);
+/// The id of a `ORGANIZATION_RELATIONSHIP` entity: its index among the model's `ORGANIZATION_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OrganizationRelationshipId(pub u32);
+/// The id of a `ORGANIZATION_ROLE` entity: its index among the model's `ORGANIZATION_ROLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OrganizationRoleId(pub u32);
+/// The id of a `ORGANIZATION_TYPE` entity: its index among the model's `ORGANIZATION_TYPE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OrganizationTypeId(pub u32);
+/// The id of a `ORGANIZATION_TYPE_ROLE` entity: its index among the model's `ORGANIZATION_TYPE_ROLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OrganizationTypeRoleId(pub u32);
+/// The id of a `ORGANIZATIONAL_ADDRESS` entity: its index among the model's `ORGANIZATIONAL_ADDRESS` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OrganizationalAddressId(pub u32);
+/// The id of a `ORGANIZATIONAL_PROJECT` entity: its index among the model's `ORGANIZATIONAL_PROJECT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OrganizationalProjectId(pub u32);
+/// The id of a `ORGANIZATIONAL_PROJECT_RELATIONSHIP` entity: its index among the model's `ORGANIZATIONAL_PROJECT_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OrganizationalProjectRelationshipId(pub u32);
+/// The id of a `ORGANIZATIONAL_PROJECT_ROLE` entity: its index among the model's `ORGANIZATIONAL_PROJECT_ROLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OrganizationalProjectRoleId(pub u32);
+/// The id of a `ORIENTED_CLOSED_SHELL` entity: its index among the model's `ORIENTED_CLOSED_SHELL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OrientedClosedShellId(pub u32);
+/// The id of a `ORIENTED_EDGE` entity: its index among the model's `ORIENTED_EDGE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OrientedEdgeId(pub u32);
+/// The id of a `OVER_RIDING_STYLED_ITEM` entity: its index among the model's `OVER_RIDING_STYLED_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OverRidingStyledItemId(pub u32);
+/// The id of a `PARABOLA` entity: its index among the model's `PARABOLA` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ParabolaId(pub u32);
+/// The id of a `PARALLELISM_TOLERANCE` entity: its index among the model's `PARALLELISM_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ParallelismToleranceId(pub u32);
+/// The id of a `PARAMETRIC_REPRESENTATION_CONTEXT` entity: its index among the model's `PARAMETRIC_REPRESENTATION_CONTEXT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ParametricRepresentationContextId(pub u32);
+/// The id of a `PATH` entity: its index among the model's `PATH` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PathId(pub u32);
+/// The id of a `PCURVE` entity: its index among the model's `PCURVE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PcurveId(pub u32);
+/// The id of a `PERPENDICULARITY_TOLERANCE` entity: its index among the model's `PERPENDICULARITY_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PerpendicularityToleranceId(pub u32);
+/// The id of a `PERSON` entity: its index among the model's `PERSON` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PersonId(pub u32);
+/// The id of a `PERSON_AND_ORGANIZATION` entity: its index among the model's `PERSON_AND_ORGANIZATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PersonAndOrganizationId(pub u32);
+/// The id of a `PERSON_AND_ORGANIZATION_ADDRESS` entity: its index among the model's `PERSON_AND_ORGANIZATION_ADDRESS` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PersonAndOrganizationAddressId(pub u32);
+/// The id of a `PERSON_AND_ORGANIZATION_ASSIGNMENT` entity: its index among the model's `PERSON_AND_ORGANIZATION_ASSIGNMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PersonAndOrganizationAssignmentId(pub u32);
+/// The id of a `PERSON_AND_ORGANIZATION_ROLE` entity: its index among the model's `PERSON_AND_ORGANIZATION_ROLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PersonAndOrganizationRoleId(pub u32);
+/// The id of a `PERSONAL_ADDRESS` entity: its index among the model's `PERSONAL_ADDRESS` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PersonalAddressId(pub u32);
+/// The id of a `PLACED_DATUM_TARGET_FEATURE` entity: its index among the model's `PLACED_DATUM_TARGET_FEATURE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PlacedDatumTargetFeatureId(pub u32);
+/// The id of a `PLACEMENT` entity: its index among the model's `PLACEMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PlacementId(pub u32);
+/// The id of a `PLANAR_BOX` entity: its index among the model's `PLANAR_BOX` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PlanarBoxId(pub u32);
+/// The id of a `PLANAR_EXTENT` entity: its index among the model's `PLANAR_EXTENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PlanarExtentId(pub u32);
+/// The id of a `PLANE` entity: its index among the model's `PLANE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PlaneId(pub u32);
+/// The id of a `PLANE_ANGLE_MEASURE_WITH_UNIT` entity: its index among the model's `PLANE_ANGLE_MEASURE_WITH_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PlaneAngleMeasureWithUnitId(pub u32);
+/// The id of a `PLANE_ANGLE_UNIT` entity: its index among the model's `PLANE_ANGLE_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PlaneAngleUnitId(pub u32);
+/// The id of a `PLUS_MINUS_TOLERANCE` entity: its index among the model's `PLUS_MINUS_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PlusMinusToleranceId(pub u32);
+/// The id of a `POINT` entity: its index among the model's `POINT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PointId(pub u32);
+/// The id of a `POINT_STYLE` entity: its index among the model's `POINT_STYLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PointStyleId(pub u32);
+/// The id of a `POLY_LOOP` entity: its index among the model's `POLY_LOOP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PolyLoopId(pub u32);
+/// The id of a `POLYLINE` entity: its index among the model's `POLYLINE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PolylineId(pub u32);
+/// The id of a `POSITION_TOLERANCE` entity: its index among the model's `POSITION_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PositionToleranceId(pub u32);
+/// The id of a `POSITIVE_LENGTH_MEASURE_WITH_UNIT` entity: its index among the model's `POSITIVE_LENGTH_MEASURE_WITH_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PositiveLengthMeasureWithUnitId(pub u32);
+/// The id of a `POSITIVE_PLANE_ANGLE_MEASURE_WITH_UNIT` entity: its index among the model's `POSITIVE_PLANE_ANGLE_MEASURE_WITH_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PositivePlaneAngleMeasureWithUnitId(pub u32);
+/// The id of a `PRE_DEFINED_CHARACTER_GLYPH` entity: its index among the model's `PRE_DEFINED_CHARACTER_GLYPH` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedCharacterGlyphId(pub u32);
+/// The id of a `PRE_DEFINED_COLOUR` entity: its index among the model's `PRE_DEFINED_COLOUR` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedColourId(pub u32);
+/// The id of a `PRE_DEFINED_CURVE_FONT` entity: its index among the model's `PRE_DEFINED_CURVE_FONT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedCurveFontId(pub u32);
+/// The id of a `PRE_DEFINED_ITEM` entity: its index among the model's `PRE_DEFINED_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedItemId(pub u32);
+/// The id of a `PRE_DEFINED_MARKER` entity: its index among the model's `PRE_DEFINED_MARKER` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedMarkerId(pub u32);
+/// The id of a `PRE_DEFINED_POINT_MARKER_SYMBOL` entity: its index among the model's `PRE_DEFINED_POINT_MARKER_SYMBOL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedPointMarkerSymbolId(pub u32);
+/// The id of a `PRE_DEFINED_PRESENTATION_STYLE` entity: its index among the model's `PRE_DEFINED_PRESENTATION_STYLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedPresentationStyleId(pub u32);
+/// The id of a `PRE_DEFINED_SURFACE_SIDE_STYLE` entity: its index among the model's `PRE_DEFINED_SURFACE_SIDE_STYLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedSurfaceSideStyleId(pub u32);
+/// The id of a `PRE_DEFINED_SYMBOL` entity: its index among the model's `PRE_DEFINED_SYMBOL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedSymbolId(pub u32);
+/// The id of a `PRE_DEFINED_TERMINATOR_SYMBOL` entity: its index among the model's `PRE_DEFINED_TERMINATOR_SYMBOL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedTerminatorSymbolId(pub u32);
+/// The id of a `PRE_DEFINED_TEXT_FONT` entity: its index among the model's `PRE_DEFINED_TEXT_FONT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedTextFontId(pub u32);
+/// The id of a `PRE_DEFINED_TILE` entity: its index among the model's `PRE_DEFINED_TILE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PreDefinedTileId(pub u32);
+/// The id of a `PRECISION_QUALIFIER` entity: its index among the model's `PRECISION_QUALIFIER` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PrecisionQualifierId(pub u32);
+/// The id of a `PRESENTATION_AREA` entity: its index among the model's `PRESENTATION_AREA` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PresentationAreaId(pub u32);
+/// The id of a `PRESENTATION_LAYER_ASSIGNMENT` entity: its index among the model's `PRESENTATION_LAYER_ASSIGNMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PresentationLayerAssignmentId(pub u32);
+/// The id of a `PRESENTATION_REPRESENTATION` entity: its index among the model's `PRESENTATION_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PresentationRepresentationId(pub u32);
+/// The id of a `PRESENTATION_SET` entity: its index among the model's `PRESENTATION_SET` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PresentationSetId(pub u32);
+/// The id of a `PRESENTATION_SIZE` entity: its index among the model's `PRESENTATION_SIZE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PresentationSizeId(pub u32);
+/// The id of a `PRESENTATION_STYLE_ASSIGNMENT` entity: its index among the model's `PRESENTATION_STYLE_ASSIGNMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PresentationStyleAssignmentId(pub u32);
+/// The id of a `PRESENTATION_STYLE_BY_CONTEXT` entity: its index among the model's `PRESENTATION_STYLE_BY_CONTEXT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PresentationStyleByContextId(pub u32);
+/// The id of a `PRESENTATION_VIEW` entity: its index among the model's `PRESENTATION_VIEW` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PresentationViewId(pub u32);
+/// The id of a `PRESENTED_ITEM` entity: its index among the model's `PRESENTED_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PresentedItemId(pub u32);
+/// The id of a `PRESENTED_ITEM_REPRESENTATION` entity: its index among the model's `PRESENTED_ITEM_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PresentedItemRepresentationId(pub u32);
+/// The id of a `PRODUCT` entity: its index among the model's `PRODUCT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductId(pub u32);
+/// The id of a `PRODUCT_CATEGORY` entity: its index among the model's `PRODUCT_CATEGORY` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductCategoryId(pub u32);
+/// The id of a `PRODUCT_CATEGORY_RELATIONSHIP` entity: its index among the model's `PRODUCT_CATEGORY_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductCategoryRelationshipId(pub u32);
+/// The id of a `PRODUCT_CONCEPT` entity: its index among the model's `PRODUCT_CONCEPT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductConceptId(pub u32);
+/// The id of a `PRODUCT_CONCEPT_CONTEXT` entity: its index among the model's `PRODUCT_CONCEPT_CONTEXT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductConceptContextId(pub u32);
+/// The id of a `PRODUCT_CONCEPT_FEATURE` entity: its index among the model's `PRODUCT_CONCEPT_FEATURE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductConceptFeatureId(pub u32);
+/// The id of a `PRODUCT_CONCEPT_FEATURE_CATEGORY` entity: its index among the model's `PRODUCT_CONCEPT_FEATURE_CATEGORY` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductConceptFeatureCategoryId(pub u32);
+/// The id of a `PRODUCT_CONTEXT` entity: its index among the model's `PRODUCT_CONTEXT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductContextId(pub u32);
+/// The id of a `PRODUCT_DEFINITION` entity: its index among the model's `PRODUCT_DEFINITION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductDefinitionId(pub u32);
+/// The id of a `PRODUCT_DEFINITION_CONTEXT` entity: its index among the model's `PRODUCT_DEFINITION_CONTEXT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductDefinitionContextId(pub u32);
+/// The id of a `PRODUCT_DEFINITION_CONTEXT_ASSOCIATION` entity: its index among the model's `PRODUCT_DEFINITION_CONTEXT_ASSOCIATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductDefinitionContextAssociationId(pub u32);
+/// The id of a `PRODUCT_DEFINITION_CONTEXT_ROLE` entity: its index among the model's `PRODUCT_DEFINITION_CONTEXT_ROLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductDefinitionContextRoleId(pub u32);
+/// The id of a `PRODUCT_DEFINITION_EFFECTIVITY` entity: its index among the model's `PRODUCT_DEFINITION_EFFECTIVITY` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductDefinitionEffectivityId(pub u32);
+/// The id of a `PRODUCT_DEFINITION_FORMATION` entity: its index among the model's `PRODUCT_DEFINITION_FORMATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductDefinitionFormationId(pub u32);
+/// The id of a `PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE` entity: its index among the model's `PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductDefinitionFormationWithSpecifiedSourceId(pub u32);
+/// The id of a `PRODUCT_DEFINITION_OCCURRENCE` entity: its index among the model's `PRODUCT_DEFINITION_OCCURRENCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductDefinitionOccurrenceId(pub u32);
+/// The id of a `PRODUCT_DEFINITION_RELATIONSHIP` entity: its index among the model's `PRODUCT_DEFINITION_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductDefinitionRelationshipId(pub u32);
+/// The id of a `PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP` entity: its index among the model's `PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductDefinitionRelationshipRelationshipId(pub u32);
+/// The id of a `PRODUCT_DEFINITION_SHAPE` entity: its index among the model's `PRODUCT_DEFINITION_SHAPE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductDefinitionShapeId(pub u32);
+/// The id of a `PRODUCT_DEFINITION_SUBSTITUTE` entity: its index among the model's `PRODUCT_DEFINITION_SUBSTITUTE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductDefinitionSubstituteId(pub u32);
+/// The id of a `PRODUCT_DEFINITION_USAGE` entity: its index among the model's `PRODUCT_DEFINITION_USAGE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductDefinitionUsageId(pub u32);
+/// The id of a `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS` entity: its index among the model's `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductDefinitionWithAssociatedDocumentsId(pub u32);
+/// The id of a `PRODUCT_RELATED_PRODUCT_CATEGORY` entity: its index among the model's `PRODUCT_RELATED_PRODUCT_CATEGORY` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProductRelatedProductCategoryId(pub u32);
+/// The id of a `PROJECTED_ZONE_DEFINITION` entity: its index among the model's `PROJECTED_ZONE_DEFINITION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProjectedZoneDefinitionId(pub u32);
+/// The id of a `PROPERTY_DEFINITION` entity: its index among the model's `PROPERTY_DEFINITION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PropertyDefinitionId(pub u32);
+/// The id of a `PROPERTY_DEFINITION_RELATIONSHIP` entity: its index among the model's `PROPERTY_DEFINITION_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PropertyDefinitionRelationshipId(pub u32);
+/// The id of a `PROPERTY_DEFINITION_REPRESENTATION` entity: its index among the model's `PROPERTY_DEFINITION_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PropertyDefinitionRepresentationId(pub u32);
+/// The id of a `QUALIFIED_REPRESENTATION_ITEM` entity: its index among the model's `QUALIFIED_REPRESENTATION_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct QualifiedRepresentationItemId(pub u32);
+/// The id of a `QUASI_UNIFORM_CURVE` entity: its index among the model's `QUASI_UNIFORM_CURVE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct QuasiUniformCurveId(pub u32);
+/// The id of a `QUASI_UNIFORM_SURFACE` entity: its index among the model's `QUASI_UNIFORM_SURFACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct QuasiUniformSurfaceId(pub u32);
+/// The id of a `RATIO_MEASURE_WITH_UNIT` entity: its index among the model's `RATIO_MEASURE_WITH_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RatioMeasureWithUnitId(pub u32);
+/// The id of a `RATIO_UNIT` entity: its index among the model's `RATIO_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RatioUnitId(pub u32);
+/// The id of a `RATIONAL_B_SPLINE_CURVE` entity: its index among the model's `RATIONAL_B_SPLINE_CURVE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RationalBSplineCurveId(pub u32);
+/// The id of a `RATIONAL_B_SPLINE_SURFACE` entity: its index among the model's `RATIONAL_B_SPLINE_SURFACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RationalBSplineSurfaceId(pub u32);
+/// The id of a `REAL_LITERAL` entity: its index among the model's `REAL_LITERAL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RealLiteralId(pub u32);
+/// The id of a `REAL_REPRESENTATION_ITEM` entity: its index among the model's `REAL_REPRESENTATION_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RealRepresentationItemId(pub u32);
+/// The id of a `REPOSITIONED_TESSELLATED_ITEM` entity: its index among the model's `REPOSITIONED_TESSELLATED_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RepositionedTessellatedItemId(pub u32);
+/// The id of a `REPRESENTATION` entity: its index among the model's `REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RepresentationId(pub u32);
+/// The id of a `REPRESENTATION_CONTEXT` entity: its index among the model's `REPRESENTATION_CONTEXT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RepresentationContextId(pub u32);
+/// The id of a `REPRESENTATION_CONTEXT_REFERENCE` entity: its index among the model's `REPRESENTATION_CONTEXT_REFERENCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RepresentationContextReferenceId(pub u32);
+/// The id of a `REPRESENTATION_ITEM` entity: its index among the model's `REPRESENTATION_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RepresentationItemId(pub u32);
+/// The id of a `REPRESENTATION_MAP` entity: its index among the model's `REPRESENTATION_MAP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RepresentationMapId(pub u32);
+/// The id of a `REPRESENTATION_REFERENCE` entity: its index among the model's `REPRESENTATION_REFERENCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RepresentationReferenceId(pub u32);
+/// The id of a `REPRESENTATION_RELATIONSHIP` entity: its index among the model's `REPRESENTATION_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RepresentationRelationshipId(pub u32);
+/// The id of a `REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION` entity: its index among the model's `REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RepresentationRelationshipWithTransformationId(pub u32);
+/// The id of a `RESOURCE_PROPERTY` entity: its index among the model's `RESOURCE_PROPERTY` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ResourcePropertyId(pub u32);
+/// The id of a `RESOURCE_REQUIREMENT_TYPE` entity: its index among the model's `RESOURCE_REQUIREMENT_TYPE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ResourceRequirementTypeId(pub u32);
+/// The id of a `ROLE_ASSOCIATION` entity: its index among the model's `ROLE_ASSOCIATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RoleAssociationId(pub u32);
+/// The id of a `ROUND_HOLE` entity: its index among the model's `ROUND_HOLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RoundHoleId(pub u32);
+/// The id of a `ROUND_HOLE_BOTTOM_CONDITION` entity: its index among the model's `ROUND_HOLE_BOTTOM_CONDITION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RoundHoleBottomConditionId(pub u32);
+/// The id of a `ROUNDNESS_TOLERANCE` entity: its index among the model's `ROUNDNESS_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RoundnessToleranceId(pub u32);
+/// The id of a `SEAM_CURVE` entity: its index among the model's `SEAM_CURVE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SeamCurveId(pub u32);
+/// The id of a `SECURITY_CLASSIFICATION` entity: its index among the model's `SECURITY_CLASSIFICATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SecurityClassificationId(pub u32);
+/// The id of a `SECURITY_CLASSIFICATION_ASSIGNMENT` entity: its index among the model's `SECURITY_CLASSIFICATION_ASSIGNMENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SecurityClassificationAssignmentId(pub u32);
+/// The id of a `SECURITY_CLASSIFICATION_LEVEL` entity: its index among the model's `SECURITY_CLASSIFICATION_LEVEL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SecurityClassificationLevelId(pub u32);
+/// The id of a `SHAPE_ASPECT` entity: its index among the model's `SHAPE_ASPECT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ShapeAspectId(pub u32);
+/// The id of a `SHAPE_ASPECT_ASSOCIATIVITY` entity: its index among the model's `SHAPE_ASPECT_ASSOCIATIVITY` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ShapeAspectAssociativityId(pub u32);
+/// The id of a `SHAPE_ASPECT_DERIVING_RELATIONSHIP` entity: its index among the model's `SHAPE_ASPECT_DERIVING_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ShapeAspectDerivingRelationshipId(pub u32);
+/// The id of a `SHAPE_ASPECT_RELATIONSHIP` entity: its index among the model's `SHAPE_ASPECT_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ShapeAspectRelationshipId(pub u32);
+/// The id of a `SHAPE_DEFINITION_REPRESENTATION` entity: its index among the model's `SHAPE_DEFINITION_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ShapeDefinitionRepresentationId(pub u32);
+/// The id of a `SHAPE_DIMENSION_REPRESENTATION` entity: its index among the model's `SHAPE_DIMENSION_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ShapeDimensionRepresentationId(pub u32);
+/// The id of a `SHAPE_REPRESENTATION` entity: its index among the model's `SHAPE_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ShapeRepresentationId(pub u32);
+/// The id of a `SHAPE_REPRESENTATION_RELATIONSHIP` entity: its index among the model's `SHAPE_REPRESENTATION_RELATIONSHIP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ShapeRepresentationRelationshipId(pub u32);
+/// The id of a `SHAPE_REPRESENTATION_WITH_PARAMETERS` entity: its index among the model's `SHAPE_REPRESENTATION_WITH_PARAMETERS` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ShapeRepresentationWithParametersId(pub u32);
+/// The id of a `SHELL_BASED_SURFACE_MODEL` entity: its index among the model's `SHELL_BASED_SURFACE_MODEL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ShellBasedSurfaceModelId(pub u32);
+/// The id of a `SI_UNIT` entity: its index among the model's `SI_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SiUnitId(pub u32);
+/// The id of a `SIMPLE_GENERIC_EXPRESSION` entity: its index among the model's `SIMPLE_GENERIC_EXPRESSION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SimpleGenericExpressionId(pub u32);
+/// The id of a `SIMPLE_NUMERIC_EXPRESSION` entity: its index among the model's `SIMPLE_NUMERIC_EXPRESSION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SimpleNumericExpressionId(pub u32);
+/// The id of a `SOLID_ANGLE_UNIT` entity: its index among the model's `SOLID_ANGLE_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SolidAngleUnitId(pub u32);
+/// The id of a `SOLID_MODEL` entity: its index among the model's `SOLID_MODEL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SolidModelId(pub u32);
+/// The id of a `SPHERICAL_SURFACE` entity: its index among the model's `SPHERICAL_SURFACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SphericalSurfaceId(pub u32);
+/// The id of a `START_REQUEST` entity: its index among the model's `START_REQUEST` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct StartRequestId(pub u32);
+/// The id of a `START_WORK` entity: its index among the model's `START_WORK` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct StartWorkId(pub u32);
+/// The id of a `STATE_OBSERVED` entity: its index among the model's `STATE_OBSERVED` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct StateObservedId(pub u32);
+/// The id of a `STATE_TYPE` entity: its index among the model's `STATE_TYPE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct StateTypeId(pub u32);
+/// The id of a `STRAIGHTNESS_TOLERANCE` entity: its index among the model's `STRAIGHTNESS_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct StraightnessToleranceId(pub u32);
+/// The id of a `STYLED_ITEM` entity: its index among the model's `STYLED_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct StyledItemId(pub u32);
+/// The id of a `SURFACE` entity: its index among the model's `SURFACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SurfaceId(pub u32);
+/// The id of a `SURFACE_CURVE` entity: its index among the model's `SURFACE_CURVE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SurfaceCurveId(pub u32);
+/// The id of a `SURFACE_OF_LINEAR_EXTRUSION` entity: its index among the model's `SURFACE_OF_LINEAR_EXTRUSION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SurfaceOfLinearExtrusionId(pub u32);
+/// The id of a `SURFACE_OF_REVOLUTION` entity: its index among the model's `SURFACE_OF_REVOLUTION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SurfaceOfRevolutionId(pub u32);
+/// The id of a `SURFACE_PROFILE_TOLERANCE` entity: its index among the model's `SURFACE_PROFILE_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SurfaceProfileToleranceId(pub u32);
+/// The id of a `SURFACE_RENDERING_PROPERTIES` entity: its index among the model's `SURFACE_RENDERING_PROPERTIES` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SurfaceRenderingPropertiesId(pub u32);
+/// The id of a `SURFACE_SIDE_STYLE` entity: its index among the model's `SURFACE_SIDE_STYLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SurfaceSideStyleId(pub u32);
+/// The id of a `SURFACE_STYLE_BOUNDARY` entity: its index among the model's `SURFACE_STYLE_BOUNDARY` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SurfaceStyleBoundaryId(pub u32);
+/// The id of a `SURFACE_STYLE_CONTROL_GRID` entity: its index among the model's `SURFACE_STYLE_CONTROL_GRID` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SurfaceStyleControlGridId(pub u32);
+/// The id of a `SURFACE_STYLE_FILL_AREA` entity: its index among the model's `SURFACE_STYLE_FILL_AREA` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SurfaceStyleFillAreaId(pub u32);
+/// The id of a `SURFACE_STYLE_PARAMETER_LINE` entity: its index among the model's `SURFACE_STYLE_PARAMETER_LINE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SurfaceStyleParameterLineId(pub u32);
+/// The id of a `SURFACE_STYLE_REFLECTANCE_AMBIENT` entity: its index among the model's `SURFACE_STYLE_REFLECTANCE_AMBIENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SurfaceStyleReflectanceAmbientId(pub u32);
+/// The id of a `SURFACE_STYLE_RENDERING` entity: its index among the model's `SURFACE_STYLE_RENDERING` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SurfaceStyleRenderingId(pub u32);
+/// The id of a `SURFACE_STYLE_RENDERING_WITH_PROPERTIES` entity: its index among the model's `SURFACE_STYLE_RENDERING_WITH_PROPERTIES` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SurfaceStyleRenderingWithPropertiesId(pub u32);
+/// The id of a `SURFACE_STYLE_SEGMENTATION_CURVE` entity: its index among the model's `SURFACE_STYLE_SEGMENTATION_CURVE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SurfaceStyleSegmentationCurveId(pub u32);
+/// The id of a `SURFACE_STYLE_SILHOUETTE` entity: its index among the model's `SURFACE_STYLE_SILHOUETTE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SurfaceStyleSilhouetteId(pub u32);
+/// The id of a `SURFACE_STYLE_TRANSPARENT` entity: its index among the model's `SURFACE_STYLE_TRANSPARENT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SurfaceStyleTransparentId(pub u32);
+/// The id of a `SURFACE_STYLE_USAGE` entity: its index among the model's `SURFACE_STYLE_USAGE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SurfaceStyleUsageId(pub u32);
+/// The id of a `SWEPT_SURFACE` entity: its index among the model's `SWEPT_SURFACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SweptSurfaceId(pub u32);
+/// The id of a `SYMBOL_COLOUR` entity: its index among the model's `SYMBOL_COLOUR` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SymbolColourId(pub u32);
+/// The id of a `SYMBOL_REPRESENTATION` entity: its index among the model's `SYMBOL_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SymbolRepresentationId(pub u32);
+/// The id of a `SYMBOL_STYLE` entity: its index among the model's `SYMBOL_STYLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SymbolStyleId(pub u32);
+/// The id of a `SYMBOL_TARGET` entity: its index among the model's `SYMBOL_TARGET` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SymbolTargetId(pub u32);
+/// The id of a `SYMMETRY_TOLERANCE` entity: its index among the model's `SYMMETRY_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SymmetryToleranceId(pub u32);
+/// The id of a `TERMINATOR_SYMBOL` entity: its index among the model's `TERMINATOR_SYMBOL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TerminatorSymbolId(pub u32);
+/// The id of a `TESSELLATED_ANNOTATION_OCCURRENCE` entity: its index among the model's `TESSELLATED_ANNOTATION_OCCURRENCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedAnnotationOccurrenceId(pub u32);
+/// The id of a `TESSELLATED_CURVE_SET` entity: its index among the model's `TESSELLATED_CURVE_SET` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedCurveSetId(pub u32);
+/// The id of a `TESSELLATED_FACE` entity: its index among the model's `TESSELLATED_FACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedFaceId(pub u32);
+/// The id of a `TESSELLATED_GEOMETRIC_SET` entity: its index among the model's `TESSELLATED_GEOMETRIC_SET` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedGeometricSetId(pub u32);
+/// The id of a `TESSELLATED_ITEM` entity: its index among the model's `TESSELLATED_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedItemId(pub u32);
+/// The id of a `TESSELLATED_SHAPE_REPRESENTATION` entity: its index among the model's `TESSELLATED_SHAPE_REPRESENTATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedShapeRepresentationId(pub u32);
+/// The id of a `TESSELLATED_SHELL` entity: its index among the model's `TESSELLATED_SHELL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedShellId(pub u32);
+/// The id of a `TESSELLATED_SOLID` entity: its index among the model's `TESSELLATED_SOLID` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedSolidId(pub u32);
+/// The id of a `TESSELLATED_STRUCTURED_ITEM` entity: its index among the model's `TESSELLATED_STRUCTURED_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedStructuredItemId(pub u32);
+/// The id of a `TESSELLATED_SURFACE_SET` entity: its index among the model's `TESSELLATED_SURFACE_SET` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TessellatedSurfaceSetId(pub u32);
+/// The id of a `TEXT_FONT` entity: its index among the model's `TEXT_FONT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TextFontId(pub u32);
+/// The id of a `TEXT_LITERAL` entity: its index among the model's `TEXT_LITERAL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TextLiteralId(pub u32);
+/// The id of a `TEXT_STYLE` entity: its index among the model's `TEXT_STYLE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TextStyleId(pub u32);
+/// The id of a `TEXT_STYLE_FOR_DEFINED_FONT` entity: its index among the model's `TEXT_STYLE_FOR_DEFINED_FONT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TextStyleForDefinedFontId(pub u32);
+/// The id of a `TEXT_STYLE_WITH_BOX_CHARACTERISTICS` entity: its index among the model's `TEXT_STYLE_WITH_BOX_CHARACTERISTICS` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TextStyleWithBoxCharacteristicsId(pub u32);
+/// The id of a `TEXTURE_STYLE_SPECIFICATION` entity: its index among the model's `TEXTURE_STYLE_SPECIFICATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TextureStyleSpecificationId(pub u32);
+/// The id of a `TEXTURE_STYLE_TESSELLATION_SPECIFICATION` entity: its index among the model's `TEXTURE_STYLE_TESSELLATION_SPECIFICATION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TextureStyleTessellationSpecificationId(pub u32);
+/// The id of a `TIME_UNIT` entity: its index among the model's `TIME_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TimeUnitId(pub u32);
+/// The id of a `TOLERANCE_VALUE` entity: its index among the model's `TOLERANCE_VALUE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ToleranceValueId(pub u32);
+/// The id of a `TOLERANCE_ZONE` entity: its index among the model's `TOLERANCE_ZONE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ToleranceZoneId(pub u32);
+/// The id of a `TOLERANCE_ZONE_DEFINITION` entity: its index among the model's `TOLERANCE_ZONE_DEFINITION` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ToleranceZoneDefinitionId(pub u32);
+/// The id of a `TOLERANCE_ZONE_FORM` entity: its index among the model's `TOLERANCE_ZONE_FORM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ToleranceZoneFormId(pub u32);
+/// The id of a `TOLERANCE_ZONE_WITH_DATUM` entity: its index among the model's `TOLERANCE_ZONE_WITH_DATUM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ToleranceZoneWithDatumId(pub u32);
+/// The id of a `TOPOLOGICAL_REPRESENTATION_ITEM` entity: its index among the model's `TOPOLOGICAL_REPRESENTATION_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TopologicalRepresentationItemId(pub u32);
+/// The id of a `TOROIDAL_SURFACE` entity: its index among the model's `TOROIDAL_SURFACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ToroidalSurfaceId(pub u32);
+/// The id of a `TOTAL_RUNOUT_TOLERANCE` entity: its index among the model's `TOTAL_RUNOUT_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TotalRunoutToleranceId(pub u32);
+/// The id of a `TRIMMED_CURVE` entity: its index among the model's `TRIMMED_CURVE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TrimmedCurveId(pub u32);
+/// The id of a `TWO_DIRECTION_REPEAT_FACTOR` entity: its index among the model's `TWO_DIRECTION_REPEAT_FACTOR` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TwoDirectionRepeatFactorId(pub u32);
+/// The id of a `TYPE_QUALIFIER` entity: its index among the model's `TYPE_QUALIFIER` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TypeQualifierId(pub u32);
+/// The id of a `UNCERTAINTY_MEASURE_WITH_UNIT` entity: its index among the model's `UNCERTAINTY_MEASURE_WITH_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct UncertaintyMeasureWithUnitId(pub u32);
+/// The id of a `UNCERTAINTY_QUALIFIER` entity: its index among the model's `UNCERTAINTY_QUALIFIER` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct UncertaintyQualifierId(pub u32);
+/// The id of a `UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE` entity: its index among the model's `UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct UnequallyDisposedGeometricToleranceId(pub u32);
+/// The id of a `UNIFORM_CURVE` entity: its index among the model's `UNIFORM_CURVE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct UniformCurveId(pub u32);
+/// The id of a `UNIFORM_SURFACE` entity: its index among the model's `UNIFORM_SURFACE` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct UniformSurfaceId(pub u32);
+/// The id of a `VALUE_FORMAT_TYPE_QUALIFIER` entity: its index among the model's `VALUE_FORMAT_TYPE_QUALIFIER` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ValueFormatTypeQualifierId(pub u32);
+/// The id of a `VALUE_REPRESENTATION_ITEM` entity: its index among the model's `VALUE_REPRESENTATION_ITEM` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ValueRepresentationItemId(pub u32);
+/// The id of a `VECTOR` entity: its index among the model's `VECTOR` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct VectorId(pub u32);
+/// The id of a `VERSIONED_ACTION_REQUEST` entity: its index among the model's `VERSIONED_ACTION_REQUEST` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct VersionedActionRequestId(pub u32);
+/// The id of a `VERTEX` entity: its index among the model's `VERTEX` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct VertexId(pub u32);
+/// The id of a `VERTEX_LOOP` entity: its index among the model's `VERTEX_LOOP` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct VertexLoopId(pub u32);
+/// The id of a `VERTEX_POINT` entity: its index among the model's `VERTEX_POINT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct VertexPointId(pub u32);
+/// The id of a `VERTEX_SHELL` entity: its index among the model's `VERTEX_SHELL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct VertexShellId(pub u32);
+/// The id of a `VIEW_VOLUME` entity: its index among the model's `VIEW_VOLUME` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ViewVolumeId(pub u32);
+/// The id of a `VOLUME_UNIT` entity: its index among the model's `VOLUME_UNIT` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct VolumeUnitId(pub u32);
+/// The id of a `WIRE_SHELL` entity: its index among the model's `WIRE_SHELL` entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct WireShellId(pub u32);
+/// The id of a complex instance: its index among the model's complex instances.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ComplexEntityId(pub u32);
 
+/// Any entity of a [`StepModel`]: its type (the variant) and its id.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EntityKey {
     Action(ActionId),
@@ -4130,6 +4649,7 @@ impl EntityKey {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ActionMethodRef {
     ActionMethod(ActionMethodId),
@@ -4145,6 +4665,7 @@ impl ActionMethodRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ActionRef {
     Action(ActionId),
@@ -4160,6 +4681,7 @@ impl ActionRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ActionResourceRef {
     ActionResource(ActionResourceId),
@@ -4175,6 +4697,7 @@ impl ActionResourceRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ActionResourceRequirementRef {
     ActionResourceRequirement(ActionResourceRequirementId),
@@ -4192,6 +4715,7 @@ impl ActionResourceRequirementRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ActionResourceTypeRef {
     ActionResourceType(ActionResourceTypeId),
@@ -4207,6 +4731,7 @@ impl ActionResourceTypeRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationCurveOccurrenceRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
@@ -4226,6 +4751,7 @@ impl AnnotationCurveOccurrenceRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationOccurrenceRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
@@ -4277,6 +4803,7 @@ impl AnnotationOccurrenceRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationPlaceholderLeaderLineRef {
     AnnotationPlaceholderLeaderLine(AnnotationPlaceholderLeaderLineId),
@@ -4304,6 +4831,7 @@ impl AnnotationPlaceholderLeaderLineRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationPlaceholderOccurrenceRef {
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrenceId),
@@ -4327,6 +4855,7 @@ impl AnnotationPlaceholderOccurrenceRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationPlaneElementRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
@@ -4390,6 +4919,7 @@ impl AnnotationPlaneElementRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationRepresentationSelectRef {
     DraughtingModel(DraughtingModelId),
@@ -4413,6 +4943,7 @@ impl AnnotationRepresentationSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationSymbolOccurrenceItemRef {
     DefinedSymbol(DefinedSymbolId),
@@ -4430,6 +4961,7 @@ impl AnnotationSymbolOccurrenceItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationSymbolOccurrenceRef {
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrenceId),
@@ -4451,6 +4983,7 @@ impl AnnotationSymbolOccurrenceRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationTextOccurrenceItemRef {
     AnnotationText(AnnotationTextId),
@@ -4476,6 +5009,7 @@ impl AnnotationTextOccurrenceItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationToModelLeaderLineRef {
     AnnotationToModelLeaderLine(AnnotationToModelLeaderLineId),
@@ -4493,6 +5027,7 @@ impl AnnotationToModelLeaderLineRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ApplicationContextRef {
     ApplicationContext(ApplicationContextId),
@@ -4508,6 +5043,7 @@ impl ApplicationContextRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ApprovalItemRef {
     Action(ActionId),
@@ -5093,6 +5629,7 @@ impl ApprovalItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ApprovalRef {
     Approval(ApprovalId),
@@ -5106,6 +5643,7 @@ impl ApprovalRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ApprovalRoleRef {
     ApprovalRole(ApprovalRoleId),
@@ -5119,6 +5657,7 @@ impl ApprovalRoleRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ApprovalStatusRef {
     ApprovalStatus(ApprovalStatusId),
@@ -5132,6 +5671,7 @@ impl ApprovalStatusRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ApprovedItemRef {
     Certification(CertificationId),
@@ -5177,6 +5717,7 @@ impl ApprovedItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum AscribableStateRef {
     AscribableState(AscribableStateId),
@@ -5190,6 +5731,7 @@ impl AscribableStateRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Axis1PlacementRef {
     Axis1Placement(Axis1PlacementId),
@@ -5205,6 +5747,7 @@ impl Axis1PlacementRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Axis2Placement3dRef {
     Axis2Placement3d(Axis2Placement3dId),
@@ -5222,6 +5765,7 @@ impl Axis2Placement3dRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Axis2PlacementRef {
     Axis2Placement2d(Axis2Placement2dId),
@@ -5239,6 +5783,7 @@ impl Axis2PlacementRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum BottomConditionTargetRef {
     BasicRoundHole(BasicRoundHoleId),
@@ -5262,6 +5807,7 @@ impl BottomConditionTargetRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CameraModelD3MultiClippingIntersectionSelectRef {
     Plane(PlaneId),
@@ -5279,6 +5825,7 @@ impl CameraModelD3MultiClippingIntersectionSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CameraModelD3Ref {
     CameraModelD3(CameraModelD3Id),
@@ -5298,6 +5845,7 @@ impl CameraModelD3Ref {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CameraModelRef {
     CameraModel(CameraModelId),
@@ -5319,6 +5867,7 @@ impl CameraModelRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CameraUsageRef {
     CameraUsage(CameraUsageId),
@@ -5334,6 +5883,7 @@ impl CameraUsageRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CartesianPointRef {
     ApllPoint(ApllPointId),
@@ -5353,6 +5903,7 @@ impl CartesianPointRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CcClassifiedItemRef {
     AssemblyComponentUsage(AssemblyComponentUsageId),
@@ -5378,6 +5929,7 @@ impl CcClassifiedItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CcPersonOrganizationItemRef {
     Change(ChangeId),
@@ -5421,6 +5973,7 @@ impl CcPersonOrganizationItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CertificationTypeRef {
     CertificationType(CertificationTypeId),
@@ -5436,6 +5989,7 @@ impl CertificationTypeRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ChangeRequestItemRef {
     ProductDefinitionFormation(ProductDefinitionFormationId),
@@ -5457,6 +6011,7 @@ impl ChangeRequestItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CharacterStyleSelectRef {
     CharacterGlyphStyleOutline(CharacterGlyphStyleOutlineId),
@@ -5478,6 +6033,7 @@ impl CharacterStyleSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CharacterizedActionDefinitionRef {
     Action(ActionId),
@@ -5501,6 +6057,7 @@ impl CharacterizedActionDefinitionRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CharacterizedDefinitionRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
@@ -5714,6 +6271,7 @@ impl CharacterizedDefinitionRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CharacterizedResourceDefinitionRef {
     ActionResource(ActionResourceId),
@@ -5739,6 +6297,7 @@ impl CharacterizedResourceDefinitionRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ClosedShellRef {
     ClosedShell(ClosedShellId),
@@ -5756,6 +6315,7 @@ impl ClosedShellRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ColourRef {
     Colour(ColourId),
@@ -5779,6 +6339,7 @@ impl ColourRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CompositeCurveSegmentRef {
     CompositeCurveSegment(CompositeCurveSegmentId),
@@ -5796,6 +6357,7 @@ impl CompositeCurveSegmentRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CompoundItemDefinitionRef {
     AdvancedFace(AdvancedFaceId),
@@ -6137,6 +6699,7 @@ impl CompoundItemDefinitionRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConfigurationDesignItemRef {
     ProductDefinition(ProductDefinitionId),
@@ -6166,6 +6729,7 @@ impl ConfigurationDesignItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConfigurationDesignRef {
     ConfigurationDesign(ConfigurationDesignId),
@@ -6181,6 +6745,7 @@ impl ConfigurationDesignRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConfigurationItemRef {
     ConfigurationItem(ConfigurationItemId),
@@ -6198,6 +6763,7 @@ impl ConfigurationItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConnectedFaceSetRef {
     ClosedShell(ClosedShellId),
@@ -6221,6 +6787,7 @@ impl ConnectedFaceSetRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ContractTypeRef {
     ContractType(ContractTypeId),
@@ -6234,6 +6801,7 @@ impl ContractTypeRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CoordinatedUniversalTimeOffsetRef {
     CoordinatedUniversalTimeOffset(CoordinatedUniversalTimeOffsetId),
@@ -6251,6 +6819,7 @@ impl CoordinatedUniversalTimeOffsetRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CoordinatesListRef {
     CoordinatesList(CoordinatesListId),
@@ -6266,6 +6835,7 @@ impl CoordinatesListRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CurveFontOrScaledCurveFontSelectRef {
     CurveStyleFont(CurveStyleFontId),
@@ -6293,6 +6863,7 @@ impl CurveFontOrScaledCurveFontSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CurveOrAnnotationCurveOccurrenceRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
@@ -6358,6 +6929,7 @@ impl CurveOrAnnotationCurveOccurrenceRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CurveOrCurveSetRef {
     BSplineCurve(BSplineCurveId),
@@ -6419,6 +6991,7 @@ impl CurveOrCurveSetRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CurveOrRenderRef {
     CurveStyle(CurveStyleId),
@@ -6436,6 +7009,7 @@ impl CurveOrRenderRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CurveRef {
     BSplineCurve(BSplineCurveId),
@@ -6495,6 +7069,7 @@ impl CurveRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CurveStyleFontPatternRef {
     CurveStyleFontPattern(CurveStyleFontPatternId),
@@ -6512,6 +7087,7 @@ impl CurveStyleFontPatternRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CurveStyleFontSelectRef {
     CurveStyleFont(CurveStyleFontId),
@@ -6537,6 +7113,7 @@ impl CurveStyleFontSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CurveStyleRef {
     CurveStyle(CurveStyleId),
@@ -6552,6 +7129,7 @@ impl CurveStyleRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DateAndTimeItemRef {
     Action(ActionId),
@@ -6749,6 +7327,7 @@ impl DateAndTimeItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DateAndTimeRef {
     DateAndTime(DateAndTimeId),
@@ -6764,6 +7343,7 @@ impl DateAndTimeRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DateRef {
     CalendarDate(CalendarDateId),
@@ -6781,6 +7361,7 @@ impl DateRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DateTimeItemRef {
     ApprovalPersonOrganization(ApprovalPersonOrganizationId),
@@ -6816,6 +7397,7 @@ impl DateTimeItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DateTimeRoleRef {
     DateTimeRole(DateTimeRoleId),
@@ -6829,6 +7411,7 @@ impl DateTimeRoleRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DateTimeSelectRef {
     CalendarDate(CalendarDateId),
@@ -6850,6 +7433,7 @@ impl DateTimeSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DatumOrCommonDatumRef {
     CommonDatum(CommonDatumId),
@@ -6872,6 +7456,7 @@ impl DatumOrCommonDatumRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DatumRef {
     CommonDatum(CommonDatumId),
@@ -6889,6 +7474,7 @@ impl DatumRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DatumReferenceCompartmentRef {
     DatumReferenceCompartment(DatumReferenceCompartmentId),
@@ -6906,6 +7492,7 @@ impl DatumReferenceCompartmentRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DatumReferenceElementRef {
     DatumReferenceElement(DatumReferenceElementId),
@@ -6923,6 +7510,7 @@ impl DatumReferenceElementRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DatumReferenceModifierRef {
     DatumReferenceModifierWithValue(DatumReferenceModifierWithValueId),
@@ -6941,6 +7529,7 @@ impl DatumReferenceModifierRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DatumSystemOrReferenceRef {
     DatumReference(DatumReferenceId),
@@ -6960,6 +7549,7 @@ impl DatumSystemOrReferenceRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DatumSystemRef {
     DatumSystem(DatumSystemId),
@@ -6975,6 +7565,7 @@ impl DatumSystemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DatumTargetRef {
     DatumTarget(DatumTargetId),
@@ -6992,6 +7583,7 @@ impl DatumTargetRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DefinedGlyphSelectRef {
     ExternallyDefinedCharacterGlyph(ExternallyDefinedCharacterGlyphId),
@@ -7013,6 +7605,7 @@ impl DefinedGlyphSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DefinedSymbolSelectRef {
     ExternallyDefinedSymbol(ExternallyDefinedSymbolId),
@@ -7036,6 +7629,7 @@ impl DefinedSymbolSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DefinitionalRepresentationRef {
     DefinitionalRepresentation(DefinitionalRepresentationId),
@@ -7053,6 +7647,7 @@ impl DefinitionalRepresentationRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DerivedPropertySelectRef {
     ActionProperty(ActionPropertyId),
@@ -7152,6 +7747,7 @@ impl DerivedPropertySelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DerivedUnitElementRef {
     DerivedUnitElement(DerivedUnitElementId),
@@ -7167,6 +7763,7 @@ impl DerivedUnitElementRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DesApllPointSelectRef {
     ApllPoint(ApllPointId),
@@ -7186,6 +7783,7 @@ impl DesApllPointSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DescriptionAttributeSelectRef {
     ActionRequestSolution(ActionRequestSolutionId),
@@ -7311,6 +7909,7 @@ impl DescriptionAttributeSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DimensionalCharacteristicRef {
     AngularLocation(AngularLocationId),
@@ -7344,6 +7943,7 @@ impl DimensionalCharacteristicRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DimensionalExponentsRef {
     DimensionalExponents(DimensionalExponentsId),
@@ -7359,6 +7959,7 @@ impl DimensionalExponentsRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DirectionRef {
     Direction(DirectionId),
@@ -7374,6 +7975,7 @@ impl DirectionRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DocumentRef {
     Document(DocumentId),
@@ -7391,6 +7993,7 @@ impl DocumentRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DocumentReferenceItemRef {
     ActionDirective(ActionDirectiveId),
@@ -8072,6 +8675,7 @@ impl DocumentReferenceItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DocumentTypeRef {
     DocumentType(DocumentTypeId),
@@ -8085,6 +8689,7 @@ impl DocumentTypeRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DraughtingCalloutElementRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
@@ -8128,6 +8733,7 @@ impl DraughtingCalloutElementRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DraughtingCalloutRef {
     DraughtingCallout(DraughtingCalloutId),
@@ -8147,6 +8753,7 @@ impl DraughtingCalloutRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DraughtingModelItemAssociationSelectRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
@@ -8202,6 +8809,7 @@ impl DraughtingModelItemAssociationSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DraughtingModelItemDefinitionRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
@@ -8359,6 +8967,7 @@ impl DraughtingModelItemDefinitionRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DraughtingModelRef {
     DraughtingModel(DraughtingModelId),
@@ -8374,6 +8983,7 @@ impl DraughtingModelRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum EdgeRef {
     Edge(EdgeId),
@@ -8393,6 +9003,7 @@ impl EdgeRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExplicitRoundHoleRef {
     ExplicitRoundHole(ExplicitRoundHoleId),
@@ -8410,6 +9021,7 @@ impl ExplicitRoundHoleRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExternalIdentificationItemRef {
     ActionDirective(ActionDirectiveId),
@@ -8959,6 +9571,7 @@ impl ExternalIdentificationItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExternalSourceRef {
     ExternalSource(ExternalSourceId),
@@ -8974,6 +9587,7 @@ impl ExternalSourceRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum FaceBoundRef {
     FaceBound(FaceBoundId),
@@ -8991,6 +9605,7 @@ impl FaceBoundRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum FaceOrSurfaceRef {
     AdvancedFace(AdvancedFaceId),
@@ -9048,6 +9663,7 @@ impl FaceOrSurfaceRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum FaceRef {
     AdvancedFace(AdvancedFaceId),
@@ -9067,6 +9683,7 @@ impl FaceRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum FaceSurfaceRef {
     AdvancedFace(AdvancedFaceId),
@@ -9084,6 +9701,7 @@ impl FaceSurfaceRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum FillAreaStyleRef {
     FillAreaStyle(FillAreaStyleId),
@@ -9099,6 +9717,7 @@ impl FillAreaStyleRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum FillAreaStyleTileShapeSelectRef {
     ExternallyDefinedTile(ExternallyDefinedTileId),
@@ -9130,6 +9749,7 @@ impl FillAreaStyleTileShapeSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum FillStyleSelectRef {
     ExternallyDefinedHatchStyle(ExternallyDefinedHatchStyleId),
@@ -9159,6 +9779,7 @@ impl FillStyleSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum FontSelectRef {
     DraughtingPreDefinedTextFont(DraughtingPreDefinedTextFontId),
@@ -9180,6 +9801,7 @@ impl FontSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeneralPropertyRef {
     GeneralProperty(GeneralPropertyId),
@@ -9195,6 +9817,7 @@ impl GeneralPropertyRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeometricItemSpecificUsageSelectRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
@@ -9272,6 +9895,7 @@ impl GeometricItemSpecificUsageSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeometricModelItemRef {
     AdvancedFace(AdvancedFaceId),
@@ -9527,6 +10151,7 @@ impl GeometricModelItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeometricRepresentationContextRef {
     GeometricRepresentationContext(GeometricRepresentationContextId),
@@ -9546,6 +10171,7 @@ impl GeometricRepresentationContextRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeometricSetRef {
     GeometricCurveSet(GeometricCurveSetId),
@@ -9563,6 +10189,7 @@ impl GeometricSetRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeometricSetSelectRef {
     AnnotationText(AnnotationTextId),
@@ -9682,6 +10309,7 @@ impl GeometricSetSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeometricToleranceRef {
     AngularityTolerance(AngularityToleranceId),
@@ -9755,6 +10383,7 @@ impl GeometricToleranceRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum GeometricToleranceTargetRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
@@ -9840,6 +10469,7 @@ impl GeometricToleranceTargetRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum GroupRef {
     Group(GroupId),
@@ -9859,6 +10489,7 @@ impl GroupRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum GroupableItemRef {
     ActionMethod(ActionMethodId),
@@ -10566,6 +11197,7 @@ impl GroupableItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum IdAttributeSelectRef {
     Action(ActionId),
@@ -10857,6 +11489,7 @@ impl IdAttributeSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum IdentificationRoleRef {
     IdentificationRole(IdentificationRoleId),
@@ -10872,6 +11505,7 @@ impl IdentificationRoleRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum InvisibleItemRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
@@ -11005,6 +11639,7 @@ impl InvisibleItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ItemDefinedTransformationRef {
     ItemDefinedTransformation(ItemDefinedTransformationId),
@@ -11022,6 +11657,7 @@ impl ItemDefinedTransformationRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ItemIdentifiedRepresentationUsageDefinitionRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
@@ -11233,6 +11869,7 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ItemIdentifiedRepresentationUsageSelectRef {
     AdvancedFace(AdvancedFaceId),
@@ -11574,6 +12211,7 @@ impl ItemIdentifiedRepresentationUsageSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum LayeredItemRef {
     AdvancedFace(AdvancedFaceId),
@@ -11917,6 +12555,7 @@ impl LayeredItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum LengthMeasureWithUnitRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
@@ -11938,6 +12577,7 @@ impl LengthMeasureWithUnitRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum LengthOrPlaneAngleMeasureWithUnitSelectRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
@@ -11965,6 +12605,7 @@ impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum LocalTimeRef {
     LocalTime(LocalTimeId),
@@ -11978,6 +12619,7 @@ impl LocalTimeRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum LoopRef {
     EdgeLoop(EdgeLoopId),
@@ -11999,6 +12641,7 @@ impl LoopRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ManifoldSolidBrepRef {
     BrepWithVoids(BrepWithVoidsId),
@@ -12018,6 +12661,7 @@ impl ManifoldSolidBrepRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum MarkerSelectRef {
     PreDefinedMarker(PreDefinedMarkerId),
@@ -12036,6 +12680,7 @@ impl MarkerSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum MeasureWithUnitRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
@@ -12071,6 +12716,7 @@ impl MeasureWithUnitRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum MechanicalDesignAndDraughtingRelationshipSelectRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
@@ -12138,6 +12784,7 @@ impl MechanicalDesignAndDraughtingRelationshipSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum NameAttributeSelectRef {
     ActionRequestSolution(ActionRequestSolutionId),
@@ -12199,6 +12846,7 @@ impl NameAttributeSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum NamedUnitRef {
     ContextDependentUnit(ContextDependentUnitId),
@@ -12232,6 +12880,7 @@ impl NamedUnitRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ObjectRoleRef {
     ObjectRole(ObjectRoleId),
@@ -12245,6 +12894,7 @@ impl ObjectRoleRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum OneDirectionRepeatFactorRef {
     OneDirectionRepeatFactor(OneDirectionRepeatFactorId),
@@ -12264,6 +12914,7 @@ impl OneDirectionRepeatFactorRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum OrganizationRef {
     Organization(OrganizationId),
@@ -12277,6 +12928,7 @@ impl OrganizationRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum OrganizationalProjectRef {
     OrganizationalProject(OrganizationalProjectId),
@@ -12292,6 +12944,7 @@ impl OrganizationalProjectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum OrientedClosedShellRef {
     OrientedClosedShell(OrientedClosedShellId),
@@ -12309,6 +12962,7 @@ impl OrientedClosedShellRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum OrientedEdgeRef {
     OrientedEdge(OrientedEdgeId),
@@ -12324,6 +12978,7 @@ impl OrientedEdgeRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PcurveOrSurfaceRef {
     BSplineSurface(BSplineSurfaceId),
@@ -12379,6 +13034,7 @@ impl PcurveOrSurfaceRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PersonAndOrganizationItemRef {
     Action(ActionId),
@@ -12592,6 +13248,7 @@ impl PersonAndOrganizationItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PersonAndOrganizationRef {
     PersonAndOrganization(PersonAndOrganizationId),
@@ -12607,6 +13264,7 @@ impl PersonAndOrganizationRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PersonAndOrganizationRoleRef {
     PersonAndOrganizationRole(PersonAndOrganizationRoleId),
@@ -12622,6 +13280,7 @@ impl PersonAndOrganizationRoleRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PersonOrganizationSelectRef {
     Organization(OrganizationId),
@@ -12641,6 +13300,7 @@ impl PersonOrganizationSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PersonRef {
     Person(PersonId),
@@ -12654,6 +13314,7 @@ impl PersonRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PlanarBoxRef {
     PlanarBox(PlanarBoxId),
@@ -12669,6 +13330,7 @@ impl PlanarBoxRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PlaneOrPlanarBoxRef {
     PlanarBox(PlanarBoxId),
@@ -12688,6 +13350,7 @@ impl PlaneOrPlanarBoxRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PointRef {
     ApllPoint(ApllPointId),
@@ -12709,6 +13372,7 @@ impl PointRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PositiveLengthMeasureWithUnitRef {
     PositiveLengthMeasureWithUnit(PositiveLengthMeasureWithUnitId),
@@ -12728,6 +13392,7 @@ impl PositiveLengthMeasureWithUnitRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PositivePlaneAngleMeasureWithUnitRef {
     PositivePlaneAngleMeasureWithUnit(PositivePlaneAngleMeasureWithUnitId),
@@ -12747,6 +13412,7 @@ impl PositivePlaneAngleMeasureWithUnitRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PresentationAreaRef {
     PresentationArea(PresentationAreaId),
@@ -12764,6 +13430,7 @@ impl PresentationAreaRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PresentationRepresentationSelectRef {
     PresentationArea(PresentationAreaId),
@@ -12787,6 +13454,7 @@ impl PresentationRepresentationSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PresentationSetRef {
     PresentationSet(PresentationSetId),
@@ -12802,6 +13470,7 @@ impl PresentationSetRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PresentationSizeAssignmentSelectRef {
     AreaInSet(AreaInSetId),
@@ -12823,6 +13492,7 @@ impl PresentationSizeAssignmentSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PresentationStyleAssignmentRef {
     PresentationStyleAssignment(PresentationStyleAssignmentId),
@@ -12842,6 +13512,7 @@ impl PresentationStyleAssignmentRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PresentationStyleSelectRef {
     ApproximationTolerance(ApproximationToleranceId),
@@ -12884,6 +13555,7 @@ impl PresentationStyleSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PresentedItemRef {
     AppliedPresentedItem(AppliedPresentedItemId),
@@ -12901,6 +13573,7 @@ impl PresentedItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PresentedItemSelectRef {
     Action(ActionId),
@@ -12954,6 +13627,7 @@ impl PresentedItemSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductCategoryRef {
     ProductCategory(ProductCategoryId),
@@ -12973,6 +13647,7 @@ impl ProductCategoryRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductConceptContextRef {
     ProductConceptContext(ProductConceptContextId),
@@ -12988,6 +13663,7 @@ impl ProductConceptContextRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductConceptRef {
     ProductConcept(ProductConceptId),
@@ -13003,6 +13679,7 @@ impl ProductConceptRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductContextRef {
     MechanicalContext(MechanicalContextId),
@@ -13020,6 +13697,7 @@ impl ProductContextRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductDefinitionContextRef {
     DesignContext(DesignContextId),
@@ -13039,6 +13717,7 @@ impl ProductDefinitionContextRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductDefinitionContextRoleRef {
     ProductDefinitionContextRole(ProductDefinitionContextRoleId),
@@ -13054,6 +13733,7 @@ impl ProductDefinitionContextRoleRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductDefinitionFormationRef {
     ProductDefinitionFormation(ProductDefinitionFormationId),
@@ -13075,6 +13755,7 @@ impl ProductDefinitionFormationRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductDefinitionOrReferenceRef {
     GenericProductDefinitionReference(GenericProductDefinitionReferenceId),
@@ -13102,6 +13783,7 @@ impl ProductDefinitionOrReferenceRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductDefinitionRef {
     ProductDefinition(ProductDefinitionId),
@@ -13123,6 +13805,7 @@ impl ProductDefinitionRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductDefinitionRelationshipRef {
     AssemblyComponentUsage(AssemblyComponentUsageId),
@@ -13150,6 +13833,7 @@ impl ProductDefinitionRelationshipRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductDefinitionShapeRef {
     ProductDefinitionShape(ProductDefinitionShapeId),
@@ -13167,6 +13851,7 @@ impl ProductDefinitionShapeRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductOrFormationOrDefinitionRef {
     Product(ProductId),
@@ -13196,6 +13881,7 @@ impl ProductOrFormationOrDefinitionRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductRef {
     Product(ProductId),
@@ -13211,6 +13897,7 @@ impl ProductRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PropertyDefinitionRef {
     ProductDefinitionShape(ProductDefinitionShapeId),
@@ -13230,6 +13917,7 @@ impl PropertyDefinitionRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum RenderingPropertiesSelectRef {
     SurfaceStyleReflectanceAmbient(SurfaceStyleReflectanceAmbientId),
@@ -13251,6 +13939,7 @@ impl RenderingPropertiesSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationContextRef {
     GeometricRepresentationContext(GeometricRepresentationContextId),
@@ -13282,6 +13971,7 @@ impl RepresentationContextRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationContextReferenceRef {
     RepresentationContextReference(RepresentationContextReferenceId),
@@ -13299,6 +13989,7 @@ impl RepresentationContextReferenceRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationItemRef {
     AdvancedFace(AdvancedFaceId),
@@ -13638,6 +14329,7 @@ impl RepresentationItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationMapRef {
     CameraUsage(CameraUsageId),
@@ -13657,6 +14349,7 @@ impl RepresentationMapRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationOrRepresentationReferenceRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
@@ -13744,6 +14437,7 @@ impl RepresentationOrRepresentationReferenceRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
@@ -13827,6 +14521,7 @@ impl RepresentationRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentedDefinitionRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
@@ -13914,6 +14609,7 @@ impl RepresentedDefinitionRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ResourceRequirementTypeRef {
     ResourceRequirementType(ResourceRequirementTypeId),
@@ -13929,6 +14625,7 @@ impl ResourceRequirementTypeRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum RoleSelectRef {
     ActionAssignment(ActionAssignmentId),
@@ -13982,6 +14679,7 @@ impl RoleSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SecurityClassificationItemRef {
     Action(ActionId),
@@ -14147,6 +14845,7 @@ impl SecurityClassificationItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SecurityClassificationLevelRef {
     SecurityClassificationLevel(SecurityClassificationLevelId),
@@ -14162,6 +14861,7 @@ impl SecurityClassificationLevelRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SecurityClassificationRef {
     SecurityClassification(SecurityClassificationId),
@@ -14177,6 +14877,7 @@ impl SecurityClassificationRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ShapeAspectRef {
     AllAroundShapeAspect(AllAroundShapeAspectId),
@@ -14232,6 +14933,7 @@ impl ShapeAspectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ShapeDimensionRepresentationRef {
     ShapeDimensionRepresentation(ShapeDimensionRepresentationId),
@@ -14249,6 +14951,7 @@ impl ShapeDimensionRepresentationRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ShapeModelRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
@@ -14298,6 +15001,7 @@ impl ShapeModelRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ShapeRepresentationRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
@@ -14345,6 +15049,7 @@ impl ShapeRepresentationRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ShapeRepresentationRelationshipRef {
     ShapeRepresentationRelationship(ShapeRepresentationRelationshipId),
@@ -14364,6 +15069,7 @@ impl ShapeRepresentationRelationshipRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ShellRef {
     ClosedShell(ClosedShellId),
@@ -14387,6 +15093,7 @@ impl ShellRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SizeSelectRef {
     LengthMeasureWithUnit(LengthMeasureWithUnitId),
@@ -14424,6 +15131,7 @@ impl SizeSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum StartRequestItemRef {
     ProductDefinitionFormation(ProductDefinitionFormationId),
@@ -14445,6 +15153,7 @@ impl StartRequestItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum StateObservedRef {
     StateObserved(StateObservedId),
@@ -14460,6 +15169,7 @@ impl StateObservedRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum StateTypeRef {
     StateType(StateTypeId),
@@ -14475,6 +15185,7 @@ impl StateTypeRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum StyleContextSelectRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
@@ -14928,6 +15639,7 @@ impl StyleContextSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum StyledItemRef {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
@@ -14985,6 +15697,7 @@ impl StyledItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum StyledItemTargetOrRepresentationItemRef {
     AdvancedBrepShapeRepresentation(AdvancedBrepShapeRepresentationId),
@@ -15397,6 +16110,7 @@ impl StyledItemTargetOrRepresentationItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SupportedItemRef {
     Action(ActionId),
@@ -15416,6 +16130,7 @@ impl SupportedItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SurfaceRef {
     BSplineSurface(BSplineSurfaceId),
@@ -15467,6 +16182,7 @@ impl SurfaceRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SurfaceRenderingPropertiesRef {
     SurfaceRenderingProperties(SurfaceRenderingPropertiesId),
@@ -15482,6 +16198,7 @@ impl SurfaceRenderingPropertiesRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SurfaceSideStyleSelectRef {
     PreDefinedSurfaceSideStyle(PreDefinedSurfaceSideStyleId),
@@ -15501,6 +16218,7 @@ impl SurfaceSideStyleSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SurfaceStyleElementSelectRef {
     SurfaceStyleBoundary(SurfaceStyleBoundaryId),
@@ -15536,6 +16254,7 @@ impl SurfaceStyleElementSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SymbolStyleSelectRef {
     SymbolColour(SymbolColourId),
@@ -15551,6 +16270,7 @@ impl SymbolStyleSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SymbolTargetRef {
     SymbolTarget(SymbolTargetId),
@@ -15566,6 +16286,7 @@ impl SymbolTargetRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TessellatedGeometricSetRef {
     TessellatedGeometricSet(TessellatedGeometricSetId),
@@ -15583,6 +16304,7 @@ impl TessellatedGeometricSetRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TessellatedItemRef {
     ComplexTriangulatedFace(ComplexTriangulatedFaceId),
@@ -15622,6 +16344,7 @@ impl TessellatedItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TessellatedStructuredItemRef {
     ComplexTriangulatedFace(ComplexTriangulatedFaceId),
@@ -15643,6 +16366,7 @@ impl TessellatedStructuredItemRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TextOrCharacterRef {
     AnnotationText(AnnotationTextId),
@@ -15666,6 +16390,7 @@ impl TextOrCharacterRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ToleranceMethodDefinitionRef {
     LimitsAndFits(LimitsAndFitsId),
@@ -15683,6 +16408,7 @@ impl ToleranceMethodDefinitionRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ToleranceSelectRef {
     ApproximationToleranceDeviation(ApproximationToleranceDeviationId),
@@ -15704,6 +16430,7 @@ impl ToleranceSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ToleranceValueOrLimitsAndFitsRef {
     LimitsAndFits(LimitsAndFitsId),
@@ -15721,6 +16448,7 @@ impl ToleranceValueOrLimitsAndFitsRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ToleranceValueRef {
     ToleranceValue(ToleranceValueId),
@@ -15734,6 +16462,7 @@ impl ToleranceValueRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ToleranceZoneFormRef {
     ToleranceZoneForm(ToleranceZoneFormId),
@@ -15749,6 +16478,7 @@ impl ToleranceZoneFormRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ToleranceZoneRef {
     ToleranceZone(ToleranceZoneId),
@@ -15766,6 +16496,7 @@ impl ToleranceZoneRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ToleranceZoneTargetRef {
     AngularLocation(AngularLocationId),
@@ -15863,6 +16594,7 @@ impl ToleranceZoneTargetRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TransformationRef {
     FunctionallyDefinedTransformation(FunctionallyDefinedTransformationId),
@@ -15884,6 +16616,7 @@ impl TransformationRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TrimmingSelectRef {
     ApllPoint(ApllPointId),
@@ -15904,6 +16637,7 @@ impl TrimmingSelectRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TwoDirectionRepeatFactorRef {
     TwoDirectionRepeatFactor(TwoDirectionRepeatFactorId),
@@ -15921,6 +16655,7 @@ impl TwoDirectionRepeatFactorRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum UncertaintyMeasureWithUnitRef {
     UncertaintyMeasureWithUnit(UncertaintyMeasureWithUnitId),
@@ -15938,6 +16673,7 @@ impl UncertaintyMeasureWithUnitRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum UnitRef {
     AreaUnit(AreaUnitId),
@@ -15977,6 +16713,7 @@ impl UnitRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ValueQualifierRef {
     PrecisionQualifier(PrecisionQualifierId),
@@ -15996,6 +16733,7 @@ impl ValueQualifierRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum VectorRef {
     Vector(VectorId),
@@ -16011,6 +16749,7 @@ impl VectorRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum VersionedActionRequestRef {
     VersionedActionRequest(VersionedActionRequestId),
@@ -16026,6 +16765,7 @@ impl VersionedActionRequestRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum VertexLoopRef {
     VertexLoop(VertexLoopId),
@@ -16041,6 +16781,7 @@ impl VertexLoopRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum VertexRef {
     Vertex(VertexId),
@@ -16058,6 +16799,7 @@ impl VertexRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ViewVolumeRef {
     ViewVolume(ViewVolumeId),
@@ -16073,6 +16815,7 @@ impl ViewVolumeRef {
     }
 }
 
+/// A reference to one of the types an attribute admits, one arm per type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum WorkItemRef {
     ProductDefinitionFormation(ProductDefinitionFormationId),
@@ -23544,6 +24287,9 @@ pub struct ComplexEntity {
     pub parts: Vec<PartialEntity>,
 }
 
+/// A STEP file's entities, held by type, with its HEADER. [`read`](crate::read)
+/// returns one, [`Ap242Author`](crate::Ap242Author) builds one and
+/// [`write`](crate::write) writes one out; see [`crate::model`].
 #[derive(Debug, Default)]
 pub struct StepModel {
     pub(crate) header: crate::header::FileHeader,

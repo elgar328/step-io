@@ -356,12 +356,17 @@ impl TextDedup {
     }
 }
 
-/// select-of-scalars: `Some(type_name)` = typed member `TYPE(v)`; `None` = bare.
-/// `value` is int-or-real because EXPRESS `number` members (count_measure,
-/// numeric_measure) admit both; the token is preserved (2 stays 2, not 2.0).
+/// A measure's number as written, integer or real: EXPRESS `number` members
+/// such as `count_measure` admit both, and the token is kept (`2` stays `2`,
+/// not `2.0`).
 #[derive(Debug, Clone, PartialEq)]
 pub enum MeasureScalar { Int(i64), Real(f64) }
-impl MeasureScalar { pub fn as_f64(&self) -> f64 { match self { Self::Int(i) => *i as f64, Self::Real(r) => *r } } }
+impl MeasureScalar {
+    /// The number as an `f64`.
+    pub fn as_f64(&self) -> f64 { match self { Self::Int(i) => *i as f64, Self::Real(r) => *r } }
+}
+/// A value of a SELECT of measure types: `type_name` is `Some` for the typed
+/// form `TYPE(v)`, `None` for a bare value.
 #[derive(Debug, Clone, PartialEq)]
 pub struct MeasureValue { pub type_name: Option<Text>, pub value: MeasureScalar }
 
@@ -414,15 +419,15 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
     for se in &ir.simples {
         writeln!(
             s,
-            "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct {}Id(pub u32);",
-            se.rust
+            "/// The id of a `{}` entity: its index among the model's `{}` entities.\n#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct {}Id(pub u32);",
+            se.name, se.name, se.rust
         )
         .unwrap();
     }
     if ir.has_part_bag {
         writeln!(
             s,
-            "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct ComplexEntityId(pub u32);"
+            "/// The id of a complex instance: its index among the model's complex instances.\n#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub struct ComplexEntityId(pub u32);"
         )
         .unwrap();
     }
@@ -431,7 +436,7 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
     // EntityKey: one variant per arena (read idmap value).
     writeln!(
         s,
-        "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub enum EntityKey {{"
+        "/// Any entity of a [`StepModel`]: its type (the variant) and its id.\n#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\npub enum EntityKey {{"
     )
     .unwrap();
     for se in &ir.simples {
@@ -548,7 +553,11 @@ pub struct IntMeasureValue { pub type_name: Option<Text>, pub value: i64 }
     }
 
     // Top-level StepModel.
-    writeln!(s, "#[derive(Debug, Default)]\npub struct StepModel {{").unwrap();
+    writeln!(
+        s,
+        "/// A STEP file's entities, held by type, with its HEADER. [`read`](crate::read)\n/// returns one, [`Ap242Author`](crate::Ap242Author) builds one and\n/// [`write`](crate::write) writes one out; see [`crate::model`].\n#[derive(Debug, Default)]\npub struct StepModel {{"
+    )
+    .unwrap();
     // The file's HEADER section (hand-written module; accessor lives there).
     writeln!(s, "    pub(crate) header: crate::header::FileHeader,").unwrap();
     writeln!(s, "    pub(crate) texts: Texts,").unwrap();
@@ -644,7 +653,11 @@ pub fn emit_resolvers(ir: &ModelIr) -> String {
             continue;
         }
         let r = &re.rust;
-        writeln!(s, "#[derive(Clone, Copy, Debug)]\npub enum {r}View<'m> {{").unwrap();
+        writeln!(
+            s,
+            "/// What a [`{r}`] names, borrowed from the model: the entity, or an\n/// aggregate's elements.\n#[derive(Clone, Copy, Debug)]\npub enum {r}View<'m> {{"
+        )
+        .unwrap();
         for (variant, target) in &re.simple_arms {
             writeln!(s, "    {variant}(&'m {target}),").unwrap();
         }
@@ -664,7 +677,7 @@ pub fn emit_resolvers(ir: &ModelIr) -> String {
         };
         writeln!(
             s,
-            "    pub fn resolve<'m>({this}, model: &'m StepModel) -> {r}View<'m> {{"
+            "    /// The entity this reference names, borrowed from `model`. Panics for\n    /// an id `model` does not have, such as one from another model.\n    pub fn resolve<'m>({this}, model: &'m StepModel) -> {r}View<'m> {{"
         )
         .unwrap();
         writeln!(s, "        match self {{").unwrap();
@@ -695,7 +708,11 @@ pub fn emit_resolvers(ir: &ModelIr) -> String {
         }
         // entity_key(): the ref's target entity as an EntityKey (identity key for
         // maps / dedup). Same per-arm mapping as the writer's `deps_*`.
-        writeln!(s, "    pub fn entity_key(&self) -> EntityKey {{").unwrap();
+        writeln!(
+            s,
+            "    /// The key of the entity this reference names.\n    pub fn entity_key(&self) -> EntityKey {{"
+        )
+        .unwrap();
         writeln!(s, "        match self {{").unwrap();
         for (variant, target) in &re.simple_arms {
             writeln!(
@@ -735,7 +752,7 @@ fn emit_ref_enum(s: &mut String, re: &RefEnum) {
     // only PartialEq. Clone at the few deref sites; compiler flags any missed.
     writeln!(
         s,
-        "#[derive(Debug, Clone, PartialEq)]\npub enum {} {{",
+        "/// A reference to one of the types an attribute admits, one arm per type.\n#[derive(Debug, Clone, PartialEq)]\npub enum {} {{",
         re.rust
     )
     .unwrap();
@@ -2987,7 +3004,7 @@ pub fn emit_author(
 
     let mut s = String::from(HEADER);
     s.push_str("//! The strict authoring layer — [`Ap242Author`], one validated\n");
-    s.push_str("//! constructor per AP242 entity that is not `ABSTRACT`.\n\n");
+    s.push_str("//! constructor per AP242 entity step-io models that is not `ABSTRACT`.\n\n");
     s.push_str("use super::model::*;\n\n");
 
     // Error type.
@@ -2998,7 +3015,8 @@ pub fn emit_author(
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum AuthorError {
-    /// The referenced entity kind is not legal in AP242.
+    /// An entity kind that is not in AP242: a reference's target, or a part
+    /// of a complex instance.
     NotAp242 { entity: &'static str },
     /// The referenced id does not point at an existing entity.
     DanglingRef { entity: &'static str },
@@ -3026,11 +3044,13 @@ pub enum AuthorError {
     /// Builder input breaks a rule of the standard: a B-spline whose knots do
     /// not fit its degree and control points, a mesh index past its points.
     InvalidInput { reason: &'static str },
-    /// A reference AP242 narrows in `entity` (a `SELF\\supertype.attribute`
-    /// redeclaration, or a SELECT with fewer members than other editions')
-    /// names a type the narrower attribute does not allow. Raised where the
-    /// type of the argument cannot rule it out: a complex instance's parts,
-    /// and a self-referencing constructor's struct.
+    /// A reference AP242 narrows in `entity` — by a `SELF\supertype.attribute`
+    /// redeclaration, a SELECT with fewer members than other editions', or a
+    /// `WHERE` rule that limits its type — names a type the narrower attribute
+    /// does not allow. Raised where the type of the argument cannot rule it
+    /// out: an argument that is a complex instance, the parts given to
+    /// [`Ap242Author::add_complex`], and a self-referencing constructor's
+    /// struct.
     NarrowedReference {
         entity: &'static str,
         attribute: &'static str,
@@ -3098,6 +3118,7 @@ pub struct Ap242Author {
 }
 
 impl Ap242Author {
+    /// An empty author: no entities, and a header with every field empty.
     pub fn new() -> Self {
         Self::default()
     }
@@ -3320,8 +3341,9 @@ impl Ap242Author {
     /// Complex (multi-part) instance — rule-based strict AP242 assembler.
     /// The part-name set is validated by the schema name-set rule (legality,
     /// supertype-chain completeness, connectivity, ONEOF exclusivity, a
-    /// subtype part beside each `ABSTRACT` part), then every reference field
-    /// is checked; parts are stored in Part 21 order (alphabetical).
+    /// subtype part beside each `ABSTRACT` part), then every part's fields are
+    /// checked (types, sizes, references, finite reals, narrowings); parts are
+    /// stored in Part 21 order (alphabetical).
     pub fn add_complex(&mut self, mut parts: Vec<PartialEntity>) -> Result<ComplexEntityId, AuthorError> {
         let names: Vec<&'static str> = parts.iter().map(part_name).collect();
         complex_rule(&names)?;
@@ -4018,7 +4040,11 @@ pub fn emit_entity_matrix(
 
     let mut s = String::new();
     s.push_str("# Entity coverage\n\n");
-    s.push_str("<!-- @generated by codegen from schema/universal.toml + codegen/coverage.toml. DO NOT hand-edit. -->\n\n");
+    writeln!(
+        s,
+        "<!-- @generated by codegen from schema/universal.toml + codegen/coverage.toml + schema/{target_stem}.toml. DO NOT hand-edit. -->\n"
+    )
+    .unwrap();
     s.push_str("*Generated by codegen from the schema data — do not edit by hand.*\n\n");
     write!(
         s,
@@ -4028,12 +4054,16 @@ pub fn emit_entity_matrix(
          - **{} … {}** — `o` means that AP edition's EXPRESS schema\n\
          \x20 declares the entity.\n\
          - **step-io (read)** — `o` means the entity is modeled by the generated\n\
-         \x20 `StepModel`: reading a file keeps it. `x` entities are outside the\n\
+         \x20 `StepModel`: reading a file keeps its instances, unless one is\n\
+         \x20 dropped for a bad value or reference (with a reason in the\n\
+         \x20 report). `x` entities are outside the\n\
          \x20 support boundary; on read they are dropped with a reason in the\n\
          \x20 report, never silently.\n\
          - **step-io (write)** — `o` means the entity can appear in step-io\n\
          \x20 output: read-supported and legal in {target_stem}, the output\n\
-         \x20 schema.\n\
+         \x20 schema. An `ABSTRACT` entity (such as `geometric_tolerance`) has\n\
+         \x20 no constructor of its own; it is written as a part of a complex\n\
+         \x20 instance, beside a part of one of its subtypes.\n\
          - ap242e3 was published as an IS (ISO 10303-242:2022) and has been\n\
          \x20 withdrawn; ap242e4 (ISO 10303-242:2025) replaces it.\n\n",
         APS[0],

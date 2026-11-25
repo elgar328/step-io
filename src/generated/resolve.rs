@@ -3,18 +3,23 @@
 
 use super::model::*;
 
+/// What a [`ActionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ActionRefView<'m> {
     Action(&'m Action),
     Complex(&'m ComplexEntity),
 }
 impl ActionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ActionRefView<'m> {
         match self {
             ActionRef::Action(i) => ActionRefView::Action(model.action_arena.get(i.0)),
             ActionRef::Complex(i) => ActionRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ActionRef::Action(i) => EntityKey::Action(*i),
@@ -23,12 +28,16 @@ impl ActionRef {
     }
 }
 
+/// What a [`ActionMethodRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ActionMethodRefView<'m> {
     ActionMethod(&'m ActionMethod),
     Complex(&'m ComplexEntity),
 }
 impl ActionMethodRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ActionMethodRefView<'m> {
         match self {
             ActionMethodRef::ActionMethod(i) => {
@@ -39,6 +48,7 @@ impl ActionMethodRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ActionMethodRef::ActionMethod(i) => EntityKey::ActionMethod(*i),
@@ -47,12 +57,16 @@ impl ActionMethodRef {
     }
 }
 
+/// What a [`ActionResourceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ActionResourceRefView<'m> {
     ActionResource(&'m ActionResource),
     Complex(&'m ComplexEntity),
 }
 impl ActionResourceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ActionResourceRefView<'m> {
         match self {
             ActionResourceRef::ActionResource(i) => {
@@ -63,6 +77,7 @@ impl ActionResourceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ActionResourceRef::ActionResource(i) => EntityKey::ActionResource(*i),
@@ -71,12 +86,16 @@ impl ActionResourceRef {
     }
 }
 
+/// What a [`ActionResourceRequirementRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ActionResourceRequirementRefView<'m> {
     ActionResourceRequirement(&'m ActionResourceRequirement),
     Complex(&'m ComplexEntity),
 }
 impl ActionResourceRequirementRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ActionResourceRequirementRefView<'m> {
         match self {
             ActionResourceRequirementRef::ActionResourceRequirement(i) => {
@@ -89,6 +108,7 @@ impl ActionResourceRequirementRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ActionResourceRequirementRef::ActionResourceRequirement(i) => {
@@ -99,11 +119,15 @@ impl ActionResourceRequirementRef {
     }
 }
 
+/// What a [`ActionResourceTypeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ActionResourceTypeRefView<'m> {
     ActionResourceType(&'m ActionResourceType),
 }
 impl ActionResourceTypeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ActionResourceTypeRefView<'m> {
         match self {
             ActionResourceTypeRef::ActionResourceType(i) => {
@@ -113,6 +137,7 @@ impl ActionResourceTypeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ActionResourceTypeRef::ActionResourceType(i) => EntityKey::ActionResourceType(*i),
@@ -120,6 +145,8 @@ impl ActionResourceTypeRef {
     }
 }
 
+/// What a [`AnnotationCurveOccurrenceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationCurveOccurrenceRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
@@ -127,6 +154,8 @@ pub enum AnnotationCurveOccurrenceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl AnnotationCurveOccurrenceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationCurveOccurrenceRefView<'m> {
         match self {
             AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(i) => {
@@ -142,6 +171,7 @@ impl AnnotationCurveOccurrenceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(i) => {
@@ -153,6 +183,8 @@ impl AnnotationCurveOccurrenceRef {
     }
 }
 
+/// What a [`AnnotationOccurrenceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationOccurrenceRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
@@ -173,6 +205,8 @@ pub enum AnnotationOccurrenceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl AnnotationOccurrenceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationOccurrenceRefView<'m> {
         match self {
             AnnotationOccurrenceRef::AnnotationCurveOccurrence(i) => {
@@ -243,6 +277,7 @@ impl AnnotationOccurrenceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationOccurrenceRef::AnnotationCurveOccurrence(i) => {
@@ -279,6 +314,8 @@ impl AnnotationOccurrenceRef {
     }
 }
 
+/// What a [`AnnotationPlaceholderLeaderLineRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationPlaceholderLeaderLineRefView<'m> {
     AnnotationPlaceholderLeaderLine(&'m AnnotationPlaceholderLeaderLine),
@@ -288,6 +325,8 @@ pub enum AnnotationPlaceholderLeaderLineRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl AnnotationPlaceholderLeaderLineRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationPlaceholderLeaderLineRefView<'m> {
         match self {
             AnnotationPlaceholderLeaderLineRef::AnnotationPlaceholderLeaderLine(i) => {
@@ -315,6 +354,7 @@ impl AnnotationPlaceholderLeaderLineRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationPlaceholderLeaderLineRef::AnnotationPlaceholderLeaderLine(i) => {
@@ -334,6 +374,8 @@ impl AnnotationPlaceholderLeaderLineRef {
     }
 }
 
+/// What a [`AnnotationPlaceholderOccurrenceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationPlaceholderOccurrenceRefView<'m> {
     AnnotationPlaceholderOccurrence(&'m AnnotationPlaceholderOccurrence),
@@ -343,6 +385,8 @@ pub enum AnnotationPlaceholderOccurrenceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl AnnotationPlaceholderOccurrenceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationPlaceholderOccurrenceRefView<'m> {
         match self {
             AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrence(i) => AnnotationPlaceholderOccurrenceRefView::AnnotationPlaceholderOccurrence(model.annotation_placeholder_occurrence_arena.get(i.0)),
@@ -350,6 +394,7 @@ impl AnnotationPlaceholderOccurrenceRef {
             AnnotationPlaceholderOccurrenceRef::Complex(i) => AnnotationPlaceholderOccurrenceRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationPlaceholderOccurrenceRef::AnnotationPlaceholderOccurrence(i) => {
@@ -363,6 +408,8 @@ impl AnnotationPlaceholderOccurrenceRef {
     }
 }
 
+/// What a [`AnnotationPlaneElementRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationPlaneElementRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
@@ -388,6 +435,8 @@ pub enum AnnotationPlaneElementRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl AnnotationPlaneElementRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationPlaneElementRefView<'m> {
         match self {
             AnnotationPlaneElementRef::AnnotationCurveOccurrence(i) => {
@@ -485,6 +534,7 @@ impl AnnotationPlaneElementRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationPlaneElementRef::AnnotationCurveOccurrence(i) => {
@@ -534,6 +584,8 @@ impl AnnotationPlaneElementRef {
     }
 }
 
+/// What a [`AnnotationRepresentationSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationRepresentationSelectRefView<'m> {
     DraughtingModel(&'m DraughtingModel),
@@ -543,6 +595,8 @@ pub enum AnnotationRepresentationSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl AnnotationRepresentationSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationRepresentationSelectRefView<'m> {
         match self {
             AnnotationRepresentationSelectRef::DraughtingModel(i) => {
@@ -570,6 +624,7 @@ impl AnnotationRepresentationSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationRepresentationSelectRef::DraughtingModel(i) => EntityKey::DraughtingModel(*i),
@@ -587,6 +642,8 @@ impl AnnotationRepresentationSelectRef {
     }
 }
 
+/// What a [`AnnotationSymbolOccurrenceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationSymbolOccurrenceRefView<'m> {
     AnnotationSymbolOccurrence(&'m AnnotationSymbolOccurrence),
@@ -595,6 +652,8 @@ pub enum AnnotationSymbolOccurrenceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl AnnotationSymbolOccurrenceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationSymbolOccurrenceRefView<'m> {
         match self {
             AnnotationSymbolOccurrenceRef::AnnotationSymbolOccurrence(i) => {
@@ -617,6 +676,7 @@ impl AnnotationSymbolOccurrenceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationSymbolOccurrenceRef::AnnotationSymbolOccurrence(i) => {
@@ -629,12 +689,16 @@ impl AnnotationSymbolOccurrenceRef {
     }
 }
 
+/// What a [`AnnotationSymbolOccurrenceItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationSymbolOccurrenceItemRefView<'m> {
     DefinedSymbol(&'m DefinedSymbol),
     Complex(&'m ComplexEntity),
 }
 impl AnnotationSymbolOccurrenceItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationSymbolOccurrenceItemRefView<'m> {
         match self {
             AnnotationSymbolOccurrenceItemRef::DefinedSymbol(i) => {
@@ -647,6 +711,7 @@ impl AnnotationSymbolOccurrenceItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationSymbolOccurrenceItemRef::DefinedSymbol(i) => EntityKey::DefinedSymbol(*i),
@@ -655,6 +720,8 @@ impl AnnotationSymbolOccurrenceItemRef {
     }
 }
 
+/// What a [`AnnotationTextOccurrenceItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationTextOccurrenceItemRefView<'m> {
     AnnotationText(&'m AnnotationText),
@@ -665,6 +732,8 @@ pub enum AnnotationTextOccurrenceItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl AnnotationTextOccurrenceItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationTextOccurrenceItemRefView<'m> {
         match self {
             AnnotationTextOccurrenceItemRef::AnnotationText(i) => {
@@ -695,6 +764,7 @@ impl AnnotationTextOccurrenceItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationTextOccurrenceItemRef::AnnotationText(i) => EntityKey::AnnotationText(*i),
@@ -711,12 +781,16 @@ impl AnnotationTextOccurrenceItemRef {
     }
 }
 
+/// What a [`AnnotationToModelLeaderLineRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationToModelLeaderLineRefView<'m> {
     AnnotationToModelLeaderLine(&'m AnnotationToModelLeaderLine),
     Complex(&'m ComplexEntity),
 }
 impl AnnotationToModelLeaderLineRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AnnotationToModelLeaderLineRefView<'m> {
         match self {
             AnnotationToModelLeaderLineRef::AnnotationToModelLeaderLine(i) => {
@@ -729,6 +803,7 @@ impl AnnotationToModelLeaderLineRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AnnotationToModelLeaderLineRef::AnnotationToModelLeaderLine(i) => {
@@ -739,11 +814,15 @@ impl AnnotationToModelLeaderLineRef {
     }
 }
 
+/// What a [`ApplicationContextRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ApplicationContextRefView<'m> {
     ApplicationContext(&'m ApplicationContext),
 }
 impl ApplicationContextRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ApplicationContextRefView<'m> {
         match self {
             ApplicationContextRef::ApplicationContext(i) => {
@@ -753,6 +832,7 @@ impl ApplicationContextRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ApplicationContextRef::ApplicationContext(i) => EntityKey::ApplicationContext(*i),
@@ -760,16 +840,21 @@ impl ApplicationContextRef {
     }
 }
 
+/// What a [`ApprovalRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ApprovalRefView<'m> {
     Approval(&'m Approval),
 }
 impl ApprovalRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ApprovalRefView<'m> {
         match self {
             ApprovalRef::Approval(i) => ApprovalRefView::Approval(model.approval_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ApprovalRef::Approval(i) => EntityKey::Approval(*i),
@@ -777,6 +862,8 @@ impl ApprovalRef {
     }
 }
 
+/// What a [`ApprovalItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ApprovalItemRefView<'m> {
     Action(&'m Action),
@@ -1038,6 +1125,8 @@ pub enum ApprovalItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ApprovalItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ApprovalItemRefView<'m> {
         match self {
             ApprovalItemRef::Action(i) => ApprovalItemRefView::Action(model.action_arena.get(i.0)),
@@ -1971,6 +2060,7 @@ impl ApprovalItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ApprovalItemRef::Action(i) => EntityKey::Action(*i),
@@ -2354,11 +2444,15 @@ impl ApprovalItemRef {
     }
 }
 
+/// What a [`ApprovalRoleRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ApprovalRoleRefView<'m> {
     ApprovalRole(&'m ApprovalRole),
 }
 impl ApprovalRoleRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ApprovalRoleRefView<'m> {
         match self {
             ApprovalRoleRef::ApprovalRole(i) => {
@@ -2366,6 +2460,7 @@ impl ApprovalRoleRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ApprovalRoleRef::ApprovalRole(i) => EntityKey::ApprovalRole(*i),
@@ -2373,11 +2468,15 @@ impl ApprovalRoleRef {
     }
 }
 
+/// What a [`ApprovalStatusRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ApprovalStatusRefView<'m> {
     ApprovalStatus(&'m ApprovalStatus),
 }
 impl ApprovalStatusRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ApprovalStatusRefView<'m> {
         match self {
             ApprovalStatusRef::ApprovalStatus(i) => {
@@ -2385,6 +2484,7 @@ impl ApprovalStatusRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ApprovalStatusRef::ApprovalStatus(i) => EntityKey::ApprovalStatus(*i),
@@ -2392,6 +2492,8 @@ impl ApprovalStatusRef {
     }
 }
 
+/// What a [`ApprovedItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ApprovedItemRefView<'m> {
     Certification(&'m Certification),
@@ -2413,6 +2515,8 @@ pub enum ApprovedItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ApprovedItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ApprovedItemRefView<'m> {
         match self {
             ApprovedItemRef::Certification(i) => {
@@ -2474,6 +2578,7 @@ impl ApprovedItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ApprovedItemRef::Certification(i) => EntityKey::Certification(*i),
@@ -2501,11 +2606,15 @@ impl ApprovedItemRef {
     }
 }
 
+/// What a [`AscribableStateRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum AscribableStateRefView<'m> {
     AscribableState(&'m AscribableState),
 }
 impl AscribableStateRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> AscribableStateRefView<'m> {
         match self {
             AscribableStateRef::AscribableState(i) => {
@@ -2513,6 +2622,7 @@ impl AscribableStateRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             AscribableStateRef::AscribableState(i) => EntityKey::AscribableState(*i),
@@ -2520,12 +2630,16 @@ impl AscribableStateRef {
     }
 }
 
+/// What a [`Axis1PlacementRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum Axis1PlacementRefView<'m> {
     Axis1Placement(&'m Axis1Placement),
     Complex(&'m ComplexEntity),
 }
 impl Axis1PlacementRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> Axis1PlacementRefView<'m> {
         match self {
             Axis1PlacementRef::Axis1Placement(i) => {
@@ -2536,6 +2650,7 @@ impl Axis1PlacementRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             Axis1PlacementRef::Axis1Placement(i) => EntityKey::Axis1Placement(*i),
@@ -2544,6 +2659,8 @@ impl Axis1PlacementRef {
     }
 }
 
+/// What a [`Axis2PlacementRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum Axis2PlacementRefView<'m> {
     Axis2Placement2d(&'m Axis2Placement2d),
@@ -2551,6 +2668,8 @@ pub enum Axis2PlacementRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl Axis2PlacementRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> Axis2PlacementRefView<'m> {
         match self {
             Axis2PlacementRef::Axis2Placement2d(i) => {
@@ -2564,6 +2683,7 @@ impl Axis2PlacementRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             Axis2PlacementRef::Axis2Placement2d(i) => EntityKey::Axis2Placement2d(*i),
@@ -2573,12 +2693,16 @@ impl Axis2PlacementRef {
     }
 }
 
+/// What a [`Axis2Placement3dRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum Axis2Placement3dRefView<'m> {
     Axis2Placement3d(&'m Axis2Placement3d),
     Complex(&'m ComplexEntity),
 }
 impl Axis2Placement3dRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> Axis2Placement3dRefView<'m> {
         match self {
             Axis2Placement3dRef::Axis2Placement3d(i) => {
@@ -2589,6 +2713,7 @@ impl Axis2Placement3dRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             Axis2Placement3dRef::Axis2Placement3d(i) => EntityKey::Axis2Placement3d(*i),
@@ -2597,6 +2722,8 @@ impl Axis2Placement3dRef {
     }
 }
 
+/// What a [`BottomConditionTargetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum BottomConditionTargetRefView<'m> {
     BasicRoundHole(&'m BasicRoundHole),
@@ -2606,6 +2733,8 @@ pub enum BottomConditionTargetRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl BottomConditionTargetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> BottomConditionTargetRefView<'m> {
         match self {
             BottomConditionTargetRef::BasicRoundHole(i) => {
@@ -2631,6 +2760,7 @@ impl BottomConditionTargetRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             BottomConditionTargetRef::BasicRoundHole(i) => EntityKey::BasicRoundHole(*i),
@@ -2648,6 +2778,8 @@ impl BottomConditionTargetRef {
     }
 }
 
+/// What a [`CameraModelRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CameraModelRefView<'m> {
     CameraModel(&'m CameraModel),
@@ -2657,6 +2789,8 @@ pub enum CameraModelRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CameraModelRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CameraModelRefView<'m> {
         match self {
             CameraModelRef::CameraModel(i) => {
@@ -2680,6 +2814,7 @@ impl CameraModelRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CameraModelRef::CameraModel(i) => EntityKey::CameraModel(*i),
@@ -2693,6 +2828,8 @@ impl CameraModelRef {
     }
 }
 
+/// What a [`CameraModelD3Ref`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CameraModelD3RefView<'m> {
     CameraModelD3(&'m CameraModelD3),
@@ -2701,6 +2838,8 @@ pub enum CameraModelD3RefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CameraModelD3Ref {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CameraModelD3RefView<'m> {
         match self {
             CameraModelD3Ref::CameraModelD3(i) => {
@@ -2721,6 +2860,7 @@ impl CameraModelD3Ref {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CameraModelD3Ref::CameraModelD3(i) => EntityKey::CameraModelD3(*i),
@@ -2733,12 +2873,16 @@ impl CameraModelD3Ref {
     }
 }
 
+/// What a [`CameraModelD3MultiClippingIntersectionSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CameraModelD3MultiClippingIntersectionSelectRefView<'m> {
     Plane(&'m Plane),
     Complex(&'m ComplexEntity),
 }
 impl CameraModelD3MultiClippingIntersectionSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(
         &self,
         model: &'m StepModel,
@@ -2756,6 +2900,7 @@ impl CameraModelD3MultiClippingIntersectionSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CameraModelD3MultiClippingIntersectionSelectRef::Plane(i) => EntityKey::Plane(*i),
@@ -2766,12 +2911,16 @@ impl CameraModelD3MultiClippingIntersectionSelectRef {
     }
 }
 
+/// What a [`CameraUsageRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CameraUsageRefView<'m> {
     CameraUsage(&'m CameraUsage),
     Complex(&'m ComplexEntity),
 }
 impl CameraUsageRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CameraUsageRefView<'m> {
         match self {
             CameraUsageRef::CameraUsage(i) => {
@@ -2782,6 +2931,7 @@ impl CameraUsageRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CameraUsageRef::CameraUsage(i) => EntityKey::CameraUsage(*i),
@@ -2790,6 +2940,8 @@ impl CameraUsageRef {
     }
 }
 
+/// What a [`CartesianPointRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CartesianPointRefView<'m> {
     ApllPoint(&'m ApllPoint),
@@ -2798,6 +2950,8 @@ pub enum CartesianPointRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CartesianPointRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CartesianPointRefView<'m> {
         match self {
             CartesianPointRef::ApllPoint(i) => {
@@ -2816,6 +2970,7 @@ impl CartesianPointRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CartesianPointRef::ApllPoint(i) => EntityKey::ApllPoint(*i),
@@ -2826,6 +2981,8 @@ impl CartesianPointRef {
     }
 }
 
+/// What a [`CcClassifiedItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CcClassifiedItemRefView<'m> {
     AssemblyComponentUsage(&'m AssemblyComponentUsage),
@@ -2837,6 +2994,8 @@ pub enum CcClassifiedItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CcClassifiedItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CcClassifiedItemRefView<'m> {
         match self {
             CcClassifiedItemRef::AssemblyComponentUsage(i) => {
@@ -2866,6 +3025,7 @@ impl CcClassifiedItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CcClassifiedItemRef::AssemblyComponentUsage(i) => EntityKey::AssemblyComponentUsage(*i),
@@ -2883,6 +3043,8 @@ impl CcClassifiedItemRef {
     }
 }
 
+/// What a [`CcPersonOrganizationItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CcPersonOrganizationItemRefView<'m> {
     Change(&'m Change),
@@ -2902,6 +3064,8 @@ pub enum CcPersonOrganizationItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CcPersonOrganizationItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CcPersonOrganizationItemRefView<'m> {
         match self {
             CcPersonOrganizationItemRef::Change(i) => {
@@ -2961,6 +3125,7 @@ impl CcPersonOrganizationItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CcPersonOrganizationItemRef::Change(i) => EntityKey::Change(*i),
@@ -2988,11 +3153,15 @@ impl CcPersonOrganizationItemRef {
     }
 }
 
+/// What a [`CertificationTypeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CertificationTypeRefView<'m> {
     CertificationType(&'m CertificationType),
 }
 impl CertificationTypeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CertificationTypeRefView<'m> {
         match self {
             CertificationTypeRef::CertificationType(i) => {
@@ -3000,6 +3169,7 @@ impl CertificationTypeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CertificationTypeRef::CertificationType(i) => EntityKey::CertificationType(*i),
@@ -3007,6 +3177,8 @@ impl CertificationTypeRef {
     }
 }
 
+/// What a [`ChangeRequestItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ChangeRequestItemRefView<'m> {
     ProductDefinitionFormation(&'m ProductDefinitionFormation),
@@ -3016,6 +3188,8 @@ pub enum ChangeRequestItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ChangeRequestItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ChangeRequestItemRefView<'m> {
         match self {
             ChangeRequestItemRef::ProductDefinitionFormation(i) => {
@@ -3035,6 +3209,7 @@ impl ChangeRequestItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ChangeRequestItemRef::ProductDefinitionFormation(i) => {
@@ -3048,6 +3223,8 @@ impl ChangeRequestItemRef {
     }
 }
 
+/// What a [`CharacterStyleSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CharacterStyleSelectRefView<'m> {
     CharacterGlyphStyleOutline(&'m CharacterGlyphStyleOutline),
@@ -3056,6 +3233,8 @@ pub enum CharacterStyleSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CharacterStyleSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CharacterStyleSelectRefView<'m> {
         match self {
             CharacterStyleSelectRef::CharacterGlyphStyleOutline(i) => {
@@ -3078,6 +3257,7 @@ impl CharacterStyleSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CharacterStyleSelectRef::CharacterGlyphStyleOutline(i) => {
@@ -3094,6 +3274,8 @@ impl CharacterStyleSelectRef {
     }
 }
 
+/// What a [`CharacterizedActionDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CharacterizedActionDefinitionRefView<'m> {
     Action(&'m Action),
@@ -3103,6 +3285,8 @@ pub enum CharacterizedActionDefinitionRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CharacterizedActionDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CharacterizedActionDefinitionRefView<'m> {
         match self {
             CharacterizedActionDefinitionRef::Action(i) => {
@@ -3128,6 +3312,7 @@ impl CharacterizedActionDefinitionRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CharacterizedActionDefinitionRef::Action(i) => EntityKey::Action(*i),
@@ -3143,6 +3328,8 @@ impl CharacterizedActionDefinitionRef {
     }
 }
 
+/// What a [`CharacterizedDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CharacterizedDefinitionRefView<'m> {
     AllAroundShapeAspect(&'m AllAroundShapeAspect),
@@ -3233,6 +3420,8 @@ pub enum CharacterizedDefinitionRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CharacterizedDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CharacterizedDefinitionRefView<'m> {
         match self {
             CharacterizedDefinitionRef::AllAroundShapeAspect(i) => {
@@ -3647,6 +3836,7 @@ impl CharacterizedDefinitionRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CharacterizedDefinitionRef::AllAroundShapeAspect(i) => {
@@ -3851,6 +4041,8 @@ impl CharacterizedDefinitionRef {
     }
 }
 
+/// What a [`CharacterizedResourceDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CharacterizedResourceDefinitionRefView<'m> {
     ActionResource(&'m ActionResource),
@@ -3860,6 +4052,8 @@ pub enum CharacterizedResourceDefinitionRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CharacterizedResourceDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CharacterizedResourceDefinitionRefView<'m> {
         match self {
             CharacterizedResourceDefinitionRef::ActionResource(i) => {
@@ -3889,6 +4083,7 @@ impl CharacterizedResourceDefinitionRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CharacterizedResourceDefinitionRef::ActionResource(i) => EntityKey::ActionResource(*i),
@@ -3906,6 +4101,8 @@ impl CharacterizedResourceDefinitionRef {
     }
 }
 
+/// What a [`ClosedShellRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ClosedShellRefView<'m> {
     ClosedShell(&'m ClosedShell),
@@ -3913,6 +4110,8 @@ pub enum ClosedShellRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ClosedShellRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ClosedShellRefView<'m> {
         match self {
             ClosedShellRef::ClosedShell(i) => {
@@ -3926,6 +4125,7 @@ impl ClosedShellRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ClosedShellRef::ClosedShell(i) => EntityKey::ClosedShell(*i),
@@ -3935,6 +4135,8 @@ impl ClosedShellRef {
     }
 }
 
+/// What a [`ColourRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ColourRefView<'m> {
     Colour(&'m Colour),
@@ -3945,6 +4147,8 @@ pub enum ColourRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ColourRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ColourRefView<'m> {
         match self {
             ColourRef::Colour(i) => ColourRefView::Colour(model.colour_arena.get(i.0)),
@@ -3961,6 +4165,7 @@ impl ColourRef {
             ColourRef::Complex(i) => ColourRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ColourRef::Colour(i) => EntityKey::Colour(*i),
@@ -3973,12 +4178,16 @@ impl ColourRef {
     }
 }
 
+/// What a [`CompositeCurveSegmentRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CompositeCurveSegmentRefView<'m> {
     CompositeCurveSegment(&'m CompositeCurveSegment),
     Complex(&'m ComplexEntity),
 }
 impl CompositeCurveSegmentRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CompositeCurveSegmentRefView<'m> {
         match self {
             CompositeCurveSegmentRef::CompositeCurveSegment(i) => {
@@ -3991,6 +4200,7 @@ impl CompositeCurveSegmentRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CompositeCurveSegmentRef::CompositeCurveSegment(i) => {
@@ -4001,6 +4211,8 @@ impl CompositeCurveSegmentRef {
     }
 }
 
+/// What a [`CompoundItemDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CompoundItemDefinitionRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
@@ -4158,6 +4370,8 @@ pub enum CompoundItemDefinitionRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CompoundItemDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&'m self, model: &'m StepModel) -> CompoundItemDefinitionRefView<'m> {
         match self {
             CompoundItemDefinitionRef::AdvancedFace(i) => {
@@ -4779,11 +4993,15 @@ impl CompoundItemDefinitionRef {
     }
 }
 
+/// What a [`ConfigurationDesignRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ConfigurationDesignRefView<'m> {
     ConfigurationDesign(&'m ConfigurationDesign),
 }
 impl ConfigurationDesignRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ConfigurationDesignRefView<'m> {
         match self {
             ConfigurationDesignRef::ConfigurationDesign(i) => {
@@ -4793,6 +5011,7 @@ impl ConfigurationDesignRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ConfigurationDesignRef::ConfigurationDesign(i) => EntityKey::ConfigurationDesign(*i),
@@ -4800,6 +5019,8 @@ impl ConfigurationDesignRef {
     }
 }
 
+/// What a [`ConfigurationDesignItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ConfigurationDesignItemRefView<'m> {
     ProductDefinition(&'m ProductDefinition),
@@ -4812,6 +5033,8 @@ pub enum ConfigurationDesignItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ConfigurationDesignItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ConfigurationDesignItemRefView<'m> {
         match self {
             ConfigurationDesignItemRef::ProductDefinition(i) => {
@@ -4848,6 +5071,7 @@ impl ConfigurationDesignItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ConfigurationDesignItemRef::ProductDefinition(i) => EntityKey::ProductDefinition(*i),
@@ -4868,12 +5092,16 @@ impl ConfigurationDesignItemRef {
     }
 }
 
+/// What a [`ConfigurationItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ConfigurationItemRefView<'m> {
     ConfigurationItem(&'m ConfigurationItem),
     Complex(&'m ComplexEntity),
 }
 impl ConfigurationItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ConfigurationItemRefView<'m> {
         match self {
             ConfigurationItemRef::ConfigurationItem(i) => {
@@ -4884,6 +5112,7 @@ impl ConfigurationItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ConfigurationItemRef::ConfigurationItem(i) => EntityKey::ConfigurationItem(*i),
@@ -4892,6 +5121,8 @@ impl ConfigurationItemRef {
     }
 }
 
+/// What a [`ConnectedFaceSetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ConnectedFaceSetRefView<'m> {
     ClosedShell(&'m ClosedShell),
@@ -4901,6 +5132,8 @@ pub enum ConnectedFaceSetRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ConnectedFaceSetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ConnectedFaceSetRefView<'m> {
         match self {
             ConnectedFaceSetRef::ClosedShell(i) => {
@@ -4922,6 +5155,7 @@ impl ConnectedFaceSetRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ConnectedFaceSetRef::ClosedShell(i) => EntityKey::ClosedShell(*i),
@@ -4933,11 +5167,15 @@ impl ConnectedFaceSetRef {
     }
 }
 
+/// What a [`ContractTypeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ContractTypeRefView<'m> {
     ContractType(&'m ContractType),
 }
 impl ContractTypeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ContractTypeRefView<'m> {
         match self {
             ContractTypeRef::ContractType(i) => {
@@ -4945,6 +5183,7 @@ impl ContractTypeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ContractTypeRef::ContractType(i) => EntityKey::ContractType(*i),
@@ -4952,11 +5191,15 @@ impl ContractTypeRef {
     }
 }
 
+/// What a [`CoordinatedUniversalTimeOffsetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CoordinatedUniversalTimeOffsetRefView<'m> {
     CoordinatedUniversalTimeOffset(&'m CoordinatedUniversalTimeOffset),
 }
 impl CoordinatedUniversalTimeOffsetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CoordinatedUniversalTimeOffsetRefView<'m> {
         match self {
             CoordinatedUniversalTimeOffsetRef::CoordinatedUniversalTimeOffset(i) => {
@@ -4966,6 +5209,7 @@ impl CoordinatedUniversalTimeOffsetRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CoordinatedUniversalTimeOffsetRef::CoordinatedUniversalTimeOffset(i) => {
@@ -4975,12 +5219,16 @@ impl CoordinatedUniversalTimeOffsetRef {
     }
 }
 
+/// What a [`CoordinatesListRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CoordinatesListRefView<'m> {
     CoordinatesList(&'m CoordinatesList),
     Complex(&'m ComplexEntity),
 }
 impl CoordinatesListRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CoordinatesListRefView<'m> {
         match self {
             CoordinatesListRef::CoordinatesList(i) => {
@@ -4991,6 +5239,7 @@ impl CoordinatesListRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CoordinatesListRef::CoordinatesList(i) => EntityKey::CoordinatesList(*i),
@@ -4999,6 +5248,8 @@ impl CoordinatesListRef {
     }
 }
 
+/// What a [`CurveRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CurveRefView<'m> {
     BSplineCurve(&'m BSplineCurve),
@@ -5027,6 +5278,8 @@ pub enum CurveRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CurveRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveRefView<'m> {
         match self {
             CurveRef::BSplineCurve(i) => {
@@ -5081,6 +5334,7 @@ impl CurveRef {
             CurveRef::Complex(i) => CurveRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CurveRef::BSplineCurve(i) => EntityKey::BSplineCurve(*i),
@@ -5111,6 +5365,8 @@ impl CurveRef {
     }
 }
 
+/// What a [`CurveFontOrScaledCurveFontSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CurveFontOrScaledCurveFontSelectRefView<'m> {
     CurveStyleFont(&'m CurveStyleFont),
@@ -5121,6 +5377,8 @@ pub enum CurveFontOrScaledCurveFontSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CurveFontOrScaledCurveFontSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveFontOrScaledCurveFontSelectRefView<'m> {
         match self {
             CurveFontOrScaledCurveFontSelectRef::CurveStyleFont(i) => {
@@ -5155,6 +5413,7 @@ impl CurveFontOrScaledCurveFontSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CurveFontOrScaledCurveFontSelectRef::CurveStyleFont(i) => EntityKey::CurveStyleFont(*i),
@@ -5175,6 +5434,8 @@ impl CurveFontOrScaledCurveFontSelectRef {
     }
 }
 
+/// What a [`CurveOrAnnotationCurveOccurrenceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CurveOrAnnotationCurveOccurrenceRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
@@ -5205,6 +5466,8 @@ pub enum CurveOrAnnotationCurveOccurrenceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CurveOrAnnotationCurveOccurrenceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveOrAnnotationCurveOccurrenceRefView<'m> {
         match self {
             CurveOrAnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(i) => {
@@ -5319,6 +5582,7 @@ impl CurveOrAnnotationCurveOccurrenceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CurveOrAnnotationCurveOccurrenceRef::AnnotationCurveOccurrence(i) => {
@@ -5363,6 +5627,8 @@ impl CurveOrAnnotationCurveOccurrenceRef {
     }
 }
 
+/// What a [`CurveOrCurveSetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CurveOrCurveSetRefView<'m> {
     BSplineCurve(&'m BSplineCurve),
@@ -5392,6 +5658,8 @@ pub enum CurveOrCurveSetRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CurveOrCurveSetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveOrCurveSetRefView<'m> {
         match self {
             CurveOrCurveSetRef::BSplineCurve(i) => {
@@ -5475,6 +5743,7 @@ impl CurveOrCurveSetRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CurveOrCurveSetRef::BSplineCurve(i) => EntityKey::BSplineCurve(*i),
@@ -5506,6 +5775,8 @@ impl CurveOrCurveSetRef {
     }
 }
 
+/// What a [`CurveOrRenderRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CurveOrRenderRefView<'m> {
     CurveStyle(&'m CurveStyle),
@@ -5513,6 +5784,8 @@ pub enum CurveOrRenderRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CurveOrRenderRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveOrRenderRefView<'m> {
         match self {
             CurveOrRenderRef::CurveStyle(i) => {
@@ -5526,6 +5799,7 @@ impl CurveOrRenderRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CurveOrRenderRef::CurveStyle(i) => EntityKey::CurveStyle(*i),
@@ -5535,12 +5809,16 @@ impl CurveOrRenderRef {
     }
 }
 
+/// What a [`CurveStyleRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CurveStyleRefView<'m> {
     CurveStyle(&'m CurveStyle),
     Complex(&'m ComplexEntity),
 }
 impl CurveStyleRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveStyleRefView<'m> {
         match self {
             CurveStyleRef::CurveStyle(i) => {
@@ -5551,6 +5829,7 @@ impl CurveStyleRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CurveStyleRef::CurveStyle(i) => EntityKey::CurveStyle(*i),
@@ -5559,12 +5838,16 @@ impl CurveStyleRef {
     }
 }
 
+/// What a [`CurveStyleFontPatternRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CurveStyleFontPatternRefView<'m> {
     CurveStyleFontPattern(&'m CurveStyleFontPattern),
     Complex(&'m ComplexEntity),
 }
 impl CurveStyleFontPatternRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveStyleFontPatternRefView<'m> {
         match self {
             CurveStyleFontPatternRef::CurveStyleFontPattern(i) => {
@@ -5577,6 +5860,7 @@ impl CurveStyleFontPatternRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CurveStyleFontPatternRef::CurveStyleFontPattern(i) => {
@@ -5587,6 +5871,8 @@ impl CurveStyleFontPatternRef {
     }
 }
 
+/// What a [`CurveStyleFontSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum CurveStyleFontSelectRefView<'m> {
     CurveStyleFont(&'m CurveStyleFont),
@@ -5596,6 +5882,8 @@ pub enum CurveStyleFontSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl CurveStyleFontSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> CurveStyleFontSelectRefView<'m> {
         match self {
             CurveStyleFontSelectRef::CurveStyleFont(i) => {
@@ -5621,6 +5909,7 @@ impl CurveStyleFontSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             CurveStyleFontSelectRef::CurveStyleFont(i) => EntityKey::CurveStyleFont(*i),
@@ -5636,6 +5925,8 @@ impl CurveStyleFontSelectRef {
     }
 }
 
+/// What a [`DateRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DateRefView<'m> {
     CalendarDate(&'m CalendarDate),
@@ -5643,6 +5934,8 @@ pub enum DateRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DateRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DateRefView<'m> {
         match self {
             DateRef::CalendarDate(i) => {
@@ -5652,6 +5945,7 @@ impl DateRef {
             DateRef::Complex(i) => DateRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DateRef::CalendarDate(i) => EntityKey::CalendarDate(*i),
@@ -5661,12 +5955,16 @@ impl DateRef {
     }
 }
 
+/// What a [`DateAndTimeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DateAndTimeRefView<'m> {
     DateAndTime(&'m DateAndTime),
     Complex(&'m ComplexEntity),
 }
 impl DateAndTimeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DateAndTimeRefView<'m> {
         match self {
             DateAndTimeRef::DateAndTime(i) => {
@@ -5677,6 +5975,7 @@ impl DateAndTimeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DateAndTimeRef::DateAndTime(i) => EntityKey::DateAndTime(*i),
@@ -5685,6 +5984,8 @@ impl DateAndTimeRef {
     }
 }
 
+/// What a [`DateAndTimeItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DateAndTimeItemRefView<'m> {
     Action(&'m Action),
@@ -5773,6 +6074,8 @@ pub enum DateAndTimeItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DateAndTimeItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DateAndTimeItemRefView<'m> {
         match self {
             DateAndTimeItemRef::Action(i) => {
@@ -6093,6 +6396,7 @@ impl DateAndTimeItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DateAndTimeItemRef::Action(i) => EntityKey::Action(*i),
@@ -6231,6 +6535,8 @@ impl DateAndTimeItemRef {
     }
 }
 
+/// What a [`DateTimeItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DateTimeItemRefView<'m> {
     ApprovalPersonOrganization(&'m ApprovalPersonOrganization),
@@ -6246,6 +6552,8 @@ pub enum DateTimeItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DateTimeItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DateTimeItemRefView<'m> {
         match self {
             DateTimeItemRef::ApprovalPersonOrganization(i) => {
@@ -6289,6 +6597,7 @@ impl DateTimeItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DateTimeItemRef::ApprovalPersonOrganization(i) => {
@@ -6310,11 +6619,15 @@ impl DateTimeItemRef {
     }
 }
 
+/// What a [`DateTimeRoleRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DateTimeRoleRefView<'m> {
     DateTimeRole(&'m DateTimeRole),
 }
 impl DateTimeRoleRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DateTimeRoleRefView<'m> {
         match self {
             DateTimeRoleRef::DateTimeRole(i) => {
@@ -6322,6 +6635,7 @@ impl DateTimeRoleRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DateTimeRoleRef::DateTimeRole(i) => EntityKey::DateTimeRole(*i),
@@ -6329,6 +6643,8 @@ impl DateTimeRoleRef {
     }
 }
 
+/// What a [`DateTimeSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DateTimeSelectRefView<'m> {
     CalendarDate(&'m CalendarDate),
@@ -6338,6 +6654,8 @@ pub enum DateTimeSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DateTimeSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DateTimeSelectRefView<'m> {
         match self {
             DateTimeSelectRef::CalendarDate(i) => {
@@ -6355,6 +6673,7 @@ impl DateTimeSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DateTimeSelectRef::CalendarDate(i) => EntityKey::CalendarDate(*i),
@@ -6366,6 +6685,8 @@ impl DateTimeSelectRef {
     }
 }
 
+/// What a [`DatumRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DatumRefView<'m> {
     CommonDatum(&'m CommonDatum),
@@ -6373,6 +6694,8 @@ pub enum DatumRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DatumRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DatumRefView<'m> {
         match self {
             DatumRef::CommonDatum(i) => {
@@ -6382,6 +6705,7 @@ impl DatumRef {
             DatumRef::Complex(i) => DatumRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DatumRef::CommonDatum(i) => EntityKey::CommonDatum(*i),
@@ -6391,6 +6715,8 @@ impl DatumRef {
     }
 }
 
+/// What a [`DatumOrCommonDatumRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DatumOrCommonDatumRefView<'m> {
     CommonDatum(&'m CommonDatum),
@@ -6400,6 +6726,8 @@ pub enum DatumOrCommonDatumRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DatumOrCommonDatumRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&'m self, model: &'m StepModel) -> DatumOrCommonDatumRefView<'m> {
         match self {
             DatumOrCommonDatumRef::CommonDatum(i) => {
@@ -6423,12 +6751,16 @@ impl DatumOrCommonDatumRef {
     }
 }
 
+/// What a [`DatumReferenceCompartmentRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DatumReferenceCompartmentRefView<'m> {
     DatumReferenceCompartment(&'m DatumReferenceCompartment),
     Complex(&'m ComplexEntity),
 }
 impl DatumReferenceCompartmentRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DatumReferenceCompartmentRefView<'m> {
         match self {
             DatumReferenceCompartmentRef::DatumReferenceCompartment(i) => {
@@ -6441,6 +6773,7 @@ impl DatumReferenceCompartmentRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DatumReferenceCompartmentRef::DatumReferenceCompartment(i) => {
@@ -6451,12 +6784,16 @@ impl DatumReferenceCompartmentRef {
     }
 }
 
+/// What a [`DatumReferenceElementRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DatumReferenceElementRefView<'m> {
     DatumReferenceElement(&'m DatumReferenceElement),
     Complex(&'m ComplexEntity),
 }
 impl DatumReferenceElementRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DatumReferenceElementRefView<'m> {
         match self {
             DatumReferenceElementRef::DatumReferenceElement(i) => {
@@ -6469,6 +6806,7 @@ impl DatumReferenceElementRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DatumReferenceElementRef::DatumReferenceElement(i) => {
@@ -6479,12 +6817,16 @@ impl DatumReferenceElementRef {
     }
 }
 
+/// What a [`DatumSystemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DatumSystemRefView<'m> {
     DatumSystem(&'m DatumSystem),
     Complex(&'m ComplexEntity),
 }
 impl DatumSystemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DatumSystemRefView<'m> {
         match self {
             DatumSystemRef::DatumSystem(i) => {
@@ -6495,6 +6837,7 @@ impl DatumSystemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DatumSystemRef::DatumSystem(i) => EntityKey::DatumSystem(*i),
@@ -6503,6 +6846,8 @@ impl DatumSystemRef {
     }
 }
 
+/// What a [`DatumSystemOrReferenceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DatumSystemOrReferenceRefView<'m> {
     DatumReference(&'m DatumReference),
@@ -6510,6 +6855,8 @@ pub enum DatumSystemOrReferenceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DatumSystemOrReferenceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DatumSystemOrReferenceRefView<'m> {
         match self {
             DatumSystemOrReferenceRef::DatumReference(i) => {
@@ -6523,6 +6870,7 @@ impl DatumSystemOrReferenceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DatumSystemOrReferenceRef::DatumReference(i) => EntityKey::DatumReference(*i),
@@ -6532,6 +6880,8 @@ impl DatumSystemOrReferenceRef {
     }
 }
 
+/// What a [`DatumTargetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DatumTargetRefView<'m> {
     DatumTarget(&'m DatumTarget),
@@ -6539,6 +6889,8 @@ pub enum DatumTargetRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DatumTargetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DatumTargetRefView<'m> {
         match self {
             DatumTargetRef::DatumTarget(i) => {
@@ -6554,6 +6906,7 @@ impl DatumTargetRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DatumTargetRef::DatumTarget(i) => EntityKey::DatumTarget(*i),
@@ -6563,6 +6916,8 @@ impl DatumTargetRef {
     }
 }
 
+/// What a [`DefinedGlyphSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DefinedGlyphSelectRefView<'m> {
     ExternallyDefinedCharacterGlyph(&'m ExternallyDefinedCharacterGlyph),
@@ -6570,6 +6925,8 @@ pub enum DefinedGlyphSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DefinedGlyphSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DefinedGlyphSelectRefView<'m> {
         match self {
             DefinedGlyphSelectRef::ExternallyDefinedCharacterGlyph(i) => {
@@ -6587,6 +6944,7 @@ impl DefinedGlyphSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DefinedGlyphSelectRef::ExternallyDefinedCharacterGlyph(i) => {
@@ -6600,6 +6958,8 @@ impl DefinedGlyphSelectRef {
     }
 }
 
+/// What a [`DefinedSymbolSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DefinedSymbolSelectRefView<'m> {
     ExternallyDefinedSymbol(&'m ExternallyDefinedSymbol),
@@ -6609,6 +6969,8 @@ pub enum DefinedSymbolSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DefinedSymbolSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DefinedSymbolSelectRefView<'m> {
         match self {
             DefinedSymbolSelectRef::ExternallyDefinedSymbol(i) => {
@@ -6636,6 +6998,7 @@ impl DefinedSymbolSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DefinedSymbolSelectRef::ExternallyDefinedSymbol(i) => {
@@ -6653,12 +7016,16 @@ impl DefinedSymbolSelectRef {
     }
 }
 
+/// What a [`DefinitionalRepresentationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DefinitionalRepresentationRefView<'m> {
     DefinitionalRepresentation(&'m DefinitionalRepresentation),
     Complex(&'m ComplexEntity),
 }
 impl DefinitionalRepresentationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DefinitionalRepresentationRefView<'m> {
         match self {
             DefinitionalRepresentationRef::DefinitionalRepresentation(i) => {
@@ -6671,6 +7038,7 @@ impl DefinitionalRepresentationRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DefinitionalRepresentationRef::DefinitionalRepresentation(i) => {
@@ -6681,6 +7049,8 @@ impl DefinitionalRepresentationRef {
     }
 }
 
+/// What a [`DerivedPropertySelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DerivedPropertySelectRefView<'m> {
     ActionProperty(&'m ActionProperty),
@@ -6721,6 +7091,8 @@ pub enum DerivedPropertySelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DerivedPropertySelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DerivedPropertySelectRefView<'m> {
         match self {
             DerivedPropertySelectRef::ActionProperty(i) => {
@@ -6901,6 +7273,7 @@ impl DerivedPropertySelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DerivedPropertySelectRef::ActionProperty(i) => EntityKey::ActionProperty(*i),
@@ -6985,11 +7358,15 @@ impl DerivedPropertySelectRef {
     }
 }
 
+/// What a [`DerivedUnitElementRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DerivedUnitElementRefView<'m> {
     DerivedUnitElement(&'m DerivedUnitElement),
 }
 impl DerivedUnitElementRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DerivedUnitElementRefView<'m> {
         match self {
             DerivedUnitElementRef::DerivedUnitElement(i) => {
@@ -6999,6 +7376,7 @@ impl DerivedUnitElementRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DerivedUnitElementRef::DerivedUnitElement(i) => EntityKey::DerivedUnitElement(*i),
@@ -7006,6 +7384,8 @@ impl DerivedUnitElementRef {
     }
 }
 
+/// What a [`DesApllPointSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DesApllPointSelectRefView<'m> {
     ApllPoint(&'m ApllPoint),
@@ -7013,6 +7393,8 @@ pub enum DesApllPointSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DesApllPointSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DesApllPointSelectRefView<'m> {
         match self {
             DesApllPointSelectRef::ApllPoint(i) => {
@@ -7028,6 +7410,7 @@ impl DesApllPointSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DesApllPointSelectRef::ApllPoint(i) => EntityKey::ApllPoint(*i),
@@ -7037,6 +7420,8 @@ impl DesApllPointSelectRef {
     }
 }
 
+/// What a [`DescriptionAttributeSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DescriptionAttributeSelectRefView<'m> {
     ActionRequestSolution(&'m ActionRequestSolution),
@@ -7089,6 +7474,8 @@ pub enum DescriptionAttributeSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DescriptionAttributeSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DescriptionAttributeSelectRefView<'m> {
         match self {
             DescriptionAttributeSelectRef::ActionRequestSolution(i) => DescriptionAttributeSelectRefView::ActionRequestSolution(model.action_request_solution_arena.get(i.0)),
@@ -7131,6 +7518,7 @@ impl DescriptionAttributeSelectRef {
             DescriptionAttributeSelectRef::Complex(i) => DescriptionAttributeSelectRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DescriptionAttributeSelectRef::ActionRequestSolution(i) => EntityKey::ActionRequestSolution(*i),
@@ -7175,6 +7563,8 @@ impl DescriptionAttributeSelectRef {
     }
 }
 
+/// What a [`DimensionalCharacteristicRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DimensionalCharacteristicRefView<'m> {
     AngularLocation(&'m AngularLocation),
@@ -7188,6 +7578,8 @@ pub enum DimensionalCharacteristicRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DimensionalCharacteristicRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DimensionalCharacteristicRefView<'m> {
         match self {
             DimensionalCharacteristicRef::AngularLocation(i) => {
@@ -7233,6 +7625,7 @@ impl DimensionalCharacteristicRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DimensionalCharacteristicRef::AngularLocation(i) => EntityKey::AngularLocation(*i),
@@ -7258,11 +7651,15 @@ impl DimensionalCharacteristicRef {
     }
 }
 
+/// What a [`DimensionalExponentsRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DimensionalExponentsRefView<'m> {
     DimensionalExponents(&'m DimensionalExponents),
 }
 impl DimensionalExponentsRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DimensionalExponentsRefView<'m> {
         match self {
             DimensionalExponentsRef::DimensionalExponents(i) => {
@@ -7272,6 +7669,7 @@ impl DimensionalExponentsRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DimensionalExponentsRef::DimensionalExponents(i) => EntityKey::DimensionalExponents(*i),
@@ -7279,12 +7677,16 @@ impl DimensionalExponentsRef {
     }
 }
 
+/// What a [`DirectionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DirectionRefView<'m> {
     Direction(&'m Direction),
     Complex(&'m ComplexEntity),
 }
 impl DirectionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DirectionRefView<'m> {
         match self {
             DirectionRef::Direction(i) => {
@@ -7295,6 +7697,7 @@ impl DirectionRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DirectionRef::Direction(i) => EntityKey::Direction(*i),
@@ -7303,6 +7706,8 @@ impl DirectionRef {
     }
 }
 
+/// What a [`DocumentRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DocumentRefView<'m> {
     Document(&'m Document),
@@ -7310,6 +7715,8 @@ pub enum DocumentRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DocumentRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DocumentRefView<'m> {
         match self {
             DocumentRef::Document(i) => DocumentRefView::Document(model.document_arena.get(i.0)),
@@ -7321,6 +7728,7 @@ impl DocumentRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DocumentRef::Document(i) => EntityKey::Document(*i),
@@ -7330,6 +7738,8 @@ impl DocumentRef {
     }
 }
 
+/// What a [`DocumentReferenceItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DocumentReferenceItemRefView<'m> {
     ActionDirective(&'m ActionDirective),
@@ -7634,6 +8044,8 @@ pub enum DocumentReferenceItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DocumentReferenceItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DocumentReferenceItemRefView<'m> {
         match self {
             DocumentReferenceItemRef::ActionDirective(i) => DocumentReferenceItemRefView::ActionDirective(model.action_directive_arena.get(i.0)),
@@ -7920,6 +8332,7 @@ impl DocumentReferenceItemRef {
             DocumentReferenceItemRef::Complex(i) => DocumentReferenceItemRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DocumentReferenceItemRef::ActionDirective(i) => EntityKey::ActionDirective(*i),
@@ -8476,11 +8889,15 @@ impl DocumentReferenceItemRef {
     }
 }
 
+/// What a [`DocumentTypeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DocumentTypeRefView<'m> {
     DocumentType(&'m DocumentType),
 }
 impl DocumentTypeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DocumentTypeRefView<'m> {
         match self {
             DocumentTypeRef::DocumentType(i) => {
@@ -8488,6 +8905,7 @@ impl DocumentTypeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DocumentTypeRef::DocumentType(i) => EntityKey::DocumentType(*i),
@@ -8495,6 +8913,8 @@ impl DocumentTypeRef {
     }
 }
 
+/// What a [`DraughtingCalloutRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DraughtingCalloutRefView<'m> {
     DraughtingCallout(&'m DraughtingCallout),
@@ -8502,6 +8922,8 @@ pub enum DraughtingCalloutRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DraughtingCalloutRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DraughtingCalloutRefView<'m> {
         match self {
             DraughtingCalloutRef::DraughtingCallout(i) => {
@@ -8517,6 +8939,7 @@ impl DraughtingCalloutRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DraughtingCalloutRef::DraughtingCallout(i) => EntityKey::DraughtingCallout(*i),
@@ -8526,6 +8949,8 @@ impl DraughtingCalloutRef {
     }
 }
 
+/// What a [`DraughtingCalloutElementRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DraughtingCalloutElementRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
@@ -8543,6 +8968,8 @@ pub enum DraughtingCalloutElementRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DraughtingCalloutElementRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DraughtingCalloutElementRefView<'m> {
         match self {
             DraughtingCalloutElementRef::AnnotationCurveOccurrence(i) => {
@@ -8600,6 +9027,7 @@ impl DraughtingCalloutElementRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DraughtingCalloutElementRef::AnnotationCurveOccurrence(i) => {
@@ -8631,12 +9059,16 @@ impl DraughtingCalloutElementRef {
     }
 }
 
+/// What a [`DraughtingModelRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DraughtingModelRefView<'m> {
     DraughtingModel(&'m DraughtingModel),
     Complex(&'m ComplexEntity),
 }
 impl DraughtingModelRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DraughtingModelRefView<'m> {
         match self {
             DraughtingModelRef::DraughtingModel(i) => {
@@ -8647,6 +9079,7 @@ impl DraughtingModelRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DraughtingModelRef::DraughtingModel(i) => EntityKey::DraughtingModel(*i),
@@ -8655,6 +9088,8 @@ impl DraughtingModelRef {
     }
 }
 
+/// What a [`DraughtingModelItemAssociationSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DraughtingModelItemAssociationSelectRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
@@ -8677,6 +9112,8 @@ pub enum DraughtingModelItemAssociationSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DraughtingModelItemAssociationSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(
         &self,
         model: &'m StepModel,
@@ -8700,6 +9137,7 @@ impl DraughtingModelItemAssociationSelectRef {
             DraughtingModelItemAssociationSelectRef::Complex(i) => DraughtingModelItemAssociationSelectRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DraughtingModelItemAssociationSelectRef::AnnotationCurveOccurrence(i) => EntityKey::AnnotationCurveOccurrence(*i),
@@ -8722,6 +9160,8 @@ impl DraughtingModelItemAssociationSelectRef {
     }
 }
 
+/// What a [`DraughtingModelItemDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum DraughtingModelItemDefinitionRefView<'m> {
     AllAroundShapeAspect(&'m AllAroundShapeAspect),
@@ -8788,6 +9228,8 @@ pub enum DraughtingModelItemDefinitionRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl DraughtingModelItemDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> DraughtingModelItemDefinitionRefView<'m> {
         match self {
             DraughtingModelItemDefinitionRef::AllAroundShapeAspect(i) => {
@@ -9094,6 +9536,7 @@ impl DraughtingModelItemDefinitionRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             DraughtingModelItemDefinitionRef::AllAroundShapeAspect(i) => {
@@ -9264,6 +9707,8 @@ impl DraughtingModelItemDefinitionRef {
     }
 }
 
+/// What a [`EdgeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum EdgeRefView<'m> {
     Edge(&'m Edge),
@@ -9272,6 +9717,8 @@ pub enum EdgeRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl EdgeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> EdgeRefView<'m> {
         match self {
             EdgeRef::Edge(i) => EdgeRefView::Edge(model.edge_arena.get(i.0)),
@@ -9282,6 +9729,7 @@ impl EdgeRef {
             EdgeRef::Complex(i) => EdgeRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             EdgeRef::Edge(i) => EntityKey::Edge(*i),
@@ -9292,12 +9740,16 @@ impl EdgeRef {
     }
 }
 
+/// What a [`ExplicitRoundHoleRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ExplicitRoundHoleRefView<'m> {
     ExplicitRoundHole(&'m ExplicitRoundHole),
     Complex(&'m ComplexEntity),
 }
 impl ExplicitRoundHoleRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ExplicitRoundHoleRefView<'m> {
         match self {
             ExplicitRoundHoleRef::ExplicitRoundHole(i) => {
@@ -9310,6 +9762,7 @@ impl ExplicitRoundHoleRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ExplicitRoundHoleRef::ExplicitRoundHole(i) => EntityKey::ExplicitRoundHole(*i),
@@ -9318,6 +9771,8 @@ impl ExplicitRoundHoleRef {
     }
 }
 
+/// What a [`ExternalIdentificationItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ExternalIdentificationItemRefView<'m> {
     ActionDirective(&'m ActionDirective),
@@ -9569,6 +10024,8 @@ pub enum ExternalIdentificationItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ExternalIdentificationItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ExternalIdentificationItemRefView<'m> {
         match self {
             ExternalIdentificationItemRef::ActionDirective(i) => ExternalIdentificationItemRefView::ActionDirective(model.action_directive_arena.get(i.0)),
@@ -9806,6 +10263,7 @@ impl ExternalIdentificationItemRef {
             ExternalIdentificationItemRef::Complex(i) => ExternalIdentificationItemRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ExternalIdentificationItemRef::ActionDirective(i) => EntityKey::ActionDirective(*i),
@@ -10045,12 +10503,16 @@ impl ExternalIdentificationItemRef {
     }
 }
 
+/// What a [`ExternalSourceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ExternalSourceRefView<'m> {
     ExternalSource(&'m ExternalSource),
     Complex(&'m ComplexEntity),
 }
 impl ExternalSourceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ExternalSourceRefView<'m> {
         match self {
             ExternalSourceRef::ExternalSource(i) => {
@@ -10061,6 +10523,7 @@ impl ExternalSourceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ExternalSourceRef::ExternalSource(i) => EntityKey::ExternalSource(*i),
@@ -10069,6 +10532,8 @@ impl ExternalSourceRef {
     }
 }
 
+/// What a [`FaceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum FaceRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
@@ -10077,6 +10542,8 @@ pub enum FaceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl FaceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FaceRefView<'m> {
         match self {
             FaceRef::AdvancedFace(i) => {
@@ -10087,6 +10554,7 @@ impl FaceRef {
             FaceRef::Complex(i) => FaceRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             FaceRef::AdvancedFace(i) => EntityKey::AdvancedFace(*i),
@@ -10097,6 +10565,8 @@ impl FaceRef {
     }
 }
 
+/// What a [`FaceBoundRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum FaceBoundRefView<'m> {
     FaceBound(&'m FaceBound),
@@ -10104,6 +10574,8 @@ pub enum FaceBoundRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl FaceBoundRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FaceBoundRefView<'m> {
         match self {
             FaceBoundRef::FaceBound(i) => {
@@ -10117,6 +10589,7 @@ impl FaceBoundRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             FaceBoundRef::FaceBound(i) => EntityKey::FaceBound(*i),
@@ -10126,6 +10599,8 @@ impl FaceBoundRef {
     }
 }
 
+/// What a [`FaceOrSurfaceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum FaceOrSurfaceRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
@@ -10153,6 +10628,8 @@ pub enum FaceOrSurfaceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl FaceOrSurfaceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FaceOrSurfaceRefView<'m> {
         match self {
             FaceOrSurfaceRef::AdvancedFace(i) => {
@@ -10230,6 +10707,7 @@ impl FaceOrSurfaceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             FaceOrSurfaceRef::AdvancedFace(i) => EntityKey::AdvancedFace(*i),
@@ -10263,6 +10741,8 @@ impl FaceOrSurfaceRef {
     }
 }
 
+/// What a [`FaceSurfaceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum FaceSurfaceRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
@@ -10270,6 +10750,8 @@ pub enum FaceSurfaceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl FaceSurfaceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FaceSurfaceRefView<'m> {
         match self {
             FaceSurfaceRef::AdvancedFace(i) => {
@@ -10283,6 +10765,7 @@ impl FaceSurfaceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             FaceSurfaceRef::AdvancedFace(i) => EntityKey::AdvancedFace(*i),
@@ -10292,12 +10775,16 @@ impl FaceSurfaceRef {
     }
 }
 
+/// What a [`FillAreaStyleRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum FillAreaStyleRefView<'m> {
     FillAreaStyle(&'m FillAreaStyle),
     Complex(&'m ComplexEntity),
 }
 impl FillAreaStyleRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FillAreaStyleRefView<'m> {
         match self {
             FillAreaStyleRef::FillAreaStyle(i) => {
@@ -10308,6 +10795,7 @@ impl FillAreaStyleRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             FillAreaStyleRef::FillAreaStyle(i) => EntityKey::FillAreaStyle(*i),
@@ -10316,6 +10804,8 @@ impl FillAreaStyleRef {
     }
 }
 
+/// What a [`FillAreaStyleTileShapeSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum FillAreaStyleTileShapeSelectRefView<'m> {
     ExternallyDefinedTile(&'m ExternallyDefinedTile),
@@ -10326,6 +10816,8 @@ pub enum FillAreaStyleTileShapeSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl FillAreaStyleTileShapeSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FillAreaStyleTileShapeSelectRefView<'m> {
         match self {
             FillAreaStyleTileShapeSelectRef::ExternallyDefinedTile(i) => {
@@ -10358,6 +10850,7 @@ impl FillAreaStyleTileShapeSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             FillAreaStyleTileShapeSelectRef::ExternallyDefinedTile(i) => {
@@ -10378,6 +10871,8 @@ impl FillAreaStyleTileShapeSelectRef {
     }
 }
 
+/// What a [`FillStyleSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum FillStyleSelectRefView<'m> {
     ExternallyDefinedHatchStyle(&'m ExternallyDefinedHatchStyle),
@@ -10390,6 +10885,8 @@ pub enum FillStyleSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl FillStyleSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FillStyleSelectRefView<'m> {
         match self {
             FillStyleSelectRef::ExternallyDefinedHatchStyle(i) => {
@@ -10434,6 +10931,7 @@ impl FillStyleSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             FillStyleSelectRef::ExternallyDefinedHatchStyle(i) => {
@@ -10456,6 +10954,8 @@ impl FillStyleSelectRef {
     }
 }
 
+/// What a [`FontSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum FontSelectRefView<'m> {
     DraughtingPreDefinedTextFont(&'m DraughtingPreDefinedTextFont),
@@ -10465,6 +10965,8 @@ pub enum FontSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl FontSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> FontSelectRefView<'m> {
         match self {
             FontSelectRef::DraughtingPreDefinedTextFont(i) => {
@@ -10488,6 +10990,7 @@ impl FontSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             FontSelectRef::DraughtingPreDefinedTextFont(i) => {
@@ -10501,12 +11004,16 @@ impl FontSelectRef {
     }
 }
 
+/// What a [`GeneralPropertyRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum GeneralPropertyRefView<'m> {
     GeneralProperty(&'m GeneralProperty),
     Complex(&'m ComplexEntity),
 }
 impl GeneralPropertyRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeneralPropertyRefView<'m> {
         match self {
             GeneralPropertyRef::GeneralProperty(i) => {
@@ -10517,6 +11024,7 @@ impl GeneralPropertyRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             GeneralPropertyRef::GeneralProperty(i) => EntityKey::GeneralProperty(*i),
@@ -10525,6 +11033,8 @@ impl GeneralPropertyRef {
     }
 }
 
+/// What a [`GeometricItemSpecificUsageSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum GeometricItemSpecificUsageSelectRefView<'m> {
     AllAroundShapeAspect(&'m AllAroundShapeAspect),
@@ -10558,6 +11068,8 @@ pub enum GeometricItemSpecificUsageSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl GeometricItemSpecificUsageSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricItemSpecificUsageSelectRefView<'m> {
         match self {
             GeometricItemSpecificUsageSelectRef::AllAroundShapeAspect(i) => {
@@ -10705,6 +11217,7 @@ impl GeometricItemSpecificUsageSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             GeometricItemSpecificUsageSelectRef::AllAroundShapeAspect(i) => {
@@ -10782,6 +11295,8 @@ impl GeometricItemSpecificUsageSelectRef {
     }
 }
 
+/// What a [`GeometricModelItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum GeometricModelItemRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
@@ -10900,6 +11415,8 @@ pub enum GeometricModelItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl GeometricModelItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricModelItemRefView<'m> {
         match self {
             GeometricModelItemRef::AdvancedFace(i) => {
@@ -11336,6 +11853,7 @@ impl GeometricModelItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             GeometricModelItemRef::AdvancedFace(i) => EntityKey::AdvancedFace(*i),
@@ -11506,12 +12024,16 @@ impl GeometricModelItemRef {
     }
 }
 
+/// What a [`GeometricRepresentationContextRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum GeometricRepresentationContextRefView<'m> {
     GeometricRepresentationContext(&'m GeometricRepresentationContext),
     Complex(&'m ComplexEntity),
 }
 impl GeometricRepresentationContextRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricRepresentationContextRefView<'m> {
         match self {
             GeometricRepresentationContextRef::GeometricRepresentationContext(i) => {
@@ -11524,6 +12046,7 @@ impl GeometricRepresentationContextRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             GeometricRepresentationContextRef::GeometricRepresentationContext(i) => {
@@ -11534,6 +12057,8 @@ impl GeometricRepresentationContextRef {
     }
 }
 
+/// What a [`GeometricSetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum GeometricSetRefView<'m> {
     GeometricCurveSet(&'m GeometricCurveSet),
@@ -11541,6 +12066,8 @@ pub enum GeometricSetRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl GeometricSetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricSetRefView<'m> {
         match self {
             GeometricSetRef::GeometricCurveSet(i) => {
@@ -11554,6 +12081,7 @@ impl GeometricSetRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             GeometricSetRef::GeometricCurveSet(i) => EntityKey::GeometricCurveSet(*i),
@@ -11563,6 +12091,8 @@ impl GeometricSetRef {
     }
 }
 
+/// What a [`GeometricSetSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum GeometricSetSelectRefView<'m> {
     AnnotationText(&'m AnnotationText),
@@ -11620,6 +12150,8 @@ pub enum GeometricSetSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl GeometricSetSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricSetSelectRefView<'m> {
         match self {
             GeometricSetSelectRef::AnnotationText(i) => {
@@ -11811,6 +12343,7 @@ impl GeometricSetSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             GeometricSetSelectRef::AnnotationText(i) => EntityKey::AnnotationText(*i),
@@ -11878,6 +12411,8 @@ impl GeometricSetSelectRef {
     }
 }
 
+/// What a [`GeometricToleranceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum GeometricToleranceRefView<'m> {
     AngularityTolerance(&'m AngularityTolerance),
@@ -11906,6 +12441,8 @@ pub enum GeometricToleranceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl GeometricToleranceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricToleranceRefView<'m> {
         match self {
             GeometricToleranceRef::AngularityTolerance(i) => {
@@ -12034,6 +12571,7 @@ impl GeometricToleranceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             GeometricToleranceRef::AngularityTolerance(i) => EntityKey::AngularityTolerance(*i),
@@ -12086,6 +12624,8 @@ impl GeometricToleranceRef {
     }
 }
 
+/// What a [`GeometricToleranceTargetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum GeometricToleranceTargetRefView<'m> {
     AllAroundShapeAspect(&'m AllAroundShapeAspect),
@@ -12123,6 +12663,8 @@ pub enum GeometricToleranceTargetRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl GeometricToleranceTargetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GeometricToleranceTargetRefView<'m> {
         match self {
             GeometricToleranceTargetRef::AllAroundShapeAspect(i) => {
@@ -12274,6 +12816,7 @@ impl GeometricToleranceTargetRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             GeometricToleranceTargetRef::AllAroundShapeAspect(i) => {
@@ -12353,6 +12896,8 @@ impl GeometricToleranceTargetRef {
     }
 }
 
+/// What a [`GroupRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum GroupRefView<'m> {
     Group(&'m Group),
@@ -12360,6 +12905,8 @@ pub enum GroupRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl GroupRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GroupRefView<'m> {
         match self {
             GroupRef::Group(i) => GroupRefView::Group(model.group_arena.get(i.0)),
@@ -12371,6 +12918,7 @@ impl GroupRef {
             GroupRef::Complex(i) => GroupRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             GroupRef::Group(i) => EntityKey::Group(*i),
@@ -12382,6 +12930,8 @@ impl GroupRef {
     }
 }
 
+/// What a [`GroupableItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum GroupableItemRefView<'m> {
     ActionMethod(&'m ActionMethod),
@@ -12698,6 +13248,8 @@ pub enum GroupableItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl GroupableItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> GroupableItemRefView<'m> {
         match self {
             GroupableItemRef::ActionMethod(i) => {
@@ -13862,6 +14414,7 @@ impl GroupableItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             GroupableItemRef::ActionMethod(i) => EntityKey::ActionMethod(*i),
@@ -14346,6 +14899,8 @@ impl GroupableItemRef {
     }
 }
 
+/// What a [`IdAttributeSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum IdAttributeSelectRefView<'m> {
     Action(&'m Action),
@@ -14472,6 +15027,8 @@ pub enum IdAttributeSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl IdAttributeSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> IdAttributeSelectRefView<'m> {
         match self {
             IdAttributeSelectRef::Action(i) => {
@@ -14964,6 +15521,7 @@ impl IdAttributeSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             IdAttributeSelectRef::Action(i) => EntityKey::Action(*i),
@@ -15172,11 +15730,15 @@ impl IdAttributeSelectRef {
     }
 }
 
+/// What a [`IdentificationRoleRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum IdentificationRoleRefView<'m> {
     IdentificationRole(&'m IdentificationRole),
 }
 impl IdentificationRoleRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> IdentificationRoleRefView<'m> {
         match self {
             IdentificationRoleRef::IdentificationRole(i) => {
@@ -15186,6 +15748,7 @@ impl IdentificationRoleRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             IdentificationRoleRef::IdentificationRole(i) => EntityKey::IdentificationRole(*i),
@@ -15193,6 +15756,8 @@ impl IdentificationRoleRef {
     }
 }
 
+/// What a [`InvisibleItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum InvisibleItemRefView<'m> {
     AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
@@ -15249,6 +15814,8 @@ pub enum InvisibleItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl InvisibleItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> InvisibleItemRefView<'m> {
         match self {
             InvisibleItemRef::AdvancedBrepShapeRepresentation(i) => {
@@ -15443,6 +16010,7 @@ impl InvisibleItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             InvisibleItemRef::AdvancedBrepShapeRepresentation(i) => {
@@ -15537,12 +16105,16 @@ impl InvisibleItemRef {
     }
 }
 
+/// What a [`ItemDefinedTransformationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ItemDefinedTransformationRefView<'m> {
     ItemDefinedTransformation(&'m ItemDefinedTransformation),
     Complex(&'m ComplexEntity),
 }
 impl ItemDefinedTransformationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ItemDefinedTransformationRefView<'m> {
         match self {
             ItemDefinedTransformationRef::ItemDefinedTransformation(i) => {
@@ -15555,6 +16127,7 @@ impl ItemDefinedTransformationRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ItemDefinedTransformationRef::ItemDefinedTransformation(i) => {
@@ -15565,6 +16138,8 @@ impl ItemDefinedTransformationRef {
     }
 }
 
+/// What a [`ItemIdentifiedRepresentationUsageDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ItemIdentifiedRepresentationUsageDefinitionRefView<'m> {
     AllAroundShapeAspect(&'m AllAroundShapeAspect),
@@ -15654,6 +16229,8 @@ pub enum ItemIdentifiedRepresentationUsageDefinitionRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ItemIdentifiedRepresentationUsageDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(
         &self,
         model: &'m StepModel,
@@ -15746,6 +16323,7 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
             ItemIdentifiedRepresentationUsageDefinitionRef::Complex(i) => ItemIdentifiedRepresentationUsageDefinitionRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ItemIdentifiedRepresentationUsageDefinitionRef::AllAroundShapeAspect(i) => EntityKey::AllAroundShapeAspect(*i),
@@ -15837,6 +16415,8 @@ impl ItemIdentifiedRepresentationUsageDefinitionRef {
     }
 }
 
+/// What a [`ItemIdentifiedRepresentationUsageSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ItemIdentifiedRepresentationUsageSelectRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
@@ -15994,6 +16574,8 @@ pub enum ItemIdentifiedRepresentationUsageSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ItemIdentifiedRepresentationUsageSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(
         &'m self,
         model: &'m StepModel,
@@ -16154,6 +16736,8 @@ impl ItemIdentifiedRepresentationUsageSelectRef {
     }
 }
 
+/// What a [`LayeredItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum LayeredItemRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
@@ -16312,6 +16896,8 @@ pub enum LayeredItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl LayeredItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> LayeredItemRefView<'m> {
         match self {
             LayeredItemRef::AdvancedFace(i) => {
@@ -16832,6 +17418,7 @@ impl LayeredItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             LayeredItemRef::AdvancedFace(i) => EntityKey::AdvancedFace(*i),
@@ -17048,6 +17635,8 @@ impl LayeredItemRef {
     }
 }
 
+/// What a [`LengthMeasureWithUnitRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum LengthMeasureWithUnitRefView<'m> {
     LengthMeasureWithUnit(&'m LengthMeasureWithUnit),
@@ -17055,6 +17644,8 @@ pub enum LengthMeasureWithUnitRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl LengthMeasureWithUnitRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> LengthMeasureWithUnitRefView<'m> {
         match self {
             LengthMeasureWithUnitRef::LengthMeasureWithUnit(i) => {
@@ -17072,6 +17663,7 @@ impl LengthMeasureWithUnitRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             LengthMeasureWithUnitRef::LengthMeasureWithUnit(i) => {
@@ -17085,6 +17677,8 @@ impl LengthMeasureWithUnitRef {
     }
 }
 
+/// What a [`LengthOrPlaneAngleMeasureWithUnitSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum LengthOrPlaneAngleMeasureWithUnitSelectRefView<'m> {
     LengthMeasureWithUnit(&'m LengthMeasureWithUnit),
@@ -17094,6 +17688,8 @@ pub enum LengthOrPlaneAngleMeasureWithUnitSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(
         &self,
         model: &'m StepModel,
@@ -17126,6 +17722,7 @@ impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             LengthOrPlaneAngleMeasureWithUnitSelectRef::LengthMeasureWithUnit(i) => {
@@ -17145,11 +17742,15 @@ impl LengthOrPlaneAngleMeasureWithUnitSelectRef {
     }
 }
 
+/// What a [`LocalTimeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum LocalTimeRefView<'m> {
     LocalTime(&'m LocalTime),
 }
 impl LocalTimeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> LocalTimeRefView<'m> {
         match self {
             LocalTimeRef::LocalTime(i) => {
@@ -17157,6 +17758,7 @@ impl LocalTimeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             LocalTimeRef::LocalTime(i) => EntityKey::LocalTime(*i),
@@ -17164,6 +17766,8 @@ impl LocalTimeRef {
     }
 }
 
+/// What a [`LoopRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum LoopRefView<'m> {
     EdgeLoop(&'m EdgeLoop),
@@ -17173,6 +17777,8 @@ pub enum LoopRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl LoopRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> LoopRefView<'m> {
         match self {
             LoopRef::EdgeLoop(i) => LoopRefView::EdgeLoop(model.edge_loop_arena.get(i.0)),
@@ -17182,6 +17788,7 @@ impl LoopRef {
             LoopRef::Complex(i) => LoopRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             LoopRef::EdgeLoop(i) => EntityKey::EdgeLoop(*i),
@@ -17193,6 +17800,8 @@ impl LoopRef {
     }
 }
 
+/// What a [`ManifoldSolidBrepRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ManifoldSolidBrepRefView<'m> {
     BrepWithVoids(&'m BrepWithVoids),
@@ -17200,6 +17809,8 @@ pub enum ManifoldSolidBrepRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ManifoldSolidBrepRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ManifoldSolidBrepRefView<'m> {
         match self {
             ManifoldSolidBrepRef::BrepWithVoids(i) => {
@@ -17215,6 +17826,7 @@ impl ManifoldSolidBrepRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ManifoldSolidBrepRef::BrepWithVoids(i) => EntityKey::BrepWithVoids(*i),
@@ -17224,6 +17836,8 @@ impl ManifoldSolidBrepRef {
     }
 }
 
+/// What a [`MeasureWithUnitRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum MeasureWithUnitRefView<'m> {
     LengthMeasureWithUnit(&'m LengthMeasureWithUnit),
@@ -17238,6 +17852,8 @@ pub enum MeasureWithUnitRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl MeasureWithUnitRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> MeasureWithUnitRefView<'m> {
         match self {
             MeasureWithUnitRef::LengthMeasureWithUnit(i) => {
@@ -17288,6 +17904,7 @@ impl MeasureWithUnitRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             MeasureWithUnitRef::LengthMeasureWithUnit(i) => EntityKey::LengthMeasureWithUnit(*i),
@@ -17314,6 +17931,8 @@ impl MeasureWithUnitRef {
     }
 }
 
+/// What a [`MechanicalDesignAndDraughtingRelationshipSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum MechanicalDesignAndDraughtingRelationshipSelectRefView<'m> {
     AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
@@ -17341,6 +17960,8 @@ pub enum MechanicalDesignAndDraughtingRelationshipSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl MechanicalDesignAndDraughtingRelationshipSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(
         &self,
         model: &'m StepModel,
@@ -17361,6 +17982,7 @@ impl MechanicalDesignAndDraughtingRelationshipSelectRef {
             MechanicalDesignAndDraughtingRelationshipSelectRef::Complex(i) => MechanicalDesignAndDraughtingRelationshipSelectRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             MechanicalDesignAndDraughtingRelationshipSelectRef::AdvancedBrepShapeRepresentation(i) => EntityKey::AdvancedBrepShapeRepresentation(*i),
@@ -17380,6 +18002,8 @@ impl MechanicalDesignAndDraughtingRelationshipSelectRef {
     }
 }
 
+/// What a [`NameAttributeSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum NameAttributeSelectRefView<'m> {
     ActionRequestSolution(&'m ActionRequestSolution),
@@ -17404,6 +18028,8 @@ pub enum NameAttributeSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl NameAttributeSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> NameAttributeSelectRefView<'m> {
         match self {
             NameAttributeSelectRef::ActionRequestSolution(i) => {
@@ -17496,6 +18122,7 @@ impl NameAttributeSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             NameAttributeSelectRef::ActionRequestSolution(i) => {
@@ -17544,6 +18171,8 @@ impl NameAttributeSelectRef {
     }
 }
 
+/// What a [`NamedUnitRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum NamedUnitRefView<'m> {
     ContextDependentUnit(&'m ContextDependentUnit),
@@ -17559,6 +18188,8 @@ pub enum NamedUnitRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl NamedUnitRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> NamedUnitRefView<'m> {
         match self {
             NamedUnitRef::ContextDependentUnit(i) => {
@@ -17590,6 +18221,7 @@ impl NamedUnitRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             NamedUnitRef::ContextDependentUnit(i) => EntityKey::ContextDependentUnit(*i),
@@ -17607,11 +18239,15 @@ impl NamedUnitRef {
     }
 }
 
+/// What a [`ObjectRoleRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ObjectRoleRefView<'m> {
     ObjectRole(&'m ObjectRole),
 }
 impl ObjectRoleRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ObjectRoleRefView<'m> {
         match self {
             ObjectRoleRef::ObjectRole(i) => {
@@ -17619,6 +18255,7 @@ impl ObjectRoleRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ObjectRoleRef::ObjectRole(i) => EntityKey::ObjectRole(*i),
@@ -17626,6 +18263,8 @@ impl ObjectRoleRef {
     }
 }
 
+/// What a [`OneDirectionRepeatFactorRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum OneDirectionRepeatFactorRefView<'m> {
     OneDirectionRepeatFactor(&'m OneDirectionRepeatFactor),
@@ -17633,6 +18272,8 @@ pub enum OneDirectionRepeatFactorRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl OneDirectionRepeatFactorRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> OneDirectionRepeatFactorRefView<'m> {
         match self {
             OneDirectionRepeatFactorRef::OneDirectionRepeatFactor(i) => {
@@ -17650,6 +18291,7 @@ impl OneDirectionRepeatFactorRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             OneDirectionRepeatFactorRef::OneDirectionRepeatFactor(i) => {
@@ -17663,11 +18305,15 @@ impl OneDirectionRepeatFactorRef {
     }
 }
 
+/// What a [`OrganizationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum OrganizationRefView<'m> {
     Organization(&'m Organization),
 }
 impl OrganizationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> OrganizationRefView<'m> {
         match self {
             OrganizationRef::Organization(i) => {
@@ -17675,6 +18321,7 @@ impl OrganizationRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             OrganizationRef::Organization(i) => EntityKey::Organization(*i),
@@ -17682,11 +18329,15 @@ impl OrganizationRef {
     }
 }
 
+/// What a [`OrganizationalProjectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum OrganizationalProjectRefView<'m> {
     OrganizationalProject(&'m OrganizationalProject),
 }
 impl OrganizationalProjectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> OrganizationalProjectRefView<'m> {
         match self {
             OrganizationalProjectRef::OrganizationalProject(i) => {
@@ -17696,6 +18347,7 @@ impl OrganizationalProjectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             OrganizationalProjectRef::OrganizationalProject(i) => {
@@ -17705,12 +18357,16 @@ impl OrganizationalProjectRef {
     }
 }
 
+/// What a [`OrientedClosedShellRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum OrientedClosedShellRefView<'m> {
     OrientedClosedShell(&'m OrientedClosedShell),
     Complex(&'m ComplexEntity),
 }
 impl OrientedClosedShellRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> OrientedClosedShellRefView<'m> {
         match self {
             OrientedClosedShellRef::OrientedClosedShell(i) => {
@@ -17723,6 +18379,7 @@ impl OrientedClosedShellRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             OrientedClosedShellRef::OrientedClosedShell(i) => EntityKey::OrientedClosedShell(*i),
@@ -17731,12 +18388,16 @@ impl OrientedClosedShellRef {
     }
 }
 
+/// What a [`OrientedEdgeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum OrientedEdgeRefView<'m> {
     OrientedEdge(&'m OrientedEdge),
     Complex(&'m ComplexEntity),
 }
 impl OrientedEdgeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> OrientedEdgeRefView<'m> {
         match self {
             OrientedEdgeRef::OrientedEdge(i) => {
@@ -17747,6 +18408,7 @@ impl OrientedEdgeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             OrientedEdgeRef::OrientedEdge(i) => EntityKey::OrientedEdge(*i),
@@ -17755,6 +18417,8 @@ impl OrientedEdgeRef {
     }
 }
 
+/// What a [`PcurveOrSurfaceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PcurveOrSurfaceRefView<'m> {
     BSplineSurface(&'m BSplineSurface),
@@ -17781,6 +18445,8 @@ pub enum PcurveOrSurfaceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PcurveOrSurfaceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PcurveOrSurfaceRefView<'m> {
         match self {
             PcurveOrSurfaceRef::BSplineSurface(i) => {
@@ -17863,6 +18529,7 @@ impl PcurveOrSurfaceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PcurveOrSurfaceRef::BSplineSurface(i) => EntityKey::BSplineSurface(*i),
@@ -17897,16 +18564,21 @@ impl PcurveOrSurfaceRef {
     }
 }
 
+/// What a [`PersonRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PersonRefView<'m> {
     Person(&'m Person),
 }
 impl PersonRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PersonRefView<'m> {
         match self {
             PersonRef::Person(i) => PersonRefView::Person(model.person_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PersonRef::Person(i) => EntityKey::Person(*i),
@@ -17914,11 +18586,15 @@ impl PersonRef {
     }
 }
 
+/// What a [`PersonAndOrganizationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PersonAndOrganizationRefView<'m> {
     PersonAndOrganization(&'m PersonAndOrganization),
 }
 impl PersonAndOrganizationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PersonAndOrganizationRefView<'m> {
         match self {
             PersonAndOrganizationRef::PersonAndOrganization(i) => {
@@ -17928,6 +18604,7 @@ impl PersonAndOrganizationRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PersonAndOrganizationRef::PersonAndOrganization(i) => {
@@ -17937,6 +18614,8 @@ impl PersonAndOrganizationRef {
     }
 }
 
+/// What a [`PersonAndOrganizationItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PersonAndOrganizationItemRefView<'m> {
     Action(&'m Action),
@@ -18030,6 +18709,8 @@ pub enum PersonAndOrganizationItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PersonAndOrganizationItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PersonAndOrganizationItemRefView<'m> {
         match self {
             PersonAndOrganizationItemRef::Action(i) => PersonAndOrganizationItemRefView::Action(model.action_arena.get(i.0)),
@@ -18111,6 +18792,7 @@ impl PersonAndOrganizationItemRef {
             PersonAndOrganizationItemRef::Complex(i) => PersonAndOrganizationItemRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PersonAndOrganizationItemRef::Action(i) => EntityKey::Action(*i),
@@ -18194,11 +18876,15 @@ impl PersonAndOrganizationItemRef {
     }
 }
 
+/// What a [`PersonAndOrganizationRoleRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PersonAndOrganizationRoleRefView<'m> {
     PersonAndOrganizationRole(&'m PersonAndOrganizationRole),
 }
 impl PersonAndOrganizationRoleRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PersonAndOrganizationRoleRefView<'m> {
         match self {
             PersonAndOrganizationRoleRef::PersonAndOrganizationRole(i) => {
@@ -18208,6 +18894,7 @@ impl PersonAndOrganizationRoleRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PersonAndOrganizationRoleRef::PersonAndOrganizationRole(i) => {
@@ -18217,6 +18904,8 @@ impl PersonAndOrganizationRoleRef {
     }
 }
 
+/// What a [`PersonOrganizationSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PersonOrganizationSelectRefView<'m> {
     Organization(&'m Organization),
@@ -18224,6 +18913,8 @@ pub enum PersonOrganizationSelectRefView<'m> {
     PersonAndOrganization(&'m PersonAndOrganization),
 }
 impl PersonOrganizationSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PersonOrganizationSelectRefView<'m> {
         match self {
             PersonOrganizationSelectRef::Organization(i) => {
@@ -18239,6 +18930,7 @@ impl PersonOrganizationSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PersonOrganizationSelectRef::Organization(i) => EntityKey::Organization(*i),
@@ -18250,12 +18942,16 @@ impl PersonOrganizationSelectRef {
     }
 }
 
+/// What a [`PlanarBoxRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PlanarBoxRefView<'m> {
     PlanarBox(&'m PlanarBox),
     Complex(&'m ComplexEntity),
 }
 impl PlanarBoxRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PlanarBoxRefView<'m> {
         match self {
             PlanarBoxRef::PlanarBox(i) => {
@@ -18266,6 +18962,7 @@ impl PlanarBoxRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PlanarBoxRef::PlanarBox(i) => EntityKey::PlanarBox(*i),
@@ -18274,6 +18971,8 @@ impl PlanarBoxRef {
     }
 }
 
+/// What a [`PlaneOrPlanarBoxRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PlaneOrPlanarBoxRefView<'m> {
     PlanarBox(&'m PlanarBox),
@@ -18281,6 +18980,8 @@ pub enum PlaneOrPlanarBoxRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PlaneOrPlanarBoxRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PlaneOrPlanarBoxRefView<'m> {
         match self {
             PlaneOrPlanarBoxRef::PlanarBox(i) => {
@@ -18294,6 +18995,7 @@ impl PlaneOrPlanarBoxRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PlaneOrPlanarBoxRef::PlanarBox(i) => EntityKey::PlanarBox(*i),
@@ -18303,6 +19005,8 @@ impl PlaneOrPlanarBoxRef {
     }
 }
 
+/// What a [`PointRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PointRefView<'m> {
     ApllPoint(&'m ApllPoint),
@@ -18312,6 +19016,8 @@ pub enum PointRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PointRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PointRefView<'m> {
         match self {
             PointRef::ApllPoint(i) => PointRefView::ApllPoint(model.apll_point_arena.get(i.0)),
@@ -18325,6 +19031,7 @@ impl PointRef {
             PointRef::Complex(i) => PointRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PointRef::ApllPoint(i) => EntityKey::ApllPoint(*i),
@@ -18336,12 +19043,16 @@ impl PointRef {
     }
 }
 
+/// What a [`PositiveLengthMeasureWithUnitRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PositiveLengthMeasureWithUnitRefView<'m> {
     PositiveLengthMeasureWithUnit(&'m PositiveLengthMeasureWithUnit),
     Complex(&'m ComplexEntity),
 }
 impl PositiveLengthMeasureWithUnitRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PositiveLengthMeasureWithUnitRefView<'m> {
         match self {
             PositiveLengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
@@ -18354,6 +19065,7 @@ impl PositiveLengthMeasureWithUnitRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PositiveLengthMeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
@@ -18364,12 +19076,16 @@ impl PositiveLengthMeasureWithUnitRef {
     }
 }
 
+/// What a [`PositivePlaneAngleMeasureWithUnitRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PositivePlaneAngleMeasureWithUnitRefView<'m> {
     PositivePlaneAngleMeasureWithUnit(&'m PositivePlaneAngleMeasureWithUnit),
     Complex(&'m ComplexEntity),
 }
 impl PositivePlaneAngleMeasureWithUnitRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(
         &self,
         model: &'m StepModel,
@@ -18387,6 +19103,7 @@ impl PositivePlaneAngleMeasureWithUnitRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PositivePlaneAngleMeasureWithUnitRef::PositivePlaneAngleMeasureWithUnit(i) => {
@@ -18397,12 +19114,16 @@ impl PositivePlaneAngleMeasureWithUnitRef {
     }
 }
 
+/// What a [`PresentationAreaRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PresentationAreaRefView<'m> {
     PresentationArea(&'m PresentationArea),
     Complex(&'m ComplexEntity),
 }
 impl PresentationAreaRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentationAreaRefView<'m> {
         match self {
             PresentationAreaRef::PresentationArea(i) => {
@@ -18413,6 +19134,7 @@ impl PresentationAreaRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PresentationAreaRef::PresentationArea(i) => EntityKey::PresentationArea(*i),
@@ -18421,6 +19143,8 @@ impl PresentationAreaRef {
     }
 }
 
+/// What a [`PresentationRepresentationSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PresentationRepresentationSelectRefView<'m> {
     PresentationArea(&'m PresentationArea),
@@ -18430,6 +19154,8 @@ pub enum PresentationRepresentationSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PresentationRepresentationSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentationRepresentationSelectRefView<'m> {
         match self {
             PresentationRepresentationSelectRef::PresentationArea(i) => {
@@ -18459,6 +19185,7 @@ impl PresentationRepresentationSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PresentationRepresentationSelectRef::PresentationArea(i) => {
@@ -18478,12 +19205,16 @@ impl PresentationRepresentationSelectRef {
     }
 }
 
+/// What a [`PresentationSetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PresentationSetRefView<'m> {
     PresentationSet(&'m PresentationSet),
     Complex(&'m ComplexEntity),
 }
 impl PresentationSetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentationSetRefView<'m> {
         match self {
             PresentationSetRef::PresentationSet(i) => {
@@ -18494,6 +19225,7 @@ impl PresentationSetRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PresentationSetRef::PresentationSet(i) => EntityKey::PresentationSet(*i),
@@ -18502,6 +19234,8 @@ impl PresentationSetRef {
     }
 }
 
+/// What a [`PresentationSizeAssignmentSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PresentationSizeAssignmentSelectRefView<'m> {
     AreaInSet(&'m AreaInSet),
@@ -18510,6 +19244,8 @@ pub enum PresentationSizeAssignmentSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PresentationSizeAssignmentSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentationSizeAssignmentSelectRefView<'m> {
         match self {
             PresentationSizeAssignmentSelectRef::AreaInSet(i) => {
@@ -18532,6 +19268,7 @@ impl PresentationSizeAssignmentSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PresentationSizeAssignmentSelectRef::AreaInSet(i) => EntityKey::AreaInSet(*i),
@@ -18546,6 +19283,8 @@ impl PresentationSizeAssignmentSelectRef {
     }
 }
 
+/// What a [`PresentationStyleAssignmentRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PresentationStyleAssignmentRefView<'m> {
     PresentationStyleAssignment(&'m PresentationStyleAssignment),
@@ -18553,6 +19292,8 @@ pub enum PresentationStyleAssignmentRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PresentationStyleAssignmentRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentationStyleAssignmentRefView<'m> {
         match self {
             PresentationStyleAssignmentRef::PresentationStyleAssignment(i) => {
@@ -18570,6 +19311,7 @@ impl PresentationStyleAssignmentRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PresentationStyleAssignmentRef::PresentationStyleAssignment(i) => {
@@ -18583,6 +19325,8 @@ impl PresentationStyleAssignmentRef {
     }
 }
 
+/// What a [`PresentedItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PresentedItemRefView<'m> {
     AppliedPresentedItem(&'m AppliedPresentedItem),
@@ -18590,6 +19334,8 @@ pub enum PresentedItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PresentedItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentedItemRefView<'m> {
         match self {
             PresentedItemRef::AppliedPresentedItem(i) => {
@@ -18605,6 +19351,7 @@ impl PresentedItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PresentedItemRef::AppliedPresentedItem(i) => EntityKey::AppliedPresentedItem(*i),
@@ -18614,6 +19361,8 @@ impl PresentedItemRef {
     }
 }
 
+/// What a [`PresentedItemSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PresentedItemSelectRefView<'m> {
     Action(&'m Action),
@@ -18636,6 +19385,8 @@ pub enum PresentedItemSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PresentedItemSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PresentedItemSelectRefView<'m> {
         match self {
             PresentedItemSelectRef::Action(i) => {
@@ -18716,6 +19467,7 @@ impl PresentedItemSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PresentedItemSelectRef::Action(i) => EntityKey::Action(*i),
@@ -18756,18 +19508,23 @@ impl PresentedItemSelectRef {
     }
 }
 
+/// What a [`ProductRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductRefView<'m> {
     Product(&'m Product),
     Complex(&'m ComplexEntity),
 }
 impl ProductRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductRefView<'m> {
         match self {
             ProductRef::Product(i) => ProductRefView::Product(model.product_arena.get(i.0)),
             ProductRef::Complex(i) => ProductRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductRef::Product(i) => EntityKey::Product(*i),
@@ -18776,6 +19533,8 @@ impl ProductRef {
     }
 }
 
+/// What a [`ProductCategoryRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductCategoryRefView<'m> {
     ProductCategory(&'m ProductCategory),
@@ -18783,6 +19542,8 @@ pub enum ProductCategoryRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ProductCategoryRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductCategoryRefView<'m> {
         match self {
             ProductCategoryRef::ProductCategory(i) => {
@@ -18798,6 +19559,7 @@ impl ProductCategoryRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductCategoryRef::ProductCategory(i) => EntityKey::ProductCategory(*i),
@@ -18809,12 +19571,16 @@ impl ProductCategoryRef {
     }
 }
 
+/// What a [`ProductConceptRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductConceptRefView<'m> {
     ProductConcept(&'m ProductConcept),
     Complex(&'m ComplexEntity),
 }
 impl ProductConceptRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductConceptRefView<'m> {
         match self {
             ProductConceptRef::ProductConcept(i) => {
@@ -18825,6 +19591,7 @@ impl ProductConceptRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductConceptRef::ProductConcept(i) => EntityKey::ProductConcept(*i),
@@ -18833,11 +19600,15 @@ impl ProductConceptRef {
     }
 }
 
+/// What a [`ProductConceptContextRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductConceptContextRefView<'m> {
     ProductConceptContext(&'m ProductConceptContext),
 }
 impl ProductConceptContextRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductConceptContextRefView<'m> {
         match self {
             ProductConceptContextRef::ProductConceptContext(i) => {
@@ -18847,6 +19618,7 @@ impl ProductConceptContextRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductConceptContextRef::ProductConceptContext(i) => {
@@ -18856,6 +19628,8 @@ impl ProductConceptContextRef {
     }
 }
 
+/// What a [`ProductContextRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductContextRefView<'m> {
     MechanicalContext(&'m MechanicalContext),
@@ -18863,6 +19637,8 @@ pub enum ProductContextRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ProductContextRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductContextRefView<'m> {
         match self {
             ProductContextRef::MechanicalContext(i) => {
@@ -18876,6 +19652,7 @@ impl ProductContextRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductContextRef::MechanicalContext(i) => EntityKey::MechanicalContext(*i),
@@ -18885,6 +19662,8 @@ impl ProductContextRef {
     }
 }
 
+/// What a [`ProductDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductDefinitionRefView<'m> {
     ProductDefinition(&'m ProductDefinition),
@@ -18892,6 +19671,8 @@ pub enum ProductDefinitionRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ProductDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionRefView<'m> {
         match self {
             ProductDefinitionRef::ProductDefinition(i) => {
@@ -18909,6 +19690,7 @@ impl ProductDefinitionRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductDefinitionRef::ProductDefinition(i) => EntityKey::ProductDefinition(*i),
@@ -18920,6 +19702,8 @@ impl ProductDefinitionRef {
     }
 }
 
+/// What a [`ProductDefinitionContextRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductDefinitionContextRefView<'m> {
     DesignContext(&'m DesignContext),
@@ -18927,6 +19711,8 @@ pub enum ProductDefinitionContextRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ProductDefinitionContextRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionContextRefView<'m> {
         match self {
             ProductDefinitionContextRef::DesignContext(i) => {
@@ -18942,6 +19728,7 @@ impl ProductDefinitionContextRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductDefinitionContextRef::DesignContext(i) => EntityKey::DesignContext(*i),
@@ -18953,11 +19740,15 @@ impl ProductDefinitionContextRef {
     }
 }
 
+/// What a [`ProductDefinitionContextRoleRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductDefinitionContextRoleRefView<'m> {
     ProductDefinitionContextRole(&'m ProductDefinitionContextRole),
 }
 impl ProductDefinitionContextRoleRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionContextRoleRefView<'m> {
         match self {
             ProductDefinitionContextRoleRef::ProductDefinitionContextRole(i) => {
@@ -18967,6 +19758,7 @@ impl ProductDefinitionContextRoleRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductDefinitionContextRoleRef::ProductDefinitionContextRole(i) => {
@@ -18976,6 +19768,8 @@ impl ProductDefinitionContextRoleRef {
     }
 }
 
+/// What a [`ProductDefinitionFormationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductDefinitionFormationRefView<'m> {
     ProductDefinitionFormation(&'m ProductDefinitionFormation),
@@ -18985,6 +19779,8 @@ pub enum ProductDefinitionFormationRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ProductDefinitionFormationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionFormationRefView<'m> {
         match self {
             ProductDefinitionFormationRef::ProductDefinitionFormation(i) => {
@@ -19004,6 +19800,7 @@ impl ProductDefinitionFormationRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductDefinitionFormationRef::ProductDefinitionFormation(i) => {
@@ -19017,6 +19814,8 @@ impl ProductDefinitionFormationRef {
     }
 }
 
+/// What a [`ProductDefinitionOrReferenceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductDefinitionOrReferenceRefView<'m> {
     GenericProductDefinitionReference(&'m GenericProductDefinitionReference),
@@ -19026,6 +19825,8 @@ pub enum ProductDefinitionOrReferenceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ProductDefinitionOrReferenceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionOrReferenceRefView<'m> {
         match self {
             ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(i) => {
@@ -19055,6 +19856,7 @@ impl ProductDefinitionOrReferenceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductDefinitionOrReferenceRef::GenericProductDefinitionReference(i) => {
@@ -19074,6 +19876,8 @@ impl ProductDefinitionOrReferenceRef {
     }
 }
 
+/// What a [`ProductDefinitionRelationshipRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductDefinitionRelationshipRefView<'m> {
     AssemblyComponentUsage(&'m AssemblyComponentUsage),
@@ -19084,6 +19888,8 @@ pub enum ProductDefinitionRelationshipRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ProductDefinitionRelationshipRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionRelationshipRefView<'m> {
         match self {
             ProductDefinitionRelationshipRef::AssemblyComponentUsage(i) => {
@@ -19116,6 +19922,7 @@ impl ProductDefinitionRelationshipRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductDefinitionRelationshipRef::AssemblyComponentUsage(i) => {
@@ -19138,12 +19945,16 @@ impl ProductDefinitionRelationshipRef {
     }
 }
 
+/// What a [`ProductDefinitionShapeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductDefinitionShapeRefView<'m> {
     ProductDefinitionShape(&'m ProductDefinitionShape),
     Complex(&'m ComplexEntity),
 }
 impl ProductDefinitionShapeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductDefinitionShapeRefView<'m> {
         match self {
             ProductDefinitionShapeRef::ProductDefinitionShape(i) => {
@@ -19156,6 +19967,7 @@ impl ProductDefinitionShapeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductDefinitionShapeRef::ProductDefinitionShape(i) => {
@@ -19166,6 +19978,8 @@ impl ProductDefinitionShapeRef {
     }
 }
 
+/// What a [`ProductOrFormationOrDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ProductOrFormationOrDefinitionRefView<'m> {
     Product(&'m Product),
@@ -19178,6 +19992,8 @@ pub enum ProductOrFormationOrDefinitionRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ProductOrFormationOrDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ProductOrFormationOrDefinitionRefView<'m> {
         match self {
             ProductOrFormationOrDefinitionRef::Product(i) => {
@@ -19212,6 +20028,7 @@ impl ProductOrFormationOrDefinitionRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ProductOrFormationOrDefinitionRef::Product(i) => EntityKey::Product(*i),
@@ -19232,6 +20049,8 @@ impl ProductOrFormationOrDefinitionRef {
     }
 }
 
+/// What a [`PropertyDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum PropertyDefinitionRefView<'m> {
     ProductDefinitionShape(&'m ProductDefinitionShape),
@@ -19239,6 +20058,8 @@ pub enum PropertyDefinitionRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl PropertyDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> PropertyDefinitionRefView<'m> {
         match self {
             PropertyDefinitionRef::ProductDefinitionShape(i) => {
@@ -19256,6 +20077,7 @@ impl PropertyDefinitionRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             PropertyDefinitionRef::ProductDefinitionShape(i) => {
@@ -19267,6 +20089,8 @@ impl PropertyDefinitionRef {
     }
 }
 
+/// What a [`RenderingPropertiesSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum RenderingPropertiesSelectRefView<'m> {
     SurfaceStyleReflectanceAmbient(&'m SurfaceStyleReflectanceAmbient),
@@ -19274,6 +20098,8 @@ pub enum RenderingPropertiesSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl RenderingPropertiesSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RenderingPropertiesSelectRefView<'m> {
         match self {
             RenderingPropertiesSelectRef::SurfaceStyleReflectanceAmbient(i) => {
@@ -19291,6 +20117,7 @@ impl RenderingPropertiesSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             RenderingPropertiesSelectRef::SurfaceStyleReflectanceAmbient(i) => {
@@ -19304,6 +20131,8 @@ impl RenderingPropertiesSelectRef {
     }
 }
 
+/// What a [`RepresentationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum RepresentationRefView<'m> {
     AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
@@ -19339,6 +20168,8 @@ pub enum RepresentationRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl RepresentationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RepresentationRefView<'m> {
         match self {
             RepresentationRef::AdvancedBrepShapeRepresentation(i) => {
@@ -19448,6 +20279,7 @@ impl RepresentationRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             RepresentationRef::AdvancedBrepShapeRepresentation(i) => {
@@ -19503,6 +20335,8 @@ impl RepresentationRef {
     }
 }
 
+/// What a [`RepresentationContextRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum RepresentationContextRefView<'m> {
     GeometricRepresentationContext(&'m GeometricRepresentationContext),
@@ -19513,6 +20347,8 @@ pub enum RepresentationContextRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl RepresentationContextRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RepresentationContextRefView<'m> {
         match self {
             RepresentationContextRef::GeometricRepresentationContext(i) => {
@@ -19545,6 +20381,7 @@ impl RepresentationContextRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             RepresentationContextRef::GeometricRepresentationContext(i) => {
@@ -19567,11 +20404,15 @@ impl RepresentationContextRef {
     }
 }
 
+/// What a [`RepresentationContextReferenceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum RepresentationContextReferenceRefView<'m> {
     RepresentationContextReference(&'m RepresentationContextReference),
 }
 impl RepresentationContextReferenceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RepresentationContextReferenceRefView<'m> {
         match self {
             RepresentationContextReferenceRef::RepresentationContextReference(i) => {
@@ -19581,6 +20422,7 @@ impl RepresentationContextReferenceRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             RepresentationContextReferenceRef::RepresentationContextReference(i) => {
@@ -19590,6 +20432,8 @@ impl RepresentationContextReferenceRef {
     }
 }
 
+/// What a [`RepresentationItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum RepresentationItemRefView<'m> {
     AdvancedFace(&'m AdvancedFace),
@@ -19745,6 +20589,8 @@ pub enum RepresentationItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl RepresentationItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RepresentationItemRefView<'m> {
         match self {
             RepresentationItemRef::AdvancedFace(i) => {
@@ -20332,6 +21178,7 @@ impl RepresentationItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             RepresentationItemRef::AdvancedFace(i) => EntityKey::AdvancedFace(*i),
@@ -20571,6 +21418,8 @@ impl RepresentationItemRef {
     }
 }
 
+/// What a [`RepresentationMapRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum RepresentationMapRefView<'m> {
     CameraUsage(&'m CameraUsage),
@@ -20578,6 +21427,8 @@ pub enum RepresentationMapRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl RepresentationMapRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RepresentationMapRefView<'m> {
         match self {
             RepresentationMapRef::CameraUsage(i) => {
@@ -20591,6 +21442,7 @@ impl RepresentationMapRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             RepresentationMapRef::CameraUsage(i) => EntityKey::CameraUsage(*i),
@@ -20600,6 +21452,8 @@ impl RepresentationMapRef {
     }
 }
 
+/// What a [`RepresentationOrRepresentationReferenceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum RepresentationOrRepresentationReferenceRefView<'m> {
     AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
@@ -20636,6 +21490,8 @@ pub enum RepresentationOrRepresentationReferenceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl RepresentationOrRepresentationReferenceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(
         &self,
         model: &'m StepModel,
@@ -20665,6 +21521,7 @@ impl RepresentationOrRepresentationReferenceRef {
             RepresentationOrRepresentationReferenceRef::Complex(i) => RepresentationOrRepresentationReferenceRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             RepresentationOrRepresentationReferenceRef::AdvancedBrepShapeRepresentation(i) => EntityKey::AdvancedBrepShapeRepresentation(*i),
@@ -20693,6 +21550,8 @@ impl RepresentationOrRepresentationReferenceRef {
     }
 }
 
+/// What a [`RepresentedDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum RepresentedDefinitionRefView<'m> {
     AllAroundShapeAspect(&'m AllAroundShapeAspect),
@@ -20730,6 +21589,8 @@ pub enum RepresentedDefinitionRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl RepresentedDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RepresentedDefinitionRefView<'m> {
         match self {
             RepresentedDefinitionRef::AllAroundShapeAspect(i) => {
@@ -20879,6 +21740,7 @@ impl RepresentedDefinitionRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             RepresentedDefinitionRef::AllAroundShapeAspect(i) => {
@@ -20956,11 +21818,15 @@ impl RepresentedDefinitionRef {
     }
 }
 
+/// What a [`ResourceRequirementTypeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ResourceRequirementTypeRefView<'m> {
     ResourceRequirementType(&'m ResourceRequirementType),
 }
 impl ResourceRequirementTypeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ResourceRequirementTypeRefView<'m> {
         match self {
             ResourceRequirementTypeRef::ResourceRequirementType(i) => {
@@ -20970,6 +21836,7 @@ impl ResourceRequirementTypeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ResourceRequirementTypeRef::ResourceRequirementType(i) => {
@@ -20979,6 +21846,8 @@ impl ResourceRequirementTypeRef {
     }
 }
 
+/// What a [`RoleSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum RoleSelectRefView<'m> {
     ActionAssignment(&'m ActionAssignment),
@@ -21001,6 +21870,8 @@ pub enum RoleSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl RoleSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> RoleSelectRefView<'m> {
         match self {
             RoleSelectRef::ActionAssignment(i) => {
@@ -21071,6 +21942,7 @@ impl RoleSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             RoleSelectRef::ActionAssignment(i) => EntityKey::ActionAssignment(*i),
@@ -21101,11 +21973,15 @@ impl RoleSelectRef {
     }
 }
 
+/// What a [`SecurityClassificationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SecurityClassificationRefView<'m> {
     SecurityClassification(&'m SecurityClassification),
 }
 impl SecurityClassificationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SecurityClassificationRefView<'m> {
         match self {
             SecurityClassificationRef::SecurityClassification(i) => {
@@ -21115,6 +21991,7 @@ impl SecurityClassificationRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SecurityClassificationRef::SecurityClassification(i) => {
@@ -21124,6 +22001,8 @@ impl SecurityClassificationRef {
     }
 }
 
+/// What a [`SecurityClassificationItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SecurityClassificationItemRefView<'m> {
     Action(&'m Action),
@@ -21194,6 +22073,8 @@ pub enum SecurityClassificationItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl SecurityClassificationItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SecurityClassificationItemRefView<'m> {
         match self {
             SecurityClassificationItemRef::Action(i) => SecurityClassificationItemRefView::Action(model.action_arena.get(i.0)),
@@ -21252,6 +22133,7 @@ impl SecurityClassificationItemRef {
             SecurityClassificationItemRef::Complex(i) => SecurityClassificationItemRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SecurityClassificationItemRef::Action(i) => EntityKey::Action(*i),
@@ -21312,11 +22194,15 @@ impl SecurityClassificationItemRef {
     }
 }
 
+/// What a [`SecurityClassificationLevelRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SecurityClassificationLevelRefView<'m> {
     SecurityClassificationLevel(&'m SecurityClassificationLevel),
 }
 impl SecurityClassificationLevelRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SecurityClassificationLevelRefView<'m> {
         match self {
             SecurityClassificationLevelRef::SecurityClassificationLevel(i) => {
@@ -21326,6 +22212,7 @@ impl SecurityClassificationLevelRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SecurityClassificationLevelRef::SecurityClassificationLevel(i) => {
@@ -21335,6 +22222,8 @@ impl SecurityClassificationLevelRef {
     }
 }
 
+/// What a [`ShapeAspectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ShapeAspectRefView<'m> {
     AllAroundShapeAspect(&'m AllAroundShapeAspect),
@@ -21360,6 +22249,8 @@ pub enum ShapeAspectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ShapeAspectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ShapeAspectRefView<'m> {
         match self {
             ShapeAspectRef::AllAroundShapeAspect(i) => ShapeAspectRefView::AllAroundShapeAspect(
@@ -21437,6 +22328,7 @@ impl ShapeAspectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ShapeAspectRef::AllAroundShapeAspect(i) => EntityKey::AllAroundShapeAspect(*i),
@@ -21472,12 +22364,16 @@ impl ShapeAspectRef {
     }
 }
 
+/// What a [`ShapeDimensionRepresentationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ShapeDimensionRepresentationRefView<'m> {
     ShapeDimensionRepresentation(&'m ShapeDimensionRepresentation),
     Complex(&'m ComplexEntity),
 }
 impl ShapeDimensionRepresentationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ShapeDimensionRepresentationRefView<'m> {
         match self {
             ShapeDimensionRepresentationRef::ShapeDimensionRepresentation(i) => {
@@ -21490,6 +22386,7 @@ impl ShapeDimensionRepresentationRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ShapeDimensionRepresentationRef::ShapeDimensionRepresentation(i) => {
@@ -21500,6 +22397,8 @@ impl ShapeDimensionRepresentationRef {
     }
 }
 
+/// What a [`ShapeModelRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ShapeModelRefView<'m> {
     AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
@@ -21518,6 +22417,8 @@ pub enum ShapeModelRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ShapeModelRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ShapeModelRefView<'m> {
         match self {
             ShapeModelRef::AdvancedBrepShapeRepresentation(i) => {
@@ -21572,6 +22473,7 @@ impl ShapeModelRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ShapeModelRef::AdvancedBrepShapeRepresentation(i) => {
@@ -21604,6 +22506,8 @@ impl ShapeModelRef {
     }
 }
 
+/// What a [`ShapeRepresentationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ShapeRepresentationRefView<'m> {
     AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
@@ -21621,6 +22525,8 @@ pub enum ShapeRepresentationRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ShapeRepresentationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ShapeRepresentationRefView<'m> {
         match self {
             ShapeRepresentationRef::AdvancedBrepShapeRepresentation(i) => {
@@ -21672,6 +22578,7 @@ impl ShapeRepresentationRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ShapeRepresentationRef::AdvancedBrepShapeRepresentation(i) => {
@@ -21701,12 +22608,16 @@ impl ShapeRepresentationRef {
     }
 }
 
+/// What a [`ShapeRepresentationRelationshipRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ShapeRepresentationRelationshipRefView<'m> {
     ShapeRepresentationRelationship(&'m ShapeRepresentationRelationship),
     Complex(&'m ComplexEntity),
 }
 impl ShapeRepresentationRelationshipRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ShapeRepresentationRelationshipRefView<'m> {
         match self {
             ShapeRepresentationRelationshipRef::ShapeRepresentationRelationship(i) => {
@@ -21719,6 +22630,7 @@ impl ShapeRepresentationRelationshipRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ShapeRepresentationRelationshipRef::ShapeRepresentationRelationship(i) => {
@@ -21729,6 +22641,8 @@ impl ShapeRepresentationRelationshipRef {
     }
 }
 
+/// What a [`ShellRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ShellRefView<'m> {
     ClosedShell(&'m ClosedShell),
@@ -21739,6 +22653,8 @@ pub enum ShellRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ShellRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ShellRefView<'m> {
         match self {
             ShellRef::ClosedShell(i) => {
@@ -21755,6 +22671,7 @@ impl ShellRef {
             ShellRef::Complex(i) => ShellRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ShellRef::ClosedShell(i) => EntityKey::ClosedShell(*i),
@@ -21767,6 +22684,8 @@ impl ShellRef {
     }
 }
 
+/// What a [`StartRequestItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum StartRequestItemRefView<'m> {
     ProductDefinitionFormation(&'m ProductDefinitionFormation),
@@ -21776,6 +22695,8 @@ pub enum StartRequestItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl StartRequestItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> StartRequestItemRefView<'m> {
         match self {
             StartRequestItemRef::ProductDefinitionFormation(i) => {
@@ -21795,6 +22716,7 @@ impl StartRequestItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             StartRequestItemRef::ProductDefinitionFormation(i) => {
@@ -21808,12 +22730,16 @@ impl StartRequestItemRef {
     }
 }
 
+/// What a [`StateObservedRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum StateObservedRefView<'m> {
     StateObserved(&'m StateObserved),
     Complex(&'m ComplexEntity),
 }
 impl StateObservedRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> StateObservedRefView<'m> {
         match self {
             StateObservedRef::StateObserved(i) => {
@@ -21824,6 +22750,7 @@ impl StateObservedRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             StateObservedRef::StateObserved(i) => EntityKey::StateObserved(*i),
@@ -21832,12 +22759,16 @@ impl StateObservedRef {
     }
 }
 
+/// What a [`StateTypeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum StateTypeRefView<'m> {
     StateType(&'m StateType),
     Complex(&'m ComplexEntity),
 }
 impl StateTypeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> StateTypeRefView<'m> {
         match self {
             StateTypeRef::StateType(i) => {
@@ -21848,6 +22779,7 @@ impl StateTypeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             StateTypeRef::StateType(i) => EntityKey::StateType(*i),
@@ -21856,6 +22788,8 @@ impl StateTypeRef {
     }
 }
 
+/// What a [`StyleContextSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum StyleContextSelectRefView<'m> {
     AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
@@ -22057,6 +22991,8 @@ pub enum StyleContextSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl StyleContextSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> StyleContextSelectRefView<'m> {
         match self {
             StyleContextSelectRef::AdvancedBrepShapeRepresentation(i) => {
@@ -22812,6 +23748,7 @@ impl StyleContextSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             StyleContextSelectRef::AdvancedBrepShapeRepresentation(i) => {
@@ -23131,6 +24068,8 @@ impl StyleContextSelectRef {
     }
 }
 
+/// What a [`StyledItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum StyledItemRefView<'m> {
     AnnotationCurveOccurrence(&'m AnnotationCurveOccurrence),
@@ -23154,6 +24093,8 @@ pub enum StyledItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl StyledItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> StyledItemRefView<'m> {
         match self {
             StyledItemRef::AnnotationCurveOccurrence(i) => {
@@ -23231,6 +24172,7 @@ impl StyledItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             StyledItemRef::AnnotationCurveOccurrence(i) => EntityKey::AnnotationCurveOccurrence(*i),
@@ -23268,6 +24210,8 @@ impl StyledItemRef {
     }
 }
 
+/// What a [`StyledItemTargetOrRepresentationItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum StyledItemTargetOrRepresentationItemRefView<'m> {
     AdvancedBrepShapeRepresentation(&'m AdvancedBrepShapeRepresentation),
@@ -23455,6 +24399,8 @@ pub enum StyledItemTargetOrRepresentationItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl StyledItemTargetOrRepresentationItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(
         &'m self,
         model: &'m StepModel,
@@ -23635,6 +24581,8 @@ impl StyledItemTargetOrRepresentationItemRef {
     }
 }
 
+/// What a [`SupportedItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SupportedItemRefView<'m> {
     Action(&'m Action),
@@ -23643,6 +24591,8 @@ pub enum SupportedItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl SupportedItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SupportedItemRefView<'m> {
         match self {
             SupportedItemRef::Action(i) => {
@@ -23659,6 +24609,7 @@ impl SupportedItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SupportedItemRef::Action(i) => EntityKey::Action(*i),
@@ -23669,6 +24620,8 @@ impl SupportedItemRef {
     }
 }
 
+/// What a [`SurfaceRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SurfaceRefView<'m> {
     BSplineSurface(&'m BSplineSurface),
@@ -23693,6 +24646,8 @@ pub enum SurfaceRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl SurfaceRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SurfaceRefView<'m> {
         match self {
             SurfaceRef::BSplineSurface(i) => {
@@ -23751,6 +24706,7 @@ impl SurfaceRef {
             SurfaceRef::Complex(i) => SurfaceRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SurfaceRef::BSplineSurface(i) => EntityKey::BSplineSurface(*i),
@@ -23777,11 +24733,15 @@ impl SurfaceRef {
     }
 }
 
+/// What a [`SurfaceRenderingPropertiesRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SurfaceRenderingPropertiesRefView<'m> {
     SurfaceRenderingProperties(&'m SurfaceRenderingProperties),
 }
 impl SurfaceRenderingPropertiesRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SurfaceRenderingPropertiesRefView<'m> {
         match self {
             SurfaceRenderingPropertiesRef::SurfaceRenderingProperties(i) => {
@@ -23791,6 +24751,7 @@ impl SurfaceRenderingPropertiesRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SurfaceRenderingPropertiesRef::SurfaceRenderingProperties(i) => {
@@ -23800,6 +24761,8 @@ impl SurfaceRenderingPropertiesRef {
     }
 }
 
+/// What a [`SurfaceSideStyleSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SurfaceSideStyleSelectRefView<'m> {
     PreDefinedSurfaceSideStyle(&'m PreDefinedSurfaceSideStyle),
@@ -23807,6 +24770,8 @@ pub enum SurfaceSideStyleSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl SurfaceSideStyleSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SurfaceSideStyleSelectRefView<'m> {
         match self {
             SurfaceSideStyleSelectRef::PreDefinedSurfaceSideStyle(i) => {
@@ -23824,6 +24789,7 @@ impl SurfaceSideStyleSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SurfaceSideStyleSelectRef::PreDefinedSurfaceSideStyle(i) => {
@@ -23835,6 +24801,8 @@ impl SurfaceSideStyleSelectRef {
     }
 }
 
+/// What a [`SurfaceStyleElementSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SurfaceStyleElementSelectRefView<'m> {
     SurfaceStyleBoundary(&'m SurfaceStyleBoundary),
@@ -23848,6 +24816,8 @@ pub enum SurfaceStyleElementSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl SurfaceStyleElementSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SurfaceStyleElementSelectRefView<'m> {
         match self {
             SurfaceStyleElementSelectRef::SurfaceStyleBoundary(i) => {
@@ -23895,6 +24865,7 @@ impl SurfaceStyleElementSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SurfaceStyleElementSelectRef::SurfaceStyleBoundary(i) => {
@@ -23926,11 +24897,15 @@ impl SurfaceStyleElementSelectRef {
     }
 }
 
+/// What a [`SymbolStyleSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SymbolStyleSelectRefView<'m> {
     SymbolColour(&'m SymbolColour),
 }
 impl SymbolStyleSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SymbolStyleSelectRefView<'m> {
         match self {
             SymbolStyleSelectRef::SymbolColour(i) => {
@@ -23938,6 +24913,7 @@ impl SymbolStyleSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SymbolStyleSelectRef::SymbolColour(i) => EntityKey::SymbolColour(*i),
@@ -23945,12 +24921,16 @@ impl SymbolStyleSelectRef {
     }
 }
 
+/// What a [`SymbolTargetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum SymbolTargetRefView<'m> {
     SymbolTarget(&'m SymbolTarget),
     Complex(&'m ComplexEntity),
 }
 impl SymbolTargetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> SymbolTargetRefView<'m> {
         match self {
             SymbolTargetRef::SymbolTarget(i) => {
@@ -23961,6 +24941,7 @@ impl SymbolTargetRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             SymbolTargetRef::SymbolTarget(i) => EntityKey::SymbolTarget(*i),
@@ -23969,12 +24950,16 @@ impl SymbolTargetRef {
     }
 }
 
+/// What a [`TessellatedGeometricSetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum TessellatedGeometricSetRefView<'m> {
     TessellatedGeometricSet(&'m TessellatedGeometricSet),
     Complex(&'m ComplexEntity),
 }
 impl TessellatedGeometricSetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> TessellatedGeometricSetRefView<'m> {
         match self {
             TessellatedGeometricSetRef::TessellatedGeometricSet(i) => {
@@ -23987,6 +24972,7 @@ impl TessellatedGeometricSetRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             TessellatedGeometricSetRef::TessellatedGeometricSet(i) => {
@@ -23997,6 +24983,8 @@ impl TessellatedGeometricSetRef {
     }
 }
 
+/// What a [`TessellatedItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum TessellatedItemRefView<'m> {
     ComplexTriangulatedFace(&'m ComplexTriangulatedFace),
@@ -24014,6 +25002,8 @@ pub enum TessellatedItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl TessellatedItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> TessellatedItemRefView<'m> {
         match self {
             TessellatedItemRef::ComplexTriangulatedFace(i) => {
@@ -24071,6 +25061,7 @@ impl TessellatedItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             TessellatedItemRef::ComplexTriangulatedFace(i) => {
@@ -24100,6 +25091,8 @@ impl TessellatedItemRef {
     }
 }
 
+/// What a [`TessellatedStructuredItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum TessellatedStructuredItemRefView<'m> {
     ComplexTriangulatedFace(&'m ComplexTriangulatedFace),
@@ -24108,6 +25101,8 @@ pub enum TessellatedStructuredItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl TessellatedStructuredItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> TessellatedStructuredItemRefView<'m> {
         match self {
             TessellatedStructuredItemRef::ComplexTriangulatedFace(i) => {
@@ -24130,6 +25125,7 @@ impl TessellatedStructuredItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             TessellatedStructuredItemRef::ComplexTriangulatedFace(i) => {
@@ -24144,6 +25140,8 @@ impl TessellatedStructuredItemRef {
     }
 }
 
+/// What a [`TextOrCharacterRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum TextOrCharacterRefView<'m> {
     AnnotationText(&'m AnnotationText),
@@ -24154,6 +25152,8 @@ pub enum TextOrCharacterRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl TextOrCharacterRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> TextOrCharacterRefView<'m> {
         match self {
             TextOrCharacterRef::AnnotationText(i) => {
@@ -24180,6 +25180,7 @@ impl TextOrCharacterRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             TextOrCharacterRef::AnnotationText(i) => EntityKey::AnnotationText(*i),
@@ -24194,12 +25195,16 @@ impl TextOrCharacterRef {
     }
 }
 
+/// What a [`ToleranceMethodDefinitionRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ToleranceMethodDefinitionRefView<'m> {
     LimitsAndFits(&'m LimitsAndFits),
     ToleranceValue(&'m ToleranceValue),
 }
 impl ToleranceMethodDefinitionRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ToleranceMethodDefinitionRefView<'m> {
         match self {
             ToleranceMethodDefinitionRef::LimitsAndFits(i) => {
@@ -24214,6 +25219,7 @@ impl ToleranceMethodDefinitionRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ToleranceMethodDefinitionRef::LimitsAndFits(i) => EntityKey::LimitsAndFits(*i),
@@ -24222,6 +25228,8 @@ impl ToleranceMethodDefinitionRef {
     }
 }
 
+/// What a [`ToleranceSelectRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ToleranceSelectRefView<'m> {
     ApproximationToleranceDeviation(&'m ApproximationToleranceDeviation),
@@ -24229,6 +25237,8 @@ pub enum ToleranceSelectRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ToleranceSelectRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ToleranceSelectRefView<'m> {
         match self {
             ToleranceSelectRef::ApproximationToleranceDeviation(i) => {
@@ -24246,6 +25256,7 @@ impl ToleranceSelectRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ToleranceSelectRef::ApproximationToleranceDeviation(i) => {
@@ -24259,11 +25270,15 @@ impl ToleranceSelectRef {
     }
 }
 
+/// What a [`ToleranceValueRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ToleranceValueRefView<'m> {
     ToleranceValue(&'m ToleranceValue),
 }
 impl ToleranceValueRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ToleranceValueRefView<'m> {
         match self {
             ToleranceValueRef::ToleranceValue(i) => {
@@ -24271,6 +25286,7 @@ impl ToleranceValueRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ToleranceValueRef::ToleranceValue(i) => EntityKey::ToleranceValue(*i),
@@ -24278,12 +25294,16 @@ impl ToleranceValueRef {
     }
 }
 
+/// What a [`ToleranceValueOrLimitsAndFitsRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ToleranceValueOrLimitsAndFitsRefView<'m> {
     LimitsAndFits(&'m LimitsAndFits),
     ToleranceValue(&'m ToleranceValue),
 }
 impl ToleranceValueOrLimitsAndFitsRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ToleranceValueOrLimitsAndFitsRefView<'m> {
         match self {
             ToleranceValueOrLimitsAndFitsRef::LimitsAndFits(i) => {
@@ -24298,6 +25318,7 @@ impl ToleranceValueOrLimitsAndFitsRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ToleranceValueOrLimitsAndFitsRef::LimitsAndFits(i) => EntityKey::LimitsAndFits(*i),
@@ -24306,6 +25327,8 @@ impl ToleranceValueOrLimitsAndFitsRef {
     }
 }
 
+/// What a [`ToleranceZoneRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ToleranceZoneRefView<'m> {
     ToleranceZone(&'m ToleranceZone),
@@ -24313,6 +25336,8 @@ pub enum ToleranceZoneRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ToleranceZoneRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ToleranceZoneRefView<'m> {
         match self {
             ToleranceZoneRef::ToleranceZone(i) => {
@@ -24328,6 +25353,7 @@ impl ToleranceZoneRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ToleranceZoneRef::ToleranceZone(i) => EntityKey::ToleranceZone(*i),
@@ -24337,11 +25363,15 @@ impl ToleranceZoneRef {
     }
 }
 
+/// What a [`ToleranceZoneFormRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ToleranceZoneFormRefView<'m> {
     ToleranceZoneForm(&'m ToleranceZoneForm),
 }
 impl ToleranceZoneFormRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ToleranceZoneFormRefView<'m> {
         match self {
             ToleranceZoneFormRef::ToleranceZoneForm(i) => {
@@ -24351,6 +25381,7 @@ impl ToleranceZoneFormRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ToleranceZoneFormRef::ToleranceZoneForm(i) => EntityKey::ToleranceZoneForm(*i),
@@ -24358,6 +25389,8 @@ impl ToleranceZoneFormRef {
     }
 }
 
+/// What a [`ToleranceZoneTargetRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ToleranceZoneTargetRefView<'m> {
     AngularLocation(&'m AngularLocation),
@@ -24397,6 +25430,8 @@ pub enum ToleranceZoneTargetRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl ToleranceZoneTargetRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ToleranceZoneTargetRefView<'m> {
         match self {
             ToleranceZoneTargetRef::AngularLocation(i) => {
@@ -24574,6 +25609,7 @@ impl ToleranceZoneTargetRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ToleranceZoneTargetRef::AngularLocation(i) => EntityKey::AngularLocation(*i),
@@ -24655,6 +25691,8 @@ impl ToleranceZoneTargetRef {
     }
 }
 
+/// What a [`TransformationRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum TransformationRefView<'m> {
     FunctionallyDefinedTransformation(&'m FunctionallyDefinedTransformation),
@@ -24664,6 +25702,8 @@ pub enum TransformationRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl TransformationRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&'m self, model: &'m StepModel) -> TransformationRefView<'m> {
         match self {
             TransformationRef::FunctionallyDefinedTransformation(i) => {
@@ -24689,12 +25729,16 @@ impl TransformationRef {
     }
 }
 
+/// What a [`TwoDirectionRepeatFactorRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum TwoDirectionRepeatFactorRefView<'m> {
     TwoDirectionRepeatFactor(&'m TwoDirectionRepeatFactor),
     Complex(&'m ComplexEntity),
 }
 impl TwoDirectionRepeatFactorRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> TwoDirectionRepeatFactorRefView<'m> {
         match self {
             TwoDirectionRepeatFactorRef::TwoDirectionRepeatFactor(i) => {
@@ -24707,6 +25751,7 @@ impl TwoDirectionRepeatFactorRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             TwoDirectionRepeatFactorRef::TwoDirectionRepeatFactor(i) => {
@@ -24717,12 +25762,16 @@ impl TwoDirectionRepeatFactorRef {
     }
 }
 
+/// What a [`UncertaintyMeasureWithUnitRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum UncertaintyMeasureWithUnitRefView<'m> {
     UncertaintyMeasureWithUnit(&'m UncertaintyMeasureWithUnit),
     Complex(&'m ComplexEntity),
 }
 impl UncertaintyMeasureWithUnitRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> UncertaintyMeasureWithUnitRefView<'m> {
         match self {
             UncertaintyMeasureWithUnitRef::UncertaintyMeasureWithUnit(i) => {
@@ -24735,6 +25784,7 @@ impl UncertaintyMeasureWithUnitRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             UncertaintyMeasureWithUnitRef::UncertaintyMeasureWithUnit(i) => {
@@ -24745,6 +25795,8 @@ impl UncertaintyMeasureWithUnitRef {
     }
 }
 
+/// What a [`UnitRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum UnitRefView<'m> {
     AreaUnit(&'m AreaUnit),
@@ -24763,6 +25815,8 @@ pub enum UnitRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl UnitRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> UnitRefView<'m> {
         match self {
             UnitRef::AreaUnit(i) => UnitRefView::AreaUnit(model.area_unit_arena.get(i.0)),
@@ -24789,6 +25843,7 @@ impl UnitRef {
             UnitRef::Complex(i) => UnitRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             UnitRef::AreaUnit(i) => EntityKey::AreaUnit(*i),
@@ -24809,6 +25864,8 @@ impl UnitRef {
     }
 }
 
+/// What a [`ValueQualifierRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ValueQualifierRefView<'m> {
     PrecisionQualifier(&'m PrecisionQualifier),
@@ -24817,6 +25874,8 @@ pub enum ValueQualifierRefView<'m> {
     ValueFormatTypeQualifier(&'m ValueFormatTypeQualifier),
 }
 impl ValueQualifierRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ValueQualifierRefView<'m> {
         match self {
             ValueQualifierRef::PrecisionQualifier(i) => {
@@ -24837,6 +25896,7 @@ impl ValueQualifierRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ValueQualifierRef::PrecisionQualifier(i) => EntityKey::PrecisionQualifier(*i),
@@ -24849,18 +25909,23 @@ impl ValueQualifierRef {
     }
 }
 
+/// What a [`VectorRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum VectorRefView<'m> {
     Vector(&'m Vector),
     Complex(&'m ComplexEntity),
 }
 impl VectorRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> VectorRefView<'m> {
         match self {
             VectorRef::Vector(i) => VectorRefView::Vector(model.vector_arena.get(i.0)),
             VectorRef::Complex(i) => VectorRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             VectorRef::Vector(i) => EntityKey::Vector(*i),
@@ -24869,11 +25934,15 @@ impl VectorRef {
     }
 }
 
+/// What a [`VersionedActionRequestRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum VersionedActionRequestRefView<'m> {
     VersionedActionRequest(&'m VersionedActionRequest),
 }
 impl VersionedActionRequestRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> VersionedActionRequestRefView<'m> {
         match self {
             VersionedActionRequestRef::VersionedActionRequest(i) => {
@@ -24883,6 +25952,7 @@ impl VersionedActionRequestRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             VersionedActionRequestRef::VersionedActionRequest(i) => {
@@ -24892,6 +25962,8 @@ impl VersionedActionRequestRef {
     }
 }
 
+/// What a [`VertexRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum VertexRefView<'m> {
     Vertex(&'m Vertex),
@@ -24899,6 +25971,8 @@ pub enum VertexRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl VertexRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> VertexRefView<'m> {
         match self {
             VertexRef::Vertex(i) => VertexRefView::Vertex(model.vertex_arena.get(i.0)),
@@ -24908,6 +25982,7 @@ impl VertexRef {
             VertexRef::Complex(i) => VertexRefView::Complex(model.complex_entity_arena.get(i.0)),
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             VertexRef::Vertex(i) => EntityKey::Vertex(*i),
@@ -24917,12 +25992,16 @@ impl VertexRef {
     }
 }
 
+/// What a [`VertexLoopRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum VertexLoopRefView<'m> {
     VertexLoop(&'m VertexLoop),
     Complex(&'m ComplexEntity),
 }
 impl VertexLoopRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> VertexLoopRefView<'m> {
         match self {
             VertexLoopRef::VertexLoop(i) => {
@@ -24933,6 +26012,7 @@ impl VertexLoopRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             VertexLoopRef::VertexLoop(i) => EntityKey::VertexLoop(*i),
@@ -24941,12 +26021,16 @@ impl VertexLoopRef {
     }
 }
 
+/// What a [`ViewVolumeRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum ViewVolumeRefView<'m> {
     ViewVolume(&'m ViewVolume),
     Complex(&'m ComplexEntity),
 }
 impl ViewVolumeRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> ViewVolumeRefView<'m> {
         match self {
             ViewVolumeRef::ViewVolume(i) => {
@@ -24957,6 +26041,7 @@ impl ViewVolumeRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             ViewVolumeRef::ViewVolume(i) => EntityKey::ViewVolume(*i),
@@ -24965,6 +26050,8 @@ impl ViewVolumeRef {
     }
 }
 
+/// What a [`WorkItemRef`] names, borrowed from the model: the entity, or an
+/// aggregate's elements.
 #[derive(Clone, Copy, Debug)]
 pub enum WorkItemRefView<'m> {
     ProductDefinitionFormation(&'m ProductDefinitionFormation),
@@ -24974,6 +26061,8 @@ pub enum WorkItemRefView<'m> {
     Complex(&'m ComplexEntity),
 }
 impl WorkItemRef {
+    /// The entity this reference names, borrowed from `model`. Panics for
+    /// an id `model` does not have, such as one from another model.
     pub fn resolve<'m>(&self, model: &'m StepModel) -> WorkItemRefView<'m> {
         match self {
             WorkItemRef::ProductDefinitionFormation(i) => {
@@ -24993,6 +26082,7 @@ impl WorkItemRef {
             }
         }
     }
+    /// The key of the entity this reference names.
     pub fn entity_key(&self) -> EntityKey {
         match self {
             WorkItemRef::ProductDefinitionFormation(i) => EntityKey::ProductDefinitionFormation(*i),
