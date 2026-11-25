@@ -4,7 +4,9 @@ use crate::parser::lexer::{LexError, Span};
 
 /// A parsed attribute value from a Part 21 entity instance.
 ///
-/// Covers every construct allowed in a parameter position by ISO 10303-21.
+/// Covers every construct allowed in a parameter position by ISO 10303-21,
+/// except a typed parameter with a user-defined (`!NAME`) keyword, which the
+/// lexer does not read.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Attribute {
     Integer(i64),
@@ -40,7 +42,7 @@ pub struct RawEntityPart {
     pub attributes: Vec<Attribute>,
 }
 
-/// A parsed Part 21 entity instance (one line in the DATA section).
+/// A parsed Part 21 entity instance (one instance in the DATA section).
 #[derive(Debug, Clone, PartialEq)]
 pub enum RawEntity {
     Simple {
@@ -178,7 +180,8 @@ impl Graph {
 /// [`stream`](crate::parser::stream) could not read a file.
 ///
 /// Lexer errors are wrapped in [`Error::Lex`] and a failing input in
-/// [`Error::Io`]; the remaining variants describe structural problems detected
+/// [`Error::Io`]; [`Error::TooLarge`] is a file larger than the reader can
+/// index, and the remaining variants describe structural problems detected
 /// during parsing. Each prints as a one-line message that includes the wrapped
 /// error's, so [`source`](std::error::Error::source) is always `None`.
 #[derive(Debug)]
@@ -205,7 +208,8 @@ pub enum Error {
     MissingHeaderEntity { name: &'static str },
     /// `FILE_SCHEMA` does not contain a list of strings.
     MalformedFileSchema { span: Span },
-    /// An attribute appeared in an invalid position (e.g. `$` inside a list).
+    /// A token that cannot start a parameter appeared where one belongs (e.g.
+    /// `;` or `=` inside a parameter list).
     InvalidAttributePosition { span: Span, detail: &'static str },
     /// A parameter is nested deeper than [`MAX_NESTING_DEPTH`] — guards against a
     /// stack overflow on adversarially deep `(((…)))` / `A(B(C(…)))` input.
@@ -213,7 +217,8 @@ pub enum Error {
     /// [`MAX_NESTING_DEPTH`]: crate::parser::MAX_NESTING_DEPTH
     NestingTooDeep { span: Span },
     /// The file holds more than the reader can index: at most `u32::MAX`
-    /// entities, and as many reference and text slots.
+    /// entities, and the reference data and text it keeps must each fit
+    /// 32-bit positions (about 4 GiB).
     /// `span` is the entity where reading stopped.
     TooLarge { span: Span },
     /// Reading the input failed, with the input's own error.

@@ -626,9 +626,8 @@ impl<R: Read> Parser<R> {
     // Attribute parsing
     // ------------------------------------------------------------------
 
-    /// Parse a comma-separated parameter list between parentheses.
-    /// Expects the opening `(` to have been consumed already? No — this
-    /// method consumes `(`, reads parameters, and consumes `)`.
+    /// Parse a parenthesised, comma-separated parameter list, consuming both
+    /// parentheses.
     fn parse_parameter_list(&mut self) -> Result<Vec<Attribute>, Error> {
         self.expect_lparen()?;
         let attrs = self.parse_list_value()?;

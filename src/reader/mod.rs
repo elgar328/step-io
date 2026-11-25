@@ -76,9 +76,10 @@ pub struct DropReason {
     pub kind: DropKind,
     /// What the kind is about: the entity type (`Unimplemented`); the rule a
     /// value breaks (`NonstandardValue`); `<ENTITY>: '<attribute>' references
-    /// <TYPE>` (`NonstandardReference`); `via-` and the reason of the entity
-    /// the cascade starts from, or `via-dangling` for an id the file does not
-    /// define (`Cascade`); what could not be read (`Unclassified`).
+    /// <TYPE>` (`NonstandardReference`); `via-` and the detail of the drop
+    /// the cascade starts from (`via-unclassified` when that one is
+    /// `Unclassified`), or `via-dangling` for an id the file does not define
+    /// (`Cascade`); what could not be read (`Unclassified`).
     pub detail: String,
 }
 
