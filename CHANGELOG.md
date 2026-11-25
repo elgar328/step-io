@@ -331,6 +331,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a `NonstandardReference`.
 - `Tolerance::magnitude` reads a magnitude given as a plain
   `MEASURE_WITH_UNIT` when its value is a length measure.
+- The scene reads a measure written as a complex instance, such as
+  `(LENGTH_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM()
+  MEASURE_WITH_UNIT(LENGTH_MEASURE(5.), #u) REPRESENTATION_ITEM(''))`, from
+  its `MEASURE_WITH_UNIT` part: `Dimension::value`, `Tolerance::magnitude`,
+  a curve width, and a conversion-based unit's factor. `Dimension::value` and
+  `Tolerance::magnitude` used to give `None` for such a measure, which is how
+  NIST's test files write them. `Scene::units` also reads a conversion factor
+  given as any other subtype of `MEASURE_WITH_UNIT`, such as a
+  `POSITIVE_LENGTH_MEASURE_WITH_UNIT`.
 - `Ap242Author` checks the size of a list held in a SELECT, and rejects one
   outside its bounds with `AuthorError::Cardinality`: a `COMMON_DATUM_LIST`
   needs at least two elements, a `LIST_REPRESENTATION_ITEM`,

@@ -529,6 +529,47 @@ fn reads_dimension_value() {
     );
 }
 
+// The value and the magnitude as NIST's test files write them: a complex
+// measure whose MEASURE_WITH_UNIT part holds the number.
+const COMPLEX_MEASURES: &str = "\
+#1=APPLICATION_CONTEXT('test');\n\
+#2=PRODUCT_CONTEXT('',#1,'mechanical');\n\
+#3=PRODUCT_DEFINITION_CONTEXT('',#1,'design');\n\
+#10=PRODUCT('p','Part','',(#2));\n\
+#11=PRODUCT_DEFINITION_FORMATION('1','',#10);\n\
+#12=PRODUCT_DEFINITION('design','',#11,#3);\n\
+#13=PRODUCT_DEFINITION_SHAPE('','',#12);\n\
+#14=SHAPE_ASPECT('feature','',#13,.T.);\n\
+#20=DIMENSIONAL_SIZE(#14,'D1');\n\
+#21=REPRESENTATION_CONTEXT('','');\n\
+#22=( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+#23=( LENGTH_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM() MEASURE_WITH_UNIT(POSITIVE_LENGTH_MEASURE(5.),#22) QUALIFIED_REPRESENTATION_ITEM((#26)) REPRESENTATION_ITEM('nominal value') );\n\
+#24=SHAPE_DIMENSION_REPRESENTATION('',(#23),#21);\n\
+#25=DIMENSIONAL_CHARACTERISTIC_REPRESENTATION(#20,#24);\n\
+#26=VALUE_FORMAT_TYPE_QUALIFIER('NR2 1.3');\n\
+#30=( LENGTH_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM() MEASURE_WITH_UNIT(LENGTH_MEASURE(0.25),#22) REPRESENTATION_ITEM('magnitude') );\n\
+#31=FLATNESS_TOLERANCE('flat','',#30,#14);\n";
+
+#[test]
+fn reads_a_complex_measure_as_a_dimension_value_and_a_tolerance_magnitude() {
+    let src = format!("{HEADER}{COMPLEX_MEASURES}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+
+    let dim = scene.all_dimensions().next().expect("a dimension");
+    let v = dim.value().expect("the complex measure item is the value");
+    assert!((v - 5.0).abs() < 1e-9, "value = {v}");
+
+    let tol = scene.all_tolerances().next().expect("a tolerance");
+    let m = tol
+        .magnitude()
+        .expect("the complex measure is the magnitude");
+    assert!((m - 0.25).abs() < 1e-9, "magnitude = {m}");
+
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
 // Three geometric tolerances sharing the product/aspect/unit scaffold: a
 // standalone FLATNESS_TOLERANCE (dedicated arena), a complex position tolerance
 // (multi-supertype ComplexEntity), and a magnitude-less STRAIGHTNESS_TOLERANCE.

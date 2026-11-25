@@ -450,7 +450,14 @@ fn size_f64(cx: Ctx<'_>, r: &m::SizeSelectRef) -> Option<f64> {
                 .get(i.0)
                 .value_component
         }
-        m::SizeSelectRef::DescriptiveMeasure(_) | m::SizeSelectRef::Complex(_) => return None,
+        m::SizeSelectRef::DescriptiveMeasure(_) => return None,
+        m::SizeSelectRef::Complex(cuid) => {
+            let Some((value, _)) = crate::scene::units::complex_measure(cx.model, *cuid) else {
+                cx.warn("size is a complex instance without a MEASURE_WITH_UNIT part".to_owned());
+                return None;
+            };
+            value
+        }
     };
     Some(value.value.as_f64())
 }

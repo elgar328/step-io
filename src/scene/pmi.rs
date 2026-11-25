@@ -134,7 +134,9 @@ impl<'m> Dimension<'m> {
 
     /// The nominal value (reverse: a `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION`
     /// referencing this dimension → its `SHAPE_DIMENSION_REPRESENTATION`'s first
-    /// `MEASURE_REPRESENTATION_ITEM`).
+    /// `MEASURE_REPRESENTATION_ITEM`, plain or a complex instance with that part,
+    /// such as `(LENGTH_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM()
+    /// MEASURE_WITH_UNIT(…) …)`).
     ///
     /// The number is raw: interpret its unit via [`kind`](Dimension::kind)
     /// (`Size`/`Location` are lengths, `Angular*` are angles) and
@@ -163,15 +165,39 @@ impl<'m> Dimension<'m> {
             };
             let sdr = cx.model.shape_dimension_representation_arena.get(sdr_id.0);
             for item in &sdr.items {
-                if let m::RepresentationItemRef::MeasureRepresentationItem(mid) = item {
-                    return Some(
-                        cx.model
-                            .measure_representation_item_arena
-                            .get(mid.0)
-                            .value_component
-                            .value
-                            .as_f64(),
-                    );
+                match item {
+                    m::RepresentationItemRef::MeasureRepresentationItem(mid) => {
+                        return Some(
+                            cx.model
+                                .measure_representation_item_arena
+                                .get(mid.0)
+                                .value_component
+                                .value
+                                .as_f64(),
+                        );
+                    }
+                    // A complex item is a value only with a
+                    // `MEASURE_REPRESENTATION_ITEM` part.
+                    m::RepresentationItemRef::Complex(cuid)
+                        if cx
+                            .model
+                            .complex_entity_arena
+                            .get(cuid.0)
+                            .parts
+                            .iter()
+                            .any(|p| matches!(p, m::PartialEntity::MeasureRepresentationItem)) =>
+                    {
+                        if let Some((value, _)) =
+                            crate::scene::units::complex_measure(cx.model, *cuid)
+                        {
+                            return Some(value.value.as_f64());
+                        }
+                        cx.warn(
+                            "dimension value is a complex instance without a MEASURE_WITH_UNIT part"
+                                .to_owned(),
+                        );
+                    }
+                    _ => {}
                 }
             }
         }
@@ -351,10 +377,13 @@ impl<'m> Tolerance<'m> {
     /// The number is raw, in the unit its measure names (`unit_component`,
     /// not read here), normally the model's length unit — interpret it via
     /// [`Scene::units`], exactly as point coordinates and dimension values are
-    /// read. AP203 and AP214 allow a plain `MEASURE_WITH_UNIT` here; its value
-    /// is taken when it is a length measure. `None` when the tolerance carries
-    /// no magnitude, or its magnitude is a complex measure instance the scene
-    /// cannot resolve or not a length (reported via [`Scene::warnings`]).
+    /// read. A complex measure such as `(LENGTH_MEASURE_WITH_UNIT()
+    /// MEASURE_REPRESENTATION_ITEM() MEASURE_WITH_UNIT(…) …)` is read from its
+    /// `MEASURE_WITH_UNIT` part. AP203 and AP214 allow a plain
+    /// `MEASURE_WITH_UNIT` here; its value is taken when it is a length
+    /// measure. `None` when the tolerance carries no magnitude, or its
+    /// magnitude is not a length or a complex instance without a
+    /// `MEASURE_WITH_UNIT` part (reported via [`Scene::warnings`]).
     pub fn magnitude(&self) -> Option<f64> {
         let this = self.about();
         let (_, mag) = this
@@ -408,8 +437,9 @@ impl<'m> Tolerance<'m> {
 
 /// Resolve a tolerance magnitude to its scalar length. AP242 types it as a
 /// `LENGTH_MEASURE_WITH_UNIT`; AP203 and AP214 allow any `MEASURE_WITH_UNIT`,
-/// whose value counts only when it is a length measure. A complex measure
-/// instance or a value of another kind is reported and yields `None`.
+/// whose value counts only when it is a length measure. A complex measure is a
+/// length when it has a length-measure part, else by its value's type. A value
+/// of another kind is reported and yields `None`.
 fn tolerance_magnitude_f64(cx: Ctx<'_>, r: &m::MeasureWithUnitRef) -> Option<f64> {
     let model = cx.model;
     let length = |v: &m::MeasureValue| {
@@ -463,9 +493,19 @@ fn tolerance_magnitude_f64(cx: Ctx<'_>, r: &m::MeasureWithUnitRef) -> Option<f64
                 .get(id.0)
                 .value_component,
         ),
-        m::MeasureWithUnitRef::Complex(_) => {
-            cx.warn("tolerance magnitude is a complex measure instance".to_owned());
-            None
+        m::MeasureWithUnitRef::Complex(cuid) => {
+            let Some((value, _)) = crate::scene::units::complex_measure(model, *cuid) else {
+                cx.warn(
+                    "tolerance magnitude is a complex instance without a MEASURE_WITH_UNIT part"
+                        .to_owned(),
+                );
+                return None;
+            };
+            if crate::scene::units::complex_is_length_measure(model, *cuid) {
+                Some(value.value.as_f64())
+            } else {
+                length(value)
+            }
         }
         m::MeasureWithUnitRef::MassMeasureWithUnit(_)
         | m::MeasureWithUnitRef::PlaneAngleMeasureWithUnit(_)

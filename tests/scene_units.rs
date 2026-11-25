@@ -65,3 +65,30 @@ fn reads_a_complex_uncertainty_as_the_precision() {
     let precision = model.scene().units().precision.expect("a precision");
     assert!((precision - 0.01).abs() < 1e-12, "precision = {precision}");
 }
+
+/// An inch whose conversion factor is a complex measure or a positive length
+/// measure: both resolve to 25.4 mm.
+#[test]
+fn reads_a_complex_or_positive_conversion_factor() {
+    for factor in [
+        "#20=(LENGTH_MEASURE_WITH_UNIT()MEASURE_WITH_UNIT(LENGTH_MEASURE(25.4),#10));",
+        "#20=POSITIVE_LENGTH_MEASURE_WITH_UNIT(POSITIVE_LENGTH_MEASURE(25.4),#10);",
+    ] {
+        let units = UNITS.replace(
+            "GLOBAL_UNIT_ASSIGNED_CONTEXT((#10,#11))",
+            "GLOBAL_UNIT_ASSIGNED_CONTEXT((#21,#11))",
+        ) + factor
+            + "\n#22=DIMENSIONAL_EXPONENTS(1.,0.,0.,0.,0.,0.,0.);\n\
+               #21=( CONVERSION_BASED_UNIT('INCH',#20) LENGTH_UNIT() NAMED_UNIT(#22) );\n";
+        let src = format!("{HEADER}{units}{FOOTER}");
+        let (model, report) = read(src.as_bytes()).expect("read");
+        assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+        let length = model.scene().units().length.expect("a length unit");
+        assert_eq!(length.name, "INCH");
+        assert!(
+            (length.to_si - 0.0254).abs() < 1e-12,
+            "inch to_si = {}",
+            length.to_si
+        );
+    }
+}

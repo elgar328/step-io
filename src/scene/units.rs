@@ -99,17 +99,9 @@ pub(crate) fn units_of(model: &StepModel) -> Units {
                     .value
                     .as_f64(),
             ),
-            m::UncertaintyMeasureWithUnitRef::Complex(cuid) => model
-                .complex_entity_arena
-                .get(cuid.0)
-                .parts
-                .iter()
-                .find_map(|p| match p {
-                    m::PartialEntity::MeasureWithUnit {
-                        value_component, ..
-                    } => Some(value_component.value.as_f64()),
-                    _ => None,
-                }),
+            m::UncertaintyMeasureWithUnitRef::Complex(cuid) => {
+                complex_measure(model, *cuid).map(|(v, _)| v.value.as_f64())
+            }
         });
     out
 }
@@ -198,22 +190,82 @@ fn measure_with_unit<'m>(
     model: &'m StepModel,
     r: &'m m::MeasureWithUnitRef,
 ) -> Option<(f64, &'m m::UnitRef)> {
-    let (value, unit) = match r {
-        m::MeasureWithUnitRef::MeasureWithUnit(i) => {
-            let e = model.measure_with_unit_arena.get(i.0);
+    let (value, unit) = measure_parts(model, r)?;
+    Some((value.value.as_f64(), unit))
+}
+
+/// The value and unit of any `MEASURE_WITH_UNIT`: every subtype holds both,
+/// and a complex instance holds them in its `MEASURE_WITH_UNIT` part. `None`
+/// only for a complex instance without that part.
+pub(crate) fn measure_parts<'m>(
+    model: &'m StepModel,
+    r: &m::MeasureWithUnitRef,
+) -> Option<(&'m m::MeasureValue, &'m m::UnitRef)> {
+    macro_rules! of {
+        ($arena:ident, $i:expr) => {{
+            let e = model.$arena.get($i.0);
             (&e.value_component, &e.unit_component)
-        }
-        m::MeasureWithUnitRef::LengthMeasureWithUnit(i) => {
-            let e = model.length_measure_with_unit_arena.get(i.0);
-            (&e.value_component, &e.unit_component)
+        }};
+    }
+    Some(match r {
+        m::MeasureWithUnitRef::MeasureWithUnit(i) => of!(measure_with_unit_arena, i),
+        m::MeasureWithUnitRef::LengthMeasureWithUnit(i) => of!(length_measure_with_unit_arena, i),
+        m::MeasureWithUnitRef::PositiveLengthMeasureWithUnit(i) => {
+            of!(positive_length_measure_with_unit_arena, i)
         }
         m::MeasureWithUnitRef::PlaneAngleMeasureWithUnit(i) => {
-            let e = model.plane_angle_measure_with_unit_arena.get(i.0);
-            (&e.value_component, &e.unit_component)
+            of!(plane_angle_measure_with_unit_arena, i)
         }
-        _ => return None,
-    };
-    Some((value.value.as_f64(), unit))
+        m::MeasureWithUnitRef::PositivePlaneAngleMeasureWithUnit(i) => {
+            of!(positive_plane_angle_measure_with_unit_arena, i)
+        }
+        m::MeasureWithUnitRef::MassMeasureWithUnit(i) => of!(mass_measure_with_unit_arena, i),
+        m::MeasureWithUnitRef::RatioMeasureWithUnit(i) => of!(ratio_measure_with_unit_arena, i),
+        m::MeasureWithUnitRef::MeasureRepresentationItem(i) => {
+            of!(measure_representation_item_arena, i)
+        }
+        m::MeasureWithUnitRef::UncertaintyMeasureWithUnit(i) => {
+            of!(uncertainty_measure_with_unit_arena, i)
+        }
+        m::MeasureWithUnitRef::Complex(cuid) => return complex_measure(model, *cuid),
+    })
+}
+
+/// The value and unit of a complex instance's `MEASURE_WITH_UNIT` part, such as
+/// `(LENGTH_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM()
+/// MEASURE_WITH_UNIT(LENGTH_MEASURE(5.), #u) REPRESENTATION_ITEM(''))`.
+pub(crate) fn complex_measure(
+    model: &StepModel,
+    cuid: m::ComplexEntityId,
+) -> Option<(&m::MeasureValue, &m::UnitRef)> {
+    model
+        .complex_entity_arena
+        .get(cuid.0)
+        .parts
+        .iter()
+        .find_map(|p| match p {
+            m::PartialEntity::MeasureWithUnit {
+                value_component,
+                unit_component,
+            } => Some((value_component, unit_component)),
+            _ => None,
+        })
+}
+
+/// Whether a complex instance has a part that makes it a length measure.
+pub(crate) fn complex_is_length_measure(model: &StepModel, cuid: m::ComplexEntityId) -> bool {
+    model
+        .complex_entity_arena
+        .get(cuid.0)
+        .parts
+        .iter()
+        .any(|p| {
+            matches!(
+                p,
+                m::PartialEntity::LengthMeasureWithUnit
+                    | m::PartialEntity::PositiveLengthMeasureWithUnit
+            )
+        })
 }
 
 /// Decimal SI prefix as a multiplier (no prefix = 1.0).
