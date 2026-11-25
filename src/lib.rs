@@ -98,15 +98,15 @@
 //! # Writing STEP
 //!
 //! The write side is strict by construction. Its foundation is [`Ap242Author`],
-//! a generated low-level layer with one constructor per AP242 entity (exposed
-//! as [`StepBuilder::author`]); every argument is validated at insertion
-//! against the AP242 edition 4 schema — its types, aggregate sizes, references,
-//! rules for combining types, and the `WHERE` rules that limit which types an
-//! attribute, each of its elements, or each element of a set it holds
-//! references, whether for every instance
-//! or by the instance's own type (not those on one indexed element, on two
-//! attributes together or on a path through another entity, nor its other
-//! `WHERE` rules) — so there is no loss report to check afterwards.
+//! a generated low-level layer with one constructor per AP242 entity that is
+//! not `ABSTRACT` (exposed as [`StepBuilder::author`]); every argument is
+//! validated at insertion against the AP242 edition 4 schema — its types,
+//! aggregate sizes, references, rules for combining types, and the `WHERE`
+//! rules that limit which types an attribute, each of its elements, or each
+//! element of a set it holds references, whether for every instance or by the
+//! instance's own type (not those on one indexed element, on two attributes
+//! together or on a path through another entity, nor its other `WHERE`
+//! rules) — so there is no loss report to check afterwards.
 //!
 //! Some of the model's reference types are wider than AP242 edition 4 allows.
 //! The model reads every edition, so an attribute a subtype narrows
@@ -258,8 +258,9 @@ pub use parser::lexer::{LexError, LexErrorKind};
 pub use parser::schema::{ApFamily, SchemaId, Stage};
 pub use refgraph::RefGraph;
 
-/// Compile-time checks of the AP242 edition 4 argument types, each paired
-/// with a version that compiles, so a `compile_fail` fails for its reason.
+/// Compile-time checks of the AP242 edition 4 argument types and
+/// constructors, each paired with a version that compiles, so a
+/// `compile_fail` fails for its reason.
 ///
 /// AP242's `approved_item` drops `PRODUCT_DEFINITION`, which AP203 allows:
 ///
@@ -495,6 +496,33 @@ pub use refgraph::RefGraph;
 ///     m::Logical::False,
 ///     m::Ap242DatumOrCommonDatumRef::DatumReferenceElement(e),
 ///     None,
+/// );
+/// # }
+/// ```
+///
+/// An entity AP242 declares `ABSTRACT` has no constructor of its own; a
+/// subtype's constructor makes one:
+///
+/// ```
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, aspect: m::ShapeAspectId) {
+/// let _ = a.add_position_tolerance(
+///     "",
+///     None,
+///     None,
+///     m::GeometricToleranceTargetRef::ShapeAspect(aspect),
+/// );
+/// # }
+/// ```
+///
+/// ```compile_fail,E0599
+/// # use step_io::{Ap242Author, model as m};
+/// # fn f(a: &mut Ap242Author, aspect: m::ShapeAspectId) {
+/// let _ = a.add_geometric_tolerance(
+///     "",
+///     None,
+///     None,
+///     m::GeometricToleranceTargetRef::ShapeAspect(aspect),
 /// );
 /// # }
 /// ```

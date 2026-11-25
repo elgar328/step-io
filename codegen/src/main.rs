@@ -174,7 +174,8 @@ fn main() {
 
     write_fmt(&format!("{dir}/schema.rs"), &emit::emit_schema(&targets));
 
-    // Strict AP242 authoring layer: constructors only for AP242-legal entities.
+    // Strict AP242 authoring layer: constructors only for AP242-legal entities
+    // that are not ABSTRACT.
     write_fmt(
         &format!("{dir}/author.rs"),
         &emit::emit_author(&ir, &parsed[0].2, &schema, &narrowing),

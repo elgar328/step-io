@@ -2,7 +2,7 @@
 // Schema-faithful model + generic 2-pass read + topo write.
 
 //! The strict authoring layer — [`Ap242Author`], one validated
-//! constructor per AP242 entity.
+//! constructor per AP242 entity that is not `ABSTRACT`.
 
 use super::model::*;
 
@@ -166,19 +166,6 @@ impl Ap242Author {
         })))
     }
 
-    /// `ACTION_ASSIGNMENT` — strict AP242 constructor.
-    pub fn add_action_assignment(
-        &mut self,
-        assigned_action: ActionRef,
-    ) -> Result<ActionAssignmentId, AuthorError> {
-        check_action_ref(&self.model, &assigned_action)?;
-        Ok(ActionAssignmentId(
-            self.model
-                .action_assignment_arena
-                .push(ActionAssignment { assigned_action }),
-        ))
-    }
-
     /// `ACTION_DIRECTIVE` — strict AP242 constructor.
     pub fn add_action_directive(
         &mut self,
@@ -333,21 +320,6 @@ impl Ap242Author {
                     description,
                     relating_action,
                     related_action,
-                }),
-        ))
-    }
-
-    /// `ACTION_REQUEST_ASSIGNMENT` — strict AP242 constructor.
-    pub fn add_action_request_assignment(
-        &mut self,
-        assigned_action_request: VersionedActionRequestRef,
-    ) -> Result<ActionRequestAssignmentId, AuthorError> {
-        check_versioned_action_request_ref(&self.model, &assigned_action_request)?;
-        Ok(ActionRequestAssignmentId(
-            self.model
-                .action_request_assignment_arena
-                .push(ActionRequestAssignment {
-                    assigned_action_request,
                 }),
         ))
     }
@@ -889,41 +861,6 @@ impl Ap242Author {
                     description,
                     relating_annotation_occurrence,
                     related_annotation_occurrence,
-                },
-            ),
-        ))
-    }
-
-    /// `ANNOTATION_PLACEHOLDER_LEADER_LINE` — strict AP242 constructor.
-    pub fn add_annotation_placeholder_leader_line(
-        &mut self,
-        name: &str,
-        geometric_elements: Vec<DesApllPointSelectRef>,
-    ) -> Result<AnnotationPlaceholderLeaderLineId, AuthorError> {
-        {
-            let x = &geometric_elements;
-            if x.len() < 2 {
-                return Err(AuthorError::Cardinality {
-                    entity: "ANNOTATION_PLACEHOLDER_LEADER_LINE",
-                    attribute: "geometric_elements",
-                    got: x.len(),
-                    min: 2,
-                    max: None,
-                });
-            }
-        }
-        for e0 in &geometric_elements {
-            check_des_apll_point_select_ref(&self.model, e0)?;
-        }
-        let name = {
-            let v = name;
-            self.text(v)
-        };
-        Ok(AnnotationPlaceholderLeaderLineId(
-            self.model.annotation_placeholder_leader_line_arena.push(
-                AnnotationPlaceholderLeaderLine {
-                    name,
-                    geometric_elements,
                 },
             ),
         ))
@@ -1706,19 +1643,6 @@ impl Ap242Author {
         };
         Ok(ApprovalId(
             self.model.approval_arena.push(Approval { status, level }),
-        ))
-    }
-
-    /// `APPROVAL_ASSIGNMENT` — strict AP242 constructor.
-    pub fn add_approval_assignment(
-        &mut self,
-        assigned_approval: ApprovalRef,
-    ) -> Result<ApprovalAssignmentId, AuthorError> {
-        check_approval_ref(&self.model, &assigned_approval)?;
-        Ok(ApprovalAssignmentId(
-            self.model
-                .approval_assignment_arena
-                .push(ApprovalAssignment { assigned_approval }),
         ))
     }
 
@@ -2673,17 +2597,6 @@ impl Ap242Author {
                     mapping_source,
                     mapping_target,
                 }),
-        ))
-    }
-
-    /// `CAMERA_MODEL` — strict AP242 constructor.
-    pub fn add_camera_model(&mut self, name: &str) -> Result<CameraModelId, AuthorError> {
-        let name = {
-            let v = name;
-            self.text(v)
-        };
-        Ok(CameraModelId(
-            self.model.camera_model_arena.push(CameraModel { name }),
         ))
     }
 
@@ -4712,24 +4625,6 @@ impl Ap242Author {
         )))
     }
 
-    /// `DATE_AND_TIME_ASSIGNMENT` — strict AP242 constructor.
-    pub fn add_date_and_time_assignment(
-        &mut self,
-        assigned_date_and_time: DateAndTimeRef,
-        role: DateTimeRoleRef,
-    ) -> Result<DateAndTimeAssignmentId, AuthorError> {
-        check_date_and_time_ref(&self.model, &assigned_date_and_time)?;
-        check_date_time_role_ref(&self.model, &role)?;
-        Ok(DateAndTimeAssignmentId(
-            self.model
-                .date_and_time_assignment_arena
-                .push(DateAndTimeAssignment {
-                    assigned_date_and_time,
-                    role,
-                }),
-        ))
-    }
-
     /// `DATE_ROLE` — strict AP242 constructor.
     pub fn add_date_role(&mut self, name: &str) -> Result<DateRoleId, AuthorError> {
         let name = {
@@ -5699,33 +5594,6 @@ impl Ap242Author {
         )))
     }
 
-    /// `DOCUMENT_PRODUCT_ASSOCIATION` — strict AP242 constructor.
-    pub fn add_document_product_association(
-        &mut self,
-        name: &str,
-        description: Option<&str>,
-        relating_document: DocumentRef,
-        related_product: ProductOrFormationOrDefinitionRef,
-    ) -> Result<DocumentProductAssociationId, AuthorError> {
-        check_document_ref(&self.model, &relating_document)?;
-        check_product_or_formation_or_definition_ref(&self.model, &related_product)?;
-        let name = {
-            let v = name;
-            self.text(v)
-        };
-        let description = description.map(|v| self.text(v));
-        Ok(DocumentProductAssociationId(
-            self.model
-                .document_product_association_arena
-                .push(DocumentProductAssociation {
-                    name,
-                    description,
-                    relating_document,
-                    related_product,
-                }),
-        ))
-    }
-
     /// `DOCUMENT_PRODUCT_EQUIVALENCE` — strict AP242 constructor.
     pub fn add_document_product_equivalence(
         &mut self,
@@ -5750,25 +5618,6 @@ impl Ap242Author {
                     relating_document,
                     related_product,
                 }),
-        ))
-    }
-
-    /// `DOCUMENT_REFERENCE` — strict AP242 constructor.
-    pub fn add_document_reference(
-        &mut self,
-        assigned_document: DocumentRef,
-        source: &str,
-    ) -> Result<DocumentReferenceId, AuthorError> {
-        check_document_ref(&self.model, &assigned_document)?;
-        let source = {
-            let v = source;
-            self.text(v)
-        };
-        Ok(DocumentReferenceId(
-            self.model.document_reference_arena.push(DocumentReference {
-                assigned_document,
-                source,
-            }),
         ))
     }
 
@@ -6258,37 +6107,6 @@ impl Ap242Author {
                     diameter_tolerance,
                     placement,
                 }),
-        ))
-    }
-
-    /// `EXPRESSION` — strict AP242 constructor.
-    pub fn add_expression(&mut self) -> Result<ExpressionId, AuthorError> {
-        Ok(ExpressionId(
-            self.model.expression_arena.push(Expression {}),
-        ))
-    }
-
-    /// `EXTERNAL_IDENTIFICATION_ASSIGNMENT` — strict AP242 constructor.
-    pub fn add_external_identification_assignment(
-        &mut self,
-        assigned_id: &str,
-        role: IdentificationRoleRef,
-        source: ExternalSourceRef,
-    ) -> Result<ExternalIdentificationAssignmentId, AuthorError> {
-        check_identification_role_ref(&self.model, &role)?;
-        check_external_source_ref(&self.model, &source)?;
-        let assigned_id = {
-            let v = assigned_id;
-            self.text(v)
-        };
-        Ok(ExternalIdentificationAssignmentId(
-            self.model.external_identification_assignment_arena.push(
-                ExternalIdentificationAssignment {
-                    assigned_id,
-                    role,
-                    source,
-                },
-            ),
         ))
     }
 
@@ -6861,13 +6679,6 @@ impl Ap242Author {
         ))
     }
 
-    /// `FOUNDED_ITEM` — strict AP242 constructor.
-    pub fn add_founded_item(&mut self) -> Result<FoundedItemId, AuthorError> {
-        Ok(FoundedItemId(
-            self.model.founded_item_arena.push(FoundedItem {}),
-        ))
-    }
-
     /// `FUNCTIONALLY_DEFINED_TRANSFORMATION` — strict AP242 constructor.
     pub fn add_functionally_defined_transformation(
         &mut self,
@@ -6883,53 +6694,6 @@ impl Ap242Author {
             self.model
                 .functionally_defined_transformation_arena
                 .push(FunctionallyDefinedTransformation { name, description }),
-        ))
-    }
-
-    /// `GENERAL_DATUM_REFERENCE` — strict AP242 constructor.
-    pub fn add_general_datum_reference(
-        &mut self,
-        name: &str,
-        description: Option<&str>,
-        of_shape: ProductDefinitionShapeRef,
-        product_definitional: Logical,
-        base: Ap242DatumOrCommonDatumRef,
-        modifiers: Option<Vec<DatumReferenceModifierRef>>,
-    ) -> Result<GeneralDatumReferenceId, AuthorError> {
-        check_product_definition_shape_ref(&self.model, &of_shape)?;
-        check_ap242_datum_or_common_datum_ref(&self.model, &base)?;
-        if let Some(x) = &modifiers {
-            if x.len() < 1 {
-                return Err(AuthorError::Cardinality {
-                    entity: "GENERAL_DATUM_REFERENCE",
-                    attribute: "modifiers",
-                    got: x.len(),
-                    min: 1,
-                    max: None,
-                });
-            }
-        }
-        if let Some(x) = &modifiers {
-            for e0 in x {
-                check_datum_reference_modifier_ref(&self.model, e0)?;
-            }
-        }
-        let name = {
-            let v = name;
-            self.text(v)
-        };
-        let description = description.map(|v| self.text(v));
-        Ok(GeneralDatumReferenceId(
-            self.model
-                .general_datum_reference_arena
-                .push(GeneralDatumReference {
-                    name,
-                    description,
-                    of_shape,
-                    product_definitional,
-                    base: base.into(),
-                    modifiers,
-                }),
         ))
     }
 
@@ -6982,35 +6746,6 @@ impl Ap242Author {
                     base_definition,
                     derived_definition,
                 }),
-        ))
-    }
-
-    /// `GENERIC_EXPRESSION` — strict AP242 constructor.
-    pub fn add_generic_expression(&mut self) -> Result<GenericExpressionId, AuthorError> {
-        Ok(GenericExpressionId(
-            self.model
-                .generic_expression_arena
-                .push(GenericExpression {}),
-        ))
-    }
-
-    /// `GENERIC_LITERAL` — strict AP242 constructor.
-    pub fn add_generic_literal(&mut self) -> Result<GenericLiteralId, AuthorError> {
-        Ok(GenericLiteralId(
-            self.model.generic_literal_arena.push(GenericLiteral {}),
-        ))
-    }
-
-    /// `GENERIC_PRODUCT_DEFINITION_REFERENCE` — strict AP242 constructor.
-    pub fn add_generic_product_definition_reference(
-        &mut self,
-        source: ExternalSourceRef,
-    ) -> Result<GenericProductDefinitionReferenceId, AuthorError> {
-        check_external_source_ref(&self.model, &source)?;
-        Ok(GenericProductDefinitionReferenceId(
-            self.model
-                .generic_product_definition_reference_arena
-                .push(GenericProductDefinitionReference { source }),
         ))
     }
 
@@ -7150,35 +6885,6 @@ impl Ap242Author {
             self.model
                 .geometric_set_arena
                 .push(GeometricSet { name, elements }),
-        ))
-    }
-
-    /// `GEOMETRIC_TOLERANCE` — strict AP242 constructor.
-    pub fn add_geometric_tolerance(
-        &mut self,
-        name: &str,
-        description: Option<&str>,
-        magnitude: Option<LengthMeasureWithUnitRef>,
-        toleranced_shape_aspect: GeometricToleranceTargetRef,
-    ) -> Result<GeometricToleranceId, AuthorError> {
-        if let Some(x) = &magnitude {
-            check_length_measure_with_unit_ref(&self.model, x)?;
-        }
-        check_geometric_tolerance_target_ref(&self.model, &toleranced_shape_aspect)?;
-        let name = {
-            let v = name;
-            self.text(v)
-        };
-        let description = description.map(|v| self.text(v));
-        Ok(GeometricToleranceId(
-            self.model
-                .geometric_tolerance_arena
-                .push(GeometricTolerance {
-                    name,
-                    description,
-                    magnitude: magnitude.map(Into::into),
-                    toleranced_shape_aspect,
-                }),
         ))
     }
 
@@ -7622,19 +7328,6 @@ impl Ap242Author {
         ))
     }
 
-    /// `GROUP_ASSIGNMENT` — strict AP242 constructor.
-    pub fn add_group_assignment(
-        &mut self,
-        assigned_group: GroupRef,
-    ) -> Result<GroupAssignmentId, AuthorError> {
-        check_group_ref(&self.model, &assigned_group)?;
-        Ok(GroupAssignmentId(
-            self.model
-                .group_assignment_arena
-                .push(GroupAssignment { assigned_group }),
-        ))
-    }
-
     /// `HYPERBOLA` — strict AP242 constructor.
     pub fn add_hyperbola(
         &mut self,
@@ -7685,24 +7378,6 @@ impl Ap242Author {
                 identified_item,
             },
         )))
-    }
-
-    /// `IDENTIFICATION_ASSIGNMENT` — strict AP242 constructor.
-    pub fn add_identification_assignment(
-        &mut self,
-        assigned_id: &str,
-        role: IdentificationRoleRef,
-    ) -> Result<IdentificationAssignmentId, AuthorError> {
-        check_identification_role_ref(&self.model, &role)?;
-        let assigned_id = {
-            let v = assigned_id;
-            self.text(v)
-        };
-        Ok(IdentificationAssignmentId(
-            self.model
-                .identification_assignment_arena
-                .push(IdentificationAssignment { assigned_id, role }),
-        ))
     }
 
     /// `IDENTIFICATION_ROLE` — strict AP242 constructor.
@@ -8092,21 +7767,6 @@ impl Ap242Author {
                     magnitude: magnitude.map(Into::into),
                     toleranced_shape_aspect,
                 }),
-        ))
-    }
-
-    /// `LITERAL_NUMBER` — strict AP242 constructor.
-    pub fn add_literal_number(&mut self, the_value: f64) -> Result<LiteralNumberId, AuthorError> {
-        if !the_value.is_finite() {
-            return Err(AuthorError::NonFiniteReal {
-                entity: "LITERAL_NUMBER",
-                attribute: "the_value",
-            });
-        }
-        Ok(LiteralNumberId(
-            self.model
-                .literal_number_arena
-                .push(LiteralNumber { the_value }),
         ))
     }
 
@@ -8705,15 +8365,6 @@ impl Ap242Author {
                     related_product_definition,
                     reference_designator,
                 }),
-        ))
-    }
-
-    /// `NUMERIC_EXPRESSION` — strict AP242 constructor.
-    pub fn add_numeric_expression(&mut self) -> Result<NumericExpressionId, AuthorError> {
-        Ok(NumericExpressionId(
-            self.model
-                .numeric_expression_arena
-                .push(NumericExpression {}),
         ))
     }
 
@@ -9542,24 +9193,6 @@ impl Ap242Author {
                     people,
                     description_1,
                 }),
-        ))
-    }
-
-    /// `PERSON_AND_ORGANIZATION_ASSIGNMENT` — strict AP242 constructor.
-    pub fn add_person_and_organization_assignment(
-        &mut self,
-        assigned_person_and_organization: PersonAndOrganizationRef,
-        role: PersonAndOrganizationRoleRef,
-    ) -> Result<PersonAndOrganizationAssignmentId, AuthorError> {
-        check_person_and_organization_ref(&self.model, &assigned_person_and_organization)?;
-        check_person_and_organization_role_ref(&self.model, &role)?;
-        Ok(PersonAndOrganizationAssignmentId(
-            self.model.person_and_organization_assignment_arena.push(
-                PersonAndOrganizationAssignment {
-                    assigned_person_and_organization,
-                    role,
-                },
-            ),
         ))
     }
 
@@ -10421,13 +10054,6 @@ impl Ap242Author {
                 context_of_items,
             },
         )))
-    }
-
-    /// `PRESENTED_ITEM` — strict AP242 constructor.
-    pub fn add_presented_item(&mut self) -> Result<PresentedItemId, AuthorError> {
-        Ok(PresentedItemId(
-            self.model.presented_item_arena.push(PresentedItem {}),
-        ))
     }
 
     /// `PRESENTED_ITEM_REPRESENTATION` — strict AP242 constructor.
@@ -11983,21 +11609,6 @@ impl Ap242Author {
         ))
     }
 
-    /// `SECURITY_CLASSIFICATION_ASSIGNMENT` — strict AP242 constructor.
-    pub fn add_security_classification_assignment(
-        &mut self,
-        assigned_security_classification: SecurityClassificationRef,
-    ) -> Result<SecurityClassificationAssignmentId, AuthorError> {
-        check_security_classification_ref(&self.model, &assigned_security_classification)?;
-        Ok(SecurityClassificationAssignmentId(
-            self.model.security_classification_assignment_arena.push(
-                SecurityClassificationAssignment {
-                    assigned_security_classification,
-                },
-            ),
-        ))
-    }
-
     /// `SECURITY_CLASSIFICATION_LEVEL` — strict AP242 constructor.
     pub fn add_security_classification_level(
         &mut self,
@@ -12321,28 +11932,6 @@ impl Ap242Author {
     ) -> Result<SiUnitId, AuthorError> {
         Ok(SiUnitId(
             self.model.si_unit_arena.push(SiUnit { prefix, name }),
-        ))
-    }
-
-    /// `SIMPLE_GENERIC_EXPRESSION` — strict AP242 constructor.
-    pub fn add_simple_generic_expression(
-        &mut self,
-    ) -> Result<SimpleGenericExpressionId, AuthorError> {
-        Ok(SimpleGenericExpressionId(
-            self.model
-                .simple_generic_expression_arena
-                .push(SimpleGenericExpression {}),
-        ))
-    }
-
-    /// `SIMPLE_NUMERIC_EXPRESSION` — strict AP242 constructor.
-    pub fn add_simple_numeric_expression(
-        &mut self,
-    ) -> Result<SimpleNumericExpressionId, AuthorError> {
-        Ok(SimpleNumericExpressionId(
-            self.model
-                .simple_numeric_expression_arena
-                .push(SimpleNumericExpression {}),
         ))
     }
 
@@ -13221,56 +12810,6 @@ impl Ap242Author {
         ))
     }
 
-    /// `TESSELLATED_FACE` — strict AP242 constructor.
-    pub fn add_tessellated_face(
-        &mut self,
-        name: &str,
-        coordinates: CoordinatesListRef,
-        pnmax: i64,
-        normals: Vec<Reals3>,
-        geometric_link: Option<Ap242FaceOrSurfaceRef>,
-    ) -> Result<TessellatedFaceId, AuthorError> {
-        check_coordinates_list_ref(&self.model, &coordinates)?;
-        {
-            let v = &normals;
-            for e in v.iter() {
-                if e.len() < 3 || e.len() > 3 {
-                    return Err(AuthorError::Cardinality {
-                        entity: "TESSELLATED_FACE",
-                        attribute: "normals",
-                        got: e.len(),
-                        min: 3,
-                        max: Some(3),
-                    });
-                }
-            }
-        }
-        for f0 in &normals {
-            if f0.iter().any(|v| !v.is_finite()) {
-                return Err(AuthorError::NonFiniteReal {
-                    entity: "TESSELLATED_FACE",
-                    attribute: "normals",
-                });
-            }
-        }
-        if let Some(x) = &geometric_link {
-            check_ap242_face_or_surface_ref(&self.model, x)?;
-        }
-        let name = {
-            let v = name;
-            self.text(v)
-        };
-        Ok(TessellatedFaceId(self.model.tessellated_face_arena.push(
-            TessellatedFace {
-                name,
-                coordinates,
-                pnmax,
-                normals,
-                geometric_link: geometric_link.map(Into::into),
-            },
-        )))
-    }
-
     /// `TESSELLATED_GEOMETRIC_SET` — strict AP242 constructor.
     pub fn add_tessellated_geometric_set(
         &mut self,
@@ -13300,19 +12839,6 @@ impl Ap242Author {
             self.model
                 .tessellated_geometric_set_arena
                 .push(TessellatedGeometricSet { name, children }),
-        ))
-    }
-
-    /// `TESSELLATED_ITEM` — strict AP242 constructor.
-    pub fn add_tessellated_item(&mut self, name: &str) -> Result<TessellatedItemId, AuthorError> {
-        let name = {
-            let v = name;
-            self.text(v)
-        };
-        Ok(TessellatedItemId(
-            self.model
-                .tessellated_item_arena
-                .push(TessellatedItem { name }),
         ))
     }
 
@@ -13443,53 +12969,6 @@ impl Ap242Author {
             self.model
                 .tessellated_structured_item_arena
                 .push(TessellatedStructuredItem { name }),
-        ))
-    }
-
-    /// `TESSELLATED_SURFACE_SET` — strict AP242 constructor.
-    pub fn add_tessellated_surface_set(
-        &mut self,
-        name: &str,
-        coordinates: CoordinatesListRef,
-        pnmax: i64,
-        normals: Vec<Reals3>,
-    ) -> Result<TessellatedSurfaceSetId, AuthorError> {
-        check_coordinates_list_ref(&self.model, &coordinates)?;
-        {
-            let v = &normals;
-            for e in v.iter() {
-                if e.len() < 3 || e.len() > 3 {
-                    return Err(AuthorError::Cardinality {
-                        entity: "TESSELLATED_SURFACE_SET",
-                        attribute: "normals",
-                        got: e.len(),
-                        min: 3,
-                        max: Some(3),
-                    });
-                }
-            }
-        }
-        for f0 in &normals {
-            if f0.iter().any(|v| !v.is_finite()) {
-                return Err(AuthorError::NonFiniteReal {
-                    entity: "TESSELLATED_SURFACE_SET",
-                    attribute: "normals",
-                });
-            }
-        }
-        let name = {
-            let v = name;
-            self.text(v)
-        };
-        Ok(TessellatedSurfaceSetId(
-            self.model
-                .tessellated_surface_set_arena
-                .push(TessellatedSurfaceSet {
-                    name,
-                    coordinates,
-                    pnmax,
-                    normals,
-                }),
         ))
     }
 
@@ -13627,28 +13106,6 @@ impl Ap242Author {
                     characteristics,
                 },
             ),
-        ))
-    }
-
-    /// `TEXTURE_STYLE_SPECIFICATION` — strict AP242 constructor.
-    pub fn add_texture_style_specification(
-        &mut self,
-    ) -> Result<TextureStyleSpecificationId, AuthorError> {
-        Ok(TextureStyleSpecificationId(
-            self.model
-                .texture_style_specification_arena
-                .push(TextureStyleSpecification {}),
-        ))
-    }
-
-    /// `TEXTURE_STYLE_TESSELLATION_SPECIFICATION` — strict AP242 constructor.
-    pub fn add_texture_style_tessellation_specification(
-        &mut self,
-    ) -> Result<TextureStyleTessellationSpecificationId, AuthorError> {
-        Ok(TextureStyleTessellationSpecificationId(
-            self.model
-                .texture_style_tessellation_specification_arena
-                .push(TextureStyleTessellationSpecification {}),
         ))
     }
 
@@ -14861,9 +14318,9 @@ impl Ap242Author {
 
     /// Complex (multi-part) instance — rule-based strict AP242 assembler.
     /// The part-name set is validated by the schema name-set rule (legality,
-    /// supertype-chain completeness, connectivity, ONEOF exclusivity), then
-    /// every reference field is checked; parts are stored in Part 21 order
-    /// (alphabetical).
+    /// supertype-chain completeness, connectivity, ONEOF exclusivity, a
+    /// subtype part beside each `ABSTRACT` part), then every reference field
+    /// is checked; parts are stored in Part 21 order (alphabetical).
     pub fn add_complex(
         &mut self,
         mut parts: Vec<PartialEntity>,
@@ -17982,25 +17439,28 @@ fn part_name(p: &PartialEntity) -> &'static str {
     }
 }
 
-/// `(part, AP242-legal, transitive supertypes)`, sorted by part name.
-static PART_INFO: &[(&str, bool, &[&str])] = &[
-    ("ACTION", true, &[]),
-    ("ACTION_ASSIGNMENT", true, &[]),
-    ("ACTION_METHOD", true, &[]),
-    ("ACTION_METHOD_RELATIONSHIP", true, &[]),
-    ("ACTION_RELATIONSHIP", true, &[]),
-    ("ACTION_REQUEST_ASSIGNMENT", true, &[]),
-    ("ACTION_RESOURCE", true, &[]),
-    ("ACTION_RESOURCE_REQUIREMENT", true, &[]),
-    ("ADDRESS", true, &[]),
+/// `(part, AP242-legal, ABSTRACT in AP242, transitive supertypes)`,
+/// sorted by part name.
+static PART_INFO: &[(&str, bool, bool, &[&str])] = &[
+    ("ACTION", true, false, &[]),
+    ("ACTION_ASSIGNMENT", true, true, &[]),
+    ("ACTION_METHOD", true, false, &[]),
+    ("ACTION_METHOD_RELATIONSHIP", true, false, &[]),
+    ("ACTION_RELATIONSHIP", true, false, &[]),
+    ("ACTION_REQUEST_ASSIGNMENT", true, true, &[]),
+    ("ACTION_RESOURCE", true, false, &[]),
+    ("ACTION_RESOURCE_REQUIREMENT", true, false, &[]),
+    ("ADDRESS", true, false, &[]),
     (
         "ADVANCED_BREP_SHAPE_REPRESENTATION",
         true,
+        false,
         &["REPRESENTATION", "SHAPE_REPRESENTATION"],
     ),
     (
         "ADVANCED_FACE",
         true,
+        false,
         &[
             "FACE",
             "FACE_SURFACE",
@@ -18012,6 +17472,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "ALL_AROUND_SHAPE_ASPECT",
         true,
+        false,
         &[
             "COMPOSITE_SHAPE_ASPECT",
             "CONTINUOUS_SHAPE_ASPECT",
@@ -18021,6 +17482,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "ANGULARITY_TOLERANCE",
         true,
+        false,
         &[
             "GEOMETRIC_TOLERANCE",
             "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
@@ -18029,12 +17491,14 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "ANGULAR_LOCATION",
         true,
+        false,
         &["DIMENSIONAL_LOCATION", "SHAPE_ASPECT_RELATIONSHIP"],
     ),
-    ("ANGULAR_SIZE", true, &["DIMENSIONAL_SIZE"]),
+    ("ANGULAR_SIZE", true, false, &["DIMENSIONAL_SIZE"]),
     (
         "ANNOTATION_CURVE_OCCURRENCE",
         true,
+        false,
         &[
             "ANNOTATION_OCCURRENCE",
             "REPRESENTATION_ITEM",
@@ -18044,22 +17508,26 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "ANNOTATION_OCCURRENCE",
         true,
+        false,
         &["REPRESENTATION_ITEM", "STYLED_ITEM"],
     ),
     (
         "ANNOTATION_OCCURRENCE_ASSOCIATIVITY",
         true,
+        false,
         &["ANNOTATION_OCCURRENCE_RELATIONSHIP"],
     ),
-    ("ANNOTATION_OCCURRENCE_RELATIONSHIP", true, &[]),
+    ("ANNOTATION_OCCURRENCE_RELATIONSHIP", true, false, &[]),
     (
         "ANNOTATION_PLACEHOLDER_LEADER_LINE",
+        true,
         true,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "ANNOTATION_PLACEHOLDER_OCCURRENCE",
         true,
+        false,
         &[
             "ANNOTATION_OCCURRENCE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -18070,6 +17538,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
         true,
+        false,
         &[
             "ANNOTATION_OCCURRENCE",
             "ANNOTATION_PLACEHOLDER_OCCURRENCE",
@@ -18081,6 +17550,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "ANNOTATION_PLANE",
         true,
+        false,
         &[
             "ANNOTATION_OCCURRENCE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -18091,6 +17561,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "ANNOTATION_SYMBOL_OCCURRENCE",
         true,
+        false,
         &[
             "ANNOTATION_OCCURRENCE",
             "REPRESENTATION_ITEM",
@@ -18100,16 +17571,19 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "ANNOTATION_TEXT",
         true,
+        false,
         &["MAPPED_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "ANNOTATION_TEXT_CHARACTER",
         true,
+        false,
         &["MAPPED_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "ANNOTATION_TEXT_OCCURRENCE",
         true,
+        false,
         &[
             "ANNOTATION_OCCURRENCE",
             "REPRESENTATION_ITEM",
@@ -18119,6 +17593,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "ANNOTATION_TO_ANNOTATION_LEADER_LINE",
         true,
+        false,
         &[
             "ANNOTATION_PLACEHOLDER_LEADER_LINE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -18128,6 +17603,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "ANNOTATION_TO_MODEL_LEADER_LINE",
         true,
+        false,
         &[
             "ANNOTATION_PLACEHOLDER_LEADER_LINE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -18137,6 +17613,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "APLL_POINT",
         true,
+        false,
         &[
             "CARTESIAN_POINT",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -18147,6 +17624,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "APLL_POINT_WITH_SURFACE",
         true,
+        false,
         &[
             "CARTESIAN_POINT",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -18154,56 +17632,74 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "REPRESENTATION_ITEM",
         ],
     ),
-    ("APPLICATION_CONTEXT_ELEMENT", true, &[]),
+    ("APPLICATION_CONTEXT_ELEMENT", true, false, &[]),
     (
         "APPLIED_APPROVAL_ASSIGNMENT",
         true,
+        false,
         &["APPROVAL_ASSIGNMENT"],
     ),
     (
         "APPLIED_DATE_AND_TIME_ASSIGNMENT",
         true,
+        false,
         &["DATE_AND_TIME_ASSIGNMENT"],
     ),
-    ("APPLIED_DOCUMENT_REFERENCE", true, &["DOCUMENT_REFERENCE"]),
+    (
+        "APPLIED_DOCUMENT_REFERENCE",
+        true,
+        false,
+        &["DOCUMENT_REFERENCE"],
+    ),
     (
         "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT",
         true,
+        false,
         &[
             "EXTERNAL_IDENTIFICATION_ASSIGNMENT",
             "IDENTIFICATION_ASSIGNMENT",
         ],
     ),
-    ("APPLIED_GROUP_ASSIGNMENT", true, &["GROUP_ASSIGNMENT"]),
+    (
+        "APPLIED_GROUP_ASSIGNMENT",
+        true,
+        false,
+        &["GROUP_ASSIGNMENT"],
+    ),
     (
         "APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT",
         true,
+        false,
         &["PERSON_AND_ORGANIZATION_ASSIGNMENT"],
     ),
-    ("APPLIED_PRESENTED_ITEM", true, &["PRESENTED_ITEM"]),
+    ("APPLIED_PRESENTED_ITEM", true, false, &["PRESENTED_ITEM"]),
     (
         "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT",
         true,
+        false,
         &["SECURITY_CLASSIFICATION_ASSIGNMENT"],
     ),
-    ("APPROVAL_ASSIGNMENT", true, &[]),
-    ("APPROXIMATION_TOLERANCE", false, &["FOUNDED_ITEM"]),
+    ("APPROVAL_ASSIGNMENT", true, true, &[]),
+    ("APPROXIMATION_TOLERANCE", false, false, &["FOUNDED_ITEM"]),
     (
         "APPROXIMATION_TOLERANCE_DEVIATION",
+        false,
         false,
         &["FOUNDED_ITEM"],
     ),
     (
         "APPROXIMATION_TOLERANCE_PARAMETER",
         false,
+        false,
         &["FOUNDED_ITEM"],
     ),
-    ("AREA_IN_SET", true, &[]),
-    ("AREA_UNIT", true, &["DERIVED_UNIT"]),
-    ("ASCRIBABLE_STATE_RELATIONSHIP", true, &[]),
+    ("AREA_IN_SET", true, false, &[]),
+    ("AREA_UNIT", true, false, &["DERIVED_UNIT"]),
+    ("ASCRIBABLE_STATE_RELATIONSHIP", true, false, &[]),
     (
         "ASSEMBLY_COMPONENT_USAGE",
         true,
+        false,
         &[
             "PRODUCT_DEFINITION_RELATIONSHIP",
             "PRODUCT_DEFINITION_USAGE",
@@ -18212,6 +17708,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "AUXILIARY_LEADER_LINE",
         true,
+        false,
         &[
             "ANNOTATION_PLACEHOLDER_LEADER_LINE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -18221,6 +17718,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "AXIS1_PLACEMENT",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "PLACEMENT",
@@ -18230,6 +17728,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "AXIS2_PLACEMENT_2D",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "PLACEMENT",
@@ -18239,6 +17738,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "AXIS2_PLACEMENT_3D",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "PLACEMENT",
@@ -18248,11 +17748,13 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "BASIC_ROUND_HOLE",
         true,
+        false,
         &["CHARACTERIZED_OBJECT", "FEATURE_DEFINITION", "ROUND_HOLE"],
     ),
     (
         "BEZIER_CURVE",
         true,
+        false,
         &[
             "BOUNDED_CURVE",
             "B_SPLINE_CURVE",
@@ -18264,6 +17766,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "BEZIER_SURFACE",
         true,
+        false,
         &[
             "BOUNDED_SURFACE",
             "B_SPLINE_SURFACE",
@@ -18275,6 +17778,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "BOUNDED_CURVE",
         true,
+        false,
         &[
             "CURVE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -18284,6 +17788,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "BOUNDED_PCURVE",
         true,
+        false,
         &[
             "BOUNDED_CURVE",
             "CURVE",
@@ -18295,6 +17800,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "BOUNDED_SURFACE",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
@@ -18304,6 +17810,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "BOUNDED_SURFACE_CURVE",
         true,
+        false,
         &[
             "BOUNDED_CURVE",
             "CURVE",
@@ -18315,6 +17822,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "BREP_WITH_VOIDS",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "MANIFOLD_SOLID_BREP",
@@ -18325,6 +17833,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "B_SPLINE_CURVE",
         true,
+        false,
         &[
             "BOUNDED_CURVE",
             "CURVE",
@@ -18335,6 +17844,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "B_SPLINE_CURVE_WITH_KNOTS",
         true,
+        false,
         &[
             "BOUNDED_CURVE",
             "B_SPLINE_CURVE",
@@ -18346,6 +17856,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "B_SPLINE_SURFACE",
         true,
+        false,
         &[
             "BOUNDED_SURFACE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -18356,6 +17867,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "B_SPLINE_SURFACE_WITH_KNOTS",
         true,
+        false,
         &[
             "BOUNDED_SURFACE",
             "B_SPLINE_SURFACE",
@@ -18364,25 +17876,29 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "SURFACE",
         ],
     ),
-    ("CALENDAR_DATE", true, &["DATE"]),
+    ("CALENDAR_DATE", true, false, &["DATE"]),
     (
         "CAMERA_IMAGE",
         true,
+        false,
         &["MAPPED_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "CAMERA_IMAGE_3D_WITH_SCALE",
         true,
+        false,
         &["CAMERA_IMAGE", "MAPPED_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "CAMERA_MODEL",
+        true,
         true,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "CAMERA_MODEL_D3",
         true,
+        false,
         &[
             "CAMERA_MODEL",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -18392,6 +17908,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "CAMERA_MODEL_D3_MULTI_CLIPPING",
         true,
+        false,
         &[
             "CAMERA_MODEL",
             "CAMERA_MODEL_D3",
@@ -18402,6 +17919,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "CAMERA_MODEL_D3_WITH_HLHSR",
         true,
+        false,
         &[
             "CAMERA_MODEL",
             "CAMERA_MODEL_D3",
@@ -18409,55 +17927,78 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "REPRESENTATION_ITEM",
         ],
     ),
-    ("CAMERA_USAGE", true, &["REPRESENTATION_MAP"]),
+    ("CAMERA_USAGE", true, false, &["REPRESENTATION_MAP"]),
     (
         "CARTESIAN_POINT",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "POINT",
             "REPRESENTATION_ITEM",
         ],
     ),
-    ("CC_DESIGN_APPROVAL", true, &["APPROVAL_ASSIGNMENT"]),
+    ("CC_DESIGN_APPROVAL", true, false, &["APPROVAL_ASSIGNMENT"]),
     (
         "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
         true,
+        false,
         &["DATE_AND_TIME_ASSIGNMENT"],
     ),
     (
         "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT",
         true,
+        false,
         &["PERSON_AND_ORGANIZATION_ASSIGNMENT"],
     ),
     (
         "CC_DESIGN_SECURITY_CLASSIFICATION",
         true,
+        false,
         &["SECURITY_CLASSIFICATION_ASSIGNMENT"],
     ),
     (
         "CENTRE_OF_SYMMETRY",
         true,
+        false,
         &["DERIVED_SHAPE_ASPECT", "SHAPE_ASPECT"],
     ),
-    ("CHANGE", true, &["ACTION_ASSIGNMENT"]),
-    ("CHANGE_REQUEST", true, &["ACTION_REQUEST_ASSIGNMENT"]),
+    ("CHANGE", true, false, &["ACTION_ASSIGNMENT"]),
+    (
+        "CHANGE_REQUEST",
+        true,
+        false,
+        &["ACTION_REQUEST_ASSIGNMENT"],
+    ),
     (
         "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
         true,
+        false,
         &["CHARACTERIZED_OBJECT"],
     ),
-    ("CHARACTERIZED_OBJECT", true, &[]),
+    ("CHARACTERIZED_OBJECT", true, false, &[]),
     (
         "CHARACTERIZED_REPRESENTATION",
         true,
+        false,
         &["CHARACTERIZED_OBJECT", "REPRESENTATION"],
     ),
-    ("CHARACTER_GLYPH_STYLE_OUTLINE", true, &["FOUNDED_ITEM"]),
-    ("CHARACTER_GLYPH_STYLE_STROKE", true, &["FOUNDED_ITEM"]),
+    (
+        "CHARACTER_GLYPH_STYLE_OUTLINE",
+        true,
+        false,
+        &["FOUNDED_ITEM"],
+    ),
+    (
+        "CHARACTER_GLYPH_STYLE_STROKE",
+        true,
+        false,
+        &["FOUNDED_ITEM"],
+    ),
     (
         "CIRCLE",
         true,
+        false,
         &[
             "CONIC",
             "CURVE",
@@ -18468,6 +18009,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "CIRCULAR_RUNOUT_TOLERANCE",
         true,
+        false,
         &[
             "GEOMETRIC_TOLERANCE",
             "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
@@ -18476,6 +18018,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "CLOSED_SHELL",
         true,
+        false,
         &[
             "CONNECTED_FACE_SET",
             "REPRESENTATION_ITEM",
@@ -18485,22 +18028,30 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "COAXIALITY_TOLERANCE",
         true,
+        false,
         &[
             "GEOMETRIC_TOLERANCE",
             "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
         ],
     ),
-    ("COLOUR", true, &[]),
-    ("COLOUR_RGB", true, &["COLOUR", "COLOUR_SPECIFICATION"]),
-    ("COLOUR_SPECIFICATION", true, &["COLOUR"]),
+    ("COLOUR", true, false, &[]),
+    (
+        "COLOUR_RGB",
+        true,
+        false,
+        &["COLOUR", "COLOUR_SPECIFICATION"],
+    ),
+    ("COLOUR_SPECIFICATION", true, false, &["COLOUR"]),
     (
         "COMMON_DATUM",
         true,
+        false,
         &["COMPOSITE_SHAPE_ASPECT", "DATUM", "SHAPE_ASPECT"],
     ),
     (
         "COMPLEX_TRIANGULATED_FACE",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
@@ -18512,6 +18063,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "COMPLEX_TRIANGULATED_SURFACE_SET",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
@@ -18522,6 +18074,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "COMPOSITE_CURVE",
         true,
+        false,
         &[
             "BOUNDED_CURVE",
             "CURVE",
@@ -18529,40 +18082,46 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "REPRESENTATION_ITEM",
         ],
     ),
-    ("COMPOSITE_CURVE_SEGMENT", true, &["FOUNDED_ITEM"]),
+    ("COMPOSITE_CURVE_SEGMENT", true, false, &["FOUNDED_ITEM"]),
     (
         "COMPOSITE_GROUP_SHAPE_ASPECT",
         true,
+        false,
         &["COMPOSITE_SHAPE_ASPECT", "SHAPE_ASPECT"],
     ),
     (
         "COMPOSITE_HOLE",
         true,
+        false,
         &[
             "CHARACTERIZED_OBJECT",
             "COMPOUND_FEATURE",
             "FEATURE_DEFINITION",
         ],
     ),
-    ("COMPOSITE_SHAPE_ASPECT", true, &["SHAPE_ASPECT"]),
+    ("COMPOSITE_SHAPE_ASPECT", true, false, &["SHAPE_ASPECT"]),
     (
         "COMPOSITE_TEXT",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "COMPOUND_FEATURE",
         true,
+        false,
         &["CHARACTERIZED_OBJECT", "FEATURE_DEFINITION"],
     ),
     (
         "COMPOUND_REPRESENTATION_ITEM",
         true,
+        false,
         &["REPRESENTATION_ITEM"],
     ),
     (
         "CONCENTRICITY_TOLERANCE",
         true,
+        false,
         &[
             "GEOMETRIC_TOLERANCE",
             "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
@@ -18571,12 +18130,14 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "CONFIGURATION_EFFECTIVITY",
         true,
+        false,
         &["EFFECTIVITY", "PRODUCT_DEFINITION_EFFECTIVITY"],
     ),
-    ("CONFIGURATION_ITEM", true, &[]),
+    ("CONFIGURATION_ITEM", true, false, &[]),
     (
         "CONIC",
         true,
+        false,
         &[
             "CURVE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -18586,6 +18147,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "CONICAL_SURFACE",
         true,
+        false,
         &[
             "ELEMENTARY_SURFACE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -18596,37 +18158,43 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "CONNECTED_FACE_SET",
         true,
+        false,
         &["REPRESENTATION_ITEM", "TOPOLOGICAL_REPRESENTATION_ITEM"],
     ),
     (
         "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
         true,
+        false,
         &["REPRESENTATION"],
     ),
     (
         "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP",
         true,
+        false,
         &["REPRESENTATION_RELATIONSHIP"],
     ),
     (
         "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
         true,
+        false,
         &[
             "OVER_RIDING_STYLED_ITEM",
             "REPRESENTATION_ITEM",
             "STYLED_ITEM",
         ],
     ),
-    ("CONTEXT_DEPENDENT_UNIT", true, &["NAMED_UNIT"]),
+    ("CONTEXT_DEPENDENT_UNIT", true, false, &["NAMED_UNIT"]),
     (
         "CONTINUOUS_SHAPE_ASPECT",
         true,
+        false,
         &["COMPOSITE_SHAPE_ASPECT", "SHAPE_ASPECT"],
     ),
-    ("CONVERSION_BASED_UNIT", true, &["NAMED_UNIT"]),
+    ("CONVERSION_BASED_UNIT", true, false, &["NAMED_UNIT"]),
     (
         "COORDINATES_LIST",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
@@ -18636,6 +18204,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "COUNTERBORE_HOLE_DEFINITION",
         true,
+        false,
         &[
             "CHARACTERIZED_OBJECT",
             "COMPOSITE_HOLE",
@@ -18647,6 +18216,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "COUNTERDRILL_HOLE_DEFINITION",
         true,
+        false,
         &[
             "CHARACTERIZED_OBJECT",
             "COMPOSITE_HOLE",
@@ -18658,6 +18228,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "COUNTERSINK_HOLE_DEFINITION",
         true,
+        false,
         &[
             "CHARACTERIZED_OBJECT",
             "COMPOSITE_HOLE",
@@ -18669,15 +18240,22 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "CURVE",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
-    ("CURVE_STYLE", true, &["FOUNDED_ITEM"]),
-    ("CURVE_STYLE_FONT", true, &["FOUNDED_ITEM"]),
-    ("CURVE_STYLE_FONT_AND_SCALING", true, &["FOUNDED_ITEM"]),
-    ("CURVE_STYLE_FONT_PATTERN", true, &["FOUNDED_ITEM"]),
+    ("CURVE_STYLE", true, false, &["FOUNDED_ITEM"]),
+    ("CURVE_STYLE_FONT", true, false, &["FOUNDED_ITEM"]),
+    (
+        "CURVE_STYLE_FONT_AND_SCALING",
+        true,
+        false,
+        &["FOUNDED_ITEM"],
+    ),
+    ("CURVE_STYLE_FONT_PATTERN", true, false, &["FOUNDED_ITEM"]),
     (
         "CYLINDRICAL_SURFACE",
         true,
+        false,
         &[
             "ELEMENTARY_SURFACE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -18685,28 +18263,36 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "SURFACE",
         ],
     ),
-    ("CYLINDRICITY_TOLERANCE", true, &["GEOMETRIC_TOLERANCE"]),
-    ("DATE", true, &[]),
-    ("DATE_AND_TIME", true, &[]),
-    ("DATE_AND_TIME_ASSIGNMENT", true, &[]),
-    ("DATUM", true, &["SHAPE_ASPECT"]),
-    ("DATUM_FEATURE", true, &["SHAPE_ASPECT"]),
-    ("DATUM_REFERENCE", true, &[]),
+    (
+        "CYLINDRICITY_TOLERANCE",
+        true,
+        false,
+        &["GEOMETRIC_TOLERANCE"],
+    ),
+    ("DATE", true, false, &[]),
+    ("DATE_AND_TIME", true, false, &[]),
+    ("DATE_AND_TIME_ASSIGNMENT", true, true, &[]),
+    ("DATUM", true, false, &["SHAPE_ASPECT"]),
+    ("DATUM_FEATURE", true, false, &["SHAPE_ASPECT"]),
+    ("DATUM_REFERENCE", true, false, &[]),
     (
         "DATUM_REFERENCE_COMPARTMENT",
         true,
+        false,
         &["GENERAL_DATUM_REFERENCE", "SHAPE_ASPECT"],
     ),
     (
         "DATUM_REFERENCE_ELEMENT",
         true,
+        false,
         &["GENERAL_DATUM_REFERENCE", "SHAPE_ASPECT"],
     ),
-    ("DATUM_SYSTEM", true, &["SHAPE_ASPECT"]),
-    ("DATUM_TARGET", true, &["SHAPE_ASPECT"]),
+    ("DATUM_SYSTEM", true, false, &["SHAPE_ASPECT"]),
+    ("DATUM_TARGET", true, false, &["SHAPE_ASPECT"]),
     (
         "DEFAULT_MODEL_GEOMETRIC_VIEW",
         true,
+        false,
         &[
             "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
             "CHARACTERIZED_OBJECT",
@@ -18717,22 +18303,31 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "DEFINED_CHARACTER_GLYPH",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "DEFINED_SYMBOL",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
-    ("DEFINITIONAL_REPRESENTATION", true, &["REPRESENTATION"]),
+    (
+        "DEFINITIONAL_REPRESENTATION",
+        true,
+        false,
+        &["REPRESENTATION"],
+    ),
     (
         "DEFINITIONAL_REPRESENTATION_RELATIONSHIP",
         true,
+        false,
         &["REPRESENTATION_RELATIONSHIP"],
     ),
     (
         "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT",
         true,
+        false,
         &[
             "DEFINITIONAL_REPRESENTATION_RELATIONSHIP",
             "REPRESENTATION_RELATIONSHIP",
@@ -18741,6 +18336,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "DEGENERATE_TOROIDAL_SURFACE",
         true,
+        false,
         &[
             "ELEMENTARY_SURFACE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -18749,54 +18345,82 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "TOROIDAL_SURFACE",
         ],
     ),
-    ("DERIVED_SHAPE_ASPECT", true, &["SHAPE_ASPECT"]),
-    ("DERIVED_UNIT", true, &[]),
+    ("DERIVED_SHAPE_ASPECT", true, false, &["SHAPE_ASPECT"]),
+    ("DERIVED_UNIT", true, false, &[]),
     (
         "DESCRIPTIVE_REPRESENTATION_ITEM",
         true,
+        false,
         &["REPRESENTATION_ITEM"],
     ),
     (
         "DESIGN_CONTEXT",
         true,
+        false,
         &["APPLICATION_CONTEXT_ELEMENT", "PRODUCT_DEFINITION_CONTEXT"],
     ),
-    ("DIMENSIONAL_CHARACTERISTIC_REPRESENTATION", true, &[]),
-    ("DIMENSIONAL_LOCATION", true, &["SHAPE_ASPECT_RELATIONSHIP"]),
+    (
+        "DIMENSIONAL_CHARACTERISTIC_REPRESENTATION",
+        true,
+        false,
+        &[],
+    ),
+    (
+        "DIMENSIONAL_LOCATION",
+        true,
+        false,
+        &["SHAPE_ASPECT_RELATIONSHIP"],
+    ),
     (
         "DIMENSIONAL_LOCATION_WITH_PATH",
         true,
+        false,
         &["DIMENSIONAL_LOCATION", "SHAPE_ASPECT_RELATIONSHIP"],
     ),
-    ("DIMENSIONAL_SIZE", true, &[]),
+    ("DIMENSIONAL_SIZE", true, false, &[]),
     (
         "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
         true,
+        false,
         &["DATUM_FEATURE", "DIMENSIONAL_SIZE", "SHAPE_ASPECT"],
     ),
-    ("DIMENSIONAL_SIZE_WITH_PATH", true, &["DIMENSIONAL_SIZE"]),
+    (
+        "DIMENSIONAL_SIZE_WITH_PATH",
+        true,
+        false,
+        &["DIMENSIONAL_SIZE"],
+    ),
     (
         "DIRECTED_DIMENSIONAL_LOCATION",
         true,
+        false,
         &["DIMENSIONAL_LOCATION", "SHAPE_ASPECT_RELATIONSHIP"],
     ),
     (
         "DIRECTION",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
-    ("DOCUMENT", true, &[]),
-    ("DOCUMENT_FILE", true, &["CHARACTERIZED_OBJECT", "DOCUMENT"]),
-    ("DOCUMENT_PRODUCT_ASSOCIATION", true, &[]),
+    ("DOCUMENT", true, false, &[]),
+    (
+        "DOCUMENT_FILE",
+        true,
+        false,
+        &["CHARACTERIZED_OBJECT", "DOCUMENT"],
+    ),
+    ("DOCUMENT_PRODUCT_ASSOCIATION", true, true, &[]),
     (
         "DOCUMENT_PRODUCT_EQUIVALENCE",
         true,
+        false,
         &["DOCUMENT_PRODUCT_ASSOCIATION"],
     ),
-    ("DOCUMENT_REFERENCE", true, &[]),
+    ("DOCUMENT_REFERENCE", true, true, &[]),
     (
         "DRAUGHTING_ANNOTATION_OCCURRENCE",
         true,
+        false,
         &[
             "ANNOTATION_OCCURRENCE",
             "REPRESENTATION_ITEM",
@@ -18806,18 +18430,21 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "DRAUGHTING_CALLOUT",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
-    ("DRAUGHTING_CALLOUT_RELATIONSHIP", true, &[]),
-    ("DRAUGHTING_MODEL", true, &["REPRESENTATION"]),
+    ("DRAUGHTING_CALLOUT_RELATIONSHIP", true, false, &[]),
+    ("DRAUGHTING_MODEL", true, false, &["REPRESENTATION"]),
     (
         "DRAUGHTING_MODEL_ITEM_ASSOCIATION",
         true,
+        false,
         &["ITEM_IDENTIFIED_REPRESENTATION_USAGE"],
     ),
     (
         "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER",
         true,
+        false,
         &[
             "DRAUGHTING_MODEL_ITEM_ASSOCIATION",
             "ITEM_IDENTIFIED_REPRESENTATION_USAGE",
@@ -18826,26 +18453,31 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "DRAUGHTING_PRE_DEFINED_COLOUR",
         true,
+        false,
         &["COLOUR", "PRE_DEFINED_COLOUR", "PRE_DEFINED_ITEM"],
     ),
     (
         "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
         true,
+        false,
         &["PRE_DEFINED_CURVE_FONT", "PRE_DEFINED_ITEM"],
     ),
     (
         "DRAUGHTING_PRE_DEFINED_TEXT_FONT",
         true,
+        false,
         &["PRE_DEFINED_ITEM", "PRE_DEFINED_TEXT_FONT"],
     ),
     (
         "EDGE",
         true,
+        false,
         &["REPRESENTATION_ITEM", "TOPOLOGICAL_REPRESENTATION_ITEM"],
     ),
     (
         "EDGE_CURVE",
         true,
+        false,
         &[
             "EDGE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -18856,6 +18488,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "EDGE_LOOP",
         true,
+        false,
         &[
             "LOOP",
             "PATH",
@@ -18863,10 +18496,11 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "TOPOLOGICAL_REPRESENTATION_ITEM",
         ],
     ),
-    ("EFFECTIVITY", true, &[]),
+    ("EFFECTIVITY", true, false, &[]),
     (
         "ELEMENTARY_SURFACE",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
@@ -18876,6 +18510,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "ELLIPSE",
         true,
+        false,
         &[
             "CONIC",
             "CURVE",
@@ -18886,6 +18521,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "EXPLICIT_COMPOSITE_HOLE",
         true,
+        false,
         &[
             "CHARACTERIZED_OBJECT",
             "COMPOSITE_HOLE",
@@ -18896,52 +18532,61 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "EXPLICIT_ROUND_HOLE",
         true,
+        false,
         &["CHARACTERIZED_OBJECT", "FEATURE_DEFINITION", "ROUND_HOLE"],
     ),
-    ("EXPRESSION", true, &["GENERIC_EXPRESSION"]),
+    ("EXPRESSION", true, true, &["GENERIC_EXPRESSION"]),
     (
         "EXTERNALLY_DEFINED_CHARACTER_GLYPH",
         true,
+        false,
         &["EXTERNALLY_DEFINED_ITEM"],
     ),
     (
         "EXTERNALLY_DEFINED_CURVE_FONT",
         true,
+        false,
         &["EXTERNALLY_DEFINED_ITEM"],
     ),
     (
         "EXTERNALLY_DEFINED_HATCH_STYLE",
         true,
+        false,
         &[
             "EXTERNALLY_DEFINED_ITEM",
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
         ],
     ),
-    ("EXTERNALLY_DEFINED_ITEM", true, &[]),
+    ("EXTERNALLY_DEFINED_ITEM", true, false, &[]),
     (
         "EXTERNALLY_DEFINED_STYLE",
         true,
+        false,
         &["EXTERNALLY_DEFINED_ITEM", "FOUNDED_ITEM"],
     ),
     (
         "EXTERNALLY_DEFINED_SYMBOL",
         true,
+        false,
         &["EXTERNALLY_DEFINED_ITEM"],
     ),
     (
         "EXTERNALLY_DEFINED_TEXT_FONT",
         true,
+        false,
         &["EXTERNALLY_DEFINED_ITEM"],
     ),
     (
         "EXTERNALLY_DEFINED_TILE",
         true,
+        false,
         &["EXTERNALLY_DEFINED_ITEM"],
     ),
     (
         "EXTERNALLY_DEFINED_TILE_STYLE",
         true,
+        false,
         &[
             "EXTERNALLY_DEFINED_ITEM",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -18951,11 +18596,13 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "EXTERNAL_IDENTIFICATION_ASSIGNMENT",
         true,
+        true,
         &["IDENTIFICATION_ASSIGNMENT"],
     ),
     (
         "EXTERNAL_IMAGE_PLACEMENT_IN_CALLOUT",
         true,
+        false,
         &[
             "ANNOTATION_OCCURRENCE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -18963,20 +18610,23 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "STYLED_ITEM",
         ],
     ),
-    ("EXTERNAL_SOURCE", true, &[]),
+    ("EXTERNAL_SOURCE", true, false, &[]),
     (
         "FACE",
         true,
+        false,
         &["REPRESENTATION_ITEM", "TOPOLOGICAL_REPRESENTATION_ITEM"],
     ),
     (
         "FACE_BOUND",
         true,
+        false,
         &["REPRESENTATION_ITEM", "TOPOLOGICAL_REPRESENTATION_ITEM"],
     ),
     (
         "FACE_OUTER_BOUND",
         true,
+        false,
         &[
             "FACE_BOUND",
             "REPRESENTATION_ITEM",
@@ -18986,6 +18636,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "FACE_SURFACE",
         true,
+        false,
         &[
             "FACE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -18993,63 +18644,73 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "TOPOLOGICAL_REPRESENTATION_ITEM",
         ],
     ),
-    ("FEATURE_DEFINITION", true, &["CHARACTERIZED_OBJECT"]),
+    ("FEATURE_DEFINITION", true, false, &["CHARACTERIZED_OBJECT"]),
     (
         "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP",
         true,
+        false,
         &["SHAPE_ASPECT_RELATIONSHIP"],
     ),
-    ("FILL_AREA_STYLE", true, &["FOUNDED_ITEM"]),
+    ("FILL_AREA_STYLE", true, false, &["FOUNDED_ITEM"]),
     (
         "FILL_AREA_STYLE_HATCHING",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "FILL_AREA_STYLE_TILES",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "FILL_AREA_STYLE_TILE_COLOURED_REGION",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "FILL_AREA_STYLE_TILE_CURVE_WITH_STYLE",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "FILL_AREA_STYLE_TILE_SYMBOL_WITH_STYLE",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
-    ("FLATNESS_TOLERANCE", true, &["GEOMETRIC_TOLERANCE"]),
-    ("FOUNDED_ITEM", true, &[]),
-    ("FUNCTIONALLY_DEFINED_TRANSFORMATION", true, &[]),
-    ("GENERAL_DATUM_REFERENCE", true, &["SHAPE_ASPECT"]),
-    ("GENERAL_PROPERTY", true, &[]),
-    ("GENERIC_EXPRESSION", true, &[]),
+    ("FLATNESS_TOLERANCE", true, false, &["GEOMETRIC_TOLERANCE"]),
+    ("FOUNDED_ITEM", true, true, &[]),
+    ("FUNCTIONALLY_DEFINED_TRANSFORMATION", true, false, &[]),
+    ("GENERAL_DATUM_REFERENCE", true, true, &["SHAPE_ASPECT"]),
+    ("GENERAL_PROPERTY", true, false, &[]),
+    ("GENERIC_EXPRESSION", true, true, &[]),
     (
         "GENERIC_LITERAL",
         true,
+        true,
         &["GENERIC_EXPRESSION", "SIMPLE_GENERIC_EXPRESSION"],
     ),
-    ("GENERIC_PRODUCT_DEFINITION_REFERENCE", true, &[]),
+    ("GENERIC_PRODUCT_DEFINITION_REFERENCE", true, true, &[]),
     (
         "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
         true,
+        false,
         &["REPRESENTATION", "SHAPE_REPRESENTATION"],
     ),
     (
         "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
         true,
+        false,
         &["REPRESENTATION", "SHAPE_REPRESENTATION"],
     ),
     (
         "GEOMETRIC_CURVE_SET",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "GEOMETRIC_SET",
@@ -19059,32 +18720,38 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "GEOMETRIC_ITEM_SPECIFIC_USAGE",
         true,
+        false,
         &["ITEM_IDENTIFIED_REPRESENTATION_USAGE"],
     ),
     (
         "GEOMETRIC_REPRESENTATION_CONTEXT",
         true,
+        false,
         &["REPRESENTATION_CONTEXT"],
     ),
     (
         "GEOMETRIC_REPRESENTATION_ITEM",
         true,
+        false,
         &["REPRESENTATION_ITEM"],
     ),
     (
         "GEOMETRIC_SET",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
-    ("GEOMETRIC_TOLERANCE", true, &[]),
+    ("GEOMETRIC_TOLERANCE", true, true, &[]),
     (
         "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
         true,
+        false,
         &["GEOMETRIC_TOLERANCE"],
     ),
     (
         "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT",
         true,
+        false,
         &[
             "GEOMETRIC_TOLERANCE",
             "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT",
@@ -19093,33 +18760,39 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT",
         true,
+        false,
         &["GEOMETRIC_TOLERANCE"],
     ),
     (
         "GEOMETRIC_TOLERANCE_WITH_MAXIMUM_TOLERANCE",
         true,
+        false,
         &["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS"],
     ),
     (
         "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
         true,
+        false,
         &["GEOMETRIC_TOLERANCE"],
     ),
     (
         "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
         true,
+        false,
         &["REPRESENTATION_CONTEXT"],
     ),
     (
         "GLOBAL_UNIT_ASSIGNED_CONTEXT",
         true,
+        false,
         &["REPRESENTATION_CONTEXT"],
     ),
-    ("GROUP", true, &[]),
-    ("GROUP_ASSIGNMENT", true, &[]),
+    ("GROUP", true, false, &[]),
+    ("GROUP_ASSIGNMENT", true, true, &[]),
     (
         "HYPERBOLA",
         true,
+        false,
         &[
             "CONIC",
             "CURVE",
@@ -19127,10 +18800,11 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "REPRESENTATION_ITEM",
         ],
     ),
-    ("IDENTIFICATION_ASSIGNMENT", true, &[]),
+    ("IDENTIFICATION_ASSIGNMENT", true, true, &[]),
     (
         "INTEGER_REPRESENTATION_ITEM",
         true,
+        false,
         &[
             "EXPRESSION",
             "GENERIC_EXPRESSION",
@@ -19146,6 +18820,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "INTERSECTION_CURVE",
         true,
+        false,
         &[
             "CURVE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -19156,6 +18831,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "INT_LITERAL",
         true,
+        false,
         &[
             "EXPRESSION",
             "GENERIC_EXPRESSION",
@@ -19166,12 +18842,13 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "SIMPLE_NUMERIC_EXPRESSION",
         ],
     ),
-    ("INVISIBILITY", true, &[]),
-    ("ITEM_DEFINED_TRANSFORMATION", true, &[]),
-    ("ITEM_IDENTIFIED_REPRESENTATION_USAGE", true, &[]),
+    ("INVISIBILITY", true, false, &[]),
+    ("ITEM_DEFINED_TRANSFORMATION", true, false, &[]),
+    ("ITEM_IDENTIFIED_REPRESENTATION_USAGE", true, false, &[]),
     (
         "LEADER_CURVE",
         true,
+        false,
         &[
             "ANNOTATION_CURVE_OCCURRENCE",
             "ANNOTATION_OCCURRENCE",
@@ -19182,6 +18859,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "LEADER_DIRECTED_CALLOUT",
         true,
+        false,
         &[
             "DRAUGHTING_CALLOUT",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -19191,6 +18869,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "LEADER_TERMINATOR",
         true,
+        false,
         &[
             "ANNOTATION_OCCURRENCE",
             "ANNOTATION_SYMBOL_OCCURRENCE",
@@ -19199,20 +18878,32 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "TERMINATOR_SYMBOL",
         ],
     ),
-    ("LENGTH_MEASURE_WITH_UNIT", true, &["MEASURE_WITH_UNIT"]),
-    ("LENGTH_UNIT", true, &["NAMED_UNIT"]),
+    (
+        "LENGTH_MEASURE_WITH_UNIT",
+        true,
+        false,
+        &["MEASURE_WITH_UNIT"],
+    ),
+    ("LENGTH_UNIT", true, false, &["NAMED_UNIT"]),
     (
         "LINE",
         true,
+        false,
         &[
             "CURVE",
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
         ],
     ),
-    ("LINE_PROFILE_TOLERANCE", true, &["GEOMETRIC_TOLERANCE"]),
+    (
+        "LINE_PROFILE_TOLERANCE",
+        true,
+        false,
+        &["GEOMETRIC_TOLERANCE"],
+    ),
     (
         "LITERAL_NUMBER",
+        true,
         true,
         &[
             "EXPRESSION",
@@ -19226,11 +18917,13 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "LOOP",
         true,
+        false,
         &["REPRESENTATION_ITEM", "TOPOLOGICAL_REPRESENTATION_ITEM"],
     ),
     (
         "MAKE_FROM_USAGE_OPTION",
         true,
+        false,
         &[
             "PRODUCT_DEFINITION_RELATIONSHIP",
             "PRODUCT_DEFINITION_USAGE",
@@ -19239,6 +18932,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "MANIFOLD_SOLID_BREP",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
@@ -19248,25 +18942,34 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
         true,
+        false,
         &["REPRESENTATION", "SHAPE_REPRESENTATION"],
     ),
-    ("MAPPED_ITEM", true, &["REPRESENTATION_ITEM"]),
-    ("MASS_MEASURE_WITH_UNIT", true, &["MEASURE_WITH_UNIT"]),
-    ("MASS_UNIT", true, &["NAMED_UNIT"]),
+    ("MAPPED_ITEM", true, false, &["REPRESENTATION_ITEM"]),
+    (
+        "MASS_MEASURE_WITH_UNIT",
+        true,
+        false,
+        &["MEASURE_WITH_UNIT"],
+    ),
+    ("MASS_UNIT", true, false, &["NAMED_UNIT"]),
     (
         "MEASURE_REPRESENTATION_ITEM",
         true,
+        false,
         &["MEASURE_WITH_UNIT", "REPRESENTATION_ITEM"],
     ),
-    ("MEASURE_WITH_UNIT", true, &[]),
+    ("MEASURE_WITH_UNIT", true, false, &[]),
     (
         "MECHANICAL_CONTEXT",
         true,
+        false,
         &["APPLICATION_CONTEXT_ELEMENT", "PRODUCT_CONTEXT"],
     ),
     (
         "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP",
         true,
+        false,
         &[
             "DEFINITIONAL_REPRESENTATION_RELATIONSHIP",
             "DEFINITIONAL_REPRESENTATION_RELATIONSHIP_WITH_SAME_CONTEXT",
@@ -19276,21 +18979,25 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
         true,
+        false,
         &["REPRESENTATION"],
     ),
     (
         "MECHANICAL_DESIGN_PRESENTATION_REPRESENTATION_WITH_DRAUGHTING",
         true,
+        false,
         &["REPRESENTATION"],
     ),
     (
         "MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION",
         true,
+        false,
         &["REPRESENTATION"],
     ),
     (
         "MODEL_GEOMETRIC_VIEW",
         true,
+        false,
         &[
             "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
             "CHARACTERIZED_OBJECT",
@@ -19299,12 +19006,14 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "MODIFIED_GEOMETRIC_TOLERANCE",
         true,
+        false,
         &["GEOMETRIC_TOLERANCE"],
     ),
-    ("NAMED_UNIT", true, &[]),
+    ("NAMED_UNIT", true, false, &[]),
     (
         "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
         true,
+        false,
         &[
             "ASSEMBLY_COMPONENT_USAGE",
             "PRODUCT_DEFINITION_RELATIONSHIP",
@@ -19314,11 +19023,13 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "NUMERIC_EXPRESSION",
         true,
+        true,
         &["EXPRESSION", "GENERIC_EXPRESSION"],
     ),
     (
         "OFFSET_SURFACE",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
@@ -19328,21 +19039,24 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "ONE_DIRECTION_REPEAT_FACTOR",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "OPEN_SHELL",
         true,
+        false,
         &[
             "CONNECTED_FACE_SET",
             "REPRESENTATION_ITEM",
             "TOPOLOGICAL_REPRESENTATION_ITEM",
         ],
     ),
-    ("ORGANIZATIONAL_ADDRESS", true, &["ADDRESS"]),
+    ("ORGANIZATIONAL_ADDRESS", true, false, &["ADDRESS"]),
     (
         "ORIENTED_CLOSED_SHELL",
         true,
+        false,
         &[
             "CLOSED_SHELL",
             "CONNECTED_FACE_SET",
@@ -19353,6 +19067,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "ORIENTED_EDGE",
         true,
+        false,
         &[
             "EDGE",
             "REPRESENTATION_ITEM",
@@ -19362,11 +19077,13 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "OVER_RIDING_STYLED_ITEM",
         true,
+        false,
         &["REPRESENTATION_ITEM", "STYLED_ITEM"],
     ),
     (
         "PARABOLA",
         true,
+        false,
         &[
             "CONIC",
             "CURVE",
@@ -19377,6 +19094,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "PARALLELISM_TOLERANCE",
         true,
+        false,
         &[
             "GEOMETRIC_TOLERANCE",
             "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
@@ -19385,16 +19103,19 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "PARAMETRIC_REPRESENTATION_CONTEXT",
         true,
+        false,
         &["REPRESENTATION_CONTEXT"],
     ),
     (
         "PATH",
         true,
+        false,
         &["REPRESENTATION_ITEM", "TOPOLOGICAL_REPRESENTATION_ITEM"],
     ),
     (
         "PCURVE",
         true,
+        false,
         &[
             "CURVE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -19404,31 +19125,36 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "PERPENDICULARITY_TOLERANCE",
         true,
+        false,
         &[
             "GEOMETRIC_TOLERANCE",
             "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
         ],
     ),
-    ("PERSONAL_ADDRESS", true, &["ADDRESS"]),
+    ("PERSONAL_ADDRESS", true, false, &["ADDRESS"]),
     (
         "PERSON_AND_ORGANIZATION_ADDRESS",
         true,
+        false,
         &["ADDRESS", "ORGANIZATIONAL_ADDRESS", "PERSONAL_ADDRESS"],
     ),
-    ("PERSON_AND_ORGANIZATION_ASSIGNMENT", true, &[]),
+    ("PERSON_AND_ORGANIZATION_ASSIGNMENT", true, true, &[]),
     (
         "PLACED_DATUM_TARGET_FEATURE",
         true,
+        false,
         &["DATUM_TARGET", "SHAPE_ASPECT"],
     ),
     (
         "PLACEMENT",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "PLANAR_BOX",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "PLANAR_EXTENT",
@@ -19438,11 +19164,13 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "PLANAR_EXTENT",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "PLANE",
         true,
+        false,
         &[
             "ELEMENTARY_SURFACE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -19453,18 +19181,21 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "PLANE_ANGLE_MEASURE_WITH_UNIT",
         true,
+        false,
         &["MEASURE_WITH_UNIT"],
     ),
-    ("PLANE_ANGLE_UNIT", true, &["NAMED_UNIT"]),
+    ("PLANE_ANGLE_UNIT", true, false, &["NAMED_UNIT"]),
     (
         "POINT",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
-    ("POINT_STYLE", true, &["FOUNDED_ITEM"]),
+    ("POINT_STYLE", true, false, &["FOUNDED_ITEM"]),
     (
         "POLYLINE",
         true,
+        false,
         &[
             "BOUNDED_CURVE",
             "CURVE",
@@ -19475,6 +19206,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "POLY_LOOP",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "LOOP",
@@ -19482,44 +19214,70 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "TOPOLOGICAL_REPRESENTATION_ITEM",
         ],
     ),
-    ("POSITION_TOLERANCE", true, &["GEOMETRIC_TOLERANCE"]),
+    ("POSITION_TOLERANCE", true, false, &["GEOMETRIC_TOLERANCE"]),
     (
         "POSITIVE_LENGTH_MEASURE_WITH_UNIT",
         true,
+        false,
         &["LENGTH_MEASURE_WITH_UNIT", "MEASURE_WITH_UNIT"],
     ),
     (
         "POSITIVE_PLANE_ANGLE_MEASURE_WITH_UNIT",
         true,
+        false,
         &["MEASURE_WITH_UNIT", "PLANE_ANGLE_MEASURE_WITH_UNIT"],
     ),
     (
         "PRESENTATION_AREA",
         true,
+        false,
         &["PRESENTATION_REPRESENTATION", "REPRESENTATION"],
     ),
-    ("PRESENTATION_REPRESENTATION", true, &["REPRESENTATION"]),
-    ("PRESENTATION_SET", true, &[]),
-    ("PRESENTATION_STYLE_ASSIGNMENT", true, &["FOUNDED_ITEM"]),
+    (
+        "PRESENTATION_REPRESENTATION",
+        true,
+        false,
+        &["REPRESENTATION"],
+    ),
+    ("PRESENTATION_SET", true, false, &[]),
+    (
+        "PRESENTATION_STYLE_ASSIGNMENT",
+        true,
+        false,
+        &["FOUNDED_ITEM"],
+    ),
     (
         "PRESENTATION_STYLE_BY_CONTEXT",
         true,
+        false,
         &["FOUNDED_ITEM", "PRESENTATION_STYLE_ASSIGNMENT"],
     ),
     (
         "PRESENTATION_VIEW",
         true,
+        false,
         &["PRESENTATION_REPRESENTATION", "REPRESENTATION"],
     ),
-    ("PRESENTED_ITEM", true, &[]),
-    ("PRE_DEFINED_CHARACTER_GLYPH", true, &["PRE_DEFINED_ITEM"]),
-    ("PRE_DEFINED_COLOUR", true, &["COLOUR", "PRE_DEFINED_ITEM"]),
-    ("PRE_DEFINED_CURVE_FONT", true, &["PRE_DEFINED_ITEM"]),
-    ("PRE_DEFINED_ITEM", true, &[]),
-    ("PRE_DEFINED_MARKER", true, &["PRE_DEFINED_ITEM"]),
+    ("PRESENTED_ITEM", true, true, &[]),
+    (
+        "PRE_DEFINED_CHARACTER_GLYPH",
+        true,
+        false,
+        &["PRE_DEFINED_ITEM"],
+    ),
+    (
+        "PRE_DEFINED_COLOUR",
+        true,
+        false,
+        &["COLOUR", "PRE_DEFINED_ITEM"],
+    ),
+    ("PRE_DEFINED_CURVE_FONT", true, false, &["PRE_DEFINED_ITEM"]),
+    ("PRE_DEFINED_ITEM", true, false, &[]),
+    ("PRE_DEFINED_MARKER", true, false, &["PRE_DEFINED_ITEM"]),
     (
         "PRE_DEFINED_POINT_MARKER_SYMBOL",
         true,
+        false,
         &[
             "PRE_DEFINED_ITEM",
             "PRE_DEFINED_MARKER",
@@ -19529,74 +19287,105 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "PRE_DEFINED_PRESENTATION_STYLE",
         false,
+        false,
         &["FOUNDED_ITEM", "PRE_DEFINED_ITEM"],
     ),
     (
         "PRE_DEFINED_SURFACE_SIDE_STYLE",
         true,
+        false,
         &["PRE_DEFINED_ITEM"],
     ),
-    ("PRE_DEFINED_SYMBOL", true, &["PRE_DEFINED_ITEM"]),
+    ("PRE_DEFINED_SYMBOL", true, false, &["PRE_DEFINED_ITEM"]),
     (
         "PRE_DEFINED_TERMINATOR_SYMBOL",
         true,
+        false,
         &["PRE_DEFINED_ITEM", "PRE_DEFINED_SYMBOL"],
     ),
-    ("PRE_DEFINED_TEXT_FONT", true, &["PRE_DEFINED_ITEM"]),
-    ("PRE_DEFINED_TILE", true, &["PRE_DEFINED_ITEM"]),
-    ("PRODUCT", true, &[]),
-    ("PRODUCT_CATEGORY", true, &[]),
-    ("PRODUCT_CONCEPT", true, &[]),
-    ("PRODUCT_CONCEPT_FEATURE", true, &[]),
-    ("PRODUCT_CONCEPT_FEATURE_CATEGORY", true, &["GROUP"]),
-    ("PRODUCT_CONTEXT", true, &["APPLICATION_CONTEXT_ELEMENT"]),
-    ("PRODUCT_DEFINITION", true, &[]),
+    ("PRE_DEFINED_TEXT_FONT", true, false, &["PRE_DEFINED_ITEM"]),
+    ("PRE_DEFINED_TILE", true, false, &["PRE_DEFINED_ITEM"]),
+    ("PRODUCT", true, false, &[]),
+    ("PRODUCT_CATEGORY", true, false, &[]),
+    ("PRODUCT_CONCEPT", true, false, &[]),
+    ("PRODUCT_CONCEPT_FEATURE", true, false, &[]),
+    ("PRODUCT_CONCEPT_FEATURE_CATEGORY", true, false, &["GROUP"]),
+    (
+        "PRODUCT_CONTEXT",
+        true,
+        false,
+        &["APPLICATION_CONTEXT_ELEMENT"],
+    ),
+    ("PRODUCT_DEFINITION", true, false, &[]),
     (
         "PRODUCT_DEFINITION_CONTEXT",
         true,
+        false,
         &["APPLICATION_CONTEXT_ELEMENT"],
     ),
-    ("PRODUCT_DEFINITION_EFFECTIVITY", true, &["EFFECTIVITY"]),
-    ("PRODUCT_DEFINITION_FORMATION", true, &[]),
+    (
+        "PRODUCT_DEFINITION_EFFECTIVITY",
+        true,
+        false,
+        &["EFFECTIVITY"],
+    ),
+    ("PRODUCT_DEFINITION_FORMATION", true, false, &[]),
     (
         "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
         true,
+        false,
         &["PRODUCT_DEFINITION_FORMATION"],
     ),
-    ("PRODUCT_DEFINITION_OCCURRENCE", true, &[]),
-    ("PRODUCT_DEFINITION_RELATIONSHIP", true, &[]),
-    ("PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP", true, &[]),
-    ("PRODUCT_DEFINITION_SHAPE", true, &["PROPERTY_DEFINITION"]),
+    ("PRODUCT_DEFINITION_OCCURRENCE", true, false, &[]),
+    ("PRODUCT_DEFINITION_RELATIONSHIP", true, false, &[]),
+    (
+        "PRODUCT_DEFINITION_RELATIONSHIP_RELATIONSHIP",
+        true,
+        false,
+        &[],
+    ),
+    (
+        "PRODUCT_DEFINITION_SHAPE",
+        true,
+        false,
+        &["PROPERTY_DEFINITION"],
+    ),
     (
         "PRODUCT_DEFINITION_USAGE",
         true,
+        false,
         &["PRODUCT_DEFINITION_RELATIONSHIP"],
     ),
     (
         "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
         true,
+        false,
         &["PRODUCT_DEFINITION"],
     ),
     (
         "PRODUCT_RELATED_PRODUCT_CATEGORY",
         true,
+        false,
         &["PRODUCT_CATEGORY"],
     ),
     (
         "PROJECTED_ZONE_DEFINITION",
         true,
+        false,
         &["TOLERANCE_ZONE_DEFINITION"],
     ),
-    ("PROPERTY_DEFINITION", true, &[]),
-    ("PROPERTY_DEFINITION_REPRESENTATION", true, &[]),
+    ("PROPERTY_DEFINITION", true, false, &[]),
+    ("PROPERTY_DEFINITION_REPRESENTATION", true, false, &[]),
     (
         "QUALIFIED_REPRESENTATION_ITEM",
         true,
+        false,
         &["REPRESENTATION_ITEM"],
     ),
     (
         "QUASI_UNIFORM_CURVE",
         true,
+        false,
         &[
             "BOUNDED_CURVE",
             "B_SPLINE_CURVE",
@@ -19608,6 +19397,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "QUASI_UNIFORM_SURFACE",
         true,
+        false,
         &[
             "BOUNDED_SURFACE",
             "B_SPLINE_SURFACE",
@@ -19619,6 +19409,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "RATIONAL_B_SPLINE_CURVE",
         true,
+        false,
         &[
             "BOUNDED_CURVE",
             "B_SPLINE_CURVE",
@@ -19630,6 +19421,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "RATIONAL_B_SPLINE_SURFACE",
         true,
+        false,
         &[
             "BOUNDED_SURFACE",
             "B_SPLINE_SURFACE",
@@ -19638,11 +19430,17 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "SURFACE",
         ],
     ),
-    ("RATIO_MEASURE_WITH_UNIT", true, &["MEASURE_WITH_UNIT"]),
-    ("RATIO_UNIT", true, &["NAMED_UNIT"]),
+    (
+        "RATIO_MEASURE_WITH_UNIT",
+        true,
+        false,
+        &["MEASURE_WITH_UNIT"],
+    ),
+    ("RATIO_UNIT", true, false, &["NAMED_UNIT"]),
     (
         "REAL_LITERAL",
         true,
+        false,
         &[
             "EXPRESSION",
             "GENERIC_EXPRESSION",
@@ -19656,6 +19454,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "REAL_REPRESENTATION_ITEM",
         true,
+        false,
         &[
             "EXPRESSION",
             "GENERIC_EXPRESSION",
@@ -19671,32 +19470,36 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "REPOSITIONED_TESSELLATED_ITEM",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
             "TESSELLATED_ITEM",
         ],
     ),
-    ("REPRESENTATION", true, &[]),
-    ("REPRESENTATION_CONTEXT", true, &[]),
-    ("REPRESENTATION_ITEM", true, &[]),
-    ("REPRESENTATION_MAP", true, &[]),
-    ("REPRESENTATION_REFERENCE", true, &[]),
-    ("REPRESENTATION_RELATIONSHIP", true, &[]),
+    ("REPRESENTATION", true, false, &[]),
+    ("REPRESENTATION_CONTEXT", true, false, &[]),
+    ("REPRESENTATION_ITEM", true, false, &[]),
+    ("REPRESENTATION_MAP", true, false, &[]),
+    ("REPRESENTATION_REFERENCE", true, false, &[]),
+    ("REPRESENTATION_RELATIONSHIP", true, false, &[]),
     (
         "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
         true,
+        false,
         &["REPRESENTATION_RELATIONSHIP"],
     ),
-    ("ROUNDNESS_TOLERANCE", true, &["GEOMETRIC_TOLERANCE"]),
+    ("ROUNDNESS_TOLERANCE", true, false, &["GEOMETRIC_TOLERANCE"]),
     (
         "ROUND_HOLE",
         true,
+        false,
         &["CHARACTERIZED_OBJECT", "FEATURE_DEFINITION"],
     ),
     (
         "SEAM_CURVE",
         true,
+        false,
         &[
             "CURVE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -19704,48 +19507,61 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "SURFACE_CURVE",
         ],
     ),
-    ("SECURITY_CLASSIFICATION_ASSIGNMENT", true, &[]),
-    ("SHAPE_ASPECT", true, &[]),
+    ("SECURITY_CLASSIFICATION_ASSIGNMENT", true, true, &[]),
+    ("SHAPE_ASPECT", true, false, &[]),
     (
         "SHAPE_ASPECT_ASSOCIATIVITY",
         true,
+        false,
         &["SHAPE_ASPECT_RELATIONSHIP"],
     ),
     (
         "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
         true,
+        false,
         &["SHAPE_ASPECT_RELATIONSHIP"],
     ),
-    ("SHAPE_ASPECT_RELATIONSHIP", true, &[]),
+    ("SHAPE_ASPECT_RELATIONSHIP", true, false, &[]),
     (
         "SHAPE_DEFINITION_REPRESENTATION",
         true,
+        false,
         &["PROPERTY_DEFINITION_REPRESENTATION"],
     ),
     (
         "SHAPE_DIMENSION_REPRESENTATION",
         true,
+        false,
         &["REPRESENTATION", "SHAPE_REPRESENTATION"],
     ),
-    ("SHAPE_REPRESENTATION", true, &["REPRESENTATION"]),
+    ("SHAPE_REPRESENTATION", true, false, &["REPRESENTATION"]),
     (
         "SHAPE_REPRESENTATION_RELATIONSHIP",
         true,
+        false,
         &["REPRESENTATION_RELATIONSHIP"],
     ),
     (
         "SHAPE_REPRESENTATION_WITH_PARAMETERS",
         true,
+        false,
         &["REPRESENTATION", "SHAPE_REPRESENTATION"],
     ),
     (
         "SHELL_BASED_SURFACE_MODEL",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
-    ("SIMPLE_GENERIC_EXPRESSION", true, &["GENERIC_EXPRESSION"]),
+    (
+        "SIMPLE_GENERIC_EXPRESSION",
+        true,
+        true,
+        &["GENERIC_EXPRESSION"],
+    ),
     (
         "SIMPLE_NUMERIC_EXPRESSION",
+        true,
         true,
         &[
             "EXPRESSION",
@@ -19754,16 +19570,18 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "SIMPLE_GENERIC_EXPRESSION",
         ],
     ),
-    ("SI_UNIT", true, &["NAMED_UNIT"]),
-    ("SOLID_ANGLE_UNIT", true, &["NAMED_UNIT"]),
+    ("SI_UNIT", true, false, &["NAMED_UNIT"]),
+    ("SOLID_ANGLE_UNIT", true, false, &["NAMED_UNIT"]),
     (
         "SOLID_MODEL",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "SPHERICAL_SURFACE",
         true,
+        false,
         &[
             "ELEMENTARY_SURFACE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -19771,20 +19589,27 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "SURFACE",
         ],
     ),
-    ("START_REQUEST", true, &["ACTION_REQUEST_ASSIGNMENT"]),
-    ("START_WORK", true, &["ACTION_ASSIGNMENT"]),
-    ("STATE_OBSERVED", true, &[]),
-    ("STATE_TYPE", true, &[]),
-    ("STRAIGHTNESS_TOLERANCE", true, &["GEOMETRIC_TOLERANCE"]),
-    ("STYLED_ITEM", true, &["REPRESENTATION_ITEM"]),
+    ("START_REQUEST", true, false, &["ACTION_REQUEST_ASSIGNMENT"]),
+    ("START_WORK", true, false, &["ACTION_ASSIGNMENT"]),
+    ("STATE_OBSERVED", true, false, &[]),
+    ("STATE_TYPE", true, false, &[]),
+    (
+        "STRAIGHTNESS_TOLERANCE",
+        true,
+        false,
+        &["GEOMETRIC_TOLERANCE"],
+    ),
+    ("STYLED_ITEM", true, false, &["REPRESENTATION_ITEM"]),
     (
         "SURFACE",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "SURFACE_CURVE",
         true,
+        false,
         &[
             "CURVE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -19794,6 +19619,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "SURFACE_OF_LINEAR_EXTRUSION",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
@@ -19804,6 +19630,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "SURFACE_OF_REVOLUTION",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
@@ -19811,41 +19638,60 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "SWEPT_SURFACE",
         ],
     ),
-    ("SURFACE_PROFILE_TOLERANCE", true, &["GEOMETRIC_TOLERANCE"]),
-    ("SURFACE_SIDE_STYLE", true, &["FOUNDED_ITEM"]),
-    ("SURFACE_STYLE_BOUNDARY", true, &["FOUNDED_ITEM"]),
-    ("SURFACE_STYLE_CONTROL_GRID", true, &["FOUNDED_ITEM"]),
-    ("SURFACE_STYLE_FILL_AREA", true, &["FOUNDED_ITEM"]),
-    ("SURFACE_STYLE_PARAMETER_LINE", true, &["FOUNDED_ITEM"]),
-    ("SURFACE_STYLE_REFLECTANCE_AMBIENT", true, &[]),
-    ("SURFACE_STYLE_RENDERING", true, &[]),
+    (
+        "SURFACE_PROFILE_TOLERANCE",
+        true,
+        false,
+        &["GEOMETRIC_TOLERANCE"],
+    ),
+    ("SURFACE_SIDE_STYLE", true, false, &["FOUNDED_ITEM"]),
+    ("SURFACE_STYLE_BOUNDARY", true, false, &["FOUNDED_ITEM"]),
+    ("SURFACE_STYLE_CONTROL_GRID", true, false, &["FOUNDED_ITEM"]),
+    ("SURFACE_STYLE_FILL_AREA", true, false, &["FOUNDED_ITEM"]),
+    (
+        "SURFACE_STYLE_PARAMETER_LINE",
+        true,
+        false,
+        &["FOUNDED_ITEM"],
+    ),
+    ("SURFACE_STYLE_REFLECTANCE_AMBIENT", true, false, &[]),
+    ("SURFACE_STYLE_RENDERING", true, false, &[]),
     (
         "SURFACE_STYLE_RENDERING_WITH_PROPERTIES",
         true,
+        false,
         &["SURFACE_STYLE_RENDERING"],
     ),
-    ("SURFACE_STYLE_SEGMENTATION_CURVE", true, &["FOUNDED_ITEM"]),
-    ("SURFACE_STYLE_SILHOUETTE", true, &["FOUNDED_ITEM"]),
-    ("SURFACE_STYLE_USAGE", true, &["FOUNDED_ITEM"]),
+    (
+        "SURFACE_STYLE_SEGMENTATION_CURVE",
+        true,
+        false,
+        &["FOUNDED_ITEM"],
+    ),
+    ("SURFACE_STYLE_SILHOUETTE", true, false, &["FOUNDED_ITEM"]),
+    ("SURFACE_STYLE_USAGE", true, false, &["FOUNDED_ITEM"]),
     (
         "SWEPT_SURFACE",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
             "SURFACE",
         ],
     ),
-    ("SYMBOL_REPRESENTATION", true, &["REPRESENTATION"]),
-    ("SYMBOL_STYLE", true, &["FOUNDED_ITEM"]),
+    ("SYMBOL_REPRESENTATION", true, false, &["REPRESENTATION"]),
+    ("SYMBOL_STYLE", true, false, &["FOUNDED_ITEM"]),
     (
         "SYMBOL_TARGET",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "SYMMETRY_TOLERANCE",
         true,
+        false,
         &[
             "GEOMETRIC_TOLERANCE",
             "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
@@ -19854,6 +19700,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "TERMINATOR_SYMBOL",
         true,
+        false,
         &[
             "ANNOTATION_OCCURRENCE",
             "ANNOTATION_SYMBOL_OCCURRENCE",
@@ -19864,6 +19711,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "TESSELLATED_ANNOTATION_OCCURRENCE",
         true,
+        false,
         &[
             "ANNOTATION_OCCURRENCE",
             "REPRESENTATION_ITEM",
@@ -19873,6 +19721,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "TESSELLATED_CURVE_SET",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
@@ -19881,6 +19730,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     ),
     (
         "TESSELLATED_FACE",
+        true,
         true,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -19892,6 +19742,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "TESSELLATED_GEOMETRIC_SET",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
@@ -19901,16 +19752,19 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "TESSELLATED_ITEM",
         true,
+        true,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "TESSELLATED_SHAPE_REPRESENTATION",
         true,
+        false,
         &["REPRESENTATION", "SHAPE_REPRESENTATION"],
     ),
     (
         "TESSELLATED_SHELL",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
@@ -19920,6 +19774,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "TESSELLATED_SOLID",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
@@ -19929,6 +19784,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "TESSELLATED_STRUCTURED_ITEM",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
@@ -19938,45 +19794,52 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "TESSELLATED_SURFACE_SET",
         true,
+        true,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
             "TESSELLATED_ITEM",
         ],
     ),
-    ("TEXTURE_STYLE_SPECIFICATION", true, &["FOUNDED_ITEM"]),
+    ("TEXTURE_STYLE_SPECIFICATION", true, true, &["FOUNDED_ITEM"]),
     (
         "TEXTURE_STYLE_TESSELLATION_SPECIFICATION",
+        true,
         true,
         &["FOUNDED_ITEM", "TEXTURE_STYLE_SPECIFICATION"],
     ),
     (
         "TEXT_LITERAL",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
-    ("TEXT_STYLE", true, &["FOUNDED_ITEM"]),
+    ("TEXT_STYLE", true, false, &["FOUNDED_ITEM"]),
     (
         "TEXT_STYLE_WITH_BOX_CHARACTERISTICS",
         true,
+        false,
         &["FOUNDED_ITEM", "TEXT_STYLE"],
     ),
-    ("TIME_UNIT", true, &["NAMED_UNIT"]),
-    ("TOLERANCE_ZONE", true, &["SHAPE_ASPECT"]),
-    ("TOLERANCE_ZONE_DEFINITION", true, &[]),
+    ("TIME_UNIT", true, false, &["NAMED_UNIT"]),
+    ("TOLERANCE_ZONE", true, false, &["SHAPE_ASPECT"]),
+    ("TOLERANCE_ZONE_DEFINITION", true, false, &[]),
     (
         "TOLERANCE_ZONE_WITH_DATUM",
         true,
+        false,
         &["SHAPE_ASPECT", "TOLERANCE_ZONE"],
     ),
     (
         "TOPOLOGICAL_REPRESENTATION_ITEM",
         true,
+        false,
         &["REPRESENTATION_ITEM"],
     ),
     (
         "TOROIDAL_SURFACE",
         true,
+        false,
         &[
             "ELEMENTARY_SURFACE",
             "GEOMETRIC_REPRESENTATION_ITEM",
@@ -19987,6 +19850,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "TOTAL_RUNOUT_TOLERANCE",
         true,
+        false,
         &[
             "GEOMETRIC_TOLERANCE",
             "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
@@ -19995,6 +19859,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "TRIMMED_CURVE",
         true,
+        false,
         &[
             "BOUNDED_CURVE",
             "CURVE",
@@ -20005,6 +19870,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "TWO_DIRECTION_REPEAT_FACTOR",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "ONE_DIRECTION_REPEAT_FACTOR",
@@ -20014,16 +19880,19 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "UNCERTAINTY_MEASURE_WITH_UNIT",
         true,
+        false,
         &["MEASURE_WITH_UNIT"],
     ),
     (
         "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE",
         true,
+        false,
         &["GEOMETRIC_TOLERANCE"],
     ),
     (
         "UNIFORM_CURVE",
         true,
+        false,
         &[
             "BOUNDED_CURVE",
             "B_SPLINE_CURVE",
@@ -20035,6 +19904,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "UNIFORM_SURFACE",
         true,
+        false,
         &[
             "BOUNDED_SURFACE",
             "B_SPLINE_SURFACE",
@@ -20043,20 +19913,28 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
             "SURFACE",
         ],
     ),
-    ("VALUE_REPRESENTATION_ITEM", true, &["REPRESENTATION_ITEM"]),
+    (
+        "VALUE_REPRESENTATION_ITEM",
+        true,
+        false,
+        &["REPRESENTATION_ITEM"],
+    ),
     (
         "VECTOR",
         true,
+        false,
         &["GEOMETRIC_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
     ),
     (
         "VERTEX",
         true,
+        false,
         &["REPRESENTATION_ITEM", "TOPOLOGICAL_REPRESENTATION_ITEM"],
     ),
     (
         "VERTEX_LOOP",
         true,
+        false,
         &[
             "LOOP",
             "REPRESENTATION_ITEM",
@@ -20066,6 +19944,7 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "VERTEX_POINT",
         true,
+        false,
         &[
             "GEOMETRIC_REPRESENTATION_ITEM",
             "REPRESENTATION_ITEM",
@@ -20076,13 +19955,15 @@ static PART_INFO: &[(&str, bool, &[&str])] = &[
     (
         "VERTEX_SHELL",
         true,
+        false,
         &["REPRESENTATION_ITEM", "TOPOLOGICAL_REPRESENTATION_ITEM"],
     ),
-    ("VIEW_VOLUME", true, &["FOUNDED_ITEM"]),
-    ("VOLUME_UNIT", true, &["DERIVED_UNIT"]),
+    ("VIEW_VOLUME", true, false, &["FOUNDED_ITEM"]),
+    ("VOLUME_UNIT", true, false, &["DERIVED_UNIT"]),
     (
         "WIRE_SHELL",
         true,
+        false,
         &["REPRESENTATION_ITEM", "TOPOLOGICAL_REPRESENTATION_ITEM"],
     ),
 ];
@@ -20336,8 +20217,9 @@ static ONEOF_GROUPS: &[&[&[&str]]] = &[
 /// AP242-legal, no duplicates, supertype chains complete (each part's
 /// transitive supertypes all present — Part 21 external mapping), the set
 /// connected through those chains (one inheritance graph, no disjoint
-/// clusters), and no ONEOF group drawn from two branches. Reference fields
-/// are checked separately by [`Ap242Author::add_complex`].
+/// clusters), no ONEOF group drawn from two branches, and beside each
+/// `ABSTRACT` part a part of one of its subtypes. Reference fields are
+/// checked separately by [`Ap242Author::add_complex`].
 pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
     if names.is_empty() {
         return Err(AuthorError::InvalidComplex {
@@ -20345,15 +20227,17 @@ pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
         });
     }
     let mut ancestor_sets: Vec<&'static [&'static str]> = Vec::with_capacity(names.len());
+    let mut abstracts: Vec<bool> = Vec::with_capacity(names.len());
     for n in names {
         let Ok(ix) = PART_INFO.binary_search_by_key(n, |e| e.0) else {
             return Err(AuthorError::NotAp242 { entity: n });
         };
-        let (_, is_legal, ancestors) = PART_INFO[ix];
+        let (_, is_legal, is_abstract, ancestors) = PART_INFO[ix];
         if !is_legal {
             return Err(AuthorError::NotAp242 { entity: n });
         }
         ancestor_sets.push(ancestors);
+        abstracts.push(is_abstract);
     }
     let mut sorted = names.to_vec();
     sorted.sort_unstable();
@@ -20403,6 +20287,13 @@ pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
                     });
                 }
             }
+        }
+    }
+    for (n, &is_abstract) in names.iter().zip(&abstracts) {
+        if is_abstract && !ancestor_sets.iter().any(|a| a.contains(n)) {
+            return Err(AuthorError::InvalidComplex {
+                reason: "abstract part without a subtype part",
+            });
         }
     }
     Ok(())

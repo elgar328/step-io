@@ -2967,13 +2967,15 @@ fn author_check_expr(
 }
 
 /// Emit `src/generated/author.rs`: the strict AP242 authoring layer. One
-/// constructor per AP242-legal simple entity; reference parameters are
-/// validated (legal variant + in-bounds id) at insertion. Entities outside
-/// the legal set get no constructor at all — unrepresentable through this
-/// API. Complex part-bags go through the rule-based `add_complex` assembler:
-/// the part-name set is validated against schema rules (legality, supertype
+/// constructor per AP242-legal simple entity that is not ABSTRACT; reference
+/// parameters are validated (legal variant + in-bounds id) at insertion.
+/// Entities outside the legal set get no constructor at all — unrepresentable
+/// through this API — and an ABSTRACT one only enters as a complex part.
+/// Complex part-bags go through the rule-based `add_complex` assembler: the
+/// part-name set is validated against schema rules (legality, supertype
 /// -chain completeness, connectivity, ONEOF exclusivity from the profile's
-/// `[[oneof]]` groups), then every reference field is checked.
+/// `[[oneof]]` groups, a subtype part beside each ABSTRACT part), then every
+/// reference field is checked.
 pub fn emit_author(
     ir: &ModelIr,
     profile: &crate::schema::ProfileToml,
@@ -2985,7 +2987,7 @@ pub fn emit_author(
 
     let mut s = String::from(HEADER);
     s.push_str("//! The strict authoring layer — [`Ap242Author`], one validated\n");
-    s.push_str("//! constructor per AP242 entity.\n\n");
+    s.push_str("//! constructor per AP242 entity that is not `ABSTRACT`.\n\n");
     s.push_str("use super::model::*;\n\n");
 
     // Error type.
@@ -3132,7 +3134,7 @@ impl Ap242Author {
     // Constructors for legal simple entities.
     let mut generated = 0usize;
     for se in &ir.simples {
-        if !legal.contains(&se.name) {
+        if !legal.contains(&se.name) || narrowing.abstract_entities.contains(&se.name) {
             continue;
         }
         generated += 1;
@@ -3245,7 +3247,9 @@ impl Ap242Author {
     let mut cyclic_checks = String::new();
     let mut cyclic = 0usize;
     for se in &ir.simples {
-        if !narrowing.self_referencing.contains(&se.rust) {
+        if !narrowing.self_referencing.contains(&se.rust)
+            || narrowing.abstract_entities.contains(&se.name)
+        {
             continue;
         }
         cyclic += 1;
@@ -3313,9 +3317,9 @@ impl Ap242Author {
             r#"
     /// Complex (multi-part) instance — rule-based strict AP242 assembler.
     /// The part-name set is validated by the schema name-set rule (legality,
-    /// supertype-chain completeness, connectivity, ONEOF exclusivity), then
-    /// every reference field is checked; parts are stored in Part 21 order
-    /// (alphabetical).
+    /// supertype-chain completeness, connectivity, ONEOF exclusivity, a
+    /// subtype part beside each `ABSTRACT` part), then every reference field
+    /// is checked; parts are stored in Part 21 order (alphabetical).
     pub fn add_complex(&mut self, mut parts: Vec<PartialEntity>) -> Result<ComplexEntityId, AuthorError> {
         let names: Vec<&'static str> = parts.iter().map(part_name).collect();
         complex_rule(&names)?;
@@ -3337,7 +3341,7 @@ impl Ap242Author {
     );
 
     if ir.has_part_bag {
-        emit_author_complex(ir, &legal, profile, schema, &mut s);
+        emit_author_complex(ir, &legal, profile, schema, narrowing, &mut s);
         emit_complex_narrowings(ir, narrowing, &mut s);
     }
 
@@ -3375,6 +3379,7 @@ fn emit_author_complex(
     legal: &std::collections::BTreeSet<String>,
     profile: &crate::schema::ProfileToml,
     schema: &crate::schema::Schema,
+    narrowing: &crate::author_narrow::AuthorNarrowing,
     s: &mut String,
 ) {
     // part_name: PartialEntity variant -> UPPER STEP keyword (mirrors the model's
@@ -3395,16 +3400,18 @@ fn emit_author_complex(
     }
     s.push_str("    }\n}\n\n");
 
-    // PART_INFO: sorted by UPPER part name -> (AP242-legal, transitive
-    // supertypes UPPER). Ancestors are the full universal-schema parent
-    // closure — a complex instance must carry every supertype as a part
-    // (Part 21 external mapping), so an ancestor outside the part world can
-    // never be satisfied and correctly makes such combinations unbuildable.
+    // PART_INFO: sorted by UPPER part name -> (AP242-legal, ABSTRACT in
+    // AP242, transitive supertypes UPPER). Ancestors are the full
+    // universal-schema parent closure — a complex instance must carry every
+    // supertype as a part (Part 21 external mapping), so an ancestor outside
+    // the part world can never be satisfied and correctly makes such
+    // combinations unbuildable.
     let part_world: std::collections::BTreeSet<&str> =
         ir.parts.iter().map(|p| p.name.as_str()).collect();
     s.push_str(
-        "/// `(part, AP242-legal, transitive supertypes)`, sorted by part name.\n\
-         static PART_INFO: &[(&str, bool, &[&str])] = &[\n",
+        "/// `(part, AP242-legal, ABSTRACT in AP242, transitive supertypes)`,\n\
+         /// sorted by part name.\n\
+         static PART_INFO: &[(&str, bool, bool, &[&str])] = &[\n",
     );
     // BTreeMap keyed by the UPPER name: `ir.parts` is ordered by the lowercase
     // schema name, which differs from UPPER byte order ('_' sorts above
@@ -3429,7 +3436,8 @@ fn emit_author_complex(
         info.insert(&p.name, (legal.contains(&p.name), ancestors));
     }
     for (name, (is_legal, ancestors)) in &info {
-        write!(s, "    ({name:?}, {is_legal}, &[").unwrap();
+        let is_abstract = narrowing.abstract_entities.contains(*name);
+        write!(s, "    ({name:?}, {is_legal}, {is_abstract}, &[").unwrap();
         for a in ancestors {
             write!(s, "{a:?}, ").unwrap();
         }
@@ -3488,22 +3496,25 @@ fn emit_author_complex(
 /// AP242-legal, no duplicates, supertype chains complete (each part's
 /// transitive supertypes all present — Part 21 external mapping), the set
 /// connected through those chains (one inheritance graph, no disjoint
-/// clusters), and no ONEOF group drawn from two branches. Reference fields
-/// are checked separately by [`Ap242Author::add_complex`].
+/// clusters), no ONEOF group drawn from two branches, and beside each
+/// `ABSTRACT` part a part of one of its subtypes. Reference fields are
+/// checked separately by [`Ap242Author::add_complex`].
 pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
     if names.is_empty() {
         return Err(AuthorError::InvalidComplex { reason: "empty part list" });
     }
     let mut ancestor_sets: Vec<&'static [&'static str]> = Vec::with_capacity(names.len());
+    let mut abstracts: Vec<bool> = Vec::with_capacity(names.len());
     for n in names {
         let Ok(ix) = PART_INFO.binary_search_by_key(n, |e| e.0) else {
             return Err(AuthorError::NotAp242 { entity: n });
         };
-        let (_, is_legal, ancestors) = PART_INFO[ix];
+        let (_, is_legal, is_abstract, ancestors) = PART_INFO[ix];
         if !is_legal {
             return Err(AuthorError::NotAp242 { entity: n });
         }
         ancestor_sets.push(ancestors);
+        abstracts.push(is_abstract);
     }
     let mut sorted = names.to_vec();
     sorted.sort_unstable();
@@ -3545,6 +3556,11 @@ pub(crate) fn complex_rule(names: &[&'static str]) -> Result<(), AuthorError> {
                     return Err(AuthorError::InvalidComplex { reason: "oneof conflict" });
                 }
             }
+        }
+    }
+    for (n, &is_abstract) in names.iter().zip(&abstracts) {
+        if is_abstract && !ancestor_sets.iter().any(|a| a.contains(n)) {
+            return Err(AuthorError::InvalidComplex { reason: "abstract part without a subtype part" });
         }
     }
     Ok(())

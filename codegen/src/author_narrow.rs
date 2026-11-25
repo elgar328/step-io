@@ -122,6 +122,9 @@ pub struct AuthorNarrowing {
     /// edition, for each type with a bound to check; read by the aggregate
     /// SELECT member that holds the type.
     pub aggregate_bounds: BTreeMap<String, (u32, Option<u32>)>,
+    /// Entities (UPPER) the output edition declares `ABSTRACT`: no simple
+    /// constructor, and a complex part only beside a subtype part.
+    pub abstract_entities: BTreeSet<String>,
     pub complex: Vec<ComplexAuthorNarrowing>,
 }
 
@@ -446,7 +449,15 @@ impl AuthorNarrowing {
             )
         };
 
-        let mut out = AuthorNarrowing::default();
+        let mut out = AuthorNarrowing {
+            abstract_entities: target_schema
+                .entity
+                .iter()
+                .filter(|(_, e)| e.is_abstract)
+                .map(|(n, _)| n.to_uppercase())
+                .collect(),
+            ..AuthorNarrowing::default()
+        };
         for (name, t) in &target_schema.types {
             let aliased = t.aliased.trim_start();
             if ["LIST", "SET", "BAG"]

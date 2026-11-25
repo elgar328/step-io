@@ -18,13 +18,9 @@ pub struct Entity {
     /// Direct supertype names (EXPRESS declaration order, left-to-right).
     #[serde(default)]
     pub parents: Vec<String>,
-    /// EXPRESS `ABSTRACT` flag. NOTE: known to be unreliable in the schema data
-    /// (curve/surface/representation_item are EXPRESS-abstract but emit
-    /// `is_abstract=false`); the generator does NOT use it for arena/ref
-    /// classification — it is read only so deserialize does not choke and as a
-    /// secondary diagnostic.
+    /// EXPRESS `ABSTRACT` flag: the entity exists only as part of an instance
+    /// of a subtype.
     #[serde(default)]
-    #[allow(dead_code)] // intentionally not used for classification (see note above)
     pub is_abstract: bool,
     /// True if this entity can appear as a Part21 complex (multiple-inheritance)
     /// part (ANDOR-combinable leaf or a supertype of one) — auto-derived in

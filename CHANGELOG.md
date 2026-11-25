@@ -122,14 +122,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `add_advanced_face`: `face_geometry` takes an
     `Ap242AdvancedFaceGeometrySelectRef` (an elementary, B-spline or swept
     surface)
-  - `add_tessellated_face` and `add_complex_triangulated_face`:
-    `geometric_link` takes an `Ap242FaceOrSurfaceRef` (a face surface or a
-    surface, where edition 2 allowed any face)
+  - `add_complex_triangulated_face`: `geometric_link` takes an
+    `Ap242FaceOrSurfaceRef` (a face surface or a surface, where edition 2
+    allowed any face)
   - `add_compound_representation_item`: `item_element` takes an
     `Ap242CompoundItemDefinitionRef` (a list or set of items, not one alone);
-    `add_datum_reference_compartment`, `add_datum_reference_element` and
-    `add_general_datum_reference`: `base` takes an
-    `Ap242DatumOrCommonDatumRef` (a datum reference element only in a list)
+    `add_datum_reference_compartment` and `add_datum_reference_element`:
+    `base` takes an `Ap242DatumOrCommonDatumRef` (a datum reference element
+    only in a list)
   - `add_draughting_model`, `add_mechanical_design_geometric_presentation_representation`,
     `add_mechanical_design_shaded_presentation_representation`,
     `add_shape_dimension_representation` and
@@ -205,6 +205,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `DRAUGHTING_ANNOTATION_OCCURRENCE.WR7` — exactly one composite text or text
   literal — where a part is an annotation text occurrence), and `add_person_and_organization_address` takes
   exactly one organization and one person, as AP242 requires.
+- `add_complex` rejects a part of an entity AP242 declares `ABSTRACT` unless
+  a part of one of its subtypes is beside it, with
+  `AuthorError::InvalidComplex`.
 - Attributes that every STEP edition narrows with a redeclaration
   (`SELF\supertype.attribute : narrower;`) now have the narrower type in the
   model, so both reading and `Ap242Author` take only what the schema allows
@@ -244,6 +247,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- The constructors of the entities AP242 edition 4 declares `ABSTRACT`,
+  which exist only as part of an instance of a subtype:
+  `add_action_assignment`, `add_action_request_assignment`,
+  `add_approval_assignment`, `add_camera_model`,
+  `add_date_and_time_assignment`, `add_document_product_association`,
+  `add_document_reference`, `add_expression`,
+  `add_external_identification_assignment`, `add_founded_item`,
+  `add_general_datum_reference`, `add_generic_expression`,
+  `add_generic_literal`, `add_generic_product_definition_reference`,
+  `add_geometric_tolerance`, `add_group_assignment`,
+  `add_identification_assignment`, `add_literal_number`,
+  `add_numeric_expression`, `add_person_and_organization_assignment`,
+  `add_presented_item`, `add_security_classification_assignment`,
+  `add_simple_generic_expression`, `add_simple_numeric_expression`,
+  `add_tessellated_face`, `add_tessellated_item`,
+  `add_tessellated_surface_set`, `add_texture_style_specification` and
+  `add_texture_style_tessellation_specification`. Use a subtype's
+  constructor, or `add_complex` with a subtype part beside the abstract one.
+  `GENERIC_PRODUCT_DEFINITION_REFERENCE`, `TEXTURE_STYLE_SPECIFICATION` and
+  `TEXTURE_STYLE_TESSELLATION_SPECIFICATION` can no longer be authored:
+  step-io does not model any of their subtypes.
 - `ANNOTATION_FILL_AREA_OCCURRENCE` and `ANNOTATION_SYMBOL` are no longer
   modeled. Every edition requires them to reference types step-io does not
   model (`ANNOTATION_FILL_AREA`, `SYMBOL_REPRESENTATION_MAP`), so a standard
