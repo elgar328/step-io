@@ -88,7 +88,8 @@ pub struct Mesh<'m> {
 }
 
 /// The normals of a [`Mesh`], as the file stores them: absent, one normal for
-/// the whole mesh, or one per vertex (parallel to [`Mesh::points`]).
+/// the whole mesh, or one per vertex (parallel to [`Mesh::points`] when its
+/// points are readable).
 #[derive(Clone, Debug, PartialEq)]
 pub enum MeshNormals {
     None,
@@ -210,10 +211,14 @@ impl<'m> Mesh<'m> {
     }
 
     /// The vertex positions, `pnindex` resolved: entry `n` is the position of
-    /// the vertex that [`Mesh::triangles`] refers to as `n` (0-based).
+    /// the vertex that [`Mesh::triangles`] refers to as `n` (0-based). A
+    /// `pnindex` entry outside the coordinate list is reported via
+    /// [`Scene::warnings`](crate::scene::Scene::warnings), and the mesh then
+    /// gives no points.
     pub fn points(&self) -> Vec<[f64; 3]> {
-        let (_, coords, _, pnindex, ..) = self.parts();
-        let model = self.cx.model;
+        let this = self.about();
+        let (_, coords, _, pnindex, ..) = this.parts();
+        let model = this.cx.model;
         let all: &[m::Reals3] = match coords {
             m::CoordinatesListRef::CoordinatesList(id) => {
                 &model.coordinates_list_arena.get(id.0).position_coords
@@ -231,7 +236,7 @@ impl<'m> Mesh<'m> {
                         _ => None,
                     })
                 else {
-                    self.cx.warn(
+                    this.cx.warn(
                         "mesh coordinates are a complex instance without a coordinate list"
                             .to_owned(),
                     );
@@ -241,16 +246,22 @@ impl<'m> Mesh<'m> {
             }
         };
         if pnindex.is_empty() {
-            all.iter().map(|row| row3(row)).collect()
-        } else {
-            pnindex
-                .iter()
-                .filter_map(|&i| {
-                    let idx = usize::try_from(i).ok()?.checked_sub(1)?;
-                    all.get(idx).map(|row| row3(row))
-                })
-                .collect()
+            return all.iter().map(|row| row3(row)).collect();
         }
+        // Dropping a bad entry would shift every later vertex, so a bad entry
+        // leaves the mesh without points.
+        let points: Option<Vec<[f64; 3]>> = pnindex
+            .iter()
+            .map(|&i| {
+                let idx = usize::try_from(i).ok()?.checked_sub(1)?;
+                all.get(idx).map(|row| row3(row))
+            })
+            .collect();
+        points.unwrap_or_else(|| {
+            this.cx
+                .warn("MESH.points: point index out of range".to_owned());
+            Vec::new()
+        })
     }
 
     /// The triangles as 0-based indices into [`Mesh::points`], expanded from
@@ -308,14 +319,20 @@ impl<'m> Mesh<'m> {
     }
 
     /// The normals, as stored: none, one for the whole mesh, or one per
-    /// vertex. Any other count is malformed and reported as a warning.
+    /// vertex (one per `pnindex` entry, or per coordinate when there is no
+    /// `pnindex`). Any other count is malformed and reported as a warning.
     pub fn normals(&self) -> MeshNormals {
         let this = self.about();
-        let (_, _, normals, ..) = this.parts();
+        let (_, _, normals, pnindex, ..) = this.parts();
+        let vertices = if pnindex.is_empty() {
+            this.points().len()
+        } else {
+            pnindex.len()
+        };
         match normals.len() {
             0 => MeshNormals::None,
             1 => MeshNormals::Uniform(row3(&normals[0])),
-            k if k == this.points().len() => {
+            k if k == vertices => {
                 MeshNormals::PerVertex(normals.iter().map(|row| row3(row)).collect())
             }
             _ => {

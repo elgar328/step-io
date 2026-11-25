@@ -334,6 +334,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Edge::to_nurbs` gives a closed edge whose direction is against its
   curve's (`same_sense` false) the other way round; it used to follow the
   curve. The closed curve still starts at the curve's parameter origin.
+- `Mesh::points` gives no points, and reports it, when a `pnindex` entry
+  falls outside the coordinate list; it used to leave the entry out, which
+  shifted every later vertex under `Mesh::triangles`. Its warnings now name
+  the mesh, and `Mesh::normals` counts per-vertex normals against `pnindex`.
 - The scene reads a measure written as a complex instance, such as
   `(LENGTH_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM()
   MEASURE_WITH_UNIT(LENGTH_MEASURE(5.), #u) REPRESENTATION_ITEM(''))`, from
