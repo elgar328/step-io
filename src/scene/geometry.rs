@@ -86,16 +86,36 @@ impl Scene<'_> {
         })
     }
 
-    /// Every geometric point in the model (`CARTESIAN_POINT`).
+    /// Every geometric point in the model: each `CARTESIAN_POINT`, each of its
+    /// subtypes `APLL_POINT` and `APLL_POINT_WITH_SURFACE` (the points of a
+    /// PMI annotation's leader lines), and each complex instance with a
+    /// `CARTESIAN_POINT` part.
     pub fn all_points(&self) -> impl Iterator<Item = Point<'_>> + '_ {
         let cx = self.ctx();
-        cx.model
+        let model = cx.model;
+        let point = move |which| Point { cx, which };
+        let cartesian = model
             .cartesian_point_arena
             .indices()
-            .map(move |i| Point {
-                cx,
-                id: m::CartesianPointId(i),
-            })
+            .map(move |i| point(PointImpl::Cartesian(m::CartesianPointId(i))));
+        let apll = model
+            .apll_point_arena
+            .indices()
+            .map(move |i| point(PointImpl::Apll(m::ApllPointId(i))));
+        let apll_with_surface = model
+            .apll_point_with_surface_arena
+            .indices()
+            .map(move |i| point(PointImpl::ApllWithSurface(m::ApllPointWithSurfaceId(i))));
+        let complex = model
+            .complex_entity_arena
+            .indices()
+            .map(m::ComplexEntityId)
+            .filter(move |&id| complex_point_coords(model, id).is_some())
+            .map(move |id| point(PointImpl::Complex(id)));
+        cartesian
+            .chain(apll)
+            .chain(apll_with_surface)
+            .chain(complex)
     }
 }
 
@@ -1532,24 +1552,27 @@ impl<'m> Vertex<'m> {
         m::EntityKey::VertexPoint(self.id)
     }
 
-    /// The vertex's geometric point (only `CARTESIAN_POINT` is resolved here).
+    /// The vertex's geometric point: a `CARTESIAN_POINT`, an `APLL_POINT`
+    /// (with or without surface), or a complex instance with a
+    /// `CARTESIAN_POINT` part. A bare `POINT`, or a complex one without that
+    /// part, has no coordinates and is reported in
+    /// [`Scene::warnings`](crate::scene::Scene::warnings).
     pub fn point(&self) -> Option<Point<'m>> {
-        let r = &self
+        let this = self.about();
+        let r = &this
             .cx
             .model
             .vertex_point_arena
-            .get(self.id.0)
+            .get(this.id.0)
             .vertex_geometry;
-        match r {
-            m::PointRef::CartesianPoint(i) => Some(Point {
-                cx: self.cx,
-                id: *i,
-            }),
-            m::PointRef::ApllPoint(_)
-            | m::PointRef::ApllPointWithSurface(_)
-            | m::PointRef::Point(_)
-            | m::PointRef::Complex(_) => None,
+        let point = Point::from_key(this.cx, r.entity_key());
+        if point.is_none() {
+            this.cx.warn(format!(
+                "vertex point is a {} without coordinates; not read",
+                Ctx::keyword(r.entity_key())
+            ));
         }
+        point
     }
 
     /// The edges that begin or end at this vertex (reverse: an `EDGE_CURVE` whose
@@ -1570,23 +1593,70 @@ impl<'m> Vertex<'m> {
     }
 }
 
-/// A geometric point (`CARTESIAN_POINT`).
+/// A geometric point: a `CARTESIAN_POINT`, one of its subtypes `APLL_POINT`
+/// and `APLL_POINT_WITH_SURFACE`, or a complex instance with a
+/// `CARTESIAN_POINT` part.
 #[derive(Clone, Copy)]
 pub struct Point<'m> {
     cx: Ctx<'m>,
-    id: m::CartesianPointId,
+    which: PointImpl,
+}
+
+#[derive(Clone, Copy)]
+enum PointImpl {
+    Cartesian(m::CartesianPointId),
+    Apll(m::ApllPointId),
+    ApllWithSurface(m::ApllPointWithSurfaceId),
+    /// Constructed only for a complex instance with a `CARTESIAN_POINT` part.
+    Complex(m::ComplexEntityId),
+}
+
+/// The coordinates in a complex instance's `CARTESIAN_POINT` part, if it has one.
+fn complex_point_coords(model: &m::StepModel, id: m::ComplexEntityId) -> Option<&[f64]> {
+    model
+        .complex_entity_arena
+        .get(id.0)
+        .parts
+        .iter()
+        .find_map(|p| match p {
+            m::PartialEntity::CartesianPoint { coordinates } => Some(&coordinates[..]),
+            _ => None,
+        })
 }
 
 impl<'m> Point<'m> {
-    /// Construct a point handle from a `CARTESIAN_POINT` id — used by other scene
-    /// modules (e.g. `pmi` feature geometry) to bridge into geometry.
+    /// A point handle for a `CARTESIAN_POINT` id — used by other scene modules
+    /// (e.g. `pmi` feature geometry) to bridge into geometry.
     pub(crate) fn from_id(cx: Ctx<'m>, id: m::CartesianPointId) -> Self {
-        Point { cx, id }
+        Point {
+            cx,
+            which: PointImpl::Cartesian(id),
+        }
+    }
+
+    /// A point handle for a reference to an entity that is a point, if it is
+    /// one this handle covers; `None` (without a warning) otherwise.
+    pub(crate) fn from_key(cx: Ctx<'m>, key: m::EntityKey) -> Option<Self> {
+        let which = match key {
+            m::EntityKey::CartesianPoint(i) => PointImpl::Cartesian(i),
+            m::EntityKey::ApllPoint(i) => PointImpl::Apll(i),
+            m::EntityKey::ApllPointWithSurface(i) => PointImpl::ApllWithSurface(i),
+            m::EntityKey::ComplexEntity(i) if complex_point_coords(cx.model, i).is_some() => {
+                PointImpl::Complex(i)
+            }
+            _ => return None,
+        };
+        Some(Point { cx, which })
     }
 
     /// This point's global identity (a `Copy` key for maps / deduplication).
     pub fn key(&self) -> m::EntityKey {
-        m::EntityKey::CartesianPoint(self.id)
+        match self.which {
+            PointImpl::Cartesian(i) => m::EntityKey::CartesianPoint(i),
+            PointImpl::Apll(i) => m::EntityKey::ApllPoint(i),
+            PointImpl::ApllWithSurface(i) => m::EntityKey::ApllPointWithSurface(i),
+            PointImpl::Complex(i) => m::EntityKey::ComplexEntity(i),
+        }
     }
 
     /// The coordinates as a 3-vector, missing components padded with `0.0` —
@@ -1602,12 +1672,15 @@ impl<'m> Point<'m> {
 
     /// The point's coordinates as written (`x, y[, z]`).
     pub fn coords(&self) -> &'m [f64] {
-        &self
-            .cx
-            .model
-            .cartesian_point_arena
-            .get(self.id.0)
-            .coordinates
+        let model = self.cx.model;
+        match self.which {
+            PointImpl::Cartesian(i) => &model.cartesian_point_arena.get(i.0).coordinates,
+            PointImpl::Apll(i) => &model.apll_point_arena.get(i.0).coordinates,
+            PointImpl::ApllWithSurface(i) => {
+                &model.apll_point_with_surface_arena.get(i.0).coordinates
+            }
+            PointImpl::Complex(i) => complex_point_coords(model, i).unwrap_or(&[]),
+        }
     }
 
     /// The marker colour of this point's style (`POINT_STYLE.marker_colour`),
@@ -1753,5 +1826,6 @@ about_by_key!(
     Shell,
     Solid,
     Surface,
-    SurfaceModel
+    SurfaceModel,
+    Vertex
 );

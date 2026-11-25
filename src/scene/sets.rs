@@ -51,13 +51,13 @@ enum SetImpl {
 }
 
 /// One element of a [`GeometricSet`]. Curves and points are typed; anything
-/// else (a placement, a planar box, a surface, a complex instance) is `Other`,
-/// by key.
+/// else (a placement, a planar box, a surface) is `Other`, by key.
 #[derive(Clone, Copy, Debug)]
 #[non_exhaustive]
 pub enum SetElement<'m> {
     Curve(Curve<'m>),
-    /// A `CARTESIAN_POINT`.
+    /// A point: a `CARTESIAN_POINT`, an `APLL_POINT` (with or without
+    /// surface), or a complex instance with a `CARTESIAN_POINT` part.
     Point(Point<'m>),
     Other(m::EntityKey),
 }
@@ -118,12 +118,8 @@ impl<'m> GeometricSet<'m> {
             if let Some(curve) = Curve::from_set_select(cx, e) {
                 return SetElement::Curve(curve);
             }
-            match e {
-                m::GeometricSetSelectRef::CartesianPoint(i) => {
-                    SetElement::Point(Point::from_id(cx, *i))
-                }
-                other => SetElement::Other(other.entity_key()),
-            }
+            Point::from_key(cx, e.entity_key())
+                .map_or(SetElement::Other(e.entity_key()), SetElement::Point)
         })
     }
 

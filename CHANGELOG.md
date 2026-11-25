@@ -231,6 +231,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `add_complex` rejects a part of an entity AP242 declares `ABSTRACT` unless
   a part of one of its subtypes is beside it, with
   `AuthorError::InvalidComplex`.
+- `Point` also covers `APLL_POINT`, `APLL_POINT_WITH_SURFACE` and a complex
+  instance with a `CARTESIAN_POINT` part: `Vertex::point`, `Scene::all_points`,
+  `SetElement::Point` and `FeatureGeometry::Point` give them, where they used
+  to give `None` or `Other`, so `Point::key` is no longer always a
+  `CARTESIAN_POINT`.
 - Attributes that every STEP edition narrows with a redeclaration
   (`SELF\supertype.attribute : narrower;`) now have the narrower type in the
   model, so both reading and `Ap242Author` take only what the schema allows

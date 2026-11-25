@@ -590,3 +590,26 @@ fn reads_a_pre_defined_colour() {
     );
     assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
 }
+
+/// A vertex whose point is a complex instance with a `CARTESIAN_POINT` part
+/// reads its coordinates, and the point is one of `Scene::all_points`.
+#[test]
+fn a_vertex_reads_a_complex_point() {
+    let brep = BREP.replace(
+        "#10=CARTESIAN_POINT('',(0.0,0.0,0.0));",
+        "#10=(CARTESIAN_POINT((0.0,0.0,5.0))GEOMETRIC_REPRESENTATION_ITEM()POINT()\
+         REPRESENTATION_ITEM(''));",
+    );
+    let src = format!("{HEADER}{brep}{FOOTER}");
+    let (model, report) = read(src.as_bytes()).expect("read");
+    assert!(report.dropped.is_empty(), "drops: {:?}", report.dropped);
+    let scene = model.scene();
+    let edge = scene.all_edges().next().expect("an edge");
+    let point = edge
+        .start()
+        .and_then(|v| v.point())
+        .expect("the start point");
+    assert_eq!(point.xyz(), [0.0, 0.0, 5.0]);
+    assert!(scene.all_points().any(|p| p.key() == point.key()));
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}

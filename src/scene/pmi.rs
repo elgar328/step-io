@@ -1054,7 +1054,8 @@ pub enum FeatureGeometry<'m> {
     Face(Face<'m>),
     /// An `EDGE_CURVE`.
     Edge(Edge<'m>),
-    /// A `CARTESIAN_POINT`.
+    /// A point: a `CARTESIAN_POINT`, an `APLL_POINT` (with or without
+    /// surface), or a complex instance with a `CARTESIAN_POINT` part.
     Point(Point<'m>),
     /// A `MANIFOLD_SOLID_BREP` or `BREP_WITH_VOIDS`.
     Solid(Solid<'m>),
@@ -1113,7 +1114,9 @@ impl<'m> Feature<'m> {
                     FeatureGeometry::Solid(Solid::from_void_id(cx, *id))
                 }
                 other => {
-                    if let Some(c) = Curve::from_model_item(cx, other) {
+                    if let Some(p) = Point::from_key(cx, other.entity_key()) {
+                        FeatureGeometry::Point(p)
+                    } else if let Some(c) = Curve::from_model_item(cx, other) {
                         FeatureGeometry::Curve(c)
                     } else if let Some(mesh) = Mesh::from_model_item(cx, other) {
                         FeatureGeometry::Mesh(mesh)
