@@ -346,15 +346,16 @@ impl<'m> Mesh<'m> {
     /// The precise b-rep face this mesh tessellates, where the file links one
     /// (`geometric_link`); surface links and surface sets have no face.
     pub fn face(&self) -> Option<Face<'m>> {
-        let link = match self.which {
-            MeshImpl::ComplexFace(i) => self
+        let this = self.about();
+        let link = match this.which {
+            MeshImpl::ComplexFace(i) => this
                 .cx
                 .model
                 .complex_triangulated_face_arena
                 .get(i.0)
                 .geometric_link
                 .as_ref(),
-            MeshImpl::PlainFace(i) => self
+            MeshImpl::PlainFace(i) => this
                 .cx
                 .model
                 .tessellated_face_arena
@@ -363,9 +364,28 @@ impl<'m> Mesh<'m> {
                 .as_ref(),
             MeshImpl::ComplexSurfaceSet(_) => None,
         }?;
+        let cx = this.cx;
         match link {
-            m::FaceOrSurfaceRef::AdvancedFace(id) => Some(Face::from_advanced_face(self.cx, *id)),
-            m::FaceOrSurfaceRef::FaceSurface(id) => Some(Face::from_face_surface(self.cx, *id)),
+            m::FaceOrSurfaceRef::AdvancedFace(id) => Some(Face::from_advanced_face(cx, *id)),
+            m::FaceOrSurfaceRef::FaceSurface(id) => Some(Face::from_face_surface(cx, *id)),
+            m::FaceOrSurfaceRef::Face(_) => {
+                cx.warn("mesh geometric_link is a bare FACE with no surface; not read".to_owned());
+                None
+            }
+            // A complex surface (a rational B-spline) is a surface link.
+            m::FaceOrSurfaceRef::Complex(cuid)
+                if !cx
+                    .model
+                    .complex_entity_arena
+                    .get(cuid.0)
+                    .parts
+                    .iter()
+                    .any(|p| matches!(p, m::PartialEntity::Surface)) =>
+            {
+                cx.warn("mesh geometric_link is a complex instance; not read".to_owned());
+                None
+            }
+            // A surface link: the mesh tessellates a surface, not a face.
             _ => None,
         }
     }
@@ -445,14 +465,22 @@ impl<'m> MeshGroup<'m> {
 
     /// The mesh faces bundled in this group.
     pub fn meshes(&self) -> impl Iterator<Item = Mesh<'m>> + 'm {
-        let cx = self.cx;
-        self.items().iter().filter_map(move |it| {
+        let this = self.about();
+        let cx = this.cx;
+        this.items().iter().filter_map(move |it| {
             let which = match it {
                 m::TessellatedStructuredItemRef::ComplexTriangulatedFace(id) => {
                     MeshImpl::ComplexFace(*id)
                 }
                 m::TessellatedStructuredItemRef::TessellatedFace(id) => MeshImpl::PlainFace(*id),
-                _ => return None,
+                m::TessellatedStructuredItemRef::TessellatedStructuredItem(_) => {
+                    cx.warn("a bare TESSELLATED_STRUCTURED_ITEM has no mesh; not read".to_owned());
+                    return None;
+                }
+                m::TessellatedStructuredItemRef::Complex(_) => {
+                    cx.warn("mesh group item is a complex instance; not read".to_owned());
+                    return None;
+                }
             };
             Some(Mesh { cx, which })
         })
@@ -460,11 +488,13 @@ impl<'m> MeshGroup<'m> {
 
     /// The precise b-rep solid this group tessellates, where the file links
     /// one: a tessellated solid links it directly (`geometric_link`); a
-    /// tessellated shell links the closed shell (`topological_link`), reached
-    /// back through the solid it bounds — as its outer shell or a cavity.
+    /// tessellated shell links the closed shell (`topological_link`), directly
+    /// or through an `ORIENTED_CLOSED_SHELL`, reached back through the solid it
+    /// bounds — as its outer shell or a cavity. An open shell bounds no solid.
     pub fn solid(&self) -> Option<Solid<'m>> {
-        let cx = self.cx;
-        match self.which {
+        let this = self.about();
+        let cx = this.cx;
+        match this.which {
             GroupImpl::Solid(i) => {
                 let link = cx
                     .model
@@ -477,7 +507,10 @@ impl<'m> MeshGroup<'m> {
                     m::ManifoldSolidBrepRef::BrepWithVoids(id) => {
                         Some(Solid::from_void_id(cx, *id))
                     }
-                    m::ManifoldSolidBrepRef::Complex(_) => None,
+                    m::ManifoldSolidBrepRef::Complex(_) => {
+                        cx.warn("mesh group's solid is a complex instance; not read".to_owned());
+                        None
+                    }
                 }
             }
             GroupImpl::Shell(i) => {
@@ -487,10 +520,24 @@ impl<'m> MeshGroup<'m> {
                     .get(i.0)
                     .topological_link
                     .as_ref()?;
-                let m::ConnectedFaceSetRef::ClosedShell(shell_id) = link else {
-                    return None;
-                };
-                Solid::of_closed_shell(cx, *shell_id)
+                match link {
+                    m::ConnectedFaceSetRef::ClosedShell(shell_id) => {
+                        Solid::of_closed_shell(cx, *shell_id)
+                    }
+                    m::ConnectedFaceSetRef::OrientedClosedShell(i) => {
+                        let ocs = cx.model.oriented_closed_shell_arena.get(i.0);
+                        let (shell_id, _) =
+                            crate::scene::geometry::resolve_oriented_closed_shell(cx, ocs)?;
+                        Solid::of_closed_shell(cx, shell_id)
+                    }
+                    m::ConnectedFaceSetRef::Complex(_) => {
+                        cx.warn("mesh group's shell is a complex instance; not read".to_owned());
+                        None
+                    }
+                    // An open shell or a bare face set bounds no solid.
+                    m::ConnectedFaceSetRef::OpenShell(_)
+                    | m::ConnectedFaceSetRef::ConnectedFaceSet(_) => None,
+                }
             }
         }
     }

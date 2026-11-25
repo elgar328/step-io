@@ -49,6 +49,26 @@ const MESHES: &str = "\
 #81=TESSELLATED_SHELL('group B',(#12),$);\n\
 #82=TESSELLATED_SHELL('group C',(#15),#49);\n";
 
+/// A tessellated shell may link its closed shell through an
+/// `ORIENTED_CLOSED_SHELL`; the group still reaches the solid.
+#[test]
+fn a_mesh_group_reaches_its_solid_through_an_oriented_shell() {
+    let meshes = MESHES.replace(
+        "#82=TESSELLATED_SHELL('group C',(#15),#49);",
+        "#83=ORIENTED_CLOSED_SHELL('',*,#49,.F.);\n#82=TESSELLATED_SHELL('group C',(#15),#83);",
+    );
+    let src = format!("{HEADER}{meshes}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let group = scene
+        .all_mesh_groups()
+        .find(|g| g.name() == "group C")
+        .expect("group C");
+    assert_eq!(group.solid().expect("the solid").name(), "the part");
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
 /// A `pnindex` entry outside the coordinate list leaves the mesh without
 /// points, with a warning on the mesh, rather than shifting the vertices after
 /// it; its per-vertex normals still count against `pnindex`.

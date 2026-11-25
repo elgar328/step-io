@@ -278,6 +278,12 @@ impl<'a> Ctx<'a> {
         }
     }
 
+    /// The STEP keyword of `key` for a warning message, `COMPLEX` for a
+    /// complex instance.
+    pub(crate) fn keyword(key: EntityKey) -> &'static str {
+        key.keyword().unwrap_or("COMPLEX")
+    }
+
     /// Record a navigation anomaly (something a handle could not resolve into
     /// the shape it exposes) so it is surfaced rather than silently dropped. A
     /// warning already recorded for the same subject is not repeated.

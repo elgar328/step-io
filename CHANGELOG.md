@@ -336,6 +336,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a `NonstandardReference`.
 - `Tolerance::magnitude` reads a magnitude given as a plain
   `MEASURE_WITH_UNIT` when its value is a length measure.
+- The scene reports a reference it cannot follow in `Scene::warnings`
+  instead of leaving it out silently: a bare `FACE`, `EDGE` or `VERTEX`; a
+  complex face, bound, oriented edge, edge or vertex; a mesh group item or a
+  link to a solid it cannot read; and a curve or surface `to_nurbs` cannot
+  convert (a bare supertype such as `B_SPLINE_SURFACE` alone, or a `PCURVE`).
+  The warnings name the handle they concern. `MeshGroup::solid` follows a
+  shell linked through an `ORIENTED_CLOSED_SHELL`.
 - `Edge::to_nurbs` gives a closed edge whose direction is against its
   curve's (`same_sense` false) the other way round; it used to follow the
   curve. The closed curve still starts at the curve's parameter origin.

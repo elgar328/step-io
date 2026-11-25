@@ -546,3 +546,24 @@ fn bounds_expose_the_orientation_layers() {
         scene.warnings()
     );
 }
+
+/// A shell face that is a bare `FACE` has no surface: the shell leaves it out
+/// and says so, naming the shell.
+#[test]
+fn a_bare_face_in_a_shell_is_reported() {
+    let brep = BREP.replace(
+        "#26=CLOSED_SHELL('',(#25));",
+        "#28=FACE('',(#24));\n#26=CLOSED_SHELL('',(#25,#28));",
+    );
+    let src = format!("{HEADER}{brep}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let solid = scene.all_solids().next().expect("a solid");
+    let (shell, _) = solid.outer().expect("the outer shell");
+    assert_eq!(shell.faces().count(), 1, "only the advanced face");
+    let warnings = scene.warnings();
+    assert_eq!(warnings.len(), 1, "{warnings:?}");
+    assert_eq!(warnings[0].entity, Some(shell.key()));
+    assert!(warnings[0].message.contains("bare FACE"));
+}

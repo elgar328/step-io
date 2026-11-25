@@ -12,7 +12,6 @@
 
 use crate::Orientation;
 use crate::RefGraph;
-use crate::StepModel;
 use crate::scene::{Ctx, Scene};
 // Alias the generated model module: bare supertype structs (`Face`, `Surface`,
 // `Curve`, `Edge`, `Vertex`, `Point`, `Loop`) would shadow our handle names, so we
@@ -308,8 +307,9 @@ impl<'m> Shell<'m> {
     /// The faces of this shell, as stored (each with its own
     /// [`orientation`](Face::orientation)).
     pub fn faces(&self) -> impl Iterator<Item = Face<'m>> + use<'m> {
-        let cx = self.cx;
-        self.parts()
+        let this = self.about();
+        let cx = this.cx;
+        this.parts()
             .1
             .iter()
             .filter_map(move |fr| Face::from_ref(cx, fr))
@@ -514,8 +514,14 @@ impl<'m> Face<'m> {
                 cx,
                 which: FaceImpl::Surface(*i),
             }),
-            // Bare `Face` carries no geometry; complex faces are out of scope.
-            m::FaceRef::Face(_) | m::FaceRef::Complex(_) => None,
+            m::FaceRef::Face(_) => {
+                cx.warn("a bare FACE has no surface geometry; not read".to_owned());
+                None
+            }
+            m::FaceRef::Complex(_) => {
+                cx.warn("face is a complex instance; not read".to_owned());
+                None
+            }
         }
     }
 
@@ -565,8 +571,9 @@ impl<'m> Face<'m> {
 
     /// The boundary loops trimming this face.
     pub fn bounds(&self) -> impl Iterator<Item = Bound<'m>> + 'm {
-        let cx = self.cx;
-        self.parts()
+        let this = self.about();
+        let cx = this.cx;
+        this.parts()
             .1
             .iter()
             .filter_map(move |br| Bound::from_ref(cx, br))
@@ -851,7 +858,19 @@ impl<'m> Surface<'m> {
                     crate::scene::nurbs::KnotFamily::Bezier,
                 )
             }
-            _ => None,
+            // Open surfaces: unbounded without a face (see above).
+            m::SurfaceRef::Plane(_)
+            | m::SurfaceRef::CylindricalSurface(_)
+            | m::SurfaceRef::ConicalSurface(_)
+            | m::SurfaceRef::SurfaceOfLinearExtrusion(_) => None,
+            // A bare supertype instance carries no geometry to convert.
+            _ => {
+                let kw = crate::scene::Ctx::keyword(this.key());
+                cx.warn(format!(
+                    "{kw}.to_nurbs: a bare {kw} has no geometry to convert"
+                ));
+                None
+            }
         }
     }
 
@@ -951,7 +970,10 @@ impl<'m> Bound<'m> {
                 cx,
                 which: BoundImpl::Outer(*i),
             }),
-            m::FaceBoundRef::Complex(_) => None,
+            m::FaceBoundRef::Complex(_) => {
+                cx.warn("face bound is a complex instance; not read".to_owned());
+                None
+            }
         }
     }
 
@@ -1007,7 +1029,7 @@ impl<'m> Bound<'m> {
             .into_iter()
             .flat_map(|el| el.edge_list.iter())
             .filter_map(move |oer| {
-                let oe = resolve_oriented_edge(cx.model, oer)?;
+                let oe = resolve_oriented_edge(cx, oer)?;
                 Some((
                     Edge::from_edge_ref(cx, &oe.edge_element)?,
                     Orientation::from_flag(oe.orientation),
@@ -1018,12 +1040,13 @@ impl<'m> Bound<'m> {
     /// The one vertex of a `VERTEX_LOOP` boundary — a face that closes to a
     /// point, such as a cone at its apex. `None` for any other loop.
     pub fn vertex(&self) -> Option<Vertex<'m>> {
-        let m::LoopRef::VertexLoop(i) = self.loop_ref() else {
+        let this = self.about();
+        let m::LoopRef::VertexLoop(i) = this.loop_ref() else {
             return None;
         };
         Vertex::from_ref(
-            self.cx,
-            &self.cx.model.vertex_loop_arena.get(i.0).loop_vertex,
+            this.cx,
+            &this.cx.model.vertex_loop_arena.get(i.0).loop_vertex,
         )
     }
 }
@@ -1049,8 +1072,18 @@ impl<'m> Edge<'m> {
     fn from_edge_ref(cx: Ctx<'m>, r: &m::EdgeRef) -> Option<Self> {
         match r {
             m::EdgeRef::EdgeCurve(i) => Some(Edge { cx, id: *i }),
-            // Bare `Edge`, nested `OrientedEdge`, and complex edges are out of scope.
-            m::EdgeRef::Edge(_) | m::EdgeRef::OrientedEdge(_) | m::EdgeRef::Complex(_) => None,
+            m::EdgeRef::Edge(_) => {
+                cx.warn("a bare EDGE has no curve; not read".to_owned());
+                None
+            }
+            m::EdgeRef::OrientedEdge(_) => {
+                cx.warn("an ORIENTED_EDGE's edge is another ORIENTED_EDGE; not read".to_owned());
+                None
+            }
+            m::EdgeRef::Complex(_) => {
+                cx.warn("edge is a complex instance; not read".to_owned());
+                None
+            }
         }
     }
 
@@ -1065,11 +1098,13 @@ impl<'m> Edge<'m> {
     }
 
     pub fn start(&self) -> Option<Vertex<'m>> {
-        Vertex::from_ref(self.cx, &self.raw().edge_start)
+        let this = self.about();
+        Vertex::from_ref(this.cx, &this.raw().edge_start)
     }
 
     pub fn end(&self) -> Option<Vertex<'m>> {
-        Vertex::from_ref(self.cx, &self.raw().edge_end)
+        let this = self.about();
+        Vertex::from_ref(this.cx, &this.raw().edge_end)
     }
 
     /// The underlying (unbounded) curve this edge lies on.
@@ -1386,7 +1421,23 @@ impl<'m> Curve<'m> {
                 cx,
                 &cx.model.intersection_curve_arena.get(i.0).curve_3d,
             ),
-            _ => None,
+            // Unbounded: an edge or a trim bounds them (see above).
+            CurveImpl::Line(_) | CurveImpl::Parabola(_) | CurveImpl::Hyperbola(_) => None,
+            CurveImpl::Pcurve(_) | CurveImpl::BoundedPcurve(_) => {
+                cx.warn(format!(
+                    "{}.to_nurbs: a curve in a surface's parameter space is not converted",
+                    crate::scene::Ctx::keyword(this.key())
+                ));
+                None
+            }
+            // A bare supertype instance carries no geometry to convert.
+            _ => {
+                let kw = crate::scene::Ctx::keyword(this.key());
+                cx.warn(format!(
+                    "{kw}.to_nurbs: a bare {kw} has no geometry to convert"
+                ));
+                None
+            }
         }
     }
 
@@ -1465,7 +1516,14 @@ impl<'m> Vertex<'m> {
     fn from_ref(cx: Ctx<'m>, r: &m::VertexRef) -> Option<Self> {
         match r {
             m::VertexRef::VertexPoint(i) => Some(Vertex { cx, id: *i }),
-            m::VertexRef::Vertex(_) | m::VertexRef::Complex(_) => None,
+            m::VertexRef::Vertex(_) => {
+                cx.warn("a bare VERTEX has no point; not read".to_owned());
+                None
+            }
+            m::VertexRef::Complex(_) => {
+                cx.warn("vertex is a complex instance; not read".to_owned());
+                None
+            }
         }
     }
 
@@ -1636,7 +1694,7 @@ fn resolve_closed_shell(
 }
 
 /// [`resolve_closed_shell`] from an `ORIENTED_CLOSED_SHELL`.
-fn resolve_oriented_closed_shell<'m>(
+pub(crate) fn resolve_oriented_closed_shell<'m>(
     cx: Ctx<'m>,
     mut oc: &'m m::OrientedClosedShell,
 ) -> Option<(m::ClosedShellId, Orientation)> {
@@ -1676,13 +1734,13 @@ fn resolve_edge_loop<'m>(cx: Ctx<'m>, r: &m::LoopRef) -> Option<&'m m::EdgeLoop>
 }
 
 /// Resolve an `OrientedEdgeRef` to an `OrientedEdge`.
-fn resolve_oriented_edge<'m>(
-    model: &'m StepModel,
-    r: &m::OrientedEdgeRef,
-) -> Option<&'m m::OrientedEdge> {
+fn resolve_oriented_edge<'m>(cx: Ctx<'m>, r: &m::OrientedEdgeRef) -> Option<&'m m::OrientedEdge> {
     match r {
-        m::OrientedEdgeRef::OrientedEdge(i) => Some(model.oriented_edge_arena.get(i.0)),
-        m::OrientedEdgeRef::Complex(_) => None,
+        m::OrientedEdgeRef::OrientedEdge(i) => Some(cx.model.oriented_edge_arena.get(i.0)),
+        m::OrientedEdgeRef::Complex(_) => {
+            cx.warn("oriented edge is a complex instance; not read".to_owned());
+            None
+        }
     }
 }
 
