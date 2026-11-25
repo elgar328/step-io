@@ -247,6 +247,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A complex curve (a rational B-spline) in a geometric set or a feature's
   geometry comes back as `SetElement::Curve` / `FeatureGeometry::Curve`,
   where it used to be `Other`.
+- `Feature::geometry` also gives the geometry of a feature's components. A
+  composite feature (`COMPOSITE_SHAPE_ASPECT`, `COMPOSITE_GROUP_SHAPE_ASPECT`,
+  `CONTINUOUS_SHAPE_ASPECT`, `ALL_AROUND_SHAPE_ASPECT`) or a datum feature
+  (`DATUM_FEATURE`, `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`), plain or complex,
+  usually carries no `GEOMETRIC_ITEM_SPECIFIC_USAGE` itself; its geometry is
+  on the shape aspects that plain `SHAPE_ASPECT_RELATIONSHIP`s name as its
+  components, and on theirs in turn. Such features used to give nothing. A
+  `DATUM` at the other end of a relationship is not a component, and each
+  item comes once even when several usages designate it.
 - Attributes that every STEP edition narrows with a redeclaration
   (`SELF\supertype.attribute : narrower;`) now have the narrower type in the
   model, so both reading and `Ap242Author` take only what the schema allows

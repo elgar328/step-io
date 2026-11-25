@@ -14,6 +14,8 @@
 // pure noise, so allow the pedantic lint module-wide.
 #![allow(clippy::must_use_candidate)]
 
+use std::collections::HashSet;
+
 use crate::generated::model as m;
 use crate::scene::geometry::{Curve, Edge, Face, Point, Solid};
 use crate::scene::mesh::Mesh;
@@ -1158,59 +1160,163 @@ impl<'m> Feature<'m> {
     /// / solids / curves / meshes / geometric sets linked to it by
     /// `GEOMETRIC_ITEM_SPECIFIC_USAGE` (GISU).
     ///
-    /// A feature may designate several items (one per GISU). Items outside the
-    /// typed set (a tessellated geometric set, a placement, …) come back as
-    /// [`FeatureGeometry::Other`] with their key. Only GISUs whose `definition`
-    /// points directly at this feature are followed; indirect links through a
-    /// shape-aspect relationship are not yet resolved.
+    /// A composite feature (`COMPOSITE_SHAPE_ASPECT`,
+    /// `COMPOSITE_GROUP_SHAPE_ASPECT`, `CONTINUOUS_SHAPE_ASPECT`,
+    /// `ALL_AROUND_SHAPE_ASPECT`) or a datum feature (`DATUM_FEATURE`,
+    /// `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`), or a complex instance with one of
+    /// those parts, usually carries no GISU itself: its geometry is on its
+    /// components, the shape aspects a plain `SHAPE_ASPECT_RELATIONSHIP` names
+    /// with this feature as the relating end. Their geometry is included, and
+    /// a component that is itself composite or a datum feature is followed in
+    /// turn. A `DATUM` or `COMMON_DATUM` at the other end is the datum the
+    /// feature establishes, not a component, and is not followed; nor is a
+    /// relationship subtype such as a dimensional location.
+    ///
+    /// Each item comes once, even when several GISUs designate it. Items
+    /// outside the typed set (a tessellated geometric set, a placement, …) come
+    /// back as [`FeatureGeometry::Other`] with their key. Other indirect links
+    /// (a derived shape aspect's deriving relationship, an item named by an
+    /// `ITEM_IDENTIFIED_REPRESENTATION_USAGE`) are not followed.
     pub fn geometry(&self) -> impl Iterator<Item = FeatureGeometry<'m>> + 'm {
         let cx = self.cx;
-        let rg = cx.ref_graph();
         let mut out = Vec::new();
-        for r in rg.referrers(self.key()) {
-            let m::EntityKey::GeometricItemSpecificUsage(gid) = r else {
+        let mut items = HashSet::new();
+        let mut visited = HashSet::from([self.key()]);
+        let mut stack = vec![self.key()];
+        while let Some(key) = stack.pop() {
+            push_gisu_geometry(cx, key, &mut items, &mut out);
+            if !has_components(cx.model, key) {
                 continue;
-            };
-            let item = &cx
-                .model
-                .geometric_item_specific_usage_arena
-                .get(gid.0)
-                .identified_item;
-            out.push(match item {
-                m::GeometricModelItemRef::AdvancedFace(id) => {
-                    FeatureGeometry::Face(Face::from_advanced_face(cx, *id))
-                }
-                m::GeometricModelItemRef::FaceSurface(id) => {
-                    FeatureGeometry::Face(Face::from_face_surface(cx, *id))
-                }
-                m::GeometricModelItemRef::EdgeCurve(id) => {
-                    FeatureGeometry::Edge(Edge::from_id(cx, *id))
-                }
-                m::GeometricModelItemRef::CartesianPoint(id) => {
-                    FeatureGeometry::Point(Point::from_id(cx, *id))
-                }
-                m::GeometricModelItemRef::ManifoldSolidBrep(id) => {
-                    FeatureGeometry::Solid(Solid::from_id(cx, *id))
-                }
-                m::GeometricModelItemRef::BrepWithVoids(id) => {
-                    FeatureGeometry::Solid(Solid::from_void_id(cx, *id))
-                }
-                other => {
-                    if let Some(p) = Point::from_key(cx, other.entity_key()) {
-                        FeatureGeometry::Point(p)
-                    } else if let Some(c) = Curve::from_model_item(cx, other) {
-                        FeatureGeometry::Curve(c)
-                    } else if let Some(mesh) = Mesh::from_model_item(cx, other) {
-                        FeatureGeometry::Mesh(mesh)
-                    } else if let Some(set) = GeometricSet::from_model_item(cx, other) {
-                        FeatureGeometry::GeometricSet(set)
-                    } else {
-                        FeatureGeometry::Other(other.entity_key())
+            }
+            for component in components(cx, key) {
+                if visited.insert(component) {
+                    push_gisu_geometry(cx, component, &mut items, &mut out);
+                    if has_components(cx.model, component) {
+                        stack.push(component);
                     }
                 }
-            });
+            }
         }
         out.into_iter()
+    }
+}
+
+/// Whether the shape aspect `key` has components to follow: a composite
+/// aspect or a datum feature, or a complex instance with such a part.
+fn has_components(model: &m::StepModel, key: m::EntityKey) -> bool {
+    match key {
+        m::EntityKey::CompositeShapeAspect(_)
+        | m::EntityKey::CompositeGroupShapeAspect(_)
+        | m::EntityKey::ContinuousShapeAspect(_)
+        | m::EntityKey::AllAroundShapeAspect(_)
+        | m::EntityKey::DatumFeature(_)
+        | m::EntityKey::DimensionalSizeWithDatumFeature(_) => true,
+        m::EntityKey::ComplexEntity(id) => {
+            model.complex_entity_arena.get(id.0).parts.iter().any(|p| {
+                matches!(
+                    p,
+                    m::PartialEntity::CompositeShapeAspect
+                        | m::PartialEntity::CompositeGroupShapeAspect
+                        | m::PartialEntity::ContinuousShapeAspect
+                        | m::PartialEntity::AllAroundShapeAspect
+                        | m::PartialEntity::DatumFeature
+                        | m::PartialEntity::DimensionalSizeWithDatumFeature
+                )
+            })
+        }
+        _ => false,
+    }
+}
+
+/// Whether the shape aspect `key` is a datum (`DATUM`, `COMMON_DATUM`, or a
+/// complex instance with such a part).
+fn is_datum(model: &m::StepModel, key: m::EntityKey) -> bool {
+    match key {
+        m::EntityKey::Datum(_) | m::EntityKey::CommonDatum(_) => true,
+        m::EntityKey::ComplexEntity(id) => {
+            model.complex_entity_arena.get(id.0).parts.iter().any(|p| {
+                matches!(
+                    p,
+                    m::PartialEntity::Datum { .. } | m::PartialEntity::CommonDatum
+                )
+            })
+        }
+        _ => false,
+    }
+}
+
+/// The components of the shape aspect `key`: the related ends of the plain
+/// `SHAPE_ASPECT_RELATIONSHIP`s whose relating end is `key`, less datums.
+fn components(cx: Ctx<'_>, key: m::EntityKey) -> Vec<m::EntityKey> {
+    let mut out = Vec::new();
+    for r in cx.ref_graph().referrers(key) {
+        let m::EntityKey::ShapeAspectRelationship(sid) = r else {
+            continue;
+        };
+        let sar = cx.model.shape_aspect_relationship_arena.get(sid.0);
+        if sar.relating_shape_aspect.entity_key() != key {
+            continue;
+        }
+        let related = sar.related_shape_aspect.entity_key();
+        if !is_datum(cx.model, related) {
+            out.push(related);
+        }
+    }
+    out
+}
+
+/// Push the geometry the GISUs on `key` designate, skipping items in `items`.
+fn push_gisu_geometry<'m>(
+    cx: Ctx<'m>,
+    key: m::EntityKey,
+    items: &mut HashSet<m::EntityKey>,
+    out: &mut Vec<FeatureGeometry<'m>>,
+) {
+    for r in cx.ref_graph().referrers(key) {
+        let m::EntityKey::GeometricItemSpecificUsage(gid) = r else {
+            continue;
+        };
+        let item = &cx
+            .model
+            .geometric_item_specific_usage_arena
+            .get(gid.0)
+            .identified_item;
+        if !items.insert(item.entity_key()) {
+            continue;
+        }
+        out.push(match item {
+            m::GeometricModelItemRef::AdvancedFace(id) => {
+                FeatureGeometry::Face(Face::from_advanced_face(cx, *id))
+            }
+            m::GeometricModelItemRef::FaceSurface(id) => {
+                FeatureGeometry::Face(Face::from_face_surface(cx, *id))
+            }
+            m::GeometricModelItemRef::EdgeCurve(id) => {
+                FeatureGeometry::Edge(Edge::from_id(cx, *id))
+            }
+            m::GeometricModelItemRef::CartesianPoint(id) => {
+                FeatureGeometry::Point(Point::from_id(cx, *id))
+            }
+            m::GeometricModelItemRef::ManifoldSolidBrep(id) => {
+                FeatureGeometry::Solid(Solid::from_id(cx, *id))
+            }
+            m::GeometricModelItemRef::BrepWithVoids(id) => {
+                FeatureGeometry::Solid(Solid::from_void_id(cx, *id))
+            }
+            other => {
+                if let Some(p) = Point::from_key(cx, other.entity_key()) {
+                    FeatureGeometry::Point(p)
+                } else if let Some(c) = Curve::from_model_item(cx, other) {
+                    FeatureGeometry::Curve(c)
+                } else if let Some(mesh) = Mesh::from_model_item(cx, other) {
+                    FeatureGeometry::Mesh(mesh)
+                } else if let Some(set) = GeometricSet::from_model_item(cx, other) {
+                    FeatureGeometry::GeometricSet(set)
+                } else {
+                    FeatureGeometry::Other(other.entity_key())
+                }
+            }
+        });
     }
 }
 

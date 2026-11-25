@@ -283,8 +283,9 @@ fn a_datum_reaches_a_dimensional_size_with_datum_feature() {
 
 // A composite datum feature written as a complex instance, as NIST's AP242
 // test files write one: the complex is the datum feature of datum 'A', joins
-// two plain shape aspects on faces by SHAPE_ASPECT_RELATIONSHIPs, and carries
-// a dimension and a tolerance. It has no GISU of its own.
+// two plain shape aspects (on a face and an edge) by
+// SHAPE_ASPECT_RELATIONSHIPs, and carries a dimension and a tolerance. It has
+// no GISU of its own; the datum has one, on a point.
 fn complex_datum_feature() -> String {
     DATUM_FEATURE
         .replace(
@@ -298,9 +299,10 @@ fn complex_datum_feature() -> String {
 #56=SHAPE_ASPECT_RELATIONSHIP('','',#50,#54);\n\
 #57=SHAPE_ASPECT_RELATIONSHIP('','',#50,#55);\n\
 #58=GEOMETRIC_ITEM_SPECIFIC_USAGE('','',#54,#37,#35);\n\
-#59=GEOMETRIC_ITEM_SPECIFIC_USAGE('','',#55,#37,#35);\n\
+#59=GEOMETRIC_ITEM_SPECIFIC_USAGE('','',#55,#37,#31);\n\
 #60=DIMENSIONAL_SIZE(#50,'width');\n\
-#61=FLATNESS_TOLERANCE('flat',$,$,#50);",
+#61=FLATNESS_TOLERANCE('flat',$,$,#50);\n\
+#62=GEOMETRIC_ITEM_SPECIFIC_USAGE('','',#51,#37,#21);",
         )
 }
 
@@ -335,6 +337,87 @@ fn a_complex_datum_feature_is_a_feature() {
     assert_eq!(part.dimensions().count(), 1);
     assert_eq!(part.tolerances().count(), 1);
 
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
+/// A complex datum feature's geometry is its components': the face and the
+/// edge, not the point on the datum it establishes.
+#[test]
+fn a_complex_datum_feature_gives_its_components_geometry() {
+    let src = format!("{HEADER}{}{FOOTER}", complex_datum_feature());
+    let (model, _rep) = read(src.as_bytes()).expect("read");
+    let scene = model.scene();
+    let df = scene
+        .all_datums()
+        .next()
+        .and_then(|d| d.datum_feature())
+        .expect("the datum feature");
+    let kinds: Vec<_> = df.geometry().map(|g| discriminant(&g)).collect();
+    assert_eq!(kinds, ["Face", "Edge"]);
+}
+
+// A plain DATUM_FEATURE with no GISU, as NIST's AP242 test files write some:
+// its geometry is behind SHAPE_ASPECT_RELATIONSHIPs, on a plain aspect (on
+// the point #20) and on a group whose components are a plain aspect (on the
+// face, designated twice) and a nested composite (on the edge). An
+// all-around aspect wraps the group. A dimensional location from the datum
+// feature to another aspect (on the point #21) is not a component.
+const DATUM_FEATURE_COMPONENTS: &str = "\
+#50=DATUM_FEATURE('df','',#13,.T.);\n\
+#51=DATUM('datum a','',#13,.T.,'A');\n\
+#52=SHAPE_ASPECT_RELATIONSHIP('','',#50,#51);\n\
+#70=COMPOSITE_GROUP_SHAPE_ASPECT('grp','',#13,.T.);\n\
+#71=SHAPE_ASPECT_RELATIONSHIP('','datum feature',#50,#70);\n\
+#72=SHAPE_ASPECT('a','',#13,.T.);\n\
+#73=SHAPE_ASPECT_RELATIONSHIP('','',#70,#72);\n\
+#74=GEOMETRIC_ITEM_SPECIFIC_USAGE('','',#72,#37,#35);\n\
+#75=COMPOSITE_SHAPE_ASPECT('c','',#13,.T.);\n\
+#76=SHAPE_ASPECT_RELATIONSHIP('','',#70,#75);\n\
+#77=SHAPE_ASPECT('b','',#13,.T.);\n\
+#78=SHAPE_ASPECT_RELATIONSHIP('','',#75,#77);\n\
+#79=GEOMETRIC_ITEM_SPECIFIC_USAGE('','',#77,#37,#31);\n\
+#80=SHAPE_ASPECT('other','',#13,.T.);\n\
+#81=GEOMETRIC_ITEM_SPECIFIC_USAGE('','',#80,#37,#21);\n\
+#82=DIMENSIONAL_LOCATION('loc','',#50,#80);\n\
+#83=ALL_AROUND_SHAPE_ASPECT('around','',#13,.T.);\n\
+#84=SHAPE_ASPECT_RELATIONSHIP('','',#83,#70);\n\
+#85=GEOMETRIC_ITEM_SPECIFIC_USAGE('','',#72,#37,#35);\n\
+#86=SHAPE_ASPECT('d','',#13,.T.);\n\
+#87=SHAPE_ASPECT_RELATIONSHIP('','datum feature',#50,#86);\n\
+#88=GEOMETRIC_ITEM_SPECIFIC_USAGE('','',#86,#37,#20);\n";
+
+/// Composite features and datum features give the geometry of their
+/// components, nested ones included, each item once; a relationship subtype
+/// and the parent side of a relationship are not followed.
+#[test]
+fn composite_and_datum_features_give_their_components_geometry() {
+    let base = DATUM_FEATURE
+        .split("#50=")
+        .next()
+        .expect("the part and its geometry");
+    let src = format!("{HEADER}{base}{DATUM_FEATURE_COMPONENTS}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let kinds = |name: &str| -> Vec<&'static str> {
+        let f = scene
+            .all_features()
+            .find(|f| f.name() == name)
+            .expect("the feature");
+        let mut kinds: Vec<_> = f.geometry().map(|g| discriminant(&g)).collect();
+        kinds.sort_unstable();
+        kinds
+    };
+    assert_eq!(kinds("df"), ["Edge", "Face", "Point"]);
+    assert_eq!(kinds("grp"), ["Edge", "Face"]);
+    assert_eq!(kinds("c"), ["Edge"]);
+    assert_eq!(kinds("around"), ["Edge", "Face"]);
+    let df = scene
+        .all_datums()
+        .next()
+        .and_then(|d| d.datum_feature())
+        .expect("the datum feature");
+    assert_eq!(df.geometry().count(), 3);
     assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
 }
 
