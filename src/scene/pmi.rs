@@ -1051,10 +1051,14 @@ impl Scene<'_> {
     /// denote a region of the part's shape (plain aspects, datum features,
     /// composite / derived / all-around / centre-of-symmetry / continuous
     /// aspects), and complex instances with a `SHAPE_ASPECT` part (a composite
-    /// datum feature, for one) that carry none of the parts below. Datum
-    /// callouts, datum-system references, tolerance zones, and views are also
-    /// `SHAPE_ASPECT`s in the schema but are not features here — datums are
-    /// reached via [`Scene::all_datums`], the rest via the raw model.
+    /// datum feature, for one) that carry none of the parts below. Datums and
+    /// common datums, datum targets and placed datum target features, the
+    /// datum reference structures (datum systems, compartments, elements and
+    /// general datum references), tolerance zones, default model geometric
+    /// views and `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` are also `SHAPE_ASPECT`s
+    /// in the schema but are not features here — datums are reached via
+    /// [`Scene::all_datums`], a `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` via
+    /// [`Datum::datum_feature`], the rest via the raw model.
     pub fn all_features(&self) -> impl Iterator<Item = Feature<'_>> + '_ {
         let cx = self.ctx();
         let mut out: Vec<Feature<'_>> = Vec::new();

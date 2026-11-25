@@ -236,9 +236,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `MappedInstance::solids`, `surface_models`, `geometric_sets` and
   `mapped_children` follow a plain `SHAPE_REPRESENTATION_RELATIONSHIP` from
   the source representation to an equivalent one, as `ProductDef::solids`
-  does. Neither crosses a relationship a `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION`
-  uses any more: it relates a component to its assembly, and crossing it
-  could pull the assembly's items into a part.
+  does. Neither crosses a relationship a
+  `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` uses any more: it relates a
+  component to its assembly, and crossing it could pull the assembly's items
+  into a part.
 - `Point` also covers `APLL_POINT`, `APLL_POINT_WITH_SURFACE` and a complex
   instance with a `CARTESIAN_POINT` part: `Vertex::point`, `Scene::all_points`,
   `SetElement::Point` and `FeatureGeometry::Point` give them, where they used
@@ -346,12 +347,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   STEP edition narrows (listed under Changed), names a type the narrower
   attribute does not allow, and reports it as a `NonstandardReference`. Such
   an entity used to be kept, with a reference the standard does not allow.
-- The same holds inside a complex entity: when one part narrows an attribute
-  another part declares, and every edition shares that narrowing, `read()`
-  drops the entity if the reference falls outside it (for example
+- The same holds inside a complex instance: when one part narrows an
+  attribute another part declares, and every edition shares that narrowing,
+  `read()` drops the entity if the reference falls outside it (for example
   `(PRESENTATION_REPRESENTATION REPRESENTATION)` over a context that is not
   geometric).
-- `read()` drops an entity whose reference points at a complex entity none
+- `read()` drops an entity whose reference points at a complex instance none
   of whose parts the schema allows there, and reports it as a
   `NonstandardReference`, as it already did for a simple entity of the wrong
   type. Such an entity used to be kept, and the reference went missing from
@@ -365,25 +366,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Tolerance::magnitude` reads a magnitude given as a plain
   `MEASURE_WITH_UNIT` when its value is a length measure.
 - The scene reports a reference it cannot follow in `Scene::warnings`
-  instead of leaving it out silently: a bare `FACE`, `EDGE` or `VERTEX`; a
-  complex face, bound, oriented edge, edge or vertex; a mesh group item or a
-  link to a solid it cannot read; and a curve or surface `to_nurbs` cannot
-  convert (a bare supertype such as `B_SPLINE_SURFACE` alone, or a `PCURVE`).
-  The NURBS conversions also report a complex direction or vector, a zero
-  direction, a 2D or degenerate placement, a complex B-spline without its
-  B-spline part or knots, and a basis or 3D curve of a kind they do not
-  convert. The product and PMI walks report a complex product, formation,
-  document, date, direction, shape representation or `of_shape`, a complex
-  dimension feature or datum feature without a `SHAPE_ASPECT` part, a complex
-  tolerance target without a `SHAPE_ASPECT`, `SHAPE_ASPECT_RELATIONSHIP` or
-  `DIMENSIONAL_SIZE` part, a placement whose transformation is not an
-  `ITEM_DEFINED_TRANSFORMATION`, and a shape relationship whose other end is
-  not a representation. The presentation walks report a complex style, style
-  element or rendering property and a bare `COLOUR`, and `Scene::units` a
-  length or angle unit it cannot read, naming the unit context. The warnings name the handle they
-  concern. A bare `PRE_DEFINED_COLOUR` now gives its colour. `Datum::datum_feature` also finds a
-  `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`. `MeshGroup::solid` follows a shell linked
-  through an `ORIENTED_CLOSED_SHELL`.
+  instead of leaving it out silently, and the warnings name the handle they
+  concern. The geometry walks report a bare `FACE`, `EDGE` or `VERTEX`; a
+  complex face, bound, oriented edge, edge or vertex; an oriented edge whose
+  edge is another `ORIENTED_EDGE`; a vertex point without coordinates; a
+  mesh group item or a link to a solid it cannot read; and a mesh's face
+  link that is a bare `FACE` or a complex instance. `to_nurbs` reports a
+  curve or surface it cannot convert (a bare supertype such as
+  `B_SPLINE_SURFACE` alone, or a `PCURVE`), a complex direction or vector, a
+  zero direction, a 2D or degenerate placement, a complex B-spline without
+  its B-spline part or knots, a B-spline whose control points do not fit its
+  knot family, an unbounded swept profile, and a basis or 3D curve of a kind
+  it does not convert. The product and PMI walks report a complex product,
+  formation, document, date, direction, shape representation or `of_shape`;
+  a complex dimension feature or datum feature without a `SHAPE_ASPECT`
+  part; a complex tolerance target without a `SHAPE_ASPECT`,
+  `SHAPE_ASPECT_RELATIONSHIP` or `DIMENSIONAL_SIZE` part; a
+  `PRODUCT_DEFINITION_OCCURRENCE` without a definition, and an occurrence or
+  assembly usage that names something other than a product definition; a
+  placement whose transformation is not an `ITEM_DEFINED_TRANSFORMATION`;
+  and a shape relationship whose other end is not a representation. The
+  presentation walks report a complex style, style element or rendering
+  property, a bare `COLOUR` and an unknown pre-defined colour name, and
+  `Scene::units` a length or angle unit it cannot read, naming the unit
+  context. A measure written as a complex instance without a
+  `MEASURE_WITH_UNIT` part is reported where it is read: a dimension value,
+  a tolerance magnitude, a curve width, the uncertainty, and a conversion
+  factor.
+- A bare `PRE_DEFINED_COLOUR` gives its colour.
+- `Datum::datum_feature` also finds a `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`.
+- `MeshGroup::solid` follows a shell linked through an
+  `ORIENTED_CLOSED_SHELL`.
 - `ProductDef::tolerances` includes a tolerance whose target is a dimension
   or a relationship between shape aspects, also when that is a complex
   instance, under each part a feature it joins is on, as
@@ -407,8 +420,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in a cycle are reported, and the overrides inside the cycle are set aside.
 - `Face::to_nurbs` converts a face on a `SURFACE_OF_LINEAR_EXTRUSION` of a
   `LINE`, bounding the line by the face's points as it bounds the extrusion;
-  it used to give `None`. A face swept from a parabola or hyperbola is
-  reported in `Scene::warnings`.
+  it used to give `None`. A face swept from a parabola or hyperbola, or from
+  a line along the extrusion, is reported in `Scene::warnings`.
 - `Edge::to_nurbs` gives a closed edge whose direction is against its
   curve's (`same_sense` false) the other way round; it used to follow the
   curve. The closed curve still starts at the curve's parameter origin.
@@ -430,8 +443,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   wrong one through overflow, and one near X a slightly skewed one through
   rounding.
 - `read()` repeats its drop pass until no kept entity fails, where it used to
-  stop after three rounds; an entity that failed in a fourth would have been
-  reported as dropped yet left in the model and counted as kept.
+  stop after three rounds; an entity that failed in the third was reported
+  as dropped yet left in the model and counted as kept.
 - The scene reads a measure written as a complex instance, such as
   `(LENGTH_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM()
   MEASURE_WITH_UNIT(LENGTH_MEASURE(5.), #u) REPRESENTATION_ITEM(''))`, from
@@ -447,8 +460,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Scene::units` stops at a conversion-based unit defined through itself and
   reports it; such a unit used to overflow the stack. A length or angle unit
   whose base is a unit of another kind, or cannot be read, is now reported
-  too, and a conversion factor that cannot be read no longer also reports
-  the unit as missing its `CONVERSION_BASED_UNIT` part.
+  too.
 - `ProductDef::children`, `parents` and `occurrences` give a usage whose two
   ends are the same definition once; it used to come twice.
 - A shape aspect written as a complex instance with a `SHAPE_ASPECT` part,

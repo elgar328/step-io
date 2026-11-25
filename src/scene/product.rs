@@ -439,7 +439,9 @@ impl<'m> ProductDef<'m> {
     /// `BREP_WITH_VOIDS`. When the geometry
     /// lives in a separate representation bridged by a plain
     /// `SHAPE_REPRESENTATION_RELATIONSHIP` (the common AP242 assembly layout), the
-    /// equivalence bridge is followed to collect those solids too.
+    /// equivalence bridge is followed to collect those solids too. A
+    /// relationship a `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` uses places a
+    /// component in its assembly rather than bridging, and is not followed.
     pub fn solids(&self) -> impl Iterator<Item = Solid<'m>> + 'm {
         let cx = self.cx;
         let mut seen: HashSet<m::EntityKey> = HashSet::new();
@@ -1278,8 +1280,9 @@ impl<'m> MappedInstance<'m> {
     /// The b-rep solids of the source representation — the geometry this
     /// instance stamps — and of the representations it is bridged to by a
     /// plain `SHAPE_REPRESENTATION_RELATIONSHIP`, as for
-    /// [`ProductDef::solids`]. A non-shape source (a presentation view) has
-    /// none.
+    /// [`ProductDef::solids`]: a relationship a
+    /// `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` uses is not followed. A
+    /// non-shape source (a presentation view) has none.
     pub fn solids(&self) -> impl Iterator<Item = Solid<'m>> + 'm {
         let cx = self.cx;
         let mut seen: HashSet<m::EntityKey> = HashSet::new();
@@ -1312,8 +1315,8 @@ impl<'m> MappedInstance<'m> {
     }
 
     /// Nested mapped items inside the source representation (and those it is
-    /// bridged to) — one level of an assembly chain; walk them to traverse the
-    /// instance tree.
+    /// bridged to, as for [`solids`](Self::solids)) — one level of an assembly
+    /// chain; walk them to traverse the instance tree.
     pub fn mapped_children(&self) -> impl Iterator<Item = MappedInstance<'m>> + 'm {
         let cx = self.cx;
         let me = self.id;
@@ -1344,11 +1347,6 @@ impl<'m> MappedInstance<'m> {
 // Helpers
 // ---------------------------------------------------------------------------
 
-/// The item-defined transformation behind a context-dependent shape
-/// representation: its `representation_relation` is the complex
-/// `(…, REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION, …)` whose operator is an
-/// `ITEM_DEFINED_TRANSFORMATION`. Returned with the relationship's
-/// `(rep_1, rep_2)`.
 /// The warning for a complex `PRODUCT_DEFINITION_FORMATION`.
 const COMPLEX_FORMATION: &str = "product definition formation is a complex instance; not read";
 
@@ -1380,6 +1378,11 @@ fn op_keyword(op: &m::TransformationRef) -> &'static str {
     }
 }
 
+/// The item-defined transformation behind a context-dependent shape
+/// representation: its `representation_relation` is the complex
+/// `(…, REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION, …)` whose operator is an
+/// `ITEM_DEFINED_TRANSFORMATION`. Returned with the relationship's
+/// `(rep_1, rep_2)`.
 fn idt_of_cdsr<'m>(
     cx: Ctx<'m>,
     rr: &m::ShapeRepresentationRelationshipRef,

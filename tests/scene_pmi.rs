@@ -1,7 +1,6 @@
 //! PMI dimensions API: a `DIMENSIONAL_SIZE` whose nominal value is reached
 //! through `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION` → a
-//! `SHAPE_DIMENSION_REPRESENTATION`'s `MEASURE_REPRESENTATION_ITEM`. The DCR is a
-//! root, so it anchors the whole chain through settling.
+//! `SHAPE_DIMENSION_REPRESENTATION`'s `MEASURE_REPRESENTATION_ITEM`.
 
 use step_io::model::EntityKey;
 use step_io::read;
@@ -10,7 +9,7 @@ use step_io::scene::{DimensionKind, FeatureGeometry, FeatureKind, ToleranceKind}
 
 // A shape aspect linked to a real planar ADVANCED_FACE via
 // GEOMETRIC_ITEM_SPECIFIC_USAGE. A dimension targets the aspect (to obtain the
-// Feature), and the GISU + dimension are roots, so settling keeps the brep.
+// Feature).
 const GEO: &str = "\
 #1=APPLICATION_CONTEXT('test');\n\
 #2=PRODUCT_CONTEXT('',#1,'mechanical');\n\
@@ -590,8 +589,7 @@ fn feature_resolves_to_its_curve() {
 // A datum reference frame reached two ways: a complex position tolerance whose
 // GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE facet points at a DATUM_SYSTEM (→
 // compartment → datum A), and a standalone perpendicularity tolerance whose
-// datum_system field holds a DATUM_REFERENCE (→ datum B). Both tolerances are
-// roots, so settling keeps the whole datum chain.
+// datum_system field holds a DATUM_REFERENCE (→ datum B).
 const DAT: &str = "\
 #1=APPLICATION_CONTEXT('test');\n\
 #2=PRODUCT_CONTEXT('',#1,'mechanical');\n\
@@ -661,8 +659,7 @@ const FOOTER: &str = "ENDSEC;\nEND-ISO-10303-21;\n";
 
 // Feature linkage: two named SHAPE_ASPECTs (hole/slot) that dimensions and
 // tolerances point at. A size targets one feature, a location spans two; a
-// dedicated and a complex tolerance each target one. Every PMI entity is a root,
-// so settling keeps the whole set.
+// dedicated and a complex tolerance each target one.
 const FEAT: &str = "\
 #1=APPLICATION_CONTEXT('test');\n\
 #2=PRODUCT_CONTEXT('',#1,'mechanical');\n\
@@ -860,7 +857,6 @@ fn a_dimension_with_only_limits_has_no_value() {
 // Three geometric tolerances sharing the product/aspect/unit scaffold: a
 // standalone FLATNESS_TOLERANCE (dedicated arena), a complex position tolerance
 // (multi-supertype ComplexEntity), and a magnitude-less STRAIGHTNESS_TOLERANCE.
-// Each tolerance is a root (nothing references it), so settling keeps it.
 const TOL: &str = "\
 #1=APPLICATION_CONTEXT('test');\n\
 #2=PRODUCT_CONTEXT('',#1,'mechanical');\n\

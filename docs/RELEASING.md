@@ -136,8 +136,8 @@ cargo yank step-io --version X.Y.Z
 This project follows [Semantic Versioning 2.0.0](https://semver.org/):
 
 - **MAJOR** (`X.0.0`) — incompatible API changes.
-- **MINOR** (`0.X.0`) — new functionality, backwards compatible.
-- **PATCH** (`0.0.X`) — backwards-compatible bug fixes.
+- **MINOR** (`X.Y.0`) — new functionality, backwards compatible.
+- **PATCH** (`X.Y.Z`) — backwards-compatible bug fixes.
 
 While the version is `0.x.y`, a breaking change bumps the minor version and
 anything else, new features included, bumps the patch (the crate is

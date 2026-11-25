@@ -2,8 +2,8 @@
 //! representation context. Both the context and the units are STEP complex
 //! instances (the context bundles the geometric / unit / uncertainty facets;
 //! each unit bundles its dimension marker with an `SI_UNIT`), so this exercises
-//! the two-level complex-part traversal. A shape representation anchors the
-//! context so settling does not prune it.
+//! the two-level complex-part traversal. A shape representation uses the
+//! context.
 
 use step_io::model::{EntityKey, ShapeRepresentationId};
 use step_io::read;

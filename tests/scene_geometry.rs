@@ -33,8 +33,8 @@ const BREP: &str = "\
 #26=CLOSED_SHELL('',(#25));\n\
 #27=MANIFOLD_SOLID_BREP('',#26);\n";
 
-// A presentation colour styled onto face #25, anchored in an MDGPR so settling
-// keeps it. Appended after BREP.
+// A presentation colour styled onto face #25, in an MDGPR. Appended after
+// BREP.
 const COLOUR: &str = "\
 #30=REPRESENTATION_CONTEXT('','3D');\n\
 #31=COLOUR_RGB('',0.8,0.2,0.1);\n\
