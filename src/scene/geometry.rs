@@ -1273,6 +1273,9 @@ macro_rules! curve_impl {
             ) -> Option<Self> {
                 let which = match r {
                     $( m::GeometricSetSelectRef::$V(i) => CurveImpl::$V(*i), )+
+                    m::GeometricSetSelectRef::Complex(i) if is_complex_curve(cx.model, *i) => {
+                        CurveImpl::Complex(*i)
+                    }
                     _ => return None,
                 };
                 Some(Curve { cx, which })
@@ -1286,12 +1289,26 @@ macro_rules! curve_impl {
             ) -> Option<Self> {
                 let which = match r {
                     $( m::GeometricModelItemRef::$V(i) => CurveImpl::$V(*i), )+
+                    m::GeometricModelItemRef::Complex(i) if is_complex_curve(cx.model, *i) => {
+                        CurveImpl::Complex(*i)
+                    }
                     _ => return None,
                 };
                 Some(Curve { cx, which })
             }
         }
     };
+}
+
+/// Whether a complex instance is a curve (has a `CURVE` part), such as a
+/// rational B-spline curve.
+fn is_complex_curve(model: &m::StepModel, id: m::ComplexEntityId) -> bool {
+    model
+        .complex_entity_arena
+        .get(id.0)
+        .parts
+        .iter()
+        .any(|p| matches!(p, m::PartialEntity::Curve))
 }
 
 curve_impl! {

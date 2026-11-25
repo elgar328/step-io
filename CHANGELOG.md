@@ -242,6 +242,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `SetElement::Point` and `FeatureGeometry::Point` give them, where they used
   to give `None` or `Other`, so `Point::key` is no longer always a
   `CARTESIAN_POINT`.
+- A complex curve (a rational B-spline) in a geometric set or a feature's
+  geometry comes back as `SetElement::Curve` / `FeatureGeometry::Curve`,
+  where it used to be `Other`.
 - Attributes that every STEP edition narrows with a redeclaration
   (`SELF\supertype.attribute : narrower;`) now have the narrower type in the
   model, so both reading and `Ap242Author` take only what the schema allows
