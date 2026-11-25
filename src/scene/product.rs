@@ -1479,8 +1479,9 @@ fn usages_of(cx: Ctx<'_>, def: m::EntityKey, side: Side) -> Vec<m::NextAssemblyU
     let mut out = Vec::new();
     for &r in rg.referrers(def) {
         match r {
+            // A usage with `def` at both ends is a referrer twice.
             m::EntityKey::NextAssemblyUsageOccurrence(nid) => {
-                if pdor_is(model, end(nid), def) {
+                if end(nid).entity_key() == def && !out.contains(&nid) {
                     out.push(nid);
                 }
             }
@@ -1499,25 +1500,6 @@ fn usages_of(cx: Ctx<'_>, def: m::EntityKey, side: Side) -> Vec<m::NextAssemblyU
         }
     }
     out
-}
-
-/// Whether a `ProductDefinitionOrReferenceRef` points at exactly this definition
-/// (plain or `..._WITH_ASSOCIATED_DOCUMENTS`), directly or as the `definition`
-/// of a `PRODUCT_DEFINITION_OCCURRENCE`.
-fn pdor_is(
-    model: &m::StepModel,
-    r: &m::ProductDefinitionOrReferenceRef,
-    key: m::EntityKey,
-) -> bool {
-    match r {
-        m::ProductDefinitionOrReferenceRef::ProductDefinitionOccurrence(i) => model
-            .product_definition_occurrence_arena
-            .get(i.0)
-            .definition
-            .as_ref()
-            .is_some_and(|d| d.entity_key() == key),
-        other => other.entity_key() == key,
-    }
 }
 
 /// Resolve a `ProductDefinitionOrReferenceRef` to a definition handle (plain or

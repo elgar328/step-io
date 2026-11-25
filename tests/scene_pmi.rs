@@ -468,6 +468,32 @@ fn a_feature_gives_the_items_an_item_identified_representation_usage_names() {
     assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
 }
 
+/// A `LIST_REPRESENTATION_ITEM` counts as a set does: each of its items.
+#[test]
+fn a_feature_gives_the_items_of_an_identified_list() {
+    let base = DATUM_FEATURE
+        .split("#50=")
+        .next()
+        .expect("the part and its geometry");
+    let features = IIRU_FEATURES.replace(
+        "SET_REPRESENTATION_ITEM((#35,#31))",
+        "LIST_REPRESENTATION_ITEM((#35,#31))",
+    );
+    assert_ne!(features, IIRU_FEATURES);
+    let src = format!("{HEADER}{base}{features}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let df = scene
+        .all_datums()
+        .next()
+        .and_then(|d| d.datum_feature())
+        .expect("the datum feature");
+    let kinds: Vec<_> = df.geometry().map(|g| discriminant(&g)).collect();
+    assert_eq!(kinds, ["Face", "Edge"]);
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}
+
 // Two parts (A, B), each with its own shape aspect + dimension; part A also has
 // a feature tolerance, a whole-part (PDS-targeted) tolerance, and a datum.
 // Per-part queries must return only that part's PMI.

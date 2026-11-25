@@ -1205,9 +1205,11 @@ impl<'m> Feature<'m> {
         let mut out = Vec::new();
         let mut items = HashSet::new();
         let mut visited = HashSet::from([self.key()]);
+        push_identified_geometry(cx, self.key(), &mut items, &mut out);
+        // Each feature's geometry is read once, when it is first reached; the
+        // stack holds the features whose components are still to be read.
         let mut stack = vec![self.key()];
         while let Some(key) = stack.pop() {
-            push_identified_geometry(cx, key, &mut items, &mut out);
             if !has_components(cx.model, key) {
                 continue;
             }

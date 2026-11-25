@@ -878,3 +878,58 @@ fn an_assembly_through_a_product_definition_occurrence_reads_the_same() {
     assert!(approx(t.to.origin, [10.0, 20.0, 30.0]));
     assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
 }
+
+/// A usage with the same definition at both ends lists that definition once
+/// as its own child and once as its own parent.
+#[test]
+fn a_definition_used_in_itself_is_listed_once() {
+    let assembly = ASSEMBLY.replace(
+        "#30=NEXT_ASSEMBLY_USAGE_OCCURRENCE('1','asm-part','',#12,#22,$);",
+        "#30=NEXT_ASSEMBLY_USAGE_OCCURRENCE('1','asm-asm','',#12,#12,$);",
+    );
+    let src = format!("{HEADER}{assembly}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let asm = def_for_product(&scene, "Assembly");
+    let names = |defs: Vec<ProductDef<'_>>| -> Vec<String> {
+        defs.iter()
+            .filter_map(|d| d.product().map(|p| p.name().to_owned()))
+            .collect()
+    };
+    assert_eq!(names(asm.children().collect()), ["Assembly"]);
+    assert_eq!(names(asm.parents().collect()), ["Assembly"]);
+    assert_eq!(asm.occurrences().count(), 1);
+}
+
+/// The assembly end of a usage may also be a `PRODUCT_DEFINITION_OCCURRENCE`.
+#[test]
+fn an_assembly_named_through_a_product_definition_occurrence_has_its_children() {
+    let assembly = ASSEMBLY.replace(
+        "#30=NEXT_ASSEMBLY_USAGE_OCCURRENCE('1','asm-part','',#12,#22,$);",
+        "#29=PRODUCT_DEFINITION_OCCURRENCE('occ-asm',$,$,#12,$);\n\
+         #30=NEXT_ASSEMBLY_USAGE_OCCURRENCE('1','asm-part','',#29,#22,$);",
+    );
+    let src = format!("{HEADER}{assembly}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+    let roots: Vec<_> = scene
+        .root_definitions()
+        .filter_map(|d| d.product().map(|p| p.name()))
+        .collect();
+    assert_eq!(roots, ["Assembly"]);
+    let asm = def_for_product(&scene, "Assembly");
+    let children: Vec<_> = asm
+        .children()
+        .filter_map(|d| d.product().map(|p| p.name()))
+        .collect();
+    assert_eq!(children, ["Part"]);
+    let part = def_for_product(&scene, "Part");
+    let parents: Vec<_> = part
+        .parents()
+        .filter_map(|d| d.product().map(|p| p.name()))
+        .collect();
+    assert_eq!(parents, ["Assembly"]);
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}

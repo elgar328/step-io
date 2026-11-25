@@ -449,6 +449,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   whose base is a unit of another kind, or cannot be read, is now reported
   too, and a conversion factor that cannot be read no longer also reports
   the unit as missing its `CONVERSION_BASED_UNIT` part.
+- `ProductDef::children`, `parents` and `occurrences` give a usage whose two
+  ends are the same definition once; it used to come twice.
 - A shape aspect written as a complex instance with a `SHAPE_ASPECT` part,
   as NIST's AP242 test files write a composite datum feature
   (`(COMPOSITE_SHAPE_ASPECT() DATUM_FEATURE() SHAPE_ASPECT(...))`), is a
