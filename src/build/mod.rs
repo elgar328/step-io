@@ -192,8 +192,9 @@ pub enum LengthUnit {
 pub struct UnitsInput {
     pub length: LengthUnit,
     /// Length uncertainty (modelling precision), in the file's own length
-    /// unit — expected finite and positive (degenerate values are the
-    /// caller's responsibility).
+    /// unit — expected positive. A value that is not finite fails
+    /// [`StepBuilder::new_with`] with [`AuthorError::NonFiniteReal`]; other
+    /// degenerate values are the caller's responsibility.
     pub uncertainty: f64,
 }
 
@@ -632,15 +633,19 @@ struct PendingPlacement {
 /// - [`DanglingRef`](AuthorError::DanglingRef) for an id out of this
 ///   builder's range. An id from another builder that happens to be in range
 ///   is not caught, and stands for whatever this builder holds there;
-/// - [`Cardinality`](AuthorError::Cardinality) for an empty list where the
-///   standard needs at least one item, such as a solid without faces.
+/// - [`Cardinality`](AuthorError::Cardinality) for a list shorter than the
+///   standard allows, such as a solid without faces or a polyline of one
+///   point;
+/// - [`CyclicAssembly`](AuthorError::CyclicAssembly) for a placement that
+///   would make an assembly contain itself ([`place`](Self::place)).
 ///
 /// Any other error indicates a bug in the builder itself. The methods given
 /// nothing that could break a rule — [`new`](Self::new), [`part`](Self::part),
 /// [`part_with`](Self::part_with), [`person_and_org`](Self::person_and_org),
 /// [`document`](Self::document), [`security`](Self::security) and
 /// [`finish`](Self::finish) — return their value as it is, and panic only on
-/// such a bug.
+/// such a bug, or for a [`Part`] from another builder that is out of range
+/// here.
 pub struct StepBuilder {
     author: Ap242Author,
     /// The geometric context of every part not placed in an assembly, and of
@@ -1568,13 +1573,14 @@ impl StepBuilder {
     /// Attach a display mesh to `part`, optionally linked to the b-rep solid
     /// it tessellates (the link is what `MeshGroup::solid()` resolves on the
     /// read side). Triangle indices are 0-based into `points`; the builder
-    /// converts to STEP's 1-based strip encoding. The mesh lands in its own
-    /// `TESSELLATED_SHAPE_REPRESENTATION` on [`finish`](Self::finish).
+    /// converts to STEP's 1-based strip encoding. On [`finish`](Self::finish)
+    /// the part's meshes land in one `TESSELLATED_SHAPE_REPRESENTATION` of
+    /// their own.
     ///
     /// # Errors
     /// [`AuthorError::InvalidInput`] for a mesh without triangles, with a
     /// triangle index not below the number of points, or with per-vertex
-    /// normals that do not number the points.
+    /// normals whose count differs from the points'.
     /// See also [the builder's errors](Self#errors).
     pub fn mesh(
         &mut self,
