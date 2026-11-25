@@ -793,3 +793,44 @@ fn a_functionally_defined_placement_is_reported() {
         "{warnings:?}"
     );
 }
+
+/// AP242 edition 4 may name the component through a
+/// `PRODUCT_DEFINITION_OCCURRENCE` of its definition: the tree, the roots and
+/// the placement read the same as when the usage names the definition itself.
+#[test]
+fn an_assembly_through_a_product_definition_occurrence_reads_the_same() {
+    let assembly = ASSEMBLY.replace(
+        "#30=NEXT_ASSEMBLY_USAGE_OCCURRENCE('1','asm-part','',#12,#22,$);",
+        "#29=PRODUCT_DEFINITION_OCCURRENCE('occ-1',$,$,#22,$);\n\
+         #30=NEXT_ASSEMBLY_USAGE_OCCURRENCE('1','asm-part','',#12,#29,$);",
+    );
+    let src = format!("{HEADER}{assembly}{FOOTER}");
+    let (model, rep) = read(src.as_bytes()).expect("read");
+    assert!(rep.dropped.is_empty(), "dropped: {:?}", rep.dropped);
+    let scene = model.scene();
+
+    let roots: Vec<_> = scene
+        .root_definitions()
+        .filter_map(|d| d.product().map(|p| p.name()))
+        .collect();
+    assert_eq!(roots, ["Assembly"]);
+    let asm = def_for_product(&scene, "Assembly");
+    let children: Vec<_> = asm
+        .children()
+        .filter_map(|d| d.product().map(|p| p.name()))
+        .collect();
+    assert_eq!(children, ["Part"]);
+    let part = def_for_product(&scene, "Part");
+    let parents: Vec<_> = part
+        .parents()
+        .filter_map(|d| d.product().map(|p| p.name()))
+        .collect();
+    assert_eq!(parents, ["Assembly"]);
+    let t = asm
+        .occurrences()
+        .next()
+        .and_then(|o| o.transform())
+        .expect("a placement transform");
+    assert!(approx(t.to.origin, [10.0, 20.0, 30.0]));
+    assert!(scene.warnings().is_empty(), "{:?}", scene.warnings());
+}

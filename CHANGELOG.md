@@ -368,6 +368,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   concern. A bare `PRE_DEFINED_COLOUR` now gives its colour. `Datum::datum_feature` also finds a
   `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`. `MeshGroup::solid` follows a shell linked
   through an `ORIENTED_CLOSED_SHELL`.
+- The assembly tree follows a `NEXT_ASSEMBLY_USAGE_OCCURRENCE` that names a
+  definition through a `PRODUCT_DEFINITION_OCCURRENCE`, as AP242 edition 4
+  may write it: `ProductDef::children`, `parents`, `occurrences`,
+  `Scene::root_definitions`, `Occurrence::definition` and
+  `Occurrence::transform` read it as they read a usage that names the
+  definition itself. Such a component used to drop out of the tree, and its
+  definition to show as a root.
 - The presentation accessors (`color`, `transparency`, `width`,
   `line_font`, `layer`, `is_visible`) read the subtypes of `STYLED_ITEM`
   too — the annotation occurrences that style PMI geometry, and a complex

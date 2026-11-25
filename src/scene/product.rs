@@ -53,20 +53,13 @@ impl Scene<'_> {
     }
 
     /// The assembly roots: definitions no `NEXT_ASSEMBLY_USAGE_OCCURRENCE`
-    /// uses as a child (`related`). Start an assembly walk here — a single
+    /// uses as a child (`related`), directly or through a
+    /// `PRODUCT_DEFINITION_OCCURRENCE`. Start an assembly walk here — a single
     /// part file simply yields all of its definitions.
     pub fn root_definitions(&self) -> impl Iterator<Item = ProductDef<'_>> + '_ {
         let cx = self.ctx();
-        let rg = cx.ref_graph();
-        self.all_product_definitions().filter(move |def| {
-            !rg.referrers(def.key()).iter().any(|r| {
-                let m::EntityKey::NextAssemblyUsageOccurrence(nid) = r else {
-                    return false;
-                };
-                let nauo = cx.model.next_assembly_usage_occurrence_arena.get(nid.0);
-                pdor_is(&nauo.related_product_definition, def.key())
-            })
-        })
+        self.all_product_definitions()
+            .filter(move |def| usages_of(cx, def.key(), Side::Related).is_empty())
     }
 }
 
@@ -410,21 +403,14 @@ impl<'m> ProductDef<'m> {
 
     /// The component occurrences directly under this definition — each a usage
     /// (`NAUO`) carrying the child definition *and* its placement transform
-    /// (reverse: a `NAUO` whose `relating` is this definition).
+    /// (reverse: a `NAUO` whose `relating` is this definition, directly or
+    /// through a `PRODUCT_DEFINITION_OCCURRENCE` of it — a usage under one
+    /// occurrence of a sub-assembly then shows under the definition itself).
     pub fn occurrences(&self) -> impl Iterator<Item = Occurrence<'m>> + 'm {
         let cx = self.cx;
-        let rg = cx.ref_graph();
-        let me = self.key();
-        let mut out: Vec<Occurrence<'m>> = Vec::new();
-        for r in rg.referrers(me) {
-            if let m::EntityKey::NextAssemblyUsageOccurrence(nid) = r {
-                let nauo = cx.model.next_assembly_usage_occurrence_arena.get(nid.0);
-                if pdor_is(&nauo.relating_product_definition, me) {
-                    out.push(Occurrence { cx, id: *nid });
-                }
-            }
-        }
-        out.into_iter()
+        usages_of(cx, self.key(), Side::Relating)
+            .into_iter()
+            .map(move |id| Occurrence { cx, id })
     }
 
     /// Component definitions directly under this one in the assembly tree — the
@@ -434,23 +420,16 @@ impl<'m> ProductDef<'m> {
     }
 
     /// Assembly definitions this one is a component of (reverse: a `NAUO` whose
-    /// `related` is this definition → its `relating`).
+    /// `related` is this definition, directly or through a
+    /// `PRODUCT_DEFINITION_OCCURRENCE` of it → its `relating`).
     pub fn parents(&self) -> impl Iterator<Item = ProductDef<'m>> + 'm {
         let cx = self.about().cx;
-        let rg = cx.ref_graph();
-        let me = self.key();
-        let mut out: Vec<ProductDef<'m>> = Vec::new();
-        for r in rg.referrers(me) {
-            if let m::EntityKey::NextAssemblyUsageOccurrence(nid) = r {
-                let nauo = cx.model.next_assembly_usage_occurrence_arena.get(nid.0);
-                if pdor_is(&nauo.related_product_definition, me) {
-                    if let Some(d) = pdor_to_def(cx, &nauo.relating_product_definition) {
-                        out.push(d);
-                    }
-                }
-            }
-        }
-        out.into_iter()
+        usages_of(cx, self.key(), Side::Related)
+            .into_iter()
+            .filter_map(move |id| {
+                let nauo = cx.model.next_assembly_usage_occurrence_arena.get(id.0);
+                pdor_to_def(cx, &nauo.relating_product_definition)
+            })
     }
 
     /// The b-rep solids of this definition's shape — the bridge into the geometry
@@ -1498,17 +1477,69 @@ fn dir3(cx: Ctx<'_>, r: &m::DirectionRef) -> [f64; 3] {
     }
 }
 
+/// Which end of a `NEXT_ASSEMBLY_USAGE_OCCURRENCE` a definition is on.
+#[derive(Clone, Copy)]
+enum Side {
+    /// The assembly (`relating_product_definition`).
+    Relating,
+    /// The component (`related_product_definition`).
+    Related,
+}
+
+/// The `NEXT_ASSEMBLY_USAGE_OCCURRENCE`s with the definition `def` on `side`,
+/// named directly or through a `PRODUCT_DEFINITION_OCCURRENCE` whose
+/// `definition` it is (as AP242 edition 4 may write an assembly).
+fn usages_of(cx: Ctx<'_>, def: m::EntityKey, side: Side) -> Vec<m::NextAssemblyUsageOccurrenceId> {
+    let rg = cx.ref_graph();
+    let model = cx.model;
+    let end = |nid: m::NextAssemblyUsageOccurrenceId| {
+        let nauo = model.next_assembly_usage_occurrence_arena.get(nid.0);
+        match side {
+            Side::Relating => &nauo.relating_product_definition,
+            Side::Related => &nauo.related_product_definition,
+        }
+    };
+    let mut out = Vec::new();
+    for &r in rg.referrers(def) {
+        match r {
+            m::EntityKey::NextAssemblyUsageOccurrence(nid) => {
+                if pdor_is(model, end(nid), def) {
+                    out.push(nid);
+                }
+            }
+            m::EntityKey::ProductDefinitionOccurrence(pid) => {
+                let pdo = m::EntityKey::ProductDefinitionOccurrence(pid);
+                for &u in rg.referrers(pdo) {
+                    if let m::EntityKey::NextAssemblyUsageOccurrence(nid) = u
+                        && end(nid).entity_key() == pdo
+                        && !out.contains(&nid)
+                    {
+                        out.push(nid);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    out
+}
+
 /// Whether a `ProductDefinitionOrReferenceRef` points at exactly this definition
-/// (plain or `..._WITH_ASSOCIATED_DOCUMENTS`).
-fn pdor_is(r: &m::ProductDefinitionOrReferenceRef, key: m::EntityKey) -> bool {
+/// (plain or `..._WITH_ASSOCIATED_DOCUMENTS`), directly or as the `definition`
+/// of a `PRODUCT_DEFINITION_OCCURRENCE`.
+fn pdor_is(
+    model: &m::StepModel,
+    r: &m::ProductDefinitionOrReferenceRef,
+    key: m::EntityKey,
+) -> bool {
     match r {
-        m::ProductDefinitionOrReferenceRef::ProductDefinition(i) => {
-            m::EntityKey::ProductDefinition(*i) == key
-        }
-        m::ProductDefinitionOrReferenceRef::ProductDefinitionWithAssociatedDocuments(i) => {
-            m::EntityKey::ProductDefinitionWithAssociatedDocuments(*i) == key
-        }
-        _ => false,
+        m::ProductDefinitionOrReferenceRef::ProductDefinitionOccurrence(i) => model
+            .product_definition_occurrence_arena
+            .get(i.0)
+            .definition
+            .as_ref()
+            .is_some_and(|d| d.entity_key() == key),
+        other => other.entity_key() == key,
     }
 }
 
@@ -1525,6 +1556,33 @@ fn pdor_to_def<'m>(cx: Ctx<'m>, r: &m::ProductDefinitionOrReferenceRef) -> Optio
                 cx,
                 m::EntityKey::ProductDefinitionWithAssociatedDocuments(*i),
             )
+        }
+        m::ProductDefinitionOrReferenceRef::ProductDefinitionOccurrence(i) => {
+            // One step: only a specified occurrence (not modeled) may name
+            // another occurrence as its definition.
+            let pdo = cx.model.product_definition_occurrence_arena.get(i.0);
+            match &pdo.definition {
+                Some(
+                    d @ (m::ProductDefinitionOrReferenceRef::ProductDefinition(_)
+                    | m::ProductDefinitionOrReferenceRef::ProductDefinitionWithAssociatedDocuments(
+                        _,
+                    )),
+                ) => pdor_to_def(cx, d),
+                Some(other) => {
+                    cx.warn(format!(
+                        "PRODUCT_DEFINITION_OCCURRENCE names a {}, not a product definition; \
+                         not followed",
+                        Ctx::keyword(other.entity_key())
+                    ));
+                    None
+                }
+                None => {
+                    cx.warn(
+                        "PRODUCT_DEFINITION_OCCURRENCE has no definition; not followed".to_owned(),
+                    );
+                    None
+                }
+            }
         }
         other => {
             cx.warn(format!(
