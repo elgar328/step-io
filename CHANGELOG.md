@@ -233,6 +233,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `add_complex` rejects a part of an entity AP242 declares `ABSTRACT` unless
   a part of one of its subtypes is beside it, with
   `AuthorError::InvalidComplex`.
+- `StepBuilder` marks a part's mesh representation as an alternative
+  representation of its shape when the part also has a solid: a
+  `NAME_ATTRIBUTE` 'alternative shape representation' names the
+  `SHAPE_DEFINITION_REPRESENTATION` that binds it, as the MBx-IF Recommended
+  Practices for Alternative Shapes (1.0) describe. A part with meshes only is
+  not marked.
 - `MappedInstance::solids`, `surface_models`, `geometric_sets` and
   `mapped_children` follow a plain `SHAPE_REPRESENTATION_RELATIONSHIP` from
   the source representation to an equivalent one, as `ProductDef::solids`

@@ -1575,7 +1575,13 @@ impl StepBuilder {
     /// read side). Triangle indices are 0-based into `points`; the builder
     /// converts to STEP's 1-based strip encoding. On [`finish`](Self::finish)
     /// the part's meshes land in one `TESSELLATED_SHAPE_REPRESENTATION` of
-    /// their own.
+    /// their own. When the part also has a solid, that representation is
+    /// marked as an alternative representation of the part's shape — a
+    /// `NAME_ATTRIBUTE` 'alternative shape representation' on its
+    /// `SHAPE_DEFINITION_REPRESENTATION`, as the MBx-IF Recommended Practices
+    /// for Alternative Shapes (1.0) describe. The mark belongs to the part, so
+    /// it takes a part's meshes to be its own shape, whether or not
+    /// `of_solid` names a solid, or names one of another part.
     ///
     /// # Errors
     /// [`AuthorError::InvalidInput`] for a mesh without triangles, with a
@@ -1921,7 +1927,8 @@ impl StepBuilder {
 /// One part's shape representation in `ctx`, linked to the part's
 /// definition, plus its tessellated representation if it carries display
 /// meshes. A part carrying a solid is emitted as the customary
-/// `ADVANCED_BREP_SHAPE_REPRESENTATION`. `children` are the frames the part's
+/// `ADVANCED_BREP_SHAPE_REPRESENTATION`, and its tessellated representation
+/// is then marked as an alternative one. `children` are the frames the part's
 /// children are placed at.
 fn bind_part(
     a: &mut Ap242Author,
@@ -1963,8 +1970,10 @@ fn bind_part(
         rep,
     )?;
 
-    // A part with display meshes gets its own tessellated
-    // representation alongside the shape one (multi-SDR per shape).
+    // A part with display meshes gets its own tessellated representation,
+    // bound to the same shape. Beside a solid it is an alternative
+    // representation of that shape, named so on its binding; a part with
+    // meshes only has no other shape, so its meshes are not marked.
     if !part.meshes.is_empty() {
         let tsr = a.add_tessellated_shape_representation(
             "",
@@ -1974,10 +1983,16 @@ fn bind_part(
                 .collect(),
             m::Ap242GlobalUnitAssignedContextRef::Complex(ctx),
         )?;
-        a.add_shape_definition_representation(
+        let binding = a.add_shape_definition_representation(
             m::PropertyDefinitionRef::ProductDefinitionShape(part.shape),
             m::ShapeRepresentationRef::TessellatedShapeRepresentation(tsr),
         )?;
+        if has_solid {
+            a.add_name_attribute(
+                "alternative shape representation",
+                m::NameAttributeSelectRef::ShapeDefinitionRepresentation(binding),
+            )?;
+        }
     }
     Ok(rep_or_ref)
 }
